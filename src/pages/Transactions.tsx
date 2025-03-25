@@ -71,13 +71,15 @@ const Transactions = () => {
   }, [transactions, searchQuery, selectedCategory, selectedType]);
 
   const handleAddTransaction = (formData: any) => {
+    const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
+    
     const newTransaction: Transaction = {
       id: uuidv4(),
       title: formData.title,
       amount: formData.amount,
       category: formData.category,
       date: formData.date,
-      type: formData.amount >= 0 ? 'income' : 'expense',
+      type: transactionType,
       notes: formData.notes,
     };
 
@@ -93,6 +95,8 @@ const Transactions = () => {
   const handleEditTransaction = (formData: any) => {
     if (!currentTransaction) return;
 
+    const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
+
     const updatedTransactions = transactions.map(t => 
       t.id === currentTransaction.id 
         ? {
@@ -101,7 +105,7 @@ const Transactions = () => {
             amount: formData.amount,
             category: formData.category,
             date: formData.date,
-            type: formData.amount >= 0 ? 'income' : 'expense',
+            type: transactionType,
             notes: formData.notes,
           }
         : t
