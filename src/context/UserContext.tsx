@@ -11,6 +11,7 @@ export interface User {
   birthDate: Date | null;
   email?: string;
   avatar?: string;
+  occupation?: string;
   smsProviders: string[];
   completedOnboarding: boolean;
   createdAt?: Date;
