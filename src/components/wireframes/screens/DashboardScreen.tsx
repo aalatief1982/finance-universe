@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
 import { useTransactions } from '@/context/TransactionContext';
 import { useUser } from '@/context/UserContext';
-import { Plus, BarChart, CreditCard, DollarSign, Filter, Settings, MessageSquare } from 'lucide-react';
+import { Plus, BarChart, CreditCard, DollarSign, Filter, Settings, MessageSquare, RefreshCw } from 'lucide-react';
 
 interface UserData {
   name?: string;
@@ -24,6 +25,7 @@ interface DashboardScreenProps {
 const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, onSettings, userData }: DashboardScreenProps) => {
   const [activeTab, setActiveTab] = useState('all');
   const [period, setPeriod] = useState('month');
+  const [currency, setCurrency] = useState('USD'); // Default currency
   const { transactions, getTransactionsSummary } = useTransactions();
   const { user } = useUser();
   
@@ -36,6 +38,19 @@ const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, onSettings,
   // Calculate summary statistics
   const { income, expenses, balance } = getTransactionsSummary();
 
+  // List of available currencies
+  const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AED'];
+  
+  // Format currency based on selection
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   return (
     <WireframeContainer>
       <WireframeHeader title={`${userData?.name ? `Hi, ${userData.name.split(' ')[0]}` : 'Dashboard'}`} />
@@ -44,17 +59,28 @@ const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, onSettings,
         <div className="bg-blue-600 text-white rounded-lg p-4 mb-2">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm opacity-80">Current Balance</span>
-            <DollarSign size={18} className="opacity-80" />
+            <div className="flex items-center">
+              <select 
+                className="bg-blue-700 text-white text-sm rounded px-2 py-1 mr-1 border-none"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+              >
+                {currencies.map(curr => (
+                  <option key={curr} value={curr}>{curr}</option>
+                ))}
+              </select>
+              <DollarSign size={18} className="opacity-80" />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold">${balance.toFixed(2)}</h2>
+          <h2 className="text-2xl font-bold">{formatCurrency(balance)}</h2>
           <div className="flex justify-between mt-4 text-sm">
             <div>
               <span className="block opacity-80">Income</span>
-              <span className="font-semibold">+${income.toFixed(2)}</span>
+              <span className="font-semibold">{formatCurrency(income)}</span>
             </div>
             <div>
               <span className="block opacity-80">Expenses</span>
-              <span className="font-semibold">-${expenses.toFixed(2)}</span>
+              <span className="font-semibold">-{formatCurrency(expenses)}</span>
             </div>
           </div>
         </div>
@@ -112,9 +138,17 @@ const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, onSettings,
                     <span className="text-xs text-gray-500">{tx.date} • {tx.category}</span>
                   </div>
                 </div>
-                <span className={`font-semibold ${tx.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                  {tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}
-                </span>
+                <div className="text-right">
+                  <span className={`font-semibold ${tx.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {tx.amount < 0 ? '-' : '+'}{formatCurrency(Math.abs(tx.amount))}
+                  </span>
+                  {tx.currency && tx.currency !== currency && (
+                    <div className="flex items-center text-xs text-gray-500">
+                      <span>Originally {tx.currency}</span>
+                      <RefreshCw size={10} className="mx-1" />
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           ) : (
