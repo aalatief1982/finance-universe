@@ -24,6 +24,7 @@ export const getStoredTransactions = (): Transaction[] => {
         if (validationResult.success) {
           validTransactions.push(validationResult.data);
         } else {
+          // Now TypeScript knows we can access the error property
           console.warn(`Invalid transaction at index ${index}:`, validationResult.error);
         }
       });

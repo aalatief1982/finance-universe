@@ -16,6 +16,7 @@ export class SmsProcessingService {
         // Validate SMS message format
         const validationResult = validateData(smsMessageSchema, message);
         if (!validationResult.success) {
+          // Now TypeScript knows we can access the error property
           console.warn('Invalid SMS message format:', validationResult.error);
           continue;
         }
