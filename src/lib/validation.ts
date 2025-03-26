@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { handleValidationError } from '@/utils/error-utils';
 import { SupportedCurrency } from '@/types/locale';
@@ -38,7 +39,7 @@ export const currencyConversionSchema = z.object({
 
 // Locale settings validation schema
 export const localeSettingsSchema = z.object({
-  currency: z.nativeEnum(SupportedCurrency),
+  currency: z.enum(["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CNY", "INR"]) as z.ZodEnum<any>,
   language: z.string()
 });
 

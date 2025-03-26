@@ -1,25 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Layout from '@/components/Layout';
-import ExpenseCard from '@/components/ExpenseCard';
-import CategoryPill from '@/components/CategoryPill';
-import TransactionTable from '@/components/TransactionTable';
-import TransactionsPagination from '@/components/TransactionsPagination';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ExpenseForm from '@/components/ExpenseForm';
-import { CATEGORIES, INITIAL_TRANSACTIONS, Transaction } from '@/lib/mock-data';
-import { formatDate } from '@/lib/formatters';
-import { Plus, Search, Filter, Trash2, Calendar, SlidersHorizontal, Table as TableIcon, LayoutGrid } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import Layout from '@/components/Layout';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import ExpenseForm from '@/components/ExpenseForm';
+import { CATEGORIES, INITIAL_TRANSACTIONS } from '@/lib/mock-data';
+import { Transaction } from '@/types/transaction';
 import { useToast } from '@/components/ui/use-toast';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DatePicker } from '@/components/ui/date-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+// Import refactored components
+import TransactionHeader from '@/components/transactions/TransactionHeader';
+import TransactionFilters from '@/components/transactions/TransactionFilters';
+import ViewToggle from '@/components/transactions/ViewToggle';
+import TransactionGrid from '@/components/transactions/TransactionGrid';
+import TransactionTable from '@/components/TransactionTable';
+import EmptyTransactionState from '@/components/transactions/EmptyTransactionState';
+import PaginationInfo from '@/components/transactions/PaginationInfo';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -217,6 +214,9 @@ const Transactions = () => {
   // Get unique categories from transactions
   const uniqueCategories = Array.from(new Set(transactions.map(t => t.category)));
 
+  // Check if any filters are active
+  const hasActiveFilters = Boolean(searchQuery || selectedCategory || selectedType || startDate || endDate);
+
   return (
     <>
       <Layout>
@@ -226,261 +226,70 @@ const Transactions = () => {
           transition={{ duration: 0.5 }}
           className="space-y-6"
         >
+          <TransactionHeader 
+            isAddingExpense={isAddingExpense}
+            setIsAddingExpense={setIsAddingExpense}
+            onAddTransaction={handleAddTransaction}
+            categories={CATEGORIES}
+          />
+          
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-            <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
-              <Button className="gap-1" onClick={() => setIsAddingExpense(true)}>
-                <Plus size={18} />
-                Add Transaction
-              </Button>
-              <DialogContent className="sm:max-w-md">
-                <ExpenseForm 
-                  onSubmit={handleAddTransaction} 
-                  categories={CATEGORIES}
-                  onCancel={() => setIsAddingExpense(false)}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-              <Input
-                placeholder="Search transactions..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <TransactionFilters
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
+              selectedType={selectedType}
+              setSelectedType={setSelectedType}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              clearFilters={clearFilters}
+              uniqueCategories={uniqueCategories}
+              filtersVisible={filtersVisible}
+              setFiltersVisible={setFiltersVisible}
+            />
             
-            <div className="flex gap-2 items-center">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    className={filtersVisible ? "bg-primary/10" : ""}
-                  >
-                    <SlidersHorizontal size={18} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4">
-                  <div className="space-y-4">
-                    <h3 className="font-medium">Filters</h3>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Category</label>
-                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Categories" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
-                          {uniqueCategories.map(category => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Type</label>
-                      <Select value={selectedType} onValueChange={setSelectedType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="All Types" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Types</SelectItem>
-                          <SelectItem value="income">Income</SelectItem>
-                          <SelectItem value="expense">Expense</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Date Range</label>
-                      <div className="flex gap-2">
-                        <DatePicker
-                          date={startDate}
-                          setDate={setStartDate}
-                          placeholder="From"
-                        />
-                        <DatePicker
-                          date={endDate}
-                          setDate={setEndDate}
-                          placeholder="To"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between pt-2">
-                      <Button variant="outline" size="sm" onClick={clearFilters}>
-                        Clear
-                      </Button>
-                      <Button size="sm" onClick={() => setFiltersVisible(false)}>
-                        Apply
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              
-              <div className="hidden sm:flex gap-2 items-center">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[130px]">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
-                    {uniqueCategories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="w-[130px]">
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                {(searchQuery || selectedCategory || selectedType || startDate || endDate) && (
-                  <Button variant="ghost" size="icon" onClick={clearFilters} title="Clear filters">
-                    <Filter className="text-muted-foreground" size={18} />
-                  </Button>
-                )}
-              </div>
-              
-              <div className="border rounded-md p-1 hidden sm:flex">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setViewMode('grid')}
-                >
-                  <LayoutGrid size={16} />
-                </Button>
-                <Button
-                  variant={viewMode === 'table' ? 'default' : 'ghost'}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setViewMode('table')}
-                >
-                  <TableIcon size={16} />
-                </Button>
-              </div>
-            </div>
+            <ViewToggle 
+              viewMode={viewMode} 
+              setViewMode={setViewMode} 
+            />
           </div>
           
-          {viewMode === 'grid' ? (
-            <div className="space-y-3">
-              {paginatedTransactions.length > 0 ? (
-                paginatedTransactions.map((transaction) => (
-                  <motion.div
-                    key={transaction.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1">
-                        <ExpenseCard
-                          id={transaction.id}
-                          title={transaction.title}
-                          amount={transaction.amount}
-                          category={transaction.category}
-                          date={formatDate(transaction.date)}
-                          onClick={() => openEditDialog(transaction)}
-                        />
-                      </div>
-                      
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive">
-                            <Trash2 size={18} />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete transaction</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this transaction? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => handleDeleteTransaction(transaction.id)}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </motion.div>
-                ))
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-center py-12"
-                >
-                  <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <Calendar className="text-muted-foreground" size={24} />
-                  </div>
-                  <h3 className="text-lg font-medium">No transactions found</h3>
-                  <p className="text-muted-foreground mt-1">
-                    {transactions.length === 0 
-                      ? "You haven't added any transactions yet." 
-                      : "No transactions match your current filters."}
-                  </p>
-                  {transactions.length === 0 && (
-                    <Button className="mt-4" onClick={() => setIsAddingExpense(true)}>
-                      Add your first transaction
-                    </Button>
-                  )}
-                  {transactions.length > 0 && (searchQuery || selectedCategory || selectedType || startDate || endDate) && (
-                    <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                      Clear filters
-                    </Button>
-                  )}
-                </motion.div>
-              )}
-            </div>
+          {paginatedTransactions.length > 0 ? (
+            viewMode === 'grid' ? (
+              <TransactionGrid
+                transactions={paginatedTransactions}
+                onEditTransaction={openEditDialog}
+                onDeleteTransaction={handleDeleteTransaction}
+              />
+            ) : (
+              <TransactionTable
+                transactions={paginatedTransactions}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onRowClick={openEditDialog}
+              />
+            )
           ) : (
-            <TransactionTable
-              transactions={paginatedTransactions}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={handleSort}
-              onRowClick={openEditDialog}
+            <EmptyTransactionState
+              hasTransactions={transactions.length > 0}
+              hasFilters={hasActiveFilters}
+              onAddTransaction={() => setIsAddingExpense(true)}
+              onClearFilters={clearFilters}
             />
           )}
           
           {filteredTransactions.length > itemsPerPage && (
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTransactions.length)} to {Math.min(currentPage * itemsPerPage, filteredTransactions.length)} of {filteredTransactions.length} transactions
-              </div>
-              <TransactionsPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
+            <PaginationInfo
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredTransactions.length}
+              onPageChange={setCurrentPage}
+            />
           )}
         </motion.div>
       </Layout>
