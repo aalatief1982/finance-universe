@@ -7,5 +7,6 @@ export interface Transaction {
   date: string;
   type?: 'income' | 'expense';
   notes?: string;
+  source?: 'manual' | 'sms';
   originalCurrency?: string;
 }

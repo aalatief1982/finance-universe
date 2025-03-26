@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -383,7 +382,7 @@ const Profile = () => {
               <FormLabel>Gender</FormLabel>
               <RadioGroup
                 value={editFormData.gender}
-                onValueChange={(value) => setEditFormData({...editFormData, gender: value})}
+                onValueChange={(value: 'male' | 'female' | null) => setEditFormData({...editFormData, gender: value})}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">

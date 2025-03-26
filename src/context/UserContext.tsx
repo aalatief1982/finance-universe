@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
 interface User {
@@ -9,6 +10,7 @@ interface User {
   gender: 'male' | 'female' | null;
   birthDate: Date | null;
   email?: string;
+  avatar?: string; // Added avatar property
   smsProviders: string[];
   completedOnboarding: boolean;
 }
