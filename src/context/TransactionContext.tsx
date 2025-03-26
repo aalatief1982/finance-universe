@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { transactionService, Transaction } from '@/services/TransactionService';
 import { useToast } from '@/components/ui/use-toast';
