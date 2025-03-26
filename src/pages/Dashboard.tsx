@@ -1,20 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import DashboardStats from '@/components/DashboardStats';
-import ExpenseChart from '@/components/ExpenseChart';
-import ExpenseCard from '@/components/ExpenseCard';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import ExpenseForm from '@/components/ExpenseForm';
-import { CATEGORIES, INITIAL_TRANSACTIONS, Transaction, generateChartData } from '@/lib/mock-data';
-import { formatDate } from '@/lib/formatters';
-import { Plus, MessageSquare, Filter, RefreshCw } from 'lucide-react';
+import { Dialog } from '@/components/ui/dialog';
+import { INITIAL_TRANSACTIONS, Transaction } from '@/lib/mock-data';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Import the new component files
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import MobileSmsButton from '@/components/dashboard/MobileSmsButton';
+import DashboardContent from '@/components/dashboard/DashboardContent';
+import TransactionDialog from '@/components/dashboard/TransactionDialog';
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -53,24 +51,6 @@ const Dashboard = () => {
     }
   }, [transactions, isLoading]);
 
-  const { categoryData, timelineData } = generateChartData(transactions);
-
-  const calculateStats = () => {
-    const income = transactions
-      .filter(t => t.amount > 0)
-      .reduce((sum, t) => sum + t.amount, 0);
-    
-    const expenses = transactions
-      .filter(t => t.amount < 0)
-      .reduce((sum, t) => sum + t.amount, 0);
-    
-    const balance = income + expenses;
-
-    return { income, expenses, balance };
-  };
-
-  const { income, expenses, balance } = calculateStats();
-
   const handleAddTransaction = (formData: any) => {
     const newTransaction: Transaction = {
       id: uuidv4(),
@@ -91,17 +71,6 @@ const Dashboard = () => {
     });
   };
 
-  // Filter transactions based on selected filter
-  const filteredTransactions = transactions.filter(tx => {
-    if (filter === 'all') return true;
-    return filter === 'income' ? tx.amount > 0 : tx.amount < 0;
-  });
-
-  // Get recent transactions
-  const recentTransactions = [...filteredTransactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
-
   return (
     <>
       <Layout>
@@ -111,144 +80,35 @@ const Dashboard = () => {
           transition={{ duration: 0.5 }}
           className="space-y-6"
         >
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">
-              {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
-            </h1>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                className="gap-1 hidden sm:flex"
-                asChild
-              >
-                <Link to="/process-sms">
-                  <MessageSquare size={18} />
-                  Import SMS
-                </Link>
-              </Button>
-              
-              <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
-                <DialogTrigger asChild>
-                  <Button className="gap-1">
-                    <Plus size={18} />
-                    Add Transaction
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <ExpenseForm 
-                    onSubmit={handleAddTransaction} 
-                    categories={CATEGORIES}
-                    onCancel={() => setIsAddingExpense(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-          
-          <DashboardStats 
-            income={income} 
-            expenses={expenses} 
-            balance={balance} 
+          <DashboardHeader 
+            user={user} 
+            setIsAddingExpense={setIsAddingExpense}
           />
           
-          <div className="sm:hidden">
-            <Button 
-              variant="outline" 
-              className="w-full gap-1 mb-4"
-              asChild
-            >
-              <Link to="/process-sms">
-                <MessageSquare size={18} />
-                Import Transactions from SMS
-              </Link>
-            </Button>
-          </div>
+          <MobileSmsButton />
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ExpenseChart 
-              expensesByCategory={categoryData}
-              expensesByDate={timelineData}
-            />
-            
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Recent Transactions</h2>
-                <div className="flex items-center gap-2">
-                  <TabsList className="h-8 bg-muted/50">
-                    <TabsTrigger 
-                      value="all" 
-                      className="text-xs px-3 h-7"
-                      onClick={() => setFilter('all')}
-                      data-state={filter === 'all' ? 'active' : 'inactive'}
-                    >
-                      All
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="income" 
-                      className="text-xs px-3 h-7"
-                      onClick={() => setFilter('income')}
-                      data-state={filter === 'income' ? 'active' : 'inactive'}
-                    >
-                      Income
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="expense" 
-                      className="text-xs px-3 h-7"
-                      onClick={() => setFilter('expense')}
-                      data-state={filter === 'expense' ? 'active' : 'inactive'}
-                    >
-                      Expenses
-                    </TabsTrigger>
-                  </TabsList>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <RefreshCw size={14} />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                {recentTransactions.length > 0 ? (
-                  recentTransactions.map((transaction) => (
-                    <ExpenseCard
-                      key={transaction.id}
-                      id={transaction.id}
-                      title={transaction.title}
-                      amount={transaction.amount}
-                      category={transaction.category}
-                      date={formatDate(transaction.date)}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-8 border rounded-lg flex flex-col items-center">
-                    <p className="text-muted-foreground mb-3">No transactions found</p>
-                    <div className="flex space-x-2">
-                      <Button size="sm" asChild>
-                        <Link to="/process-sms">
-                          <MessageSquare className="mr-1" size={16} />
-                          Import from SMS
-                        </Link>
-                      </Button>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          <Plus className="mr-1" size={16} />
-                          Add Manually
-                        </Button>
-                      </DialogTrigger>
-                    </div>
-                  </div>
-                )}
-                {recentTransactions.length > 0 && (
-                  <Button variant="outline" size="sm" className="w-full mt-4" asChild>
-                    <Link to="/transactions">
-                      View All Transactions
-                    </Link>
-                  </Button>
-                )}
-              </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center min-h-[300px]">
+              <p className="text-muted-foreground">Loading dashboard data...</p>
             </div>
-          </div>
+          ) : (
+            <DashboardContent 
+              transactions={transactions}
+              filter={filter}
+              setFilter={setFilter}
+              setIsAddingExpense={setIsAddingExpense}
+            />
+          )}
         </motion.div>
       </Layout>
+
+      <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
+        <TransactionDialog
+          isOpen={isAddingExpense}
+          onClose={() => setIsAddingExpense(false)}
+          onSubmit={handleAddTransaction}
+        />
+      </Dialog>
     </>
   );
 };
