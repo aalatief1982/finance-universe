@@ -20,7 +20,8 @@ export class SmsProcessingService {
           continue;
         }
         
-        const parsedTransaction = parseSmsMessage(message.message, message.sender);
+        const validatedMessage = validationResult.data;
+        const parsedTransaction = parseSmsMessage(validatedMessage.message, validatedMessage.sender);
         
         if (parsedTransaction) {
           const newTransaction: Transaction = {
