@@ -16,6 +16,7 @@ import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
 import SmsProviderSelection from "@/pages/SmsProviderSelection";
 import ProcessSmsMessages from "@/pages/ProcessSmsMessages";
+import ExpenseTrackerWireframes from "@/components/wireframes/ExpenseTrackerWireframes";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/wireframes" element={<ExpenseTrackerWireframes />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
