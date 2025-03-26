@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, Upload, UserRound, Calendar, Mail, X, User2 } from 'lucide-react';
+import { Camera, Upload, UserRound, Calendar, Mail, X, User2, Briefcase } from 'lucide-react';
 import WireframeButton from '../../WireframeButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
   const [gender, setGender] = useState<'male' | 'female' | null>(null);
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [email, setEmail] = useState('');
+  const [occupation, setOccupation] = useState('');
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { toast } = useToast();
   
@@ -71,6 +72,7 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
       gender,
       birthDate,
       email: email || undefined,
+      occupation: occupation || undefined,
       createdAt: new Date()
     };
     
@@ -216,6 +218,20 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
               />
             </PopoverContent>
           </Popover>
+        </div>
+        
+        <div>
+          <Label htmlFor="occupation">Occupation</Label>
+          <div className="flex items-center mt-1 relative">
+            <Briefcase className="w-4 h-4 text-muted-foreground absolute left-3" />
+            <Input
+              id="occupation"
+              placeholder="Enter your occupation"
+              className="pl-10"
+              value={occupation}
+              onChange={(e) => setOccupation(e.target.value)}
+            />
+          </div>
         </div>
         
         <div>

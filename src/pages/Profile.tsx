@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, MessageSquare, Shield, CreditCard, Wallet, User, Camera, Mail, Phone, Calendar, Trash2 } from 'lucide-react';
+import { ChevronRight, MessageSquare, Shield, CreditCard, Wallet, User, Camera, Mail, Phone, Calendar, Trash2, Briefcase } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -50,19 +50,21 @@ const Profile = () => {
     phone: user?.phone || '',
     gender: user?.gender || 'male',
     birthDate: user?.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : '',
+    occupation: user?.occupation || '',
   });
   
   const [profileCompletionPercent, setProfileCompletionPercent] = useState(() => {
     if (!user) return 20;
     
     let fields = 0;
-    const totalFields = 5; // fullName, email, phone, gender, birthDate
+    const totalFields = 6; // fullName, email, phone, gender, birthDate, occupation
     
     if (user.fullName) fields++;
     if (user.email) fields++;
     if (user.phone) fields++;
     if (user.gender) fields++;
     if (user.birthDate) fields++;
+    if (user.occupation) fields++;
     
     return Math.round((fields / totalFields) * 100);
   });
@@ -122,19 +124,21 @@ const Profile = () => {
       phone: editFormData.phone,
       gender: editFormData.gender as 'male' | 'female' | null,
       birthDate: editFormData.birthDate ? new Date(editFormData.birthDate) : null,
+      occupation: editFormData.occupation,
     });
     
     setIsEditing(false);
     
     // Calculate new profile completion percentage
     let fields = 0;
-    const totalFields = 5;
+    const totalFields = 6;
     
     if (editFormData.fullName) fields++;
     if (editFormData.email) fields++;
     if (editFormData.phone) fields++;
     if (editFormData.gender) fields++;
     if (editFormData.birthDate) fields++;
+    if (editFormData.occupation) fields++;
     
     setProfileCompletionPercent(Math.round((fields / totalFields) * 100));
     
@@ -284,6 +288,11 @@ const Profile = () => {
                   : 'Not provided'}
               </span>
             </div>
+            <div className="flex items-center text-sm">
+              <Briefcase className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-muted-foreground w-24">Occupation:</span>
+              <span className="font-medium">{user?.occupation || 'Not provided'}</span>
+            </div>
           </div>
         </div>
         
@@ -404,6 +413,17 @@ const Profile = () => {
                 type="date"
                 value={editFormData.birthDate}
                 onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <FormLabel htmlFor="occupation">Occupation</FormLabel>
+              <Input
+                id="occupation"
+                name="occupation"
+                value={editFormData.occupation}
+                onChange={handleInputChange}
+                placeholder="Enter your occupation"
               />
             </div>
           </div>

@@ -8,6 +8,7 @@ export interface User {
   gender?: 'male' | 'female' | null;
   birthDate?: Date | null;
   avatar?: string;
+  occupation?: string;
   hasProfile?: boolean;
   smsProviders?: string[];
   completedOnboarding?: boolean;
