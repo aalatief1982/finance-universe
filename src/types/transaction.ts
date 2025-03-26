@@ -1,20 +1,8 @@
 
-export interface Transaction {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  date: string;
-  type: 'income' | 'expense';
-  notes?: string;
-  source?: 'manual' | 'sms';
-  originalCurrency?: string;
-  smsDetails?: {
-    sender: string;
-    message: string;
-    timestamp: string;
-  };
-}
+import { z } from 'zod';
+import { transactionSchema } from '@/lib/validation';
+
+export type Transaction = z.infer<typeof transactionSchema>;
 
 export interface TransactionSummary {
   income: number;
@@ -34,3 +22,4 @@ export interface TimePeriodData {
 }
 
 export type TimePeriod = 'week' | 'month' | 'year';
+
