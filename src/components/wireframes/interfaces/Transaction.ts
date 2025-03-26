@@ -9,4 +9,9 @@ export interface Transaction {
   notes?: string;
   source?: 'manual' | 'sms';
   originalCurrency?: string;
+  smsDetails?: {
+    sender: string;
+    message: string;
+    timestamp: string;
+  };
 }
