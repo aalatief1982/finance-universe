@@ -16,13 +16,14 @@ export class SmsProcessingService {
         // Validate SMS message format
         const validationResult = validateData(smsMessageSchema, message);
         
-        // Properly handle the discriminated union using an if check
+        // Handle validation error case
         if (!validationResult.success) {
+          // Only access error when success is false, now TypeScript is happy
           console.warn('Invalid SMS message format:', validationResult.error);
           continue;
         }
         
-        // Now we can safely use validationResult.data because TypeScript knows it exists
+        // TypeScript now knows validationResult has the data property
         const validatedMessage = validationResult.data;
         const parsedTransaction = parseSmsMessage(validatedMessage.message, validatedMessage.sender);
         
