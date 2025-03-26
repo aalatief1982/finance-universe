@@ -10,11 +10,12 @@ interface UserData {
   email?: string;
   phone?: string;
   smsProviders?: string[];
+  smsStartDate?: string;
 }
 
 interface SMSProviderScreenProps {
   onNext: () => void;
-  onComplete: (providers: string[]) => void;
+  onComplete: (providers: string[], startDate?: string) => void;
   onSkip: () => void;
   userData: UserData;
   onUpdateUserData: (data: Partial<UserData>) => void;
@@ -23,7 +24,7 @@ interface SMSProviderScreenProps {
 const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserData }: SMSProviderScreenProps) => {
   const [selectedProviders, setSelectedProviders] = useState<string[]>(userData?.smsProviders || []);
   const [searchQuery, setSearchQuery] = useState('');
-  const [startDate, setStartDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>(userData?.smsStartDate || '');
   const [error, setError] = useState('');
 
   // Calculate today's date and 6 months ago
@@ -69,19 +70,21 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
       providers.find(p => p.id === id)?.name
     ).filter(Boolean) as string[];
     
-    // Also save the start date if selected
+    // Update user data with providers and start date
     const dataToUpdate: Partial<UserData> = {
-      smsProviders: selectedProviderNames
+      smsProviders: selectedProviderNames,
+      smsStartDate: startDate || undefined
     };
     
     onUpdateUserData(dataToUpdate);
-    onComplete(selectedProviderNames);
+    onComplete(selectedProviderNames, startDate);
   };
 
   // Handle date selection
   const handleDateSelect = () => {
     // For wireframe purposes, set to six months ago
-    setStartDate(formatDate(sixMonthsAgo));
+    const date = formatDate(sixMonthsAgo);
+    setStartDate(date);
   };
 
   return (

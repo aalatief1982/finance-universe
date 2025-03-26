@@ -6,12 +6,16 @@ interface CurrencySelectorProps {
   onChange: (currency: string) => void;
   className?: string;
   darkMode?: boolean;
+  currencies?: string[];
 }
 
-const CurrencySelector = ({ value, onChange, className = '', darkMode = false }: CurrencySelectorProps) => {
-  // List of common currencies
-  const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AED', 'INR', 'CAD', 'AUD', 'CNY'];
-  
+const CurrencySelector = ({ 
+  value, 
+  onChange, 
+  className = '', 
+  darkMode = false,
+  currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AED', 'INR', 'CAD', 'AUD', 'CNY']
+}: CurrencySelectorProps) => {
   return (
     <select 
       className={`rounded px-2 py-1 text-sm ${

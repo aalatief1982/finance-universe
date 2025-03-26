@@ -5,6 +5,7 @@ import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
 import { useTransactions } from '@/context/TransactionContext';
 import { useUser } from '@/context/UserContext';
+import CurrencySelector from '../CurrencySelector';
 import { Plus, BarChart, CreditCard, DollarSign, Filter, Settings, MessageSquare, RefreshCw } from 'lucide-react';
 
 interface UserData {
@@ -12,6 +13,7 @@ interface UserData {
   email?: string;
   phone?: string;
   smsProviders?: string[];
+  smsStartDate?: string;
 }
 
 interface DashboardScreenProps {
@@ -37,9 +39,6 @@ const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, onSettings,
   
   // Calculate summary statistics
   const { income, expenses, balance } = getTransactionsSummary();
-
-  // List of available currencies
-  const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AED'];
   
   // Format currency based on selection
   const formatCurrency = (amount: number) => {
@@ -60,16 +59,12 @@ const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, onSettings,
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm opacity-80">Current Balance</span>
             <div className="flex items-center">
-              <select 
-                className="bg-blue-700 text-white text-sm rounded px-2 py-1 mr-1 border-none"
+              <CurrencySelector 
                 value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-              >
-                {currencies.map(curr => (
-                  <option key={curr} value={curr}>{curr}</option>
-                ))}
-              </select>
-              <DollarSign size={18} className="opacity-80" />
+                onChange={setCurrency}
+                darkMode={true}
+              />
+              <DollarSign size={18} className="opacity-80 ml-1" />
             </div>
           </div>
           <h2 className="text-2xl font-bold">{formatCurrency(balance)}</h2>
