@@ -32,6 +32,7 @@ const Transactions = () => {
     setItemsPerPage,
     sortField,
     sortDirection,
+    setSortDirection, // Added this missing import
     searchQuery,
     setSearchQuery,
     selectedCategory,
@@ -52,7 +53,8 @@ const Transactions = () => {
     clearFilters,
     uniqueCategories,
     hasActiveFilters,
-    totalPages
+    totalPages,
+    setCurrentTransaction // Added this missing import
   } = useTransactionsState();
 
   return (
@@ -93,7 +95,7 @@ const Transactions = () => {
             sortField={sortField}
             sortDirection={sortDirection}
             onSort={handleSort}
-            onSortDirectionChange={(direction) => sortDirection !== direction && setSortDirection(direction)}
+            onSortDirectionChange={(direction) => setSortDirection(direction)}
           />
           
           <TransactionsContent 
