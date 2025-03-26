@@ -22,8 +22,11 @@ export function useTransactionsPagination({ sortedTransactions }: UseTransaction
 
   // Reset to first page when sorted transactions change (excluding pagination changes)
   useEffect(() => {
-    setCurrentPage(1);
-  }, [sortedTransactions.length]);
+    if (currentPage > 1 && sortedTransactions.length > 0 && 
+        Math.ceil(sortedTransactions.length / itemsPerPage) < currentPage) {
+      setCurrentPage(1);
+    }
+  }, [sortedTransactions.length, itemsPerPage, currentPage]);
 
   return {
     paginatedTransactions,
