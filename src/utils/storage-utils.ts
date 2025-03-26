@@ -24,7 +24,6 @@ export const getStoredTransactions = (): Transaction[] => {
         if (validationResult.success) {
           validTransactions.push(validationResult.data);
         } else {
-          // Now we check for success before accessing error
           console.warn(`Invalid transaction at index ${index}:`, validationResult.error);
         }
       });

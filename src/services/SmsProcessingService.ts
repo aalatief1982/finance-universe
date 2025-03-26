@@ -16,7 +16,6 @@ export class SmsProcessingService {
         // Validate SMS message format
         const validationResult = validateData(smsMessageSchema, message);
         if (!validationResult.success) {
-          // Now we check for success before accessing error
           console.warn('Invalid SMS message format:', validationResult.error);
           continue;
         }
