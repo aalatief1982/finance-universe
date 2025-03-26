@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
@@ -9,6 +10,10 @@ interface UserData {
   email?: string;
   phone?: string;
   smsProviders?: string[];
+  preferences?: {
+    theme?: 'light' | 'dark' | 'system';
+    notifications?: boolean;
+  };
 }
 
 interface SettingsScreenProps {
@@ -18,8 +23,10 @@ interface SettingsScreenProps {
 }
 
 const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenProps) => {
-  const [darkMode, setDarkMode] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [darkMode, setDarkMode] = useState(userData?.preferences?.theme === 'dark');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    userData?.preferences?.notifications !== false
+  );
   
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -83,7 +90,7 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
   
   return (
     <WireframeContainer>
-      <WireframeHeader title="Settings" />
+      <WireframeHeader title="Settings" onBack={onBack} />
       
       <div className="space-y-6">
         {settingsSections.map(section => (
