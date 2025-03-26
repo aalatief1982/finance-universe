@@ -73,8 +73,7 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
     
     toast({
       title: "Setup complete",
-      description: "Your account is ready to use",
-      variant: "success"
+      description: "Your account is ready to use"
     });
     
     // If the parent component provided an onNext callback, call it
