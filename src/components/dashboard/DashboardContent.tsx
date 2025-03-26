@@ -30,8 +30,8 @@ const DashboardContent = ({
   
   const balance = income + expenses;
 
-  // Generate chart data
-  const { categoryData, timelineData } = generateChartData(transactions);
+  // Generate chart data - casting to ensure type compatibility
+  const { categoryData, timelineData } = generateChartData(transactions as any);
 
   return (
     <>

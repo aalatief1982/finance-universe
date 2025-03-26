@@ -1,15 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-
-export type Transaction = {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  date: string;
-  type: 'expense' | 'income';
-  notes?: string;
-};
+import { Transaction } from '@/types/transaction';
 
 // Generate a random date within the last 30 days
 const getRandomDate = () => {

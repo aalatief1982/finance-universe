@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Dialog } from '@/components/ui/dialog';
-import { INITIAL_TRANSACTIONS, Transaction } from '@/lib/mock-data';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
+import { Transaction } from '@/types/transaction';
 
 // Import the new component files
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -28,13 +28,18 @@ const Dashboard = () => {
       setIsLoading(true);
       const storedTransactions = localStorage.getItem('transactions');
       if (storedTransactions) {
-        setTransactions(JSON.parse(storedTransactions));
+        // Cast the parsed data to ensure type compatibility
+        const parsedTransactions = JSON.parse(storedTransactions) as Transaction[];
+        setTransactions(parsedTransactions);
       } else {
-        setTransactions(INITIAL_TRANSACTIONS);
+        // Import here to avoid circular dependency
+        const { INITIAL_TRANSACTIONS } = require('@/lib/mock-data');
+        setTransactions(INITIAL_TRANSACTIONS as Transaction[]);
       }
     } catch (error) {
       console.error('Error loading transactions:', error);
-      setTransactions(INITIAL_TRANSACTIONS);
+      const { INITIAL_TRANSACTIONS } = require('@/lib/mock-data');
+      setTransactions(INITIAL_TRANSACTIONS as Transaction[]);
     } finally {
       setIsLoading(false);
     }
