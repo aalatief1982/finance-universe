@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { INITIAL_TRANSACTIONS } from '@/lib/mock-data';
@@ -211,6 +210,7 @@ export function useTransactionsState() {
     filteredTransactions,
     paginatedTransactions,
     currentTransaction,
+    setCurrentTransaction, // Explicitly adding this function to the return object
     isAddingExpense,
     setIsAddingExpense,
     isEditingExpense,
@@ -221,6 +221,7 @@ export function useTransactionsState() {
     setItemsPerPage,
     sortField,
     sortDirection,
+    setSortDirection, // Explicitly adding this function to the return object
     searchQuery,
     setSearchQuery,
     selectedCategory,
