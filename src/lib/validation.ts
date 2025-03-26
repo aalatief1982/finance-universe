@@ -22,7 +22,25 @@ export const transactionSchema = z.object({
     .optional()
 });
 
-// ... keep existing code (SMS message validation schema, currency conversion validation schema, locale settings validation schema)
+// SMS message validation schema
+export const smsMessageSchema = z.object({
+  sender: z.string(),
+  message: z.string(),
+  date: z.date()
+});
+
+// Currency conversion validation schema
+export const currencyConversionSchema = z.object({
+  from: z.string(),
+  to: z.string(),
+  amount: z.number()
+});
+
+// Locale settings validation schema
+export const localeSettingsSchema = z.object({
+  currency: z.nativeEnum(SupportedCurrency),
+  language: z.string()
+});
 
 // Define the result type explicitly for better type safety
 export type ValidationResult<T> = 
