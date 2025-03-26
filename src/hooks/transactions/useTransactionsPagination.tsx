@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Transaction } from '@/types/transaction';
 
 interface UseTransactionsPaginationProps {
@@ -14,13 +14,19 @@ export function useTransactionsPagination({ sortedTransactions }: UseTransaction
   // Calculate total pages
   const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
 
+  // Update paginated transactions whenever dependencies change
   useEffect(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    setPaginatedTransactions(sortedTransactions.slice(startIndex, endIndex));
+    try {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      setPaginatedTransactions(sortedTransactions.slice(startIndex, endIndex));
+    } catch (error) {
+      console.error('Error updating paginated transactions:', error);
+      setPaginatedTransactions([]);
+    }
   }, [sortedTransactions, currentPage, itemsPerPage]);
 
-  // Reset to first page when sorted transactions change (excluding pagination changes)
+  // Reset to first page when sorted transactions change significantly
   useEffect(() => {
     if (currentPage > 1 && sortedTransactions.length > 0 && 
         Math.ceil(sortedTransactions.length / itemsPerPage) < currentPage) {

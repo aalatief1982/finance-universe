@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 import { useToast } from '@/components/ui/use-toast';
 import { INITIAL_TRANSACTIONS } from '@/lib/mock-data';
-import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 
 export function useTransactionsCrud() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -15,10 +14,15 @@ export function useTransactionsCrud() {
 
   useEffect(() => {
     // Load transactions from localStorage or use initial data
-    const storedTransactions = localStorage.getItem('transactions');
-    if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
-    } else {
+    try {
+      const storedTransactions = localStorage.getItem('transactions');
+      if (storedTransactions) {
+        setTransactions(JSON.parse(storedTransactions));
+      } else {
+        setTransactions(INITIAL_TRANSACTIONS);
+      }
+    } catch (error) {
+      console.error('Error loading transactions from localStorage:', error);
       setTransactions(INITIAL_TRANSACTIONS);
     }
   }, []);
@@ -26,7 +30,11 @@ export function useTransactionsCrud() {
   useEffect(() => {
     // Save transactions to localStorage whenever they change
     if (transactions.length > 0) {
-      localStorage.setItem('transactions', JSON.stringify(transactions));
+      try {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+      } catch (error) {
+        console.error('Error saving transactions to localStorage:', error);
+      }
     }
   }, [transactions]);
 

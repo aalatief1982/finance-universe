@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -23,23 +22,36 @@ const Dashboard = () => {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const { toast } = useToast();
   const { user } = useUser();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Load transactions from localStorage or use initial data
-    const storedTransactions = localStorage.getItem('transactions');
-    if (storedTransactions) {
-      setTransactions(JSON.parse(storedTransactions));
-    } else {
+    try {
+      setIsLoading(true);
+      const storedTransactions = localStorage.getItem('transactions');
+      if (storedTransactions) {
+        setTransactions(JSON.parse(storedTransactions));
+      } else {
+        setTransactions(INITIAL_TRANSACTIONS);
+      }
+    } catch (error) {
+      console.error('Error loading transactions:', error);
       setTransactions(INITIAL_TRANSACTIONS);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     // Save transactions to localStorage whenever they change
-    if (transactions.length > 0) {
-      localStorage.setItem('transactions', JSON.stringify(transactions));
+    if (!isLoading && transactions.length > 0) {
+      try {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+      } catch (error) {
+        console.error('Error saving transactions:', error);
+      }
     }
-  }, [transactions]);
+  }, [transactions, isLoading]);
 
   const { categoryData, timelineData } = generateChartData(transactions);
 
