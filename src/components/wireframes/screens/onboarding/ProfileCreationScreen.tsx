@@ -1,5 +1,11 @@
 
 import React, { useState } from 'react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import WireframeButton from '../../WireframeButton';
 
 interface UserData {
@@ -15,6 +21,13 @@ interface ProfileCreationScreenProps {
   errors: {[key: string]: string};
 }
 
+// Create a schema for form validation
+const formSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  phone: z.string().min(1, { message: "Phone number is required" })
+});
+
 const ProfileCreationScreen = ({ 
   onComplete, 
   userData, 
@@ -23,95 +36,96 @@ const ProfileCreationScreen = ({
 }: ProfileCreationScreenProps) => {
   const [localErrors, setLocalErrors] = useState<{[key: string]: string}>({});
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    onUpdateUserData({ [name]: value });
+  // Initialize the form with react-hook-form and zod validation
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: userData.name || "",
+      email: userData.email || "",
+      phone: userData.phone || ""
+    }
+  });
+
+  // Handle form submission
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    onUpdateUserData(data);
+    onComplete();
   };
 
-  const validateForm = (): boolean => {
-    let isValid = true;
-    const newErrors: {[key: string]: string} = {};
-    
-    if (!userData.name || userData.name.trim() === '') {
-      newErrors.name = 'Name is required';
-      isValid = false;
-    }
-    
-    if (!userData.email || userData.email.trim() === '') {
-      newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-      isValid = false;
-    }
-    
-    if (!userData.phone || userData.phone.trim() === '') {
-      newErrors.phone = 'Phone number is required';
-      isValid = false;
-    }
-    
-    setLocalErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (validateForm()) {
-      onComplete();
-    }
-  };
-
-  // Use combined errors from props and local state
+  // For backward compatibility with the old error system
   const displayErrors = { ...errors, ...localErrors };
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Full Name</label>
-          <input 
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
             name="name"
-            type="text" 
-            placeholder="Enter your full name" 
-            className={`w-full p-2 border rounded-lg ${displayErrors.name ? 'border-red-500' : ''}`}
-            value={userData.name || ''}
-            onChange={handleChange}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter your full name" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+                {displayErrors.name && !form.formState.errors.name && (
+                  <p className="text-red-500 text-sm mt-1">{displayErrors.name}</p>
+                )}
+              </FormItem>
+            )}
           />
-          {displayErrors.name && <p className="text-red-500 text-sm mt-1">{displayErrors.name}</p>}
-        </div>
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Email Address</label>
-          <input 
+          
+          <FormField
+            control={form.control}
             name="email"
-            type="email" 
-            placeholder="you@example.com" 
-            className={`w-full p-2 border rounded-lg ${displayErrors.email ? 'border-red-500' : ''}`}
-            value={userData.email || ''}
-            onChange={handleChange}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="email"
+                    placeholder="you@example.com" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+                {displayErrors.email && !form.formState.errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{displayErrors.email}</p>
+                )}
+              </FormItem>
+            )}
           />
-          {displayErrors.email && <p className="text-red-500 text-sm mt-1">{displayErrors.email}</p>}
-        </div>
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Phone Number</label>
-          <input 
+          
+          <FormField
+            control={form.control}
             name="phone"
-            type="tel" 
-            placeholder="+1 (000) 000-0000" 
-            className={`w-full p-2 border rounded-lg ${displayErrors.phone ? 'border-red-500' : ''}`}
-            value={userData.phone || ''}
-            onChange={handleChange}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="tel"
+                    placeholder="+1 (000) 000-0000" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+                {displayErrors.phone && !form.formState.errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{displayErrors.phone}</p>
+                )}
+              </FormItem>
+            )}
           />
-          {displayErrors.phone && <p className="text-red-500 text-sm mt-1">{displayErrors.phone}</p>}
-        </div>
-        
-        <div className="mt-2">
-          <button type="submit" className="w-full py-2 px-4 rounded-lg text-center font-semibold transition-colors bg-blue-600 text-white hover:bg-blue-700">
-            Create Account
-          </button>
-        </div>
-      </form>
+          
+          <div className="mt-6">
+            <WireframeButton type="submit">Create Account</WireframeButton>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 };

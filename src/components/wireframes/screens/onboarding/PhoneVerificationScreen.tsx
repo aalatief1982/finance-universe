@@ -1,5 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useUser } from '@/context/UserContext';
 import WireframeButton from '../../WireframeButton';
 
 interface PhoneVerificationScreenProps {
@@ -7,13 +10,23 @@ interface PhoneVerificationScreenProps {
 }
 
 const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const { user, updateUser } = useUser();
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
   const [isVerificationSent, setIsVerificationSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState(['', '', '', '']);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [error, setError] = useState('');
   
   const handleSendCode = () => {
-    if (!phoneNumber) return;
+    if (!phoneNumber) {
+      setError('Please enter a valid phone number');
+      return;
+    }
+    
+    setError('');
     setIsVerificationSent(true);
+    // Update the user context with the phone number
+    updateUser({ phone: phoneNumber });
     // In a real app, this would send a verification code to the phone number
   };
   
@@ -35,7 +48,11 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     // Check if all inputs are filled
     if (newCode.every(digit => digit) && newCode.join('').length === 4) {
       // In a real app, verify the code here
-      setTimeout(onNext, 500); // Simulate verification
+      setIsVerifying(true);
+      setTimeout(() => {
+        setIsVerifying(false);
+        onNext();
+      }, 1000); // Simulate verification delay
     }
   };
 
@@ -49,19 +66,33 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     }
   };
 
+  const handleResendCode = () => {
+    // Reset verification code
+    setVerificationCode(['', '', '', '']);
+    // In a real app, this would resend the verification code
+    
+    // Show a user-friendly message
+    setError('A new code has been sent to your phone');
+    setTimeout(() => {
+      setError('');
+    }, 3000);
+  };
+
   return (
     <div className="space-y-4">
       {!isVerificationSent ? (
         <>
           <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Enter Mobile Number</label>
-            <input 
+            <Label htmlFor="phone-number" className="block text-gray-700 mb-2">Enter Mobile Number</Label>
+            <Input 
+              id="phone-number"
               type="tel" 
               placeholder="+1 (000) 000-0000" 
-              className="w-full p-2 border rounded-lg"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
+              className={error ? "border-red-500" : ""}
             />
+            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
           </div>
           <WireframeButton onClick={handleSendCode}>Send Verification Code</WireframeButton>
         </>
@@ -70,33 +101,42 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
           <div className="text-center mb-4">
             <p className="text-gray-700 mb-1">Enter the 4-digit code sent to</p>
             <p className="font-bold">{phoneNumber}</p>
+            {error && <p className="text-blue-500 text-sm mt-2">{error}</p>}
           </div>
           
           <div className="flex justify-center space-x-2 mb-6">
             {verificationCode.map((digit, index) => (
-              <input
+              <Input
                 key={index}
                 id={`code-input-${index}`}
                 type="text"
-                className="w-12 h-12 text-center text-xl border rounded-lg"
+                className="w-12 h-12 text-center text-xl"
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
+                autoFocus={index === 0 && isVerificationSent}
               />
             ))}
           </div>
           
           <div className="text-center">
-            <button className="text-blue-600 underline">Resend Code</button>
+            <button 
+              className="text-blue-600 underline" 
+              onClick={handleResendCode}
+              type="button"
+            >
+              Resend Code
+            </button>
           </div>
           
           <div className="mt-4">
             <WireframeButton 
               onClick={onNext}
               variant={verificationCode.every(digit => digit) ? 'primary' : 'secondary'}
+              disabled={isVerifying}
             >
-              Verify and Continue
+              {isVerifying ? 'Verifying...' : 'Verify and Continue'}
             </WireframeButton>
           </div>
         </>
