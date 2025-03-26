@@ -11,6 +11,7 @@ export interface Transaction {
   type: 'income' | 'expense';
   notes?: string;
   source?: 'manual' | 'sms';
+  originalCurrency?: string;
   smsDetails?: {
     sender: string;
     message: string;
