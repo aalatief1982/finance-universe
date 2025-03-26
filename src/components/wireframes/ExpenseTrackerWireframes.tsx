@@ -7,16 +7,42 @@ import AddTransactionScreen from './screens/AddTransactionScreen';
 import ReportsScreen from './screens/ReportsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 
+// Simple state management for the wireframes
+interface UserData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  smsProviders?: string[];
+}
+
 const ExpenseTrackerWireframes = () => {
   const [currentScreen, setCurrentScreen] = useState('onboarding');
+  const [userData, setUserData] = useState<UserData>({});
+
+  const handleUpdateUserData = (data: Partial<UserData>) => {
+    setUserData((prev) => ({ ...prev, ...data }));
+  };
 
   const screens: {[key: string]: JSX.Element} = {
-    onboarding: <OnboardingScreen onNext={() => setCurrentScreen('smsProvider')} />,
-    smsProvider: <SMSProviderScreen onNext={() => setCurrentScreen('dashboard')} />,
+    onboarding: (
+      <OnboardingScreen 
+        onNext={() => setCurrentScreen('smsProvider')} 
+        userData={userData}
+        onUpdateUserData={handleUpdateUserData}
+      />
+    ),
+    smsProvider: (
+      <SMSProviderScreen 
+        onNext={() => setCurrentScreen('dashboard')}
+        userData={userData}
+        onUpdateUserData={handleUpdateUserData}
+      />
+    ),
     dashboard: (
       <DashboardScreen 
         onAddTransaction={() => setCurrentScreen('addTransaction')}
         onReports={() => setCurrentScreen('reports')}
+        userData={userData}
       />
     ),
     addTransaction: <AddTransactionScreen onCancel={() => setCurrentScreen('dashboard')} />,

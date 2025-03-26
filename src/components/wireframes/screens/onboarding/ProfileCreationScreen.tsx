@@ -1,40 +1,61 @@
 
 import React from 'react';
 import WireframeButton from '../../WireframeButton';
-import { Calendar, Camera } from 'lucide-react';
+
+interface UserData {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
 
 interface ProfileCreationScreenProps {
   onComplete: () => void;
+  userData: UserData;
+  onUpdateUserData: (data: Partial<UserData>) => void;
+  errors: {[key: string]: string};
 }
 
-const ProfileCreationScreen = ({ onComplete }: ProfileCreationScreenProps) => {
+const ProfileCreationScreen = ({ 
+  onComplete, 
+  userData, 
+  onUpdateUserData,
+  errors 
+}: ProfileCreationScreenProps) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    onUpdateUserData({ [name]: value });
+  };
+
   return (
-    <div>
-      <div className="flex justify-center mb-4">
-        <div className="bg-gray-200 w-32 h-32 rounded-full flex items-center justify-center">
-          <Camera className="text-gray-500" size={48} />
-        </div>
-      </div>
-      <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-2">Full Name</label>
         <input 
+          name="name"
           type="text" 
-          placeholder="Full Name" 
-          className="w-full p-2 border rounded-lg"
+          placeholder="Enter your full name" 
+          className={`w-full p-2 border rounded-lg ${errors.name ? 'border-red-500' : ''}`}
+          value={userData.name || ''}
+          onChange={handleChange}
         />
-        <div className="flex space-x-2">
-          <button className="flex-1 py-2 border rounded-lg">Male</button>
-          <button className="flex-1 py-2 border rounded-lg">Female</button>
-        </div>
-        <div className="flex items-center border rounded-lg p-2">
-          <Calendar className="mr-2 text-gray-500" size={24} />
-          <span>Select Birth Date</span>
-        </div>
+        {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+      </div>
+      
+      <div className="mb-4">
+        <label className="block text-gray-700 mb-2">Email Address</label>
         <input 
+          name="email"
           type="email" 
-          placeholder="Email (Optional)" 
-          className="w-full p-2 border rounded-lg"
+          placeholder="you@example.com" 
+          className={`w-full p-2 border rounded-lg ${errors.email ? 'border-red-500' : ''}`}
+          value={userData.email || ''}
+          onChange={handleChange}
         />
-        <WireframeButton onClick={onComplete}>Create Profile</WireframeButton>
+        {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+      </div>
+      
+      <div className="mt-2">
+        <WireframeButton onClick={onComplete}>Create Account</WireframeButton>
       </div>
     </div>
   );
