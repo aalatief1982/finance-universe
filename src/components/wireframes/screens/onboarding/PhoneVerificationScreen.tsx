@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { useUser } from '@/context/UserContext';
 import WireframeButton from '../../WireframeButton';
 import { motion } from 'framer-motion';
-import { Phone, Loader2 } from 'lucide-react';
+import { Phone, Loader2, Info } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 interface PhoneVerificationScreenProps {
   onNext: () => void;
@@ -44,7 +45,8 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
         setSuccess('Verification code sent successfully!');
         toast({
           title: "Verification code sent",
-          description: "Please check your phone for the verification code",
+          description: "For demo purposes, the code is 1234",
+          variant: "default",
         });
         
         // In a real app, this would send a verification code to the phone number
@@ -57,34 +59,15 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     }
   };
   
-  const handleVerificationCodeChange = (index: number, value: string) => {
-    if (value.length > 1) return; // Only allow one character per input
+  const handleVerificationCodeChange = (value: string) => {
+    const codeArray = value.split('').slice(0, 4);
+    // Pad with empty strings if less than 4 characters
+    const paddedArray = [...codeArray, ...Array(4 - codeArray.length).fill('')];
+    setVerificationCode(paddedArray);
     
-    const newCode = [...verificationCode];
-    newCode[index] = value;
-    setVerificationCode(newCode);
-    
-    // Auto-focus next input if current one is filled
-    if (value && index < 3) {
-      const nextInput = document.getElementById(`code-input-${index + 1}`);
-      if (nextInput) {
-        nextInput.focus();
-      }
-    }
-    
-    // Check if all inputs are filled for auto-verification
-    if (newCode.every(digit => digit) && newCode.join('').length === 4) {
-      handleVerifyCode();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
-    // Handle backspace to go to previous input
-    if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
-      const prevInput = document.getElementById(`code-input-${index - 1}`);
-      if (prevInput) {
-        prevInput.focus();
-      }
+    // If we have a complete 4-digit code, verify it
+    if (codeArray.length === 4) {
+      handleVerifyCode(codeArray.join(''));
     }
   };
 
@@ -101,7 +84,8 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
         setSuccess('A new code has been sent to your phone');
         toast({
           title: "Code resent",
-          description: "A new verification code has been sent to your phone",
+          description: "For demo purposes, the code is 1234",
+          variant: "default",
         });
         setTimeout(() => {
           setSuccess('');
@@ -115,15 +99,15 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     }
   };
   
-  const handleVerifyCode = async () => {
-    const code = verificationCode.join('');
-    if (code.length !== 4) {
+  const handleVerifyCode = async (code?: string) => {
+    const codeToVerify = code || verificationCode.join('');
+    if (codeToVerify.length !== 4) {
       setError('Please enter a valid 4-digit code');
       return;
     }
     
     try {
-      const success = await confirmPhoneVerification(code);
+      const success = await confirmPhoneVerification(codeToVerify);
       
       if (success) {
         setSuccess('Phone number verified successfully!');
@@ -143,6 +127,11 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
         // Error message is handled by the context
         setVerificationCode(['', '', '', '']);
         setError('Invalid verification code. Please try again.');
+        toast({
+          title: "Verification failed",
+          description: "Please use code 1234 for this demo",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setError('Verification failed. Please try again.');
@@ -212,20 +201,31 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
             {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
           
-          <div className="flex justify-center space-x-3 mb-6">
-            {verificationCode.map((digit, index) => (
-              <Input
-                key={index}
-                id={`code-input-${index}`}
-                type="text"
-                className="w-14 h-14 text-center text-xl font-semibold"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                autoFocus={index === 0 && isVerificationSent}
-              />
-            ))}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+            <div className="flex items-start">
+              <Info className="h-5 w-5 text-amber-500 mt-0.5 mr-2" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">Demo Info</p>
+                <p className="text-xs text-amber-700">
+                  For this demo, please use code: <span className="font-bold">1234</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-center mb-6">
+            <InputOTP
+              maxLength={4}
+              value={verificationCode.join('')}
+              onChange={handleVerificationCodeChange}
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+              </InputOTPGroup>
+            </InputOTP>
           </div>
           
           <div className="text-center">
@@ -241,7 +241,7 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
           
           <div className="mt-6">
             <WireframeButton 
-              onClick={handleVerifyCode}
+              onClick={() => handleVerifyCode()}
               variant={verificationCode.every(digit => digit) ? 'primary' : 'secondary'}
               disabled={isLoading || !verificationCode.every(digit => digit)}
               className="w-full"
