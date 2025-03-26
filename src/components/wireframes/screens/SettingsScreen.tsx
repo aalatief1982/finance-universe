@@ -1,22 +1,46 @@
-
 import React, { useState } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
 import { Bell, Lock, CreditCard, HelpCircle, LogOut, Moon, User, MessageSquare } from 'lucide-react';
 
-interface SettingsScreenProps {}
+interface UserData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  smsProviders?: string[];
+}
 
-const SettingsScreen = () => {
+interface SettingsScreenProps {
+  onBack: () => void;
+  userData: UserData;
+  onUpdateUserData: (data: Partial<UserData>) => void;
+}
+
+const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenProps) => {
   const [darkMode, setDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
+    // Update user preferences when toggling dark mode
+    onUpdateUserData({ 
+      preferences: { 
+        theme: darkMode ? 'light' : 'dark',
+        notifications: notificationsEnabled 
+      } 
+    });
   };
   
   const toggleNotifications = () => {
     setNotificationsEnabled(!notificationsEnabled);
+    // Update user preferences when toggling notifications
+    onUpdateUserData({ 
+      preferences: { 
+        theme: darkMode ? 'dark' : 'light',
+        notifications: !notificationsEnabled 
+      } 
+    });
   };
   
   const settingsSections = [
