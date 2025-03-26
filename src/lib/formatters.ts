@@ -30,9 +30,12 @@ export const dateToString = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
-// Group array of transactions by month
-export const groupByMonth = <T extends { date: string }>(items: T[]): Record<string, T[]> => {
+// Group array of transactions by month - updated to handle optional date
+export const groupByMonth = <T extends { date?: string }>(items: T[]): Record<string, T[]> => {
   return items.reduce((acc: Record<string, T[]>, item) => {
+    // Skip items without a date property
+    if (!item.date) return acc;
+    
     const date = new Date(item.date);
     const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     
