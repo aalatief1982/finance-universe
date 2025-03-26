@@ -6,6 +6,7 @@ import WireframeHeader from '../WireframeHeader';
 import WelcomeScreen from './onboarding/WelcomeScreen';
 import PhoneVerificationScreen from './onboarding/PhoneVerificationScreen';
 import ProfileCreationScreen from './onboarding/ProfileCreationScreen';
+import SmsProviderSelectionScreen from './onboarding/SmsProviderSelectionScreen';
 
 interface UserData {
   name?: string;
@@ -25,7 +26,7 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   
-  const screenTitles = ['Welcome', 'Phone Verification', 'Profile Creation'];
+  const screenTitles = ['Welcome', 'Phone Verification', 'Profile Creation', 'SMS Providers'];
   
   // Update user context when userData changes
   useEffect(() => {
@@ -35,7 +36,7 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   }, [userData, updateUser]);
   
   const handleNext = () => {
-    if (step < 2) {
+    if (step < 3) {
       setStep(step + 1);
     } else {
       // Validate before completing onboarding
@@ -68,6 +69,11 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSelectSmsProviders = (selectedProviders: string[]) => {
+    onUpdateUserData({ smsProviders: selectedProviders });
+    handleNext();
+  };
+
   const renderStep = () => {
     switch (step) {
       case 0:
@@ -85,6 +91,12 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
             userData={userData}
             onUpdateUserData={onUpdateUserData}
             errors={errors}
+          />
+        );
+      case 3:
+        return (
+          <SmsProviderSelectionScreen 
+            onComplete={handleSelectSmsProviders}
           />
         );
       default:

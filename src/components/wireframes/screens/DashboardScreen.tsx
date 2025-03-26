@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
-import { Plus, BarChart, CreditCard, DollarSign, Filter, Settings } from 'lucide-react';
+import { useTransactions } from '@/context/TransactionContext';
+import { useUser } from '@/context/UserContext';
+import { Plus, BarChart, CreditCard, DollarSign, Filter, Settings, MessageSquare } from 'lucide-react';
 
 interface UserData {
   name?: string;
@@ -15,37 +17,24 @@ interface UserData {
 interface DashboardScreenProps {
   onAddTransaction: () => void;
   onReports: () => void;
+  onImportSms: () => void;
   userData?: UserData;
 }
 
-// Mock transaction data
-const mockTransactions = [
-  { id: 1, title: 'Grocery Shopping', amount: -87.65, date: '2023-06-10', category: 'Food' },
-  { id: 2, title: 'Salary Deposit', amount: 2400.00, date: '2023-06-01', category: 'Income' },
-  { id: 3, title: 'Coffee Shop', amount: -4.50, date: '2023-06-08', category: 'Food' },
-  { id: 4, title: 'Gas Station', amount: -45.00, date: '2023-06-05', category: 'Transportation' },
-];
-
-const DashboardScreen = ({ onAddTransaction, onReports, userData }: DashboardScreenProps) => {
+const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, userData }: DashboardScreenProps) => {
   const [activeTab, setActiveTab] = useState('all');
   const [period, setPeriod] = useState('month');
+  const { transactions, getTransactionsSummary } = useTransactions();
+  const { user } = useUser();
   
   // Filter transactions based on activeTab
-  const filteredTransactions = mockTransactions.filter(tx => {
+  const filteredTransactions = transactions.filter(tx => {
     if (activeTab === 'all') return true;
     return activeTab === 'income' ? tx.amount > 0 : tx.amount < 0;
-  });
+  }).slice(0, 5); // Just show the most recent 5
   
   // Calculate summary statistics
-  const totalIncome = mockTransactions
-    .filter(tx => tx.amount > 0)
-    .reduce((sum, tx) => sum + tx.amount, 0);
-    
-  const totalExpense = mockTransactions
-    .filter(tx => tx.amount < 0)
-    .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-    
-  const balance = totalIncome - totalExpense;
+  const { income, expenses, balance } = getTransactionsSummary();
 
   return (
     <WireframeContainer>
@@ -61,11 +50,11 @@ const DashboardScreen = ({ onAddTransaction, onReports, userData }: DashboardScr
           <div className="flex justify-between mt-4 text-sm">
             <div>
               <span className="block opacity-80">Income</span>
-              <span className="font-semibold">+${totalIncome.toFixed(2)}</span>
+              <span className="font-semibold">+${income.toFixed(2)}</span>
             </div>
             <div>
               <span className="block opacity-80">Expenses</span>
-              <span className="font-semibold">-${totalExpense.toFixed(2)}</span>
+              <span className="font-semibold">-${expenses.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -111,22 +100,36 @@ const DashboardScreen = ({ onAddTransaction, onReports, userData }: DashboardScr
         </div>
         
         <div className="space-y-2 max-h-52 overflow-y-auto">
-          {filteredTransactions.map(tx => (
-            <div key={tx.id} className="flex justify-between items-center p-3 bg-white border rounded-lg">
-              <div className="flex items-center">
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                  <CreditCard size={16} className="text-gray-500" />
+          {filteredTransactions.length > 0 ? (
+            filteredTransactions.map(tx => (
+              <div key={tx.id} className="flex justify-between items-center p-3 bg-white border rounded-lg">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                    <CreditCard size={16} className="text-gray-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm">{tx.title}</h3>
+                    <span className="text-xs text-gray-500">{tx.date} • {tx.category}</span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-sm">{tx.title}</h3>
-                  <span className="text-xs text-gray-500">{tx.date} • {tx.category}</span>
-                </div>
+                <span className={`font-semibold ${tx.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                  {tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}
+                </span>
               </div>
-              <span className={`font-semibold ${tx.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                {tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}
-              </span>
+            ))
+          ) : (
+            <div className="text-center py-6 bg-gray-50 border rounded-lg">
+              <p className="text-gray-500 mb-2">No transactions to display</p>
+              <div className="flex justify-center space-x-2">
+                <WireframeButton onClick={onAddTransaction} variant="secondary" size="small">
+                  <Plus size={14} className="mr-1" /> Add Manually
+                </WireframeButton>
+                <WireframeButton onClick={onImportSms} variant="secondary" size="small">
+                  <MessageSquare size={14} className="mr-1" /> Import SMS
+                </WireframeButton>
+              </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
       
@@ -146,6 +149,12 @@ const DashboardScreen = ({ onAddTransaction, onReports, userData }: DashboardScr
           onClick={onReports}
         >
           <BarChart size={20} />
+        </button>
+        
+        <button className="p-2 bg-gray-200 rounded-lg"
+          onClick={onImportSms}
+        >
+          <MessageSquare size={20} />
         </button>
         
         <button className="p-2 bg-gray-200 rounded-lg">
