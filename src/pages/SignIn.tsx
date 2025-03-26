@@ -26,7 +26,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setUser } = useUser();
+  const { updateUser } = useUser(); // Using updateUser from context instead of setUser
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -41,19 +41,18 @@ const SignIn = () => {
     
     // Simulate authentication
     setTimeout(() => {
-      // Set user in context
-      setUser({
+      // Set user in context using updateUser instead of setUser
+      updateUser({
         id: '123',
-        name: 'Demo User',
+        fullName: 'Demo User',
         email: values.email,
         phone: '+1234567890',
-        isOnboarded: true,
-        createdAt: new Date().toISOString(),
-        preferences: {
-          currency: 'USD',
-          theme: 'light',
-          notifications: true
-        }
+        completedOnboarding: true,
+        phoneVerified: true,
+        hasProfile: true,
+        gender: null,
+        birthDate: null,
+        smsProviders: []
       });
       
       toast({

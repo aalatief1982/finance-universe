@@ -6,6 +6,7 @@ import WireframeButton from '../../WireframeButton';
 
 interface SmsProviderSelectionScreenProps {
   onComplete: (selectedProviders: string[]) => void;
+  onSkip: () => void;
 }
 
 const smsProviders = [
@@ -47,7 +48,7 @@ const smsProviders = [
   }
 ];
 
-const SmsProviderSelectionScreen = ({ onComplete }: SmsProviderSelectionScreenProps) => {
+const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelectionScreenProps) => {
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   
   const toggleProvider = (providerId: string) => {
@@ -126,7 +127,7 @@ const SmsProviderSelectionScreen = ({ onComplete }: SmsProviderSelectionScreenPr
         </WireframeButton>
         
         <button 
-          onClick={() => onComplete([])} 
+          onClick={onSkip} 
           className="w-full text-center mt-3 text-sm text-muted-foreground hover:text-foreground"
         >
           Skip for now

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WelcomeScreen from './onboarding/WelcomeScreen';
@@ -8,7 +7,13 @@ import SmsProviderSelectionScreen from './onboarding/SmsProviderSelectionScreen'
 import { useUser } from '@/context/UserContext';
 import { useNavigate } from 'react-router-dom';
 
-const OnboardingScreen = () => {
+interface OnboardingScreenProps {
+  onNext?: () => void;
+  userData?: any;
+  onUpdateUserData?: (data: any) => void;
+}
+
+const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScreenProps = {}) => {
   const [step, setStep] = useState(0);
   const { user, updateUser, logIn } = useUser();
   const navigate = useNavigate();
@@ -46,8 +51,13 @@ const OnboardingScreen = () => {
     // Complete login process
     logIn();
     
-    // Navigate to dashboard
-    navigate('/dashboard');
+    // If the parent component provided an onNext callback, call it
+    if (onNext) {
+      onNext();
+    } else {
+      // Otherwise, navigate to dashboard
+      navigate('/dashboard');
+    }
   };
   
   const handleSkipSmsSelection = () => {
@@ -59,8 +69,13 @@ const OnboardingScreen = () => {
     // Complete login process
     logIn();
     
-    // Navigate to dashboard
-    navigate('/dashboard');
+    // If the parent component provided an onNext callback, call it
+    if (onNext) {
+      onNext();
+    } else {
+      // Otherwise, navigate to dashboard
+      navigate('/dashboard');
+    }
   };
   
   const renderCurrentStep = () => {
