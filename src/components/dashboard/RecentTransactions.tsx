@@ -3,11 +3,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, Plus, MessageSquare } from 'lucide-react';
+import { RefreshCw, Plus, MessageSquare, ArrowRight } from 'lucide-react';
 import { DialogTrigger } from '@/components/ui/dialog';
 import ExpenseCard from '@/components/ExpenseCard';
 import { Transaction } from '@/types/transaction';
 import { formatDate } from '@/lib/formatters';
+import { motion } from 'framer-motion';
 
 interface RecentTransactionsProps {
   filter: 'all' | 'income' | 'expense';
@@ -31,8 +32,24 @@ const RecentTransactions = ({
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5); // Show only the 5 most recent
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 }
+  };
+
   return (
-    <div>
+    <div className="bg-background rounded-lg border border-border p-4 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Recent Transactions</h2>
         <div className="flex items-center gap-2">
@@ -62,23 +79,29 @@ const RecentTransactions = ({
               Expenses
             </TabsTrigger>
           </TabsList>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-8 w-8" title="Refresh transactions">
             <RefreshCw size={14} />
           </Button>
         </div>
       </div>
       
-      <div className="space-y-3">
+      <motion.div 
+        className="space-y-3"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {filteredTransactions.length > 0 ? (
           filteredTransactions.map((transaction) => (
-            <ExpenseCard
-              key={transaction.id}
-              id={transaction.id}
-              title={transaction.title}
-              amount={transaction.amount}
-              category={transaction.category}
-              date={formatDate(transaction.date)}
-            />
+            <motion.div key={transaction.id} variants={itemVariants}>
+              <ExpenseCard
+                id={transaction.id}
+                title={transaction.title}
+                amount={transaction.amount}
+                category={transaction.category}
+                date={formatDate(transaction.date)}
+              />
+            </motion.div>
           ))
         ) : (
           <div className="text-center py-8 border rounded-lg flex flex-col items-center">
@@ -100,13 +123,16 @@ const RecentTransactions = ({
           </div>
         )}
         {filteredTransactions.length > 0 && (
-          <Button variant="outline" size="sm" className="w-full mt-4" asChild>
-            <Link to="/transactions">
-              View All Transactions
-            </Link>
-          </Button>
+          <div className="mt-4">
+            <Button variant="outline" size="sm" className="w-full group" asChild>
+              <Link to="/transactions" className="flex items-center justify-center">
+                View All Transactions
+                <ArrowRight size={14} className="ml-2 transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

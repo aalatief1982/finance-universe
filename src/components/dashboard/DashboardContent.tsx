@@ -5,6 +5,7 @@ import ExpenseChart from '@/components/ExpenseChart';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import { Transaction } from '@/types/transaction';
 import { generateChartData } from '@/lib/mock-data';
+import { motion } from 'framer-motion';
 
 interface DashboardContentProps {
   transactions: Transaction[];
@@ -34,7 +35,12 @@ const DashboardContent = ({
   const { categoryData, timelineData } = generateChartData(transactions as any);
 
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-6"
+    >
       <DashboardStats 
         income={income} 
         expenses={expenses} 
@@ -42,19 +48,31 @@ const DashboardContent = ({
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ExpenseChart 
-          expensesByCategory={categoryData}
-          expensesByDate={timelineData}
-        />
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <ExpenseChart 
+            expensesByCategory={categoryData}
+            expensesByDate={timelineData}
+          />
+        </motion.div>
         
-        <RecentTransactions 
-          filter={filter}
-          setFilter={setFilter}
-          transactions={transactions}
-          setIsAddingExpense={setIsAddingExpense}
-        />
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <RecentTransactions 
+            filter={filter}
+            setFilter={setFilter}
+            transactions={transactions}
+            setIsAddingExpense={setIsAddingExpense}
+          />
+        </motion.div>
       </div>
-    </>
+    </motion.div>
   );
 };
 
