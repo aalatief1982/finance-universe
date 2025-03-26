@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { handleValidationError } from '@/utils/error-utils';
 import { SupportedCurrency } from '@/types/locale';
@@ -23,25 +22,7 @@ export const transactionSchema = z.object({
     .optional()
 });
 
-// SMS message validation schema
-export const smsMessageSchema = z.object({
-  sender: z.string().min(1),
-  message: z.string().min(1),
-  timestamp: z.string().optional()
-});
-
-// Currency conversion validation schema
-export const currencyConversionSchema = z.object({
-  from: z.string().length(3),
-  to: z.string().length(3),
-  amount: z.number().refine(n => !isNaN(n)),
-});
-
-// Locale settings validation schema
-export const localeSettingsSchema = z.object({
-  currency: z.string().length(3),
-  locale: z.string(),
-});
+// ... keep existing code (SMS message validation schema, currency conversion validation schema, locale settings validation schema)
 
 // Define the result type explicitly for better type safety
 export type ValidationResult<T> = 
