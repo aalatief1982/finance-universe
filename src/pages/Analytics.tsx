@@ -5,7 +5,8 @@ import Layout from '@/components/Layout';
 import CategoryPill from '@/components/CategoryPill';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { INITIAL_TRANSACTIONS, Transaction } from '@/lib/mock-data';
+import { INITIAL_TRANSACTIONS } from '@/lib/mock-data';
+import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/lib/formatters';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { groupByMonth } from '@/lib/formatters';
@@ -100,7 +101,7 @@ const Analytics = () => {
       return (
         <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
           <p className="font-medium">{payload[0].name || label}</p>
-          <p className="text-primary">{formatCurrency(payload[0].value)}</p>
+          <p className="text-primary">{formatCurrency(payload[0].value as number)}</p>
         </div>
       );
     }
@@ -272,7 +273,7 @@ const Analytics = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
                         <XAxis dataKey="month" />
-                        <YAxis tickFormatter={(value) => formatCurrency(value).replace(/[^0-9.]/g, '')} />
+                        <YAxis tickFormatter={(value: number) => formatCurrency(value).replace(/[^0-9.]/g, '')} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend />
                         <Bar dataKey="total" name="Spending" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
