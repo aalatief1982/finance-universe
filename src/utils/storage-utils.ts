@@ -21,10 +21,12 @@ export const getStoredTransactions = (): Transaction[] => {
     if (Array.isArray(parsedData)) {
       parsedData.forEach((item, index) => {
         const validationResult = validateData(transactionSchema, item);
+        
+        // Properly handle the discriminated union
         if (validationResult.success) {
           validTransactions.push(validationResult.data);
         } else {
-          // Now TypeScript knows we can access the error property
+          // Now we can safely access the error property
           console.warn(`Invalid transaction at index ${index}:`, validationResult.error);
         }
       });
