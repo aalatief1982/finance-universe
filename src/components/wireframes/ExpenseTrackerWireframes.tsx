@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import OnboardingScreen from './screens/OnboardingScreen';
 import DashboardScreen from './screens/DashboardScreen';
@@ -69,11 +70,14 @@ const ExpenseTrackerWireframes = () => {
 
       {activeScreen === 'sms-provider' && (
         <SMSProviderScreen
+          onNext={() => setActiveScreen('dashboard')}
           onComplete={(providers) => {
             handleUpdateUserData({ smsProviders: providers });
             setActiveScreen('dashboard');
           }}
           onSkip={() => setActiveScreen('dashboard')}
+          userData={userData}
+          onUpdateUserData={handleUpdateUserData}
         />
       )}
 

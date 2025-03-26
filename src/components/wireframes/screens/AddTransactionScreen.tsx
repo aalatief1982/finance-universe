@@ -7,6 +7,7 @@ import { X, ArrowDown, ArrowUp, Calendar, Tag, CreditCard, Receipt } from 'lucid
 
 interface AddTransactionScreenProps {
   onCancel: () => void;
+  onSave: () => void;
 }
 
 const CATEGORIES = [
@@ -14,7 +15,7 @@ const CATEGORIES = [
   'Shopping', 'Utilities', 'Health', 'Education', 'Travel', 'Other'
 ];
 
-const AddTransactionScreen = ({ onCancel }: AddTransactionScreenProps) => {
+const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) => {
   const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -51,7 +52,7 @@ const AddTransactionScreen = ({ onCancel }: AddTransactionScreenProps) => {
         date,
         description
       });
-      onCancel(); // Return to dashboard
+      onSave(); // Call the onSave prop
     }
   };
 

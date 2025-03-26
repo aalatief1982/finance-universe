@@ -14,11 +14,13 @@ interface UserData {
 
 interface SMSProviderScreenProps {
   onNext: () => void;
+  onComplete: (providers: string[]) => void;
+  onSkip: () => void;
   userData: UserData;
   onUpdateUserData: (data: Partial<UserData>) => void;
 }
 
-const SMSProviderScreen = ({ onNext, userData, onUpdateUserData }: SMSProviderScreenProps) => {
+const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserData }: SMSProviderScreenProps) => {
   const [selectedProviders, setSelectedProviders] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<string>('');
@@ -56,7 +58,7 @@ const SMSProviderScreen = ({ onNext, userData, onUpdateUserData }: SMSProviderSc
     ).filter(Boolean) as string[];
     
     onUpdateUserData({ smsProviders: selectedProviderNames });
-    onNext();
+    onComplete(selectedProviderNames);
   };
 
   return (
