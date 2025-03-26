@@ -22,4 +22,3 @@ export interface TimePeriodData {
 }
 
 export type TimePeriod = 'week' | 'month' | 'year';
-
