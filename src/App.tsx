@@ -8,6 +8,7 @@ import ProcessSmsMessages from './pages/ProcessSmsMessages';
 import Settings from './pages/Settings';
 import SignIn from './pages/SignIn';
 import Profile from './pages/Profile';
+import SmsProviderSelection from './pages/SmsProviderSelection';
 import { UserProvider, useUser } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
 import ErrorBoundary from './components/ui/error-boundary';
@@ -71,6 +72,12 @@ function AppRoutes() {
       <Route path="/profile" element={
         <ProtectedRoute>
           <Profile />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/sms-providers" element={
+        <ProtectedRoute>
+          <SmsProviderSelection />
         </ProtectedRoute>
       } />
     </Routes>

@@ -10,9 +10,13 @@ import SmsPermissionRequest from '@/components/SmsPermissionRequest';
 import { useToast } from '@/components/ui/use-toast';
 import { getMockSmsMessages, parseSmsMessage } from '@/lib/sms-parser';
 import { v4 as uuidv4 } from 'uuid';
+import { smsPermissionService } from '@/services/SmsPermissionService';
+import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
+import { transactionService } from '@/services/TransactionService';
 
 const ProcessSmsMessages = () => {
   const [permissionGranted, setPermissionGranted] = useState(false);
+  const [providersConfigured, setProvidersConfigured] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -24,17 +28,39 @@ const ProcessSmsMessages = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Skip permission if already granted (could be stored in localStorage in a real app)
-    const savedPermission = localStorage.getItem('smsPermissionGranted');
-    if (savedPermission === 'true') {
-      setPermissionGranted(true);
+    // Check permission and provider configuration on mount
+    const hasPermission = smsPermissionService.hasPermission();
+    const hasProviders = smsProviderSelectionService.isProviderSelectionCompleted();
+    
+    setPermissionGranted(hasPermission);
+    setProvidersConfigured(hasProviders);
+    
+    // If both permissions and providers are configured, we can start processing immediately
+    if (hasPermission && hasProviders) {
+      // Don't auto-start, just show the processing screen
+    } 
+    // If providers are not configured but permission is granted, navigate to provider selection
+    else if (hasPermission && !hasProviders) {
+      toast({
+        title: "SMS providers needed",
+        description: "Please select the financial institutions to track",
+      });
+      navigate('/profile');
     }
-  }, []);
+  }, [navigate, toast]);
 
   const handlePermissionGranted = () => {
     setPermissionGranted(true);
-    localStorage.setItem('smsPermissionGranted', 'true');
-    startProcessing();
+    smsPermissionService.savePermissionStatus(true);
+    
+    // Check if providers are configured
+    if (!smsProviderSelectionService.isProviderSelectionCompleted()) {
+      toast({
+        title: "SMS providers needed",
+        description: "Please select the financial institutions to track",
+      });
+      navigate('/profile');
+    }
   };
 
   const handlePermissionDenied = () => {
@@ -49,9 +75,15 @@ const ProcessSmsMessages = () => {
     setIsProcessing(true);
     setIsPaused(false);
     
-    // In a real app, we would access actual SMS messages
-    // For now, we'll use mocks
-    const mockMessages = getMockSmsMessages();
+    // Get mock messages for selected providers only
+    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
+    const mockMessages = getMockSmsMessages().filter(msg => 
+      selectedProviders.some(provider => 
+        msg.sender.toLowerCase().includes(provider.name.toLowerCase()) ||
+        msg.message.toLowerCase().includes(provider.name.toLowerCase())
+      )
+    );
+    
     setTotalMessages(mockMessages.length);
     
     // Process the first message
@@ -93,7 +125,14 @@ const ProcessSmsMessages = () => {
     setConfirmedTransactions(updatedConfirmed);
     
     // Get mock messages again (in a real app we'd keep track of the original array)
-    const mockMessages = getMockSmsMessages();
+    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
+    const mockMessages = getMockSmsMessages().filter(msg => 
+      selectedProviders.some(provider => 
+        msg.sender.toLowerCase().includes(provider.name.toLowerCase()) ||
+        msg.message.toLowerCase().includes(provider.name.toLowerCase())
+      )
+    );
+    
     const nextIndex = processedCount;
     
     if (nextIndex < mockMessages.length) {
@@ -103,9 +142,16 @@ const ProcessSmsMessages = () => {
     }
   };
 
-  const handleDeclineTransaction = (id: string) => {
+  const handleDeclineTransaction = () => {
     // Skip this transaction and move to the next
-    const mockMessages = getMockSmsMessages();
+    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
+    const mockMessages = getMockSmsMessages().filter(msg => 
+      selectedProviders.some(provider => 
+        msg.sender.toLowerCase().includes(provider.name.toLowerCase()) ||
+        msg.message.toLowerCase().includes(provider.name.toLowerCase())
+      )
+    );
+    
     const nextIndex = processedCount;
     
     if (nextIndex < mockMessages.length) {
@@ -113,11 +159,6 @@ const ProcessSmsMessages = () => {
     } else {
       finishProcessing(confirmedTransactions);
     }
-  };
-
-  const handleEditTransaction = (transaction: any) => {
-    // Update the current transaction
-    setCurrentTransaction(transaction);
   };
 
   const togglePause = () => {
@@ -141,15 +182,10 @@ const ProcessSmsMessages = () => {
         notes: t.message,
       }));
       
-      // Get existing transactions from localStorage
-      const existingTransactionsJSON = localStorage.getItem('transactions');
-      const existingTransactions = existingTransactionsJSON ? JSON.parse(existingTransactionsJSON) : [];
-      
-      // Merge new transactions with existing ones
+      // Use the transaction service to save transactions
+      const existingTransactions = transactionService.getAllTransactions();
       const allTransactions = [...formattedTransactions, ...existingTransactions];
-      
-      // Save back to localStorage
-      localStorage.setItem('transactions', JSON.stringify(allTransactions));
+      transactionService.saveTransactions(allTransactions);
     }
     
     toast({
@@ -229,7 +265,7 @@ const ProcessSmsMessages = () => {
                   transaction={currentTransaction}
                   onConfirm={handleConfirmTransaction}
                   onDecline={handleDeclineTransaction}
-                  onEdit={handleEditTransaction}
+                  onEdit={(transaction) => setCurrentTransaction(transaction)}
                 />
               </div>
             )}

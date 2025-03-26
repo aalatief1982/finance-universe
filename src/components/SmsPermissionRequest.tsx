@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, MessageSquare, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { smsPermissionService } from '@/services/SmsPermissionService';
 
 interface SmsPermissionRequestProps {
   onGranted: () => void;
@@ -17,15 +18,12 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
   const [isRequesting, setIsRequesting] = useState(false);
   const { toast } = useToast();
 
-  const handleRequestPermission = () => {
+  const handleRequestPermission = async () => {
     setIsRequesting(true);
     
-    // In a real mobile app, this would use Capacitor or other APIs to request SMS read permission
-    // For now, we'll simulate a successful permission grant
-    setTimeout(() => {
-      setIsRequesting(false);
-      // Mock success response
-      const granted = true;
+    try {
+      // In a real mobile app, this would use Capacitor or other APIs
+      const granted = await smsPermissionService.requestPermission();
       
       if (granted) {
         toast({
@@ -41,7 +39,16 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
         });
         onDenied();
       }
-    }, 1500);
+    } catch (error) {
+      toast({
+        title: "Error requesting permission",
+        description: "There was a problem requesting SMS permission",
+        variant: "destructive",
+      });
+      onDenied();
+    } finally {
+      setIsRequesting(false);
+    }
   };
 
   return (

@@ -1,68 +1,71 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, MessageSquare } from 'lucide-react';
+import { Check, MessageSquare, Calendar } from 'lucide-react';
 import WireframeButton from '../../WireframeButton';
+import { smsProviderSelectionService, SmsProvider } from '@/services/SmsProviderSelectionService';
+import { useToast } from '@/components/ui/use-toast';
 
 interface SmsProviderSelectionScreenProps {
   onComplete: (selectedProviders: string[]) => void;
   onSkip: () => void;
 }
 
-const smsProviders = [
-  {
-    id: 'bank-of-america',
-    name: 'Bank of America',
-    icon: '🏦',
-    description: 'Transaction alerts from Bank of America'
-  },
-  {
-    id: 'chase',
-    name: 'Chase Bank',
-    icon: '💳',
-    description: 'Purchase notifications and alerts'
-  },
-  {
-    id: 'wells-fargo',
-    name: 'Wells Fargo',
-    icon: '🏛️',
-    description: 'Account activity alerts'
-  },
-  {
-    id: 'citibank',
-    name: 'Citibank',
-    icon: '💰',
-    description: 'Transaction notifications'
-  },
-  {
-    id: 'capital-one',
-    name: 'Capital One',
-    icon: '💵',
-    description: 'Purchase and payment alerts'
-  },
-  {
-    id: 'amex',
-    name: 'American Express',
-    icon: '💸',
-    description: 'Charge notifications'
-  }
-];
-
 const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelectionScreenProps) => {
-  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
+  const [providers, setProviders] = useState<SmsProvider[]>([]);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const { toast } = useToast();
+  
+  // Load providers on component mount
+  useEffect(() => {
+    const savedProviders = smsProviderSelectionService.getSmsProviders();
+    setProviders(savedProviders);
+    
+    const savedDate = smsProviderSelectionService.getSmsStartDate();
+    if (savedDate) {
+      setStartDate(savedDate);
+    }
+  }, []);
   
   const toggleProvider = (providerId: string) => {
-    setSelectedProviders(prev => {
-      if (prev.includes(providerId)) {
-        return prev.filter(id => id !== providerId);
-      } else {
-        return [...prev, providerId];
-      }
+    const updatedProviders = smsProviderSelectionService.toggleProviderSelection(providerId);
+    setProviders(updatedProviders);
+  };
+  
+  const handleDateSelect = () => {
+    // Set to 6 months ago
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const dateString = sixMonthsAgo.toISOString().split('T')[0];
+    
+    setStartDate(dateString);
+    smsProviderSelectionService.saveSmsStartDate(dateString);
+    
+    toast({
+      title: "Date selected",
+      description: `Messages from ${dateString} will be analyzed`,
     });
   };
   
   const handleContinue = () => {
-    onComplete(selectedProviders);
+    const selectedProviders = providers.filter(p => p.isSelected);
+    
+    if (selectedProviders.length === 0) {
+      toast({
+        title: "Selection required",
+        description: "Please select at least one provider",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const selectedProviderNames = selectedProviders.map(p => p.name);
+    
+    if (startDate) {
+      smsProviderSelectionService.saveSmsStartDate(startDate);
+    }
+    
+    onComplete(selectedProviderNames);
   };
 
   return (
@@ -83,12 +86,12 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       </div>
       
       <div className="grid grid-cols-1 gap-3 max-h-[320px] overflow-y-auto pr-1">
-        {smsProviders.map((provider) => (
+        {providers.map((provider) => (
           <div 
             key={provider.id}
             className={`
               border rounded-lg p-4 cursor-pointer transition-colors
-              ${selectedProviders.includes(provider.id) 
+              ${provider.isSelected 
                 ? 'border-primary bg-primary/5' 
                 : 'border-border hover:border-primary/50'}
             `}
@@ -96,13 +99,16 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
           >
             <div className="flex items-start">
               <div className="flex-shrink-0 text-2xl mr-3">
-                {provider.icon}
+                {provider.id.includes('bank') ? '🏦' : 
+                 provider.id.includes('credit') ? '💳' :
+                 provider.id.includes('investment') ? '📈' :
+                 provider.id.includes('digital') ? '💸' : '💰'}
               </div>
               <div className="flex-1">
                 <h4 className="font-medium text-foreground">{provider.name}</h4>
-                <p className="text-sm text-muted-foreground">{provider.description}</p>
+                <p className="text-sm text-muted-foreground">{provider.pattern}</p>
               </div>
-              {selectedProviders.includes(provider.id) && (
+              {provider.isSelected && (
                 <div className="flex-shrink-0 ml-2">
                   <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                     <Check className="h-3 w-3 text-white" />
@@ -114,16 +120,28 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
         ))}
       </div>
       
+      <div className="border rounded-lg p-4 cursor-pointer hover:bg-secondary/50" onClick={handleDateSelect}>
+        <div className="flex items-center">
+          <Calendar className="mr-3 text-primary" size={24} />
+          <div>
+            <h4 className="font-medium">Set Start Date</h4>
+            <p className="text-sm text-muted-foreground">
+              {startDate || "Select when to start analyzing messages"}
+            </p>
+          </div>
+        </div>
+      </div>
+      
       <div className="mt-6 pt-4 border-t border-border">
         <WireframeButton 
           onClick={handleContinue} 
           variant="primary"
           className="w-full"
-          disabled={selectedProviders.length === 0}
+          disabled={providers.filter(p => p.isSelected).length === 0}
         >
-          {selectedProviders.length === 0 
+          {providers.filter(p => p.isSelected).length === 0 
             ? "Select at least one provider" 
-            : `Continue with ${selectedProviders.length} selected`}
+            : `Continue with ${providers.filter(p => p.isSelected).length} selected`}
         </WireframeButton>
         
         <button 

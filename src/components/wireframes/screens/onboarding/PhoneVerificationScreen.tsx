@@ -6,12 +6,14 @@ import VerificationCodeForm from './phone-verification/VerificationCodeForm';
 import { usePhoneVerification } from './phone-verification/usePhoneVerification';
 import { Check, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/components/ui/use-toast';
 
 interface PhoneVerificationScreenProps {
   onNext: () => void;
 }
 
 const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
+  const { toast } = useToast();
   const {
     phoneNumber,
     setPhoneNumber,
@@ -24,7 +26,13 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     handleVerificationCodeChange,
     handleResendCode,
     handleVerifyCode
-  } = usePhoneVerification(onNext);
+  } = usePhoneVerification((phone) => {
+    toast({
+      title: "Verification successful",
+      description: `Phone ${phone} has been verified`,
+    });
+    onNext();
+  });
 
   return (
     <motion.div 
