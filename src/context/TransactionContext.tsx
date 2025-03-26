@@ -1,5 +1,7 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { transactionService, Transaction } from '@/services/TransactionService';
+import { transactionService } from '@/services/TransactionService';
+import { Transaction } from '@/types/transaction';
 import { useToast } from '@/components/ui/use-toast';
 
 interface TransactionContextType {
