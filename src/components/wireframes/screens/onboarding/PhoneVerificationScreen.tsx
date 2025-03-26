@@ -35,20 +35,25 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     }
     
     setError('');
-    const success = await startPhoneVerification(phoneNumber);
     
-    if (success) {
-      setIsVerificationSent(true);
-      setSuccess('Verification code sent successfully!');
-      toast({
-        title: "Verification code sent",
-        description: "Please check your phone for the verification code",
-      });
+    try {
+      const success = await startPhoneVerification(phoneNumber);
       
-      // In a real app, this would send a verification code to the phone number
-      setTimeout(() => {
-        setSuccess('');
-      }, 3000);
+      if (success) {
+        setIsVerificationSent(true);
+        setSuccess('Verification code sent successfully!');
+        toast({
+          title: "Verification code sent",
+          description: "Please check your phone for the verification code",
+        });
+        
+        // In a real app, this would send a verification code to the phone number
+        setTimeout(() => {
+          setSuccess('');
+        }, 3000);
+      }
+    } catch (err) {
+      setError('Failed to send verification code. Please try again.');
     }
   };
   
@@ -88,17 +93,24 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     setVerificationCode(['', '', '', '']);
     
     // In a real app, this would resend the verification code
-    const success = await startPhoneVerification(phoneNumber);
-    
-    if (success) {
-      // Show a user-friendly message
-      setSuccess('A new code has been sent to your phone');
-      toast({
-        title: "Code resent",
-        description: "A new verification code has been sent to your phone",
-      });
+    try {
+      const success = await startPhoneVerification(phoneNumber);
+      
+      if (success) {
+        // Show a user-friendly message
+        setSuccess('A new code has been sent to your phone');
+        toast({
+          title: "Code resent",
+          description: "A new verification code has been sent to your phone",
+        });
+        setTimeout(() => {
+          setSuccess('');
+        }, 3000);
+      }
+    } catch (err) {
+      setError('Failed to resend code. Please try again later.');
       setTimeout(() => {
-        setSuccess('');
+        setError('');
       }, 3000);
     }
   };
@@ -110,23 +122,30 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
       return;
     }
     
-    const success = await confirmPhoneVerification(code);
-    
-    if (success) {
-      setSuccess('Phone number verified successfully!');
-      toast({
-        title: "Verification successful",
-        description: "Your phone number has been verified",
-        variant: "default",
-      });
+    try {
+      const success = await confirmPhoneVerification(code);
       
-      // Wait a moment before proceeding to next step
-      setTimeout(() => {
-        onNext();
-      }, 1000);
-    } else {
-      // Error message is handled by the context
-      setVerificationCode(['', '', '', '']);
+      if (success) {
+        setSuccess('Phone number verified successfully!');
+        toast({
+          title: "Verification successful",
+          description: "Your phone number has been verified",
+          variant: "default",
+        });
+        
+        // Wait a moment before proceeding to next step
+        setTimeout(() => {
+          // Update user data with phone number
+          updateUser({ phone: phoneNumber });
+          onNext();
+        }, 1000);
+      } else {
+        // Error message is handled by the context
+        setVerificationCode(['', '', '', '']);
+        setError('Invalid verification code. Please try again.');
+      }
+    } catch (err) {
+      setError('Verification failed. Please try again.');
     }
   };
 

@@ -1,155 +1,95 @@
 
 import React, { useState, useEffect } from 'react';
-import { useUser } from '@/context/UserContext';
 import WireframeContainer from '../WireframeContainer';
-import WireframeHeader from '../WireframeHeader';
 import WelcomeScreen from './onboarding/WelcomeScreen';
 import PhoneVerificationScreen from './onboarding/PhoneVerificationScreen';
-import ProfileCreationScreen from './onboarding/ProfileCreationScreen';
+import UserProfileScreen from './onboarding/UserProfileScreen';
 import SmsProviderSelectionScreen from './onboarding/SmsProviderSelectionScreen';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft } from 'lucide-react';
+import { useUser } from '@/context/UserContext';
+import { useNavigate } from 'react-router-dom';
 
-interface UserData {
-  name?: string;
-  email?: string;
-  phone?: string;
-  smsProviders?: string[];
-}
-
-interface OnboardingScreenProps {
-  onNext: () => void;
-  userData: UserData;
-  onUpdateUserData: (data: Partial<UserData>) => void;
-}
-
-const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScreenProps) => {
-  const { user, updateUser } = useUser();
+const OnboardingScreen = () => {
   const [step, setStep] = useState(0);
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const { user, updateUser, logIn } = useUser();
+  const navigate = useNavigate();
   
-  const screenTitles = ['Welcome', 'Phone Verification', 'Profile Creation', 'SMS Providers'];
-  
-  // Update user context when userData changes
+  // Reset onboarding to step 0 when component mounts
   useEffect(() => {
-    if (Object.keys(userData).length > 0) {
-      updateUser(userData);
+    // Check if user already completed onboarding
+    if (user && user.completedOnboarding) {
+      navigate('/dashboard');
     }
-  }, [userData, updateUser]);
+  }, [user, navigate]);
   
-  const handleNext = () => {
-    if (step < 3) {
-      setStep(step + 1);
-    } else {
-      // Validate before completing onboarding
-      if (validateProfileData()) {
-        // Set user as onboarded in the context
-        updateUser({ isOnboarded: true });
-        onNext();
-      }
-    }
+  const handleWelcomeComplete = () => {
+    setStep(1);
   };
-
-  const handleBack = () => {
-    if (step > 0) {
-      setStep(step - 1);
-    }
+  
+  const handlePhoneVerificationComplete = () => {
+    setStep(2);
   };
-
-  const validateProfileData = () => {
-    const newErrors: {[key: string]: string} = {};
-    
-    if (!userData.name) {
-      newErrors.name = 'Name is required';
-    }
-    
-    if (!userData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-    
-    if (!userData.phone) {
-      newErrors.phone = 'Phone number is required';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  
+  const handleProfileComplete = (profileData: any) => {
+    updateUser({
+      ...profileData,
+      hasProfile: true
+    });
+    setStep(3);
   };
-
-  const handleSelectSmsProviders = (selectedProviders: string[]) => {
-    onUpdateUserData({ smsProviders: selectedProviders });
-    handleNext();
+  
+  const handleSmsProviderSelectionComplete = (providers: string[]) => {
+    updateUser({
+      smsProviders: providers,
+      completedOnboarding: true
+    });
+    
+    // Complete login process
+    logIn();
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
   };
-
-  const renderStep = () => {
+  
+  const handleSkipSmsSelection = () => {
+    updateUser({
+      smsProviders: [],
+      completedOnboarding: true
+    });
+    
+    // Complete login process
+    logIn();
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
+  };
+  
+  const renderCurrentStep = () => {
     switch (step) {
       case 0:
-        return <WelcomeScreen onNext={handleNext} />;
+        return <WelcomeScreen onNext={handleWelcomeComplete} />;
       case 1:
-        return (
-          <PhoneVerificationScreen 
-            onNext={handleNext} 
-          />
-        );
+        return <PhoneVerificationScreen onNext={handlePhoneVerificationComplete} />;
       case 2:
-        return (
-          <ProfileCreationScreen 
-            onComplete={handleNext}
-            userData={userData}
-            onUpdateUserData={onUpdateUserData}
-            errors={errors}
-          />
-        );
+        return <UserProfileScreen onComplete={handleProfileComplete} />;
       case 3:
         return (
           <SmsProviderSelectionScreen 
-            onComplete={handleSelectSmsProviders}
+            onComplete={handleSmsProviderSelectionComplete}
+            onSkip={handleSkipSmsSelection}
           />
         );
       default:
-        return <WelcomeScreen onNext={handleNext} />;
+        return <WelcomeScreen onNext={handleWelcomeComplete} />;
     }
   };
-
+  
   return (
     <WireframeContainer>
-      <WireframeHeader 
-        title={screenTitles[step]} 
-        leftElement={
-          step > 0 ? (
-            <button 
-              onClick={handleBack}
-              className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
-            </button>
-          ) : undefined
-        }
-        rightElement={
-          <div className="flex space-x-1">
-            {[0, 1, 2, 3].map((s) => (
-              <div 
-                key={s} 
-                className={`h-1.5 rounded-full ${s === step ? 'w-5 bg-primary' : 'w-2 bg-muted'}`}
-              />
-            ))}
-          </div>
-        }
-      />
-      
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderStep()}
-        </motion.div>
-      </AnimatePresence>
+      <div className="p-4 h-full flex flex-col justify-center">
+        <div className="max-w-md mx-auto w-full">
+          {renderCurrentStep()}
+        </div>
+      </div>
     </WireframeContainer>
   );
 };

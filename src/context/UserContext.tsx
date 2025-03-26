@@ -1,175 +1,163 @@
+import React, { createContext, useState, useEffect, useContext } from 'react';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-export interface UserProfile {
-  id?: string;
-  name?: string;
+interface User {
+  id: string;
+  phone: string;
+  phoneVerified: boolean;
+  hasProfile: boolean;
+  fullName: string;
+  gender: 'male' | 'female' | null;
+  birthDate: Date | null;
   email?: string;
-  phone?: string;
-  gender?: 'male' | 'female';
-  birthDate?: Date;
-  profileImage?: string;
-  smsProviders?: string[];
-  isOnboarded?: boolean;
-  createdAt?: string;
-  preferences?: {
-    currency?: string;
-    theme?: 'light' | 'dark' | 'system';
-    notifications?: boolean;
-  };
-}
-
-interface AuthState {
-  isAuthenticated: boolean;
-  isVerifying: boolean;
-  verificationId?: string;
+  smsProviders: string[];
+  completedOnboarding: boolean;
 }
 
 interface UserContextType {
-  user: UserProfile | null;
-  auth: AuthState;
-  isLoading: boolean;
-  error: string | null;
-  setUser: (user: UserProfile | null) => void;
-  updateUser: (data: Partial<UserProfile>) => void;
-  logout: () => void;
+  user: User | null;
+  auth: {
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    isVerifying: boolean;
+  };
+  updateUser: (userData: Partial<User>) => void;
   startPhoneVerification: (phoneNumber: string) => Promise<boolean>;
   confirmPhoneVerification: (code: string) => Promise<boolean>;
-  setAuthState: (auth: Partial<AuthState>) => void;
+  logIn: () => void;
+  logOut: () => void;
+  isLoading: boolean;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
-
-export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [auth, setAuth] = useState<AuthState>({
+export const UserContext = createContext<UserContextType>({
+  user: null,
+  auth: {
     isAuthenticated: false,
-    isVerifying: false,
-  });
+    isLoading: false,
+    isVerifying: false
+  },
+  updateUser: () => {},
+  startPhoneVerification: async () => false,
+  confirmPhoneVerification: async () => false,
+  logIn: () => {},
+  logOut: () => {},
+  isLoading: false
+});
 
-  // Check for existing user in localStorage on mount
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [auth, setAuth] = useState({
+    isAuthenticated: false,
+    isLoading: true,
+    isVerifying: false
+  });
+  
+  // Load user from local storage on initial render
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        
-        // Convert date strings back to Date objects
-        if (parsedUser.birthDate) {
-          parsedUser.birthDate = new Date(parsedUser.birthDate);
-        }
-        
         setUser(parsedUser);
-        setAuth(prev => ({ ...prev, isAuthenticated: true }));
-      } catch (err) {
-        console.error('Failed to parse stored user data', err);
+        setAuth(prev => ({
+          ...prev,
+          isAuthenticated: parsedUser.completedOnboarding || false,
+          isLoading: false
+        }));
+      } catch (error) {
+        console.error('Failed to parse stored user data', error);
+        setAuth(prev => ({ ...prev, isLoading: false }));
       }
+    } else {
+      setAuth(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
-
-  // Save user data to localStorage when it changes
+  
+  // Save user to local storage whenever it changes
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
     }
   }, [user]);
-
-  const updateUser = (data: Partial<UserProfile>) => {
+  
+  const updateUser = (userData: Partial<User>) => {
     setUser(prevUser => {
-      if (!prevUser) return data as UserProfile;
-      return { ...prevUser, ...data };
+      if (!prevUser) return userData as User;
+      return { ...prevUser, ...userData };
     });
   };
-
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    setAuth({ isAuthenticated: false, isVerifying: false });
-  };
-
-  // Mock phone verification in a real app this would use Firebase
+  
   const startPhoneVerification = async (phoneNumber: string): Promise<boolean> => {
     setIsLoading(true);
-    setError(null);
+    setAuth(prev => ({ ...prev, isVerifying: true }));
     
     try {
-      // Simulate API call
+      // In a real app, this would call Firebase Auth or similar service
+      // For now, we'll simulate a successful verification after a short delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // In a real app, this would store a verification ID from Firebase
-      setAuth(prev => ({ 
-        ...prev, 
-        isVerifying: true,
-        verificationId: 'mock-verification-id'
-      }));
-      
-      // Update user's phone number
+      // Update user phone number
       updateUser({ phone: phoneNumber });
       
       setIsLoading(false);
       return true;
-    } catch (err) {
-      setError('Failed to send verification code. Please try again.');
+    } catch (error) {
+      console.error('Error starting phone verification', error);
       setIsLoading(false);
       return false;
     }
   };
-
-  // Mock confirmation in a real app this would verify with Firebase
+  
   const confirmPhoneVerification = async (code: string): Promise<boolean> => {
     setIsLoading(true);
-    setError(null);
     
     try {
-      // Simulate API call
+      // In a real app, this would verify the code with Firebase Auth or similar
+      // For now, we'll simulate a successful verification if the code is "1234"
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // In a real app, this would confirm the code with Firebase
-      // For demo, we'll accept any code
+      const isValid = code === "1234"; // For demo purposes, "1234" is always valid
       
-      setAuth(prev => ({ 
-        ...prev, 
-        isAuthenticated: true,
-        isVerifying: false 
-      }));
+      if (isValid) {
+        updateUser({ phoneVerified: true });
+        setAuth(prev => ({ ...prev, isVerifying: false }));
+      }
       
       setIsLoading(false);
-      return true;
-    } catch (err) {
-      setError('Invalid verification code. Please try again.');
+      return isValid;
+    } catch (error) {
+      console.error('Error confirming verification code', error);
       setIsLoading(false);
       return false;
     }
   };
-
-  const setAuthState = (newState: Partial<AuthState>) => {
-    setAuth(prev => ({ ...prev, ...newState }));
+  
+  const logIn = () => {
+    setAuth(prev => ({ ...prev, isAuthenticated: true }));
   };
-
+  
+  const logOut = () => {
+    setAuth(prev => ({ ...prev, isAuthenticated: false }));
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+  
   return (
-    <UserContext.Provider value={{ 
-      user, 
-      auth,
-      isLoading, 
-      error, 
-      setUser, 
-      updateUser, 
-      logout,
-      startPhoneVerification,
-      confirmPhoneVerification,
-      setAuthState
-    }}>
+    <UserContext.Provider
+      value={{
+        user,
+        auth,
+        updateUser,
+        startPhoneVerification,
+        confirmPhoneVerification,
+        logIn,
+        logOut,
+        isLoading
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
 };
 
-export const useUser = () => {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
-};
+export const useUser = () => useContext(UserContext);

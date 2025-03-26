@@ -2,7 +2,7 @@
 import React from 'react';
 import WireframeButton from '../../WireframeButton';
 import { motion } from 'framer-motion';
-import { SmartphoneIcon, ShieldCheckIcon } from 'lucide-react';
+import { SmartphoneIcon, ShieldCheckIcon, BarChartIcon } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onNext: () => void;
@@ -41,6 +41,10 @@ const WelcomeScreen = ({ onNext }: WelcomeScreenProps) => {
           <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
             <ShieldCheckIcon size={16} className="text-primary" />
             <span>Your data is secure and never leaves your device</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <BarChartIcon size={16} className="text-primary" />
+            <span>Customizable dashboards for financial insights</span>
           </div>
         </div>
       </div>
