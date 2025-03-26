@@ -2,6 +2,7 @@
 import React from 'react';
 import WireframeButton from '../../WireframeButton';
 import { motion } from 'framer-motion';
+import { SmartphoneIcon, ShieldCheckIcon } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onNext: () => void;
@@ -32,9 +33,16 @@ const WelcomeScreen = ({ onNext }: WelcomeScreenProps) => {
           Get Started
         </WireframeButton>
         
-        <p className="text-sm text-gray-500 mt-4">
-          Your data is secure and never leaves your device
-        </p>
+        <div className="mt-8 flex flex-col gap-3">
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <SmartphoneIcon size={16} className="text-primary" />
+            <span>SMS verification for secure login</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <ShieldCheckIcon size={16} className="text-primary" />
+            <span>Your data is secure and never leaves your device</span>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

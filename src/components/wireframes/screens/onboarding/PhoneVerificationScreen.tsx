@@ -5,39 +5,51 @@ import { Label } from "@/components/ui/label";
 import { useUser } from '@/context/UserContext';
 import WireframeButton from '../../WireframeButton';
 import { motion } from 'framer-motion';
-import { Phone } from 'lucide-react';
+import { Phone, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface PhoneVerificationScreenProps {
   onNext: () => void;
 }
 
 const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
-  const { user, updateUser } = useUser();
+  const { user, auth, updateUser, startPhoneVerification, confirmPhoneVerification, isLoading } = useUser();
   const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
   const [isVerificationSent, setIsVerificationSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState(['', '', '', '']);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const { toast } = useToast();
   
-  const handleSendCode = () => {
+  // Set verification UI state based on auth context
+  useEffect(() => {
+    if (auth.isVerifying) {
+      setIsVerificationSent(true);
+    }
+  }, [auth.isVerifying]);
+  
+  const handleSendCode = async () => {
     if (!phoneNumber || phoneNumber.length < 10) {
       setError('Please enter a valid phone number');
       return;
     }
     
     setError('');
-    setIsVerificationSent(true);
-    setSuccess('Verification code sent successfully!');
+    const success = await startPhoneVerification(phoneNumber);
     
-    // Update the user context with the phone number
-    updateUser({ phone: phoneNumber });
-    
-    // In a real app, this would send a verification code to the phone number
-    // For demo, we'll just simulate a success message
-    setTimeout(() => {
-      setSuccess('');
-    }, 3000);
+    if (success) {
+      setIsVerificationSent(true);
+      setSuccess('Verification code sent successfully!');
+      toast({
+        title: "Verification code sent",
+        description: "Please check your phone for the verification code",
+      });
+      
+      // In a real app, this would send a verification code to the phone number
+      setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+    }
   };
   
   const handleVerificationCodeChange = (index: number, value: string) => {
@@ -55,18 +67,9 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
       }
     }
     
-    // Check if all inputs are filled
+    // Check if all inputs are filled for auto-verification
     if (newCode.every(digit => digit) && newCode.join('').length === 4) {
-      // In a real app, verify the code here
-      setIsVerifying(true);
-      setTimeout(() => {
-        setIsVerifying(false);
-        setSuccess('Phone number verified successfully!');
-        // Wait a moment before proceeding to next step
-        setTimeout(() => {
-          onNext();
-        }, 1000);
-      }, 1500); // Simulate verification delay
+      handleVerifyCode();
     }
   };
 
@@ -80,16 +83,51 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     }
   };
 
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     // Reset verification code
     setVerificationCode(['', '', '', '']);
-    // In a real app, this would resend the verification code
     
-    // Show a user-friendly message
-    setSuccess('A new code has been sent to your phone');
-    setTimeout(() => {
-      setSuccess('');
-    }, 3000);
+    // In a real app, this would resend the verification code
+    const success = await startPhoneVerification(phoneNumber);
+    
+    if (success) {
+      // Show a user-friendly message
+      setSuccess('A new code has been sent to your phone');
+      toast({
+        title: "Code resent",
+        description: "A new verification code has been sent to your phone",
+      });
+      setTimeout(() => {
+        setSuccess('');
+      }, 3000);
+    }
+  };
+  
+  const handleVerifyCode = async () => {
+    const code = verificationCode.join('');
+    if (code.length !== 4) {
+      setError('Please enter a valid 4-digit code');
+      return;
+    }
+    
+    const success = await confirmPhoneVerification(code);
+    
+    if (success) {
+      setSuccess('Phone number verified successfully!');
+      toast({
+        title: "Verification successful",
+        description: "Your phone number has been verified",
+        variant: "default",
+      });
+      
+      // Wait a moment before proceeding to next step
+      setTimeout(() => {
+        onNext();
+      }, 1000);
+    } else {
+      // Error message is handled by the context
+      setVerificationCode(['', '', '', '']);
+    }
   };
 
   return (
@@ -129,8 +167,16 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
             onClick={handleSendCode}
             variant="primary"
             className="w-full"
+            disabled={isLoading}
           >
-            Send Verification Code
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending Code...
+              </>
+            ) : (
+              "Send Verification Code"
+            )}
           </WireframeButton>
         </>
       ) : (
@@ -168,6 +214,7 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
               className="text-primary hover:text-primary/80 text-sm font-medium underline" 
               onClick={handleResendCode}
               type="button"
+              disabled={isLoading}
             >
               Didn't receive a code? Resend
             </button>
@@ -175,12 +222,19 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
           
           <div className="mt-6">
             <WireframeButton 
-              onClick={onNext}
+              onClick={handleVerifyCode}
               variant={verificationCode.every(digit => digit) ? 'primary' : 'secondary'}
-              disabled={isVerifying || !verificationCode.every(digit => digit)}
+              disabled={isLoading || !verificationCode.every(digit => digit)}
               className="w-full"
             >
-              {isVerifying ? 'Verifying...' : 'Verify and Continue'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                "Verify and Continue"
+              )}
             </WireframeButton>
           </div>
         </>
