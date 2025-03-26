@@ -11,14 +11,18 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import ExpenseForm from '@/components/ExpenseForm';
 import { CATEGORIES, INITIAL_TRANSACTIONS, Transaction, generateChartData } from '@/lib/mock-data';
 import { formatDate } from '@/lib/formatters';
-import { Plus, MessageSquare } from 'lucide-react';
+import { Plus, MessageSquare, Filter, RefreshCw } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
+import { useUser } from '@/context/UserContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const { toast } = useToast();
+  const { user } = useUser();
 
   useEffect(() => {
     // Load transactions from localStorage or use initial data
@@ -75,8 +79,14 @@ const Dashboard = () => {
     });
   };
 
+  // Filter transactions based on selected filter
+  const filteredTransactions = transactions.filter(tx => {
+    if (filter === 'all') return true;
+    return filter === 'income' ? tx.amount > 0 : tx.amount < 0;
+  });
+
   // Get recent transactions
-  const recentTransactions = [...transactions]
+  const recentTransactions = [...filteredTransactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 5);
 
@@ -90,7 +100,9 @@ const Dashboard = () => {
           className="space-y-6"
         >
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
+            </h1>
             <div className="flex space-x-2">
               <Button 
                 variant="outline" 
@@ -149,9 +161,37 @@ const Dashboard = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Recent Transactions</h2>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/transactions">View All</Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                  <TabsList className="h-8 bg-muted/50">
+                    <TabsTrigger 
+                      value="all" 
+                      className="text-xs px-3 h-7"
+                      onClick={() => setFilter('all')}
+                      data-state={filter === 'all' ? 'active' : 'inactive'}
+                    >
+                      All
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="income" 
+                      className="text-xs px-3 h-7"
+                      onClick={() => setFilter('income')}
+                      data-state={filter === 'income' ? 'active' : 'inactive'}
+                    >
+                      Income
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="expense" 
+                      className="text-xs px-3 h-7"
+                      onClick={() => setFilter('expense')}
+                      data-state={filter === 'expense' ? 'active' : 'inactive'}
+                    >
+                      Expenses
+                    </TabsTrigger>
+                  </TabsList>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <RefreshCw size={14} />
+                  </Button>
+                </div>
               </div>
               
               <div className="space-y-3">
@@ -168,7 +208,7 @@ const Dashboard = () => {
                   ))
                 ) : (
                   <div className="text-center py-8 border rounded-lg flex flex-col items-center">
-                    <p className="text-muted-foreground mb-3">No transactions yet</p>
+                    <p className="text-muted-foreground mb-3">No transactions found</p>
                     <div className="flex space-x-2">
                       <Button size="sm" asChild>
                         <Link to="/process-sms">
@@ -184,6 +224,13 @@ const Dashboard = () => {
                       </DialogTrigger>
                     </div>
                   </div>
+                )}
+                {recentTransactions.length > 0 && (
+                  <Button variant="outline" size="sm" className="w-full mt-4" asChild>
+                    <Link to="/transactions">
+                      View All Transactions
+                    </Link>
+                  </Button>
                 )}
               </div>
             </div>
