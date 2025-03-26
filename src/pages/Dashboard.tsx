@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import DashboardStats from '@/components/DashboardStats';
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import ExpenseForm from '@/components/ExpenseForm';
 import { CATEGORIES, INITIAL_TRANSACTIONS, Transaction, generateChartData } from '@/lib/mock-data';
 import { formatDate } from '@/lib/formatters';
-import { Plus } from 'lucide-react';
+import { Plus, MessageSquare } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -90,21 +91,34 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
-              <DialogTrigger asChild>
-                <Button className="gap-1">
-                  <Plus size={18} />
-                  Add Transaction
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <ExpenseForm 
-                  onSubmit={handleAddTransaction} 
-                  categories={CATEGORIES}
-                  onCancel={() => setIsAddingExpense(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                className="gap-1 hidden sm:flex"
+                asChild
+              >
+                <Link to="/process-sms">
+                  <MessageSquare size={18} />
+                  Import SMS
+                </Link>
+              </Button>
+              
+              <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
+                <DialogTrigger asChild>
+                  <Button className="gap-1">
+                    <Plus size={18} />
+                    Add Transaction
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <ExpenseForm 
+                    onSubmit={handleAddTransaction} 
+                    categories={CATEGORIES}
+                    onCancel={() => setIsAddingExpense(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           
           <DashboardStats 
@@ -112,6 +126,19 @@ const Dashboard = () => {
             expenses={expenses} 
             balance={balance} 
           />
+          
+          <div className="sm:hidden">
+            <Button 
+              variant="outline" 
+              className="w-full gap-1 mb-4"
+              asChild
+            >
+              <Link to="/process-sms">
+                <MessageSquare size={18} />
+                Import Transactions from SMS
+              </Link>
+            </Button>
+          </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ExpenseChart 
@@ -123,7 +150,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Recent Transactions</h2>
                 <Button variant="ghost" size="sm" asChild>
-                  <a href="/transactions">View All</a>
+                  <Link to="/transactions">View All</Link>
                 </Button>
               </div>
               
@@ -140,7 +167,23 @@ const Dashboard = () => {
                     />
                   ))
                 ) : (
-                  <p className="text-muted-foreground text-center py-6">No transactions yet</p>
+                  <div className="text-center py-8 border rounded-lg flex flex-col items-center">
+                    <p className="text-muted-foreground mb-3">No transactions yet</p>
+                    <div className="flex space-x-2">
+                      <Button size="sm" asChild>
+                        <Link to="/process-sms">
+                          <MessageSquare className="mr-1" size={16} />
+                          Import from SMS
+                        </Link>
+                      </Button>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <Plus className="mr-1" size={16} />
+                          Add Manually
+                        </Button>
+                      </DialogTrigger>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

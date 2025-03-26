@@ -14,6 +14,8 @@ import Transactions from "@/pages/Transactions";
 import Analytics from "@/pages/Analytics";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
+import SmsProviderSelection from "@/pages/SmsProviderSelection";
+import ProcessSmsMessages from "@/pages/ProcessSmsMessages";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ const App = () => (
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/sms-providers" element={<SmsProviderSelection />} />
+          <Route path="/process-sms" element={<ProcessSmsMessages />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/analytics" element={<Analytics />} />
