@@ -47,13 +47,18 @@ export const localeSettingsSchema = z.object({
   timeFormat: z.string()
 });
 
+// Define the result type explicitly for better type safety
+export type ValidationResult<T> = 
+  | { success: true; data: T; error?: never } 
+  | { success: false; error: string; data?: never };
+
 /**
  * Validates data against a schema and returns validation result
  */
 export function validateData<T>(
   schema: z.ZodType<T>,
   data: unknown
-): { success: true; data: T } | { success: false; error: string } {
+): ValidationResult<T> {
   try {
     const result = schema.safeParse(data);
     
