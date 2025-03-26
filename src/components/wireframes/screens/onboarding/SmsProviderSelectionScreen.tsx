@@ -23,7 +23,7 @@ const SmsProviderSelectionScreen: React.FC<SmsProviderSelectionScreenProps> = ({
 }) => {
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   
-  const { handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       providers: []
@@ -31,14 +31,18 @@ const SmsProviderSelectionScreen: React.FC<SmsProviderSelectionScreenProps> = ({
   });
 
   const toggleProvider = (provider: string) => {
-    setSelectedProviders(prev => 
-      prev.includes(provider)
-        ? prev.filter(p => p !== provider)
-        : [...prev, provider]
-    );
+    const newSelection = selectedProviders.includes(provider)
+      ? selectedProviders.filter(p => p !== provider)
+      : [...selectedProviders, provider];
+    
+    setSelectedProviders(newSelection);
+    setValue('providers', newSelection, { shouldValidate: true });
   };
 
   const onSubmit = () => {
+    if (selectedProviders.length === 0) {
+      return; // Don't proceed if no providers selected
+    }
     onComplete(selectedProviders);
   };
 
@@ -77,7 +81,12 @@ const SmsProviderSelectionScreen: React.FC<SmsProviderSelectionScreenProps> = ({
           <p className="text-red-500 text-sm">{errors.providers.message}</p>
         )}
 
-        <WireframeButton type="submit" variant="primary" className="w-full">
+        <WireframeButton 
+          type="submit" 
+          variant="primary" 
+          className="w-full"
+          disabled={selectedProviders.length === 0}
+        >
           Continue
         </WireframeButton>
       </form>

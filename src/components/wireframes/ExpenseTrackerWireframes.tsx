@@ -13,6 +13,10 @@ interface UserData {
   email?: string;
   phone?: string;
   smsProviders?: string[];
+  preferences?: {
+    theme?: 'light' | 'dark' | 'system';
+    notifications?: boolean;
+  };
 }
 
 const ExpenseTrackerWireframes = () => {
@@ -33,7 +37,15 @@ const ExpenseTrackerWireframes = () => {
   >('onboarding');
 
   const handleImportSms = () => {
-    setActiveScreen('sms-transaction');
+    if (!userData.smsProviders || userData.smsProviders.length === 0) {
+      setActiveScreen('sms-provider');
+    } else {
+      setActiveScreen('sms-transaction');
+    }
+  };
+
+  const handleSettings = () => {
+    setActiveScreen('settings');
   };
 
   return (
@@ -51,6 +63,7 @@ const ExpenseTrackerWireframes = () => {
           onAddTransaction={() => setActiveScreen('add-transaction')}
           onReports={() => setActiveScreen('reports')}
           onImportSms={handleImportSms}
+          onSettings={handleSettings}
           userData={userData}
         />
       )}
@@ -65,6 +78,7 @@ const ExpenseTrackerWireframes = () => {
       {activeScreen === 'reports' && (
         <ReportsScreen
           onExportReport={() => alert('Report exported!')}
+          onBack={() => setActiveScreen('dashboard')}
         />
       )}
 
@@ -73,7 +87,7 @@ const ExpenseTrackerWireframes = () => {
           onNext={() => setActiveScreen('dashboard')}
           onComplete={(providers) => {
             handleUpdateUserData({ smsProviders: providers });
-            setActiveScreen('dashboard');
+            setActiveScreen('sms-transaction');
           }}
           onSkip={() => setActiveScreen('dashboard')}
           userData={userData}
