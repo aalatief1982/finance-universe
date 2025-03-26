@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { smsPermissionService } from '@/services/SmsPermissionService';
 import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
 import { transactionService } from '@/services/TransactionService';
+import { Transaction } from '@/types/transaction';
 
 const ProcessSmsMessages = () => {
   const [permissionGranted, setPermissionGranted] = useState(false);
@@ -169,10 +171,10 @@ const ProcessSmsMessages = () => {
     setIsProcessing(false);
     setCurrentTransaction(null);
     
-    // In a real app, save these transactions to your state management or database
+    // In a real app, this would save these transactions to your state management or database
     if (confirmedTransactions.length > 0) {
       // Convert to the format used by our transaction store
-      const formattedTransactions = confirmedTransactions.map(t => ({
+      const formattedTransactions: Transaction[] = confirmedTransactions.map(t => ({
         id: t.id,
         title: t.description,
         amount: t.amount,
@@ -180,12 +182,12 @@ const ProcessSmsMessages = () => {
         date: new Date(t.date).toISOString(),
         type: t.amount < 0 ? 'expense' : 'income',
         notes: t.message,
+        source: 'sms'
       }));
       
       // Use the transaction service to save transactions
       const existingTransactions = transactionService.getAllTransactions();
-      const allTransactions = [...formattedTransactions, ...existingTransactions];
-      transactionService.saveTransactions(allTransactions);
+      transactionService.saveTransactions([...formattedTransactions, ...existingTransactions]);
     }
     
     toast({

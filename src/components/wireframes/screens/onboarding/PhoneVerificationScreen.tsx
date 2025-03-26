@@ -26,10 +26,10 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     handleVerificationCodeChange,
     handleResendCode,
     handleVerifyCode
-  } = usePhoneVerification((phone) => {
+  } = usePhoneVerification(() => {
     toast({
       title: "Verification successful",
-      description: `Phone ${phone} has been verified`,
+      description: `Phone ${phoneNumber} has been verified`,
     });
     onNext();
   });
