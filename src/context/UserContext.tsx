@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
-interface User {
+export interface User {
   id: string;
   phone: string;
   phoneVerified: boolean;
@@ -10,9 +10,17 @@ interface User {
   gender: 'male' | 'female' | null;
   birthDate: Date | null;
   email?: string;
-  avatar?: string; // Added avatar property
+  avatar?: string;
   smsProviders: string[];
   completedOnboarding: boolean;
+  createdAt?: Date;
+  lastActive?: Date;
+  preferences?: {
+    currency: string;
+    theme: 'light' | 'dark' | 'system';
+    notifications: boolean;
+    language: string;
+  };
 }
 
 interface UserContextType {
@@ -28,6 +36,8 @@ interface UserContextType {
   logIn: () => void;
   logOut: () => void;
   isLoading: boolean;
+  loadUserProfile: () => Promise<User | null>;
+  updateUserPreferences: (preferences: Partial<User['preferences']>) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -42,7 +52,9 @@ export const UserContext = createContext<UserContextType>({
   confirmPhoneVerification: async () => false,
   logIn: () => {},
   logOut: () => {},
-  isLoading: false
+  isLoading: false,
+  loadUserProfile: async () => null,
+  updateUserPreferences: () => {}
 });
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -60,6 +72,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
+        
+        // Convert string dates back to Date objects
+        if (parsedUser.birthDate) {
+          parsedUser.birthDate = new Date(parsedUser.birthDate);
+        }
+        if (parsedUser.createdAt) {
+          parsedUser.createdAt = new Date(parsedUser.createdAt);
+        }
+        if (parsedUser.lastActive) {
+          parsedUser.lastActive = new Date(parsedUser.lastActive);
+        }
+        
         setUser(parsedUser);
         setAuth(prev => ({
           ...prev,
@@ -84,8 +108,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const updateUser = (userData: Partial<User>) => {
     setUser(prevUser => {
-      if (!prevUser) return userData as User;
-      return { ...prevUser, ...userData };
+      if (!prevUser) {
+        const newUser: User = {
+          id: userData.id || `user_${Date.now()}`,
+          phone: userData.phone || '',
+          phoneVerified: userData.phoneVerified || false,
+          hasProfile: userData.hasProfile || false,
+          fullName: userData.fullName || '',
+          gender: userData.gender || null,
+          birthDate: userData.birthDate || null,
+          email: userData.email,
+          avatar: userData.avatar,
+          smsProviders: userData.smsProviders || [],
+          completedOnboarding: userData.completedOnboarding || false,
+          createdAt: new Date(),
+          lastActive: new Date(),
+          preferences: userData.preferences || {
+            currency: 'USD',
+            theme: 'light',
+            notifications: true,
+            language: 'en'
+          }
+        };
+        return newUser;
+      }
+      
+      // Update lastActive timestamp
+      const updatedUser = { 
+        ...prevUser, 
+        ...userData,
+        lastActive: new Date() 
+      };
+      
+      return updatedUser;
     });
   };
   
@@ -134,8 +189,31 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
+  const loadUserProfile = async (): Promise<User | null> => {
+    // In a real app, this would fetch user data from the backend
+    // For now, we'll just return the current user from state
+    return user;
+  };
+  
+  const updateUserPreferences = (preferences: Partial<User['preferences']>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      
+      return {
+        ...prevUser,
+        preferences: {
+          ...prevUser.preferences,
+          ...preferences
+        }
+      };
+    });
+  };
+  
   const logIn = () => {
     setAuth(prev => ({ ...prev, isAuthenticated: true }));
+    
+    // Update last active timestamp
+    updateUser({ lastActive: new Date() });
   };
   
   const logOut = () => {
@@ -154,7 +232,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         confirmPhoneVerification,
         logIn,
         logOut,
-        isLoading
+        isLoading,
+        loadUserProfile,
+        updateUserPreferences
       }}
     >
       {children}

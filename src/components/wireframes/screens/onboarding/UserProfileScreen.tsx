@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, Upload, UserRound, Calendar, Mail, X } from 'lucide-react';
+import { Camera, Upload, UserRound, Calendar, Mail, X, User2 } from 'lucide-react';
 import WireframeButton from '../../WireframeButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 interface UserProfileScreenProps {
   onComplete: (profileData: any) => void;
@@ -68,7 +70,8 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
       fullName,
       gender,
       birthDate,
-      email: email || undefined
+      email: email || undefined,
+      createdAt: new Date()
     };
     
     onComplete(profileData);
@@ -76,6 +79,16 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
   
   const removeImage = () => {
     setProfileImage(null);
+  };
+  
+  const getInitials = (name: string) => {
+    if (!name) return '';
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
   
   return (
@@ -96,11 +109,12 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
         <div className="relative mb-4">
           {profileImage ? (
             <div className="relative">
-              <img 
-                src={profileImage} 
-                alt="Profile" 
-                className="w-24 h-24 rounded-full object-cover" 
-              />
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={profileImage} alt="Profile" />
+                <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                  {getInitials(fullName) || <User2 className="h-10 w-10" />}
+                </AvatarFallback>
+              </Avatar>
               <button 
                 className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full"
                 onClick={removeImage}
@@ -109,9 +123,14 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
               </button>
             </div>
           ) : (
-            <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
-              <UserRound className="w-12 h-12 text-gray-400" />
-            </div>
+            <Avatar className="h-24 w-24">
+              <AvatarFallback className={cn(
+                "bg-primary/10 text-primary text-xl",
+                !fullName && "bg-muted"
+              )}>
+                {getInitials(fullName) || <User2 className="h-10 w-10 text-muted-foreground" />}
+              </AvatarFallback>
+            </Avatar>
           )}
         </div>
         
@@ -201,8 +220,8 @@ const UserProfileScreen = ({ onComplete }: UserProfileScreenProps) => {
         
         <div>
           <Label htmlFor="email">Email (Optional)</Label>
-          <div className="flex items-center mt-1">
-            <Mail className="w-4 h-4 text-gray-400 absolute ml-3" />
+          <div className="flex items-center mt-1 relative">
+            <Mail className="w-4 h-4 text-muted-foreground absolute left-3" />
             <Input
               id="email"
               type="email"

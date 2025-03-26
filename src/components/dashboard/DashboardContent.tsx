@@ -6,6 +6,7 @@ import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import { Transaction } from '@/types/transaction';
 import { generateChartData } from '@/lib/mock-data';
 import { motion } from 'framer-motion';
+import { useUser } from '@/context/UserContext';
 
 interface DashboardContentProps {
   transactions: Transaction[];
@@ -20,6 +21,8 @@ const DashboardContent = ({
   setFilter,
   setIsAddingExpense
 }: DashboardContentProps) => {
+  const { user } = useUser();
+  
   // Calculate financial summary
   const income = transactions
     .filter(t => t.amount > 0)
@@ -41,6 +44,15 @@ const DashboardContent = ({
       transition={{ duration: 0.4 }}
       className="space-y-6"
     >
+      <div className="pb-2">
+        <h2 className="text-xl font-bold">
+          {user?.fullName ? `Welcome back, ${user.fullName.split(' ')[0]}` : 'Welcome to your Dashboard'}
+        </h2>
+        <p className="text-muted-foreground">
+          Here's an overview of your finances
+        </p>
+      </div>
+      
       <DashboardStats 
         income={income} 
         expenses={expenses} 
@@ -52,7 +64,9 @@ const DashboardContent = ({
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-card rounded-lg border p-4"
         >
+          <h3 className="font-medium mb-3">Expense Breakdown</h3>
           <ExpenseChart 
             expensesByCategory={categoryData}
             expensesByDate={timelineData}
@@ -63,6 +77,7 @@ const DashboardContent = ({
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
+          className="bg-card rounded-lg border p-4"
         >
           <RecentTransactions 
             filter={filter}

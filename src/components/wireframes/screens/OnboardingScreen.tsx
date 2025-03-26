@@ -6,6 +6,7 @@ import UserProfileScreen from './onboarding/UserProfileScreen';
 import SmsProviderSelectionScreen from './onboarding/SmsProviderSelectionScreen';
 import { useUser } from '@/context/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
 
 interface OnboardingScreenProps {
   onNext?: () => void;
@@ -17,6 +18,7 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   const [step, setStep] = useState(0);
   const { user, updateUser, logIn } = useUser();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // Reset onboarding to step 0 when component mounts
   useEffect(() => {
@@ -28,18 +30,36 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   
   const handleWelcomeComplete = () => {
     setStep(1);
+    toast({
+      title: "Welcome to Expense Tracker",
+      description: "Let's get you set up with a new account"
+    });
   };
   
   const handlePhoneVerificationComplete = () => {
     setStep(2);
+    toast({
+      title: "Phone verified",
+      description: "Your phone number has been successfully verified"
+    });
   };
   
   const handleProfileComplete = (profileData: any) => {
+    // Create a timestamp for account creation
+    const createdAt = new Date();
+    
     updateUser({
       ...profileData,
-      hasProfile: true
+      hasProfile: true,
+      createdAt
     });
+    
     setStep(3);
+    
+    toast({
+      title: "Profile created",
+      description: "Your profile has been set up successfully"
+    });
   };
   
   const handleSmsProviderSelectionComplete = (providers: string[]) => {
@@ -50,6 +70,12 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
     
     // Complete login process
     logIn();
+    
+    toast({
+      title: "Setup complete",
+      description: "Your account is ready to use",
+      variant: "success"
+    });
     
     // If the parent component provided an onNext callback, call it
     if (onNext) {
@@ -68,6 +94,11 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
     
     // Complete login process
     logIn();
+    
+    toast({
+      title: "Setup complete",
+      description: "You can configure SMS providers later"
+    });
     
     // If the parent component provided an onNext callback, call it
     if (onNext) {
