@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
@@ -18,10 +17,11 @@ interface DashboardScreenProps {
   onAddTransaction: () => void;
   onReports: () => void;
   onImportSms: () => void;
+  onSettings: () => void;
   userData?: UserData;
 }
 
-const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, userData }: DashboardScreenProps) => {
+const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, onSettings, userData }: DashboardScreenProps) => {
   const [activeTab, setActiveTab] = useState('all');
   const [period, setPeriod] = useState('month');
   const { transactions, getTransactionsSummary } = useTransactions();
@@ -157,7 +157,7 @@ const DashboardScreen = ({ onAddTransaction, onReports, onImportSms, userData }:
           <MessageSquare size={20} />
         </button>
         
-        <button className="p-2 bg-gray-200 rounded-lg">
+        <button className="p-2 bg-gray-200 rounded-lg" onClick={onSettings}>
           <Settings size={20} />
         </button>
       </div>

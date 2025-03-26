@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
@@ -8,9 +7,10 @@ import { Calendar, PieChart, BarChart, Download } from 'lucide-react';
 
 interface ReportsScreenProps {
   onExportReport?: () => void;
+  onBack?: () => void; // Added missing onBack prop
 }
 
-const ReportsScreen = ({ onExportReport }: ReportsScreenProps) => {
+const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
   const [activeTab, setActiveTab] = useState<'category' | 'timeline'>('category');
   const [period, setPeriod] = useState('month');
   const { getTransactionsByCategory, getTransactionsByTimePeriod } = useTransactions();
@@ -30,7 +30,7 @@ const ReportsScreen = ({ onExportReport }: ReportsScreenProps) => {
   
   return (
     <WireframeContainer>
-      <WireframeHeader title="Reports" />
+      <WireframeHeader title="Reports" onBack={onBack} />
       
       <div className="space-y-4">
         <div className="flex justify-between mb-2">
