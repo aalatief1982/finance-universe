@@ -23,7 +23,7 @@ const Analytics = () => {
     if (storedTransactions) {
       setTransactions(JSON.parse(storedTransactions));
     } else {
-      setTransactions(INITIAL_TRANSACTIONS);
+      setTransactions(INITIAL_TRANSACTIONS as Transaction[]);
     }
   }, []);
 
@@ -47,7 +47,12 @@ const Analytics = () => {
 
   // Generate data for the monthly spending chart
   const getMonthlyData = () => {
-    const grouped = groupByMonth(transactions.filter(t => t.amount < 0));
+    // Filter out transactions that don't have a date field or have amount >= 0
+    const validTransactions = transactions
+      .filter(t => t.amount < 0 && t.date);
+    
+    // Now we can safely pass these to groupByMonth
+    const grouped = groupByMonth(validTransactions);
     
     return Object.entries(grouped).map(([month, txns]) => {
       const total = txns.reduce((sum, t) => sum + Math.abs(t.amount), 0);
