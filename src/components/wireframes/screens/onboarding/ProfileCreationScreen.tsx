@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import WireframeButton from '../../WireframeButton';
 
 interface UserData {
@@ -21,6 +21,8 @@ const ProfileCreationScreen = ({
   onUpdateUserData,
   errors 
 }: ProfileCreationScreenProps) => {
+  const [localErrors, setLocalErrors] = useState<{[key: string]: string}>({});
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     onUpdateUserData({ [name]: value });
@@ -48,7 +50,7 @@ const ProfileCreationScreen = ({
       isValid = false;
     }
     
-    onUpdateUserData({ _errors: newErrors });
+    setLocalErrors(newErrors);
     return isValid;
   };
 
@@ -59,6 +61,9 @@ const ProfileCreationScreen = ({
     }
   };
 
+  // Use combined errors from props and local state
+  const displayErrors = { ...errors, ...localErrors };
+
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit}>
@@ -68,11 +73,11 @@ const ProfileCreationScreen = ({
             name="name"
             type="text" 
             placeholder="Enter your full name" 
-            className={`w-full p-2 border rounded-lg ${errors.name ? 'border-red-500' : ''}`}
+            className={`w-full p-2 border rounded-lg ${displayErrors.name ? 'border-red-500' : ''}`}
             value={userData.name || ''}
             onChange={handleChange}
           />
-          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          {displayErrors.name && <p className="text-red-500 text-sm mt-1">{displayErrors.name}</p>}
         </div>
         
         <div className="mb-4">
@@ -81,11 +86,11 @@ const ProfileCreationScreen = ({
             name="email"
             type="email" 
             placeholder="you@example.com" 
-            className={`w-full p-2 border rounded-lg ${errors.email ? 'border-red-500' : ''}`}
+            className={`w-full p-2 border rounded-lg ${displayErrors.email ? 'border-red-500' : ''}`}
             value={userData.email || ''}
             onChange={handleChange}
           />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          {displayErrors.email && <p className="text-red-500 text-sm mt-1">{displayErrors.email}</p>}
         </div>
         
         <div className="mb-4">
@@ -94,15 +99,17 @@ const ProfileCreationScreen = ({
             name="phone"
             type="tel" 
             placeholder="+1 (000) 000-0000" 
-            className={`w-full p-2 border rounded-lg ${errors.phone ? 'border-red-500' : ''}`}
+            className={`w-full p-2 border rounded-lg ${displayErrors.phone ? 'border-red-500' : ''}`}
             value={userData.phone || ''}
             onChange={handleChange}
           />
-          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+          {displayErrors.phone && <p className="text-red-500 text-sm mt-1">{displayErrors.phone}</p>}
         </div>
         
         <div className="mt-2">
-          <WireframeButton type="submit">Create Account</WireframeButton>
+          <button type="submit" className="w-full py-2 px-4 rounded-lg text-center font-semibold transition-colors bg-blue-600 text-white hover:bg-blue-700">
+            Create Account
+          </button>
         </div>
       </form>
     </div>
