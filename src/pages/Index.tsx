@@ -1,11 +1,42 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-md mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">Expense Tracker App</CardTitle>
+            <CardDescription className="text-center">
+              Track your expenses effortlessly
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-center text-muted-foreground">
+              Welcome to the Expense Tracker App, your personal finance assistant.
+            </p>
+            <div className="grid gap-4">
+              <Button variant="default" className="w-full" onClick={() => {
+                toast({
+                  title: "Getting Started",
+                  description: "Welcome to the Expense Tracker App!",
+                });
+              }}>
+                Get Started
+              </Button>
+              <Link to="/dashboard">
+                <Button variant="outline" className="w-full">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
