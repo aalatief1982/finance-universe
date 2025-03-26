@@ -1,29 +1,81 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronRight, MessageSquare, Shield, CreditCard, Wallet, User } from 'lucide-react';
+import { ChevronRight, MessageSquare, Shield, CreditCard, Wallet, User, Camera, Mail, Phone, Calendar, Trash2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUser } from '@/context/UserContext';
+import { useToast } from '@/components/ui/use-toast';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
 
 const Profile = () => {
-  // In a real app, you would fetch user data from your state management or API
-  const user = {
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    avatar: '/placeholder.svg',
-    smsProvidersConfigured: false
-  };
-
+  const { user, updateUser } = useUser();
+  const { toast } = useToast();
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    fullName: user?.fullName || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    gender: user?.gender || 'male',
+    birthDate: user?.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : '',
+  });
+  
+  const [profileCompletionPercent, setProfileCompletionPercent] = useState(() => {
+    if (!user) return 20;
+    
+    let fields = 0;
+    const totalFields = 5; // fullName, email, phone, gender, birthDate
+    
+    if (user.fullName) fields++;
+    if (user.email) fields++;
+    if (user.phone) fields++;
+    if (user.gender) fields++;
+    if (user.birthDate) fields++;
+    
+    return Math.round((fields / totalFields) * 100);
+  });
+  
   const menuItems = [
     {
       title: 'SMS Providers',
       description: 'Configure financial institutions for transaction tracking',
       icon: MessageSquare,
       link: '/sms-providers',
-      status: user.smsProvidersConfigured ? 'Configured' : 'Not configured',
-      statusColor: user.smsProvidersConfigured ? 'text-green-500' : 'text-amber-500'
+      status: user?.smsProviders?.length ? 'Configured' : 'Not configured',
+      statusColor: user?.smsProviders?.length ? 'text-green-500' : 'text-amber-500'
     },
     {
       title: 'Privacy & Security',
@@ -58,6 +110,79 @@ const Profile = () => {
       statusColor: 'text-foreground'
     }
   ];
+  
+  const handleEditProfile = () => {
+    setIsEditing(true);
+  };
+  
+  const handleSaveProfile = () => {
+    // Update the user profile
+    updateUser({
+      fullName: editFormData.fullName,
+      email: editFormData.email,
+      phone: editFormData.phone,
+      gender: editFormData.gender as 'male' | 'female' | null,
+      birthDate: editFormData.birthDate ? new Date(editFormData.birthDate) : null,
+    });
+    
+    setIsEditing(false);
+    
+    // Calculate new profile completion percentage
+    let fields = 0;
+    const totalFields = 5;
+    
+    if (editFormData.fullName) fields++;
+    if (editFormData.email) fields++;
+    if (editFormData.phone) fields++;
+    if (editFormData.gender) fields++;
+    if (editFormData.birthDate) fields++;
+    
+    setProfileCompletionPercent(Math.round((fields / totalFields) * 100));
+    
+    toast({
+      title: "Profile updated",
+      description: "Your profile information has been saved.",
+    });
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    });
+  };
+  
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // In a real app, you would upload this file to your server or cloud storage
+    // Here we'll just use a local URL
+    const imageUrl = URL.createObjectURL(file);
+    
+    // Update user avatar
+    updateUser({
+      avatar: imageUrl,
+    });
+    
+    toast({
+      title: "Avatar updated",
+      description: "Your profile picture has been updated.",
+    });
+  };
+  
+  const handleDeleteAccount = () => {
+    // In a real app, this would connect to your backend service
+    toast({
+      title: "Account deleted",
+      description: "Your account has been permanently deleted.",
+      variant: "destructive",
+    });
+    
+    // In a real app, you would redirect to the home page after account deletion
+    window.location.href = '/';
+  };
 
   return (
     <Layout>
@@ -69,20 +194,98 @@ const Profile = () => {
       >
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600">
+                <Trash2 className="h-4 w-4 mr-1" />
+                Delete Account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-500 hover:bg-red-600">
+                  Delete Account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
         
         <div className="bg-card rounded-lg border p-6 flex flex-col items-center text-center space-y-4">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold">{user.name}</h2>
-            <p className="text-muted-foreground">{user.email}</p>
+          <div className="relative">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={user?.avatar || '/placeholder.svg'} alt={user?.fullName || 'User'} />
+              <AvatarFallback>{user?.fullName?.charAt(0) || 'U'}</AvatarFallback>
+            </Avatar>
+            <label 
+              htmlFor="avatar-upload" 
+              className="absolute bottom-0 right-0 bg-primary text-primary-foreground h-8 w-8 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+            >
+              <Camera size={14} />
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+            </label>
           </div>
-          <Button variant="outline" size="sm">
+          
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold">{user?.fullName || 'New User'}</h2>
+            <p className="text-muted-foreground">{user?.email || user?.phone || 'No contact info'}</p>
+          </div>
+          
+          <div className="w-full space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Profile Completion</span>
+              <span>{profileCompletionPercent}%</span>
+            </div>
+            <Progress value={profileCompletionPercent} className="h-2" />
+          </div>
+          
+          <Button onClick={handleEditProfile}>
             Edit Profile
           </Button>
+        </div>
+        
+        <div className="bg-card rounded-lg border p-4">
+          <h3 className="font-medium mb-2">Personal Information</h3>
+          <div className="space-y-3">
+            <div className="flex items-center text-sm">
+              <User className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-muted-foreground w-24">Name:</span>
+              <span className="font-medium">{user?.fullName || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-muted-foreground w-24">Email:</span>
+              <span className="font-medium">{user?.email || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-muted-foreground w-24">Phone:</span>
+              <span className="font-medium">{user?.phone || 'Not provided'}</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-muted-foreground w-24">Birth Date:</span>
+              <span className="font-medium">
+                {user?.birthDate 
+                  ? new Date(user.birthDate).toLocaleDateString() 
+                  : 'Not provided'}
+              </span>
+            </div>
+          </div>
         </div>
         
         <div className="space-y-4">
@@ -117,7 +320,7 @@ const Profile = () => {
           ))}
         </div>
         
-        {!user.smsProvidersConfigured && (
+        {!user?.smsProviders?.length && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -134,6 +337,86 @@ const Profile = () => {
           </motion.div>
         )}
       </motion.div>
+      
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <FormLabel htmlFor="fullName">Full Name</FormLabel>
+              <Input
+                id="fullName"
+                name="fullName"
+                value={editFormData.fullName}
+                onChange={handleInputChange}
+                placeholder="Enter your full name"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <FormLabel htmlFor="email">Email Address</FormLabel>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={editFormData.email}
+                onChange={handleInputChange}
+                placeholder="Enter your email address"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <FormLabel htmlFor="phone">Phone Number</FormLabel>
+              <Input
+                id="phone"
+                name="phone"
+                value={editFormData.phone}
+                onChange={handleInputChange}
+                placeholder="Enter your phone number"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <FormLabel>Gender</FormLabel>
+              <RadioGroup
+                value={editFormData.gender}
+                onValueChange={(value) => setEditFormData({...editFormData, gender: value})}
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="male" id="male" />
+                  <label htmlFor="male">Male</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="female" id="female" />
+                  <label htmlFor="female">Female</label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            <div className="space-y-2">
+              <FormLabel htmlFor="birthDate">Birth Date</FormLabel>
+              <Input
+                id="birthDate"
+                name="birthDate"
+                type="date"
+                value={editFormData.birthDate}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleSaveProfile}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
