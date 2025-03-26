@@ -40,3 +40,13 @@ export interface ProfileMenuItem {
   statusColor?: string;
   section: ProfileSection;
 }
+
+export interface ProfileData {
+  image?: string | null;
+  fullName: string;
+  gender: 'male' | 'female' | null;
+  birthDate: Date | null;
+  email?: string;
+  occupation?: string;
+  createdAt?: Date;
+}
