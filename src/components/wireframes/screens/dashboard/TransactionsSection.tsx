@@ -2,7 +2,7 @@
 import React from 'react';
 import { CreditCard, MessageSquare, Plus, RefreshCw } from 'lucide-react';
 import WireframeButton from '../../WireframeButton';
-import { Transaction } from '@/context/TransactionContext';
+import { Transaction } from '@/services/TransactionService';
 
 interface TransactionsSectionProps {
   transactions: Transaction[];
