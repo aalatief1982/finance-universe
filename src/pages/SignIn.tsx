@@ -5,12 +5,13 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
+import { useUser } from '@/context/UserContext';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 
 const formSchema = z.object({
@@ -23,7 +24,9 @@ type FormValues = z.infer<typeof formSchema>;
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -36,13 +39,28 @@ const SignIn = () => {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    // This is where you would typically make an API call to authenticate the user
-    // For now, we'll just simulate a successful login after a delay
+    // Simulate authentication
     setTimeout(() => {
+      // Set user in context
+      setUser({
+        id: '123',
+        name: 'Demo User',
+        email: values.email,
+        phone: '+1234567890',
+        isOnboarded: true,
+        createdAt: new Date().toISOString(),
+        preferences: {
+          currency: 'USD',
+          theme: 'light',
+          notifications: true
+        }
+      });
+      
       toast({
-        title: 'Success!',
+        title: 'Welcome back!',
         description: 'You have been signed in successfully.',
       });
+      
       setIsLoading(false);
       navigate('/dashboard');
     }, 1500);
@@ -121,7 +139,7 @@ const SignIn = () => {
                       </FormItem>
                     )}
                   />
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-end">
                     <Link 
                       to="/forgot-password" 
                       className="text-sm text-primary hover:underline"

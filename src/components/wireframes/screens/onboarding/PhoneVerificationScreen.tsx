@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from '@/context/UserContext';
 import WireframeButton from '../../WireframeButton';
+import { motion } from 'framer-motion';
+import { Phone } from 'lucide-react';
 
 interface PhoneVerificationScreenProps {
   onNext: () => void;
@@ -16,18 +18,26 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
   const [verificationCode, setVerificationCode] = useState(['', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   
   const handleSendCode = () => {
-    if (!phoneNumber) {
+    if (!phoneNumber || phoneNumber.length < 10) {
       setError('Please enter a valid phone number');
       return;
     }
     
     setError('');
     setIsVerificationSent(true);
+    setSuccess('Verification code sent successfully!');
+    
     // Update the user context with the phone number
     updateUser({ phone: phoneNumber });
+    
     // In a real app, this would send a verification code to the phone number
+    // For demo, we'll just simulate a success message
+    setTimeout(() => {
+      setSuccess('');
+    }, 3000);
   };
   
   const handleVerificationCodeChange = (index: number, value: string) => {
@@ -51,8 +61,12 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
       setIsVerifying(true);
       setTimeout(() => {
         setIsVerifying(false);
-        onNext();
-      }, 1000); // Simulate verification delay
+        setSuccess('Phone number verified successfully!');
+        // Wait a moment before proceeding to next step
+        setTimeout(() => {
+          onNext();
+        }, 1000);
+      }, 1500); // Simulate verification delay
     }
   };
 
@@ -72,17 +86,32 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
     // In a real app, this would resend the verification code
     
     // Show a user-friendly message
-    setError('A new code has been sent to your phone');
+    setSuccess('A new code has been sent to your phone');
     setTimeout(() => {
-      setError('');
+      setSuccess('');
     }, 3000);
   };
 
   return (
-    <div className="space-y-4">
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       {!isVerificationSent ? (
         <>
-          <div className="mb-4">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+              <Phone className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-medium">Verify Your Phone Number</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              We'll send you a verification code to confirm your phone
+            </p>
+          </div>
+          
+          <div className="mb-6">
             <Label htmlFor="phone-number" className="block text-gray-700 mb-2">Enter Mobile Number</Label>
             <Input 
               id="phone-number"
@@ -93,24 +122,38 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
               className={error ? "border-red-500" : ""}
             />
             {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            {success && <p className="text-green-500 text-sm mt-1">{success}</p>}
           </div>
-          <WireframeButton onClick={handleSendCode}>Send Verification Code</WireframeButton>
+          
+          <WireframeButton 
+            onClick={handleSendCode}
+            variant="primary"
+            className="w-full"
+          >
+            Send Verification Code
+          </WireframeButton>
         </>
       ) : (
         <>
-          <div className="text-center mb-4">
-            <p className="text-gray-700 mb-1">Enter the 4-digit code sent to</p>
-            <p className="font-bold">{phoneNumber}</p>
-            {error && <p className="text-blue-500 text-sm mt-2">{error}</p>}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+              <Phone className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-medium">Enter Verification Code</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enter the 4-digit code sent to <span className="font-medium">{phoneNumber}</span>
+            </p>
+            {success && <p className="text-green-500 text-sm mt-2">{success}</p>}
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
           
-          <div className="flex justify-center space-x-2 mb-6">
+          <div className="flex justify-center space-x-3 mb-6">
             {verificationCode.map((digit, index) => (
               <Input
                 key={index}
                 id={`code-input-${index}`}
                 type="text"
-                className="w-12 h-12 text-center text-xl"
+                className="w-14 h-14 text-center text-xl font-semibold"
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
@@ -122,26 +165,27 @@ const PhoneVerificationScreen = ({ onNext }: PhoneVerificationScreenProps) => {
           
           <div className="text-center">
             <button 
-              className="text-blue-600 underline" 
+              className="text-primary hover:text-primary/80 text-sm font-medium underline" 
               onClick={handleResendCode}
               type="button"
             >
-              Resend Code
+              Didn't receive a code? Resend
             </button>
           </div>
           
-          <div className="mt-4">
+          <div className="mt-6">
             <WireframeButton 
               onClick={onNext}
               variant={verificationCode.every(digit => digit) ? 'primary' : 'secondary'}
-              disabled={isVerifying}
+              disabled={isVerifying || !verificationCode.every(digit => digit)}
+              className="w-full"
             >
               {isVerifying ? 'Verifying...' : 'Verify and Continue'}
             </WireframeButton>
           </div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 };
 

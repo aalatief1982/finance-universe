@@ -7,6 +7,8 @@ import WelcomeScreen from './onboarding/WelcomeScreen';
 import PhoneVerificationScreen from './onboarding/PhoneVerificationScreen';
 import ProfileCreationScreen from './onboarding/ProfileCreationScreen';
 import SmsProviderSelectionScreen from './onboarding/SmsProviderSelectionScreen';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronLeft } from 'lucide-react';
 
 interface UserData {
   name?: string;
@@ -45,6 +47,12 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
         updateUser({ isOnboarded: true });
         onNext();
       }
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
     }
   };
 
@@ -106,8 +114,42 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
 
   return (
     <WireframeContainer>
-      <WireframeHeader title={screenTitles[step]} />
-      {renderStep()}
+      <WireframeHeader 
+        title={screenTitles[step]} 
+        leftElement={
+          step > 0 ? (
+            <button 
+              onClick={handleBack}
+              className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back
+            </button>
+          ) : undefined
+        }
+        rightElement={
+          <div className="flex space-x-1">
+            {[0, 1, 2, 3].map((s) => (
+              <div 
+                key={s} 
+                className={`h-1.5 rounded-full ${s === step ? 'w-5 bg-primary' : 'w-2 bg-muted'}`}
+              />
+            ))}
+          </div>
+        }
+      />
+      
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          {renderStep()}
+        </motion.div>
+      </AnimatePresence>
     </WireframeContainer>
   );
 };
