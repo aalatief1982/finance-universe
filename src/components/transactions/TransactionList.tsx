@@ -304,9 +304,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
             ) : (
               <TransactionTable
                 transactions={prepareTransactionsWithPath(paginatedTransactions)}
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSort={handleSort}
+                sortField={effectiveSortField}
+                sortDirection={effectiveSortDirection}
+                onSort={handleSortChange}
                 onRowClick={onEdit}
               />
             )}
