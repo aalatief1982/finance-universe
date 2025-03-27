@@ -1,4 +1,4 @@
-// DataManagementSettings.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,9 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Download, UploadCloud, RefreshCw, Shield, Trash } from 'lucide-react';
+import { Download, UploadCloud, RefreshCw, Database } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { getUserSettings, storeUserSettings, backupData, restoreData, clearAllData } from '@/utils/storage-utils';
+import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
 
 const DataManagementSettings = () => {
   const { toast } = useToast();
@@ -68,28 +68,20 @@ const DataManagementSettings = () => {
   
   const handleExportData = () => {
     try {
-      // Create data backup
-      const backupString = backupData();
-      
-      if (!backupString) {
+      const data = localStorage.getItem('transactions');
+      if (!data) {
         toast({
           title: "No data to export",
-          description: "You don't have any data to export.",
+          description: "You don't have any transactions to export.",
           variant: "destructive",
         });
         return;
       }
       
-      // Create download link
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(backupString);
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(data);
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
-      
-      // Create filename with current date
-      const date = new Date().toISOString().split('T')[0];
-      downloadAnchorNode.setAttribute("download", `expense-tracker-backup-${date}.json`);
-      
-      // Trigger download
+      downloadAnchorNode.setAttribute("download", "expense-tracker-data.json");
       document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
@@ -108,7 +100,6 @@ const DataManagementSettings = () => {
   };
   
   const handleImportData = () => {
-    // Create file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.json';
@@ -122,27 +113,17 @@ const DataManagementSettings = () => {
       
       reader.onload = (event) => {
         try {
-          const result = event.target?.result as string;
-          const success = restoreData(result);
-          
-          if (success) {
-            toast({
-              title: "Import successful",
-              description: "Your data has been imported successfully.",
-            });
-            // Reload page to reflect changes
-            window.location.reload();
-          } else {
-            toast({
-              title: "Import failed",
-              description: "The backup file couldn't be processed.",
-              variant: "destructive",
-            });
-          }
+          const jsonData = JSON.parse(event.target?.result as string);
+          localStorage.setItem('transactions', JSON.stringify(jsonData));
+          toast({
+            title: "Import successful",
+            description: "Your data has been imported successfully.",
+          });
+          setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
           toast({
             title: "Import failed",
-            description: "An error occurred while importing your data.",
+            description: "Failed to parse the imported file. Make sure it's a valid JSON file.",
             variant: "destructive",
           });
         }
@@ -151,33 +132,23 @@ const DataManagementSettings = () => {
       reader.readAsText(file);
     };
     
-    // Trigger file selection
     fileInput.click();
   };
   
   const handleResetData = () => {
-    try {
-      clearAllData();
-      toast({
-        title: "Data reset successful",
-        description: "All your data has been reset.",
-      });
-      // Reload page to reflect changes
-      window.location.reload();
-    } catch (error) {
-      toast({
-        title: "Reset failed",
-        description: "An error occurred while resetting your data.",
-        variant: "destructive",
-      });
-    }
+    localStorage.removeItem('transactions');
+    toast({
+      title: "Data reset successful",
+      description: "All your transaction data has been reset.",
+    });
+    window.location.reload();
   };
   
   return (
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Shield className="mr-2" size={20} />
+          <Database className="mr-2" size={20} />
           <span>Data Management</span>
         </CardTitle>
         <CardDescription>Manage your data and privacy settings</CardDescription>

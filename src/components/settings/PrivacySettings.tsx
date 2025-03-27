@@ -1,10 +1,10 @@
-// PrivacySettings.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, EyeOff, Lock, UserX } from 'lucide-react';
+import { Eye, EyeOff, Lock, Shield } from 'lucide-react';
 import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
 
 const PrivacySettings = () => {
@@ -66,7 +66,7 @@ const PrivacySettings = () => {
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Lock className="mr-2" size={20} />
+          <Shield className="mr-2" size={20} />
           <span>Privacy Settings</span>
         </CardTitle>
         <CardDescription>Control your privacy and security options</CardDescription>
@@ -108,7 +108,7 @@ const PrivacySettings = () => {
         
         <div className="space-y-2">
           <Label htmlFor="data-sharing" className="flex items-center">
-            <UserX size={16} className="mr-2" />
+            <Shield size={16} className="mr-2" />
             Data Sharing
           </Label>
           <Select value={dataSharing} onValueChange={handleDataSharingChange}>
