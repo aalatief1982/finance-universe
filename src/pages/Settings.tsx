@@ -225,6 +225,7 @@ const Settings = () => {
 
   // Fix the Switch component handler in the maskAmounts section
   const handleMaskAmountsChange = (checked: boolean) => {
+    // Use the boolean directly without any type assertions
     setMaskAmounts(checked);
     updatePrivacySettings({
       maskAmounts: checked,

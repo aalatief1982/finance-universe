@@ -1,4 +1,3 @@
-
 import { SupportedLocale, SupportedCurrency, LocaleSettings } from '@/types/locale';
 import { handleError } from '../error-utils';
 import { ErrorType } from '@/types/error';
@@ -128,12 +127,11 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
             currency: settings.currency || userSettings.currency,
             language: settings.locale ? settings.locale.split('-')[0] : userSettings.language,
             displayOptions: {
-              // Safely handle displayOptions properties with proper type checking
-              // Provide defaults for each property to ensure type safety
-              defaultView: displayOptions.defaultView as 'list' | 'stats' | 'calendar' || 'list',
-              compactMode: Boolean(displayOptions.compactMode),
-              showCategories: Boolean(displayOptions.showCategories !== false),
-              showTags: Boolean(displayOptions.showTags !== false),
+              // Safe access with type assertions and defaults
+              defaultView: (displayOptions as any).defaultView || 'list',
+              compactMode: Boolean((displayOptions as any).compactMode),
+              showCategories: (displayOptions as any).showCategories === false ? false : true,
+              showTags: (displayOptions as any).showTags === false ? false : true,
               // Preserve weekStartsOn from settings.firstDayOfWeek
               weekStartsOn: settings.firstDayOfWeek === 1 ? 'monday' : 'sunday',
               // Handle showCents from settings.numberFormat
