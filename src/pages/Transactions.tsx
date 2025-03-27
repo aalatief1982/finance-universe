@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -24,7 +25,12 @@ const Transactions = () => {
     handleEditTransaction,
     handleDeleteTransaction,
     openEditDialog,
-    setCurrentTransaction
+    setCurrentTransaction,
+    // Add sorting properties
+    sortField,
+    sortDirection,
+    setSortDirection,
+    handleSort
   } = useTransactionsState();
 
   return (
@@ -48,6 +54,10 @@ const Transactions = () => {
             onEdit={openEditDialog}
             onDelete={handleDeleteTransaction}
             onAdd={() => setIsAddingExpense(true)}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onSortDirectionChange={setSortDirection}
           />
         </motion.div>
       </Layout>

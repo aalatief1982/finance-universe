@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Transaction } from '@/types/transaction';
@@ -24,13 +25,21 @@ interface TransactionListProps {
   onEdit: (transaction: Transaction) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
+  sortField?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (field: string) => void;
+  onSortDirectionChange?: (direction: 'asc' | 'desc') => void;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
   transactions,
   onEdit,
   onDelete,
-  onAdd
+  onAdd,
+  sortField: externalSortField,
+  sortDirection: externalSortDirection,
+  onSort: externalOnSort,
+  onSortDirectionChange: externalOnSortDirectionChange
 }) => {
   const { toast } = useToast();
   // View mode state
@@ -60,14 +69,24 @@ const TransactionList: React.FC<TransactionListProps> = ({
     hasActiveFilters
   } = useTransactionsFilters({ transactions });
 
-  // Use the sorting hook
+  // Use the sorting hook with external control if provided
   const {
     sortedTransactions,
-    sortField,
-    sortDirection,
-    setSortDirection,
-    handleSort
-  } = useTransactionsSorting({ filteredTransactions });
+    sortField: internalSortField,
+    sortDirection: internalSortDirection,
+    setSortDirection: internalSetSortDirection,
+    handleSort: internalHandleSort
+  } = useTransactionsSorting({ 
+    filteredTransactions,
+    initialSortField: externalSortField,
+    initialSortDirection: externalSortDirection
+  });
+
+  // Determine which sort controls to use
+  const effectiveSortField = externalSortField || internalSortField || 'date';
+  const effectiveSortDirection = externalSortDirection || internalSortDirection || 'desc';
+  const handleSortChange = externalOnSort || internalHandleSort;
+  const handleSortDirectionChange = externalOnSortDirectionChange || internalSetSortDirection;
 
   // Use the pagination hook
   const {
@@ -214,10 +233,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </div>
         {viewMode === 'table' && (
           <TransactionSortControls
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            onSortDirectionChange={setSortDirection}
+            sortField={effectiveSortField}
+            sortDirection={effectiveSortDirection}
+            onSort={handleSortChange}
+            onSortDirectionChange={handleSortDirectionChange}
           />
         )}
       </div>

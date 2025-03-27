@@ -4,18 +4,25 @@ import { Transaction } from '@/types/transaction';
 
 interface UseTransactionsSortingProps {
   filteredTransactions: Transaction[];
+  initialSortField?: string;
+  initialSortDirection?: 'asc' | 'desc';
 }
 
-export function useTransactionsSorting({ filteredTransactions }: UseTransactionsSortingProps) {
+export function useTransactionsSorting({ 
+  filteredTransactions,
+  initialSortField = 'date',
+  initialSortDirection = 'desc'
+}: UseTransactionsSortingProps) {
   const [sortedTransactions, setSortedTransactions] = useState<Transaction[]>([]);
-  const [sortField, setSortField] = useState('date');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = useState<string>(initialSortField);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(initialSortDirection);
 
+  // Apply sorting whenever transactions, sort field or direction changes
   useEffect(() => {
-    // Sort transactions
     const sorted = [...filteredTransactions].sort((a, b) => {
       let comparison = 0;
       
+      // Handle different field types
       switch(sortField) {
         case 'date':
           comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -30,21 +37,25 @@ export function useTransactionsSorting({ filteredTransactions }: UseTransactions
           comparison = a.amount - b.amount;
           break;
         default:
-          comparison = 0;
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
       }
       
+      // Apply sort direction
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-
+    
     setSortedTransactions(sorted);
   }, [filteredTransactions, sortField, sortDirection]);
 
+  // Handle sort field change
   const handleSort = (field: string) => {
     if (sortField === field) {
+      // If clicking the same field, toggle direction
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
+      // If clicking a new field, set it and default to descending
       setSortField(field);
-      setSortDirection('desc'); // Default to descending for new field
+      setSortDirection('desc');
     }
   };
 
@@ -52,6 +63,7 @@ export function useTransactionsSorting({ filteredTransactions }: UseTransactions
     sortedTransactions,
     sortField,
     sortDirection,
+    setSortField,
     setSortDirection,
     handleSort
   };
