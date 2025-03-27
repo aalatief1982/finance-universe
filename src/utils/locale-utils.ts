@@ -292,9 +292,9 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
               weekStartsOn: settings.firstDayOfWeek === 1 ? 'monday' : 'sunday',
               // Keep existing values or use defaults
               defaultView: displayOptions.defaultView || 'list',
-              compactMode: displayOptions.compactMode !== undefined ? displayOptions.compactMode : false,
-              showCategories: displayOptions.showCategories !== undefined ? displayOptions.showCategories : true,
-              showTags: displayOptions.showTags !== undefined ? displayOptions.showTags : true,
+              compactMode: typeof displayOptions.compactMode !== 'undefined' ? displayOptions.compactMode : false,
+              showCategories: typeof displayOptions.showCategories !== 'undefined' ? displayOptions.showCategories : true,
+              showTags: typeof displayOptions.showTags !== 'undefined' ? displayOptions.showTags : true,
               // Map date format
               dateFormat: settings.dateFormat === 'dd/MM/yyyy' ? 'DD/MM/YYYY' : 
                           settings.dateFormat === 'yyyy-MM-dd' ? 'YYYY-MM-DD' : 
@@ -839,6 +839,4 @@ export const convertCurrency = (
     const fromToUsd = fromCurrency === 'USD' ? 1 : (exchangeRates[`${fromCurrency}_USD`] || (1 / exchangeRates[`USD_${fromCurrency}`]));
     const usdToTarget = toCurrency === 'USD' ? 1 : (exchangeRates[`USD_${toCurrency}`] || (1 / exchangeRates[`${toCurrency}_USD`]));
     
-    return amount * fromToUsd * usdToTarget;
-  }
-}
+    return
