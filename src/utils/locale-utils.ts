@@ -839,4 +839,6 @@ export const convertCurrency = (
     const fromToUsd = fromCurrency === 'USD' ? 1 : (exchangeRates[`${fromCurrency}_USD`] || (1 / exchangeRates[`USD_${fromCurrency}`]));
     const usdToTarget = toCurrency === 'USD' ? 1 : (exchangeRates[`USD_${toCurrency}`] || (1 / exchangeRates[`${toCurrency}_USD`]));
     
-    return
+    return amount * fromToUsd * usdToTarget;
+  }
+};
