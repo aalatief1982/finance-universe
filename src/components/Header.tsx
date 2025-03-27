@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Home, PieChart, List, Settings, User, Menu, X, LogOut } from 'lucide-react';
+import { Home, PieChart, List, Settings, User, Menu, X, LogOut, MessageSquare } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -74,21 +73,16 @@ const Header = ({ className }: HeaderProps) => {
   
   // Navigation items - only show non-auth pages if not on landing page
   const navItems = !isLandingPage ? [
-    { title: 'Dashboard', path: '/dashboard', icon: Home },
-    { title: 'Analytics', path: '/analytics', icon: PieChart },
-    { title: 'Transactions', path: '/transactions', icon: List },
-    { title: 'Settings', path: '/settings', icon: Settings },
-    { title: 'Profile', path: '/profile', icon: User },
-  ] : [];
-
-  // Mobile navigation items
-  const mobileNavItems = [
     { title: 'Dashboard', path: '/dashboard', icon: Home, description: 'Overview of your finances' },
     { title: 'Analytics', path: '/analytics', icon: PieChart, description: 'Detailed reports and charts' },
     { title: 'Transactions', path: '/transactions', icon: List, description: 'View and manage your transactions' },
+    { title: 'Process SMS', path: '/process-sms', icon: MessageSquare, description: 'Import transactions from SMS' },
     { title: 'Settings', path: '/settings', icon: Settings, description: 'Configure app preferences' },
     { title: 'Profile', path: '/profile', icon: User, description: 'Manage your profile' },
-  ];
+  ] : [];
+
+  // Mobile navigation items - same as navItems but kept for clarity
+  const mobileNavItems = navItems;
   
   // Auth links - only show on landing page
   const authLinks = isLandingPage ? (
@@ -96,12 +90,14 @@ const Header = ({ className }: HeaderProps) => {
       <Link 
         to="/signin" 
         className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+        aria-label="Sign in to your account"
       >
         Sign In
       </Link>
       <Link 
         to="/signup"
         className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+        aria-label="Create a new account"
       >
         Sign Up
       </Link>
@@ -113,7 +109,7 @@ const Header = ({ className }: HeaderProps) => {
           <NavigationMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User profile and options">
                   <Avatar>
                     <AvatarImage src="/placeholder.svg" alt={user?.fullName || 'User'} />
                     <AvatarFallback>
@@ -200,6 +196,7 @@ const Header = ({ className }: HeaderProps) => {
                             : "text-muted-foreground hover:text-foreground hover:bg-accent"
                         )}
                         title={item.title}
+                        aria-current={location.pathname === item.path ? "page" : undefined}
                       >
                         <item.icon size={18} className="mr-2" />
                         {item.title}
@@ -224,7 +221,7 @@ const Header = ({ className }: HeaderProps) => {
               <div className="md:hidden">
                 <Sheet>
                   <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Open navigation menu">
                       <Menu size={20} />
                     </Button>
                   </SheetTrigger>
@@ -265,6 +262,7 @@ const Header = ({ className }: HeaderProps) => {
                                   ? "bg-primary/10 text-primary" 
                                   : "text-foreground"
                               )}
+                              aria-current={location.pathname === item.path ? "page" : undefined}
                             >
                               <item.icon size={20} className="mr-3" />
                               <div>
