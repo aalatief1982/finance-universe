@@ -24,37 +24,61 @@ const DashboardContent = ({
 }: DashboardContentProps) => {
   const { user } = useUser();
   
-  // Calculate financial summary
-  const income = transactions
-    .filter(t => t.amount > 0)
+  // Defensive check for transactions array
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+  
+  // Calculate financial summary with safer approach
+  const income = safeTransactions
+    .filter(t => t && typeof t.amount === 'number' && t.amount > 0)
     .reduce((sum, t) => sum + t.amount, 0);
   
-  const expenses = transactions
-    .filter(t => t.amount < 0)
+  const expenses = safeTransactions
+    .filter(t => t && typeof t.amount === 'number' && t.amount < 0)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   
   const balance = income - expenses;
 
-  // Calculate previous month's balance for comparison
+  // Calculate previous month's balance with defensive approach
   const today = new Date();
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const lastMonthTransactions = transactions.filter(tx => {
-    const txDate = new Date(tx.date);
-    return txDate < firstDayOfMonth;
+  
+  const lastMonthTransactions = safeTransactions.filter(tx => {
+    // Skip invalid transactions
+    if (!tx || !tx.date) return false;
+    
+    try {
+      const txDate = new Date(tx.date);
+      return txDate < firstDayOfMonth;
+    } catch (error) {
+      console.warn('Invalid date format in transaction:', tx);
+      return false;
+    }
   });
 
   const previousIncome = lastMonthTransactions
-    .filter(t => t.amount > 0)
+    .filter(t => t && typeof t.amount === 'number' && t.amount > 0)
     .reduce((sum, t) => sum + t.amount, 0);
   
   const previousExpenses = lastMonthTransactions
-    .filter(t => t.amount < 0)
+    .filter(t => t && typeof t.amount === 'number' && t.amount < 0)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   
   const previousBalance = previousIncome - previousExpenses;
 
-  // Generate chart data
-  const { categoryData, timelineData } = generateChartData(transactions);
+  // Generate chart data with error handling
+  let categoryData = [];
+  let timelineData = [];
+  
+  try {
+    const chartData = generateChartData(safeTransactions);
+    categoryData = chartData.categoryData || [];
+    timelineData = chartData.timelineData || [];
+  } catch (error) {
+    console.error('Error generating chart data:', error);
+    // Provide empty arrays as fallback
+    categoryData = [];
+    timelineData = [];
+  }
 
   // Placeholder skeleton for loading state
   if (isLoading) {
@@ -120,7 +144,7 @@ const DashboardContent = ({
           <RecentTransactions 
             filter={filter}
             setFilter={setFilter}
-            transactions={transactions}
+            transactions={safeTransactions}
             setIsAddingExpense={setIsAddingExpense}
           />
         </motion.div>
