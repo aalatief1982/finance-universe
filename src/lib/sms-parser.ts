@@ -1,5 +1,6 @@
-
 // This module contains the SMS parsing logic for the expense tracker app
+import { transactionService } from '@/services/TransactionService';
+import { CategoryRule } from '@/types/transaction';
 
 export interface ParsedTransaction {
   amount: number;
@@ -17,11 +18,9 @@ const BANK_PATTERNS = [
     regex: /Your account has been (credited|debited) with (\$|USD) ?([0-9,]+\.\d{2})/i,
     isExpense: (matches: RegExpMatchArray) => matches[1].toLowerCase() === 'debited',
     getAmount: (matches: RegExpMatchArray) => parseFloat(matches[3].replace(/,/g, '')),
-    getCategory: (message: string) => {
-      if (message.includes('salary') || message.includes('payroll')) return 'Income';
-      if (message.includes('grocery') || message.includes('supermarket')) return 'Groceries';
-      if (message.includes('restaurant') || message.includes('cafe')) return 'Dining';
-      return 'Miscellaneous';
+    getDescription: (message: string) => {
+      const merchantMatch = message.match(/at ([A-Za-z0-9\s&]+) on/i);
+      return merchantMatch ? merchantMatch[1].trim() : "Bank Transaction";
     }
   },
   {
@@ -29,20 +28,14 @@ const BANK_PATTERNS = [
     regex: /(Purchase|Payment) of (\$|USD) ?([0-9,]+\.\d{2}) at (.+) on/i,
     isExpense: (matches: RegExpMatchArray) => matches[1].toLowerCase() === 'purchase',
     getAmount: (matches: RegExpMatchArray) => parseFloat(matches[3].replace(/,/g, '')),
-    getCategory: (message: string, matches: RegExpMatchArray) => {
-      const merchant = matches[4].toLowerCase();
-      if (merchant.includes('amazon') || merchant.includes('store')) return 'Shopping';
-      if (merchant.includes('uber') || merchant.includes('lyft')) return 'Transport';
-      if (merchant.includes('netflix') || merchant.includes('spotify')) return 'Entertainment';
-      return 'Miscellaneous';
-    }
+    getDescription: (message: string, matches: RegExpMatchArray) => matches[4].trim()
   },
   {
     bank: "Investment Corp",
     regex: /Dividend of (\$|USD) ?([0-9,]+\.\d{2}) has been (credited|deposited)/i,
     isExpense: () => false, // Dividends are always income
     getAmount: (matches: RegExpMatchArray) => parseFloat(matches[2].replace(/,/g, '')),
-    getCategory: () => 'Investments'
+    getDescription: () => "Dividend Payment"
   }
 ];
 
@@ -58,15 +51,20 @@ export function parseSmsMessage(message: string, sender: string): ParsedTransact
       const isExpense = pattern.isExpense(matches);
       let amount = pattern.getAmount(matches);
       if (isExpense) amount = -amount; // Convert to negative for expenses
+
+      const description = pattern.getDescription ? 
+        pattern.getDescription(message, matches) : 
+        extractDescription(message, sender);
       
-      const category = pattern.getCategory(message, matches);
+      // Apply category rules to determine the category
+      const category = applyCategoryRules(description, amount, message);
       
       return {
         amount,
-        date: new Date(), // In a real app, try to extract the date from the message
+        date: extractDateFromMessage(message) || new Date(),
         sender: pattern.bank,
         category,
-        description: extractDescription(message, sender),
+        description,
         rawMessage: message
       };
     }
@@ -92,6 +90,93 @@ function extractDescription(message: string, sender: string): string {
   
   // Fallback to truncated message
   return message.length > 50 ? message.substring(0, 50) + '...' : message;
+}
+
+/**
+ * Attempt to extract a date from the message
+ */
+function extractDateFromMessage(message: string): Date | null {
+  // Look for common date formats in the message
+  
+  // Format: MM/DD or MM/DD/YYYY
+  const dateMatch1 = message.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+  if (dateMatch1) {
+    const month = parseInt(dateMatch1[1], 10) - 1; // JS months are 0-indexed
+    const day = parseInt(dateMatch1[2], 10);
+    const year = dateMatch1[3] ? parseInt(dateMatch1[3], 10) : new Date().getFullYear();
+    const fullYear = year < 100 ? 2000 + year : year;
+    
+    const date = new Date(fullYear, month, day);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  // Format: DD-MM-YYYY or variations
+  const dateMatch2 = message.match(/\b(\d{1,2})[.-](\d{1,2})[.-](\d{2,4})\b/);
+  if (dateMatch2) {
+    const day = parseInt(dateMatch2[1], 10);
+    const month = parseInt(dateMatch2[2], 10) - 1; // JS months are 0-indexed
+    const year = parseInt(dateMatch2[3], 10);
+    const fullYear = year < 100 ? 2000 + year : year;
+    
+    const date = new Date(fullYear, month, day);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  // Format: "on January 15" or similar
+  const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  const monthPattern = months.join('|');
+  const dateMatch3 = message.match(new RegExp(`\\b(?:on|date)\\s+(${monthPattern})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b`, 'i'));
+  
+  if (dateMatch3) {
+    const month = months.indexOf(dateMatch3[1].toLowerCase());
+    const day = parseInt(dateMatch3[2], 10);
+    const year = new Date().getFullYear(); // Assume current year
+    
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  return null; // Couldn't extract date
+}
+
+/**
+ * Apply category rules to determine the transaction category
+ */
+function applyCategoryRules(description: string, amount: number, rawMessage: string): string {
+  // Get the category rules from the transaction service
+  const rules = transactionService.getCategoryRules();
+  
+  // Combine all text fields for matching
+  const textToMatch = [description, rawMessage]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  
+  // Sort rules by priority (higher priority first)
+  const sortedRules = [...rules].sort((a, b) => b.priority - a.priority);
+  
+  // Try to match rules in priority order
+  for (const rule of sortedRules) {
+    let isMatch = false;
+    
+    if (rule.isRegex) {
+      try {
+        const regex = new RegExp(rule.pattern, 'i');
+        isMatch = regex.test(textToMatch);
+      } catch (err) {
+        console.error('Invalid regex pattern in category rule:', rule.pattern);
+      }
+    } else {
+      isMatch = textToMatch.includes(rule.pattern.toLowerCase());
+    }
+    
+    if (isMatch) {
+      return rule.categoryId;
+    }
+  }
+  
+  // If no rule matches, use basic categorization
+  return categorizeTransaction(description, amount);
 }
 
 /**
