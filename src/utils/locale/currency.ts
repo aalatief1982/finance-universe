@@ -1,5 +1,5 @@
 
-import { SupportedCurrency, CurrencyInfo } from '@/types/locale';
+import { SupportedCurrency, CurrencyInfo, SupportedLocale } from '@/types/locale';
 import { handleError } from '../error-utils';
 import { ErrorType } from '@/types/error';
 import { getUserSettings } from '../storage-utils';
