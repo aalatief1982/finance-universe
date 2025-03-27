@@ -55,9 +55,10 @@ const Settings = () => {
     user?.preferences?.displayOptions?.compactMode || false
   );
   
-  // Using a boolean type for maskAmounts
+  // Initialize maskAmounts with default value from user preferences or false
+  // No explicit type annotation to let TypeScript infer it properly
   const [maskAmounts, setMaskAmounts] = useState(
-    user?.preferences?.privacy?.maskAmounts || false
+    Boolean(user?.preferences?.privacy?.maskAmounts)
   );
   
   const [requireAuth, setRequireAuth] = useState(
@@ -286,7 +287,7 @@ const Settings = () => {
                       Dark
                     </ToggleGroupItem>
                     <ToggleGroupItem value="system" className="gap-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-monitor"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide lucide-monitor"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></svg>
                       System
                     </ToggleGroupItem>
                   </ToggleGroup>
