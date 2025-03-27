@@ -1,3 +1,4 @@
+
 import { SupportedLocale, SupportedCurrency, LocaleSettings } from '@/types/locale';
 import { handleError } from '../error-utils';
 import { ErrorType } from '@/types/error';
@@ -117,6 +118,7 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
       
       // Only update user settings if they exist
       if (userSettings) {
+        // Make sure displayOptions is defined with proper type
         const displayOptions = userSettings.displayOptions || {};
         
         // Update user preferences with the new locale settings
@@ -129,11 +131,11 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
               // Preserve existing display options
               showCents: settings.numberFormat?.minimumFractionDigits !== 0,
               weekStartsOn: settings.firstDayOfWeek === 1 ? 'monday' : 'sunday',
-              // Use existing values with proper optional chaining and defaults
-              defaultView: displayOptions?.defaultView || 'list',
-              compactMode: displayOptions?.compactMode || false,
-              showCategories: displayOptions?.showCategories || true,
-              showTags: displayOptions?.showTags || true,
+              // Properly handle existing properties with safe defaults
+              defaultView: typeof displayOptions.defaultView === 'string' ? displayOptions.defaultView : 'list',
+              compactMode: typeof displayOptions.compactMode === 'boolean' ? displayOptions.compactMode : false,
+              showCategories: typeof displayOptions.showCategories === 'boolean' ? displayOptions.showCategories : true,
+              showTags: typeof displayOptions.showTags === 'boolean' ? displayOptions.showTags : true,
               // Map date format
               dateFormat: settings.dateFormat === 'dd/MM/yyyy' ? 'DD/MM/YYYY' : 
                           settings.dateFormat === 'yyyy-MM-dd' ? 'YYYY-MM-DD' : 

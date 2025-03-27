@@ -223,7 +223,7 @@ const Settings = () => {
 
   // Fix the Switch component handler in the maskAmounts section
   const handleMaskAmountsChange = (checked: boolean) => {
-    setMaskAmounts(checked);
+    setMaskAmounts(checked); // This should work with boolean since the state is defined as boolean
     updatePrivacySettings({
       maskAmounts: checked,
       requireAuthForSensitiveActions: requireAuth,
