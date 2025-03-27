@@ -7,27 +7,130 @@ import { useTransactionsFilters } from './transactions/useTransactionsFilters';
 import { useTransactionsSorting } from './transactions/useTransactionsSorting';
 import { useTransactionsPagination } from './transactions/useTransactionsPagination';
 import { useUser } from '@/context/UserContext';
+import { 
+  getStoredTransactions, 
+  storeTransactions, 
+  storeTransaction, 
+  removeTransaction, 
+  getStoredCategories, 
+  getStoredCategoryRules, 
+  addCategoryChange, 
+  getCategoryHierarchy 
+} from '@/utils/storage-utils';
 
 export function useTransactionsState() {
   // Get user context for currency preferences
   const { user } = useUser();
   const userCurrency = user?.preferences?.currency || 'USD';
   
-  // CRUD operations
+  // Local state for transactions
+  const [transactions, setTransactionsState] = useState<Transaction[]>([]);
+  
+  // Load transactions on mount
+  useEffect(() => {
+    const storedTransactions = getStoredTransactions();
+    setTransactionsState(storedTransactions);
+  }, []);
+  
+  // Enhanced setter that updates both state and storage
+  const setTransactions = useCallback((newTransactions: Transaction[] | ((prev: Transaction[]) => Transaction[])) => {
+    setTransactionsState(prev => {
+      const updatedTransactions = typeof newTransactions === 'function' 
+        ? newTransactions(prev) 
+        : newTransactions;
+      
+      // Update storage
+      storeTransactions(updatedTransactions);
+      
+      return updatedTransactions;
+    });
+  }, []);
+  
+  // CRUD operations with enhanced storage
   const {
-    transactions,
-    setTransactions,
     currentTransaction,
     setCurrentTransaction,
     isAddingExpense,
     setIsAddingExpense,
     isEditingExpense,
     setIsEditingExpense,
-    handleAddTransaction,
-    handleEditTransaction,
-    handleDeleteTransaction,
+    handleAddTransaction: baseCrudAddTransaction,
+    handleEditTransaction: baseCrudEditTransaction,
+    handleDeleteTransaction: baseCrudDeleteTransaction,
     openEditDialog
   } = useTransactionsCrud();
+
+  // Override CRUD methods to use enhanced storage
+  const handleAddTransaction = useCallback((formData: any) => {
+    const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
+    
+    const newTransaction: Transaction = {
+      id: uuidv4(),
+      title: formData.title,
+      amount: formData.amount,
+      category: formData.category,
+      date: formData.date,
+      type: transactionType,
+      notes: formData.notes,
+      source: 'manual'
+    };
+
+    // Store in local storage directly
+    storeTransaction(newTransaction);
+    
+    // Update state
+    setTransactions(prev => [newTransaction, ...prev]);
+    setIsAddingExpense(false);
+    
+    return newTransaction;
+  }, [setTransactions, setIsAddingExpense]);
+
+  const handleEditTransaction = useCallback((formData: any) => {
+    if (!currentTransaction) return null;
+
+    const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
+
+    const updatedTransaction: Transaction = {
+      ...currentTransaction,
+      title: formData.title,
+      amount: formData.amount,
+      category: formData.category,
+      date: formData.date,
+      type: transactionType,
+      notes: formData.notes,
+    };
+
+    // Record category change if different from original
+    if (updatedTransaction.category !== currentTransaction.category) {
+      addCategoryChange({
+        transactionId: currentTransaction.id,
+        oldCategoryId: currentTransaction.category,
+        newCategoryId: updatedTransaction.category,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Store updated transaction
+    storeTransaction(updatedTransaction);
+    
+    // Update state
+    setTransactions(prev => 
+      prev.map(t => t.id === currentTransaction.id ? updatedTransaction : t)
+    );
+    
+    setIsEditingExpense(false);
+    setCurrentTransaction(null);
+    
+    return updatedTransaction;
+  }, [currentTransaction, setTransactions, setIsEditingExpense, setCurrentTransaction]);
+
+  const handleDeleteTransaction = useCallback((id: string) => {
+    // Remove from storage
+    removeTransaction(id);
+    
+    // Update state
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  }, [setTransactions]);
 
   // Filtering
   const {
@@ -103,15 +206,25 @@ export function useTransactionsState() {
 
     setTransactionSummary(summary);
 
+    // Get category hierarchy for proper names
+    const categoryMap = new Map();
+    const categories = getStoredCategories();
+    
+    categories.forEach(category => {
+      categoryMap.set(category.id, category.name);
+    });
+
     // Calculate category breakdown for expenses only
     const expensesByCategory = transactions
       .filter(t => t.amount < 0)
       .reduce((acc, transaction) => {
-        const category = transaction.category;
-        if (!acc[category]) {
-          acc[category] = 0;
+        const categoryId = transaction.category;
+        const categoryName = categoryMap.get(categoryId) || categoryId;
+        
+        if (!acc[categoryName]) {
+          acc[categoryName] = 0;
         }
-        acc[category] += Math.abs(transaction.amount);
+        acc[categoryName] += Math.abs(transaction.amount);
         return acc;
       }, {} as Record<string, number>);
 
@@ -129,7 +242,7 @@ export function useTransactionsState() {
       .slice(0, limit);
   }, [transactions]);
 
-  // Calculate transactions by time period
+  // Calculate transactions by time period with enhanced category handling
   const getTransactionsByTimePeriod = useCallback((period: 'week' | 'month' | 'year' = 'month') => {
     const now = new Date();
     let startDate: Date;
@@ -189,19 +302,98 @@ export function useTransactionsState() {
     }));
   }, [transactions]);
 
-  // Import transactions from SMS
+  // Import transactions from SMS with enhanced storage
   const importFromSMS = useCallback((smsTransactions: Omit<Transaction, 'id'>[]) => {
     const newTransactions = smsTransactions.map(tx => ({
       ...tx,
       id: uuidv4()
     }));
     
-    setTransactions(prev => [...newTransactions, ...prev]);
+    // Apply category rules to auto-categorize transactions
+    const categoryRules = getStoredCategoryRules();
+    
+    const categorizedTransactions = newTransactions.map(transaction => {
+      // Default to uncategorized if no match is found
+      let matchedCategory = transaction.category || 'Uncategorized';
+      
+      // Try to match title against category rules
+      if (transaction.title) {
+        // Sort rules by priority (highest first)
+        const sortedRules = [...categoryRules].sort((a, b) => b.priority - a.priority);
+        
+        for (const rule of sortedRules) {
+          const { pattern, isRegex, categoryId } = rule;
+          
+          let isMatch = false;
+          if (isRegex) {
+            try {
+              const regex = new RegExp(pattern, 'i');
+              isMatch = regex.test(transaction.title);
+            } catch (error) {
+              console.error('Invalid regex pattern:', pattern, error);
+            }
+          } else {
+            isMatch = transaction.title.toLowerCase().includes(pattern.toLowerCase());
+          }
+          
+          if (isMatch) {
+            matchedCategory = categoryId;
+            break;
+          }
+        }
+      }
+      
+      return {
+        ...transaction,
+        category: matchedCategory
+      };
+    });
+    
+    // Store each transaction
+    categorizedTransactions.forEach(transaction => {
+      storeTransaction(transaction);
+    });
+    
+    // Update state
+    setTransactions(prev => [...categorizedTransactions, ...prev]);
+    
+    return categorizedTransactions;
   }, [setTransactions]);
+
+  // Get category path for a transaction
+  const getCategoryPath = useCallback((categoryId: string): string => {
+    if (!categoryId) return "";
+    
+    const categoryHierarchy = getCategoryHierarchy();
+    const path: string[] = [];
+    
+    const findCategory = (categories: any[], targetId: string): boolean => {
+      for (const category of categories) {
+        if (category.id === targetId) {
+          path.unshift(category.name);
+          return true;
+        }
+        
+        if (category.subcategories && category.subcategories.length > 0) {
+          if (findCategory(category.subcategories, targetId)) {
+            path.unshift(category.name);
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    };
+    
+    findCategory(categoryHierarchy, categoryId);
+    
+    return path.join(' > ');
+  }, []);
 
   return {
     // CRUD-related
     transactions,
+    setTransactions,
     currentTransaction,
     setCurrentTransaction,
     isAddingExpense,
@@ -250,6 +442,9 @@ export function useTransactionsState() {
     categoryBreakdown,
     getRecentTransactions,
     getTransactionsByTimePeriod,
+    
+    // Category utilities
+    getCategoryPath,
     
     // Import functionality
     importFromSMS,

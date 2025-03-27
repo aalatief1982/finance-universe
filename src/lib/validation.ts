@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { handleValidationError } from '@/utils/error-utils';
 import { SupportedCurrency } from '@/types/locale';
@@ -43,6 +42,95 @@ export const localeSettingsSchema = z.object({
   language: z.string()
 });
 
+// NEW SCHEMAS BELOW
+
+// Category validation schema
+export const categorySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, "Category name is required").max(50, "Category name is too long"),
+  parentId: z.string().uuid().optional(),
+  metadata: z.object({
+    description: z.string().optional(),
+    icon: z.object({
+      name: z.string(),
+      color: z.string().optional()
+    }).optional(),
+    color: z.string().optional(),
+    budget: z.number().nonnegative().optional(),
+    isHidden: z.boolean().optional(),
+    isSystem: z.boolean().optional(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime()
+  }).optional(),
+  subcategories: z.lazy(() => z.array(categorySchema)).optional()
+});
+
+// Category rule validation schema
+export const categoryRuleSchema = z.object({
+  id: z.string().uuid(),
+  pattern: z.string().min(1, "Pattern is required"),
+  categoryId: z.string().uuid(),
+  isRegex: z.boolean().optional(),
+  priority: z.number().int(),
+  description: z.string().optional()
+});
+
+// User preferences validation schema
+export const userPreferencesSchema = z.object({
+  currency: z.string(),
+  language: z.string(),
+  theme: z.enum(["light", "dark", "system"]).optional(),
+  notifications: z.object({
+    enabled: z.boolean(),
+    types: z.array(z.enum(["sms", "budget", "insights"])).optional()
+  }).optional(),
+  displayOptions: z.object({
+    showCents: z.boolean().optional(),
+    weekStartsOn: z.enum(["sunday", "monday"]).optional(),
+    defaultView: z.enum(["list", "stats"]).optional()
+  }).optional(),
+  updatedAt: z.string().datetime()
+});
+
+// Budget validation schema
+export const budgetSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, "Budget name is required"),
+  amount: z.number().positive("Budget amount must be positive"),
+  period: z.enum(["daily", "weekly", "monthly", "quarterly", "yearly"]),
+  categoryId: z.string().uuid().optional(),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime().optional(),
+  isRecurring: z.boolean().optional(),
+  notification: z.object({
+    enabled: z.boolean(),
+    thresholdPercentage: z.number().min(1).max(100).optional()
+  }).optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
+// Data import/export validation schema
+export const dataImportSchema = z.object({
+  version: z.string(),
+  exportDate: z.string().datetime(),
+  data: z.object({
+    transactions: z.array(transactionSchema).optional(),
+    categories: z.array(categorySchema).optional(),
+    rules: z.array(categoryRuleSchema).optional(),
+    budgets: z.array(budgetSchema).optional(),
+    preferences: userPreferencesSchema.optional()
+  })
+});
+
+// Transaction category change history schema
+export const transactionCategoryChangeSchema = z.object({
+  transactionId: z.string().uuid(),
+  oldCategoryId: z.string().uuid().optional(),
+  newCategoryId: z.string().uuid(),
+  timestamp: z.string().datetime()
+});
+
 // Define the result type explicitly for better type safety
 export type ValidationResult<T> = 
   | { success: true; data: T; error?: never } 
@@ -73,3 +161,9 @@ export function validateData<T>(
 
 // Update the transaction type to include validation using the schema
 export type ValidatedTransaction = z.infer<typeof transactionSchema>;
+export type ValidatedCategory = z.infer<typeof categorySchema>;
+export type ValidatedCategoryRule = z.infer<typeof categoryRuleSchema>;
+export type ValidatedUserPreferences = z.infer<typeof userPreferencesSchema>;
+export type ValidatedBudget = z.infer<typeof budgetSchema>;
+export type ValidatedDataImport = z.infer<typeof dataImportSchema>;
+export type ValidatedTransactionCategoryChange = z.infer<typeof transactionCategoryChangeSchema>;

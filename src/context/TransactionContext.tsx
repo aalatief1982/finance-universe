@@ -1,14 +1,16 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { transactionService } from '@/services/TransactionService';
 import { Transaction } from '@/types/transaction';
 import { useToast } from '@/components/ui/use-toast';
+import { validateData, transactionSchema } from '@/lib/validation';
+import { handleError, handleValidationError } from '@/utils/error-utils';
+import { ErrorType } from '@/types/error';
 
 interface TransactionContextType {
   transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-  updateTransaction: (id: string, updates: Partial<Omit<Transaction, 'id'>>) => void;
-  deleteTransaction: (id: string) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Transaction | null;
+  updateTransaction: (id: string, updates: Partial<Omit<Transaction, 'id'>>) => Transaction | null;
+  deleteTransaction: (id: string) => boolean;
   processTransactionsFromSMS: (messages: { sender: string; message: string; date: Date }[]) => Transaction[];
   getTransactionsSummary: () => { income: number; expenses: number; balance: number };
   getTransactionsByCategory: () => { name: string; value: number }[];
@@ -29,16 +31,15 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       const loadedTransactions = transactionService.getAllTransactions();
       setTransactions(loadedTransactions);
     } catch (error) {
-      console.error('Failed to load transactions:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load your transactions. Please try again.',
-        variant: 'destructive',
+      handleError({
+        type: ErrorType.STORAGE,
+        message: 'Failed to load your transactions. Please try again.',
+        originalError: error
       });
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   // Save transactions when they change
   useEffect(() => {
@@ -46,110 +47,228 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       try {
         transactionService.saveTransactions(transactions);
       } catch (error) {
-        console.error('Failed to save transactions:', error);
+        handleError({
+          type: ErrorType.STORAGE,
+          message: 'Failed to save transactions',
+          originalError: error,
+          isSilent: true // Don't show toast for background save failures
+        });
       }
     }
   }, [transactions, isLoading]);
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     try {
+      // Validate the transaction first
+      const validationResult = validateData(
+        transactionSchema.omit({ id: true }),
+        transaction
+      );
+      
+      if (!validationResult.success) {
+        handleValidationError(validationResult.error);
+        return null;
+      }
+      
       const newTransaction = transactionService.addTransaction(transaction);
       setTransactions(prev => [newTransaction, ...prev]);
+      
       toast({
         title: 'Transaction Added',
         description: 'Your transaction has been added successfully.',
       });
+      
       return newTransaction;
     } catch (error) {
-      console.error('Failed to add transaction:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add transaction. Please try again.',
-        variant: 'destructive',
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to add transaction. Please try again.',
+        originalError: error
       });
+      
       return null;
     }
   };
 
   const updateTransaction = (id: string, updates: Partial<Omit<Transaction, 'id'>>) => {
     try {
+      // Find the existing transaction
+      const existingTransaction = transactions.find(t => t.id === id);
+      
+      if (!existingTransaction) {
+        throw new Error(`Transaction with id ${id} not found`);
+      }
+      
+      // Create the merged transaction for validation
+      const mergedTransaction = {
+        ...existingTransaction,
+        ...updates
+      };
+      
+      // Validate the merged transaction
+      const validationResult = validateData(
+        transactionSchema,
+        mergedTransaction
+      );
+      
+      if (!validationResult.success) {
+        handleValidationError(validationResult.error);
+        return null;
+      }
+      
       const updatedTransaction = transactionService.updateTransaction(id, updates);
+      
       if (updatedTransaction) {
         setTransactions(prev => 
           prev.map(t => t.id === id ? updatedTransaction : t)
         );
+        
         toast({
           title: 'Transaction Updated',
           description: 'Your transaction has been updated successfully.',
         });
+        
+        return updatedTransaction;
       }
+      
+      return null;
     } catch (error) {
-      console.error('Failed to update transaction:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update transaction. Please try again.',
-        variant: 'destructive',
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to update transaction. Please try again.',
+        originalError: error
       });
+      
+      return null;
     }
   };
 
   const deleteTransaction = (id: string) => {
     try {
       const success = transactionService.deleteTransaction(id);
+      
       if (success) {
         setTransactions(prev => prev.filter(t => t.id !== id));
+        
         toast({
           title: 'Transaction Deleted',
           description: 'Your transaction has been deleted successfully.',
         });
+        
+        return true;
       }
+      
+      return false;
     } catch (error) {
-      console.error('Failed to delete transaction:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete transaction. Please try again.',
-        variant: 'destructive',
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to delete transaction. Please try again.',
+        originalError: error
       });
+      
+      return false;
     }
   };
 
   const processTransactionsFromSMS = (messages: { sender: string; message: string; date: Date }[]) => {
     try {
-      const extractedTransactions = transactionService.processTransactionsFromSMS(messages);
-      if (extractedTransactions.length > 0) {
-        setTransactions(prev => [...extractedTransactions, ...prev]);
+      // Validate SMS messages
+      const validMessages = messages.filter(msg => {
+        if (!msg.sender || !msg.message || !msg.date) {
+          console.warn('Invalid SMS message format', msg);
+          return false;
+        }
+        return true;
+      });
+      
+      if (validMessages.length === 0) {
+        throw new Error('No valid SMS messages provided');
+      }
+      
+      const extractedTransactions = transactionService.processTransactionsFromSMS(validMessages);
+      
+      // Validate each extracted transaction
+      const validTransactions: Transaction[] = [];
+      
+      for (const transaction of extractedTransactions) {
+        const validationResult = validateData(transactionSchema, transaction);
+        
+        if (validationResult.success) {
+          validTransactions.push(validationResult.data);
+        } else {
+          console.warn('Invalid transaction extracted from SMS:', validationResult.error);
+        }
+      }
+      
+      if (validTransactions.length > 0) {
+        setTransactions(prev => [...validTransactions, ...prev]);
+        
         toast({
           title: 'Transactions Imported',
-          description: `${extractedTransactions.length} transactions were imported from SMS.`,
+          description: `${validTransactions.length} transactions were imported from SMS.`,
         });
       } else {
         toast({
           title: 'No Transactions Found',
-          description: 'No transactions were found in the provided SMS messages.',
+          description: 'No valid transactions were found in the provided SMS messages.',
         });
       }
-      return extractedTransactions;
+      
+      return validTransactions;
     } catch (error) {
-      console.error('Failed to process SMS transactions:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to process SMS messages. Please try again.',
-        variant: 'destructive',
+      handleError({
+        type: ErrorType.PARSING,
+        message: 'Failed to process SMS messages. Please try again.',
+        originalError: error
       });
+      
       return [];
     }
   };
 
   const getTransactionsSummary = () => {
-    return transactionService.getTransactionsSummary();
+    try {
+      return transactionService.getTransactionsSummary();
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to calculate transaction summary',
+        originalError: error,
+        isSilent: true
+      });
+      
+      return { income: 0, expenses: 0, balance: 0 };
+    }
   };
 
   const getTransactionsByCategory = () => {
-    return transactionService.getTransactionsByCategory();
+    try {
+      return transactionService.getTransactionsByCategory();
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to calculate transactions by category',
+        originalError: error,
+        isSilent: true
+      });
+      
+      return [];
+    }
   };
 
   const getTransactionsByTimePeriod = (period: 'week' | 'month' | 'year' = 'month') => {
-    return transactionService.getTransactionsByTimePeriod(period);
+    try {
+      return transactionService.getTransactionsByTimePeriod(period);
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to calculate transactions by time period',
+        originalError: error,
+        isSilent: true
+      });
+      
+      return [];
+    }
   };
 
   const value = {
