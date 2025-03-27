@@ -1,7 +1,7 @@
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { User as UserType, UserPreferences } from '@/types/user';
 
-import React, { createContext, useState, useEffect, useContext } from 'react';
-
-export interface User {
+export interface User extends UserType {
   id: string;
   phone: string;
   phoneVerified: boolean;
@@ -39,6 +39,9 @@ interface UserContextType {
   isLoading: boolean;
   loadUserProfile: () => Promise<User | null>;
   updateUserPreferences: (preferences: Partial<User['preferences']>) => void;
+  completeOnboarding: () => void;
+  isProfileComplete: () => boolean;
+  updateAvatar: (avatarUrl: string) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -55,7 +58,10 @@ export const UserContext = createContext<UserContextType>({
   logOut: () => {},
   isLoading: false,
   loadUserProfile: async () => null,
-  updateUserPreferences: () => {}
+  updateUserPreferences: () => {},
+  completeOnboarding: () => {},
+  isProfileComplete: () => false,
+  updateAvatar: () => {}
 });
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -107,7 +113,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
   
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = useCallback((userData: Partial<User>) => {
     setUser(prevUser => {
       if (!prevUser) {
         const newUser: User = {
@@ -120,6 +126,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           birthDate: userData.birthDate || null,
           email: userData.email,
           avatar: userData.avatar,
+          occupation: userData.occupation,
           smsProviders: userData.smsProviders || [],
           completedOnboarding: userData.completedOnboarding || false,
           createdAt: new Date(),
@@ -143,7 +150,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return updatedUser;
     });
-  };
+  }, []);
   
   const startPhoneVerification = async (phoneNumber: string): Promise<boolean> => {
     setIsLoading(true);
@@ -190,13 +197,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  const loadUserProfile = async (): Promise<User | null> => {
+  const loadUserProfile = useCallback(async (): Promise<User | null> => {
     // In a real app, this would fetch user data from the backend
     // For now, we'll just return the current user from state
+    
+    // Simulate API call
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setIsLoading(false);
+    
     return user;
-  };
+  }, [user]);
   
-  const updateUserPreferences = (preferences: Partial<User['preferences']>) => {
+  const updateUserPreferences = useCallback((preferences: Partial<User['preferences']>) => {
     setUser(prevUser => {
       if (!prevUser) return null;
       
@@ -208,20 +221,46 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
     });
-  };
+  }, []);
   
-  const logIn = () => {
+  const completeOnboarding = useCallback(() => {
+    updateUser({ 
+      completedOnboarding: true,
+      hasProfile: true 
+    });
+    logIn();
+  }, []);
+  
+  const isProfileComplete = useCallback((): boolean => {
+    if (!user) return false;
+    
+    // Check if required profile fields are completed
+    const requiredFields = [
+      user.fullName,
+      user.phoneVerified,
+      user.phone,
+      user.smsProviders && user.smsProviders.length > 0
+    ];
+    
+    return requiredFields.every(Boolean);
+  }, [user]);
+  
+  const updateAvatar = useCallback((avatarUrl: string) => {
+    updateUser({ avatar: avatarUrl });
+  }, []);
+  
+  const logIn = useCallback(() => {
     setAuth(prev => ({ ...prev, isAuthenticated: true }));
     
     // Update last active timestamp
     updateUser({ lastActive: new Date() });
-  };
+  }, []);
   
-  const logOut = () => {
+  const logOut = useCallback(() => {
     setAuth(prev => ({ ...prev, isAuthenticated: false }));
     setUser(null);
     localStorage.removeItem('user');
-  };
+  }, []);
   
   return (
     <UserContext.Provider
@@ -235,7 +274,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logOut,
         isLoading,
         loadUserProfile,
-        updateUserPreferences
+        updateUserPreferences,
+        completeOnboarding,
+        isProfileComplete,
+        updateAvatar
       }}
     >
       {children}
