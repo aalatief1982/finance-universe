@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, Plus, MessageSquare, ArrowRight } from 'lucide-react';
 import { DialogTrigger } from '@/components/ui/dialog';
 import TransactionCard from '@/components/transactions/TransactionCard';
@@ -46,37 +47,38 @@ const RecentTransactions = ({
     visible: { opacity: 1, x: 0 }
   };
 
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setFilter(value as 'all' | 'income' | 'expense');
+  };
+
   return (
     <div className="bg-background rounded-lg border border-border p-4 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Recent Transactions</h2>
         <div className="flex items-center gap-2">
-          <TabsList className="h-8 bg-muted/50">
-            <TabsTrigger 
-              value="all" 
-              className="text-xs px-3 h-7"
-              onClick={() => setFilter('all')}
-              data-state={filter === 'all' ? 'active' : 'inactive'}
-            >
-              All
-            </TabsTrigger>
-            <TabsTrigger 
-              value="income" 
-              className="text-xs px-3 h-7"
-              onClick={() => setFilter('income')}
-              data-state={filter === 'income' ? 'active' : 'inactive'}
-            >
-              Income
-            </TabsTrigger>
-            <TabsTrigger 
-              value="expense" 
-              className="text-xs px-3 h-7"
-              onClick={() => setFilter('expense')}
-              data-state={filter === 'expense' ? 'active' : 'inactive'}
-            >
-              Expenses
-            </TabsTrigger>
-          </TabsList>
+          <Tabs value={filter} onValueChange={handleTabChange}>
+            <TabsList className="h-8 bg-muted/50">
+              <TabsTrigger 
+                value="all" 
+                className="text-xs px-3 h-7"
+              >
+                All
+              </TabsTrigger>
+              <TabsTrigger 
+                value="income" 
+                className="text-xs px-3 h-7"
+              >
+                Income
+              </TabsTrigger>
+              <TabsTrigger 
+                value="expense" 
+                className="text-xs px-3 h-7"
+              >
+                Expenses
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Button variant="ghost" size="icon" className="h-8 w-8" title="Refresh transactions">
             <RefreshCw size={14} />
           </Button>
