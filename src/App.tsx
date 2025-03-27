@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import ExpenseTrackerWireframes from './components/wireframes/ExpenseTrackerWireframes';
@@ -7,8 +6,12 @@ import Transactions from './pages/Transactions';
 import ProcessSmsMessages from './pages/ProcessSmsMessages';
 import Settings from './pages/Settings';
 import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
 import Profile from './pages/Profile';
 import SmsProviderSelection from './pages/SmsProviderSelection';
+import Analytics from './pages/Analytics';
+import NotFound from './pages/NotFound';
+import Index from './pages/Index';
 import { UserProvider, useUser } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
 import ErrorBoundary from './components/ui/error-boundary';
@@ -34,7 +37,7 @@ function AppRoutes() {
   const { auth, user } = useUser();
 
   useEffect(() => {
-    // Redirect to dashboard if user is authenticated
+    // Redirect to dashboard if user is authenticated and on home page
     if (auth.isAuthenticated && window.location.pathname === '/') {
       window.location.href = '/dashboard';
     }
@@ -42,8 +45,10 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<ExpenseTrackerWireframes />} />
+      <Route path="/" element={<Index />} />
+      <Route path="/wireframes" element={<ExpenseTrackerWireframes />} />
       <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<SignUp />} />
       
       <Route path="/dashboard" element={
         <ProtectedRoute>
@@ -54,6 +59,12 @@ function AppRoutes() {
       <Route path="/transactions" element={
         <ProtectedRoute>
           <Transactions />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/analytics" element={
+        <ProtectedRoute>
+          <Analytics />
         </ProtectedRoute>
       } />
       
@@ -80,6 +91,9 @@ function AppRoutes() {
           <SmsProviderSelection />
         </ProtectedRoute>
       } />
+      
+      {/* Catch all route for 404 pages */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
