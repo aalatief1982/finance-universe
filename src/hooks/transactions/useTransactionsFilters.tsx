@@ -12,7 +12,7 @@ export function useTransactionsFilters({ transactions }: UseTransactionsFiltersP
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedType, setSelectedType] = useState<string>('');
+  const [selectedType, setSelectedType] = useState<string>('all');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
@@ -21,7 +21,7 @@ export function useTransactionsFilters({ transactions }: UseTransactionsFiltersP
   const uniqueCategories = Array.from(new Set(transactions.map(t => t.category)));
 
   // Check if any filters are active
-  const hasActiveFilters = Boolean(searchQuery || selectedCategory || selectedType || startDate || endDate);
+  const hasActiveFilters = Boolean(searchQuery || selectedCategory || (selectedType && selectedType !== 'all') || startDate || endDate);
 
   useEffect(() => {
     // Filter transactions based on all criteria
@@ -41,7 +41,7 @@ export function useTransactionsFilters({ transactions }: UseTransactionsFiltersP
     }
 
     // Type filter
-    if (selectedType) {
+    if (selectedType && selectedType !== 'all') {
       const isExpense = selectedType === 'expense';
       filtered = filtered.filter(t => isExpense ? t.amount < 0 : t.amount > 0);
     }
@@ -64,7 +64,7 @@ export function useTransactionsFilters({ transactions }: UseTransactionsFiltersP
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory('');
-    setSelectedType('');
+    setSelectedType('all');
     setStartDate(null);
     setEndDate(null);
   };

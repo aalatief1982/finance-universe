@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, SlidersHorizontal, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -155,7 +156,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Types</SelectItem>
+                      <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="income">Income</SelectItem>
                       <SelectItem value="expense">Expense</SelectItem>
                     </SelectContent>
@@ -286,7 +287,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="income">Income</SelectItem>
                 <SelectItem value="expense">Expense</SelectItem>
               </SelectContent>
