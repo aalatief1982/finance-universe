@@ -12,6 +12,8 @@ import {
   ValidatedUserPreferences,
   ValidatedBudget
 } from "@/lib/validation";
+import { User, UserPreferences } from "@/types/user";
+import { LocaleSettings, SupportedCurrency } from "@/types/locale";
 
 // Storage keys
 const TRANSACTIONS_STORAGE_KEY = 'transactions';
@@ -19,11 +21,16 @@ const CATEGORIES_STORAGE_KEY = 'categories';
 const CATEGORY_RULES_STORAGE_KEY = 'categoryRules';
 const CATEGORY_CHANGES_STORAGE_KEY = 'categoryChanges';
 const USER_PREFERENCES_STORAGE_KEY = 'userPreferences';
+const USER_SETTINGS_STORAGE_KEY = 'userSettings';
+const USER_PROFILE_STORAGE_KEY = 'userProfile';
+const LOCALE_SETTINGS_STORAGE_KEY = 'localeSettings';
 const BUDGETS_STORAGE_KEY = 'budgets';
 const DATA_VERSION_KEY = 'dataVersion';
+const USER_SESSION_KEY = 'userSession';
+const USER_THEME_KEY = 'userTheme';
 
 // Current data version - increment when data structure changes
-const CURRENT_DATA_VERSION = '1.0';
+const CURRENT_DATA_VERSION = '1.1';
 
 // Helper function to safely parse JSON with validation
 const safelyParseJSON = <T>(json: string | null, defaultValue: T): T => {
@@ -481,6 +488,375 @@ export const storeUserPreferences = (preferences: ValidatedUserPreferences): voi
   }
 };
 
+// New function: Get comprehensive user settings
+export const getUserSettings = (): UserPreferences => {
+  try {
+    const storedSettings = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
+    if (!storedSettings) {
+      // Return default settings if none exist
+      return {
+        currency: 'USD',
+        language: 'en',
+        theme: 'system',
+        notifications: {
+          enabled: true,
+          types: ['sms', 'budget', 'insights']
+        },
+        displayOptions: {
+          showCents: true,
+          weekStartsOn: 'sunday', 
+          defaultView: 'list',
+          compactMode: false,
+          showCategories: true,
+          showTags: true
+        },
+        privacy: {
+          maskAmounts: false,
+          requireAuthForSensitiveActions: true,
+          dataSharing: 'none'
+        },
+        dataManagement: {
+          autoBackup: false,
+          backupFrequency: 'weekly',
+          dataRetention: 'forever'
+        }
+      };
+    }
+    
+    const parsedSettings = JSON.parse(storedSettings);
+    
+    // Make sure all required properties exist
+    const defaultSettings: UserPreferences = {
+      currency: parsedSettings.currency || 'USD',
+      language: parsedSettings.language || 'en',
+      theme: parsedSettings.theme || 'system',
+      notifications: {
+        enabled: parsedSettings.notifications?.enabled !== false,
+        types: parsedSettings.notifications?.types || ['sms', 'budget', 'insights']
+      },
+      displayOptions: {
+        showCents: parsedSettings.displayOptions?.showCents !== false,
+        weekStartsOn: parsedSettings.displayOptions?.weekStartsOn || 'sunday', 
+        defaultView: parsedSettings.displayOptions?.defaultView || 'list',
+        compactMode: parsedSettings.displayOptions?.compactMode === true,
+        showCategories: parsedSettings.displayOptions?.showCategories !== false,
+        showTags: parsedSettings.displayOptions?.showTags !== false
+      },
+      privacy: {
+        maskAmounts: parsedSettings.privacy?.maskAmounts === true,
+        requireAuthForSensitiveActions: parsedSettings.privacy?.requireAuthForSensitiveActions !== false,
+        dataSharing: parsedSettings.privacy?.dataSharing || 'none'
+      },
+      dataManagement: {
+        autoBackup: parsedSettings.dataManagement?.autoBackup === true,
+        backupFrequency: parsedSettings.dataManagement?.backupFrequency || 'weekly',
+        dataRetention: parsedSettings.dataManagement?.dataRetention || 'forever'
+      }
+    };
+    
+    return defaultSettings;
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to load user settings from storage',
+      originalError: error
+    });
+    
+    // Return default settings in case of error
+    return {
+      currency: 'USD',
+      language: 'en',
+      theme: 'system',
+      notifications: {
+        enabled: true,
+        types: ['sms', 'budget', 'insights']
+      },
+      displayOptions: {
+        showCents: true,
+        weekStartsOn: 'sunday', 
+        defaultView: 'list',
+        compactMode: false,
+        showCategories: true,
+        showTags: true
+      },
+      privacy: {
+        maskAmounts: false,
+        requireAuthForSensitiveActions: true,
+        dataSharing: 'none'
+      },
+      dataManagement: {
+        autoBackup: false,
+        backupFrequency: 'weekly',
+        dataRetention: 'forever'
+      }
+    };
+  }
+};
+
+// New function: Store comprehensive user settings
+export const storeUserSettings = (settings: UserPreferences): void => {
+  try {
+    localStorage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    
+    // Also update theme in a separate key for quick access
+    if (settings.theme) {
+      localStorage.setItem(USER_THEME_KEY, settings.theme);
+    }
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to save user settings to storage',
+      originalError: error
+    });
+  }
+};
+
+// New function: Update specific user setting
+export const updateUserSetting = <T extends keyof UserPreferences>(
+  key: T, 
+  value: UserPreferences[T]
+): void => {
+  try {
+    const currentSettings = getUserSettings();
+    const updatedSettings = {
+      ...currentSettings,
+      [key]: value
+    };
+    
+    storeUserSettings(updatedSettings);
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: `Failed to update user setting: ${String(key)}`,
+      originalError: error
+    });
+  }
+};
+
+// New function: Get user profile
+export const getUserProfile = (): User | null => {
+  try {
+    const storedProfile = localStorage.getItem(USER_PROFILE_STORAGE_KEY);
+    if (!storedProfile) {
+      return null;
+    }
+    
+    const parsedProfile = JSON.parse(storedProfile);
+    
+    // Convert date strings back to Date objects
+    if (parsedProfile.birthDate) {
+      parsedProfile.birthDate = new Date(parsedProfile.birthDate);
+    }
+    if (parsedProfile.createdAt) {
+      parsedProfile.createdAt = new Date(parsedProfile.createdAt);
+    }
+    if (parsedProfile.lastActive) {
+      parsedProfile.lastActive = new Date(parsedProfile.lastActive);
+    }
+    
+    return parsedProfile as User;
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to load user profile from storage',
+      originalError: error
+    });
+    return null;
+  }
+};
+
+// New function: Store user profile
+export const storeUserProfile = (profile: User): void => {
+  try {
+    localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to save user profile to storage',
+      originalError: error
+    });
+  }
+};
+
+// New function: Update specific user profile field
+export const updateUserProfile = (updates: Partial<User>): void => {
+  try {
+    const currentProfile = getUserProfile();
+    if (!currentProfile) {
+      // If no profile exists, create a new one with the updates
+      if (updates.id) {
+        storeUserProfile({
+          id: updates.id,
+          fullName: updates.fullName || '',
+          phone: updates.phone || '',
+          phoneVerified: updates.phoneVerified || false,
+          gender: updates.gender || null,
+          birthDate: updates.birthDate || null,
+          hasProfile: updates.hasProfile || false,
+          smsProviders: updates.smsProviders || [],
+          completedOnboarding: updates.completedOnboarding || false,
+          ...updates
+        });
+      }
+      return;
+    }
+    
+    // Update existing profile
+    const updatedProfile = {
+      ...currentProfile,
+      ...updates,
+      lastActive: new Date()
+    };
+    
+    storeUserProfile(updatedProfile);
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to update user profile in storage',
+      originalError: error
+    });
+  }
+};
+
+// New function: Get locale settings
+export const getLocaleSettings = (): LocaleSettings => {
+  try {
+    const storedSettings = localStorage.getItem(LOCALE_SETTINGS_STORAGE_KEY);
+    if (!storedSettings) {
+      // Return default locale settings
+      return {
+        locale: 'en-US',
+        currency: 'USD',
+        dateFormat: 'MM/dd/yyyy',
+        timeFormat: 'h:mm a',
+        firstDayOfWeek: 0
+      };
+    }
+    
+    return JSON.parse(storedSettings);
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to load locale settings from storage',
+      originalError: error
+    });
+    
+    // Return default settings in case of error
+    return {
+      locale: 'en-US',
+      currency: 'USD',
+      dateFormat: 'MM/dd/yyyy',
+      timeFormat: 'h:mm a',
+      firstDayOfWeek: 0
+    };
+  }
+};
+
+// New function: Store locale settings
+export const storeLocaleSettings = (settings: LocaleSettings): void => {
+  try {
+    localStorage.setItem(LOCALE_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to save locale settings to storage',
+      originalError: error
+    });
+  }
+};
+
+// New function: Update currency
+export const updateCurrency = (currency: SupportedCurrency): void => {
+  try {
+    // Update in locale settings
+    const localeSettings = getLocaleSettings();
+    storeLocaleSettings({
+      ...localeSettings,
+      currency
+    });
+    
+    // Update in user settings
+    const userSettings = getUserSettings();
+    storeUserSettings({
+      ...userSettings,
+      currency
+    });
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to update currency in storage',
+      originalError: error
+    });
+  }
+};
+
+// New function: Get theme
+export const getUserTheme = (): 'light' | 'dark' | 'system' => {
+  try {
+    const theme = localStorage.getItem(USER_THEME_KEY);
+    if (theme === 'light' || theme === 'dark' || theme === 'system') {
+      return theme;
+    }
+    return 'system';
+  } catch (error) {
+    console.warn('Failed to get user theme from storage', error);
+    return 'system';
+  }
+};
+
+// New function: Store user session
+export const storeUserSession = (session: { userId: string, token: string, expiresAt: number }): void => {
+  try {
+    localStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to save user session to storage',
+      originalError: error
+    });
+  }
+};
+
+// New function: Get user session
+export const getUserSession = (): { userId: string, token: string, expiresAt: number } | null => {
+  try {
+    const storedSession = localStorage.getItem(USER_SESSION_KEY);
+    if (!storedSession) {
+      return null;
+    }
+    
+    const session = JSON.parse(storedSession);
+    
+    // Check if session is expired
+    if (session.expiresAt && session.expiresAt < Date.now()) {
+      localStorage.removeItem(USER_SESSION_KEY);
+      return null;
+    }
+    
+    return session;
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to load user session from storage',
+      originalError: error
+    });
+    return null;
+  }
+};
+
+// New function: Clear user session
+export const clearUserSession = (): void => {
+  try {
+    localStorage.removeItem(USER_SESSION_KEY);
+  } catch (error) {
+    handleError({
+      type: ErrorType.STORAGE,
+      message: 'Failed to clear user session from storage',
+      originalError: error
+    });
+  }
+};
+
 // Budget storage functions
 export const getStoredBudgets = (): ValidatedBudget[] => {
   try {
@@ -575,6 +951,8 @@ export const backupData = (): string => {
       categoryRules: getStoredCategoryRules(),
       categoryChanges: getStoredCategoryChanges(),
       userPreferences: getUserPreferences(),
+      userSettings: getUserSettings(),
+      localeSettings: getLocaleSettings(),
       budgets: getStoredBudgets()
     };
     
@@ -620,6 +998,14 @@ export const restoreData = (backupJson: string): boolean => {
       storeUserPreferences(backup.userPreferences);
     }
     
+    if (backup.userSettings) {
+      storeUserSettings(backup.userSettings);
+    }
+    
+    if (backup.localeSettings) {
+      storeLocaleSettings(backup.localeSettings);
+    }
+    
     if (Array.isArray(backup.budgets)) {
       storeBudgets(backup.budgets);
     }
@@ -646,8 +1032,13 @@ export const clearAllData = (): void => {
     localStorage.removeItem(CATEGORY_RULES_STORAGE_KEY);
     localStorage.removeItem(CATEGORY_CHANGES_STORAGE_KEY);
     localStorage.removeItem(USER_PREFERENCES_STORAGE_KEY);
+    localStorage.removeItem(USER_SETTINGS_STORAGE_KEY);
+    localStorage.removeItem(USER_PROFILE_STORAGE_KEY);
+    localStorage.removeItem(LOCALE_SETTINGS_STORAGE_KEY);
     localStorage.removeItem(BUDGETS_STORAGE_KEY);
     localStorage.removeItem(DATA_VERSION_KEY);
+    localStorage.removeItem(USER_SESSION_KEY);
+    localStorage.removeItem(USER_THEME_KEY);
   } catch (error) {
     handleError({
       type: ErrorType.STORAGE,

@@ -75,19 +75,39 @@ export const categoryRuleSchema = z.object({
   description: z.string().optional()
 });
 
-// User preferences validation schema
+// Enhanced User preferences validation schema with more detailed options
 export const userPreferencesSchema = z.object({
-  currency: z.string(),
+  currency: z.enum(["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CNY", "INR"]),
   language: z.string(),
-  theme: z.enum(["light", "dark", "system"]).optional(),
+  theme: z.enum(["light", "dark", "system"]),
   notifications: z.object({
     enabled: z.boolean(),
-    types: z.array(z.enum(["sms", "budget", "insights"])).optional()
-  }).optional(),
+    types: z.array(z.enum(["sms", "budget", "insights", "security", "marketing"])),
+    emailNotifications: z.boolean().optional(),
+    pushNotifications: z.boolean().optional(),
+    quietHours: z.object({
+      enabled: z.boolean().optional(),
+      start: z.string().optional(), // Time format: "HH:MM"
+      end: z.string().optional(),   // Time format: "HH:MM"
+    }).optional()
+  }),
   displayOptions: z.object({
-    showCents: z.boolean().optional(),
-    weekStartsOn: z.enum(["sunday", "monday"]).optional(),
-    defaultView: z.enum(["list", "stats"]).optional()
+    showCents: z.boolean(),
+    weekStartsOn: z.enum(["sunday", "monday"]),
+    defaultView: z.enum(["list", "stats", "calendar"]),
+    compactMode: z.boolean().optional(),
+    showCategories: z.boolean().optional(),
+    showTags: z.boolean().optional()
+  }),
+  privacy: z.object({
+    maskAmounts: z.boolean().optional(),
+    requireAuthForSensitiveActions: z.boolean().optional(),
+    dataSharing: z.enum(["none", "anonymous", "full"]).optional()
+  }).optional(),
+  dataManagement: z.object({
+    autoBackup: z.boolean().optional(),
+    backupFrequency: z.enum(["daily", "weekly", "monthly"]).optional(),
+    dataRetention: z.enum(["3months", "6months", "1year", "forever"]).optional()
   }).optional(),
   updatedAt: z.string().datetime()
 });
