@@ -41,8 +41,9 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.preferences?.notifications || false
   );
-  const [showCents, setShowCents] = useState(
-    user?.preferences?.displayOptions?.showCents || true
+  // Fix: Explicitly type showCents as boolean instead of letting TypeScript infer it
+  const [showCents, setShowCents] = useState<boolean>(
+    user?.preferences?.displayOptions?.showCents !== false
   );
   const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday'>(
     user?.preferences?.displayOptions?.weekStartsOn || 'sunday'
