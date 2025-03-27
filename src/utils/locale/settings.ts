@@ -1,3 +1,4 @@
+
 import { SupportedLocale, SupportedCurrency, LocaleSettings } from '@/types/locale';
 import { handleError } from '../error-utils';
 import { ErrorType } from '@/types/error';
@@ -127,7 +128,7 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
             currency: settings.currency || userSettings.currency,
             language: settings.locale ? settings.locale.split('-')[0] : userSettings.language,
             displayOptions: {
-              // Safe access with type assertions and defaults
+              // Use type assertion to safely access properties that might not exist
               defaultView: (displayOptions as any).defaultView || 'list',
               compactMode: Boolean((displayOptions as any).compactMode),
               showCategories: (displayOptions as any).showCategories === false ? false : true,
