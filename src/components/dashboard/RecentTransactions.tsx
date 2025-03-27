@@ -1,13 +1,11 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, Plus, MessageSquare, ArrowRight } from 'lucide-react';
 import { DialogTrigger } from '@/components/ui/dialog';
-import ExpenseCard from '@/components/ExpenseCard';
+import TransactionCard from '@/components/transactions/TransactionCard';
 import { Transaction } from '@/types/transaction';
-import { formatDate } from '@/lib/formatters';
 import { motion } from 'framer-motion';
 
 interface RecentTransactionsProps {
@@ -94,12 +92,9 @@ const RecentTransactions = ({
         {filteredTransactions.length > 0 ? (
           filteredTransactions.map((transaction) => (
             <motion.div key={transaction.id} variants={itemVariants}>
-              <ExpenseCard
-                id={transaction.id}
-                title={transaction.title}
-                amount={transaction.amount}
-                category={transaction.category}
-                date={formatDate(transaction.date)}
+              <TransactionCard
+                transaction={transaction}
+                showActions={false}
               />
             </motion.div>
           ))
