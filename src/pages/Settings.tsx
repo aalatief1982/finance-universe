@@ -220,6 +220,21 @@ const Settings = () => {
     };
     reader.readAsText(file);
   };
+
+  // Fix the Switch component handler in the maskAmounts section
+  const handleMaskAmountsChange = (checked: boolean) => {
+    setMaskAmounts(checked);
+    updatePrivacySettings({
+      maskAmounts: checked,
+      requireAuthForSensitiveActions: requireAuth,
+      dataSharing
+    });
+    
+    toast({
+      title: "Privacy settings updated",
+      description: "Your privacy settings have been saved."
+    });
+  };
   
   return (
     <Layout>
@@ -412,7 +427,7 @@ const Settings = () => {
                   <Switch 
                     id="mask-amounts" 
                     checked={maskAmounts}
-                    onCheckedChange={setMaskAmounts}
+                    onCheckedChange={handleMaskAmountsChange}
                   />
                 </div>
                 
