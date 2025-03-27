@@ -35,9 +35,34 @@ interface HeaderProps {
   className?: string;
 }
 
+// Map routes to their corresponding titles - similar to WireframeHeader
+const routeTitleMap: Record<string, string> = {
+  '/': 'Home',
+  '/dashboard': 'Dashboard',
+  '/transactions': 'Transactions',
+  '/analytics': 'Analytics',
+  '/process-sms': 'Process SMS',
+  '/settings': 'Settings',
+  '/profile': 'Profile',
+  '/sms-providers': 'SMS Providers',
+  '/signin': 'Sign In',
+  '/signup': 'Sign Up',
+  '/wireframes': 'Wireframes',
+  '/wireframes/dashboard': 'Dashboard',
+  '/wireframes/onboarding': 'Onboarding',
+  '/wireframes/add-transaction': 'Add Transaction',
+  '/wireframes/reports': 'Reports',
+  '/wireframes/settings': 'Settings',
+  '/wireframes/sms-provider': 'SMS Provider',
+  '/wireframes/sms-transaction': 'SMS Transaction',
+};
+
 const Header = ({ className }: HeaderProps) => {
   const location = useLocation();
   const { user, logOut } = useUser();
+  
+  // Get the current page title from the route map
+  const currentPageTitle = routeTitleMap[location.pathname] || 'Expense Tracker';
   
   // Check if we're on the landing page
   const isLandingPage = location.pathname === '/';
@@ -173,7 +198,7 @@ const Header = ({ className }: HeaderProps) => {
                 <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                   <span className="text-white font-semibold text-lg">E</span>
                 </div>
-                <span className="text-xl font-semibold tracking-tight">Expense Tracker</span>
+                <span className="text-xl font-semibold tracking-tight">{isLandingPage ? 'Expense Tracker' : currentPageTitle}</span>
               </Link>
             </motion.div>
             
@@ -231,7 +256,7 @@ const Header = ({ className }: HeaderProps) => {
                         <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mr-2">
                           <span className="text-white font-semibold text-lg">E</span>
                         </div>
-                        <span>Expense Tracker</span>
+                        <span>{currentPageTitle}</span>
                       </SheetTitle>
                     </SheetHeader>
                     

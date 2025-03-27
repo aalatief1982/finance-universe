@@ -105,7 +105,8 @@ function App() {
         <TransactionProvider>
           <Router>
             <div className="min-h-screen flex flex-col">
-              <Header />
+              {/* Pass contextTitle prop to Header to enable dynamic context-aware titles */}
+              <Header contextTitle={true} />
               <div className="flex-1">
                 <AppRoutes />
               </div>
