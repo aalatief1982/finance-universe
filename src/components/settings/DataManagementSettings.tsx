@@ -10,18 +10,40 @@ import { Download, UploadCloud, RefreshCw, Database } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
 
+// Define the correct types for backupFrequency and dataRetention
+type BackupFrequency = 'daily' | 'weekly' | 'monthly' | 'never';
+type DataRetention = '3months' | '6months' | '1year' | 'forever';
+
 const DataManagementSettings = () => {
   const { toast } = useToast();
   const [autoBackup, setAutoBackup] = useState(false);
-  const [backupFrequency, setBackupFrequency] = useState<string>('weekly');
-  const [dataRetention, setDataRetention] = useState<string>('forever');
+  const [backupFrequency, setBackupFrequency] = useState<BackupFrequency>('weekly');
+  const [dataRetention, setDataRetention] = useState<DataRetention>('forever');
   
   useEffect(() => {
     // Get user settings on component mount
     const userSettings = getUserSettings();
     setAutoBackup(userSettings.dataManagement?.autoBackup === true);
-    setBackupFrequency(userSettings.dataManagement?.backupFrequency || 'weekly');
-    setDataRetention(userSettings.dataManagement?.dataRetention || 'forever');
+    
+    // Ensure we cast to the correct type or fallback to the default
+    const storedBackupFrequency = userSettings.dataManagement?.backupFrequency;
+    if (storedBackupFrequency && 
+        (storedBackupFrequency === 'daily' || 
+         storedBackupFrequency === 'weekly' || 
+         storedBackupFrequency === 'monthly' || 
+         storedBackupFrequency === 'never')) {
+      setBackupFrequency(storedBackupFrequency);
+    }
+    
+    // Ensure we cast to the correct type or fallback to the default
+    const storedDataRetention = userSettings.dataManagement?.dataRetention;
+    if (storedDataRetention && 
+        (storedDataRetention === '3months' || 
+         storedDataRetention === '6months' || 
+         storedDataRetention === '1year' || 
+         storedDataRetention === 'forever')) {
+      setDataRetention(storedDataRetention);
+    }
   }, []);
   
   const handleAutoBackupToggle = (enabled: boolean) => {
@@ -38,7 +60,7 @@ const DataManagementSettings = () => {
     });
   };
   
-  const handleBackupFrequencyChange = (frequency: string) => {
+  const handleBackupFrequencyChange = (frequency: BackupFrequency) => {
     setBackupFrequency(frequency);
     
     // Update user settings
@@ -52,7 +74,7 @@ const DataManagementSettings = () => {
     });
   };
   
-  const handleDataRetentionChange = (retention: string) => {
+  const handleDataRetentionChange = (retention: DataRetention) => {
     setDataRetention(retention);
     
     // Update user settings
@@ -176,6 +198,7 @@ const DataManagementSettings = () => {
                 <SelectItem value="daily">Daily</SelectItem>
                 <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="never">Never</SelectItem>
               </SelectContent>
             </Select>
           </div>

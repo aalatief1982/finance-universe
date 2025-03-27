@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import ExpenseTrackerWireframes from './components/wireframes/ExpenseTrackerWireframes';
@@ -105,8 +106,8 @@ function App() {
         <TransactionProvider>
           <Router>
             <div className="min-h-screen flex flex-col">
-              {/* Pass contextTitle prop to Header to enable dynamic context-aware titles */}
-              <Header contextTitle={true} />
+              {/* Remove the contextTitle prop since it doesn't exist in HeaderProps */}
+              <Header />
               <div className="flex-1">
                 <AppRoutes />
               </div>

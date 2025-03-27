@@ -353,7 +353,7 @@ const Settings = () => {
                   <Switch 
                     id="compact-mode" 
                     checked={compactMode}
-                    onCheckedChange={setCompactMode}
+                    onCheckedChange={(checked) => setCompactMode(checked)}
                   />
                 </div>
                 

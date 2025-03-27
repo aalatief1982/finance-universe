@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -7,17 +6,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, EyeOff, Lock, Shield } from 'lucide-react';
 import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
 
+// Define the allowed data sharing types
+type DataSharingType = 'none' | 'anonymous' | 'full';
+
 const PrivacySettings = () => {
   const [maskAmounts, setMaskAmounts] = useState(false);
   const [requireAuth, setRequireAuth] = useState(true);
-  const [dataSharing, setDataSharing] = useState<string>('none');
+  const [dataSharing, setDataSharing] = useState<DataSharingType>('none');
   
   useEffect(() => {
     // Get user settings on component mount
     const userSettings = getUserSettings();
     setMaskAmounts(userSettings.privacy?.maskAmounts === true);
     setRequireAuth(userSettings.privacy?.requireAuthForSensitiveActions !== false);
-    setDataSharing(userSettings.privacy?.dataSharing || 'none');
+    
+    // Ensure we cast to the correct type or fallback to the default
+    const storedDataSharing = userSettings.privacy?.dataSharing;
+    if (storedDataSharing && 
+        (storedDataSharing === 'none' || 
+         storedDataSharing === 'anonymous' || 
+         storedDataSharing === 'full')) {
+      setDataSharing(storedDataSharing);
+    }
   }, []);
   
   const handleMaskAmountsToggle = (enabled: boolean) => {
@@ -48,7 +58,7 @@ const PrivacySettings = () => {
     });
   };
   
-  const handleDataSharingChange = (value: string) => {
+  const handleDataSharingChange = (value: DataSharingType) => {
     setDataSharing(value);
     
     // Update user settings

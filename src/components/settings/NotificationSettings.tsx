@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -6,6 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Bell, AlertTriangle, CreditCard, TrendingUp } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
+
+// Define the allowed notification types
+type NotificationType = 'sms' | 'budget' | 'insights' | 'security';
 
 const NotificationSettings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -21,10 +23,16 @@ const NotificationSettings = () => {
     setNotificationsEnabled(userSettings.notifications?.enabled !== false);
     
     if (userSettings.notifications?.types) {
+      // Filter to only include valid notification types
+      const validTypes = userSettings.notifications.types.filter(
+        (type): type is NotificationType => 
+          type === 'sms' || type === 'budget' || type === 'insights' || type === 'security'
+      );
+      
       setNotificationTypes({
-        sms: userSettings.notifications.types.includes('sms'),
-        budget: userSettings.notifications.types.includes('budget'),
-        insights: userSettings.notifications.types.includes('insights')
+        sms: validTypes.includes('sms'),
+        budget: validTypes.includes('budget'),
+        insights: validTypes.includes('insights')
       });
     }
   }, []);
@@ -52,12 +60,21 @@ const NotificationSettings = () => {
     // Update user settings
     const userSettings = getUserSettings();
     const currentTypes = userSettings.notifications?.types || [];
-    let newTypes: string[];
+    
+    // Filter out any invalid types first
+    const validCurrentTypes = currentTypes.filter(
+      (t): t is NotificationType => 
+        t === 'sms' || t === 'budget' || t === 'insights' || t === 'security'
+    );
+    
+    let newTypes: NotificationType[];
     
     if (checked) {
-      newTypes = [...currentTypes, type].filter((v, i, a) => a.indexOf(v) === i);
+      // Add the type if it doesn't exist
+      newTypes = [...validCurrentTypes, type].filter((v, i, a) => a.indexOf(v) === i) as NotificationType[];
     } else {
-      newTypes = currentTypes.filter(t => t !== type);
+      // Remove the type
+      newTypes = validCurrentTypes.filter(t => t !== type);
     }
     
     storeUserSettings({

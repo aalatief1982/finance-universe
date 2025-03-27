@@ -10,7 +10,7 @@ import NotificationSettings from '@/components/settings/NotificationSettings';
 import DataManagementSettings from '@/components/settings/DataManagementSettings';
 import PrivacySettings from '@/components/settings/PrivacySettings';
 
-const Settings = () => {
+const SettingsPage = () => {
   return (
     <Layout>
       <motion.div
@@ -33,4 +33,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default SettingsPage;
