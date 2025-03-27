@@ -54,8 +54,7 @@ const Settings = () => {
     user?.preferences?.displayOptions?.compactMode || false
   );
   
-  // Initialize maskAmounts as a boolean state, not a literal type
-  // Use boolean type explicitly to avoid TypeScript inferring it as a literal
+  // Fix: Explicitly type maskAmounts as boolean and use Boolean() for initialization
   const [maskAmounts, setMaskAmounts] = useState<boolean>(
     Boolean(user?.preferences?.privacy?.maskAmounts)
   );
@@ -226,7 +225,7 @@ const Settings = () => {
     reader.readAsText(file);
   };
 
-  // Fix for the maskAmounts handler to ensure type compatibility
+  // Fix: Improve the maskAmounts handler to use the new boolean state
   const handleMaskAmountsChange = (checked: boolean) => {
     // Use the boolean value directly
     setMaskAmounts(checked);
