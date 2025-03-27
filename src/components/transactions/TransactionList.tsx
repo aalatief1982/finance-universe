@@ -107,6 +107,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return transactionService.getCategoryPath(categoryId).join(' > ');
   };
 
+  // Transform transactions with category path to avoid errors
+  const prepareTransactionsWithPath = (transactionsToMap: Transaction[]) => {
+    return transactionsToMap.map(transaction => {
+      const enrichedTransaction = {...transaction};
+      enrichedTransaction.categoryPath = getCategoryPath(transaction.category);
+      return enrichedTransaction;
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -249,35 +258,33 @@ const TransactionList: React.FC<TransactionListProps> = ({
             transition={{ duration: 0.3 }}
           >
             {viewMode === 'grid' ? (
-              paginatedTransactions.map((transaction) => (
-                <motion.div
-                  key={transaction.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                  className="group"
-                >
-                  <TransactionCard
-                    transaction={{
-                      ...transaction,
-                      // Add the full category path for display
-                      categoryPath: getCategoryPath(transaction.category)
-                    }}
-                    onEdit={() => onEdit(transaction)}
-                    onDelete={() => handleDeleteTransaction(transaction.id)}
-                    showActions={true}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
-                  />
-                </motion.div>
-              ))
+              paginatedTransactions.map((transaction) => {
+                // Create a transaction with categoryPath added
+                return (
+                  <motion.div
+                    key={transaction.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="group"
+                  >
+                    <TransactionCard
+                      transaction={{
+                        ...transaction,
+                        categoryPath: getCategoryPath(transaction.category)
+                      }}
+                      onEdit={() => onEdit(transaction)}
+                      onDelete={() => handleDeleteTransaction(transaction.id)}
+                      showActions={true}
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                    />
+                  </motion.div>
+                );
+              })
             ) : (
               <TransactionTable
-                transactions={paginatedTransactions.map(transaction => ({
-                  ...transaction,
-                  // Add the full category path for display
-                  categoryPath: getCategoryPath(transaction.category)
-                }))}
+                transactions={prepareTransactionsWithPath(paginatedTransactions)}
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}

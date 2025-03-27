@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { transactionSchema } from '@/lib/validation';
 
-export type Transaction = z.infer<typeof transactionSchema>;
+export type Transaction = z.infer<typeof transactionSchema> & {
+  categoryPath?: string;
+};
 
 export interface TransactionSummary {
   income: number;
