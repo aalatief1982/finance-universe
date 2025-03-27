@@ -11,11 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Plus, Grid2X2, Table } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { useToast } from '@/components/ui/use-toast';
+import TransactionsContent from '@/components/transactions/TransactionsContent';
 
 // Import hooks
 import { useTransactionsFilters } from '@/hooks/transactions/useTransactionsFilters';
 import { useTransactionsSorting } from '@/hooks/transactions/useTransactionsSorting';
 import { useTransactionsPagination } from '@/hooks/transactions/useTransactionsPagination';
+import { transactionService } from '@/services/TransactionService';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -33,6 +35,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const { toast } = useToast();
   // View mode state
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [minAmount, setMinAmount] = useState<number>(0);
+  const [maxAmount, setMaxAmount] = useState<number>(0);
+  const [sortBy, setSortBy] = useState<string>('date_desc');
 
   // Use the filtering hook
   const {
@@ -95,6 +101,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
     });
   };
 
+  // Get the full category path for display
+  const getCategoryPath = (categoryId: string): string => {
+    if (!categoryId) return "";
+    return transactionService.getCategoryPath(categoryId).join(' > ');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -125,6 +137,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
             uniqueCategories={uniqueCategories}
             filtersVisible={filtersVisible}
             setFiltersVisible={setFiltersVisible}
+            advancedMode={advancedMode}
+            setAdvancedMode={setAdvancedMode}
+            minAmount={minAmount}
+            setMinAmount={setMinAmount}
+            maxAmount={maxAmount}
+            setMaxAmount={setMaxAmount}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
           />
         </CardContent>
       </Card>
@@ -239,7 +259,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   className="group"
                 >
                   <TransactionCard
-                    transaction={transaction}
+                    transaction={{
+                      ...transaction,
+                      // Add the full category path for display
+                      categoryPath: getCategoryPath(transaction.category)
+                    }}
                     onEdit={() => onEdit(transaction)}
                     onDelete={() => handleDeleteTransaction(transaction.id)}
                     showActions={true}
@@ -249,7 +273,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
               ))
             ) : (
               <TransactionTable
-                transactions={paginatedTransactions}
+                transactions={paginatedTransactions.map(transaction => ({
+                  ...transaction,
+                  // Add the full category path for display
+                  categoryPath: getCategoryPath(transaction.category)
+                }))}
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSort={handleSort}
