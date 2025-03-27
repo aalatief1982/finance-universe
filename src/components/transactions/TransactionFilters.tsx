@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, SlidersHorizontal, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,10 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Category } from '@/types/transaction';
+import CategoryHierarchy from '@/components/categories/CategoryHierarchy';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { transactionService } from '@/services/TransactionService';
 
 interface TransactionFiltersProps {
   searchQuery: string;
@@ -58,6 +62,25 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   sortBy,
   setSortBy
 }) => {
+  const [showCategoryHierarchy, setShowCategoryHierarchy] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  
+  // Fetch categories on component mount
+  useEffect(() => {
+    setCategories(transactionService.getCategories());
+  }, []);
+  
+  // Get category name for display
+  const getCategoryName = (categoryId: string): string => {
+    if (!categoryId) return "All Categories";
+    
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return categoryId;
+    
+    const path = transactionService.getCategoryPath(categoryId);
+    return path.join(' > ');
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
@@ -83,25 +106,46 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                 <SlidersHorizontal size={18} />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-4" align="end">
+            <PopoverContent className="w-[350px] p-4" align="end">
               <div className="space-y-4">
                 <h3 className="font-medium">Filters</h3>
                 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Category</label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Categories</SelectItem>
-                      {uniqueCategories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={showCategoryHierarchy} onOpenChange={setShowCategoryHierarchy}>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start font-normal text-left h-10"
+                      >
+                        {getCategoryName(selectedCategory)}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0" align="start">
+                      <div className="p-2">
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start mb-2 text-sm"
+                          onClick={() => {
+                            setSelectedCategory('');
+                            setShowCategoryHierarchy(false);
+                          }}
+                        >
+                          All Categories
+                        </Button>
+                        <ScrollArea className="h-[300px]">
+                          <CategoryHierarchy
+                            categories={categories}
+                            selectedCategoryId={selectedCategory}
+                            onSelectCategory={(categoryId) => {
+                              setSelectedCategory(categoryId);
+                              setShowCategoryHierarchy(false);
+                            }}
+                          />
+                        </ScrollArea>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 
                 <div className="space-y-2">
@@ -209,19 +253,33 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           </Popover>
           
           <div className="hidden sm:flex gap-2 items-center">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
-                {uniqueCategories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="min-w-[150px] h-10 px-3">
+                  <span className="truncate">
+                    {getCategoryName(selectedCategory)}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <div className="p-2">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start mb-2 text-sm"
+                    onClick={() => setSelectedCategory('')}
+                  >
+                    All Categories
+                  </Button>
+                  <ScrollArea className="h-[300px]">
+                    <CategoryHierarchy
+                      categories={categories}
+                      selectedCategoryId={selectedCategory}
+                      onSelectCategory={setSelectedCategory}
+                    />
+                  </ScrollArea>
+                </div>
+              </PopoverContent>
+            </Popover>
             
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="w-[150px]">
