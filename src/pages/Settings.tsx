@@ -356,7 +356,7 @@ const Settings = () => {
                   <Switch 
                     id="show-cents" 
                     checked={showCents}
-                    onCheckedChange={setShowCents}
+                    onCheckedChange={(checked) => setShowCents(checked)}
                   />
                 </div>
                 
