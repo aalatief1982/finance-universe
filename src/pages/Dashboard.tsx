@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -7,73 +6,47 @@ import { v4 as uuidv4 } from 'uuid';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Transaction } from '@/types/transaction';
+import { useTransactions } from '@/context/TransactionContext';
 
-// Import the new component files
+// Import the component files
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MobileSmsButton from '@/components/dashboard/MobileSmsButton';
 import DashboardContent from '@/components/dashboard/DashboardContent';
 import TransactionDialog from '@/components/dashboard/TransactionDialog';
 
 const Dashboard = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const { toast } = useToast();
   const { user } = useUser();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Load transactions from localStorage or use initial data
-    try {
-      setIsLoading(true);
-      const storedTransactions = localStorage.getItem('transactions');
-      if (storedTransactions) {
-        // Cast the parsed data to ensure type compatibility
-        const parsedTransactions = JSON.parse(storedTransactions) as Transaction[];
-        setTransactions(parsedTransactions);
-      } else {
-        // Import here to avoid circular dependency
-        const { INITIAL_TRANSACTIONS } = require('@/lib/mock-data');
-        setTransactions(INITIAL_TRANSACTIONS as Transaction[]);
-      }
-    } catch (error) {
-      console.error('Error loading transactions:', error);
-      const { INITIAL_TRANSACTIONS } = require('@/lib/mock-data');
-      setTransactions(INITIAL_TRANSACTIONS as Transaction[]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Save transactions to localStorage whenever they change
-    if (!isLoading && transactions.length > 0) {
-      try {
-        localStorage.setItem('transactions', JSON.stringify(transactions));
-      } catch (error) {
-        console.error('Error saving transactions:', error);
-      }
-    }
-  }, [transactions, isLoading]);
+  const { transactions, addTransaction, isLoading } = useTransactions();
 
   const handleAddTransaction = (formData: any) => {
-    const newTransaction: Transaction = {
-      id: uuidv4(),
-      title: formData.title,
-      amount: formData.amount,
-      category: formData.category,
-      date: formData.date,
-      type: formData.amount >= 0 ? 'income' : 'expense',
-      notes: formData.notes,
-    };
+    try {
+      const newTransaction: Omit<Transaction, 'id'> = {
+        title: formData.title,
+        amount: formData.amount,
+        category: formData.category,
+        date: formData.date,
+        type: formData.amount >= 0 ? 'income' : 'expense',
+        notes: formData.notes || '',
+      };
 
-    setTransactions([newTransaction, ...transactions]);
-    setIsAddingExpense(false);
-    
-    toast({
-      title: "Transaction added",
-      description: `${newTransaction.title} has been added successfully.`,
-    });
+      addTransaction(newTransaction);
+      setIsAddingExpense(false);
+      
+      toast({
+        title: "Transaction added",
+        description: `${newTransaction.title} has been added successfully.`,
+      });
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add transaction. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -92,18 +65,13 @@ const Dashboard = () => {
           
           <MobileSmsButton />
           
-          {isLoading ? (
-            <div className="flex justify-center items-center min-h-[300px]">
-              <p className="text-muted-foreground">Loading dashboard data...</p>
-            </div>
-          ) : (
-            <DashboardContent 
-              transactions={transactions}
-              filter={filter}
-              setFilter={setFilter}
-              setIsAddingExpense={setIsAddingExpense}
-            />
-          )}
+          <DashboardContent 
+            transactions={transactions}
+            filter={filter}
+            setFilter={setFilter}
+            setIsAddingExpense={setIsAddingExpense}
+            isLoading={isLoading}
+          />
         </motion.div>
       </Layout>
 
