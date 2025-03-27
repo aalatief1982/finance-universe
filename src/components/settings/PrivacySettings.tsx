@@ -26,11 +26,8 @@ const PrivacySettings = () => {
     // Ensure we cast to the correct type or fallback to the default
     const storedDataSharing = userSettings.privacy?.dataSharing;
     if (storedDataSharing && 
-        (storedDataSharing === 'none' || 
-         storedDataSharing === 'anonymous' || 
-         storedDataSharing === 'minimal' || 
-         storedDataSharing === 'full')) {
-      setDataSharing(storedDataSharing);
+        ['none', 'anonymous', 'minimal', 'full'].includes(storedDataSharing)) {
+      setDataSharing(storedDataSharing as DataSharingType);
     }
   }, []);
   

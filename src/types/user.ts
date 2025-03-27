@@ -16,7 +16,7 @@ export interface User {
   settings?: {
     currency?: string;
     language?: string;
-    theme?: 'light' | 'dark' | 'system';
+    theme: 'light' | 'dark' | 'system';
     notifications?: boolean;
   };
 }
@@ -44,7 +44,7 @@ export interface UserPreferences {
   privacy: {
     maskAmounts: boolean;
     requireAuthForSensitiveActions: boolean;
-    dataSharing: 'none' | 'anonymous' | 'full';
+    dataSharing: 'none' | 'anonymous' | 'minimal' | 'full';
     lockScreenTimeout?: number; // in minutes
     biometricAuth?: boolean;
   };
