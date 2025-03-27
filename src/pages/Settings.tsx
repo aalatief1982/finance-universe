@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -54,10 +55,12 @@ const Settings = () => {
   const [compactMode, setCompactMode] = useState(
     user?.preferences?.displayOptions?.compactMode || false
   );
-  // Fix the type of maskAmounts to be boolean, not specifically true
+  
+  // Fix: Change type of maskAmounts from specifically true to boolean
   const [maskAmounts, setMaskAmounts] = useState<boolean>(
     user?.preferences?.privacy?.maskAmounts || false
   );
+  
   const [requireAuth, setRequireAuth] = useState(
     user?.preferences?.privacy?.requireAuthForSensitiveActions || false
   );
