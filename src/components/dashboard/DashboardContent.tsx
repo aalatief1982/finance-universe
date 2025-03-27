@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DashboardStats from '@/components/DashboardStats';
 import ExpenseChart from '@/components/ExpenseChart';
@@ -13,13 +12,15 @@ interface DashboardContentProps {
   filter: 'all' | 'income' | 'expense';
   setFilter: (filter: 'all' | 'income' | 'expense') => void;
   setIsAddingExpense: (value: boolean) => void;
+  isLoading?: boolean;
 }
 
 const DashboardContent = ({ 
   transactions, 
   filter, 
   setFilter,
-  setIsAddingExpense
+  setIsAddingExpense,
+  isLoading = false
 }: DashboardContentProps) => {
   const { user } = useUser();
   
@@ -30,12 +31,51 @@ const DashboardContent = ({
   
   const expenses = transactions
     .filter(t => t.amount < 0)
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  
+  const balance = income - expenses;
+
+  // Calculate previous month's balance for comparison
+  const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastMonthTransactions = transactions.filter(tx => {
+    const txDate = new Date(tx.date);
+    return txDate < firstDayOfMonth;
+  });
+
+  const previousIncome = lastMonthTransactions
+    .filter(t => t.amount > 0)
     .reduce((sum, t) => sum + t.amount, 0);
   
-  const balance = income + expenses;
+  const previousExpenses = lastMonthTransactions
+    .filter(t => t.amount < 0)
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  
+  const previousBalance = previousIncome - previousExpenses;
 
-  // Generate chart data - casting to ensure type compatibility
-  const { categoryData, timelineData } = generateChartData(transactions as any);
+  // Generate chart data
+  const { categoryData, timelineData } = generateChartData(transactions);
+
+  // Placeholder skeleton for loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-6 bg-muted rounded w-1/3 mb-2"></div>
+        <div className="h-4 bg-muted rounded w-2/3 mb-6"></div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-32 bg-muted rounded-lg"></div>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="h-80 bg-muted rounded-lg"></div>
+          <div className="h-80 bg-muted rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -45,7 +85,7 @@ const DashboardContent = ({
       className="space-y-6"
     >
       <div className="pb-2">
-        <h2 className="text-xl font-bold">
+        <h2 className="text-2xl font-bold">
           {user?.fullName ? `Welcome back, ${user.fullName.split(' ')[0]}` : 'Welcome to your Dashboard'}
         </h2>
         <p className="text-muted-foreground">
@@ -56,7 +96,8 @@ const DashboardContent = ({
       <DashboardStats 
         income={income} 
         expenses={expenses} 
-        balance={balance} 
+        balance={balance}
+        previousBalance={previousBalance}
       />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -64,9 +105,7 @@ const DashboardContent = ({
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-card rounded-lg border p-4"
         >
-          <h3 className="font-medium mb-3">Expense Breakdown</h3>
           <ExpenseChart 
             expensesByCategory={categoryData}
             expensesByDate={timelineData}
@@ -77,7 +116,6 @@ const DashboardContent = ({
           initial={{ opacity: 0, x: 10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-card rounded-lg border p-4"
         >
           <RecentTransactions 
             filter={filter}
