@@ -55,7 +55,7 @@ const Settings = () => {
     user?.preferences?.displayOptions?.compactMode || false
   );
   
-  // Fix: Properly type maskAmounts as boolean (NOT as a literal true type)
+  // Using a boolean type for maskAmounts
   const [maskAmounts, setMaskAmounts] = useState(
     user?.preferences?.privacy?.maskAmounts || false
   );
@@ -225,9 +225,8 @@ const Settings = () => {
     reader.readAsText(file);
   };
 
-  // Fix the Switch component handler in the maskAmounts section
+  // Fix for the maskAmounts handler to ensure type compatibility
   const handleMaskAmountsChange = (checked: boolean) => {
-    // Use the boolean directly without any type assertions
     setMaskAmounts(checked);
     updatePrivacySettings({
       maskAmounts: checked,
