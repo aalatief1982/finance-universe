@@ -17,7 +17,6 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
-import { SetStateAction } from 'react';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -55,9 +54,9 @@ const Settings = () => {
     user?.preferences?.displayOptions?.compactMode || false
   );
   
-  // Initialize maskAmounts with default value from user preferences or false
-  // No explicit type annotation to let TypeScript infer it properly
-  const [maskAmounts, setMaskAmounts] = useState(
+  // Initialize maskAmounts as a boolean state, not a literal type
+  // Use boolean type explicitly to avoid TypeScript inferring it as a literal
+  const [maskAmounts, setMaskAmounts] = useState<boolean>(
     Boolean(user?.preferences?.privacy?.maskAmounts)
   );
   
@@ -93,7 +92,8 @@ const Settings = () => {
       }
       
       if (user.preferences.privacy) {
-        setMaskAmounts(user.preferences.privacy.maskAmounts || false);
+        // Ensure we use Boolean to convert to a proper boolean value
+        setMaskAmounts(Boolean(user.preferences.privacy.maskAmounts));
         setRequireAuth(user.preferences.privacy.requireAuthForSensitiveActions || false);
         setDataSharing(user.preferences.privacy.dataSharing || 'none');
       }
@@ -228,7 +228,9 @@ const Settings = () => {
 
   // Fix for the maskAmounts handler to ensure type compatibility
   const handleMaskAmountsChange = (checked: boolean) => {
+    // Use the boolean value directly
     setMaskAmounts(checked);
+    
     updatePrivacySettings({
       maskAmounts: checked,
       requireAuthForSensitiveActions: requireAuth,

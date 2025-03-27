@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -7,17 +8,19 @@ import { Eye, EyeOff, Lock, Shield } from 'lucide-react';
 import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
 
 // Define the allowed data sharing types
-type DataSharingType = 'none' | 'anonymous' | 'full';
+type DataSharingType = 'none' | 'anonymous' | 'minimal' | 'full';
 
 const PrivacySettings = () => {
-  const [maskAmounts, setMaskAmounts] = useState(false);
+  // Use boolean type for maskAmounts instead of inferring a literal type
+  const [maskAmounts, setMaskAmounts] = useState<boolean>(false);
   const [requireAuth, setRequireAuth] = useState(true);
   const [dataSharing, setDataSharing] = useState<DataSharingType>('none');
   
   useEffect(() => {
     // Get user settings on component mount
     const userSettings = getUserSettings();
-    setMaskAmounts(userSettings.privacy?.maskAmounts === true);
+    // Use Boolean to ensure proper type conversion
+    setMaskAmounts(Boolean(userSettings.privacy?.maskAmounts));
     setRequireAuth(userSettings.privacy?.requireAuthForSensitiveActions !== false);
     
     // Ensure we cast to the correct type or fallback to the default
@@ -25,6 +28,7 @@ const PrivacySettings = () => {
     if (storedDataSharing && 
         (storedDataSharing === 'none' || 
          storedDataSharing === 'anonymous' || 
+         storedDataSharing === 'minimal' || 
          storedDataSharing === 'full')) {
       setDataSharing(storedDataSharing);
     }
