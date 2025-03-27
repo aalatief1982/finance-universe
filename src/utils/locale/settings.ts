@@ -1,3 +1,4 @@
+
 import { SupportedLocale, SupportedCurrency, LocaleSettings } from '@/types/locale';
 import { handleError } from '../error-utils';
 import { ErrorType } from '@/types/error';
@@ -117,7 +118,7 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
       
       // Only update user settings if they exist
       if (userSettings) {
-        // Make sure displayOptions is defined with proper type
+        // Create a safe displayOptions object with default values for type safety
         const displayOptions = userSettings.displayOptions || {};
         
         // Update user preferences with the new locale settings
@@ -127,14 +128,15 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
             currency: settings.currency || userSettings.currency,
             language: settings.locale ? settings.locale.split('-')[0] : userSettings.language,
             displayOptions: {
-              // Preserve existing display options
-              showCents: settings.numberFormat?.minimumFractionDigits !== 0,
-              weekStartsOn: settings.firstDayOfWeek === 1 ? 'monday' : 'sunday',
-              // Properly handle existing properties with safe defaults
+              // Safely handle displayOptions properties
               defaultView: typeof displayOptions.defaultView === 'string' ? displayOptions.defaultView : 'list',
               compactMode: typeof displayOptions.compactMode === 'boolean' ? displayOptions.compactMode : false,
               showCategories: typeof displayOptions.showCategories === 'boolean' ? displayOptions.showCategories : true,
               showTags: typeof displayOptions.showTags === 'boolean' ? displayOptions.showTags : true,
+              // Preserve weekStartsOn from settings.firstDayOfWeek
+              weekStartsOn: settings.firstDayOfWeek === 1 ? 'monday' : 'sunday',
+              // Handle showCents from settings.numberFormat
+              showCents: settings.numberFormat?.minimumFractionDigits !== 0,
               // Map date format
               dateFormat: settings.dateFormat === 'dd/MM/yyyy' ? 'DD/MM/YYYY' : 
                           settings.dateFormat === 'yyyy-MM-dd' ? 'YYYY-MM-DD' : 

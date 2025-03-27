@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import { SetStateAction } from 'react';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -223,7 +224,7 @@ const Settings = () => {
 
   // Fix the Switch component handler in the maskAmounts section
   const handleMaskAmountsChange = (checked: boolean) => {
-    setMaskAmounts(checked);
+    setMaskAmounts(checked as SetStateAction<boolean>);
     updatePrivacySettings({
       maskAmounts: checked,
       requireAuthForSensitiveActions: requireAuth,
