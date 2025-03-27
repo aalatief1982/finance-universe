@@ -118,7 +118,7 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
       
       // Only update user settings if they exist
       if (userSettings) {
-        // Create a safe displayOptions object with default values for type safety
+        // Create a safe displayOptions object with proper typing
         const displayOptions = userSettings.displayOptions || {};
         
         // Update user preferences with the new locale settings
@@ -128,11 +128,12 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
             currency: settings.currency || userSettings.currency,
             language: settings.locale ? settings.locale.split('-')[0] : userSettings.language,
             displayOptions: {
-              // Safely handle displayOptions properties
-              defaultView: typeof displayOptions.defaultView === 'string' ? displayOptions.defaultView : 'list',
-              compactMode: typeof displayOptions.compactMode === 'boolean' ? displayOptions.compactMode : false,
-              showCategories: typeof displayOptions.showCategories === 'boolean' ? displayOptions.showCategories : true,
-              showTags: typeof displayOptions.showTags === 'boolean' ? displayOptions.showTags : true,
+              // Safely handle displayOptions properties with proper type checking
+              // Provide defaults for each property to ensure type safety
+              defaultView: displayOptions.defaultView as 'list' | 'stats' | 'calendar' || 'list',
+              compactMode: Boolean(displayOptions.compactMode),
+              showCategories: Boolean(displayOptions.showCategories !== false),
+              showTags: Boolean(displayOptions.showTags !== false),
               // Preserve weekStartsOn from settings.firstDayOfWeek
               weekStartsOn: settings.firstDayOfWeek === 1 ? 'monday' : 'sunday',
               // Handle showCents from settings.numberFormat

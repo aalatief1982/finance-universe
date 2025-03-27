@@ -54,7 +54,8 @@ const Settings = () => {
   const [compactMode, setCompactMode] = useState(
     user?.preferences?.displayOptions?.compactMode || false
   );
-  const [maskAmounts, setMaskAmounts] = useState(
+  // Fix the type of maskAmounts to be boolean, not specifically true
+  const [maskAmounts, setMaskAmounts] = useState<boolean>(
     user?.preferences?.privacy?.maskAmounts || false
   );
   const [requireAuth, setRequireAuth] = useState(
@@ -224,7 +225,7 @@ const Settings = () => {
 
   // Fix the Switch component handler in the maskAmounts section
   const handleMaskAmountsChange = (checked: boolean) => {
-    setMaskAmounts(checked as SetStateAction<boolean>);
+    setMaskAmounts(checked);
     updatePrivacySettings({
       maskAmounts: checked,
       requireAuthForSensitiveActions: requireAuth,
