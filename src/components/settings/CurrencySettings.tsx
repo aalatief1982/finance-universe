@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DollarSign } from 'lucide-react';
 import { getUserSettings, storeUserSettings, updateCurrency } from '@/utils/storage-utils';
 import { SupportedCurrency } from '@/types/locale';
-import { getAllCurrencies } from '@/utils/locale-utils';
+import { getAllCurrencies } from '@/utils/locale';
 
 const CurrencySettings = () => {
   const [currency, setCurrency] = useState<SupportedCurrency>('USD');
