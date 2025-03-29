@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, Plus, MessageSquare, ArrowRight } from 'lucide-react';
-import { DialogTrigger } from '@/components/ui/dialog';
+import { Dialog } from '@/components/ui/dialog';
 import TransactionCard from '@/components/transactions/TransactionCard';
 import { Transaction } from '@/types/transaction';
 import { motion } from 'framer-motion';
@@ -110,12 +110,14 @@ const RecentTransactions = ({
                   Import from SMS
                 </Link>
               </Button>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" onClick={() => setIsAddingExpense(true)}>
-                  <Plus className="mr-1" size={16} />
-                  Add Manually
-                </Button>
-              </DialogTrigger>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setIsAddingExpense(true)}
+              >
+                <Plus className="mr-1" size={16} />
+                Add Manually
+              </Button>
             </div>
           </div>
         )}
