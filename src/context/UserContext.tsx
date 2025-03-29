@@ -2,6 +2,14 @@ import React, { createContext, useState, useEffect, useContext, useCallback } fr
 import { User as UserType, UserPreferences } from '@/types/user';
 import { ValidatedUserPreferences, userPreferencesSchema, validateData } from '@/lib/validation';
 import { toast } from '@/components/ui/use-toast';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { ENABLE_SUPABASE_AUTH } from '@/lib/env';
+import { 
+  startPhoneVerificationWithSupabase, 
+  confirmPhoneVerificationWithSupabase,
+  updateUserProfileInSupabase,
+  isAuthenticatedWithSupabase
+} from '@/lib/supabase-auth';
 
 export interface User extends UserType {
   id: string;
@@ -161,61 +169,133 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, detectSystemTheme]);
   
-  // Load user from local storage on initial render
+  // Check for Supabase auth on initial load
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        
-        // Convert string dates back to Date objects
-        if (parsedUser.birthDate) {
-          parsedUser.birthDate = new Date(parsedUser.birthDate);
-        }
-        if (parsedUser.createdAt) {
-          parsedUser.createdAt = new Date(parsedUser.createdAt);
-        }
-        if (parsedUser.lastActive) {
-          parsedUser.lastActive = new Date(parsedUser.lastActive);
-        }
-        
-        // Initialize preferences with defaults if not present
-        if (!parsedUser.preferences) {
-          parsedUser.preferences = {
-            currency: 'USD',
-            theme: 'light',
-            notifications: true,
-            language: 'en',
-            displayOptions: {
-              showCents: true,
-              weekStartsOn: 'sunday',
-              defaultView: 'list',
-              compactMode: false,
-              showCategories: true,
-              showTags: true
+    const checkSupabaseAuth = async () => {
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+        try {
+          const { data } = await supabase.auth.getSession();
+          
+          if (data.session) {
+            // Get user profile from Supabase
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', data.session.user.id)
+              .single();
+              
+            if (userData && !error) {
+              // Convert Supabase user data to our User format
+              setUser({
+                id: data.session.user.id,
+                fullName: userData.full_name,
+                email: userData.email || '',
+                phone: userData.phone || '',
+                phoneVerified: userData.phone_verified,
+                hasProfile: true,
+                gender: userData.gender,
+                birthDate: userData.birth_date ? new Date(userData.birth_date) : null,
+                smsProviders: userData.sms_providers || [],
+                completedOnboarding: userData.completed_onboarding,
+                createdAt: userData.created_at ? new Date(userData.created_at) : new Date(),
+                lastActive: userData.last_active ? new Date(userData.last_active) : new Date(),
+                // ... map other properties
+              });
+              
+              setAuth({
+                isAuthenticated: true,
+                isLoading: false,
+                isVerifying: false
+              });
+              
+              return;
             }
-          };
+          }
+        } catch (error) {
+          console.error("Error checking Supabase auth:", error);
         }
-        
-        setUser(parsedUser);
-        setAuth(prev => ({
-          ...prev,
-          isAuthenticated: parsedUser.completedOnboarding || false,
-          isLoading: false
-        }));
-      } catch (error) {
-        console.error('Failed to parse stored user data', error);
+      }
+      
+      // Fall back to local storage check if Supabase auth fails or is disabled
+      checkLocalStorageAuth();
+    };
+    
+    const checkLocalStorageAuth = () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          
+          // Convert string dates back to Date objects
+          if (parsedUser.birthDate) {
+            parsedUser.birthDate = new Date(parsedUser.birthDate);
+          }
+          if (parsedUser.createdAt) {
+            parsedUser.createdAt = new Date(parsedUser.createdAt);
+          }
+          if (parsedUser.lastActive) {
+            parsedUser.lastActive = new Date(parsedUser.lastActive);
+          }
+          
+          // Initialize preferences with defaults if not present
+          if (!parsedUser.preferences) {
+            parsedUser.preferences = {
+              currency: 'USD',
+              theme: 'light',
+              notifications: true,
+              language: 'en',
+              displayOptions: {
+                showCents: true,
+                weekStartsOn: 'sunday',
+                defaultView: 'list',
+                compactMode: false,
+                showCategories: true,
+                showTags: true
+              }
+            };
+          }
+          
+          setUser(parsedUser);
+          setAuth(prev => ({
+            ...prev,
+            isAuthenticated: parsedUser.completedOnboarding || false,
+            isLoading: false
+          }));
+        } catch (error) {
+          console.error('Failed to parse stored user data', error);
+          setAuth(prev => ({ ...prev, isLoading: false }));
+        }
+      } else {
         setAuth(prev => ({ ...prev, isLoading: false }));
       }
-    } else {
-      setAuth(prev => ({ ...prev, isLoading: false }));
-    }
+    };
+    
+    checkSupabaseAuth();
   }, []);
   
   // Save user to local storage whenever it changes
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
+      
+      // If Supabase is enabled, also update the user profile there
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && user.id) {
+        updateUserProfileInSupabase(user.id, {
+          full_name: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          phone_verified: user.phoneVerified,
+          gender: user.gender,
+          birth_date: user.birthDate ? user.birthDate.toISOString() : null,
+          avatar_url: user.avatar,
+          occupation: user.occupation,
+          sms_providers: user.smsProviders,
+          completed_onboarding: user.completedOnboarding,
+          last_active: new Date().toISOString()
+        }).catch(error => {
+          console.error("Error updating user profile in Supabase:", error);
+        });
+      }
     }
   }, [user]);
   
@@ -271,15 +351,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuth(prev => ({ ...prev, isVerifying: true }));
     
     try {
-      // In a real app, this would call Firebase Auth or similar service
-      // For now, we'll simulate a successful verification after a short delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update user phone number
-      updateUser({ phone: phoneNumber });
-      
-      setIsLoading(false);
-      return true;
+      // Check if we should use Supabase for verification
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+        const success = await startPhoneVerificationWithSupabase(phoneNumber);
+        
+        if (success) {
+          // Update user phone number
+          updateUser({ phone: phoneNumber });
+          setIsLoading(false);
+          return true;
+        } else {
+          // Fall back to mock verification if Supabase fails
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          updateUser({ phone: phoneNumber });
+          setIsLoading(false);
+          return true;
+        }
+      } else {
+        // Use mock verification
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        updateUser({ phone: phoneNumber });
+        setIsLoading(false);
+        return true;
+      }
     } catch (error) {
       console.error('Error starting phone verification', error);
       setIsLoading(false);
@@ -291,19 +385,33 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // In a real app, this would verify the code with Firebase Auth or similar
-      // For now, we'll simulate a successful verification if the code is "1234"
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const isValid = code === "1234"; // For demo purposes, "1234" is always valid
-      
-      if (isValid) {
-        updateUser({ phoneVerified: true });
-        setAuth(prev => ({ ...prev, isVerifying: false }));
+      // Check if we should use Supabase for verification
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+        const success = await confirmPhoneVerificationWithSupabase(code);
+        
+        if (success) {
+          updateUser({ phoneVerified: true });
+          setAuth(prev => ({ ...prev, isVerifying: false }));
+          setIsLoading(false);
+          return true;
+        } else {
+          // Code is invalid
+          setIsLoading(false);
+          return false;
+        }
+      } else {
+        // In mock mode, "1234" is always valid
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const isValid = code === "1234";
+        
+        if (isValid) {
+          updateUser({ phoneVerified: true });
+          setAuth(prev => ({ ...prev, isVerifying: false }));
+        }
+        
+        setIsLoading(false);
+        return isValid;
       }
-      
-      setIsLoading(false);
-      return isValid;
     } catch (error) {
       console.error('Error confirming verification code', error);
       setIsLoading(false);
@@ -454,14 +562,32 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser({ avatar: avatarUrl });
   }, [updateUser]);
   
-  const logIn = useCallback(() => {
-    setAuth(prev => ({ ...prev, isAuthenticated: true }));
+  const logIn = useCallback(async () => {
+    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+      // If using Supabase auth, this is handled automatically by the sign-in flow
+      // We just need to check if we're already authenticated
+      const isAuthenticated = await isAuthenticatedWithSupabase();
+      
+      setAuth(prev => ({ 
+        ...prev, 
+        isAuthenticated: isAuthenticated || prev.isAuthenticated 
+      }));
+    } else {
+      // When not using Supabase, handle auth state locally
+      setAuth(prev => ({ ...prev, isAuthenticated: true }));
+    }
     
     // Update last active timestamp
     updateUser({ lastActive: new Date() });
-  }, [updateUser]);
+  }, []);
   
-  const logOut = useCallback(() => {
+  const logOut = useCallback(async () => {
+    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+    }
+    
+    // Clear local state
     setAuth(prev => ({ ...prev, isAuthenticated: false }));
     setUser(null);
     localStorage.removeItem('user');

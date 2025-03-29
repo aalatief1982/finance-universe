@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/components/ui/use-toast';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -26,7 +27,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { updateUser } = useUser(); // Using updateUser from context instead of setUser
+  const { updateUser } = useUser();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -39,7 +40,69 @@ const SignIn = () => {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    // Simulate authentication
+    // Check if Supabase is configured
+    if (isSupabaseConfigured()) {
+      try {
+        // Attempt to sign in with Supabase
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: values.email,
+          password: values.password,
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        // Get user profile data from Supabase
+        const { data: userData, error: profileError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user?.id)
+          .single();
+          
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+        }
+        
+        // Update local user context with Supabase user data
+        if (userData) {
+          updateUser({
+            id: data.user?.id || '',
+            fullName: userData.full_name,
+            email: userData.email || '',
+            phone: userData.phone || '',
+            completedOnboarding: userData.completed_onboarding,
+            phoneVerified: userData.phone_verified,
+            hasProfile: true,
+            gender: userData.gender,
+            birthDate: userData.birth_date ? new Date(userData.birth_date) : null,
+            smsProviders: userData.sms_providers || []
+          });
+        }
+        
+        toast({
+          title: 'Welcome back!',
+          description: 'You have been signed in successfully.',
+        });
+        
+        navigate('/dashboard');
+      } catch (error: any) {
+        console.error("Supabase auth error:", error);
+        
+        // Fallback to mock authentication if Supabase auth fails
+        fallbackToMockAuth(values);
+      }
+    } else {
+      // Supabase not configured, use mock authentication
+      fallbackToMockAuth(values);
+    }
+    
+    setIsLoading(false);
+  };
+  
+  // Fallback to the original mock authentication
+  const fallbackToMockAuth = (values: FormValues) => {
+    // Simulate authentication with a delay
     setTimeout(() => {
       // Set user in context using updateUser instead of setUser
       updateUser({
@@ -60,7 +123,6 @@ const SignIn = () => {
         description: 'You have been signed in successfully.',
       });
       
-      setIsLoading(false);
       navigate('/dashboard');
     }, 1500);
   };

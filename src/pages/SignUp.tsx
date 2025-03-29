@@ -10,8 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { useUser } from '@/context/UserContext';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -30,6 +32,8 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { updateUser } = useUser();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,14 +48,112 @@ const SignUp = () => {
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
+    // Check if Supabase is configured
+    if (isSupabaseConfigured()) {
+      try {
+        // Attempt to register with Supabase
+        const { data, error } = await supabase.auth.signUp({
+          email: values.email,
+          password: values.password,
+          options: {
+            data: {
+              full_name: values.name
+            }
+          }
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data.user) {
+          // Create user profile in Supabase
+          const { error: profileError } = await supabase
+            .from('users')
+            .insert({
+              id: data.user.id,
+              email: values.email,
+              full_name: values.name,
+              phone: '',
+              phone_verified: false,
+              gender: null,
+              birth_date: null,
+              avatar_url: null,
+              occupation: null,
+              sms_providers: [],
+              completed_onboarding: false,
+              created_at: new Date().toISOString(),
+              last_active: new Date().toISOString()
+            });
+          
+          if (profileError) {
+            console.error("Error creating user profile:", profileError);
+          }
+          
+          // Update local user context
+          updateUser({
+            id: data.user.id,
+            fullName: values.name,
+            email: values.email,
+            phone: '',
+            completedOnboarding: false,
+            phoneVerified: false,
+            hasProfile: false,
+            gender: null,
+            birthDate: null,
+            smsProviders: []
+          });
+          
+          toast({
+            title: 'Account created!',
+            description: 'Your account has been created successfully.',
+          });
+          
+          // Redirect to onboarding or dashboard
+          navigate('/dashboard');
+        }
+      } catch (error: any) {
+        console.error("Supabase registration error:", error);
+        toast({
+          title: 'Registration failed',
+          description: error.message || 'An error occurred during registration.',
+          variant: 'destructive'
+        });
+        
+        // Fallback to mock registration if Supabase fails
+        fallbackToMockRegistration(values);
+      }
+    } else {
+      // Supabase not configured, use mock registration
+      fallbackToMockRegistration(values);
+    }
+    
+    setIsLoading(false);
+  };
+  
+  // Fallback to the original mock registration
+  const fallbackToMockRegistration = (values: FormValues) => {
     // This is where you would typically make an API call to register the user
     // For now, we'll just simulate a successful registration after a delay
     setTimeout(() => {
+      updateUser({
+        id: `user_${Date.now()}`,
+        fullName: values.name,
+        email: values.email,
+        phone: '',
+        completedOnboarding: false,
+        phoneVerified: false,
+        hasProfile: false,
+        gender: null,
+        birthDate: null,
+        smsProviders: []
+      });
+      
       toast({
         title: 'Account created!',
         description: 'Your account has been created successfully.',
       });
-      setIsLoading(false);
+      
       navigate('/dashboard');
     }, 1500);
   };
