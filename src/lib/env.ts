@@ -6,13 +6,15 @@
 
 export const getEnvironmentVariable = (key: string, defaultValue: string = ''): string => {
   // For Vite, environment variables are accessed through import.meta.env
-  if (import.meta.env[key]) {
-    return import.meta.env[key];
+  const envKey = `VITE_${key.replace(/^VITE_/, '')}`;
+  
+  if (import.meta.env[envKey]) {
+    return import.meta.env[envKey];
   }
   
   // Fallback to window._env if available (for runtime configuration)
-  if (typeof window !== 'undefined' && window._env && window._env[key]) {
-    return window._env[key];
+  if (typeof window !== 'undefined' && window._env && window._env[envKey]) {
+    return window._env[envKey];
   }
   
   return defaultValue;
@@ -26,13 +28,13 @@ declare global {
 }
 
 // Supabase configuration
-export const SUPABASE_URL = getEnvironmentVariable('VITE_SUPABASE_URL', '');
-export const SUPABASE_ANON_KEY = getEnvironmentVariable('VITE_SUPABASE_ANON_KEY', '');
+export const SUPABASE_URL = getEnvironmentVariable('SUPABASE_URL', '');
+export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY', '');
 
 // Feature flags
-export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('VITE_ENABLE_SUPABASE_AUTH', 'false') === 'true';
-export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('VITE_ENABLE_SMS_INTEGRATION', 'true') === 'true';
+export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
+export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRATION', 'true') === 'true';
 
 // Configuration options
-export const DEFAULT_CURRENCY = getEnvironmentVariable('VITE_DEFAULT_CURRENCY', 'USD');
-export const APP_VERSION = getEnvironmentVariable('VITE_APP_VERSION', '1.0.0');
+export const DEFAULT_CURRENCY = getEnvironmentVariable('DEFAULT_CURRENCY', 'USD');
+export const APP_VERSION = getEnvironmentVariable('APP_VERSION', '1.0.0');

@@ -1,17 +1,17 @@
 
 import { createClient } from '@supabase/supabase-js';
-
-// These environment variables will need to be set in your deployed environment
-// For local development, you can hardcode them here, but don't commit the actual values
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './env';
 
 // Create a single supabase client for interacting with your database
+// Use default placeholder values for development to prevent crashes
+const supabaseUrl = SUPABASE_URL || 'https://placeholder-project.supabase.co';
+const supabaseAnonKey = SUPABASE_ANON_KEY || 'placeholder-key';
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return !!supabaseUrl && !!supabaseAnonKey;
+  return !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
 };
 
 // Database types
