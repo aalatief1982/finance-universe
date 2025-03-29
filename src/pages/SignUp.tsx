@@ -1,9 +1,6 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -11,155 +8,75 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/components/ui/use-toast';
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useUser } from '@/context/UserContext';
+import { Phone } from 'lucide-react';
 
+// Modified schema to focus on phone number
 const formSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
+  phoneNumber: z.string()
+    .min(10, 'Phone number must be at least 10 characters')
+    .regex(/^\+?[0-9\s\-\(\)]+$/, 'Please enter a valid phone number'),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 const SignUp = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updateUser } = useUser();
+  const { updateUser, startPhoneVerification } = useUser();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
+      phoneNumber: '',
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
     
-    // Check if Supabase is configured
-    if (isSupabaseConfigured()) {
-      try {
-        // Attempt to register with Supabase
-        const { data, error } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.password,
-          options: {
-            data: {
-              full_name: values.name
-            }
-          }
+    try {
+      // Start phone verification process
+      const success = await startPhoneVerification(values.phoneNumber);
+      
+      if (success) {
+        // Create basic user profile with phone number
+        updateUser({
+          id: `user_${Date.now()}`,
+          phone: values.phoneNumber,
+          phoneVerified: false,
+          fullName: '',
+          completedOnboarding: false
         });
         
-        if (error) {
-          throw error;
-        }
-        
-        if (data.user) {
-          // Create user profile in Supabase
-          const { error: profileError } = await supabase
-            .from('users')
-            .insert({
-              id: data.user.id,
-              email: values.email,
-              full_name: values.name,
-              phone: '',
-              phone_verified: false,
-              gender: null,
-              birth_date: null,
-              avatar_url: null,
-              occupation: null,
-              sms_providers: [],
-              completed_onboarding: false,
-              created_at: new Date().toISOString(),
-              last_active: new Date().toISOString()
-            });
-          
-          if (profileError) {
-            console.error("Error creating user profile:", profileError);
-          }
-          
-          // Update local user context
-          updateUser({
-            id: data.user.id,
-            fullName: values.name,
-            email: values.email,
-            phone: '',
-            completedOnboarding: false,
-            phoneVerified: false,
-            hasProfile: false,
-            gender: null,
-            birthDate: null,
-            smsProviders: []
-          });
-          
-          toast({
-            title: 'Account created!',
-            description: 'Your account has been created successfully.',
-          });
-          
-          // Redirect to onboarding or dashboard
-          navigate('/dashboard');
-        }
-      } catch (error: any) {
-        console.error("Supabase registration error:", error);
         toast({
-          title: 'Registration failed',
-          description: error.message || 'An error occurred during registration.',
+          title: 'Verification code sent',
+          description: 'Please enter the verification code sent to your phone.',
+        });
+        
+        // Navigate to the onboarding screen which will start with verification
+        navigate('/onboarding');
+      } else {
+        toast({
+          title: 'Verification failed',
+          description: 'Could not send verification code. Please try again.',
           variant: 'destructive'
         });
-        
-        // Fallback to mock registration if Supabase fails
-        fallbackToMockRegistration(values);
       }
-    } else {
-      // Supabase not configured, use mock registration
-      fallbackToMockRegistration(values);
-    }
-    
-    setIsLoading(false);
-  };
-  
-  // Fallback to the original mock registration
-  const fallbackToMockRegistration = (values: FormValues) => {
-    // This is where you would typically make an API call to register the user
-    // For now, we'll just simulate a successful registration after a delay
-    setTimeout(() => {
-      updateUser({
-        id: `user_${Date.now()}`,
-        fullName: values.name,
-        email: values.email,
-        phone: '',
-        completedOnboarding: false,
-        phoneVerified: false,
-        hasProfile: false,
-        gender: null,
-        birthDate: null,
-        smsProviders: []
-      });
-      
+    } catch (error: any) {
       toast({
-        title: 'Account created!',
-        description: 'Your account has been created successfully.',
+        title: 'Error',
+        description: error.message || 'An error occurred. Please try again.',
+        variant: 'destructive'
       });
-      
-      navigate('/dashboard');
-    }, 1500);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const toggleShowPassword = () => setShowPassword(!showPassword);
-  const toggleShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
 
   return (
     <Layout>
@@ -174,7 +91,7 @@ const SignUp = () => {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
               <CardDescription>
-                Enter your information to create an account
+                Enter your phone number to get started
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -182,106 +99,28 @@ const SignUp = () => {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="name"
+                    name="phoneNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="example@email.com" 
-                            type="email" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>Phone Number</FormLabel>
                         <div className="relative">
                           <FormControl>
-                            <Input 
-                              placeholder="••••••••" 
-                              type={showPassword ? "text" : "password"} 
-                              {...field} 
-                            />
+                            <div className="flex items-center">
+                              <Phone className="absolute left-3 text-muted-foreground" size={16} />
+                              <Input 
+                                className="pl-10" 
+                                placeholder="+1 (123) 456-7890" 
+                                {...field} 
+                              />
+                            </div>
                           </FormControl>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={toggleShowPassword}
-                          >
-                            {showPassword ? (
-                              <EyeOffIcon className="h-4 w-4" />
-                            ) : (
-                              <EyeIcon className="h-4 w-4" />
-                            )}
-                            <span className="sr-only">
-                              {showPassword ? "Hide password" : "Show password"}
-                            </span>
-                          </Button>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
-                        <div className="relative">
-                          <FormControl>
-                            <Input 
-                              placeholder="••••••••" 
-                              type={showConfirmPassword ? "text" : "password"} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3"
-                            onClick={toggleShowConfirmPassword}
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOffIcon className="h-4 w-4" />
-                            ) : (
-                              <EyeIcon className="h-4 w-4" />
-                            )}
-                            <span className="sr-only">
-                              {showConfirmPassword ? "Hide password" : "Show password"}
-                            </span>
-                          </Button>
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Creating account..." : "Create account"}
+                    {isLoading ? "Sending verification code..." : "Continue"}
                   </Button>
                 </form>
               </Form>

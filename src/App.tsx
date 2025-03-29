@@ -8,6 +8,7 @@ import ProcessSmsMessages from './pages/ProcessSmsMessages';
 import Settings from './pages/Settings';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import Onboarding from './pages/Onboarding';
 import Profile from './pages/Profile';
 import SmsProviderSelection from './pages/SmsProviderSelection';
 import Analytics from './pages/Analytics';
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route path="/wireframes" element={<ExpenseTrackerWireframes />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/onboarding" element={<Onboarding />} />
       
       <Route path="/dashboard" element={
         <ProtectedRoute>
@@ -106,7 +108,6 @@ function App() {
         <TransactionProvider>
           <Router>
             <div className="min-h-screen flex flex-col">
-              {/* Remove the contextTitle prop since it doesn't exist in HeaderProps */}
               <Header />
               <div className="flex-1">
                 <AppRoutes />
