@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ interface LayoutProps {
   withPadding?: boolean;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
   centerContent?: boolean;
+  hideNavigation?: boolean; // Added this prop to fix the TypeScript error
 }
 
 const Layout = ({ 
@@ -17,7 +19,8 @@ const Layout = ({
   animate = true, 
   withPadding = true,
   maxWidth = '7xl',
-  centerContent = true
+  centerContent = true,
+  hideNavigation // Added this prop (not used in the component itself but passed by parent components)
 }: LayoutProps) => {
   
   // Define max width class based on prop
