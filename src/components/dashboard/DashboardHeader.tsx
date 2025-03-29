@@ -29,11 +29,12 @@ const DashboardHeader = ({ user, setIsAddingExpense }: DashboardHeaderProps) => 
           </Link>
         </Button>
         
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gap-1" onClick={() => setIsAddingExpense(true)}>Add Transaction</Button>
-          </DialogTrigger>
-        </Dialog>
+        <Button 
+          className="gap-1" 
+          onClick={() => setIsAddingExpense(true)}
+        >
+          Add Transaction
+        </Button>
       </div>
     </div>
   );
