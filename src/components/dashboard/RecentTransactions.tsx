@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RefreshCw, Plus, MessageSquare, ArrowRight } from 'lucide-react';
-import { Dialog } from '@/components/ui/dialog';
 import TransactionCard from '@/components/transactions/TransactionCard';
 import { Transaction } from '@/types/transaction';
 import { motion } from 'framer-motion';
