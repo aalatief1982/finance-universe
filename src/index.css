@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 210 100% 50%;
+    --primary: 174 100% 31%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
@@ -23,7 +23,7 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96%;
+    --accent: 174 100% 31%;
     --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
@@ -31,9 +31,12 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 210 100% 50%;
+    --ring: 174 100% 31%;
 
     --radius: 0.75rem;
+    
+    --expense: 0 78% 54%;
+    --income: 138 57% 43%;
   }
 
   .dark {
@@ -46,7 +49,7 @@
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 100% 50%;
+    --primary: 174 100% 31%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 33% 18%;
@@ -85,6 +88,22 @@
   
   .text-balance {
     text-wrap: balance;
+  }
+  
+  .income-text {
+    @apply text-[#34A853];
+  }
+  
+  .expense-text {
+    @apply text-[#DD3933];
+  }
+  
+  .income-bg {
+    @apply bg-[#34A853]/20;
+  }
+  
+  .expense-bg {
+    @apply bg-[#DD3933]/20;
   }
 }
 

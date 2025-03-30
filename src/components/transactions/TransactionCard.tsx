@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowDownLeft, ArrowUpRight, Calendar, Tag, Edit, Trash2 } from 'lucide-react';
@@ -7,6 +8,7 @@ import { Transaction } from '@/types/transaction';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -25,59 +27,87 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
 }) => {
   const isIncome = transaction.amount > 0;
   
+  // Get emoji based on category
+  const getEmojiForCategory = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      'food': '🍔',
+      'restaurant': '🍔',
+      'dining': '🍔',
+      'transportation': '🚕',
+      'housing': '🏠',
+      'rent': '🏠',
+      'utilities': '💡',
+      'groceries': '🛒',
+      'shopping': '🛍️',
+      'entertainment': '🎬',
+      'health': '⚕️',
+      'insurance': '🏥',
+      'education': '📚',
+      'personal': '👤',
+      'travel': '✈️',
+      'salary': '💼',
+      'income': '💰',
+      'investment': '📈'
+    };
+    
+    // Convert category to lowercase and look for matches
+    const lowerCategory = category.toLowerCase();
+    for (const [key, emoji] of Object.entries(categoryMap)) {
+      if (lowerCategory.includes(key)) {
+        return emoji;
+      }
+    }
+    
+    // Default emoji if no match found
+    return isIncome ? '💰' : '📝';
+  };
+  
+  // Format time from date
+  const formatTime = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), 'h:mm a');
+    } catch (error) {
+      return '';
+    }
+  };
+  
   return (
     <motion.div
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
       className={className}
     >
-      <Card className={cn(
-        "overflow-hidden border transition-all duration-200",
-        isIncome ? "hover:border-green-500/50" : "hover:border-red-500/50"
-      )}>
+      <Card className="overflow-hidden border hover:shadow-md transition-all duration-200">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center",
-                isIncome ? "bg-green-100" : "bg-red-100"
+                isIncome ? "income-bg" : "expense-bg"
               )}>
-                {isIncome ? (
-                  <ArrowUpRight className="text-green-600" size={20} />
-                ) : (
-                  <ArrowDownLeft className="text-red-600" size={20} />
-                )}
+                <span className="text-base">
+                  {getEmojiForCategory(transaction.category)}
+                </span>
               </div>
               
               <div className="space-y-1">
                 <h3 className="font-medium text-sm line-clamp-1">{transaction.title}</h3>
-                <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                  <span className="flex items-center">
-                    <Calendar size={12} className="mr-1" />
-                    {formatDate(transaction.date)}
-                  </span>
-                  <span className="flex items-center">
-                    <Tag size={12} className="mr-1" />
-                    {transaction.category}
-                  </span>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <span>{transaction.category}</span>
+                  <span className="mx-1">•</span>
+                  <span>{formatTime(transaction.date)}</span>
                 </div>
               </div>
             </div>
             
             <div className="text-right">
               <span className={cn(
-                "font-semibold",
-                isIncome ? "text-green-600" : "text-red-600"
+                "font-medium",
+                isIncome ? "income-text" : "expense-text"
               )}>
                 {isIncome ? "+" : "-"}
                 {formatCurrency(Math.abs(transaction.amount))}
               </span>
-              
-              {transaction.notes && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                  {transaction.notes}
-                </p>
-              )}
             </div>
           </div>
           

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import DashboardStats from '@/components/DashboardStats';
 import ExpenseChart from '@/components/ExpenseChart';
@@ -110,7 +111,7 @@ const DashboardContent = ({
     >
       <div className="pb-2">
         <h2 className="text-2xl font-bold">
-          {user?.fullName ? `Welcome back, ${user.fullName.split(' ')[0]}` : 'Welcome to your Dashboard'}
+          {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Welcome to your Dashboard'}
         </h2>
         <p className="text-muted-foreground">
           Here's an overview of your finances
