@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WelcomeScreen from './onboarding/WelcomeScreen';
-import PhoneVerificationScreen from './onboarding/PhoneVerificationScreen';
+import SecondScreen from './onboarding/SecondScreen';
+import ThirdScreen from './onboarding/ThirdScreen';
+import FinalScreen from './onboarding/FinalScreen';
 import UserProfileScreen from './onboarding/UserProfileScreen';
+import PhoneVerificationScreen from './onboarding/PhoneVerificationScreen';
 import SmsProviderSelectionScreen from './onboarding/SmsProviderSelectionScreen';
 import { useUser } from '@/context/UserContext';
 import { useNavigate } from 'react-router-dom';
@@ -30,14 +33,22 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   
   const handleWelcomeComplete = () => {
     setStep(1);
-    toast({
-      title: "Welcome to Expense Tracker",
-      description: "Let's get you set up with a new account"
-    });
+  };
+  
+  const handleSecondScreenComplete = () => {
+    setStep(2);
+  };
+  
+  const handleThirdScreenComplete = () => {
+    setStep(3);
+  };
+  
+  const handleFinalScreenComplete = () => {
+    setStep(4);
   };
   
   const handlePhoneVerificationComplete = () => {
-    setStep(2);
+    setStep(5);
     toast({
       title: "Phone verified",
       description: "Your phone number has been successfully verified"
@@ -54,7 +65,7 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
       createdAt
     });
     
-    setStep(3);
+    setStep(6);
     
     toast({
       title: "Profile created",
@@ -113,10 +124,16 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
       case 0:
         return <WelcomeScreen onNext={handleWelcomeComplete} />;
       case 1:
-        return <PhoneVerificationScreen onNext={handlePhoneVerificationComplete} />;
+        return <SecondScreen onNext={handleSecondScreenComplete} />;
       case 2:
-        return <UserProfileScreen onComplete={handleProfileComplete} />;
+        return <ThirdScreen onNext={handleThirdScreenComplete} />;
       case 3:
+        return <FinalScreen onNext={handleFinalScreenComplete} />;
+      case 4:
+        return <PhoneVerificationScreen onNext={handlePhoneVerificationComplete} />;
+      case 5:
+        return <UserProfileScreen onComplete={handleProfileComplete} />;
+      case 6:
         return (
           <SmsProviderSelectionScreen 
             onComplete={handleSmsProviderSelectionComplete}
@@ -131,7 +148,7 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   return (
     <WireframeContainer>
       <div className="p-4 h-full flex flex-col justify-center">
-        <div className="max-w-md mx-auto w-full">
+        <div className="max-w-md mx-auto w-full h-full">
           {renderCurrentStep()}
         </div>
       </div>

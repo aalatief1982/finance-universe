@@ -62,7 +62,7 @@ const Header = ({ className }: HeaderProps) => {
   const { user, logOut } = useUser();
   
   // Get the current page title from the route map
-  const currentPageTitle = routeTitleMap[location.pathname] || 'Expense Tracker';
+  const currentPageTitle = routeTitleMap[location.pathname] || 'Xpensia';
   
   // Check if we're on the landing page
   const isLandingPage = location.pathname === '/';
@@ -85,9 +85,9 @@ const Header = ({ className }: HeaderProps) => {
             >
               <Link to="/" className="flex items-center space-x-2">
                 <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                  <span className="text-white font-semibold text-lg">E</span>
+                  <span className="text-white font-semibold text-lg">X</span>
                 </div>
-                <span className="text-xl font-semibold tracking-tight">Expense Tracker</span>
+                <span className="text-xl font-semibold tracking-tight">Xpensia</span>
               </Link>
             </motion.div>
           </div>
@@ -196,9 +196,9 @@ const Header = ({ className }: HeaderProps) => {
             >
               <Link to="/" className="flex items-center space-x-2">
                 <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                  <span className="text-white font-semibold text-lg">E</span>
+                  <span className="text-white font-semibold text-lg">X</span>
                 </div>
-                <span className="text-xl font-semibold tracking-tight">{isLandingPage ? 'Expense Tracker' : currentPageTitle}</span>
+                <span className="text-xl font-semibold tracking-tight">{isLandingPage ? 'Xpensia' : currentPageTitle}</span>
               </Link>
             </motion.div>
             

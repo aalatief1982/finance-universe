@@ -25,9 +25,9 @@ const Index = () => {
           transition={{ duration: 0.5 }}
           className="max-w-lg text-center"
         >
-          <h1 className="text-4xl font-bold mb-6">Expense Tracker</h1>
+          <h1 className="text-4xl font-bold mb-6">Xpensia</h1>
           <p className="text-xl text-muted-foreground mb-8">
-            Automatically analyze your expenses through SMS messages and gain insights into your spending patterns
+            Every expense has a story. We help you see where your money goes and why.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
@@ -40,7 +40,7 @@ const Index = () => {
           
           <div className="mt-12 space-y-4 text-sm text-muted-foreground">
             <p>
-              • Automatically categorize transactions from SMS
+              • Auto-categorize transactions from SMS
             </p>
             <p>
               • Track spending across multiple accounts

@@ -1,0 +1,46 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#0097a0" />
+  
+  <!-- Main X with wallet -->
+  <path d="M240 260
+           L480 500
+           L240 740
+           L310 810
+           L550 570
+           L790 810
+           L860 740
+           L620 500
+           L860 260
+           L790 190
+           L550 430
+           L310 190
+           Z" 
+        fill="white" />
+  
+  <!-- Wallet part -->
+  <path d="M610 530
+           H760
+           C800 530 830 560 830 600
+           V720
+           C830 760 800 790 760 790
+           H610
+           V730
+           H750
+           C750 700 726 676 696 676
+           C666 676 642 700 642 730
+           C642 760 666 784 696 784
+           H760
+           V600
+           H610
+           Z" 
+        fill="white" />
+  
+  <!-- Wallet circle -->
+  <circle cx="696" cy="730" r="30" fill="#0097a0" />
+  
+  <!-- Vertical lines -->
+  <rect x="770" y="500" width="24" height="90" fill="white" />
+  <rect x="820" y="500" width="24" height="90" fill="white" />
+</svg>

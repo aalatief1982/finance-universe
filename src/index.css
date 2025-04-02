@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 174 100% 31%;
+    --primary: 175 100% 30%; /* Updated to match the teal color in the images #0097a0 */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
@@ -23,7 +23,7 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 174 100% 31%;
+    --accent: 175 100% 30%; /* Updated to match primary */
     --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
@@ -31,7 +31,7 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 174 100% 31%;
+    --ring: 175 100% 30%; /* Updated to match primary */
 
     --radius: 0.75rem;
     
@@ -49,7 +49,7 @@
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 174 100% 31%;
+    --primary: 175 100% 30%; /* Updated to match the teal color */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 33% 18%;
