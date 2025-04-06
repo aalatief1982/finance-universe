@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Phone, Loader2 } from 'lucide-react';
@@ -11,7 +11,10 @@ interface EnterPhoneFormProps {
   handleSendCode: () => void;
   isLoading: boolean;
   error: string;
+  errorType?: 'network' | 'validation' | 'auth' | null;
   success: string;
+  isOffline?: boolean;
+  validatePhoneNumber?: (number: string) => boolean;
 }
 
 const EnterPhoneForm = ({ 
@@ -20,7 +23,10 @@ const EnterPhoneForm = ({
   handleSendCode, 
   isLoading,
   error,
-  success
+  errorType,
+  success,
+  isOffline,
+  validatePhoneNumber
 }: EnterPhoneFormProps) => {
   return (
     <>
@@ -43,16 +49,20 @@ const EnterPhoneForm = ({
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
           className={error ? "border-red-500" : ""}
+          disabled={isOffline}
         />
         {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         {success && <p className="text-green-500 text-sm mt-1">{success}</p>}
+        {isOffline && (
+          <p className="text-red-500 text-sm mt-1">You are currently offline. Please check your connection.</p>
+        )}
       </div>
       
       <WireframeButton 
         onClick={handleSendCode}
         variant="primary"
         className="w-full"
-        disabled={isLoading}
+        disabled={isLoading || isOffline}
       >
         {isLoading ? (
           <>

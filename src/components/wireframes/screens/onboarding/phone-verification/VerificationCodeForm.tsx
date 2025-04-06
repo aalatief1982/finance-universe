@@ -12,7 +12,11 @@ interface VerificationCodeFormProps {
   handleVerifyCode: () => void;
   isLoading: boolean;
   error: string;
+  errorType?: 'network' | 'validation' | 'auth' | null;
   success: string;
+  sessionTimeRemaining?: number;
+  formatRemainingTime?: (milliseconds: number) => string;
+  isOffline?: boolean;
 }
 
 const VerificationCodeForm = ({
@@ -23,7 +27,11 @@ const VerificationCodeForm = ({
   handleVerifyCode,
   isLoading,
   error,
-  success
+  errorType,
+  success,
+  sessionTimeRemaining,
+  formatRemainingTime,
+  isOffline
 }: VerificationCodeFormProps) => {
   return (
     <>
@@ -37,6 +45,12 @@ const VerificationCodeForm = ({
         </p>
         {success && <p className="text-green-500 text-sm mt-2">{success}</p>}
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        
+        {sessionTimeRemaining && formatRemainingTime && (
+          <div className="mt-2 text-sm font-medium">
+            Time remaining: {formatRemainingTime(sessionTimeRemaining)}
+          </div>
+        )}
       </div>
       
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
@@ -56,6 +70,7 @@ const VerificationCodeForm = ({
           maxLength={4}
           value={verificationCode.join('')}
           onChange={handleVerificationCodeChange}
+          disabled={isOffline}
         >
           <InputOTPGroup>
             <InputOTPSlot index={0} />
@@ -71,7 +86,7 @@ const VerificationCodeForm = ({
           className="text-primary hover:text-primary/80 text-sm font-medium underline" 
           onClick={handleResendCode}
           type="button"
-          disabled={isLoading}
+          disabled={isLoading || isOffline}
         >
           Didn't receive a code? Resend
         </button>
@@ -81,7 +96,7 @@ const VerificationCodeForm = ({
         <WireframeButton 
           onClick={handleVerifyCode}
           variant={verificationCode.every(digit => digit) ? 'primary' : 'secondary'}
-          disabled={isLoading || !verificationCode.every(digit => digit)}
+          disabled={isLoading || !verificationCode.every(digit => digit) || isOffline}
           className="w-full"
         >
           {isLoading ? (
