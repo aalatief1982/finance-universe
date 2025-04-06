@@ -1,3 +1,4 @@
+
 // This module contains the SMS parsing logic for the expense tracker app
 import { transactionService } from '@/services/TransactionService';
 import { CategoryRule } from '@/types/transaction';
@@ -314,13 +315,13 @@ function determineSubcategory(category: string, description: string, message: st
     }
     
     if (textToAnalyze.includes('pharm') || textToAnalyze.includes('drug') || 
-        textToAnalyze.includes('medicine') || textToanalyze.includes('صيدلية') ||
+        textToAnalyze.includes('medicine') || textToAnalyze.includes('صيدلية') ||
         textToAnalyze.includes('دواء')) {
       return 'Pharmacy';
     }
     
     if (textToAnalyze.includes('gym') || textToAnalyze.includes('fitness') || 
-        textToAnalyze.includes('workout') || textToanalyze.includes('صالة رياضية')) {
+        textToAnalyze.includes('workout') || textToAnalyze.includes('صالة رياضية')) {
       return 'Gym';
     }
   }
@@ -698,4 +699,7 @@ export function getMockSmsMessages() {
       id: '10',
       sender: 'HDFC Bank',
       message: 'HDFC: INR 1,450.00 has been debited from your account for purchase at BIG BAZAAR on 11-05-2023',
-      date: new Date('2023-05-
+      date: new Date('2023-05-11T11:45:00'),
+    }
+  ];
+}
