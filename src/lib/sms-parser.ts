@@ -314,13 +314,13 @@ function determineSubcategory(category: string, description: string, message: st
     }
     
     if (textToAnalyze.includes('pharm') || textToAnalyze.includes('drug') || 
-        textToAnalyze.includes('medicine') || textToAnalyze.includes('صيدلية') ||
+        textToAnalyze.includes('medicine') || textToanalyze.includes('صيدلية') ||
         textToAnalyze.includes('دواء')) {
       return 'Pharmacy';
     }
     
     if (textToAnalyze.includes('gym') || textToAnalyze.includes('fitness') || 
-        textToAnalyze.includes('workout') || textToAnalyze.includes('صالة رياضية')) {
+        textToAnalyze.includes('workout') || textToanalyze.includes('صالة رياضية')) {
       return 'Gym';
     }
   }
@@ -698,4 +698,4 @@ export function getMockSmsMessages() {
       id: '10',
       sender: 'HDFC Bank',
       message: 'HDFC: INR 1,450.00 has been debited from your account for purchase at BIG BAZAAR on 11-05-2023',
-      date: new Date('2023-
+      date: new Date('2023-05-
