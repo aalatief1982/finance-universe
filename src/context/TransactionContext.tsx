@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { transactionService } from '@/services/TransactionService';
 import { Transaction } from '@/types/transaction';
@@ -60,7 +61,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     try {
-      // Use our new validation function
+      // Use our validation function
       const validationResult = validateNewTransaction(transaction);
       
       if (!validationResult.success) {
@@ -94,7 +95,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   };
 
-  // Fix updateTransaction method to handle required fields
+  // Fix updateTransaction method to handle required fields and subcategory
   const updateTransaction = (id: string, updates: Partial<Omit<Transaction, 'id'>>) => {
     try {
       // Find the existing transaction

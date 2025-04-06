@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +14,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search } from 'lucide-react';
 import CategoryHierarchy from '@/components/categories/CategoryHierarchy';
 import { transactionService } from '@/services/TransactionService';
-import { Category } from '@/types/transaction';
+import { Category, TransactionType, CategoryWithSubcategories } from '@/types/transaction';
+import { CATEGORY_HIERARCHY, getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
 
 const ACCOUNTS = [
   "Cash", "Bank Account", "Credit Card", "Savings", "Investment", "Other"
@@ -44,6 +44,7 @@ const formSchema = z.object({
   category: z.string().min(1, {
     message: "Please select a category.",
   }),
+  subcategory: z.string().optional(),
   date: z.string().min(1, {
     message: "Please select a date.",
   }),
@@ -80,6 +81,7 @@ const ExpenseForm = ({
     title: "",
     amount: undefined,
     category: "",
+    subcategory: "",
     date: new Date().toISOString().split('T')[0],
     type: "expense",
     fromAccount: "",
@@ -100,9 +102,41 @@ const ExpenseForm = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategoryName, setSelectedCategoryName] = useState(defaultValues.category || '');
+  const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
   
   // Watch the transaction type to conditionally render fields
-  const transactionType = form.watch("type");
+  const transactionType = form.watch("type") as TransactionType;
+  const selectedCategory = form.watch("category");
+  
+  // Update available subcategories when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      const subcategories = getSubcategoriesForCategory(selectedCategory);
+      setAvailableSubcategories(subcategories);
+      
+      // If current subcategory is not available, reset it
+      const currentSubcategory = form.getValues("subcategory");
+      if (currentSubcategory && !subcategories.includes(currentSubcategory)) {
+        form.setValue("subcategory", "");
+      }
+    } else {
+      setAvailableSubcategories([]);
+      form.setValue("subcategory", "");
+    }
+  }, [selectedCategory, form]);
+  
+  // Update available categories when transaction type changes
+  useEffect(() => {
+    const categoryNames = getCategoriesForType(transactionType);
+    
+    // If current category doesn't match transaction type, reset it
+    const currentCategory = form.getValues("category");
+    if (currentCategory && !categoryNames.includes(currentCategory)) {
+      form.setValue("category", "");
+      form.setValue("subcategory", "");
+      setSelectedCategoryName("");
+    }
+  }, [transactionType, form]);
   
   // Fetch hierarchical categories
   useEffect(() => {
@@ -137,17 +171,23 @@ const ExpenseForm = ({
     form.reset();
   };
   
-  // Filter categories based on search query
+  // Filter categories based on search query and transaction type
   const filteredCategories = searchQuery 
     ? hierarchicalCategories.filter(cat => 
         cat.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : hierarchicalCategories;
     
+  // Get available categories for the current transaction type
+  const categoriesForType = getCategoriesForType(transactionType);
+  
   // Handle category selection
   const handleCategorySelect = (categoryId: string) => {
     form.setValue('category', categoryId, { shouldValidate: true });
     updateSelectedCategoryName(categoryId);
     setShowCategorySelector(false);
+    
+    // Reset subcategory when category changes
+    form.setValue('subcategory', '', { shouldValidate: true });
   };
 
   return (
@@ -358,12 +398,21 @@ const ExpenseForm = ({
                               />
                             </div>
                             <ScrollArea className="h-[200px]">
-                              <CategoryHierarchy
-                                categories={filteredCategories}
-                                selectedCategoryId={field.value}
-                                onSelectCategory={handleCategorySelect}
-                                maxHeight="200px"
-                              />
+                              <div className="p-2">
+                                <p className="text-sm font-medium mb-2">Available Categories for {transactionType}:</p>
+                                <div className="space-y-1">
+                                  {categoriesForType.map(categoryName => (
+                                    <Button
+                                      key={categoryName}
+                                      variant={selectedCategoryName === categoryName ? "default" : "outline"}
+                                      className="w-full justify-start"
+                                      onClick={() => handleCategorySelect(categoryName)}
+                                    >
+                                      {categoryName}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
                             </ScrollArea>
                           </div>
                         </PopoverContent>
@@ -373,7 +422,58 @@ const ExpenseForm = ({
                   )}
                 />
                 
-                {/* Date */}
+                {/* Subcategory - Only shown when category is selected and subcategories are available */}
+                {selectedCategory && availableSubcategories.length > 0 && (
+                  <FormField
+                    control={form.control}
+                    name="subcategory"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subcategory</FormLabel>
+                        <Select
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select subcategory" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="">None</SelectItem>
+                            {availableSubcategories.map(subcategory => (
+                              <SelectItem key={subcategory} value={subcategory}>
+                                {subcategory}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+                
+                {/* Date - Always shown */}
+                {!selectedCategory || !availableSubcategories.length ? (
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Date*</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : null}
+              </div>
+              
+              {/* Date - Show in another row if subcategory is shown */}
+              {selectedCategory && availableSubcategories.length > 0 && (
                 <FormField
                   control={form.control}
                   name="date"
@@ -387,7 +487,7 @@ const ExpenseForm = ({
                     </FormItem>
                   )}
                 />
-              </div>
+              )}
               
               {/* Person */}
               <FormField

@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { 
   transactionSchema, 
@@ -17,8 +18,8 @@ export type Transaction = z.infer<typeof transactionSchema> & {
   exchangeRate?: number;
   fromAccount?: string;
   toAccount?: string;
-  subcategory?: string;
-  currency?: string; // Changed from SupportedCurrency to string
+  subcategory?: string; // Explicitly defined subcategory field
+  currency?: string; // String type for currency
   description?: string;
   person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | 'none' | null;
   providerDetails?: {
@@ -78,7 +79,7 @@ export interface CategoryHierarchy {
 
 export type TransactionCategoryChange = z.infer<typeof transactionCategoryChangeSchema>;
 
-// New category hierarchical structure
+// New category hierarchical structure - making the relationship with transaction type explicit
 export interface CategoryWithSubcategories {
   name: string;
   subcategories: string[];
