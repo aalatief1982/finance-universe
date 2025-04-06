@@ -49,7 +49,7 @@ const formSchema = z.object({
   }),
   description: z.string().optional(),
   notes: z.string().optional(),
-  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen"]).optional().nullable(),
+  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional(),
   currency: z.string().min(1, {
     message: "Please select a currency.",
   }),
@@ -86,7 +86,7 @@ const ExpenseForm = ({
     toAccount: "",
     description: "",
     notes: "",
-    person: null,
+    person: undefined,
     currency: "SAR",
   },
   onCancel,
@@ -397,7 +397,7 @@ const ExpenseForm = ({
                   <FormItem>
                     <FormLabel>Main Person</FormLabel>
                     <Select
-                      value={field.value || ""}
+                      value={field.value || "none"}
                       onValueChange={field.onChange}
                     >
                       <FormControl>
@@ -406,7 +406,7 @@ const ExpenseForm = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="Ahmed">Ahmed</SelectItem>
                         <SelectItem value="Marwa">Marwa</SelectItem>
                         <SelectItem value="Youssef">Youssef</SelectItem>

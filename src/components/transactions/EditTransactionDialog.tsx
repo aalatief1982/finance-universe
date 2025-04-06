@@ -37,7 +37,7 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
             type: currentTransaction.type || (currentTransaction.amount >= 0 ? 'income' : 'expense'),
             notes: currentTransaction.notes || '',
             description: currentTransaction.description || '',
-            person: currentTransaction.person || null,
+            person: currentTransaction.person || 'none',
             fromAccount: currentTransaction.fromAccount || '',
             toAccount: currentTransaction.toAccount || '',
             currency: currentTransaction.currency || 'SAR',

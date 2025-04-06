@@ -21,7 +21,7 @@ export type Transaction = z.infer<typeof transactionSchema> & {
   subcategory?: string;
   currency?: SupportedCurrency;
   description?: string;
-  person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | null;
+  person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | 'none' | null;
   providerDetails?: {
     providerName?: string;
     providerType?: 'bank' | 'payment_app' | 'card' | 'other';

@@ -14,7 +14,7 @@ export const transactionSchema = z.object({
   toAccount: z.string().optional().nullable(),
   notes: z.string().optional(),
   description: z.string().optional(),
-  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen"]).optional().nullable(),
+  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional().nullable(),
   source: z.enum(["manual", "sms"]).optional(),
   originalCurrency: z.string().optional(),
   // Fix the currency enum type by using as const
@@ -210,3 +210,23 @@ export type ValidatedUserPreferences = z.infer<typeof userPreferencesSchema>;
 export type ValidatedBudget = z.infer<typeof budgetSchema>;
 export type ValidatedDataImport = z.infer<typeof dataImportSchema>;
 export type ValidatedTransactionCategoryChange = z.infer<typeof transactionCategoryChangeSchema>;
+
+// Update the Person type in the TransactionContext to handle validation
+export function validateNewTransaction(transaction: Omit<z.infer<typeof transactionSchema>, 'id'>) {
+  try {
+    // We need to create a new schema without the id field
+    const transactionWithoutIdSchema = transactionSchema.omit({ id: true });
+    return { 
+      success: true, 
+      data: transactionWithoutIdSchema.parse(transaction) 
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessages = error.errors.map(e => e.message).join(', ');
+      return { success: false, error: `Validation Error: ${errorMessages}` };
+    } else {
+      console.error("Unexpected validation error:", error);
+      return { success: false, error: "Unexpected validation error" };
+    }
+  }
+}

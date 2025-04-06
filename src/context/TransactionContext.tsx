@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { transactionService } from '@/services/TransactionService';
 import { Transaction } from '@/types/transaction';
 import { useToast } from '@/components/ui/use-toast';
-import { validateData, transactionSchema } from '@/lib/validation';
+import { validateData, transactionSchema, validateNewTransaction } from '@/lib/validation';
 import { handleError, handleValidationError } from '@/utils/error-utils';
 import { ErrorType } from '@/types/error';
 import { SupportedCurrency } from '@/types/locale';
@@ -60,14 +60,8 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     try {
-      // Fix: Use z.object instead of trying to use omit on the schema
-      const transactionWithoutId = { ...transaction };
-      
-      // Validate the transaction
-      const validationResult = validateData(
-        transactionSchema.omit({ id: true }),
-        transactionWithoutId
-      );
+      // Use our new validation function
+      const validationResult = validateNewTransaction(transaction);
       
       if (!validationResult.success) {
         handleValidationError(validationResult.error);
@@ -77,7 +71,8 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Type assertion to ensure currency is properly typed
       const typedTransaction = {
         ...transaction,
-        currency: transaction.currency as SupportedCurrency | undefined
+        currency: transaction.currency as SupportedCurrency | undefined,
+        person: transaction.person === 'none' ? null : transaction.person
       };
       
       const newTransaction = transactionService.addTransaction(typedTransaction);
