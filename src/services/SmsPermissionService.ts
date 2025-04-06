@@ -1,10 +1,10 @@
-
 import { useToast } from '@/components/ui/use-toast';
 import { ErrorType } from '@/types/error';
 import { handleError } from '@/utils/error-utils';
 import { Capacitor } from '@capacitor/core';
 
 const SMS_PERMISSION_STORAGE_KEY = 'smsPermissionGranted';
+const SMS_PROVIDERS_SELECTED_KEY = 'smsProvidersSelected';
 
 class SmsPermissionService {
   // Check if app is running in a native mobile environment
@@ -138,14 +138,28 @@ class SmsPermissionService {
   // Check if SMS providers have been selected
   hasProvidersSelected(): boolean {
     try {
+      // First check the dedicated flag
+      const hasSelected = localStorage.getItem(SMS_PROVIDERS_SELECTED_KEY) === 'true';
+      if (hasSelected) {
+        return true;
+      }
+      
+      // Fallback to checking the actual providers
       const providers = localStorage.getItem('sms_providers');
       if (!providers) {
         return false;
       }
       
       const parsedProviders = JSON.parse(providers);
-      return Array.isArray(parsedProviders) && 
+      const hasSelectedProviders = Array.isArray(parsedProviders) && 
              parsedProviders.some((provider: any) => provider.isSelected);
+      
+      // Update the flag if we found selected providers
+      if (hasSelectedProviders) {
+        localStorage.setItem(SMS_PROVIDERS_SELECTED_KEY, 'true');
+      }
+      
+      return hasSelectedProviders;
     } catch (error) {
       handleError({
         type: ErrorType.STORAGE,
@@ -153,6 +167,59 @@ class SmsPermissionService {
         originalError: error
       });
       return false;
+    }
+  }
+  
+  // Mark providers as selected
+  setProvidersSelected(selected: boolean): void {
+    try {
+      localStorage.setItem(SMS_PROVIDERS_SELECTED_KEY, selected ? 'true' : 'false');
+    } catch (error) {
+      handleError({
+        type: ErrorType.STORAGE,
+        message: 'Failed to save SMS providers selection status',
+        originalError: error
+      });
+    }
+  }
+  
+  // Check if SMS provider detection has been run previously
+  hasRunProviderDetection(): boolean {
+    try {
+      return localStorage.getItem('sms_provider_detection_run') === 'true';
+    } catch (error) {
+      return false;
+    }
+  }
+  
+  // Mark provider detection as run
+  setProviderDetectionRun(hasRun: boolean): void {
+    try {
+      localStorage.setItem('sms_provider_detection_run', hasRun ? 'true' : 'false');
+    } catch (error) {
+      handleError({
+        type: ErrorType.STORAGE,
+        message: 'Failed to save SMS provider detection status',
+        originalError: error
+      });
+    }
+  }
+  
+  // Reset SMS permission and detection state (for testing)
+  resetSmsState(): void {
+    try {
+      localStorage.removeItem(SMS_PERMISSION_STORAGE_KEY);
+      localStorage.removeItem(SMS_PROVIDERS_SELECTED_KEY);
+      localStorage.removeItem('sms_provider_detection_run');
+      localStorage.removeItem('sms_providers');
+      localStorage.removeItem('detected_sms_providers');
+      localStorage.removeItem('sms_start_date');
+    } catch (error) {
+      handleError({
+        type: ErrorType.STORAGE,
+        message: 'Failed to reset SMS state',
+        originalError: error
+      });
     }
   }
 }
@@ -194,7 +261,11 @@ export const useSmsPermission = () => {
     hasPermission: smsPermissionService.hasPermission.bind(smsPermissionService),
     requestPermission,
     canReadSms: smsPermissionService.canReadSms.bind(smsPermissionService),
-    isNativeEnvironment: smsPermissionService.isNativeEnvironment.bind(smsPermissionService)
+    isNativeEnvironment: smsPermissionService.isNativeEnvironment.bind(smsPermissionService),
+    hasProvidersSelected: smsPermissionService.hasProvidersSelected.bind(smsPermissionService),
+    hasRunProviderDetection: smsPermissionService.hasRunProviderDetection.bind(smsPermissionService),
+    setProviderDetectionRun: smsPermissionService.setProviderDetectionRun.bind(smsPermissionService),
+    resetSmsState: smsPermissionService.resetSmsState.bind(smsPermissionService)
   };
 };
 
