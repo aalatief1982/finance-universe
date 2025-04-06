@@ -18,7 +18,7 @@ import { UserProvider, useUser } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
 import ErrorBoundary from './components/ui/error-boundary';
 import { Toaster } from './components/ui/toaster';
-import Header from './components/Header';
+import { Header } from './components/header';
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
