@@ -1,4 +1,3 @@
-
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { ENABLE_SUPABASE_AUTH, ENABLE_DEMO_MODE } from '@/lib/env';
 import { User } from './types';
@@ -14,7 +13,8 @@ import {
   getVerificationAttemptsRemaining,
   getMaxVerificationAttempts
 } from '@/lib/supabase-auth';
-import { createError, ErrorType } from '@/types/error';
+import { ErrorType } from '@/types/error';
+import { createError } from '@/utils/error-utils';
 
 /**
  * Check if a user with the given phone number exists
