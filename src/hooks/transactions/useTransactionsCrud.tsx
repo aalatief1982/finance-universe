@@ -70,7 +70,12 @@ export function useTransactionsCrud() {
         date: formData.date,
         type: transactionType,
         notes: formData.notes,
-        source: 'manual'
+        source: 'manual',
+        fromAccount: formData.fromAccount || 'Cash', // Add default fromAccount
+        toAccount: formData.toAccount,
+        description: formData.description,
+        person: formData.person,
+        currency: formData.currency
       };
 
       // Store directly using the enhanced storage function
@@ -113,6 +118,11 @@ export function useTransactionsCrud() {
         date: formData.date,
         type: transactionType,
         notes: formData.notes,
+        fromAccount: formData.fromAccount || currentTransaction.fromAccount || 'Cash',
+        toAccount: formData.toAccount,
+        description: formData.description,
+        person: formData.person,
+        currency: formData.currency
       };
 
       // Track category changes if the category was changed

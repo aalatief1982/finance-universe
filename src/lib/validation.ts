@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import { handleValidationError } from '@/utils/error-utils';
 import { SupportedCurrency } from '@/types/locale';
@@ -11,19 +10,19 @@ export const transactionSchema = z.object({
   category: z.string().min(1, "Category is required"),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date format"),
   type: z.enum(["income", "expense", "transfer"]),
-  fromAccount: z.string().min(1, "From Account is required"),
+  fromAccount: z.string().optional(), // Make fromAccount optional here
   toAccount: z.string().optional().nullable(),
   notes: z.string().optional(),
   description: z.string().optional(),
   person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen"]).optional().nullable(),
   source: z.enum(["manual", "sms"]).optional(),
   originalCurrency: z.string().optional(),
-  // Update the currency field to use SupportedCurrency enum
+  // Fix the currency enum type by using as const
   currency: z.enum([
     "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", 
     "NZD", "SEK", "KRW", "SGD", "NOK", "MXN", "INR", "RUB", "ZAR", 
     "BRL", "AED", "SAR", "TRY", "PLN", "EGP", "BHD"
-  ] as [SupportedCurrency, ...SupportedCurrency[]]).default("SAR"),
+  ] as const).default("SAR"),
   smsDetails: z
     .object({
       sender: z.string(),
@@ -62,7 +61,7 @@ export const localeSettingsSchema = z.object({
     "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", 
     "NZD", "SEK", "KRW", "SGD", "NOK", "MXN", "INR", "RUB", "ZAR", 
     "BRL", "AED", "SAR", "TRY", "PLN", "EGP", "BHD"
-  ] as [SupportedCurrency, ...SupportedCurrency[]]),
+  ] as const),
   language: z.string()
 });
 

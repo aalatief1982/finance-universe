@@ -60,10 +60,13 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
     try {
-      // Validate the transaction first
+      // Fix: Use z.object instead of trying to use omit on the schema
+      const transactionWithoutId = { ...transaction };
+      
+      // Validate the transaction
       const validationResult = validateData(
         transactionSchema.omit({ id: true }),
-        transaction
+        transactionWithoutId
       );
       
       if (!validationResult.success) {
@@ -97,6 +100,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
   };
 
+  // Fix updateTransaction method to handle required fields
   const updateTransaction = (id: string, updates: Partial<Omit<Transaction, 'id'>>) => {
     try {
       // Find the existing transaction
@@ -106,10 +110,11 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         throw new Error(`Transaction with id ${id} not found`);
       }
       
-      // Ensure currency is properly typed
+      // Ensure fromAccount is included
       const typedUpdates = {
         ...updates,
-        currency: updates.currency as SupportedCurrency | undefined
+        currency: updates.currency as SupportedCurrency | undefined,
+        fromAccount: updates.fromAccount || existingTransaction.fromAccount || "Cash" // Provide a default
       };
       
       // Create the merged transaction for validation

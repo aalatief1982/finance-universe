@@ -34,6 +34,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Income',
     date: getRandomDate(),
     type: 'income',
+    fromAccount: 'Bank Account', // Add fromAccount to all transactions
   },
   {
     id: uuidv4(),
@@ -42,6 +43,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Housing',
     date: getRandomDate(),
     type: 'expense',
+    fromAccount: 'Bank Account', 
   },
   {
     id: uuidv4(),
@@ -50,6 +52,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Food',
     date: getRandomDate(),
     type: 'expense',
+    fromAccount: 'Credit Card',
   },
   {
     id: uuidv4(),
@@ -58,6 +61,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Transportation',
     date: getRandomDate(),
     type: 'expense',
+    fromAccount: 'Credit Card',
   },
   {
     id: uuidv4(),
@@ -66,6 +70,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Subscriptions',
     date: getRandomDate(),
     type: 'expense',
+    fromAccount: 'Bank Account',
   },
   {
     id: uuidv4(),
@@ -74,6 +79,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Food',
     date: getRandomDate(),
     type: 'expense',
+    fromAccount: 'Credit Card',
   },
   {
     id: uuidv4(),
@@ -82,6 +88,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Income',
     date: getRandomDate(),
     type: 'income',
+    fromAccount: 'Bank Account',
   },
   {
     id: uuidv4(),
@@ -90,6 +97,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     category: 'Shopping',
     date: getRandomDate(),
     type: 'expense',
+    fromAccount: 'Credit Card',
   },
 ];
 

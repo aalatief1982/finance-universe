@@ -72,7 +72,12 @@ export function useTransactionsState() {
       date: formData.date,
       type: transactionType,
       notes: formData.notes,
-      source: 'manual'
+      source: 'manual',
+      fromAccount: formData.fromAccount || 'Cash', // Add default fromAccount
+      toAccount: formData.toAccount,
+      description: formData.description,
+      person: formData.person,
+      currency: formData.currency || userCurrency
     };
 
     // Store in local storage directly
@@ -83,7 +88,7 @@ export function useTransactionsState() {
     setIsAddingExpense(false);
     
     return newTransaction;
-  }, [setTransactions, setIsAddingExpense]);
+  }, [setTransactions, setIsAddingExpense, userCurrency]);
 
   const handleEditTransaction = useCallback((formData: any) => {
     if (!currentTransaction) return null;
@@ -98,6 +103,11 @@ export function useTransactionsState() {
       date: formData.date,
       type: transactionType,
       notes: formData.notes,
+      fromAccount: formData.fromAccount || currentTransaction.fromAccount || 'Cash',
+      toAccount: formData.toAccount,
+      description: formData.description,
+      person: formData.person,
+      currency: formData.currency
     };
 
     // Record category change if different from original

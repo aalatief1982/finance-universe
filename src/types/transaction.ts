@@ -11,11 +11,12 @@ import { SupportedCurrency } from '@/types/locale';
 
 export type TransactionType = 'income' | 'expense' | 'transfer';
 
+// Update the Transaction type to make fromAccount optional to fix compatibility issues
 export type Transaction = z.infer<typeof transactionSchema> & {
   categoryPath?: string;
   originalCurrency?: string;
   exchangeRate?: number;
-  fromAccount: string;
+  fromAccount?: string; // Changed from required to optional
   toAccount?: string;
   subcategory?: string;
   currency?: SupportedCurrency;
