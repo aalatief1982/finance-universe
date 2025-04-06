@@ -1,14 +1,16 @@
+
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { User as UserType, UserPreferences } from '@/types/user';
 import { ValidatedUserPreferences, userPreferencesSchema, validateData } from '@/lib/validation';
 import { toast } from '@/components/ui/use-toast';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { ENABLE_SUPABASE_AUTH,ENABLE_DEMO_MODE  } from '@/lib/env';
+import { ENABLE_SUPABASE_AUTH, ENABLE_DEMO_MODE } from '@/lib/env';
 import { 
   startPhoneVerificationWithSupabase, 
   confirmPhoneVerificationWithSupabase,
   updateUserProfileInSupabase,
   isAuthenticatedWithSupabase,
+  signOutFromSupabase,
   setDemoMode,
   isDemoMode,
   getVerificationAttemptsRemaining,
@@ -85,6 +87,7 @@ interface UserContextType {
   isProfileComplete: () => boolean;
   updateAvatar: (avatarUrl: string) => void;
   getEffectiveTheme: () => 'light' | 'dark';
+  setDemoModeEnabled: (enabled: boolean) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -92,7 +95,8 @@ export const UserContext = createContext<UserContextType>({
   auth: {
     isAuthenticated: false,
     isLoading: false,
-    isVerifying: false
+    isVerifying: false,
+    isDemoMode: false
   },
   updateUser: () => {},
   startPhoneVerification: async () => false,
@@ -113,6 +117,7 @@ export const UserContext = createContext<UserContextType>({
   isProfileComplete: () => false,
   updateAvatar: () => {},
   getEffectiveTheme: () => 'light',
+  setDemoModeEnabled: () => {},
 });
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -179,6 +184,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, detectSystemTheme]);
   
+  // Set demo mode based on environment or user preference
+  useEffect(() => {
+    setDemoMode(ENABLE_DEMO_MODE);
+  }, []);
+  
   // Check for Supabase auth on initial load
   useEffect(() => {
     const checkSupabaseAuth = async () => {
@@ -212,11 +222,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // ... map other properties
               });
               
-              setAuth({
+              setAuth(prev => ({
+                ...prev,
                 isAuthenticated: true,
                 isLoading: false,
                 isVerifying: false
-              });
+              }));
               
               return;
             }
@@ -309,11 +320,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
   
-  // Set demo mode based on environment or user preference
-useEffect(() => {
-  setDemoMode(ENABLE_DEMO_MODE);
-}, []);
-  
   const updateUser = useCallback((userData: Partial<User>) => {
     setUser(prevUser => {
       if (!prevUser) {
@@ -361,177 +367,98 @@ useEffect(() => {
     });
   }, []);
   
-
   // Update authentication state with demo mode and attempts remaining
-const updateAuthState = useCallback(() => {
-  setAuth(prev => ({
-    ...prev,
-    verificationAttemptsRemaining: getVerificationAttemptsRemaining(),
-    maxVerificationAttempts: getMaxVerificationAttempts(),
-    isDemoMode: isDemoMode()
-  }));
-}, []);
+  const updateAuthState = useCallback(() => {
+    setAuth(prev => ({
+      ...prev,
+      verificationAttemptsRemaining: getVerificationAttemptsRemaining(),
+      maxVerificationAttempts: getMaxVerificationAttempts(),
+      isDemoMode: isDemoMode()
+    }));
+  }, []);
 
-
-  // Update this function:
-const startPhoneVerification = async (phoneNumber: string): Promise<boolean> => {
-  setIsLoading(true);
-  setAuth(prev => ({ ...prev, isVerifying: true }));
-  
-  try {
-    // Check if we should use Supabase for verification
-    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
-      const success = await startPhoneVerificationWithSupabase(phoneNumber);
-      
-      if (success) {
-        // Update user phone number
-        updateUser({ phone: phoneNumber });
-        setIsLoading(false);
-        return true;
+  // Implementation with demo mode support
+  const startPhoneVerification = async (phoneNumber: string): Promise<boolean> => {
+    setIsLoading(true);
+    setAuth(prev => ({ ...prev, isVerifying: true }));
+    
+    try {
+      // Check if we should use Supabase for verification
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+        const success = await startPhoneVerificationWithSupabase(phoneNumber);
+        
+        if (success) {
+          // Update user phone number
+          updateUser({ phone: phoneNumber });
+          setIsLoading(false);
+          updateAuthState();
+          return true;
+        } else {
+          // Handle verification failure
+          console.error('Failed to start phone verification');
+          setIsLoading(false);
+          updateAuthState();
+          return false;
+        }
       } else {
-        // Fall back to mock verification if Supabase fails
+        // Use mock verification in demo mode
         await new Promise(resolve => setTimeout(resolve, 1500));
         updateUser({ phone: phoneNumber });
         setIsLoading(false);
-        return true;
-      }
-    } else {
-      // Use mock verification
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      updateUser({ phone: phoneNumber });
-      setIsLoading(false);
-      return true;
-    }
-  } catch (error) {
-    console.error('Error starting phone verification', error);
-    setIsLoading(false);
-    return false;
-  }
-};
-
-// To handle demo mode and update the auth state:
-const startPhoneVerification = async (phoneNumber: string): Promise<boolean> => {
-  setIsLoading(true);
-  setAuth(prev => ({ ...prev, isVerifying: true }));
-  
-  try {
-    // Check if we should use Supabase for verification
-    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
-      const success = await startPhoneVerificationWithSupabase(phoneNumber);
-      
-      if (success) {
-        // Update user phone number
-        updateUser({ phone: phoneNumber });
-        setIsLoading(false);
         updateAuthState();
         return true;
-      } else {
-        // Handle verification failure
-        console.error('Failed to start phone verification');
-        setIsLoading(false);
-        updateAuthState();
-        return false;
       }
-    } else {
-      // Use mock verification in demo mode
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      updateUser({ phone: phoneNumber });
+    } catch (error) {
+      console.error('Error starting phone verification', error);
       setIsLoading(false);
       updateAuthState();
-      return true;
+      return false;
     }
-  } catch (error) {
-    console.error('Error starting phone verification', error);
-    setIsLoading(false);
-    updateAuthState();
-    return false;
-  }
-};
+  };
 
-  
-  // Update this function:
-const confirmPhoneVerification = async (code: string): Promise<boolean> => {
-  setIsLoading(true);
-  
-  try {
-    // Check if we should use Supabase for verification
-    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
-      const success = await confirmPhoneVerificationWithSupabase(code);
-      
-      if (success) {
-        updateUser({ phoneVerified: true });
-        setAuth(prev => ({ ...prev, isVerifying: false }));
-        setIsLoading(false);
-        return true;
+  // Implementation with demo mode support
+  const confirmPhoneVerification = async (code: string): Promise<boolean> => {
+    setIsLoading(true);
+    
+    try {
+      // Check if we should use Supabase for verification
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
+        const success = await confirmPhoneVerificationWithSupabase(code);
+        
+        if (success) {
+          updateUser({ phoneVerified: true });
+          setAuth(prev => ({ ...prev, isVerifying: false }));
+          setIsLoading(false);
+          updateAuthState();
+          return true;
+        } else {
+          // Code is invalid
+          setIsLoading(false);
+          updateAuthState();
+          return false;
+        }
       } else {
-        // Code is invalid
-        setIsLoading(false);
-        return false;
-      }
-    } else {
-      // In mock mode, "1234" is always valid
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const isValid = code === "1234";
-      
-      if (isValid) {
-        updateUser({ phoneVerified: true });
-        setAuth(prev => ({ ...prev, isVerifying: false }));
-      }
-      
-      setIsLoading(false);
-      return isValid;
-    }
-  } catch (error) {
-    console.error('Error confirming verification code', error);
-    setIsLoading(false);
-    return false;
-  }
-};
-
-// To handle demo mode and update the auth state:
-const confirmPhoneVerification = async (code: string): Promise<boolean> => {
-  setIsLoading(true);
-  
-  try {
-    // Check if we should use Supabase for verification
-    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
-      const success = await confirmPhoneVerificationWithSupabase(code);
-      
-      if (success) {
-        updateUser({ phoneVerified: true });
-        setAuth(prev => ({ ...prev, isVerifying: false }));
+        // In demo mode, "1234" is always valid
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const isValid = code === "1234";
+        
+        if (isValid) {
+          updateUser({ phoneVerified: true });
+          setAuth(prev => ({ ...prev, isVerifying: false }));
+        }
+        
         setIsLoading(false);
         updateAuthState();
-        return true;
-      } else {
-        // Code is invalid
-        setIsLoading(false);
-        updateAuthState();
-        return false;
+        return isValid;
       }
-    } else {
-      // In demo mode, "1234" is always valid
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const isValid = code === "1234";
-      
-      if (isValid) {
-        updateUser({ phoneVerified: true });
-        setAuth(prev => ({ ...prev, isVerifying: false }));
-      }
-      
+    } catch (error) {
+      console.error('Error confirming verification code', error);
       setIsLoading(false);
       updateAuthState();
-      return isValid;
+      return false;
     }
-  } catch (error) {
-    console.error('Error confirming verification code', error);
-    setIsLoading(false);
-    updateAuthState();
-    return false;
-  }
-};
+  };
 
-  
   const loadUserProfile = useCallback(async (): Promise<User | null> => {
     // In a real app, this would fetch user data from the backend
     // For now, we'll just return the current user from state
@@ -675,134 +602,95 @@ const confirmPhoneVerification = async (code: string): Promise<boolean> => {
     updateUser({ avatar: avatarUrl });
   }, [updateUser]);
   
- // Update this function:
-const logIn = useCallback(async () => {
-  if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
-    // If using Supabase auth, this is handled automatically by the sign-in flow
-    // We just need to check if we're already authenticated
-    const isAuthenticated = await isAuthenticatedWithSupabase();
-    
-    setAuth(prev => ({ 
-      ...prev, 
-      isAuthenticated: isAuthenticated || prev.isAuthenticated 
-    }));
-  } else {
-    // When not using Supabase, handle auth state locally
-    setAuth(prev => ({ ...prev, isAuthenticated: true }));
-  }
-  
-  // Update last active timestamp
-  updateUser({ lastActive: new Date() });
-}, []);
-
-// To check for demo mode:
-const logIn = useCallback(async () => {
-  if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
-    // If using Supabase auth, this is handled automatically by the sign-in flow
-    // We just need to check if we're already authenticated
-    const isAuthenticated = await isAuthenticatedWithSupabase();
-    
-    setAuth(prev => ({ 
-      ...prev, 
-      isAuthenticated: isAuthenticated || prev.isAuthenticated 
-    }));
-  } else {
-    // When not using Supabase, handle auth state locally
-    setAuth(prev => ({ ...prev, isAuthenticated: true }));
-  }
-  
-  // Update last active timestamp
-  updateUser({ lastActive: new Date() });
-}, [updateUser]);
-
-  
-// Update this function:
-const logOut = useCallback(async () => {
-  if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
-    // Sign out from Supabase
-    await supabase.auth.signOut();
-  }
-  
-  // Clear local state
-  setAuth(prev => ({ ...prev, isAuthenticated: false }));
-  setUser(null);
-  localStorage.removeItem('user');
-}, []);
-
-// To use signOutFromSupabase and handle demo mode:
-const logOut = useCallback(async () => {
-  try {
+  // Implementation with demo mode support
+  const logIn = useCallback(async () => {
     if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
-      // Sign out from Supabase
-      await signOutFromSupabase();
+      // If using Supabase auth, this is handled automatically by the sign-in flow
+      // We just need to check if we're already authenticated
+      const isAuthenticated = await isAuthenticatedWithSupabase();
+      
+      setAuth(prev => ({ 
+        ...prev, 
+        isAuthenticated: isAuthenticated || prev.isAuthenticated 
+      }));
+    } else {
+      // When not using Supabase, handle auth state locally
+      setAuth(prev => ({ ...prev, isAuthenticated: true }));
     }
     
-    // Clear local state
-    setAuth(prev => ({ 
-      ...prev, 
-      isAuthenticated: false,
-      isDemoMode: isDemoMode()
-    }));
-    setUser(null);
-    localStorage.removeItem('user');
+    // Update last active timestamp
+    updateUser({ lastActive: new Date() });
+  }, [updateUser]);
+  
+  // Implementation with demo mode and signOutFromSupabase
+  const logOut = useCallback(async () => {
+    try {
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
+        // Sign out from Supabase
+        await signOutFromSupabase();
+      }
+      
+      // Clear local state
+      setAuth(prev => ({ 
+        ...prev, 
+        isAuthenticated: false,
+        isDemoMode: isDemoMode()
+      }));
+      setUser(null);
+      localStorage.removeItem('user');
+      
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out."
+      });
+    } catch (error) {
+      console.error('Error signing out', error);
+    }
+  }, []);
+  
+  // Function to toggle demo mode
+  const setDemoModeEnabled = useCallback((enabled: boolean) => {
+    setDemoMode(enabled);
+    updateAuthState();
     
     toast({
-      title: "Signed out",
-      description: "You have been successfully signed out."
+      title: enabled ? "Demo Mode Enabled" : "Demo Mode Disabled",
+      description: enabled 
+        ? "Using mock authentication. Verification code is 1234." 
+        : "Using real authentication services."
     });
-  } catch (error) {
-    console.error('Error signing out', error);
-  }
-}, []);
-
-// Add this function before the return statement:
-const setDemoModeEnabled = useCallback((enabled: boolean) => {
-  setDemoMode(enabled);
-  updateAuthState();
+  }, [updateAuthState]);
   
-  toast({
-    title: enabled ? "Demo Mode Enabled" : "Demo Mode Disabled",
-    description: enabled 
-      ? "Using mock authentication. Verification code is 1234." 
-      : "Using real authentication services."
-  });
-}, [updateAuthState]);
-
-
-
-  
- // Update the provider value to include the new function:
-return (
-  <UserContext.Provider
-    value={{
-      user,
-      auth,
-      updateUser,
-      startPhoneVerification,
-      confirmPhoneVerification,
-      logIn,
-      logOut,
-      isLoading,
-      loadUserProfile,
-      updateUserPreferences,
-      updateTheme,
-      updateCurrency,
-      updateLanguage,
-      updateNotificationSettings,
-      updateDisplayOptions,
-      updatePrivacySettings,
-      updateDataManagement,
-      completeOnboarding,
-      isProfileComplete,
-      updateAvatar,
-      getEffectiveTheme,
-      setDemoModeEnabled  // <-- Add this line
-    }}
-  >
-    {children}
-  </UserContext.Provider>
-);
-
+  return (
+    <UserContext.Provider
+      value={{
+        user,
+        auth,
+        updateUser,
+        startPhoneVerification,
+        confirmPhoneVerification,
+        logIn,
+        logOut,
+        isLoading,
+        loadUserProfile,
+        updateUserPreferences,
+        updateTheme,
+        updateCurrency,
+        updateLanguage,
+        updateNotificationSettings,
+        updateDisplayOptions,
+        updatePrivacySettings,
+        updateDataManagement,
+        completeOnboarding,
+        isProfileComplete,
+        updateAvatar,
+        getEffectiveTheme,
+        setDemoModeEnabled
+      }}
+    >
+      {children}
+    </UserContext.Provider>
+  );
 };
 
 export const useUser = () => useContext(UserContext);
