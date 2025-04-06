@@ -4,7 +4,17 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { getNavItems } from './route-constants';
-import * as Icons from 'lucide-react';
+import { Home, PieChart, List, MessageSquare, Settings, User } from 'lucide-react';
+
+// Map of icon names to their components
+const iconMap = {
+  'Home': Home,
+  'PieChart': PieChart,
+  'List': List,
+  'MessageSquare': MessageSquare,
+  'Settings': Settings,
+  'User': User
+};
 
 export const MainNavigation: React.FC = () => {
   const location = useLocation();
@@ -19,8 +29,8 @@ export const MainNavigation: React.FC = () => {
     >
       <ul className="flex items-center space-x-1">
         {navItems.map((item) => {
-          // Dynamically get the icon from lucide-react
-          const IconComponent = Icons[item.icon as keyof typeof Icons];
+          // Get the icon component from our icon map
+          const IconComponent = iconMap[item.icon as keyof typeof iconMap];
           
           return (
             <li key={item.title}>

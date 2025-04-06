@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Home, PieChart, List, MessageSquare, Settings, User } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,7 +15,16 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { getNavItems } from './route-constants';
-import * as Icons from 'lucide-react';
+
+// Map of icon names to their components
+const iconMap = {
+  'Home': Home,
+  'PieChart': PieChart,
+  'List': List,
+  'MessageSquare': MessageSquare,
+  'Settings': Settings,
+  'User': User
+};
 
 interface MobileNavigationProps {
   currentPageTitle: string;
@@ -62,8 +71,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPageT
             
             <nav className="space-y-1">
               {navItems.map((item) => {
-                // Dynamically get the icon from lucide-react
-                const IconComponent = Icons[item.icon as keyof typeof Icons];
+                // Get the icon component from our icon map
+                const IconComponent = iconMap[item.icon as keyof typeof iconMap];
                 
                 return (
                   <SheetClose asChild key={item.title}>
