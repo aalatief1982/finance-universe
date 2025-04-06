@@ -1,8 +1,8 @@
-
 import React from 'react';
-import { Phone, Loader2, Info } from 'lucide-react';
+import { Phone, Loader2, Info, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import WireframeButton from '../../../WireframeButton';
+import { Progress } from '@/components/ui/progress';
 
 interface VerificationCodeFormProps {
   phoneNumber: string;
@@ -33,6 +33,38 @@ const VerificationCodeForm = ({
   formatRemainingTime,
   isOffline
 }: VerificationCodeFormProps) => {
+  // Calculate progress percentage for timeout
+  const getTimeoutProgress = () => {
+    if (!sessionTimeRemaining) return 0;
+    // Assuming session timeout is 15 minutes (900,000 ms)
+    const totalDuration = 15 * 60 * 1000;
+    return Math.max(0, Math.min(100, (sessionTimeRemaining / totalDuration) * 100));
+  };
+
+  // Determine time warning color based on remaining time
+  const getTimeWarningColor = () => {
+    if (!sessionTimeRemaining) return 'text-muted-foreground';
+    
+    // Less than 1 minute - urgent (red)
+    if (sessionTimeRemaining < 60000) return 'text-red-600';
+    // Less than 3 minutes - warning (amber)
+    if (sessionTimeRemaining < 180000) return 'text-amber-600';
+    // Otherwise normal (green)
+    return 'text-green-600';
+  };
+
+  // Get progress color based on remaining time
+  const getProgressColor = () => {
+    if (!sessionTimeRemaining) return 'bg-muted';
+    
+    // Less than 1 minute - urgent (red)
+    if (sessionTimeRemaining < 60000) return 'bg-red-600';
+    // Less than 3 minutes - warning (amber)
+    if (sessionTimeRemaining < 180000) return 'bg-amber-600';
+    // Otherwise normal (green)
+    return 'bg-green-600';
+  };
+
   return (
     <>
       <div className="text-center mb-6">
@@ -43,12 +75,36 @@ const VerificationCodeForm = ({
         <p className="text-sm text-muted-foreground mt-1">
           Enter the 4-digit code sent to <span className="font-medium">{phoneNumber}</span>
         </p>
-        {success && <p className="text-green-500 text-sm mt-2">{success}</p>}
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        
+        {success && (
+          <div className="mt-2 flex items-center justify-center space-x-1 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+            <p className="text-sm font-medium">{success}</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="mt-2 flex items-center justify-center space-x-1 text-red-600">
+            <AlertCircle className="h-4 w-4" />
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+        )}
         
         {sessionTimeRemaining && formatRemainingTime && (
-          <div className="mt-2 text-sm font-medium">
-            Time remaining: {formatRemainingTime(sessionTimeRemaining)}
+          <div className="mt-4 border rounded-lg p-3 bg-gray-50">
+            <div className="flex items-center space-x-2">
+              <Clock className={`h-4 w-4 ${getTimeWarningColor()}`} />
+              <span className={`text-sm font-medium ${getTimeWarningColor()}`}>
+                Session expires in: {formatRemainingTime(sessionTimeRemaining)}
+              </span>
+            </div>
+            <div className="mt-2">
+              <Progress 
+                value={getTimeoutProgress()} 
+                className="h-2" 
+                indicatorClassName={getProgressColor()}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -70,20 +126,49 @@ const VerificationCodeForm = ({
           maxLength={4}
           value={verificationCode.join('')}
           onChange={handleVerificationCodeChange}
-          disabled={isOffline}
+          disabled={isOffline || isLoading}
+          className={error ? "has-error" : success ? "has-success" : ""}
         >
           <InputOTPGroup>
-            <InputOTPSlot index={0} />
-            <InputOTPSlot index={1} />
-            <InputOTPSlot index={2} />
-            <InputOTPSlot index={3} />
+            <InputOTPSlot 
+              index={0} 
+              className={error ? "border-red-500" : success ? "border-green-500" : ""} 
+            />
+            <InputOTPSlot 
+              index={1} 
+              className={error ? "border-red-500" : success ? "border-green-500" : ""} 
+            />
+            <InputOTPSlot 
+              index={2} 
+              className={error ? "border-red-500" : success ? "border-green-500" : ""} 
+            />
+            <InputOTPSlot 
+              index={3} 
+              className={error ? "border-red-500" : success ? "border-green-500" : ""} 
+            />
           </InputOTPGroup>
         </InputOTP>
       </div>
       
+      {isOffline && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2" />
+            <div>
+              <p className="text-sm font-medium text-red-800">You're offline</p>
+              <p className="text-xs text-red-700">
+                Please check your internet connection and try again
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="text-center">
         <button 
-          className="text-primary hover:text-primary/80 text-sm font-medium underline" 
+          className={`text-primary hover:text-primary/80 text-sm font-medium underline
+            ${(isLoading || isOffline) ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
           onClick={handleResendCode}
           type="button"
           disabled={isLoading || isOffline}
@@ -97,12 +182,19 @@ const VerificationCodeForm = ({
           onClick={handleVerifyCode}
           variant={verificationCode.every(digit => digit) ? 'primary' : 'secondary'}
           disabled={isLoading || !verificationCode.every(digit => digit) || isOffline}
-          className="w-full"
+          className={`w-full transition-all duration-300 ${
+            success ? 'bg-green-600 hover:bg-green-700' : ''
+          }`}
         >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Verifying...
+            </>
+          ) : success ? (
+            <>
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Verified!
             </>
           ) : (
             "Verify and Continue"
