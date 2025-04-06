@@ -102,6 +102,39 @@ export const CURRENCY_INFO: Partial<Record<SupportedCurrency, CurrencyInfo>> = {
     thousandsSeparator: ',',
     decimalSeparator: '.',
     spaceBetweenAmountAndSymbol: false
+  },
+  EGP: {
+    code: 'EGP',
+    symbol: 'E£',
+    name: 'Egyptian Pound',
+    namePlural: 'Egyptian Pounds',
+    decimalPlaces: 2,
+    symbolPosition: 'before',
+    thousandsSeparator: ',',
+    decimalSeparator: '.',
+    spaceBetweenAmountAndSymbol: false
+  },
+  SAR: {
+    code: 'SAR',
+    symbol: 'ر.س',
+    name: 'Saudi Riyal',
+    namePlural: 'Saudi Riyals',
+    decimalPlaces: 2,
+    symbolPosition: 'after',
+    thousandsSeparator: ',',
+    decimalSeparator: '.',
+    spaceBetweenAmountAndSymbol: true
+  },
+  AED: {
+    code: 'AED',
+    symbol: 'د.إ',
+    name: 'UAE Dirham',
+    namePlural: 'UAE Dirhams',
+    decimalPlaces: 2,
+    symbolPosition: 'after',
+    thousandsSeparator: ',',
+    decimalSeparator: '.',
+    spaceBetweenAmountAndSymbol: true
   }
 };
 

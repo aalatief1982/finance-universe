@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { handleValidationError } from '@/utils/error-utils';
 import { SupportedCurrency } from '@/types/locale';
@@ -13,6 +14,7 @@ export const transactionSchema = z.object({
   notes: z.string().optional(),
   source: z.enum(["manual", "sms"]).optional(),
   originalCurrency: z.string().optional(),
+  currency: z.string().optional(),
   smsDetails: z
     .object({
       sender: z.string(),
@@ -38,7 +40,7 @@ export const currencyConversionSchema = z.object({
 
 // Locale settings validation schema
 export const localeSettingsSchema = z.object({
-  currency: z.enum(["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CNY", "INR"]) as z.ZodEnum<any>,
+  currency: z.enum(["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CNY", "INR", "SAR", "AED", "EGP"]) as z.ZodEnum<any>,
   language: z.string()
 });
 

@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { 
   transactionSchema, 
@@ -17,6 +18,7 @@ export type Transaction = z.infer<typeof transactionSchema> & {
   fromAccount?: string;
   toAccount?: string;
   subcategory?: string;
+  currency?: SupportedCurrency;
   person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | null;
   providerDetails?: {
     providerName?: string;

@@ -45,7 +45,8 @@ export type SupportedCurrency =
   | 'AED'  // United Arab Emirates Dirham
   | 'SAR'  // Saudi Riyal
   | 'TRY'  // Turkish Lira
-  | 'PLN'; // Polish Złoty
+  | 'PLN'  // Polish Złoty
+  | 'EGP'; // Egyptian Pound
 
 // Enhanced locale settings interface
 export interface LocaleSettings {
