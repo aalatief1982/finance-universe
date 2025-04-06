@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
-=======
-
-import React from 'react';
->>>>>>> a76b6e2cd5f578d1a84c693fd72879ef1461bbc3
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Phone, Loader2, AlertCircle, Check } from 'lucide-react';
@@ -111,7 +106,6 @@ const EnterPhoneForm = ({
       
       <div className="mb-6">
         <Label htmlFor="phone-number" className="block text-gray-700 mb-2">Enter Mobile Number</Label>
-<<<<<<< HEAD
         <div className="relative">
           <Input 
             id="phone-number"
@@ -146,20 +140,8 @@ const EnterPhoneForm = ({
           <p className="text-green-500 text-sm mt-1">Valid phone number format</p>
         )}
         
-=======
-        <Input 
-          id="phone-number"
-          type="tel" 
-          placeholder="+1 (000) 000-0000" 
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          className={error ? "border-red-500" : ""}
-          disabled={isOffline}
-        />
->>>>>>> a76b6e2cd5f578d1a84c693fd72879ef1461bbc3
         {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
         {success && <p className="text-green-500 text-sm mt-1">{success}</p>}
-<<<<<<< HEAD
         
         {phoneNumber && !phoneNumber.startsWith('+') && validationState === 'invalid' && (
           <div className="mt-2 bg-amber-50 border border-amber-200 rounded p-2 text-sm">
@@ -173,22 +155,13 @@ const EnterPhoneForm = ({
         {isOffline && (
           <p className="text-red-500 text-sm mt-1">You are currently offline. Please check your connection.</p>
         )}
-=======
-        {isOffline && (
-          <p className="text-red-500 text-sm mt-1">You are currently offline. Please check your connection.</p>
-        )}
->>>>>>> a76b6e2cd5f578d1a84c693fd72879ef1461bbc3
       </div>
       
       <WireframeButton 
         onClick={handleSendCode}
         variant="primary"
         className="w-full"
-<<<<<<< HEAD
         disabled={isLoading || isOffline || (validationState === 'invalid' && phoneNumber.length > 0)}
-=======
-        disabled={isLoading || isOffline}
->>>>>>> a76b6e2cd5f578d1a84c693fd72879ef1461bbc3
       >
         {isLoading ? (
           <>
