@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { transactionService } from '@/services/TransactionService';
 import { Transaction } from '@/types/transaction';
@@ -69,10 +68,9 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         return null;
       }
       
-      // Type assertion to ensure currency is properly typed
+      // Ensure transaction is properly typed without forced casting
       const typedTransaction = {
         ...transaction,
-        currency: transaction.currency as string | undefined,
         person: transaction.person === 'none' ? null : transaction.person
       };
       
@@ -106,10 +104,9 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         throw new Error(`Transaction with id ${id} not found`);
       }
       
-      // Ensure fromAccount is included
+      // Ensure fromAccount is included without forced casting
       const typedUpdates = {
         ...updates,
-        currency: updates.currency as string | undefined,
         fromAccount: updates.fromAccount || existingTransaction.fromAccount || "Cash" // Provide a default
       };
       
@@ -205,13 +202,8 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       const validTransactions: Transaction[] = [];
       
       for (const transaction of extractedTransactions) {
-        // Ensure currency is properly typed
-        const typedTransaction = {
-          ...transaction,
-          currency: transaction.currency as SupportedCurrency | undefined
-        };
-        
-        const validationResult = validateData(transactionSchema, typedTransaction);
+        // No need for type assertion anymore
+        const validationResult = validateData(transactionSchema, transaction);
         
         if (validationResult.success) {
           validTransactions.push(validationResult.data);

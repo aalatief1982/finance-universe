@@ -105,13 +105,8 @@ export const getStoredTransactions = (): Transaction[] => {
     
     if (Array.isArray(parsedData)) {
       parsedData.forEach((item, index) => {
-        // Ensure currency is properly typed
-        const typedItem = {
-          ...item,
-          currency: item.currency as string | undefined
-        };
-        
-        const validationResult = validateData(transactionSchema, typedItem);
+        // No need for type casting now
+        const validationResult = validateData(transactionSchema, item);
         
         if (validationResult.success) {
           // If validation succeeded, add to valid transactions
@@ -163,16 +158,11 @@ export const storeTransaction = (transaction: Transaction): void => {
     const transactions = getStoredTransactions();
     const existingIndex = transactions.findIndex(t => t.id === transaction.id);
     
-    // Ensure currency is properly typed
-    const typedTransaction = {
-      ...transaction,
-      currency: transaction.currency as string | undefined
-    };
-    
+    // No need for type casting now
     if (existingIndex >= 0) {
-      transactions[existingIndex] = typedTransaction;
+      transactions[existingIndex] = transaction;
     } else {
-      transactions.unshift(typedTransaction);
+      transactions.unshift(transaction);
     }
     
     storeTransactions(transactions);

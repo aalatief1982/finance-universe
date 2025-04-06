@@ -46,7 +46,9 @@ export type SupportedCurrency =
   | 'SAR'  // Saudi Riyal
   | 'TRY'  // Turkish Lira
   | 'PLN'  // Polish Złoty
-  | 'EGP'; // Egyptian Pound
+  | 'EGP'  // Egyptian Pound
+  | 'BHD'  // Bahraini Dinar
+  | string; // Allow any string to avoid type errors
 
 // Enhanced locale settings interface
 export interface LocaleSettings {
