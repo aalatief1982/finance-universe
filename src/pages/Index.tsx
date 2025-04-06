@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/UserContext';
+import { XpensiaLogo } from '@/components/header';
 
 const Index = () => {
   const { auth } = useUser();
@@ -24,7 +26,10 @@ const Index = () => {
           transition={{ duration: 0.5 }}
           className="max-w-lg text-center"
         >
-          <h1 className="text-4xl font-bold mb-6">Xpensia</h1>
+          <div className="flex flex-col items-center mb-6">
+            <XpensiaLogo className="h-16 w-16 mb-2" />
+            <h1 className="text-4xl font-bold">Xpensia</h1>
+          </div>
           <p className="text-xl text-muted-foreground mb-8">
             Every expense has a story. We help you see where your money goes and why.
           </p>

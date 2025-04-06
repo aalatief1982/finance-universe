@@ -46,8 +46,12 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPageT
         <SheetContent side="left" className="w-[300px] sm:w-[400px]">
           <SheetHeader className="border-b pb-4 mb-4">
             <SheetTitle className="flex items-center">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mr-2">
-                <span className="text-white font-semibold text-lg">X</span>
+              <div className="h-8 w-8 rounded-lg bg-primary overflow-hidden flex items-center justify-center mr-2">
+                <img 
+                  src="/xpensia-logo.png" 
+                  alt="Xpensia Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span>{currentPageTitle}</span>
             </SheetTitle>
