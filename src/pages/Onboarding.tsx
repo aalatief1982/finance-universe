@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
@@ -6,6 +5,7 @@ import OnboardingScreen from '@/components/wireframes/screens/OnboardingScreen';
 import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { smsPermissionService } from '@/services/SmsPermissionService';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -30,16 +30,42 @@ const Onboarding = () => {
       navigate('/signup');
     }
   }, [auth.isAuthenticated, auth.isVerifying, user, navigate, toast]);
+
+  // Check SMS permission status when component mounts
+  useEffect(() => {
+    const checkSmsPermissions = async () => {
+      // Only check permissions in native environments
+      if (smsPermissionService.isNativeEnvironment()) {
+        const hasPermission = smsPermissionService.hasPermission();
+        console.log('SMS permission status:', hasPermission ? 'granted' : 'not granted');
+      }
+    };
+    
+    checkSmsPermissions();
+  }, []);
   
   const handleOnboardingComplete = () => {
-    // Mark onboarding as complete
-    updateUser({ completedOnboarding: true });
+    // Check if SMS permissions were granted during onboarding
+    const smsPermissionGranted = smsPermissionService.hasPermission();
     
-    // Notify user
-    toast({
-      title: "Setup complete!",
-      description: "Your account is ready to use.",
+    // Mark onboarding as complete
+    updateUser({ 
+      completedOnboarding: true,
+      smsPermissionGranted
     });
+    
+    // Notify user with appropriate message based on permission status
+    if (smsPermissionService.isNativeEnvironment() && smsPermissionGranted) {
+      toast({
+        title: "Setup complete!",
+        description: "Your account is ready to use with SMS tracking enabled.",
+      });
+    } else {
+      toast({
+        title: "Setup complete!",
+        description: "Your account is ready to use.",
+      });
+    }
     
     // Navigate to dashboard
     navigate('/dashboard');
