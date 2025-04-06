@@ -1,8 +1,7 @@
-
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { User as UserType, UserPreferences } from '@/types/user';
 import { ValidatedUserPreferences, userPreferencesSchema, validateData } from '@/lib/validation';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { ENABLE_SUPABASE_AUTH, ENABLE_DEMO_MODE } from '@/lib/env';
 import { 
@@ -32,6 +31,7 @@ export interface User extends UserType {
   completedOnboarding: boolean;
   createdAt?: Date;
   lastActive?: Date;
+  registrationStarted?: boolean; // Added to track registration status
   preferences?: {
     currency: string;
     theme: 'light' | 'dark' | 'system';
@@ -88,6 +88,7 @@ interface UserContextType {
   updateAvatar: (avatarUrl: string) => void;
   getEffectiveTheme: () => 'light' | 'dark';
   setDemoModeEnabled: (enabled: boolean) => void;
+  checkUserExists: (phoneNumber: string) => Promise<boolean>; // New function to check if user exists
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -118,6 +119,7 @@ export const UserContext = createContext<UserContextType>({
   updateAvatar: () => {},
   getEffectiveTheme: () => 'light',
   setDemoModeEnabled: () => {},
+  checkUserExists: async () => false,
 });
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -189,59 +191,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setDemoMode(ENABLE_DEMO_MODE);
   }, []);
   
-  // Check for Supabase auth on initial load
+  // Enhanced auth check that initializes with local storage first for faster UI response
   useEffect(() => {
-    const checkSupabaseAuth = async () => {
-      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
-        try {
-          const { data } = await supabase.auth.getSession();
-          
-          if (data.session) {
-            // Get user profile from Supabase
-            const { data: userData, error } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', data.session.user.id)
-              .single();
-              
-            if (userData && !error) {
-              // Convert Supabase user data to our User format
-              setUser({
-                id: data.session.user.id,
-                fullName: userData.full_name,
-                email: userData.email || '',
-                phone: userData.phone || '',
-                phoneVerified: userData.phone_verified,
-                hasProfile: true,
-                gender: userData.gender,
-                birthDate: userData.birth_date ? new Date(userData.birth_date) : null,
-                smsProviders: userData.sms_providers || [],
-                completedOnboarding: userData.completed_onboarding,
-                createdAt: userData.created_at ? new Date(userData.created_at) : new Date(),
-                lastActive: userData.last_active ? new Date(userData.last_active) : new Date(),
-                // ... map other properties
-              });
-              
-              setAuth(prev => ({
-                ...prev,
-                isAuthenticated: true,
-                isLoading: false,
-                isVerifying: false
-              }));
-              
-              return;
-            }
-          }
-        } catch (error) {
-          console.error("Error checking Supabase auth:", error);
-        }
-      }
-      
-      // Fall back to local storage check if Supabase auth fails or is disabled
-      checkLocalStorageAuth();
-    };
-    
-    const checkLocalStorageAuth = () => {
+    const checkLocalStorageFirst = () => {
+      // First check localStorage for quicker initial render
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
@@ -279,18 +232,72 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(parsedUser);
           setAuth(prev => ({
             ...prev,
-            isAuthenticated: parsedUser.completedOnboarding || false,
-            isLoading: false
+            isAuthenticated: parsedUser.phoneVerified || false,
+            isLoading: ENABLE_SUPABASE_AUTH && isSupabaseConfigured() // Keep loading if we need to verify with Supabase
           }));
         } catch (error) {
           console.error('Failed to parse stored user data', error);
-          setAuth(prev => ({ ...prev, isLoading: false }));
         }
-      } else {
-        setAuth(prev => ({ ...prev, isLoading: false }));
       }
     };
     
+    const checkSupabaseAuth = async () => {
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+        try {
+          const { data } = await supabase.auth.getSession();
+          
+          if (data.session) {
+            // Get user profile from Supabase
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', data.session.user.id)
+              .single();
+              
+            if (userData && !error) {
+              // Convert Supabase user data to our User format
+              const updatedUser = {
+                id: data.session.user.id,
+                fullName: userData.full_name,
+                email: userData.email || '',
+                phone: userData.phone || '',
+                phoneVerified: userData.phone_verified,
+                hasProfile: true,
+                gender: userData.gender,
+                birthDate: userData.birth_date ? new Date(userData.birth_date) : null,
+                smsProviders: userData.sms_providers || [],
+                completedOnboarding: userData.completed_onboarding,
+                createdAt: userData.created_at ? new Date(userData.created_at) : new Date(),
+                lastActive: userData.last_active ? new Date(userData.last_active) : new Date(),
+                registrationStarted: true,
+                // ... map other properties
+              };
+              
+              setUser(updatedUser);
+              setAuth(prev => ({
+                ...prev,
+                isAuthenticated: updatedUser.phoneVerified,
+                isLoading: false,
+                isVerifying: false
+              }));
+              
+              // Update localStorage
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error checking Supabase auth:", error);
+        }
+      }
+      
+      // If we get here, either Supabase auth failed or it's disabled
+      setAuth(prev => ({ ...prev, isLoading: false }));
+    };
+    
+    // First check localStorage to avoid UI flicker
+    checkLocalStorageFirst();
+    // Then verify with Supabase if needed
     checkSupabaseAuth();
   }, []);
   
@@ -320,6 +327,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
   
+  // Enhanced updateUser with improved defaults
   const updateUser = useCallback((userData: Partial<User>) => {
     setUser(prevUser => {
       if (!prevUser) {
@@ -338,6 +346,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           completedOnboarding: userData.completedOnboarding || false,
           createdAt: new Date(),
           lastActive: new Date(),
+          registrationStarted: true, // Mark as started registration
           preferences: userData.preferences || {
             currency: 'USD',
             theme: 'light',
@@ -377,19 +386,61 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
 
-  // Implementation with demo mode support
+  // New function to check if a user with the given phone number exists
+  const checkUserExists = async (phoneNumber: string): Promise<boolean> => {
+    // First check local storage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser.phone === phoneNumber) {
+          return true;
+        }
+      } catch (error) {
+        console.error('Error parsing stored user', error);
+      }
+    }
+    
+    // Then check Supabase if enabled
+    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('phone')
+          .eq('phone', phoneNumber)
+          .limit(1);
+          
+        if (error) {
+          console.error("Error checking if user exists:", error);
+          return false;
+        }
+        
+        return data && data.length > 0;
+      } catch (error) {
+        console.error("Error checking if user exists:", error);
+        return false;
+      }
+    }
+    
+    return false;
+  };
+
+  // Enhanced phone verification start with better error handling and demo support
   const startPhoneVerification = async (phoneNumber: string): Promise<boolean> => {
     setIsLoading(true);
     setAuth(prev => ({ ...prev, isVerifying: true }));
     
     try {
       // Check if we should use Supabase for verification
-      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
         const success = await startPhoneVerificationWithSupabase(phoneNumber);
         
         if (success) {
-          // Update user phone number
-          updateUser({ phone: phoneNumber });
+          // Update user phone number and registration status
+          updateUser({ 
+            phone: phoneNumber,
+            registrationStarted: true
+          });
           setIsLoading(false);
           updateAuthState();
           return true;
@@ -403,7 +454,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         // Use mock verification in demo mode
         await new Promise(resolve => setTimeout(resolve, 1500));
-        updateUser({ phone: phoneNumber });
+        updateUser({ 
+          phone: phoneNumber,
+          registrationStarted: true 
+        });
         setIsLoading(false);
         updateAuthState();
         return true;
@@ -416,7 +470,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Implementation with demo mode support
+  // Enhanced confirmation with improved error handling and user state updates
   const confirmPhoneVerification = async (code: string): Promise<boolean> => {
     setIsLoading(true);
     
@@ -426,8 +480,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const success = await confirmPhoneVerificationWithSupabase(code);
         
         if (success) {
-          updateUser({ phoneVerified: true });
-          setAuth(prev => ({ ...prev, isVerifying: false }));
+          updateUser({ 
+            phoneVerified: true,
+            registrationStarted: true
+          });
+          setAuth(prev => ({ 
+            ...prev, 
+            isVerifying: false,
+            isAuthenticated: true // Set authenticated when phone is verified
+          }));
           setIsLoading(false);
           updateAuthState();
           return true;
@@ -443,8 +504,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isValid = code === "1234";
         
         if (isValid) {
-          updateUser({ phoneVerified: true });
-          setAuth(prev => ({ ...prev, isVerifying: false }));
+          updateUser({ 
+            phoneVerified: true,
+            registrationStarted: true
+          });
+          setAuth(prev => ({ 
+            ...prev, 
+            isVerifying: false,
+            isAuthenticated: true // Set authenticated when phone is verified in demo mode too
+          }));
         }
         
         setIsLoading(false);
@@ -576,14 +644,26 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
   
+  // Enhanced onboarding completion that also updates authentication state
   const completeOnboarding = useCallback(() => {
     updateUser({ 
       completedOnboarding: true,
-      hasProfile: true 
+      hasProfile: true,
+      registrationStarted: true
     });
+    
+    // Update auth state to mark as authenticated
+    setAuth(prev => ({ 
+      ...prev, 
+      isAuthenticated: true,
+      isVerifying: false
+    }));
+    
+    // Log in to ensure proper session state
     logIn();
-  }, [updateUser]);
+  }, [updateUser, logIn]);
   
+  // Enhanced profile completion check that requires phone verification
   const isProfileComplete = useCallback((): boolean => {
     if (!user) return false;
     
@@ -602,7 +682,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser({ avatar: avatarUrl });
   }, [updateUser]);
   
-  // Implementation with demo mode support
+  // Enhanced login with better state management
   const logIn = useCallback(async () => {
     if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
       // If using Supabase auth, this is handled automatically by the sign-in flow
@@ -615,12 +695,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
     } else {
       // When not using Supabase, handle auth state locally
-      setAuth(prev => ({ ...prev, isAuthenticated: true }));
+      // Only set as authenticated if phone is verified
+      setAuth(prev => ({ 
+        ...prev, 
+        isAuthenticated: user?.phoneVerified || false
+      }));
     }
     
     // Update last active timestamp
-    updateUser({ lastActive: new Date() });
-  }, [updateUser]);
+    updateUser({ 
+      lastActive: new Date(),
+      registrationStarted: true
+    });
+  }, [updateUser, user]);
   
   // Implementation with demo mode and signOutFromSupabase
   const logOut = useCallback(async () => {
@@ -685,7 +772,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isProfileComplete,
         updateAvatar,
         getEffectiveTheme,
-        setDemoModeEnabled
+        setDemoModeEnabled,
+        checkUserExists
       }}
     >
       {children}
