@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
@@ -50,6 +51,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+// Inside the UserProvider, we need to ensure TransactionProvider wraps all routes that use transactions
 function AppRoutes() {
   const { auth, user } = useUser();
 
@@ -83,28 +85,36 @@ function AppRoutes() {
         </PublicRoute>
       } />
       
+      {/* Wrap all protected routes that need transaction data with TransactionProvider */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
-          <Dashboard />
+          <TransactionProvider>
+            <Dashboard />
+          </TransactionProvider>
         </ProtectedRoute>
       } />
       
-      {/* Other protected routes remain the same */}
       <Route path="/transactions" element={
         <ProtectedRoute>
-          <Transactions />
+          <TransactionProvider>
+            <Transactions />
+          </TransactionProvider>
         </ProtectedRoute>
       } />
       
       <Route path="/analytics" element={
         <ProtectedRoute>
-          <Analytics />
+          <TransactionProvider>
+            <Analytics />
+          </TransactionProvider>
         </ProtectedRoute>
       } />
       
       <Route path="/process-sms" element={
         <ProtectedRoute>
-          <ProcessSmsMessages />
+          <TransactionProvider>
+            <ProcessSmsMessages />
+          </TransactionProvider>
         </ProtectedRoute>
       } />
       
@@ -136,19 +146,18 @@ function App() {
   return (
     <ErrorBoundary>
       <UserProvider>
-        <TransactionProvider>
-          <MotionConfig reducedMotion="user">
-            <Router>
-              <div className="min-h-screen flex flex-col">
-                <Header />
-                <div className="flex-1">
-                  <AppRoutes />
-                </div>
+        {/* Remove the TransactionProvider from here since we're adding it per-route */}
+        <MotionConfig reducedMotion="user">
+          <Router>
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <div className="flex-1">
+                <AppRoutes />
               </div>
-              <Toaster />
-            </Router>
-          </MotionConfig>
-        </TransactionProvider>
+            </div>
+            <Toaster />
+          </Router>
+        </MotionConfig>
       </UserProvider>
     </ErrorBoundary>
   );
