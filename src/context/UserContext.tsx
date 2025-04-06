@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { User as UserType, UserPreferences } from '@/types/user';
 import { ValidatedUserPreferences, userPreferencesSchema, validateData } from '@/lib/validation';
@@ -527,6 +528,59 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Enhanced login with better state management
+  const logIn = useCallback(async () => {
+    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
+      // If using Supabase auth, this is handled automatically by the sign-in flow
+      // We just need to check if we're already authenticated
+      const isAuthenticated = await isAuthenticatedWithSupabase();
+      
+      setAuth(prev => ({ 
+        ...prev, 
+        isAuthenticated: isAuthenticated || prev.isAuthenticated 
+      }));
+    } else {
+      // When not using Supabase, handle auth state locally
+      // Only set as authenticated if phone is verified
+      setAuth(prev => ({ 
+        ...prev, 
+        isAuthenticated: user?.phoneVerified || false
+      }));
+    }
+    
+    // Update last active timestamp
+    updateUser({ 
+      lastActive: new Date(),
+      registrationStarted: true
+    });
+  }, [updateUser, user]);
+  
+  // Implementation with demo mode and signOutFromSupabase
+  const logOut = useCallback(async () => {
+    try {
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
+        // Sign out from Supabase
+        await signOutFromSupabase();
+      }
+      
+      // Clear local state
+      setAuth(prev => ({ 
+        ...prev, 
+        isAuthenticated: false,
+        isDemoMode: isDemoMode()
+      }));
+      setUser(null);
+      localStorage.removeItem('user');
+      
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out."
+      });
+    } catch (error) {
+      console.error('Error signing out', error);
+    }
+  }, []);
+
   const loadUserProfile = useCallback(async (): Promise<User | null> => {
     // In a real app, this would fetch user data from the backend
     // For now, we'll just return the current user from state
@@ -681,59 +735,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateAvatar = useCallback((avatarUrl: string) => {
     updateUser({ avatar: avatarUrl });
   }, [updateUser]);
-  
-  // Enhanced login with better state management
-  const logIn = useCallback(async () => {
-    if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
-      // If using Supabase auth, this is handled automatically by the sign-in flow
-      // We just need to check if we're already authenticated
-      const isAuthenticated = await isAuthenticatedWithSupabase();
-      
-      setAuth(prev => ({ 
-        ...prev, 
-        isAuthenticated: isAuthenticated || prev.isAuthenticated 
-      }));
-    } else {
-      // When not using Supabase, handle auth state locally
-      // Only set as authenticated if phone is verified
-      setAuth(prev => ({ 
-        ...prev, 
-        isAuthenticated: user?.phoneVerified || false
-      }));
-    }
-    
-    // Update last active timestamp
-    updateUser({ 
-      lastActive: new Date(),
-      registrationStarted: true
-    });
-  }, [updateUser, user]);
-  
-  // Implementation with demo mode and signOutFromSupabase
-  const logOut = useCallback(async () => {
-    try {
-      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
-        // Sign out from Supabase
-        await signOutFromSupabase();
-      }
-      
-      // Clear local state
-      setAuth(prev => ({ 
-        ...prev, 
-        isAuthenticated: false,
-        isDemoMode: isDemoMode()
-      }));
-      setUser(null);
-      localStorage.removeItem('user');
-      
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out."
-      });
-    } catch (error) {
-      console.error('Error signing out', error);
-    }
-  }, []);
   
   // Function to toggle demo mode
   const setDemoModeEnabled = useCallback((enabled: boolean) => {
