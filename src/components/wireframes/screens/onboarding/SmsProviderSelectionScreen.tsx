@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, MessageSquare, Calendar } from 'lucide-react';
 import WireframeButton from '../../WireframeButton';
 import { smsProviderSelectionService, SmsProvider } from '@/services/SmsProviderSelectionService';
 import { useToast } from '@/components/ui/use-toast';
+import { smsPermissionService } from '@/services/SmsPermissionService';
 
 interface SmsProviderSelectionScreenProps {
   onComplete: (selectedProviders: string[]) => void;
@@ -14,9 +14,10 @@ interface SmsProviderSelectionScreenProps {
 const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelectionScreenProps) => {
   const [providers, setProviders] = useState<SmsProvider[]>([]);
   const [startDate, setStartDate] = useState<string | null>(null);
+  const [permissionGranted, setPermissionGranted] = useState<boolean>(false);
   const { toast } = useToast();
   
-  // Load providers on component mount
+  // Load providers on component mount and check permission status
   useEffect(() => {
     const savedProviders = smsProviderSelectionService.getSmsProviders();
     setProviders(savedProviders);
@@ -25,6 +26,13 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
     if (savedDate) {
       setStartDate(savedDate);
     }
+    
+    // Check if SMS permission is already granted
+    const hasPermission = smsPermissionService.hasPermission();
+    setPermissionGranted(hasPermission);
+    
+    // If we're in a native environment but don't have permission, we could
+    // prompt the user here or wait for them to select providers first
   }, []);
   
   const toggleProvider = (providerId: string) => {
@@ -47,7 +55,35 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
     });
   };
   
-  const handleContinue = () => {
+  const requestSmsPermission = async () => {
+    if (smsPermissionService.isNativeEnvironment()) {
+      const granted = await smsPermissionService.requestPermission();
+      setPermissionGranted(granted);
+      
+      if (granted) {
+        toast({
+          title: "Permission granted",
+          description: "You've successfully granted SMS reading permission",
+        });
+      } else {
+        toast({
+          title: "Permission denied",
+          description: "SMS reading permission is required for automatic tracking",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // In web environment, simulate permission granted
+      setPermissionGranted(true);
+      smsPermissionService.savePermissionStatus(true);
+      toast({
+        title: "Development mode",
+        description: "SMS permissions simulated in web environment",
+      });
+    }
+  };
+  
+  const handleContinue = async () => {
     const selectedProviders = providers.filter(p => p.isSelected);
     
     if (selectedProviders.length === 0) {
@@ -59,12 +95,28 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       return;
     }
     
+    // Save the selected providers
     const selectedProviderNames = selectedProviders.map(p => p.name);
     
     if (startDate) {
       smsProviderSelectionService.saveSmsStartDate(startDate);
     }
     
+    // If we're in a native environment and permission hasn't been granted yet,
+    // request it before proceeding
+    if (smsPermissionService.isNativeEnvironment() && !permissionGranted) {
+      const granted = await smsPermissionService.requestPermission();
+      setPermissionGranted(granted);
+      
+      // If permission granted, proceed; otherwise, we'll still continue
+      // but the user won't get automatic SMS tracking
+      smsPermissionService.savePermissionStatus(granted);
+    } else if (!smsPermissionService.isNativeEnvironment()) {
+      // In web environment, just set mock permission to true
+      smsPermissionService.savePermissionStatus(true);
+    }
+    
+    // Complete the process and move to the next screen
     onComplete(selectedProviderNames);
   };
 
@@ -84,6 +136,22 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
           Choose the banks or financial services that send you SMS notifications
         </p>
       </div>
+      
+      {smsPermissionService.isNativeEnvironment() && !permissionGranted && (
+        <div className="border-l-4 border-primary bg-primary/5 p-4 rounded-r-lg mb-4">
+          <p className="text-sm font-medium">SMS Permission Required</p>
+          <p className="text-xs text-muted-foreground mb-2">
+            To automatically track your transactions, we need permission to read SMS messages.
+          </p>
+          <WireframeButton
+            onClick={requestSmsPermission}
+            variant="outline"
+            className="text-xs"
+          >
+            Grant SMS Permission
+          </WireframeButton>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 gap-3 max-h-[320px] overflow-y-auto pr-1">
         {providers.map((provider) => (
