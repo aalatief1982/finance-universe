@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { transactionService } from '@/services/TransactionService';
 import { Transaction } from '@/types/transaction';
@@ -71,7 +72,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Type assertion to ensure currency is properly typed
       const typedTransaction = {
         ...transaction,
-        currency: transaction.currency as SupportedCurrency | undefined,
+        currency: transaction.currency as string | undefined,
         person: transaction.person === 'none' ? null : transaction.person
       };
       
@@ -108,7 +109,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Ensure fromAccount is included
       const typedUpdates = {
         ...updates,
-        currency: updates.currency as SupportedCurrency | undefined,
+        currency: updates.currency as string | undefined,
         fromAccount: updates.fromAccount || existingTransaction.fromAccount || "Cash" // Provide a default
       };
       

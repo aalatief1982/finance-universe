@@ -108,7 +108,7 @@ export const getStoredTransactions = (): Transaction[] => {
         // Ensure currency is properly typed
         const typedItem = {
           ...item,
-          currency: item.currency as SupportedCurrency | undefined
+          currency: item.currency as string | undefined
         };
         
         const validationResult = validateData(transactionSchema, typedItem);
@@ -166,7 +166,7 @@ export const storeTransaction = (transaction: Transaction): void => {
     // Ensure currency is properly typed
     const typedTransaction = {
       ...transaction,
-      currency: transaction.currency as SupportedCurrency | undefined
+      currency: transaction.currency as string | undefined
     };
     
     if (existingIndex >= 0) {

@@ -17,12 +17,7 @@ export const transactionSchema = z.object({
   person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional().nullable(),
   source: z.enum(["manual", "sms"]).optional(),
   originalCurrency: z.string().optional(),
-  // Fix the currency enum type by using as const
-  currency: z.enum([
-    "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", 
-    "NZD", "SEK", "KRW", "SGD", "NOK", "MXN", "INR", "RUB", "ZAR", 
-    "BRL", "AED", "SAR", "TRY", "PLN", "EGP", "BHD"
-  ] as const).default("SAR"),
+  currency: z.string().optional().default("SAR"),
   smsDetails: z
     .object({
       sender: z.string(),
@@ -57,11 +52,7 @@ export const currencyConversionSchema = z.object({
 
 // Locale settings validation schema
 export const localeSettingsSchema = z.object({
-  currency: z.enum([
-    "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", 
-    "NZD", "SEK", "KRW", "SGD", "NOK", "MXN", "INR", "RUB", "ZAR", 
-    "BRL", "AED", "SAR", "TRY", "PLN", "EGP", "BHD"
-  ] as const),
+  currency: z.string(),
   language: z.string()
 });
 
@@ -212,10 +203,41 @@ export type ValidatedDataImport = z.infer<typeof dataImportSchema>;
 export type ValidatedTransactionCategoryChange = z.infer<typeof transactionCategoryChangeSchema>;
 
 // Update the Person type in the TransactionContext to handle validation
-export function validateNewTransaction(transaction: Omit<z.infer<typeof transactionSchema>, 'id'>) {
+export function validateNewTransaction(transaction: Omit<ValidatedTransaction, 'id'>) {
   try {
     // We need to create a new schema without the id field
-    const transactionWithoutIdSchema = transactionSchema.omit({ id: true });
+    const transactionWithoutIdSchema = z.object({
+      title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+      amount: z.number().refine(n => !isNaN(n), "Amount must be a valid number"),
+      category: z.string().min(1, "Category is required"),
+      date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date format"),
+      type: z.enum(["income", "expense", "transfer"]),
+      fromAccount: z.string().optional(),
+      toAccount: z.string().optional().nullable(),
+      notes: z.string().optional(),
+      description: z.string().optional(),
+      person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional().nullable(),
+      source: z.enum(["manual", "sms"]).optional(),
+      originalCurrency: z.string().optional(),
+      currency: z.string().optional().default("SAR"),
+      smsDetails: z
+        .object({
+          sender: z.string(),
+          message: z.string(),
+          timestamp: z.string()
+        })
+        .optional()
+    }).refine(data => {
+      // If transaction type is transfer, toAccount is required
+      if (data.type === 'transfer' && !data.toAccount) {
+        return false;
+      }
+      return true;
+    }, {
+      message: "To Account is required for transfer transactions",
+      path: ["toAccount"]
+    });
+    
     return { 
       success: true, 
       data: transactionWithoutIdSchema.parse(transaction) 
