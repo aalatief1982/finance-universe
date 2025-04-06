@@ -1,4 +1,3 @@
-
 /**
  * This file provides a unified interface for accessing environment variables
  * and provides fallbacks for development environments.
@@ -34,6 +33,7 @@ export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY', 'ey
 // Feature flags
 export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
 export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRATION', 'true') === 'true';
+export const ENABLE_DEMO_MODE = getEnvironmentVariable('ENABLE_DEMO_MODE', 'true') === 'true';
 
 // Configuration options
 export const DEFAULT_CURRENCY = getEnvironmentVariable('DEFAULT_CURRENCY', 'USD');
