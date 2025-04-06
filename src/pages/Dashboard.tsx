@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Dialog } from '@/components/ui/dialog';
 import { v4 as uuidv4 } from 'uuid';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
+import { smsPermissionService } from '@/services/SmsPermissionService';
 
 // Import the component files
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -20,6 +21,17 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { user } = useUser();
   const { transactions, addTransaction, isLoading } = useTransactions();
+  const [canReadSms, setCanReadSms] = useState(false);
+
+  // Check if SMS permissions are granted on component mount
+  useEffect(() => {
+    const checkSmsPermission = () => {
+      const hasPermission = smsPermissionService.canReadSms();
+      setCanReadSms(hasPermission);
+    };
+    
+    checkSmsPermission();
+  }, []);
 
   const handleAddTransaction = (formData: any) => {
     try {
@@ -49,6 +61,24 @@ const Dashboard = () => {
     }
   };
 
+  const handleRequestSmsPermission = async () => {
+    const granted = await smsPermissionService.requestPermission();
+    
+    if (granted) {
+      setCanReadSms(true);
+      toast({
+        title: "Permission granted",
+        description: "You can now import transactions from SMS",
+      });
+    } else {
+      toast({
+        title: "Permission denied",
+        description: "You'll need to manually add transactions",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       <Layout>
@@ -63,7 +93,24 @@ const Dashboard = () => {
             setIsAddingExpense={setIsAddingExpense}
           />
           
-          <MobileSmsButton />
+          {/* Only show SMS button if in mobile environment */}
+          {smsPermissionService.isNativeEnvironment() && (
+            canReadSms ? (
+              <MobileSmsButton />
+            ) : (
+              <div className="sm:hidden mb-4">
+                <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
+                  <p className="text-sm mb-2">Enable automatic expense tracking through SMS</p>
+                  <button 
+                    onClick={handleRequestSmsPermission} 
+                    className="text-xs bg-primary text-white px-3 py-1.5 rounded-md"
+                  >
+                    Grant SMS Permission
+                  </button>
+                </div>
+              </div>
+            )
+          )}
           
           <DashboardContent 
             transactions={transactions}
