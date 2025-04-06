@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { XpensiaLogo } from './XpensiaLogo';
 
 interface LogoLinkProps {
   isLandingPage: boolean;
@@ -16,13 +17,7 @@ export const LogoLink: React.FC<LogoLinkProps> = ({ isLandingPage, currentPageTi
       transition={{ duration: 0.3 }}
     >
       <Link to="/" className="flex items-center space-x-2">
-        <div className="h-8 w-8 rounded-lg bg-primary overflow-hidden flex items-center justify-center">
-          <img 
-            src="/xpensia-logo.png" 
-            alt="Xpensia Logo" 
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <XpensiaLogo />
         <span className="text-xl font-semibold tracking-tight">
           {isLandingPage ? 'Xpensia' : currentPageTitle}
         </span>
