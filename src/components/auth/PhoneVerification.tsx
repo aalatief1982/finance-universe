@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, Loader2, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Clock, Phone } from 'lucide-react';
 import { 
   getVerificationSessionTimeRemaining,
   getVerificationAttemptsRemaining 
 } from '@/lib/supabase-auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Progress } from '@/components/ui/progress';
 
 interface PhoneVerificationProps {
   onVerificationComplete?: () => void;
@@ -27,6 +28,7 @@ const PhoneVerification = ({
   const [isVerificationSent, setIsVerificationSent] = useState(!!user?.phone);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [errorType, setErrorType] = useState<'network' | 'validation' | 'auth' | null>(null);
   const [success, setSuccess] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [attemptsRemaining, setAttemptsRemaining] = useState(5);
@@ -58,6 +60,7 @@ const PhoneVerification = ({
         if (remaining <= 0) {
           clearInterval(timerId!);
           setError('Verification session has expired. Please request a new code.');
+          setErrorType('auth');
           toast({
             title: 'Session Expired',
             description: 'Your verification session has timed out. Please request a new code.',
@@ -72,6 +75,28 @@ const PhoneVerification = ({
     };
   }, [isVerificationSent, toast]);
 
+  // Validation function for phone number
+  const validatePhoneNumber = (number: string): boolean => {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(number.replace(/\s+/g, ''));
+  };
+
+  // Format phone number as user types
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Allow only digits, +, spaces, parentheses, and hyphens
+    value = value.replace(/[^\d+\s()-]/g, '');
+    
+    // Ensure only one + at the beginning
+    if (value.indexOf('+') > 0) {
+      value = value.replace(/\+/g, '');
+      value = '+' + value;
+    }
+    
+    setPhoneNumber(value);
+  };
+
   const formatTime = (ms: number): string => {
     if (ms <= 0) return '0:00';
     const totalSeconds = Math.floor(ms / 1000);
@@ -80,12 +105,45 @@ const PhoneVerification = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Get progress percentage for timeout
+  const getTimeoutProgress = () => {
+    if (!timeRemaining) return 0;
+    // Assuming session timeout is 15 minutes (900,000 ms)
+    const totalDuration = 15 * 60 * 1000;
+    return Math.max(0, Math.min(100, (timeRemaining / totalDuration) * 100));
+  };
+
+  // Get progress color based on remaining time
+  const getProgressColor = () => {
+    if (!timeRemaining) return 'bg-muted';
+    
+    // Less than 1 minute - urgent (red)
+    if (timeRemaining < 60000) return 'bg-red-600';
+    // Less than 3 minutes - warning (amber)
+    if (timeRemaining < 180000) return 'bg-amber-600';
+    // Otherwise normal (green)
+    return 'bg-green-600';
+  };
+
+  // Determine time warning color
+  const getTimeWarningColor = () => {
+    if (!timeRemaining) return 'text-muted-foreground';
+    
+    // Less than 1 minute - urgent (red)
+    if (timeRemaining < 60000) return 'text-red-600';
+    // Less than 3 minutes - warning (amber)
+    if (timeRemaining < 180000) return 'text-amber-600';
+    // Otherwise normal (green)
+    return 'text-green-600';
+  };
+
   const handleSendCode = async () => {
     // If phone number is already saved and we're hiding input, use it directly
     const phoneToVerify = hidePhoneInput ? user?.phone || phoneNumber : phoneNumber;
     
-    if (!phoneToVerify || phoneToVerify.length < 10) {
-      setError('Please enter a valid phone number');
+    if (!phoneToVerify || !validatePhoneNumber(phoneToVerify)) {
+      setError('Please enter a valid phone number with country code');
+      setErrorType('validation');
       toast({
         title: 'Invalid phone number',
         description: 'Please enter a valid phone number with country code',
@@ -96,6 +154,7 @@ const PhoneVerification = ({
 
     setIsLoading(true);
     setError('');
+    setErrorType(null);
     try {
       const success = await startPhoneVerification(phoneToVerify);
       
@@ -117,6 +176,7 @@ const PhoneVerification = ({
     } catch (err) {
       console.error('Error sending code:', err);
       setError('Failed to send code. Please check your phone number and try again.');
+      setErrorType('network');
       toast({
         title: 'Failed to send code',
         description: 'Please check your phone number and try again later',
@@ -130,6 +190,7 @@ const PhoneVerification = ({
   const handleVerifyCode = async () => {
     if (!verificationCode || verificationCode.length !== 4) {
       setError('Please enter a valid 4-digit code');
+      setErrorType('validation');
       toast({
         title: 'Invalid code',
         description: 'Please enter a valid 4-digit code',
@@ -140,6 +201,7 @@ const PhoneVerification = ({
 
     if (timeRemaining <= 0) {
       setError('Verification session has expired. Please request a new code.');
+      setErrorType('auth');
       toast({
         title: 'Session expired',
         description: 'Your verification session has timed out. Please request a new code.',
@@ -150,6 +212,7 @@ const PhoneVerification = ({
 
     setIsLoading(true);
     setError('');
+    setErrorType(null);
     try {
       const success = await confirmPhoneVerification(verificationCode);
       
@@ -176,6 +239,7 @@ const PhoneVerification = ({
       console.error('Verification error:', err);
       setVerificationCode('');
       setError(`Invalid code. ${attemptsRemaining} attempts remaining.`);
+      setErrorType('validation');
       toast({
         title: 'Verification failed',
         description: `Invalid code. ${attemptsRemaining} attempts remaining. For this demo, use 1234.`,
@@ -189,6 +253,7 @@ const PhoneVerification = ({
   const handleResendCode = () => {
     setVerificationCode('');
     setError('');
+    setErrorType(null);
     handleSendCode();
   };
 
@@ -226,17 +291,31 @@ const PhoneVerification = ({
             {!hidePhoneInput && (
               <div className="space-y-2">
                 <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+1234567890"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className={error ? "border-red-300 focus-visible:ring-red-400" : ""}
-                />
+                <div className="relative">
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1234567890"
+                    value={phoneNumber}
+                    onChange={handlePhoneChange}
+                    className={error && errorType === 'validation' ? "border-red-300 focus-visible:ring-red-400" : ""}
+                  />
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Include country code (e.g., +1 for US)
                 </p>
+                
+                {phoneNumber && !phoneNumber.startsWith('+') && (
+                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded p-2 text-xs">
+                    <p className="font-medium text-amber-700">International Format Required</p>
+                    <p className="text-amber-600">
+                      Example: +1 for US/Canada, +44 for UK, +61 for Australia
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             <Button
@@ -257,10 +336,19 @@ const PhoneVerification = ({
         ) : (
           <div className="space-y-4">
             {/* Session timer indicator */}
-            <div className="flex justify-center mb-2">
-              <div className="text-sm text-muted-foreground flex items-center">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>Session expires in: <span className="font-medium">{formatTime(timeRemaining)}</span></span>
+            <div className="mb-4 border rounded-lg p-3 bg-gray-50">
+              <div className="flex items-center space-x-2">
+                <Clock className={`h-4 w-4 ${getTimeWarningColor()}`} />
+                <span className={`text-sm font-medium ${getTimeWarningColor()}`}>
+                  Session expires in: {formatTime(timeRemaining)}
+                </span>
+              </div>
+              <div className="mt-2">
+                <Progress 
+                  value={getTimeoutProgress()} 
+                  className="h-2" 
+                  indicatorClassName={getProgressColor()}
+                />
               </div>
             </div>
             
@@ -274,7 +362,12 @@ const PhoneVerification = ({
                   render={({ slots }) => (
                     <InputOTPGroup>
                       {slots.map((slot, index) => (
-                        <InputOTPSlot key={index} index={index} {...slot} />
+                        <InputOTPSlot 
+                          key={index} 
+                          index={index} 
+                          {...slot} 
+                          className={error ? "border-red-300" : success ? "border-green-300" : ""}
+                        />
                       ))}
                     </InputOTPGroup>
                   )}
@@ -299,7 +392,7 @@ const PhoneVerification = ({
             </Alert>
             
             <Button
-              className="w-full"
+              className={`w-full ${success ? 'bg-green-600 hover:bg-green-700' : ''}`}
               onClick={handleVerifyCode}
               disabled={isLoading || timeRemaining <= 0}
             >
@@ -307,6 +400,11 @@ const PhoneVerification = ({
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Verifying...
+                </>
+              ) : success ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Verified!
                 </>
               ) : (
                 'Verify Code'
