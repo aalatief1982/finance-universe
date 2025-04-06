@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   fullName: string;
@@ -11,6 +10,8 @@ export interface User {
   occupation?: string;
   hasProfile?: boolean;
   smsProviders?: string[];
+  detectedSmsProviders?: string[]; // New field for auto-detected providers
+  smsProviderDetectionRun?: boolean; // New field to track if detection has run
   completedOnboarding?: boolean;
   createdAt?: Date;
   lastActive?: Date;
@@ -56,6 +57,11 @@ export interface UserPreferences {
     dataRetention: '3months' | '6months' | '1year' | 'forever';
     exportFormat?: 'json' | 'csv' | 'pdf';
     cloudSync?: boolean;
+  };
+  sms?: { // New section for SMS-specific preferences
+    startDate?: string;
+    autoDetectProviders: boolean;
+    showDetectionNotifications: boolean;
   };
   categories?: {
     showUncategorized: boolean;
@@ -161,4 +167,13 @@ export interface DisplaySetting {
     label: string;
     value: string | number;
   }>;
+}
+
+export interface SmsProvider { // New interface for detailed SMS provider info
+  id: string;
+  name: string;
+  pattern: string;
+  isSelected: boolean;
+  isDetected: boolean;
+  lastDetected?: Date;
 }
