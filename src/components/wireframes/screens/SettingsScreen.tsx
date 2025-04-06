@@ -3,7 +3,10 @@ import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
 import CurrencySelector from '../CurrencySelector';
-import { Bell, Lock, CreditCard, HelpCircle, LogOut, Moon, User, MessageSquare, Sun, Globe, Shield, Database, Eye } from 'lucide-react';
+import { 
+  Bell, Lock, CreditCard, HelpCircle, LogOut, Moon, User, 
+  MessageSquare, Sun, Globe, Shield, Database, Eye, ToggleRight
+} from 'lucide-react';
 
 interface UserData {
   name?: string;
@@ -32,6 +35,12 @@ interface UserData {
       dataRetention?: '3months' | '6months' | '1year' | 'forever';
     };
   };
+  subscription?: {
+    isPremium?: boolean;
+    isDemoMode?: boolean;
+    expiryDate?: string;
+    plan?: 'free' | 'premium' | 'enterprise';
+  };
 }
 
 interface SettingsScreenProps {
@@ -59,6 +68,9 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
   );
   const [autoBackup, setAutoBackup] = useState(
     userData?.preferences?.dataManagement?.autoBackup === true
+  );
+  const [demoMode, setDemoMode] = useState(
+    userData?.subscription?.isDemoMode === true
   );
   
   const toggleDarkMode = () => {
@@ -145,6 +157,16 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
     });
   };
   
+  const toggleDemoMode = () => {
+    setDemoMode(!demoMode);
+    onUpdateUserData({
+      subscription: {
+        ...userData?.subscription,
+        isDemoMode: !demoMode
+      }
+    });
+  };
+  
   // Tab structure similar to main settings page
   const settingsTabs = [
     {
@@ -171,6 +193,11 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
       id: 'data',
       label: 'Data',
       icon: <Database size={16} />
+    },
+    {
+      id: 'subscription',
+      label: 'Subscription',
+      icon: <CreditCard size={16} />
     }
   ];
   
@@ -277,6 +304,45 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
           { icon: <LogOut size={20} />, label: 'Log Out', action: () => {}, danger: true },
         ]
       }
+    ],
+    subscription: [
+      {
+        title: 'Subscription Plan',
+        items: [
+          { 
+            icon: <CreditCard size={20} />, 
+            label: 'Current Plan', 
+            action: () => {},
+            custom: (
+              <span className="ml-auto font-medium text-blue-600">
+                {userData?.subscription?.plan || 'Free'}
+              </span>
+            )
+          },
+          { 
+            icon: <ToggleRight size={20} />, 
+            label: 'Demo Mode', 
+            action: toggleDemoMode,
+            toggle: true,
+            toggled: demoMode,
+            description: 'Enable demo features for testing'
+          },
+          { 
+            icon: <CreditCard size={20} />, 
+            label: 'Upgrade to Premium', 
+            action: () => {},
+            custom: (
+              <WireframeButton 
+                variant="primary" 
+                size="small" 
+                className="ml-auto"
+              >
+                Upgrade
+              </WireframeButton>
+            )
+          },
+        ]
+      }
     ]
   };
   
@@ -320,7 +386,12 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
                     <div className={`mr-3 ${item.danger ? 'text-red-500' : 'text-gray-500'}`}>
                       {item.icon}
                     </div>
-                    <span className={item.danger ? 'text-red-500' : ''}>{item.label}</span>
+                    <div>
+                      <span className={item.danger ? 'text-red-500' : ''}>{item.label}</span>
+                      {item.description && (
+                        <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                      )}
+                    </div>
                   </div>
                   
                   {item.custom ? (
