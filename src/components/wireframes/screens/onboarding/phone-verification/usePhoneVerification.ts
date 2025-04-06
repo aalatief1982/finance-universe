@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/hooks/use-toast';
@@ -5,7 +6,11 @@ import {
   getVerificationSessionTimeout, 
   getVerificationSessionTimeRemaining 
 } from '@/lib/supabase-auth';
-import { handleValidationError } from '@/utils/error-utils';
+import { 
+  handleValidationError, 
+  handleNetworkError, 
+  handleAuthError 
+} from '@/utils/error-utils';
 
 export const usePhoneVerification = (onNext: () => void) => {
   const { user, auth, updateUser, startPhoneVerification, confirmPhoneVerification, isLoading } = useUser();
@@ -13,10 +18,29 @@ export const usePhoneVerification = (onNext: () => void) => {
   const [isVerificationSent, setIsVerificationSent] = useState(false);
   const [verificationCode, setVerificationCode] = useState(['', '', '', '']);
   const [error, setError] = useState('');
+  const [errorType, setErrorType] = useState<'network' | 'validation' | 'auth' | null>(null);
   const [success, setSuccess] = useState('');
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState(0);
   const [timeoutId, setTimeoutId] = useState<number | null>(null);
+  const [networkStatus, setNetworkStatus] = useState<'online' | 'offline'>('online');
   const { toast } = useToast();
+  
+  // Monitor network status
+  useEffect(() => {
+    const handleOnline = () => setNetworkStatus('online');
+    const handleOffline = () => setNetworkStatus('offline');
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Initialize network status
+    setNetworkStatus(navigator.onLine ? 'online' : 'offline');
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   // Set verification UI state based on auth context
   useEffect(() => {
@@ -40,6 +64,7 @@ export const usePhoneVerification = (onNext: () => void) => {
         // When time expires, show timeout message
         if (timeRemaining <= 0) {
           setError('Verification session has expired. Please request a new code.');
+          setErrorType('auth');
           setIsVerificationSent(false);
           clearInterval(intervalId);
           
@@ -60,22 +85,61 @@ export const usePhoneVerification = (onNext: () => void) => {
       };
     }
   }, [isVerificationSent, toast, timeoutId]);
+
+  // Phone number validation function
+  const validatePhoneNumber = (number: string): boolean => {
+    // Basic international phone number validation - can be extended for more comprehensive validation
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(number.replace(/\s+/g, ''));
+  };
   
   const handleSendCode = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setError('Please enter a valid phone number');
-      handleValidationError(
-        'Please enter a valid phone number', 
-        { phoneNumber, length: phoneNumber.length },
+    // Clear previous errors
+    setError('');
+    setErrorType(null);
+    
+    // Check network status first
+    if (networkStatus === 'offline') {
+      setError('You appear to be offline. Please check your internet connection and try again.');
+      setErrorType('network');
+      
+      handleNetworkError(
+        'Cannot send verification code while offline', 
+        { phoneNumber, networkStatus },
         true
       );
+      
+      toast({
+        title: "Network error",
+        description: "You appear to be offline. Please check your internet connection.",
+        variant: "destructive",
+      });
       return;
     }
     
-    setError('');
+    // Validate phone number
+    if (!phoneNumber || !validatePhoneNumber(phoneNumber)) {
+      const errorMsg = 'Please enter a valid phone number with country code (e.g., +1234567890)';
+      setError(errorMsg);
+      setErrorType('validation');
+      
+      handleValidationError(
+        errorMsg, 
+        { phoneNumber, isValid: validatePhoneNumber(phoneNumber) },
+        true
+      );
+      
+      toast({
+        title: "Invalid phone number",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
-      const success = await startPhoneVerification(phoneNumber);
+      const formattedPhoneNumber = phoneNumber.replace(/\s+/g, '');
+      const success = await startPhoneVerification(formattedPhoneNumber);
       
       if (success) {
         setIsVerificationSent(true);
@@ -93,6 +157,8 @@ export const usePhoneVerification = (onNext: () => void) => {
         setTimeoutId(id);
       } else {
         setError('Failed to send verification code. Please try again with a valid phone number.');
+        setErrorType('auth');
+        
         toast({
           title: "Verification failed",
           description: "Could not send verification code. Please check your phone number.",
@@ -102,6 +168,14 @@ export const usePhoneVerification = (onNext: () => void) => {
     } catch (err) {
       console.error("Phone verification error:", err);
       setError('An unexpected error occurred. Please try again.');
+      setErrorType('network');
+      
+      handleAuthError(
+        'Failed to initiate phone verification', 
+        { phoneNumber },
+        err
+      );
+      
       toast({
         title: "Verification error",
         description: "An unexpected error occurred. Please try again later.",
@@ -126,9 +200,30 @@ export const usePhoneVerification = (onNext: () => void) => {
     // Reset verification code
     setVerificationCode(['', '', '', '']);
     setError('');
+    setErrorType(null);
+    
+    // Check network status first
+    if (networkStatus === 'offline') {
+      setError('You appear to be offline. Please check your internet connection and try again.');
+      setErrorType('network');
+      
+      handleNetworkError(
+        'Cannot resend verification code while offline', 
+        { phoneNumber, networkStatus },
+        true
+      );
+      
+      toast({
+        title: "Network error",
+        description: "You appear to be offline. Please check your internet connection.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
-      const success = await startPhoneVerification(phoneNumber);
+      const formattedPhoneNumber = phoneNumber.replace(/\s+/g, '');
+      const success = await startPhoneVerification(formattedPhoneNumber);
       
       if (success) {
         // Show a user-friendly message
@@ -146,6 +241,8 @@ export const usePhoneVerification = (onNext: () => void) => {
         setTimeoutId(id);
       } else {
         setError('Failed to resend code. Please check your phone number.');
+        setErrorType('auth');
+        
         toast({
           title: "Resend failed",
           description: "Could not resend verification code. Please try again.",
@@ -155,8 +252,17 @@ export const usePhoneVerification = (onNext: () => void) => {
     } catch (err) {
       console.error("Resend code error:", err);
       setError('An unexpected error occurred. Please try again later.');
+      setErrorType('network');
+      
+      handleNetworkError(
+        'Failed to resend verification code', 
+        { phoneNumber },
+        err
+      );
+      
       setTimeout(() => {
         setError('');
+        setErrorType(null);
       }, 3000);
     }
   };
@@ -170,9 +276,30 @@ export const usePhoneVerification = (onNext: () => void) => {
   };
   
   const handleVerifyCode = async (code?: string) => {
+    // Check network status first
+    if (networkStatus === 'offline') {
+      setError('You appear to be offline. Please check your internet connection and try again.');
+      setErrorType('network');
+      
+      handleNetworkError(
+        'Cannot verify code while offline', 
+        { phoneNumber, networkStatus },
+        true
+      );
+      
+      toast({
+        title: "Network error",
+        description: "You appear to be offline. Please check your internet connection.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Check if session has expired
     if (sessionTimeRemaining <= 0) {
       setError('Verification session has expired. Please request a new code.');
+      setErrorType('auth');
+      
       toast({
         title: "Session expired",
         description: "Your verification session has timed out. Please request a new code.",
@@ -185,6 +312,8 @@ export const usePhoneVerification = (onNext: () => void) => {
     const codeToVerify = code || verificationCode.join('');
     if (codeToVerify.length !== 4) {
       setError('Please enter a valid 4-digit code');
+      setErrorType('validation');
+      
       handleValidationError('Invalid verification code format', { codeLength: codeToVerify.length }, true);
       return;
     }
@@ -194,6 +323,9 @@ export const usePhoneVerification = (onNext: () => void) => {
       
       if (success) {
         setSuccess('Phone number verified successfully!');
+        setError('');
+        setErrorType(null);
+        
         toast({
           title: "Verification successful",
           description: "Your phone number has been verified",
@@ -210,6 +342,8 @@ export const usePhoneVerification = (onNext: () => void) => {
         // Error message is handled by the context
         setVerificationCode(['', '', '', '']);
         setError(`Invalid verification code. ${auth.verificationAttemptsRemaining} attempts remaining.`);
+        setErrorType('validation');
+        
         toast({
           title: "Verification failed",
           description: auth.isDemoMode 
@@ -221,6 +355,14 @@ export const usePhoneVerification = (onNext: () => void) => {
     } catch (err) {
       console.error("Verification error:", err);
       setError('Verification failed. Please try again.');
+      setErrorType('network');
+      
+      handleAuthError(
+        'Failed to confirm verification code', 
+        { attemptsRemaining: auth.verificationAttemptsRemaining },
+        err
+      );
+      
       toast({
         title: "Error",
         description: "Verification failed due to an unexpected error.",
@@ -235,13 +377,16 @@ export const usePhoneVerification = (onNext: () => void) => {
     isVerificationSent,
     verificationCode,
     error,
+    errorType,
     success,
     isLoading,
+    networkStatus,
     sessionTimeRemaining,
     formatRemainingTime,
     handleSendCode,
     handleVerificationCodeChange,
     handleResendCode,
-    handleVerifyCode
+    handleVerifyCode,
+    validatePhoneNumber
   };
 };

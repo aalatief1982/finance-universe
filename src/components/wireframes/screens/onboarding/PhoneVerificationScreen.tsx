@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import EnterPhoneForm from './phone-verification/EnterPhoneForm';
 import VerificationCodeForm from './phone-verification/VerificationCodeForm';
 import { usePhoneVerification } from './phone-verification/usePhoneVerification';
-import { Check, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Check, AlertCircle, ArrowLeft, WifiOff, Clock, ShieldAlert } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -25,12 +25,17 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
     isVerificationSent,
     verificationCode,
     error,
+    errorType,
     success,
     isLoading,
+    networkStatus,
+    sessionTimeRemaining,
+    formatRemainingTime,
     handleSendCode,
     handleVerificationCodeChange,
     handleResendCode,
-    handleVerifyCode
+    handleVerifyCode,
+    validatePhoneNumber
   } = usePhoneVerification(() => {
     toast({
       title: "Verification successful",
@@ -39,8 +44,57 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
     onNext();
   });
 
+  // Error icon based on error type
+  const getErrorIcon = () => {
+    switch (errorType) {
+      case 'network':
+        return <WifiOff className="h-4 w-4 text-red-600" />;
+      case 'validation':
+        return <AlertCircle className="h-4 w-4 text-amber-600" />;
+      case 'auth':
+        return <ShieldAlert className="h-4 w-4 text-red-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-red-600" />;
+    }
+  };
+
+  // Error alert variant based on error type
+  const getErrorAlertClass = () => {
+    switch (errorType) {
+      case 'network':
+        return "bg-red-50 border-red-200";
+      case 'validation':
+        return "bg-amber-50 border-amber-200";
+      case 'auth':
+        return "bg-red-50 border-red-200";
+      default:
+        return "bg-red-50 border-red-200";
+    }
+  };
+
   // Mock function for email verification - in a real app this would connect to a real service
   const handleEmailVerification = async (email: string) => {
+    // Check email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check network status
+    if (networkStatus === 'offline') {
+      toast({
+        title: "Network error",
+        description: "You appear to be offline. Please check your internet connection.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
@@ -53,6 +107,20 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
     setTimeout(() => {
       onNext();
     }, 2000);
+  };
+
+  // Offline banner component
+  const OfflineBanner = () => {
+    if (networkStatus === 'online') return null;
+    
+    return (
+      <Alert className="bg-red-50 border-red-200 mb-4">
+        <WifiOff className="h-4 w-4 text-red-600" />
+        <AlertDescription className="text-red-700">
+          You are currently offline. Please check your internet connection and try again.
+        </AlertDescription>
+      </Alert>
+    );
   };
 
   return (
@@ -79,6 +147,8 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
         Please verify your account to continue. You can use your phone number or email address.
       </p>
       
+      <OfflineBanner />
+      
       <Tabs defaultValue="phone" value={verificationMethod} onValueChange={(v) => setVerificationMethod(v as 'phone' | 'email')}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="phone">Phone Number</TabsTrigger>
@@ -86,19 +156,56 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
         </TabsList>
         
         <TabsContent value="phone" className="space-y-4 pt-4">
-          {success && (
-            <Alert className="bg-green-50 border-green-200">
-              <Check className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-700">{success}</AlertDescription>
-            </Alert>
-          )}
-          
-          {error && (
-            <Alert variant="destructive" className="bg-red-50 border-red-200">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          <AnimatePresence mode="wait">
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Alert className="bg-green-50 border-green-200">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-700">{success}</AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+            
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Alert className={getErrorAlertClass()}>
+                  {getErrorIcon()}
+                  <AlertDescription className="text-red-700">{error}</AlertDescription>
+                  
+                  {/* Additional help text based on error type */}
+                  {errorType === 'network' && (
+                    <div className="mt-2 text-sm text-red-600">
+                      Please check your connection and try again. If the problem persists, 
+                      try switching to a different network.
+                    </div>
+                  )}
+                  
+                  {errorType === 'validation' && phoneNumber && !validatePhoneNumber(phoneNumber) && (
+                    <div className="mt-2 text-sm text-amber-600">
+                      The phone number should include the country code (e.g., +1 for US/Canada).
+                    </div>
+                  )}
+                  
+                  {errorType === 'auth' && error.includes('session has expired') && (
+                    <div className="mt-2 text-sm text-red-600">
+                      <Clock className="h-3 w-3 inline mr-1" />
+                      Verification sessions expire after 15 minutes for security reasons.
+                    </div>
+                  )}
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {!isVerificationSent ? (
             <EnterPhoneForm
@@ -107,7 +214,10 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
               handleSendCode={handleSendCode}
               isLoading={isLoading}
               error={error}
+              errorType={errorType}
               success={success}
+              isOffline={networkStatus === 'offline'}
+              validatePhoneNumber={validatePhoneNumber}
             />
           ) : (
             <VerificationCodeForm
@@ -118,7 +228,11 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
               handleVerifyCode={() => handleVerifyCode()}
               isLoading={isLoading}
               error={error}
+              errorType={errorType}
               success={success}
+              sessionTimeRemaining={sessionTimeRemaining}
+              formatRemainingTime={formatRemainingTime}
+              isOffline={networkStatus === 'offline'}
             />
           )}
           
@@ -148,12 +262,20 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
                 id="email"
                 type="email"
                 placeholder="Enter your email address"
-                className="w-full p-2 border rounded"
+                className={`w-full p-2 border rounded ${networkStatus === 'offline' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                disabled={networkStatus === 'offline'}
               />
+              {networkStatus === 'offline' && (
+                <p className="text-xs text-red-600">
+                  <WifiOff className="h-3 w-3 inline mr-1" />
+                  This feature is unavailable while offline
+                </p>
+              )}
             </div>
             <Button 
               className="w-full" 
               onClick={() => handleEmailVerification('user@example.com')}
+              disabled={networkStatus === 'offline'}
             >
               Send Verification Link
             </Button>
