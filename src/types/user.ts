@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   fullName: string;
@@ -13,6 +14,7 @@ export interface User {
   completedOnboarding?: boolean;
   createdAt?: Date;
   lastActive?: Date;
+  smsPermissionGranted?: boolean;
   settings?: {
     currency?: string;
     language?: string;

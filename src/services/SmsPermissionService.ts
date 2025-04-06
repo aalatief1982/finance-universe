@@ -1,7 +1,8 @@
+
 import { useToast } from '@/components/ui/use-toast';
 import { ErrorType } from '@/types/error';
 import { handleError } from '@/utils/error-utils';
-import { CapacitorPlatforms, Capacitor } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 const SMS_PERMISSION_STORAGE_KEY = 'smsPermissionGranted';
 
@@ -12,7 +13,7 @@ class SmsPermissionService {
   }
 
   // Get platform information
-  getPlatform(): CapacitorPlatforms {
+  getPlatform(): string {
     return Capacitor.getPlatform();
   }
 
