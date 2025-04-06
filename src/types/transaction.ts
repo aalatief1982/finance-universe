@@ -6,11 +6,18 @@ import {
   transactionCategoryChangeSchema,
   budgetSchema
 } from '@/lib/validation';
+import { SupportedCurrency } from '@/types/locale';
+
+export type TransactionType = 'income' | 'expense' | 'transfer';
 
 export type Transaction = z.infer<typeof transactionSchema> & {
   categoryPath?: string;
   originalCurrency?: string;
   exchangeRate?: number;
+  fromAccount?: string;
+  toAccount?: string;
+  subcategory?: string;
+  person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | null;
   providerDetails?: {
     providerName?: string;
     providerType?: 'bank' | 'payment_app' | 'card' | 'other';
@@ -67,6 +74,13 @@ export interface CategoryHierarchy {
 }
 
 export type TransactionCategoryChange = z.infer<typeof transactionCategoryChangeSchema>;
+
+// New category hierarchical structure
+export interface CategoryWithSubcategories {
+  name: string;
+  subcategories: string[];
+  transactionType: TransactionType;
+}
 
 // Budget interfaces aligned with validation
 export type Budget = z.infer<typeof budgetSchema>;

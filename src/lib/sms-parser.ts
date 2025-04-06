@@ -2,15 +2,20 @@
 import { transactionService } from '@/services/TransactionService';
 import { CategoryRule } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
+import { getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
 
 export interface ParsedTransaction {
   amount: number;
   date: Date;
   sender: string;
   category: string;
+  subcategory?: string;
   description: string;
   rawMessage: string;
   currency?: SupportedCurrency;
+  country?: string;
+  fromAccount?: string;
+  toAccount?: string;
 }
 
 // Generic pattern matchers that are not tied to specific banks
@@ -177,19 +182,185 @@ export function parseSmsMessage(message: string, sender: string): ParsedTransact
       // Apply category rules to determine the category
       const category = applyCategoryRules(description, amount, message);
       
+      // Determine if this is a transfer message
+      const isTransfer = detectTransfer(message);
+      
+      // Extract recipient/toAccount for transfers
+      let toAccount = null;
+      if (isTransfer) {
+        toAccount = extractToAccount(message);
+      }
+      
+      // Try to identify a subcategory if possible
+      const subcategory = determineSubcategory(category, description, message);
+      
       return {
         amount,
         date: extractDateFromMessage(message) || new Date(),
         sender: extractBankName(sender, message), // Dynamically extract bank name
         category,
+        subcategory,
         description,
         rawMessage: message,
-        currency
+        currency,
+        country: detectCountry(message),
+        fromAccount: extractBankName(sender, message),
+        toAccount: toAccount
       };
     }
   }
   
   return null; // No patterns matched
+}
+
+/**
+ * Check if a message describes a transfer
+ */
+function detectTransfer(message: string): boolean {
+  const transferKeywords = [
+    'transfer', 'sent to', 'to account', 'wire', 'moved',
+    'حوالة', 'تحويل', 'ارسال',
+    'transfered', 'sent', 'wired to'
+  ];
+  
+  const messageLower = message.toLowerCase();
+  return transferKeywords.some(keyword => messageLower.includes(keyword));
+}
+
+/**
+ * Extract the recipient account from a transfer message
+ */
+function extractToAccount(message: string): string | null {
+  const patterns = [
+    // Common patterns for recipient in transfer messages
+    /(?:to|sent to|transferred to|recipient)[\s:]+([\w\s.']+?)(?:\s+on|\s+at|\s+for|\s+with|$)/i,
+    /(?:to account|account number|account no|a\/c)[\s:#]+([0-9*]+)/i,
+    // Arabic patterns
+    /(?:حوالة|تحويل)[\s:]+([\w\s.']+?)(?:\s+في|\s+بتاريخ|\s+على|$)/i
+  ];
+  
+  for (const pattern of patterns) {
+    const match = message.match(pattern);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Try to determine a subcategory based on the main category and message content
+ */
+function determineSubcategory(category: string, description: string, message: string): string | undefined {
+  // Get available subcategories for this category
+  const subcategories = getSubcategoriesForCategory(category);
+  if (!subcategories.length) return undefined;
+  
+  // Combine description and message for analysis
+  const textToAnalyze = (description + ' ' + message).toLowerCase();
+  
+  // Look for subcategory keywords in the text
+  for (const subcategory of subcategories) {
+    // Create variations of the subcategory name for matching
+    const variations = [
+      subcategory.toLowerCase(),
+      subcategory.toLowerCase().replace(' ', ''),
+      subcategory.toLowerCase().replace(' ', '-')
+    ];
+    
+    if (variations.some(v => textToAnalyze.includes(v))) {
+      return subcategory;
+    }
+  }
+  
+  // Special case handling for common subcategories
+  if (category === 'Shopping') {
+    if (textToAnalyze.includes('grocer') || textToAnalyze.includes('market') || 
+        textToAnalyze.includes('supermarket') || textToAnalyze.includes('food') ||
+        textToAnalyze.includes('بقالة') || textToAnalyze.includes('سوبرماركت')) {
+      return 'Grocery';
+    }
+    
+    if (textToAnalyze.includes('cloth') || textToAnalyze.includes('wear') || 
+        textToAnalyze.includes('fashion') || textToAnalyze.includes('ملابس')) {
+      return 'Clothing';
+    }
+    
+    if (textToAnalyze.includes('appliance') || textToAnalyze.includes('electr') || 
+        textToAnalyze.includes('device') || textToAnalyze.includes('أجهزة')) {
+      return 'Appliances';
+    }
+  }
+  
+  if (category === 'Car') {
+    if (textToAnalyze.includes('gas') || textToAnalyze.includes('fuel') || 
+        textToAnalyze.includes('petrol') || textToAnalyze.includes('وقود') ||
+        textToAnalyze.includes('بنزين')) {
+      return 'Gas';
+    }
+    
+    if (textToAnalyze.includes('service') || textToAnalyze.includes('repair') || 
+        textToAnalyze.includes('maint') || textToAnalyze.includes('صيانة')) {
+      return 'Maintenance';
+    }
+  }
+  
+  if (category === 'Health') {
+    if (textToAnalyze.includes('hospital') || textToAnalyze.includes('clinic') || 
+        textToAnalyze.includes('doctor') || textToAnalyze.includes('مستشفى') ||
+        textToAnalyze.includes('طبيب')) {
+      return 'Hospital';
+    }
+    
+    if (textToAnalyze.includes('pharm') || textToAnalyze.includes('drug') || 
+        textToAnalyze.includes('medicine') || textToAnalyze.includes('صيدلية') ||
+        textToAnalyze.includes('دواء')) {
+      return 'Pharmacy';
+    }
+    
+    if (textToAnalyze.includes('gym') || textToAnalyze.includes('fitness') || 
+        textToAnalyze.includes('workout') || textToAnalyze.includes('صالة رياضية')) {
+      return 'Gym';
+    }
+  }
+  
+  if (category === 'Salary') {
+    if (textToAnalyze.includes('bonus') || textToAnalyze.includes('award') || 
+        textToAnalyze.includes('مكافأة')) {
+      return 'Bonus';
+    }
+    
+    if (textToAnalyze.includes('benefit') || textToAnalyze.includes('allowance') || 
+        textToAnalyze.includes('بدل')) {
+      return 'Benefit';
+    }
+  }
+  
+  // Default to first subcategory if we can't determine one
+  return undefined;
+}
+
+/**
+ * Detect the country from message content
+ */
+function detectCountry(message: string): string | undefined {
+  const countryPatterns = [
+    { country: 'Saudi Arabia', patterns: ['sar', 'riyal', 'ريال', 'سعودي', 'المملكة العربية السعودية', 'saudi'] },
+    { country: 'Egypt', patterns: ['egp', 'egyptian pound', 'جنيه', 'مصري', 'مصر', 'egypt'] },
+    { country: 'UAE', patterns: ['aed', 'dirham', 'درهم', 'إمارات', 'dubai', 'دبي', 'abu dhabi', 'أبو ظبي'] },
+    { country: 'Bahrain', patterns: ['bhd', 'bahraini dinar', 'دينار بحريني', 'البحرين', 'bahrain'] }
+  ];
+  
+  const messageLower = message.toLowerCase();
+  
+  for (const country of countryPatterns) {
+    if (country.patterns.some(pattern => messageLower.includes(pattern))) {
+      return country.country;
+    }
+  }
+  
+  return undefined;
 }
 
 /**
@@ -527,41 +698,4 @@ export function getMockSmsMessages() {
       id: '10',
       sender: 'HDFC Bank',
       message: 'HDFC: INR 1,450.00 has been debited from your account for purchase at BIG BAZAAR on 11-05-2023',
-      date: new Date('2023-05-11T11:05:00'),
-    },
-    {
-      id: '11',
-      sender: 'SBI',
-      message: 'SBI: Your account XX7890 is debited with Rs.550.50 on 12-05-2023 at RELIANCE FRESH',
-      date: new Date('2023-05-12T09:15:00'),
-    },
-    
-    // UAE messages
-    {
-      id: '12',
-      sender: 'Emirates NBD',
-      message: 'ENBD: AED 275.00 was spent on your card at CARREFOUR DUBAI on 13/05/2023',
-      date: new Date('2023-05-13T15:30:00'),
-    },
-    
-    // Generic messages
-    {
-      id: '13',
-      sender: 'STC Pay',
-      message: 'Your STC Pay wallet has been debited with SAR 100.00 for payment to Muhammad Ali on 14/05/2023',
-      date: new Date('2023-05-14T14:25:00'),
-    },
-    {
-      id: '14',
-      sender: '+123456789',
-      message: 'Transaction alert: Purchase of 45.75 USD at STARBUCKS JEDDAH on 15/05/2023',
-      date: new Date('2023-05-15T08:40:00'),
-    },
-    {
-      id: '15',
-      sender: 'Bank Alert',
-      message: 'Payment of EUR 95.20 to ONLINE MERCHANT on 16-05-2023 has been completed',
-      date: new Date('2023-05-16T17:50:00'),
-    },
-  ];
-}
+      date: new Date('2023-

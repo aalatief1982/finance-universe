@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, Edit, Globe, DollarSign, Building } from 'lucide-react';
+import { Check, X, Edit, Globe, DollarSign, Building, ArrowRightLeft, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CATEGORIES } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/badge';
 import { SupportedCurrency } from '@/types/locale';
+import { CATEGORY_HIERARCHY, PEOPLE, CURRENCIES, getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
+import { TransactionType } from '@/types/transaction';
 
 export interface SmsTransaction {
   id: string;
@@ -16,9 +18,14 @@ export interface SmsTransaction {
   amount: number;
   date: string;
   inferredCategory: string;
+  subcategory?: string;
   description: string;
   currency?: SupportedCurrency;
   country?: string;
+  fromAccount?: string;
+  toAccount?: string;
+  person?: string;
+  type: TransactionType;
   providerDetails?: {
     providerName?: string;
     providerType?: 'bank' | 'payment_app' | 'card' | 'other';
@@ -42,6 +49,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   'EGP': 'E£',
   'INR': '₹',
   'AED': 'AED',
+  'BHD': 'BD',
 };
 
 const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
@@ -52,6 +60,22 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTransaction, setEditedTransaction] = useState({ ...transaction });
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
+  const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Initialize categories based on transaction type
+    if (editedTransaction.type) {
+      const categories = getCategoriesForType(editedTransaction.type);
+      setAvailableCategories(categories);
+      
+      // If a category is selected, update subcategories
+      if (editedTransaction.inferredCategory) {
+        const subcategories = getSubcategoriesForCategory(editedTransaction.inferredCategory);
+        setAvailableSubcategories(subcategories);
+      }
+    }
+  }, [editedTransaction.type, editedTransaction.inferredCategory]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -67,11 +91,36 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
     setIsEditing(false);
   };
 
-  const handleChange = (field: keyof SmsTransaction, value: string | number) => {
+  const handleChange = (field: keyof SmsTransaction, value: string | number | TransactionType) => {
     setEditedTransaction(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // Handle special cases
+    if (field === 'type') {
+      const transactionType = value as TransactionType;
+      const categories = getCategoriesForType(transactionType);
+      setAvailableCategories(categories);
+      
+      // Reset category and subcategory when type changes
+      setEditedTransaction(prev => ({
+        ...prev,
+        inferredCategory: '',
+        subcategory: ''
+      }));
+    }
+    
+    if (field === 'inferredCategory') {
+      const subcategories = getSubcategoriesForCategory(value as string);
+      setAvailableSubcategories(subcategories);
+      
+      // Reset subcategory when category changes
+      setEditedTransaction(prev => ({
+        ...prev,
+        subcategory: ''
+      }));
+    }
   };
 
   const getCurrencySymbol = (currency?: SupportedCurrency) => {
@@ -82,6 +131,19 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   const formatAmount = (amount: number, currency?: SupportedCurrency) => {
     const symbol = getCurrencySymbol(currency);
     return `${symbol}${Math.abs(amount).toFixed(2)}`;
+  };
+
+  const getTransactionTypeColor = (type: TransactionType) => {
+    switch (type) {
+      case 'expense':
+        return 'text-red-500';
+      case 'income':
+        return 'text-green-500';
+      case 'transfer':
+        return 'text-blue-500';
+      default:
+        return '';
+    }
   };
 
   return (
@@ -95,18 +157,40 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
         <div className="flex justify-between items-start">
           <div className="max-w-[60%]">
             <div className="flex items-center gap-1">
-              <p className="text-sm text-muted-foreground truncate">From: {transaction.sender}</p>
+              <p className="text-sm text-muted-foreground truncate">
+                {transaction.type === 'transfer' ? 'Transfer' : (transaction.fromAccount || transaction.sender)}
+              </p>
               {transaction.providerDetails?.providerType && (
                 <Badge variant="outline" className="text-xs">
                   {transaction.providerDetails.providerType}
                 </Badge>
               )}
             </div>
-            <p className="text-sm truncate max-w-full">{transaction.description}</p>
-            <p className="text-xs text-muted-foreground line-clamp-1">{transaction.message}</p>
+            
+            <div className="flex items-center gap-1">
+              <p className="text-sm truncate max-w-full">
+                {transaction.description || transaction.inferredCategory}
+                {transaction.subcategory && ` - ${transaction.subcategory}`}
+              </p>
+              {transaction.person && (
+                <Badge variant="outline" className="text-xs flex items-center gap-0.5">
+                  <User size={10} />
+                  {transaction.person}
+                </Badge>
+              )}
+            </div>
+            
+            {transaction.type === 'transfer' && transaction.toAccount && (
+              <div className="flex items-center gap-1 mt-1">
+                <ArrowRightLeft size={12} className="text-blue-500" />
+                <p className="text-xs">To: {transaction.toAccount}</p>
+              </div>
+            )}
+            
+            <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{transaction.message}</p>
           </div>
           <div className="shrink-0">
-            <p className={`font-semibold ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+            <p className={`font-semibold ${getTransactionTypeColor(transaction.type)}`}>
               {formatAmount(transaction.amount, transaction.currency)}
             </p>
             <p className="text-xs text-muted-foreground text-right">{transaction.date}</p>
@@ -120,6 +204,10 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
 
         {/* Metadata badges */}
         <div className="flex flex-wrap gap-1.5">
+          <Badge variant="secondary" className={`text-xs flex items-center gap-1 ${getTransactionTypeColor(transaction.type)}`}>
+            {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
+          </Badge>
+          
           {transaction.currency && (
             <Badge variant="secondary" className="text-xs flex items-center gap-1">
               <DollarSign size={12} />
@@ -151,7 +239,10 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
         <div className="flex justify-between items-center">
           <div>
             <p className="text-sm font-medium">Category:</p>
-            <p className="text-sm">{transaction.inferredCategory}</p>
+            <p className="text-sm">
+              {transaction.inferredCategory}
+              {transaction.subcategory && ` / ${transaction.subcategory}`}
+            </p>
           </div>
           <div className="flex space-x-2">
             <Button 
@@ -188,13 +279,48 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             <DialogTitle>Edit Transaction</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Transaction Type</label>
+              <Select 
+                value={editedTransaction.type}
+                onValueChange={(value) => handleChange('type', value as TransactionType)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">From Account</label>
+              <Input 
+                value={editedTransaction.fromAccount || editedTransaction.sender}
+                onChange={(e) => handleChange('fromAccount', e.target.value)}
+              />
+            </div>
+            
+            {editedTransaction.type === 'transfer' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">To Account</label>
+                <Input 
+                  value={editedTransaction.toAccount || ''}
+                  onChange={(e) => handleChange('toAccount', e.target.value)}
+                />
+              </div>
+            )}
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Amount</label>
                 <Input 
                   type="number" 
                   value={Math.abs(editedTransaction.amount)}
-                  onChange={(e) => handleChange('amount', Number(e.target.value) * (editedTransaction.amount < 0 ? -1 : 1))}
+                  onChange={(e) => handleChange('amount', Number(e.target.value))}
                 />
               </div>
               
@@ -208,35 +334,12 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="SAR">SAR (SR)</SelectItem>
-                    <SelectItem value="EGP">EGP (E£)</SelectItem>
-                    <SelectItem value="INR">INR (₹)</SelectItem>
-                    <SelectItem value="AED">AED</SelectItem>
+                    {CURRENCIES.map(currency => (
+                      <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Type</label>
-              <Select 
-                value={editedTransaction.amount < 0 ? "expense" : "income"}
-                onValueChange={(value) => {
-                  const newAmount = Math.abs(editedTransaction.amount) * (value === "expense" ? -1 : 1);
-                  handleChange('amount', newAmount);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             
             <div className="space-y-2">
@@ -249,15 +352,52 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map(category => (
+                  {availableCategories.map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
+            {availableSubcategories.length > 0 && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Subcategory</label>
+                <Select 
+                  value={editedTransaction.subcategory || ''}
+                  onValueChange={(value) => handleChange('subcategory', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableSubcategories.map(subcategory => (
+                      <SelectItem key={subcategory} value={subcategory}>{subcategory}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
             <div className="space-y-2">
-              <label className="text-sm font-medium">Description</label>
+              <label className="text-sm font-medium">Person (Optional)</label>
+              <Select 
+                value={editedTransaction.person || ''}
+                onValueChange={(value) => handleChange('person', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select person" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  {PEOPLE.map(person => (
+                    <SelectItem key={person} value={person}>{person}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description (Optional)</label>
               <Input 
                 value={editedTransaction.description}
                 onChange={(e) => handleChange('description', e.target.value)}

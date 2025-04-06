@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { smsPermissionService } from '@/services/SmsPermissionService';
 import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
 import { transactionService } from '@/services/TransactionService';
-import { Transaction } from '@/types/transaction';
+import { Transaction, TransactionType } from '@/types/transaction';
 
 const ProcessSmsMessages = () => {
   const [permissionGranted, setPermissionGranted] = useState(false);
@@ -103,6 +103,15 @@ const ProcessSmsMessages = () => {
     const parsedTransaction = parseSmsMessage(message.message, message.sender);
     
     if (parsedTransaction) {
+      // Determine transaction type based on the amount and content
+      let transactionType: TransactionType = parsedTransaction.amount < 0 ? 'expense' : 'income';
+      
+      // Check if it's a transfer by looking for transfer-related keywords
+      const transferKeywords = ['transfer', 'sent to', 'to account', 'حوالة', 'تحويل'];
+      if (transferKeywords.some(keyword => message.message.toLowerCase().includes(keyword))) {
+        transactionType = 'transfer';
+      }
+      
       // Show the transaction for confirmation
       setCurrentTransaction({
         id: uuidv4(),
@@ -112,6 +121,14 @@ const ProcessSmsMessages = () => {
         date: message.date.toLocaleDateString(),
         inferredCategory: parsedTransaction.category,
         description: parsedTransaction.description,
+        currency: parsedTransaction.currency,
+        country: parsedTransaction.country,
+        fromAccount: message.sender,
+        type: transactionType,
+        // Try to extract toAccount for transfers
+        ...(transactionType === 'transfer' && {
+          toAccount: extractToAccount(message.message)
+        })
       });
     } else {
       // Skip this message if it couldn't be parsed
@@ -120,6 +137,25 @@ const ProcessSmsMessages = () => {
     
     setProcessedCount(index + 1);
     setProgress(((index + 1) / messages.length) * 100);
+  };
+
+  // Helper function to extract recipient account from transfer messages
+  const extractToAccount = (message: string): string => {
+    // This is a simplified version - in a real app, it would be more sophisticated
+    const patterns = [
+      /(?:to|sent to|transferred to|recipient)[\s:]+([\w\s.']+?)(?:\s+on|\s+at|\s+for|\s+with|$)/i,
+      /(?:to account|account number|account no|a\/c)[\s:#]+([0-9*]+)/i,
+      /(?:حوالة|تحويل)[\s:]+([\w\s.']+?)(?:\s+في|\s+بتاريخ|\s+على|$)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+    }
+    
+    return 'Unknown Recipient';
   };
 
   const handleConfirmTransaction = (transaction: any) => {
@@ -179,10 +215,16 @@ const ProcessSmsMessages = () => {
         title: t.description,
         amount: t.amount,
         category: t.inferredCategory,
+        subcategory: t.subcategory,
         date: new Date(t.date).toISOString(),
-        type: t.amount < 0 ? 'expense' : 'income',
+        type: t.type,
         notes: t.message,
-        source: 'sms'
+        source: 'sms',
+        fromAccount: t.fromAccount,
+        toAccount: t.toAccount,
+        person: t.person,
+        currency: t.currency,
+        country: t.country
       }));
       
       // Use the transaction service to save transactions
