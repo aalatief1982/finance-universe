@@ -11,7 +11,8 @@ import {
   setDemoMode,
   isDemoMode,
   getVerificationAttemptsRemaining,
-  getMaxVerificationAttempts
+  getMaxVerificationAttempts,
+  getVerificationSessionTimeout as getVerificationTimeout
 } from '@/lib/supabase-auth';
 import { ErrorType } from '@/types/error';
 import { createError } from '@/utils/error-utils';
@@ -173,8 +174,8 @@ export const checkSupabaseAuth = async (
  * @returns Timeout in milliseconds
  */
 export const getVerificationSessionTimeout = (): number => {
-  // Using 30 minutes timeout (same as in supabase-auth.ts)
-  return 30 * 60 * 1000;
+  // Use the imported function from supabase-auth.ts
+  return getVerificationTimeout();
 };
 
 /**

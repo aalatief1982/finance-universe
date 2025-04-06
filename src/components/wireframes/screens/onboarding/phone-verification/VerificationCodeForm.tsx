@@ -1,3 +1,4 @@
+
 import React, { KeyboardEvent } from 'react';
 import { Phone, Loader2, Info, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
@@ -134,6 +135,7 @@ const VerificationCodeForm = ({
               <Progress 
                 value={getTimeoutProgress()} 
                 className="h-2" 
+                indicatorClassName={getProgressColor()}
                 aria-labelledby="timer-value"
                 aria-valuemin={0}
                 aria-valuemax={100}

@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, WifiOff } from 'lucide-react';
 import PhoneVerification from '@/components/auth/PhoneVerification';
+import VerificationCodeForm from './phone-verification/VerificationCodeForm';
+import { usePhoneVerification } from './phone-verification/usePhoneVerification';
 
 interface PhoneVerificationScreenProps {
   onNext: () => void;
