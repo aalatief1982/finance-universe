@@ -1,4 +1,3 @@
-
 import React, { KeyboardEvent } from 'react';
 import { Phone, Loader2, Info, AlertCircle, Clock, CheckCircle2 } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
@@ -174,8 +173,6 @@ const VerificationCodeForm = ({
           value={verificationCode.join('')}
           onChange={handleVerificationCodeChange}
           disabled={isOffline || isLoading}
-          className={error ? "has-error" : success ? "has-success" : ""}
-          aria-invalid={!!error}
         >
           <InputOTPGroup>
             {[0, 1, 2, 3].map((index) => (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -416,6 +415,7 @@ const PhoneVerification = ({
                 <Progress 
                   value={getTimeoutProgress()} 
                   className="h-2" 
+                  indicatorClassName={getProgressColor()}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={getTimeoutProgress()}
@@ -439,20 +439,19 @@ const PhoneVerification = ({
                   maxLength={4}
                   value={verificationCode}
                   onChange={setVerificationCode}
-                  render={({ slots }) => (
-                    <InputOTPGroup>
-                      {slots.map((slot, index) => (
-                        <InputOTPSlot 
-                          key={index} 
-                          index={index} 
-                          {...slot} 
-                          className={error ? "border-red-300" : success ? "border-green-300" : ""}
-                          aria-label={`Digit ${index + 1}`}
-                        />
-                      ))}
-                    </InputOTPGroup>
-                  )}
-                />
+                  disabled={isLoading}
+                >
+                  <InputOTPGroup>
+                    {[0, 1, 2, 3].map((index) => (
+                      <InputOTPSlot 
+                        key={index} 
+                        index={index} 
+                        className={error ? "border-red-300" : success ? "border-green-300" : ""}
+                        aria-label={`Digit ${index + 1}`}
+                      />
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
               </div>
               
               <div className="flex justify-between">
