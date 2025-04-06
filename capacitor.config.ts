@@ -12,7 +12,13 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 0
+    },
+    Permissions: {
+      permissions: ["sms"]
     }
+  },
+  android: {
+    appendUserAgent: 'Xpensia Android App'
   }
 };
 

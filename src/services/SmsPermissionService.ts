@@ -96,17 +96,23 @@ class SmsPermissionService {
   // Request SMS permission on Android
   private async requestAndroidPermission(): Promise<boolean> {
     try {
-      // On Android, we would use the Android Permissions plugin
-      // This is a placeholder for actual implementation using Capacitor plugins
+      // On Android, we would use the Capacitor Permissions API
       console.log('Requesting Android SMS permission');
       
-      // For actual implementation, you would use:
-      // const { Permissions } = Plugins;
-      // const { granted } = await Permissions.query({ name: 'sms' });
+      // In a real app, we would check and request permissions using:
+      // import { Permissions } from '@capacitor/core';
+      // const { state } = await Permissions.query({ name: 'sms' });
+      // if (state !== 'granted') {
+      //   const result = await Permissions.request({ name: 'sms' });
+      //   return result.state === 'granted';
+      // }
+      // return true;
       
-      // Simulate successful permission for now
-      this.savePermissionStatus(true);
-      return true;
+      // For now, we'll use the mock implementation
+      // In your real device implementation, you'd replace this
+      const granted = await this.mockRequestPermission();
+      this.savePermissionStatus(granted);
+      return granted;
     } catch (error) {
       console.error('Error requesting Android SMS permission:', error);
       return false;
