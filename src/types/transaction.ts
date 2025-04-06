@@ -9,6 +9,17 @@ import {
 
 export type Transaction = z.infer<typeof transactionSchema> & {
   categoryPath?: string;
+  originalCurrency?: string;
+  exchangeRate?: number;
+  providerDetails?: {
+    providerName?: string;
+    providerType?: 'bank' | 'payment_app' | 'card' | 'other';
+    providerCountry?: string;
+    accountLastFourDigits?: string;
+    transactionId?: string;
+    balanceAfterTransaction?: number;
+    isInternational?: boolean;
+  };
 };
 
 export interface TransactionSummary {
@@ -96,13 +107,56 @@ export interface TransactionFilter {
   minAmount?: number;
   maxAmount?: number;
   tags?: string[];
+  provider?: string;
+  currency?: string;
+  country?: string;
 }
 
 // Transaction sorting types
-export type TransactionSortField = 'date' | 'title' | 'amount' | 'category';
+export type TransactionSortField = 'date' | 'title' | 'amount' | 'category' | 'provider';
 export type SortDirection = 'asc' | 'desc';
 
 export interface TransactionSortOptions {
   field: TransactionSortField;
   direction: SortDirection;
+}
+
+// Bank and provider types for better categorization and localization
+export interface FinancialProvider {
+  id: string;
+  name: string;
+  country: string;
+  type: 'bank' | 'payment_app' | 'card' | 'other';
+  patterns: string[];
+  logo?: string;
+  defaultCurrency: SupportedCurrency;
+  // Regular expression patterns to extract transaction details from SMS
+  smsPatterns?: {
+    amount?: string;
+    description?: string;
+    date?: string;
+    accountNumber?: string;
+    balance?: string;
+  };
+}
+
+// Interface for handling bank-specific SMS providers
+export interface BankSmsProvider {
+  id: string;
+  name: string;
+  bankName: string;
+  country: string;
+  isActive: boolean;
+  senderPatterns: string[];
+  messagePatterns: {
+    debit?: string;
+    credit?: string;
+    balance?: string;
+  };
+  extractors: {
+    amount: string;
+    description: string;
+    date: string;
+    accountNumber?: string;
+  };
 }
