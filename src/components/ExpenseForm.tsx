@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +17,18 @@ import CategoryHierarchy from '@/components/categories/CategoryHierarchy';
 import { transactionService } from '@/services/TransactionService';
 import { Category } from '@/types/transaction';
 
+const ACCOUNTS = [
+  "Cash", "Bank Account", "Credit Card", "Savings", "Investment", "Other"
+];
+
+const CURRENCIES = [
+  { code: "SAR", name: "Saudi Riyal" },
+  { code: "EGP", name: "Egyptian Pound" },
+  { code: "USD", name: "US Dollar" },
+  { code: "BHD", name: "Bahraini Dinar" },
+  { code: "AED", name: "UAE Dirham" }
+];
+
 const formSchema = z.object({
   title: z.string().min(2, {
     message: "Title must be at least 2 characters.",
@@ -22,14 +36,32 @@ const formSchema = z.object({
   amount: z.coerce.number().min(0.01, {
     message: "Amount must be greater than 0.",
   }),
+  type: z.enum(["expense", "income", "transfer"]),
+  fromAccount: z.string().min(1, {
+    message: "From Account is required.",
+  }),
+  toAccount: z.string().optional(),
   category: z.string().min(1, {
     message: "Please select a category.",
   }),
   date: z.string().min(1, {
     message: "Please select a date.",
   }),
-  type: z.enum(["expense", "income"]),
+  description: z.string().optional(),
   notes: z.string().optional(),
+  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen"]).optional().nullable(),
+  currency: z.string().min(1, {
+    message: "Please select a currency.",
+  }),
+}).refine(data => {
+  // If transaction type is transfer, toAccount is required
+  if (data.type === 'transfer' && !data.toAccount) {
+    return false;
+  }
+  return true;
+}, {
+  message: "To Account is required for transfer transactions",
+  path: ["toAccount"]
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -50,7 +82,12 @@ const ExpenseForm = ({
     category: "",
     date: new Date().toISOString().split('T')[0],
     type: "expense",
+    fromAccount: "",
+    toAccount: "",
+    description: "",
     notes: "",
+    person: null,
+    currency: "SAR",
   },
   onCancel,
 }: ExpenseFormProps) => {
@@ -63,6 +100,9 @@ const ExpenseForm = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategoryName, setSelectedCategoryName] = useState(defaultValues.category || '');
+  
+  // Watch the transaction type to conditionally render fields
+  const transactionType = form.watch("type");
   
   // Fetch hierarchical categories
   useEffect(() => {
@@ -92,12 +132,7 @@ const ExpenseForm = ({
   };
 
   const handleSubmit = (values: FormValues) => {
-    // If type is expense, make amount negative
-    if (values.type === "expense") {
-      values.amount = -Math.abs(values.amount);
-    } else {
-      values.amount = Math.abs(values.amount);
-    }
+    // If type is expense, make amount negative (only for display - actual handling in service)
     onSubmit(values);
     form.reset();
   };
@@ -131,14 +166,42 @@ const ExpenseForm = ({
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              {/* Transaction Type - First field for logical flow */}
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transaction Type*</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="expense">Expense</SelectItem>
+                        <SelectItem value="income">Income</SelectItem>
+                        <SelectItem value="transfer">Transfer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Title */}
               <FormField
                 control={form.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Title*</FormLabel>
                     <FormControl>
-                      <Input placeholder="Grocery shopping" {...field} />
+                      <Input placeholder="Transaction title" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -146,12 +209,13 @@ const ExpenseForm = ({
               />
               
               <div className="grid grid-cols-2 gap-4">
+                {/* Amount */}
                 <FormField
                   control={form.control}
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount</FormLabel>
+                      <FormLabel>Amount*</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -165,28 +229,107 @@ const ExpenseForm = ({
                   )}
                 />
                 
+                {/* Currency */}
                 <FormField
                   control={form.control}
-                  name="date"
+                  name="currency"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
+                      <FormLabel>Currency*</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {CURRENCIES.map(currency => (
+                            <SelectItem key={currency.code} value={currency.code}>
+                              {currency.code} - {currency.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
               
+              {/* Accounts Section */}
+              <div className="grid grid-cols-1 gap-4">
+                {/* From Account */}
+                <FormField
+                  control={form.control}
+                  name="fromAccount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>From Account*</FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select account" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ACCOUNTS.map(account => (
+                            <SelectItem key={account} value={account}>
+                              {account}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {/* To Account - Only shown for Transfer */}
+                {transactionType === 'transfer' && (
+                  <FormField
+                    control={form.control}
+                    name="toAccount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>To Account*</FormLabel>
+                        <Select
+                          value={field.value || ""}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select destination account" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ACCOUNTS.map(account => (
+                              <SelectItem key={account} value={account}>
+                                {account}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
+                {/* Category */}
                 <FormField
                   control={form.control}
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel>Category*</FormLabel>
                       <Popover 
                         open={showCategorySelector} 
                         onOpenChange={setShowCategorySelector}
@@ -230,40 +373,80 @@ const ExpenseForm = ({
                   )}
                 />
                 
+                {/* Date */}
                 <FormField
                   control={form.control}
-                  name="type"
+                  name="date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="expense">Expense</SelectItem>
-                          <SelectItem value="income">Income</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Date*</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
               
+              {/* Person */}
+              <FormField
+                control={form.control}
+                name="person"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Main Person</FormLabel>
+                    <Select
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select person (optional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="Ahmed">Ahmed</SelectItem>
+                        <SelectItem value="Marwa">Marwa</SelectItem>
+                        <SelectItem value="Youssef">Youssef</SelectItem>
+                        <SelectItem value="Salma">Salma</SelectItem>
+                        <SelectItem value="Mazen">Mazen</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter a detailed description..." 
+                        className="resize-none min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {/* Notes */}
               <FormField
                 control={form.control}
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notes (Optional)</FormLabel>
+                    <FormLabel>Notes</FormLabel>
                     <FormControl>
-                      <Input placeholder="Additional details..." {...field} />
+                      <Input placeholder="Additional notes..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

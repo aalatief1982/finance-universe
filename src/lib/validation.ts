@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { handleValidationError } from '@/utils/error-utils';
 import { SupportedCurrency } from '@/types/locale';
@@ -9,16 +10,20 @@ export const transactionSchema = z.object({
   amount: z.number().refine(n => !isNaN(n), "Amount must be a valid number"),
   category: z.string().min(1, "Category is required"),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date format"),
-  type: z.enum(["income", "expense"]),
+  type: z.enum(["income", "expense", "transfer"]),
+  fromAccount: z.string().min(1, "From Account is required"),
+  toAccount: z.string().optional().nullable(),
   notes: z.string().optional(),
+  description: z.string().optional(),
+  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen"]).optional().nullable(),
   source: z.enum(["manual", "sms"]).optional(),
   originalCurrency: z.string().optional(),
   // Update the currency field to use SupportedCurrency enum
   currency: z.enum([
     "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", 
     "NZD", "SEK", "KRW", "SGD", "NOK", "MXN", "INR", "RUB", "ZAR", 
-    "BRL", "AED", "SAR", "TRY", "PLN", "EGP"
-  ] as [SupportedCurrency, ...SupportedCurrency[]]).optional(),
+    "BRL", "AED", "SAR", "TRY", "PLN", "EGP", "BHD"
+  ] as [SupportedCurrency, ...SupportedCurrency[]]).default("SAR"),
   smsDetails: z
     .object({
       sender: z.string(),
@@ -26,6 +31,15 @@ export const transactionSchema = z.object({
       timestamp: z.string()
     })
     .optional()
+}).refine(data => {
+  // If transaction type is transfer, toAccount is required
+  if (data.type === 'transfer' && !data.toAccount) {
+    return false;
+  }
+  return true;
+}, {
+  message: "To Account is required for transfer transactions",
+  path: ["toAccount"]
 });
 
 // SMS message validation schema
@@ -47,7 +61,7 @@ export const localeSettingsSchema = z.object({
   currency: z.enum([
     "USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "HKD", 
     "NZD", "SEK", "KRW", "SGD", "NOK", "MXN", "INR", "RUB", "ZAR", 
-    "BRL", "AED", "SAR", "TRY", "PLN", "EGP"
+    "BRL", "AED", "SAR", "TRY", "PLN", "EGP", "BHD"
   ] as [SupportedCurrency, ...SupportedCurrency[]]),
   language: z.string()
 });

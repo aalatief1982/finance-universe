@@ -15,10 +15,11 @@ export type Transaction = z.infer<typeof transactionSchema> & {
   categoryPath?: string;
   originalCurrency?: string;
   exchangeRate?: number;
-  fromAccount?: string;
+  fromAccount: string;
   toAccount?: string;
   subcategory?: string;
   currency?: SupportedCurrency;
+  description?: string;
   person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | null;
   providerDetails?: {
     providerName?: string;

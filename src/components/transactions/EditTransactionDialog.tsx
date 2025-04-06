@@ -34,8 +34,13 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
             amount: Math.abs(currentTransaction.amount),
             category: currentTransaction.category,
             date: currentTransaction.date,
-            type: currentTransaction.amount >= 0 ? 'income' : 'expense',
+            type: currentTransaction.type || (currentTransaction.amount >= 0 ? 'income' : 'expense'),
             notes: currentTransaction.notes || '',
+            description: currentTransaction.description || '',
+            person: currentTransaction.person || null,
+            fromAccount: currentTransaction.fromAccount || '',
+            toAccount: currentTransaction.toAccount || '',
+            currency: currentTransaction.currency || 'SAR',
           }}
           onCancel={onCancel}
         />
