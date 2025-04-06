@@ -1,59 +1,39 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { AnimatePresence } from 'framer-motion';
+import Sidebar from './Sidebar';
+import MobileNav from './MobileNav';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
   children: React.ReactNode;
+  hideNavigation?: boolean;
   className?: string;
-  animate?: boolean;
-  withPadding?: boolean;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
-  centerContent?: boolean;
-  hideNavigation?: boolean; // Added this prop to fix the TypeScript error
 }
 
-const Layout = ({ 
+const Layout: React.FC<LayoutProps> = ({ 
   children, 
-  className, 
-  animate = true, 
-  withPadding = true,
-  maxWidth = '7xl',
-  centerContent = true,
-  hideNavigation // Added this prop (not used in the component itself but passed by parent components)
-}: LayoutProps) => {
+  hideNavigation = false,
+  className = ''
+}) => {
+  const isMobile = useIsMobile();
   
-  // Define max width class based on prop
-  const maxWidthClass = maxWidth === 'full' 
-    ? 'w-full' 
-    : `max-w-${maxWidth}`;
-  
-  const content = (
-    <div className={cn(
-      maxWidthClass,
-      centerContent && "mx-auto",
-      withPadding && "px-4 sm:px-6 lg:px-8 py-6 md:py-10",
-      className
-    )}>
-      {children}
+  return (
+    <div className={`min-h-screen flex flex-col ${className}`}>
+      {!hideNavigation && (
+        <>
+          {!isMobile && <Sidebar />}
+          {isMobile && <MobileNav />}
+        </>
+      )}
+      
+      <main className={`flex-1 container mx-auto px-4 pt-4 pb-20 ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}>
+        <AnimatePresence mode="wait">
+          {children}
+        </AnimatePresence>
+      </main>
     </div>
   );
-
-  if (animate) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        className="w-full"
-      >
-        {content}
-      </motion.div>
-    );
-  }
-
-  return content;
 };
 
 export default Layout;

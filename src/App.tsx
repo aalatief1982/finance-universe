@@ -1,6 +1,7 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import ExpenseTrackerWireframes from './components/wireframes/ExpenseTrackerWireframes';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
@@ -38,7 +39,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function AppRoutes() {
   const { auth, user } = useUser();
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Redirect to dashboard if user is authenticated and on home page
     if (auth.isAuthenticated && window.location.pathname === '/') {
       window.location.href = '/dashboard';
@@ -106,15 +107,17 @@ function App() {
     <ErrorBoundary>
       <UserProvider>
         <TransactionProvider>
-          <Router>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <div className="flex-1">
-                <AppRoutes />
+          <MotionConfig reducedMotion="user">
+            <Router>
+              <div className="min-h-screen flex flex-col">
+                <Header />
+                <div className="flex-1">
+                  <AppRoutes />
+                </div>
               </div>
-            </div>
-            <Toaster />
-          </Router>
+              <Toaster />
+            </Router>
+          </MotionConfig>
         </TransactionProvider>
       </UserProvider>
     </ErrorBoundary>
