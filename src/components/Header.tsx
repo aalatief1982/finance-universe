@@ -33,6 +33,7 @@ import {
 
 interface HeaderProps {
   className?: string;
+  showNavigation?: boolean; // New prop to control navigation visibility
 }
 
 // Map routes to their corresponding titles - similar to WireframeHeader
@@ -57,9 +58,9 @@ const routeTitleMap: Record<string, string> = {
   '/wireframes/sms-transaction': 'SMS Transaction',
 };
 
-const Header = ({ className }: HeaderProps) => {
+const Header = ({ className, showNavigation = true }: HeaderProps) => {
   const location = useLocation();
-  const { user, logOut } = useUser();
+  const { user, logOut, auth } = useUser();
   
   // Get the current page title from the route map
   const currentPageTitle = routeTitleMap[location.pathname] || 'Xpensia';
@@ -69,6 +70,9 @@ const Header = ({ className }: HeaderProps) => {
   
   // Don't show full header with navigation on sign in/sign up pages
   const isAuthPage = location.pathname === '/signin' || location.pathname === '/signup';
+  
+  // Determine if navigation should be shown based on props and other conditions
+  const shouldShowNavigation = showNavigation && !isAuthPage && !isLandingPage && auth.isAuthenticated;
   
   if (isAuthPage) {
     return (
@@ -96,8 +100,8 @@ const Header = ({ className }: HeaderProps) => {
     );
   }
   
-  // Navigation items - only show non-auth pages if not on landing page
-  const navItems = !isLandingPage ? [
+  // Navigation items - only show if navigation should be displayed
+  const navItems = shouldShowNavigation ? [
     { title: 'Dashboard', path: '/dashboard', icon: Home, description: 'Overview of your finances' },
     { title: 'Analytics', path: '/analytics', icon: PieChart, description: 'Detailed reports and charts' },
     { title: 'Transactions', path: '/transactions', icon: List, description: 'View and manage your transactions' },
@@ -127,7 +131,7 @@ const Header = ({ className }: HeaderProps) => {
         Sign Up
       </Link>
     </div>
-  ) : (
+  ) : auth.isAuthenticated ? (
     <nav className="hidden md:block">
       <NavigationMenu>
         <NavigationMenuList>
@@ -179,7 +183,7 @@ const Header = ({ className }: HeaderProps) => {
         </NavigationMenuList>
       </NavigationMenu>
     </nav>
-  );
+  ) : null;
 
   return (
     <header className={cn(
@@ -242,7 +246,7 @@ const Header = ({ className }: HeaderProps) => {
             {authLinks}
             
             {/* Mobile Navigation */}
-            {!isLandingPage && !isAuthPage && (
+            {shouldShowNavigation && mobileNavItems.length > 0 && (
               <div className="md:hidden">
                 <Sheet>
                   <SheetTrigger asChild>
@@ -254,7 +258,7 @@ const Header = ({ className }: HeaderProps) => {
                     <SheetHeader className="border-b pb-4 mb-4">
                       <SheetTitle className="flex items-center">
                         <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mr-2">
-                          <span className="text-white font-semibold text-lg">E</span>
+                          <span className="text-white font-semibold text-lg">X</span>
                         </div>
                         <span>{currentPageTitle}</span>
                       </SheetTitle>
@@ -299,16 +303,18 @@ const Header = ({ className }: HeaderProps) => {
                         ))}
                       </nav>
                       
-                      <div className="mt-8 pt-4 border-t">
-                        <Button 
-                          variant="destructive" 
-                          className="w-full justify-start" 
-                          onClick={logOut}
-                        >
-                          <LogOut size={18} className="mr-2" />
-                          Log out
-                        </Button>
-                      </div>
+                      {user && (
+                        <div className="mt-8 pt-4 border-t">
+                          <Button 
+                            variant="destructive" 
+                            className="w-full justify-start" 
+                            onClick={logOut}
+                          >
+                            <LogOut size={18} className="mr-2" />
+                            Log out
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </SheetContent>
                 </Sheet>
