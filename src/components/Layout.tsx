@@ -9,14 +9,14 @@ interface LayoutProps {
   children: React.ReactNode;
   hideNavigation?: boolean;
   className?: string;
-  withPadding?: boolean; // Add the missing prop
+  withPadding?: boolean; // Add the withPadding prop
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
   hideNavigation = false,
   className = '',
-  withPadding = true // Add default value for the new prop
+  withPadding = true // Default to true
 }) => {
   const isMobile = useIsMobile();
   
