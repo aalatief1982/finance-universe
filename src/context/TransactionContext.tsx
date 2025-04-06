@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { validateData, transactionSchema } from '@/lib/validation';
 import { handleError, handleValidationError } from '@/utils/error-utils';
 import { ErrorType } from '@/types/error';
+import { SupportedCurrency } from '@/types/locale';
 
 interface TransactionContextType {
   transactions: Transaction[];
@@ -70,7 +71,13 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         return null;
       }
       
-      const newTransaction = transactionService.addTransaction(transaction);
+      // Type assertion to ensure currency is properly typed
+      const typedTransaction = {
+        ...transaction,
+        currency: transaction.currency as SupportedCurrency | undefined
+      };
+      
+      const newTransaction = transactionService.addTransaction(typedTransaction);
       setTransactions(prev => [newTransaction, ...prev]);
       
       toast({
@@ -99,10 +106,16 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         throw new Error(`Transaction with id ${id} not found`);
       }
       
+      // Ensure currency is properly typed
+      const typedUpdates = {
+        ...updates,
+        currency: updates.currency as SupportedCurrency | undefined
+      };
+      
       // Create the merged transaction for validation
       const mergedTransaction = {
         ...existingTransaction,
-        ...updates
+        ...typedUpdates
       };
       
       // Validate the merged transaction
@@ -116,7 +129,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         return null;
       }
       
-      const updatedTransaction = transactionService.updateTransaction(id, updates);
+      const updatedTransaction = transactionService.updateTransaction(id, typedUpdates);
       
       if (updatedTransaction) {
         setTransactions(prev => 
@@ -191,7 +204,13 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       const validTransactions: Transaction[] = [];
       
       for (const transaction of extractedTransactions) {
-        const validationResult = validateData(transactionSchema, transaction);
+        // Ensure currency is properly typed
+        const typedTransaction = {
+          ...transaction,
+          currency: transaction.currency as SupportedCurrency | undefined
+        };
+        
+        const validationResult = validateData(transactionSchema, typedTransaction);
         
         if (validationResult.success) {
           validTransactions.push(validationResult.data);

@@ -105,7 +105,13 @@ export const getStoredTransactions = (): Transaction[] => {
     
     if (Array.isArray(parsedData)) {
       parsedData.forEach((item, index) => {
-        const validationResult = validateData(transactionSchema, item);
+        // Ensure currency is properly typed
+        const typedItem = {
+          ...item,
+          currency: item.currency as SupportedCurrency | undefined
+        };
+        
+        const validationResult = validateData(transactionSchema, typedItem);
         
         if (validationResult.success) {
           // If validation succeeded, add to valid transactions
@@ -157,10 +163,16 @@ export const storeTransaction = (transaction: Transaction): void => {
     const transactions = getStoredTransactions();
     const existingIndex = transactions.findIndex(t => t.id === transaction.id);
     
+    // Ensure currency is properly typed
+    const typedTransaction = {
+      ...transaction,
+      currency: transaction.currency as SupportedCurrency | undefined
+    };
+    
     if (existingIndex >= 0) {
-      transactions[existingIndex] = transaction;
+      transactions[existingIndex] = typedTransaction;
     } else {
-      transactions.unshift(transaction);
+      transactions.unshift(typedTransaction);
     }
     
     storeTransactions(transactions);
