@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -49,7 +50,8 @@ const SignUp = () => {
           phone: values.phoneNumber,
           phoneVerified: false,
           fullName: '',
-          completedOnboarding: false
+          completedOnboarding: false,
+          registrationStarted: true // Mark registration as started
         });
         
         toast({

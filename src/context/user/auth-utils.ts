@@ -216,6 +216,10 @@ export const startPhoneVerification = async (
       });
       setIsLoading(false);
       updateAuthState();
+      // Make sure we're storing the session expiry time in localStorage
+      const sessionExpiryTime = Date.now() + getVerificationSessionTimeout();
+      localStorage.setItem('verificationSessionExpiry', sessionExpiryTime.toString());
+      localStorage.setItem('verificationPhoneNumber', phoneNumber);
       return true;
     }
   } catch (error) {

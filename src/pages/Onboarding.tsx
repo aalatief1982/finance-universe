@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
@@ -18,7 +19,7 @@ const Onboarding = () => {
     }
   }, [user, navigate]);
   
-  // Redirect to signup if no user exists
+  // Redirect to signup if no user exists or user hasn't started registration
   useEffect(() => {
     if (!auth.isAuthenticated && !user && !auth.isVerifying) {
       toast({
@@ -29,6 +30,22 @@ const Onboarding = () => {
       navigate('/signup');
     }
   }, [auth.isAuthenticated, auth.isVerifying, user, navigate, toast]);
+  
+  // Make sure phone is verified before allowing onboarding to proceed further
+  useEffect(() => {
+    if (user && !user.phoneVerified && !auth.isVerifying) {
+      // If they've started registration but haven't verified their phone,
+      // let them continue through onboarding which will force the verification screen
+      if (!user.registrationStarted) {
+        toast({
+          title: "Phone verification required",
+          description: "Please verify your phone number to continue.",
+          variant: "destructive"
+        });
+        navigate('/signup');
+      }
+    }
+  }, [user, auth.isVerifying, navigate, toast]);
   
   const handleOnboardingComplete = () => {
     // Mark onboarding as complete

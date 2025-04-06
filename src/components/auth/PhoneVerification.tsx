@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,6 +12,7 @@ import {
 } from '@/lib/supabase-auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Progress } from '@/components/ui/progress';
+import { KeyboardEvent } from 'react';
 
 interface PhoneVerificationProps {
   onVerificationComplete?: () => void;
@@ -44,7 +45,23 @@ const PhoneVerification = ({
         handleSendCode();
       }
     }
-  }, [user, hidePhoneInput]);
+    
+    // Check if there's an active verification session
+    const sessionExpiry = localStorage.getItem('verificationSessionExpiry');
+    if (sessionExpiry) {
+      const expiry = parseInt(sessionExpiry, 10);
+      // If session is still valid, show verification code input
+      if (Date.now() < expiry) {
+        setIsVerificationSent(true);
+        
+        // If we have a phone from localStorage and none from user
+        const storedPhone = localStorage.getItem('verificationPhoneNumber');
+        if (storedPhone && !phoneNumber) {
+          setPhoneNumber(storedPhone);
+        }
+      }
+    }
+  }, [user, hidePhoneInput, phoneNumber]);
 
   // Update timer when verification is sent
   useEffect(() => {
@@ -61,6 +78,7 @@ const PhoneVerification = ({
           clearInterval(timerId!);
           setError('Verification session has expired. Please request a new code.');
           setErrorType('auth');
+          setIsVerificationSent(false);
           toast({
             title: 'Session Expired',
             description: 'Your verification session has timed out. Please request a new code.',
@@ -257,8 +275,33 @@ const PhoneVerification = ({
     handleSendCode();
   };
 
+  // Handle Enter key press for phone input 
+  const handlePhoneKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !isLoading && !isVerificationSent) {
+      e.preventDefault();
+      handleSendCode();
+    }
+  };
+
+  // Handle keydown events for more accessible verification code submission
+  const handleCodeKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    // If all digits are filled and user presses Enter, submit the code
+    if (e.key === 'Enter' && verificationCode.length === 4 && !isLoading) {
+      e.preventDefault();
+      handleVerifyCode();
+    }
+  };
+
+  // For screen readers to announce status changes
+  const getAriaLiveText = () => {
+    if (isLoading) return 'Loading, please wait...';
+    if (success) return success;
+    if (error) return error;
+    return '';
+  };
+
   return (
-    <Card>
+    <Card role="region" aria-label="Phone verification form">
       <CardHeader>
         <CardTitle className="text-xl">Phone Verification</CardTitle>
         <CardDescription>
@@ -270,8 +313,8 @@ const PhoneVerification = ({
       <CardContent>
         {/* Success Message */}
         {success && (
-          <Alert className="mb-4 bg-green-50 border-green-200">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <Alert className="mb-4 bg-green-50 border-green-200" role="status" aria-live="polite">
+            <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />
             <AlertTitle className="text-green-800">Success</AlertTitle>
             <AlertDescription className="text-green-700">{success}</AlertDescription>
           </Alert>
@@ -279,18 +322,23 @@ const PhoneVerification = ({
         
         {/* Error Message */}
         {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
+          <Alert variant="destructive" className="mb-4" role="alert" aria-live="assertive">
+            <AlertCircle className="h-4 w-4" aria-hidden="true" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
         
+        {/* Hidden status for screen readers */}
+        <div aria-live="polite" className="sr-only">
+          {getAriaLiveText()}
+        </div>
+        
         {!isVerificationSent ? (
           <div className="space-y-4">
             {!hidePhoneInput && (
               <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
+                <label htmlFor="phone" className="text-sm font-medium" id="phone-label">Phone Number</label>
                 <div className="relative">
                   <Input
                     id="phone"
@@ -298,23 +346,37 @@ const PhoneVerification = ({
                     placeholder="+1234567890"
                     value={phoneNumber}
                     onChange={handlePhoneChange}
+                    onKeyDown={handlePhoneKeyDown}
                     className={error && errorType === 'validation' ? "border-red-300 focus-visible:ring-red-400" : ""}
+                    aria-labelledby="phone-label"
+                    aria-describedby="phone-hint phone-error"
+                    aria-invalid={error && errorType === 'validation' ? 'true' : 'false'}
+                    autoComplete="tel"
                   />
                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <Phone className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p id="phone-hint" className="text-xs text-muted-foreground">
                   Include country code (e.g., +1 for US)
                 </p>
                 
                 {phoneNumber && !phoneNumber.startsWith('+') && (
-                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded p-2 text-xs">
+                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded p-2 text-xs" 
+                       id="phone-format-hint"
+                       role="note"
+                       aria-live="polite">
                     <p className="font-medium text-amber-700">International Format Required</p>
                     <p className="text-amber-600">
                       Example: +1 for US/Canada, +44 for UK, +61 for Australia
                     </p>
                   </div>
+                )}
+                
+                {error && errorType === 'validation' && (
+                  <p id="phone-error" className="text-xs text-red-500" aria-live="assertive">
+                    {error}
+                  </p>
                 )}
               </div>
             )}
@@ -322,11 +384,13 @@ const PhoneVerification = ({
               className="w-full"
               onClick={handleSendCode}
               disabled={isLoading}
+              aria-busy={isLoading}
+              aria-describedby={hidePhoneInput ? '' : 'phone-hint'}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span>Sending...</span>
                 </>
               ) : (
                 'Send Verification Code'
@@ -336,9 +400,14 @@ const PhoneVerification = ({
         ) : (
           <div className="space-y-4">
             {/* Session timer indicator */}
-            <div className="mb-4 border rounded-lg p-3 bg-gray-50">
+            <div 
+              className="mb-4 border rounded-lg p-3 bg-gray-50" 
+              role="timer" 
+              aria-label={`Session expires in ${formatTime(timeRemaining)}`}
+              aria-live="polite"
+            >
               <div className="flex items-center space-x-2">
-                <Clock className={`h-4 w-4 ${getTimeWarningColor()}`} />
+                <Clock className={`h-4 w-4 ${getTimeWarningColor()}`} aria-hidden="true" />
                 <span className={`text-sm font-medium ${getTimeWarningColor()}`}>
                   Session expires in: {formatTime(timeRemaining)}
                 </span>
@@ -348,13 +417,25 @@ const PhoneVerification = ({
                   value={getTimeoutProgress()} 
                   className="h-2" 
                   indicatorClassName={getProgressColor()}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={getTimeoutProgress()}
+                  aria-label={`${getTimeoutProgress()}% time remaining`}
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="code" className="text-sm font-medium">Verification Code</label>
-              <div className="flex justify-center py-2">
+              <label htmlFor="code" className="text-sm font-medium" id="code-label">
+                Verification Code
+              </label>
+              <div 
+                className="flex justify-center py-2"
+                onKeyDown={handleCodeKeyDown}
+                role="group"
+                aria-labelledby="code-label"
+                tabIndex={0}
+              >
                 <InputOTP
                   maxLength={4}
                   value={verificationCode}
@@ -367,6 +448,7 @@ const PhoneVerification = ({
                           index={index} 
                           {...slot} 
                           className={error ? "border-red-300" : success ? "border-green-300" : ""}
+                          aria-label={`Digit ${index + 1}`}
                         />
                       ))}
                     </InputOTPGroup>
@@ -375,17 +457,21 @@ const PhoneVerification = ({
               </div>
               
               <div className="flex justify-between">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground" id="code-hint">
                   Enter the 4-digit code sent to {hidePhoneInput ? user?.phone : phoneNumber}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Attempts remaining: {attemptsRemaining}
+                <p className="text-xs text-muted-foreground" aria-live="polite">
+                  Attempts remaining: <span aria-label={`${attemptsRemaining} attempts remaining`}>{attemptsRemaining}</span>
                 </p>
               </div>
             </div>
             
             {/* Demo Info */}
-            <Alert className="bg-amber-50 border-amber-200">
+            <Alert 
+              className="bg-amber-50 border-amber-200" 
+              role="note"
+              aria-label="Demo information"
+            >
               <AlertDescription className="text-amber-800 text-sm">
                 For this demo, please use code: <span className="font-bold">1234</span>
               </AlertDescription>
@@ -395,16 +481,18 @@ const PhoneVerification = ({
               className={`w-full ${success ? 'bg-green-600 hover:bg-green-700' : ''}`}
               onClick={handleVerifyCode}
               disabled={isLoading || timeRemaining <= 0}
+              aria-busy={isLoading}
+              aria-describedby="code-hint"
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <span>Verifying...</span>
                 </>
               ) : success ? (
                 <>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Verified!
+                  <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  <span>Verified!</span>
                 </>
               ) : (
                 'Verify Code'
@@ -416,7 +504,11 @@ const PhoneVerification = ({
       {isVerificationSent && (
         <CardFooter className="flex justify-between">
           {!hidePhoneInput && (
-            <Button variant="ghost" onClick={() => setIsVerificationSent(false)}>
+            <Button 
+              variant="ghost" 
+              onClick={() => setIsVerificationSent(false)}
+              aria-label="Change phone number"
+            >
               Change Phone Number
             </Button>
           )}
@@ -425,6 +517,8 @@ const PhoneVerification = ({
             onClick={handleResendCode} 
             disabled={isLoading || timeRemaining > 0}
             className={hidePhoneInput ? "ml-auto" : ""}
+            aria-label="Resend verification code"
+            aria-disabled={isLoading || timeRemaining > 0}
           >
             Resend Code
           </Button>

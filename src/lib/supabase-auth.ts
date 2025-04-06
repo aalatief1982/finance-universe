@@ -3,8 +3,8 @@ import { ErrorType, AppError, ErrorSeverity } from '@/types/error';
 import { handleError, createError } from '@/utils/error-utils';
 import { ENABLE_SUPABASE_AUTH } from './env';
 
-// Session timeout in milliseconds (15 minutes)
-const SESSION_TIMEOUT = 15 * 60 * 1000;
+// Session timeout in milliseconds (30 minutes instead of 15)
+const SESSION_TIMEOUT = 30 * 60 * 1000;
 // Maximum verification attempts
 const MAX_VERIFICATION_ATTEMPTS = 5;
 
@@ -78,6 +78,10 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
       };
     }
     
+    // Store the session expiry time in localStorage to persist across page reloads
+    localStorage.setItem('verificationSessionExpiry', verificationState.sessionExpiryTime.toString());
+    localStorage.setItem('verificationPhoneNumber', phoneNumber);
+    
     return { success: true };
   } catch (error) {
     const appError = createError(
@@ -97,6 +101,18 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
  * @returns Boolean indicating if session is valid
  */
 export const isVerificationSessionValid = (): boolean => {
+  // Check if there's a stored session expiry time
+  const storedExpiryTime = localStorage.getItem('verificationSessionExpiry');
+  if (storedExpiryTime) {
+    verificationState.sessionExpiryTime = parseInt(storedExpiryTime, 10);
+    
+    // Also restore the phone number if available
+    const storedPhoneNumber = localStorage.getItem('verificationPhoneNumber');
+    if (storedPhoneNumber) {
+      verificationState.phoneNumber = storedPhoneNumber;
+    }
+  }
+  
   return Date.now() < verificationState.sessionExpiryTime;
 };
 
@@ -160,6 +176,10 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
         };
       }
       
+      // Clear session data on successful verification
+      localStorage.removeItem('verificationSessionExpiry');
+      localStorage.removeItem('verificationPhoneNumber');
+      
       return { success: true };
     }
     
@@ -179,6 +199,10 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
           )
         };
       }
+      
+      // Clear session data on successful verification
+      localStorage.removeItem('verificationSessionExpiry');
+      localStorage.removeItem('verificationPhoneNumber');
       
       return { success: true };
     }
@@ -203,6 +227,10 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
       };
     }
     
+    // Clear session data on successful verification
+    localStorage.removeItem('verificationSessionExpiry');
+    localStorage.removeItem('verificationPhoneNumber');
+    
     return { success: true };
   } catch (error) {
     const appError = createError(
@@ -224,6 +252,12 @@ export const resetVerificationSession = (): void => {
   verificationState.attempts = 0;
   verificationState.startTime = Date.now();
   verificationState.sessionExpiryTime = Date.now() + SESSION_TIMEOUT;
+  
+  // Update localStorage
+  localStorage.setItem('verificationSessionExpiry', verificationState.sessionExpiryTime.toString());
+  if (verificationState.phoneNumber) {
+    localStorage.setItem('verificationPhoneNumber', verificationState.phoneNumber);
+  }
 };
 
 /**

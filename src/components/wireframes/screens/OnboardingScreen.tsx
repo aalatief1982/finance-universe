@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WelcomeScreen from './onboarding/WelcomeScreen';
@@ -23,11 +24,17 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Reset onboarding to step 0 when component mounts
+  // Determine initial step based on verification status
   useEffect(() => {
-    // Check if user already completed onboarding
+    // If user already completed onboarding, redirect to dashboard
     if (user && user.completedOnboarding) {
       navigate('/dashboard');
+      return;
+    }
+    
+    // Check if phone is verified - if not, force the phone verification step first
+    if (user && !user.phoneVerified) {
+      setStep(4); // Jump directly to phone verification step
     }
   }, [user, navigate]);
   
@@ -44,7 +51,13 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   };
   
   const handleFinalScreenComplete = () => {
-    setStep(4);
+    // Only proceed to phone verification if needed (unlikely to hit this path now)
+    if (user && !user.phoneVerified) {
+      setStep(4);
+    } else {
+      // Skip to profile creation
+      setStep(5);
+    }
   };
   
   const handlePhoneVerificationComplete = () => {
@@ -120,6 +133,11 @@ const OnboardingScreen = ({ onNext, userData, onUpdateUserData }: OnboardingScre
   };
   
   const renderCurrentStep = () => {
+    // If we need verification and it's not the verification step, force it
+    if (user && !user.phoneVerified && step !== 4) {
+      return <PhoneVerificationScreen onNext={handlePhoneVerificationComplete} />;
+    }
+    
     switch (step) {
       case 0:
         return <WelcomeScreen onNext={handleWelcomeComplete} />;
