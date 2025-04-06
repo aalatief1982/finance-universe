@@ -18,7 +18,7 @@ export type Transaction = z.infer<typeof transactionSchema> & {
   exchangeRate?: number;
   fromAccount?: string;
   toAccount?: string;
-  subcategory?: string; // Explicitly defined subcategory field
+  subcategory?: string; // Subcategory field explicitly defined
   currency?: string; // String type for currency
   description?: string;
   person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | 'none' | null;

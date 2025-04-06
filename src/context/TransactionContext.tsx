@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { transactionService } from '@/services/TransactionService';
 import { Transaction } from '@/types/transaction';
@@ -72,7 +71,9 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Ensure transaction is properly typed without forced casting
       const typedTransaction = {
         ...transaction,
-        person: transaction.person === 'none' ? null : transaction.person
+        person: transaction.person === 'none' ? null : transaction.person,
+        // Include subcategory if it exists
+        subcategory: transaction.subcategory || undefined
       };
       
       const newTransaction = transactionService.addTransaction(typedTransaction);
@@ -108,7 +109,11 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Ensure fromAccount is included without forced casting
       const typedUpdates = {
         ...updates,
-        fromAccount: updates.fromAccount || existingTransaction.fromAccount || "Cash" // Provide a default
+        fromAccount: updates.fromAccount || existingTransaction.fromAccount || "Cash", // Provide a default
+        // Include subcategory in updates
+        subcategory: updates.subcategory || existingTransaction.subcategory,
+        // Handle person field
+        person: updates.person === 'none' ? null : updates.person
       };
       
       // Create the merged transaction for validation

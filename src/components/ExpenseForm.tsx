@@ -88,7 +88,7 @@ const ExpenseForm = ({
     toAccount: "",
     description: "",
     notes: "",
-    person: undefined,
+    person: "none", // Set default to "none" instead of undefined
     currency: "SAR",
   },
   onCancel,
@@ -166,7 +166,7 @@ const ExpenseForm = ({
   };
 
   const handleSubmit = (values: FormValues) => {
-    // If type is expense, make amount negative (only for display - actual handling in service)
+    // Include subcategory in the submitted values
     onSubmit(values);
     form.reset();
   };
@@ -454,7 +454,7 @@ const ExpenseForm = ({
                   />
                 )}
                 
-                {/* Date - Always shown */}
+                {/* Date - Show in the grid if subcategory is not shown */}
                 {!selectedCategory || !availableSubcategories.length ? (
                   <FormField
                     control={form.control}
