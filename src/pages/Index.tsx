@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -29,12 +28,9 @@ const Index = () => {
           <p className="text-xl text-muted-foreground mb-8">
             Every expense has a story. We help you see where your money goes and why.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button size="lg" asChild>
-              <Link to="/signup">Create Account</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/signin">Sign In</Link>
+              <Link to="/signup">Register</Link>
             </Button>
           </div>
           

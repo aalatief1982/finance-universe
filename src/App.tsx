@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
@@ -30,7 +29,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!auth.isAuthenticated) {
-    return <Navigate to="/signin" />;
+    return <Navigate to="/signup" />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Public route component that redirects to dashboard if user is authenticated
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { auth, user } = useUser();
+  
+  if (auth.isLoading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  if (auth.isAuthenticated) {
+    return <Navigate to="/dashboard" />;
   }
   
   return <>{children}</>;
@@ -50,9 +64,24 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/wireframes" element={<ExpenseTrackerWireframes />} />
-      <Route path="/signin" element={<SignIn />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/onboarding" element={<Onboarding />} />
+      
+      <Route path="/signin" element={
+        <PublicRoute>
+          <SignIn />
+        </PublicRoute>
+      } />
+      
+      <Route path="/signup" element={
+        <PublicRoute>
+          <SignUp />
+        </PublicRoute>
+      } />
+      
+      <Route path="/onboarding" element={
+        <PublicRoute>
+          <Onboarding />
+        </PublicRoute>
+      } />
       
       <Route path="/dashboard" element={
         <ProtectedRoute>
@@ -60,6 +89,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
+      {/* Other protected routes remain the same */}
       <Route path="/transactions" element={
         <ProtectedRoute>
           <Transactions />

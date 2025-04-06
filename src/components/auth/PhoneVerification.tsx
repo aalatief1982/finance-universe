@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/UserContext';
@@ -11,23 +10,39 @@ import {
   getVerificationSessionTimeRemaining,
   getVerificationAttemptsRemaining 
 } from '@/lib/supabase-auth';
-import { handleError } from '@/utils/error-utils';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 interface PhoneVerificationProps {
   onVerificationComplete?: () => void;
+  hidePhoneInput?: boolean;
 }
 
-const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+const PhoneVerification = ({ 
+  onVerificationComplete,
+  hidePhoneInput = false 
+}: PhoneVerificationProps) => {
+  const { user, startPhoneVerification, confirmPhoneVerification, auth } = useUser();
+  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '');
   const [verificationCode, setVerificationCode] = useState('');
-  const [isVerificationSent, setIsVerificationSent] = useState(false);
+  const [isVerificationSent, setIsVerificationSent] = useState(!!user?.phone);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [attemptsRemaining, setAttemptsRemaining] = useState(5);
-  const { startPhoneVerification, confirmPhoneVerification } = useUser();
   const { toast } = useToast();
+
+  // Initialize with phone number from user context if available
+  useEffect(() => {
+    if (user?.phone) {
+      setPhoneNumber(user.phone);
+      
+      // If coming from signup flow, automatically trigger verification
+      if (hidePhoneInput && !user.phoneVerified) {
+        handleSendCode();
+      }
+    }
+  }, [user, hidePhoneInput]);
 
   // Update timer when verification is sent
   useEffect(() => {
@@ -66,7 +81,10 @@ const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) =
   };
 
   const handleSendCode = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
+    // If phone number is already saved and we're hiding input, use it directly
+    const phoneToVerify = hidePhoneInput ? user?.phone || phoneNumber : phoneNumber;
+    
+    if (!phoneToVerify || phoneToVerify.length < 10) {
       setError('Please enter a valid phone number');
       toast({
         title: 'Invalid phone number',
@@ -79,7 +97,7 @@ const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) =
     setIsLoading(true);
     setError('');
     try {
-      const success = await startPhoneVerification(phoneNumber);
+      const success = await startPhoneVerification(phoneToVerify);
       
       if (success) {
         setIsVerificationSent(true);
@@ -97,7 +115,7 @@ const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) =
         throw new Error('Failed to send verification code');
       }
     } catch (err) {
-      handleError(err);
+      console.error('Error sending code:', err);
       setError('Failed to send code. Please check your phone number and try again.');
       toast({
         title: 'Failed to send code',
@@ -149,14 +167,13 @@ const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) =
         }
       } else {
         // Update attempts remaining
-        const remaining = getVerificationAttemptsRemaining();
-        setAttemptsRemaining(remaining);
+        setAttemptsRemaining(getVerificationAttemptsRemaining());
         
         // Show error message with attempts remaining
-        throw new Error(`Invalid verification code. ${remaining} attempts remaining.`);
+        throw new Error(`Invalid verification code. ${attemptsRemaining} attempts remaining.`);
       }
     } catch (err) {
-      handleError(err);
+      console.error('Verification error:', err);
       setVerificationCode('');
       setError(`Invalid code. ${attemptsRemaining} attempts remaining.`);
       toast({
@@ -206,20 +223,22 @@ const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) =
         
         {!isVerificationSent ? (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1234567890"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className={error ? "border-red-300 focus-visible:ring-red-400" : ""}
-              />
-              <p className="text-xs text-muted-foreground">
-                Include country code (e.g., +1 for US)
-              </p>
-            </div>
+            {!hidePhoneInput && (
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+1234567890"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className={error ? "border-red-300 focus-visible:ring-red-400" : ""}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Include country code (e.g., +1 for US)
+                </p>
+              </div>
+            )}
             <Button
               className="w-full"
               onClick={handleSendCode}
@@ -246,19 +265,25 @@ const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) =
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="code">Verification Code</Label>
-              <Input
-                id="code"
-                type="text"
-                placeholder="1234"
-                maxLength={4}
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                className={error ? "border-red-300 focus-visible:ring-red-400" : ""}
-              />
+              <label htmlFor="code" className="text-sm font-medium">Verification Code</label>
+              <div className="flex justify-center py-2">
+                <InputOTP
+                  maxLength={4}
+                  value={verificationCode}
+                  onChange={setVerificationCode}
+                  render={({ slots }) => (
+                    <InputOTPGroup>
+                      {slots.map((slot, index) => (
+                        <InputOTPSlot key={index} index={index} {...slot} />
+                      ))}
+                    </InputOTPGroup>
+                  )}
+                />
+              </div>
+              
               <div className="flex justify-between">
                 <p className="text-xs text-muted-foreground">
-                  Enter the 4-digit code sent to {phoneNumber}
+                  Enter the 4-digit code sent to {hidePhoneInput ? user?.phone : phoneNumber}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Attempts remaining: {attemptsRemaining}
@@ -292,13 +317,16 @@ const PhoneVerification = ({ onVerificationComplete }: PhoneVerificationProps) =
       </CardContent>
       {isVerificationSent && (
         <CardFooter className="flex justify-between">
-          <Button variant="ghost" onClick={() => setIsVerificationSent(false)}>
-            Change Phone Number
-          </Button>
+          {!hidePhoneInput && (
+            <Button variant="ghost" onClick={() => setIsVerificationSent(false)}>
+              Change Phone Number
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             onClick={handleResendCode} 
             disabled={isLoading || timeRemaining > 0}
+            className={hidePhoneInput ? "ml-auto" : ""}
           >
             Resend Code
           </Button>

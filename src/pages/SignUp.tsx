@@ -1,20 +1,19 @@
-
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useUser } from '@/context/UserContext';
-import { Phone } from 'lucide-react';
+import { Phone, Loader2 } from 'lucide-react';
 
-// Modified schema to focus on phone number
+// Phone number validation schema
 const formSchema = z.object({
   phoneNumber: z.string()
     .min(10, 'Phone number must be at least 10 characters')
@@ -58,7 +57,7 @@ const SignUp = () => {
           description: 'Please enter the verification code sent to your phone.',
         });
         
-        // Navigate to the onboarding screen which will start with verification
+        // Navigate directly to the onboarding screen which will start with verification
         navigate('/onboarding');
       } else {
         toast({
@@ -79,7 +78,7 @@ const SignUp = () => {
   };
 
   return (
-    <Layout>
+    <Layout hideNavigation>
       <div className="flex min-h-[80vh] items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -89,7 +88,7 @@ const SignUp = () => {
         >
           <Card>
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+              <CardTitle className="text-2xl font-bold">Register</CardTitle>
               <CardDescription>
                 Enter your phone number to get started
               </CardDescription>
@@ -120,19 +119,18 @@ const SignUp = () => {
                     )}
                   />
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Sending verification code..." : "Continue"}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending verification code...
+                      </>
+                    ) : (
+                      "Continue"
+                    )}
                   </Button>
                 </form>
               </Form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <div className="text-sm text-muted-foreground text-center">
-                Already have an account?{' '}
-                <Link to="/signin" className="text-primary hover:underline">
-                  Sign in
-                </Link>
-              </div>
-            </CardFooter>
           </Card>
         </motion.div>
       </div>
