@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/context/UserContext';
 import WireframeContainer from '../WireframeContainer';
 import WelcomeScreen from './onboarding/WelcomeScreen';
 import SecondScreen from './onboarding/SecondScreen';
@@ -8,8 +10,6 @@ import FinalScreen from './onboarding/FinalScreen';
 import UserProfileScreen from './onboarding/UserProfileScreen';
 import PhoneVerificationScreen from './onboarding/PhoneVerificationScreen';
 import SmsProviderSelectionScreen from './onboarding/SmsProviderSelectionScreen';
-import { useUser } from '@/context/UserContext';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 
 interface OnboardingScreenProps {

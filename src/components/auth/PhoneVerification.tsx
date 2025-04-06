@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,7 +12,7 @@ import {
 } from '@/lib/supabase-auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Progress } from '@/components/ui/progress';
-import { KeyboardEvent } from 'react';
+import { cn } from '@/lib/utils';
 
 interface PhoneVerificationProps {
   onVerificationComplete?: () => void;
@@ -78,7 +78,6 @@ const PhoneVerification = ({
           clearInterval(timerId!);
           setError('Verification session has expired. Please request a new code.');
           setErrorType('auth');
-          setIsVerificationSent(false);
           toast({
             title: 'Session Expired',
             description: 'Your verification session has timed out. Please request a new code.',
@@ -126,8 +125,8 @@ const PhoneVerification = ({
   // Get progress percentage for timeout
   const getTimeoutProgress = () => {
     if (!timeRemaining) return 0;
-    // Assuming session timeout is 15 minutes (900,000 ms)
-    const totalDuration = 15 * 60 * 1000;
+    // Assuming session timeout is 30 minutes
+    const totalDuration = 30 * 60 * 1000;
     return Math.max(0, Math.min(100, (timeRemaining / totalDuration) * 100));
   };
 
@@ -416,7 +415,6 @@ const PhoneVerification = ({
                 <Progress 
                   value={getTimeoutProgress()} 
                   className="h-2" 
-                  indicatorClassName={getProgressColor()}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={getTimeoutProgress()}

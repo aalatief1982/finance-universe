@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -27,7 +27,18 @@ const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { updateUser, startPhoneVerification } = useUser();
+  const { user, updateUser, startPhoneVerification, auth } = useUser();
+
+  // If user is already authenticated and has completed onboarding, redirect to dashboard
+  useEffect(() => {
+    if (auth.isAuthenticated && user?.completedOnboarding) {
+      navigate('/dashboard');
+    }
+    // If user is authenticated but hasn't completed onboarding, redirect to onboarding
+    else if (auth.isAuthenticated && user && !user.completedOnboarding) {
+      navigate('/onboarding');
+    }
+  }, [auth.isAuthenticated, user, navigate]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -40,20 +51,22 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
+      const formattedPhone = values.phoneNumber.trim().replace(/\s+/g, '');
+      
+      // Create basic user profile with phone number first
+      updateUser({
+        id: `user_${Date.now()}`,
+        phone: formattedPhone,
+        phoneVerified: false,
+        fullName: '',
+        completedOnboarding: false,
+        registrationStarted: true // Mark registration as started
+      });
+      
       // Start phone verification process
-      const success = await startPhoneVerification(values.phoneNumber);
+      const success = await startPhoneVerification(formattedPhone);
       
       if (success) {
-        // Create basic user profile with phone number
-        updateUser({
-          id: `user_${Date.now()}`,
-          phone: values.phoneNumber,
-          phoneVerified: false,
-          fullName: '',
-          completedOnboarding: false,
-          registrationStarted: true // Mark registration as started
-        });
-        
         toast({
           title: 'Verification code sent',
           description: 'Please enter the verification code sent to your phone.',

@@ -168,6 +168,16 @@ export const checkSupabaseAuth = async (
 };
 
 /**
+ * Get verification session timeout value in milliseconds
+ * This should match the timeout value used in supabase-auth.ts
+ * @returns Timeout in milliseconds
+ */
+export const getVerificationSessionTimeout = (): number => {
+  // Using 30 minutes timeout (same as in supabase-auth.ts)
+  return 30 * 60 * 1000;
+};
+
+/**
  * Start phone verification
  * @param phoneNumber The phone number to verify
  * @param setIsLoading Function to set loading state
