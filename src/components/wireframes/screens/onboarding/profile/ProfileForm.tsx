@@ -1,12 +1,10 @@
 
-import React, { useState } from 'react';
-import { Calendar, Mail, Briefcase, User2 } from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface ProfileFormProps {
   fullName: string;
@@ -21,7 +19,7 @@ interface ProfileFormProps {
   setOccupation: (occupation: string) => void;
 }
 
-const ProfileForm = ({
+const ProfileForm: React.FC<ProfileFormProps> = ({
   fullName,
   setFullName,
   gender,
@@ -32,100 +30,77 @@ const ProfileForm = ({
   setEmail,
   occupation,
   setOccupation
-}: ProfileFormProps) => {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  
+}) => {
   return (
-    <div className="space-y-4">
+    <motion.div 
+      className="space-y-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.2, duration: 0.3 }}
+    >
       <div>
-        <Label htmlFor="full-name">Full Name</Label>
-        <Input
-          id="full-name"
-          placeholder="Enter your full name"
+        <Label htmlFor="fullName">Full Name <span className="text-red-500">*</span></Label>
+        <Input 
+          id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
+          placeholder="Enter your full name"
+          className="mt-1"
         />
       </div>
       
       <div>
-        <Label>Gender</Label>
-        <div className="flex space-x-2 mt-1">
-          <Button
-            type="button"
-            variant={gender === 'male' ? 'default' : 'outline'}
-            className="flex-1"
-            onClick={() => setGender('male')}
-          >
-            Male
-          </Button>
-          <Button
-            type="button"
-            variant={gender === 'female' ? 'default' : 'outline'}
-            className="flex-1"
-            onClick={() => setGender('female')}
-          >
-            Female
-          </Button>
-        </div>
+        <Label>Gender <span className="text-red-500">*</span></Label>
+        <RadioGroup 
+          value={gender || ''} 
+          onValueChange={(value) => setGender(value as 'male' | 'female')}
+          className="flex space-x-4 mt-1"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="male" id="male" />
+            <Label htmlFor="male" className="cursor-pointer">Male</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="female" id="female" />
+            <Label htmlFor="female" className="cursor-pointer">Female</Label>
+          </div>
+        </RadioGroup>
       </div>
       
       <div>
-        <Label htmlFor="birth-date">Birth Date</Label>
-        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              id="birth-date"
-              variant="outline"
-              className="w-full justify-start text-left font-normal mt-1"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              {birthDate ? format(birthDate, 'PPP') : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <CalendarComponent
-              mode="single"
-              selected={birthDate || undefined}
-              onSelect={(date) => {
-                setBirthDate(date);
-                setIsCalendarOpen(false);
-              }}
-              initialFocus
-              disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-      
-      <div>
-        <Label htmlFor="occupation">Occupation</Label>
-        <div className="flex items-center mt-1 relative">
-          <Briefcase className="w-4 h-4 text-muted-foreground absolute left-3" />
-          <Input
-            id="occupation"
-            placeholder="Enter your occupation"
-            className="pl-10"
-            value={occupation}
-            onChange={(e) => setOccupation(e.target.value)}
+        <Label htmlFor="birthDate">Date of Birth <span className="text-red-500">*</span></Label>
+        <div className="mt-1">
+          <DatePicker
+            date={birthDate}
+            setDate={setBirthDate}
+            placeholder="Select your birth date"
           />
         </div>
       </div>
       
       <div>
         <Label htmlFor="email">Email (Optional)</Label>
-        <div className="flex items-center mt-1 relative">
-          <Mail className="w-4 h-4 text-muted-foreground absolute left-3" />
-          <Input
-            id="email"
-            type="email"
-            placeholder="Enter your email"
-            className="pl-10"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+        <Input 
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email address"
+          className="mt-1"
+        />
       </div>
-    </div>
+      
+      <div>
+        <Label htmlFor="occupation">Occupation (Optional)</Label>
+        <Input 
+          id="occupation"
+          value={occupation}
+          onChange={(e) => setOccupation(e.target.value)}
+          placeholder="Enter your occupation"
+          className="mt-1"
+        />
+      </div>
+    </motion.div>
   );
 };
 

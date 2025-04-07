@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, MessageSquare, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { smsPermissionService } from '@/services/SmsPermissionService';
+import { Capacitor } from '@capacitor/core';
 
 interface SmsPermissionRequestProps {
   onGranted: () => void;
@@ -16,30 +17,59 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
   onDenied 
 }) => {
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if running on a native platform
+    setIsNative(Capacitor.isNativePlatform());
+    
+    // Check if permission is already granted
+    const checkExistingPermission = async () => {
+      if (Capacitor.isNativePlatform()) {
+        const hasPermission = await smsPermissionService.hasPermission();
+        if (hasPermission) {
+          onGranted();
+        }
+      }
+    };
+    
+    checkExistingPermission();
+  }, [onGranted]);
 
   const handleRequestPermission = async () => {
     setIsRequesting(true);
     
     try {
-      // In a real mobile app, this would use Capacitor or other APIs
-      const granted = await smsPermissionService.requestPermission();
-      
-      if (granted) {
+      // For native platforms, use the actual permission API
+      if (Capacitor.isNativePlatform()) {
+        const granted = await smsPermissionService.requestPermission();
+        
+        if (granted) {
+          toast({
+            title: "Permission granted",
+            description: "You've successfully granted SMS reading permission",
+          });
+          onGranted();
+        } else {
+          toast({
+            title: "Permission denied",
+            description: "SMS reading permission is required for automatic tracking",
+            variant: "destructive",
+          });
+          onDenied();
+        }
+      } else {
+        // For web development, simulate permission granting
+        await new Promise(resolve => setTimeout(resolve, 1000));
         toast({
-          title: "Permission granted",
-          description: "You've successfully granted SMS reading permission",
+          title: "Development mode",
+          description: "SMS permissions simulated in web environment",
         });
         onGranted();
-      } else {
-        toast({
-          title: "Permission denied",
-          description: "SMS reading permission is required for automatic tracking",
-          variant: "destructive",
-        });
-        onDenied();
       }
     } catch (error) {
+      console.error("Error requesting SMS permission:", error);
       toast({
         title: "Error requesting permission",
         description: "There was a problem requesting SMS permission",

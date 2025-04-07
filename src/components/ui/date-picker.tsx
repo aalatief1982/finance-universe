@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Capacitor } from '@capacitor/core';
 
 interface DatePickerProps {
   date: Date | null;
@@ -24,6 +25,34 @@ export function DatePicker({
   placeholder = "Pick a date",
   className,
 }: DatePickerProps) {
+  const isNative = Capacitor.isNativePlatform();
+
+  // Handle native date input for mobile devices
+  const handleNativeDateSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedDate = e.target.value ? new Date(e.target.value) : null;
+    setDate(selectedDate);
+  };
+
+  // For native platforms, use the native date input
+  if (isNative) {
+    return (
+      <div className={cn("relative", className)}>
+        <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <input
+          type="date"
+          className={cn(
+            "w-full pl-10 pr-3 py-2 border rounded-md font-normal",
+            !date && "text-muted-foreground"
+          )}
+          value={date ? format(date, "yyyy-MM-dd") : ""}
+          onChange={handleNativeDateSelect}
+          placeholder={placeholder}
+        />
+      </div>
+    );
+  }
+
+  // For web, use the Popover/Calendar component
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -39,12 +68,13 @@ export function DatePicker({
           {date ? format(date, "PPP") : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
         <Calendar
           mode="single"
           selected={date || undefined}
           onSelect={setDate}
           initialFocus
+          className="p-3 pointer-events-auto"
         />
       </PopoverContent>
     </Popover>

@@ -1,10 +1,10 @@
 
-import React from 'react';
-import { Camera, Upload, X, User2 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import React, { useState } from 'react';
+import { Camera, User, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
+import { Capacitor } from '@capacitor/core';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface ProfileImageUploaderProps {
   profileImage: string | null;
@@ -12,84 +12,146 @@ interface ProfileImageUploaderProps {
   fullName: string;
 }
 
-const ProfileImageUploader = ({ profileImage, setProfileImage, fullName }: ProfileImageUploaderProps) => {
+const ProfileImageUploader: React.FC<ProfileImageUploaderProps> = ({
+  profileImage,
+  setProfileImage,
+  fullName,
+}) => {
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
-  
-  const handleImageUpload = () => {
-    // In a real app, this would use native file picker
-    // For the wireframe, we'll use a placeholder image
-    setProfileImage('/placeholder.svg');
-    
-    toast({
-      title: "Image uploaded",
-      description: "Profile image has been updated"
-    });
+  const isNative = Capacitor.isNativePlatform();
+
+  const takePicture = async () => {
+    try {
+      if (!isNative) {
+        // Web fallback
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              setProfileImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+        input.click();
+        return;
+      }
+
+      // Native camera implementation
+      setIsUploading(true);
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        saveToGallery: false,
+      });
+
+      if (image.dataUrl) {
+        setProfileImage(image.dataUrl);
+      }
+    } catch (error) {
+      console.error('Error taking picture:', error);
+      toast({
+        title: 'Camera Error',
+        description: 'Failed to take picture. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
-  
-  const removeImage = () => {
-    setProfileImage(null);
+
+  const selectFromGallery = async () => {
+    try {
+      if (!isNative) {
+        // Web fallback
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              setProfileImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+        input.click();
+        return;
+      }
+
+      // Native photo library implementation
+      setIsUploading(true);
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Photos,
+      });
+
+      if (image.dataUrl) {
+        setProfileImage(image.dataUrl);
+      }
+    } catch (error) {
+      console.error('Error selecting from gallery:', error);
+      toast({
+        title: 'Gallery Error',
+        description: 'Failed to select image. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
-  
-  const getInitials = (name: string) => {
-    if (!name) return '';
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-  
+
   return (
     <div className="flex flex-col items-center">
-      <div className="relative mb-4">
+      <div 
+        className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-2 border-border mb-4 relative"
+      >
         {profileImage ? (
-          <div className="relative">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={profileImage} alt="Profile" />
-              <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                {getInitials(fullName) || <User2 className="h-10 w-10" />}
-              </AvatarFallback>
-            </Avatar>
-            <button 
-              className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full"
-              onClick={removeImage}
-            >
-              <X size={14} />
-            </button>
-          </div>
+          <img 
+            src={profileImage} 
+            alt="Profile" 
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <Avatar className="h-24 w-24">
-            <AvatarFallback className={cn(
-              "bg-primary/10 text-primary text-xl",
-              !fullName && "bg-muted"
-            )}>
-              {getInitials(fullName) || <User2 className="h-10 w-10 text-muted-foreground" />}
-            </AvatarFallback>
-          </Avatar>
+          <User className="h-12 w-12 text-muted-foreground" />
         )}
       </div>
       
-      <div className="flex space-x-2 mb-6">
+      <div className="flex gap-2">
         <Button 
-          size="sm" 
+          type="button" 
           variant="outline" 
-          className="flex items-center gap-1"
-          onClick={handleImageUpload}
+          size="sm"
+          onClick={takePicture}
+          disabled={isUploading}
         >
-          <Camera size={16} />
-          <span>Camera</span>
+          <Camera className="h-4 w-4 mr-2" />
+          {isNative ? 'Camera' : 'Upload'}
         </Button>
         
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="flex items-center gap-1"
-          onClick={handleImageUpload}
-        >
-          <Upload size={16} />
-          <span>Upload</span>
-        </Button>
+        {isNative && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm"
+            onClick={selectFromGallery}
+            disabled={isUploading}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Gallery
+          </Button>
+        )}
       </div>
     </div>
   );
