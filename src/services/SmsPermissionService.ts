@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 
 class SmsPermissionService {
   private permissionStatusKey = 'sms_permission_status';
+  private providersKey = 'sms_providers_selected';
 
   // Check if running on native platform
   isNativeEnvironment(): boolean {
@@ -19,6 +20,20 @@ class SmsPermissionService {
     
     const permissionStatus = localStorage.getItem(this.permissionStatusKey);
     return permissionStatus === 'granted';
+  }
+
+  // Check if SMS can be read (permission is granted)
+  canReadSms(): boolean {
+    return this.hasPermission();
+  }
+
+  // Check if user has selected SMS providers
+  hasProvidersSelected(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    const providers = localStorage.getItem(this.providersKey);
+    // If providers exist and is not an empty array
+    return !!providers && providers !== '[]';
   }
 
   // Request SMS permission
@@ -54,6 +69,13 @@ class SmsPermissionService {
   savePermissionStatus(granted: boolean): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem(this.permissionStatusKey, granted ? 'granted' : 'denied');
+    }
+  }
+
+  // Save selected providers status
+  saveProvidersStatus(hasProviders: boolean): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.providersKey, hasProviders ? 'true' : 'false');
     }
   }
 }
