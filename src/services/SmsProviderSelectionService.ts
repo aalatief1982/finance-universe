@@ -1,331 +1,122 @@
 
-import { ErrorType } from '@/types/error';
-import { handleError } from '@/utils/error-utils';
-import { Capacitor } from '@capacitor/core';
-
 export interface SmsProvider {
   id: string;
   name: string;
   pattern: string;
   isSelected: boolean;
-  isDetected?: boolean; // Field to track if provider was auto-detected
+  isDetected?: boolean;
 }
 
-export interface DetectedProvider {
-  id: string;
-  count: number;
-  lastSeen?: Date;
-}
-
-const SMS_PROVIDERS_STORAGE_KEY = 'sms_providers';
-const SMS_START_DATE_STORAGE_KEY = 'sms_start_date';
-const DETECTED_PROVIDERS_STORAGE_KEY = 'detected_sms_providers';
-
+// Mock service for SMS provider selection
 class SmsProviderSelectionService {
-  // Default provider templates - will be filled with actual detected providers
-  private defaultProviders: SmsProvider[] = [];
-  
-  // Get all available SMS providers - from actual detection
+  private providers: SmsProvider[] = [
+    { id: 'bank-alrajhi', name: 'Al Rajhi Bank', pattern: 'ALRAJHI', isSelected: false },
+    { id: 'bank-ncb', name: 'Saudi National Bank', pattern: 'SNB', isSelected: false },
+    { id: 'bank-riyadh', name: 'Riyad Bank', pattern: 'RIYADBANK', isSelected: false },
+    { id: 'bank-alinma', name: 'Alinma Bank', pattern: 'ALINMA', isSelected: false },
+    { id: 'bank-albilad', name: 'Bank Albilad', pattern: 'ALBILAD', isSelected: false },
+    { id: 'bank-nbe', name: 'National Bank of Egypt', pattern: 'NBE', isSelected: false },
+    { id: 'bank-cib', name: 'Commercial International Bank', pattern: 'CIB', isSelected: false },
+    { id: 'bank-sbi', name: 'State Bank of India', pattern: 'SBI', isSelected: false },
+    { id: 'payment-stcpay', name: 'STC Pay', pattern: 'STCPAY', isSelected: false },
+    { id: 'payment-paypal', name: 'PayPal', pattern: 'PAYPAL', isSelected: false },
+  ];
+
+  private smsStartDate: string | null = null;
+
+  // Get all providers
   getSmsProviders(): SmsProvider[] {
-    try {
-      const storedProviders = localStorage.getItem(SMS_PROVIDERS_STORAGE_KEY);
-      if (!storedProviders) {
-        return this.defaultProviders;
-      }
-      
-      const providers = JSON.parse(storedProviders);
-      
-      // Merge with detected providers to highlight detected ones
-      const detectedProviders = this.getDetectedProviders();
-      
-      return providers.map(provider => ({
-        ...provider,
-        isDetected: detectedProviders.some(dp => dp.id === provider.id)
-      }));
-    } catch (error) {
-      handleError({
-        type: ErrorType.STORAGE,
-        message: 'Failed to load SMS providers from storage',
-        originalError: error
-      });
-      return this.defaultProviders;
-    }
+    // Return a copy of the providers
+    return [...this.providers];
   }
-  
-  // Save selected SMS providers
-  saveSelectedProviders(providers: SmsProvider[]): void {
-    try {
-      localStorage.setItem(SMS_PROVIDERS_STORAGE_KEY, JSON.stringify(providers));
-    } catch (error) {
-      handleError({
-        type: ErrorType.STORAGE,
-        message: 'Failed to save SMS providers to storage',
-        originalError: error
-      });
-    }
-  }
-  
-  // Get selected SMS providers only
-  getSelectedProviders(): SmsProvider[] {
-    return this.getSmsProviders().filter(provider => provider.isSelected);
-  }
-  
-  // Toggle selection status of a provider
+
+  // Toggle selection of a provider
   toggleProviderSelection(providerId: string): SmsProvider[] {
-    const providers = this.getSmsProviders();
-    const updatedProviders = providers.map(provider => {
-      if (provider.id === providerId) {
-        return { ...provider, isSelected: !provider.isSelected };
-      }
-      return provider;
-    });
-    
-    this.saveSelectedProviders(updatedProviders);
-    return updatedProviders;
-  }
-  
-  // Save SMS start date
-  saveSmsStartDate(date: string): void {
-    try {
-      localStorage.setItem(SMS_START_DATE_STORAGE_KEY, date);
-    } catch (error) {
-      handleError({
-        type: ErrorType.STORAGE,
-        message: 'Failed to save SMS start date to storage',
-        originalError: error
-      });
-    }
-  }
-  
-  // Get SMS start date
-  getSmsStartDate(): string | null {
-    try {
-      return localStorage.getItem(SMS_START_DATE_STORAGE_KEY);
-    } catch (error) {
-      handleError({
-        type: ErrorType.STORAGE,
-        message: 'Failed to get SMS start date from storage',
-        originalError: error
-      });
-      return null;
-    }
-  }
-  
-  // Check if SMS permissions have been granted
-  hasSmsPermission(): boolean {
-    try {
-      return localStorage.getItem('smsPermissionGranted') === 'true';
-    } catch (error) {
-      return false;
-    }
-  }
-  
-  // Save SMS permission status
-  saveSmsPermissionStatus(granted: boolean): void {
-    try {
-      localStorage.setItem('smsPermissionGranted', granted ? 'true' : 'false');
-    } catch (error) {
-      handleError({
-        type: ErrorType.STORAGE,
-        message: 'Failed to save SMS permission status to storage',
-        originalError: error
-      });
-    }
-  }
-  
-  // Check if SMS provider selection is completed
-  isProviderSelectionCompleted(): boolean {
-    const selectedProviders = this.getSelectedProviders();
-    return selectedProviders.length > 0;
-  }
-  
-  // METHODS FOR REAL PROVIDER DETECTION
-  
-  // Save detected providers
-  saveDetectedProviders(detectedProviders: DetectedProvider[]): void {
-    try {
-      localStorage.setItem(DETECTED_PROVIDERS_STORAGE_KEY, JSON.stringify(detectedProviders));
-    } catch (error) {
-      handleError({
-        type: ErrorType.STORAGE,
-        message: 'Failed to save detected SMS providers',
-        originalError: error
-      });
-    }
-  }
-  
-  // Get detected providers
-  getDetectedProviders(): DetectedProvider[] {
-    try {
-      const storedDetectedProviders = localStorage.getItem(DETECTED_PROVIDERS_STORAGE_KEY);
-      if (!storedDetectedProviders) {
-        return [];
-      }
-      return JSON.parse(storedDetectedProviders);
-    } catch (error) {
-      handleError({
-        type: ErrorType.STORAGE,
-        message: 'Failed to get detected SMS providers',
-        originalError: error
-      });
-      return [];
-    }
-  }
-  
-  // Analyze SMS message content to detect providers
-  detectProviderFromMessage(message: string, sender: string): string | null {
-    // Get existing providers or create a new provider ID if no match
-    const providers = this.getSmsProviders();
-    
-    // First check if the sender matches any known provider name
-    const senderMatch = providers.find(provider => 
-      sender.toLowerCase().includes(provider.name.toLowerCase()) ||
-      provider.name.toLowerCase().includes(sender.toLowerCase())
+    this.providers = this.providers.map(provider => 
+      provider.id === providerId 
+        ? { ...provider, isSelected: !provider.isSelected } 
+        : provider
     );
     
-    if (senderMatch) {
-      return senderMatch.id;
-    }
+    // Save the updated selection to localStorage
+    this.saveProvidersToStorage();
     
-    // Then check if the message content matches any provider patterns
-    for (const provider of providers) {
-      const patternWords = provider.pattern
-        .replace('$AMOUNT', '')
-        .toLowerCase()
-        .split(' ')
-        .filter(word => word.length > 3); // Only use significant words
-      
-      const messageWords = message.toLowerCase();
-      const matches = patternWords.filter(word => messageWords.includes(word));
-      
-      // If enough significant words match, consider it a match
-      if (matches.length >= 2) {
-        return provider.id;
-      }
-    }
-    
-    // If no match found, this is a new provider
-    // Generate an ID based on the sender
-    const cleanSender = sender.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    return `provider-${cleanSender}-${Math.floor(Math.random() * 1000)}`;
+    return [...this.providers];
   }
-  
-  // Create a new provider from a message
-  createProviderFromMessage(message: string, sender: string): SmsProvider {
-    const id = this.detectProviderFromMessage(message, sender) || 
-              `provider-${Math.floor(Math.random() * 10000)}`;
-    
-    // Extract a pattern from the message
-    let pattern = message;
-    
-    // Look for amount patterns (like $50.00 or 50.00 USD)
-    const amountRegex = /\$?\d+(\.\d{2})?\s?[A-Z]{0,3}/g;
-    pattern = pattern.replace(amountRegex, '$AMOUNT');
-    
-    // Truncate long patterns
-    if (pattern.length > 100) {
-      pattern = pattern.substring(0, 100) + '...';
-    }
-    
-    return {
-      id,
-      name: sender,
-      pattern,
-      isSelected: false,
-      isDetected: true
-    };
+
+  // Save the SMS start date
+  saveSmsStartDate(date: string): void {
+    this.smsStartDate = date;
+    localStorage.setItem('smsStartDate', date);
   }
-  
-  // Process a batch of SMS messages to detect providers - now with real data
-  detectProvidersFromMessages(messages: Array<{body: string, address: string}>): SmsProvider[] {
-    if (!messages || messages.length === 0) {
-      return this.getSmsProviders();
+
+  // Get the SMS start date
+  getSmsStartDate(): string | null {
+    if (!this.smsStartDate) {
+      this.smsStartDate = localStorage.getItem('smsStartDate');
     }
+    return this.smsStartDate;
+  }
+
+  // Save providers to localStorage
+  private saveProvidersToStorage(): void {
+    const selectedProviders = this.providers
+      .filter(p => p.isSelected)
+      .map(p => p.id);
     
-    const existingDetected = this.getDetectedProviders();
-    const detectedProviderCounts: Record<string, number> = {};
-    const lastSeen: Record<string, Date> = {};
-    const newProviders: Record<string, SmsProvider> = {};
-    
-    // Process each message to detect or create providers
-    messages.forEach(message => {
-      // Try to detect existing provider
-      const providerId = this.detectProviderFromMessage(message.body, message.address);
-      
-      if (providerId) {
-        detectedProviderCounts[providerId] = (detectedProviderCounts[providerId] || 0) + 1;
-        lastSeen[providerId] = new Date();
-      } else {
-        // Create a new provider from this message
-        const newProvider = this.createProviderFromMessage(message.body, message.address);
-        newProviders[newProvider.id] = newProvider;
-        detectedProviderCounts[newProvider.id] = 1;
-        lastSeen[newProvider.id] = new Date();
+    localStorage.setItem('selectedSmsProviders', JSON.stringify(selectedProviders));
+  }
+
+  // Load providers from localStorage
+  loadProvidersFromStorage(): void {
+    try {
+      const storedProviders = localStorage.getItem('selectedSmsProviders');
+      if (storedProviders) {
+        const selectedIds = JSON.parse(storedProviders) as string[];
+        
+        this.providers = this.providers.map(provider => ({
+          ...provider,
+          isSelected: selectedIds.includes(provider.id)
+        }));
       }
+    } catch (error) {
+      console.error('Error loading SMS providers from storage:', error);
+    }
+  }
+
+  // Simulate detection of providers from SMS messages
+  simulateProviderDetection(): SmsProvider[] {
+    // Randomly detect 2-4 providers
+    const detectedCount = Math.floor(Math.random() * 3) + 2;
+    const allProviders = [...this.providers];
+    
+    // Shuffle array for random selection
+    const shuffled = allProviders.sort(() => 0.5 - Math.random());
+    
+    // Select the first few providers as "detected"
+    const detected = shuffled.slice(0, detectedCount);
+    
+    // Update the providers list with detection status
+    this.providers = this.providers.map(provider => {
+      const isDetected = detected.some(d => d.id === provider.id);
+      return {
+        ...provider,
+        isDetected,
+        // Auto-select detected providers
+        isSelected: isDetected ? true : provider.isSelected
+      };
     });
     
-    // Merge with existing detections
-    existingDetected.forEach(provider => {
-      if (detectedProviderCounts[provider.id]) {
-        detectedProviderCounts[provider.id] += provider.count;
-      } else {
-        detectedProviderCounts[provider.id] = provider.count;
-        lastSeen[provider.id] = provider.lastSeen || new Date();
-      }
-    });
+    this.saveProvidersToStorage();
     
-    // Convert to array of detected providers for storage
-    const detectedProviders: DetectedProvider[] = Object.keys(detectedProviderCounts).map(id => ({
-      id,
-      count: detectedProviderCounts[id],
-      lastSeen: lastSeen[id]
-    }));
-    
-    // Sort by count (most frequently detected first)
-    detectedProviders.sort((a, b) => b.count - a.count);
-    
-    // Save detected providers
-    this.saveDetectedProviders(detectedProviders);
-    
-    // Get existing providers
-    let providers = this.getSmsProviders();
-    
-    // Add new providers
-    Object.values(newProviders).forEach(newProvider => {
-      if (!providers.some(p => p.id === newProvider.id)) {
-        providers.push(newProvider);
-      }
-    });
-    
-    // Update provider detection status
-    providers = providers.map(provider => ({
-      ...provider,
-      isDetected: detectedProviders.some(dp => dp.id === provider.id)
-    }));
-    
-    // Save all providers
-    this.saveSelectedProviders(providers);
-    
-    return providers;
+    return [...this.providers];
   }
-  
-  // Method to check if we're in a native environment (needed for actual SMS access)
-  isNativeEnvironment(): boolean {
-    return Capacitor.isNativePlatform();
-  }
-  
-  // Access native SMS for provider detection (in real implementation, this would use a Capacitor plugin)
-  async accessNativeSms(): Promise<Array<{body: string, address: string}>> {
-    if (!this.isNativeEnvironment()) {
-      console.log('Cannot access native SMS in web environment');
-      return [];
-    }
-    
-    // In a real implementation, this would use a Capacitor plugin to access SMS
-    // For now, return an empty array
-    return [];
+
+  // Get provider by ID
+  getProviderById(providerId: string): SmsProvider | undefined {
+    return this.providers.find(p => p.id === providerId);
   }
 }
 
-// Export a singleton instance
+// Create singleton instance
 export const smsProviderSelectionService = new SmsProviderSelectionService();

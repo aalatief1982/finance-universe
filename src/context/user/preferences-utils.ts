@@ -1,83 +1,68 @@
 
-import { User, UserPreferences, CurrencyOption, ThemeOption } from './types';
+import { User, UserPreferences } from './types';
 import { setTheme } from './theme-utils';
 
 /**
- * Updates user preferences and returns the updated user object
+ * Updates user preferences and applies relevant changes
  */
 export const updateUserPreferences = (
-  user: User,
-  updates: Partial<UserPreferences>
+  user: User, 
+  preferences: Partial<UserPreferences>
 ): User => {
-  // Create a new user object with updated preferences
+  // Create updated user object
   const updatedUser = {
     ...user,
     preferences: {
       ...user.preferences,
-      ...updates
-    },
-    updatedAt: new Date()
+      ...preferences
+    }
   };
   
-  // Apply theme change if theme was updated
-  if (updates.theme && updates.theme !== user.preferences?.theme) {
-    setTheme(updates.theme);
+  // Apply theme change if present
+  if (preferences.theme && preferences.theme !== user.preferences?.theme) {
+    setTheme(preferences.theme);
   }
+  
+  // Store updated user in localStorage
+  localStorage.setItem('user', JSON.stringify(updatedUser));
   
   return updatedUser;
 };
 
 /**
- * Updates the user's theme preference
+ * Gets the user's effective currency
  */
-export const updateTheme = (
-  user: User,
-  theme: ThemeOption
-): User => {
-  return updateUserPreferences(user, { theme });
-};
-
-/**
- * Updates the user's currency preference
- */
-export const updateCurrency = (
-  user: User,
-  currency: CurrencyOption
-): User => {
-  return updateUserPreferences(user, { currency });
-};
-
-/**
- * Updates the user's language preference
- */
-export const updateLanguage = (
-  user: User,
-  language: string
-): User => {
-  return updateUserPreferences(user, { language });
-};
-
-/**
- * Updates the user's notification settings
- */
-export const updateNotificationSettings = (
-  user: User,
-  notifications: boolean
-): User => {
-  return updateUserPreferences(user, { notifications });
-};
-
-/**
- * Gets the effective theme (with system preference resolved)
- */
-export const getEffectiveTheme = (
-  preferences?: UserPreferences
-): 'light' | 'dark' => {
-  const theme = preferences?.theme || 'system';
-  
-  if (theme === 'system') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+export const getEffectiveCurrency = (user: User | null): string => {
+  if (user?.preferences?.currency) {
+    return user.preferences.currency;
   }
   
-  return theme;
+  // Default currency from localStorage or fallback
+  return localStorage.getItem('currency') || 'USD';
+};
+
+/**
+ * Sets the user's preferred currency
+ */
+export const setPreferredCurrency = (currency: string): void => {
+  localStorage.setItem('currency', currency);
+};
+
+/**
+ * Gets the user's preferred language
+ */
+export const getPreferredLanguage = (user: User | null): string => {
+  if (user?.preferences?.language) {
+    return user.preferences.language;
+  }
+  
+  // Default language from localStorage or fallback
+  return localStorage.getItem('language') || 'en';
+};
+
+/**
+ * Sets the user's preferred language
+ */
+export const setPreferredLanguage = (language: string): void => {
+  localStorage.setItem('language', language);
 };

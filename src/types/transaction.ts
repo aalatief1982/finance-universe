@@ -1,10 +1,9 @@
-
 export interface Transaction {
   id: string;
   title: string;
   amount: number;
   category: string;
-  date: Date;
+  date: string; // Changed from Date to string
   type: TransactionType;
   notes?: string;
   source?: 'manual' | 'sms' | 'import';
@@ -14,6 +13,7 @@ export interface Transaction {
   toAccount?: string;
   currency?: string;
   originalCurrency?: string;
+  categoryPath?: string; // Add this to support components that use it
   smsDetails?: {
     sender: string;
     message: string;
@@ -51,6 +51,7 @@ export interface CategoryIcon {
 
 export interface CategoryWithSubcategories extends Category {
   subcategories?: CategoryWithSubcategories[];
+  transactionType?: TransactionType; // Add this property for categories-data.ts
 }
 
 export interface CategoryRule {
