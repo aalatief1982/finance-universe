@@ -86,7 +86,7 @@ export const createUserWithPhone = async (phone: string): Promise<UserPhoneAuthR
     ));
     
     return { 
-      user: { phone },
+      user: { phone } as User,
       error: 'Failed to create user. Please try again.'
     };
   }

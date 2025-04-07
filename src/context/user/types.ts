@@ -47,6 +47,7 @@ export interface User {
   occupation?: string;
   // Add missing property
   phoneVerified?: boolean;
+  registrationStarted?: boolean;
 }
 
 export interface AuthState {
@@ -72,7 +73,7 @@ export interface UserContextValue {
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
   checkProfileCompletion: () => ProfileCompletionStatus;
-  // Add missing methods
+  // Add missing methods with implementation
   startPhoneVerification?: (phone: string) => Promise<boolean>;
   confirmPhoneVerification?: (code: string) => Promise<boolean>;
   isLoading?: boolean;

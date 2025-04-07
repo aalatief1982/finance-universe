@@ -74,7 +74,7 @@ export const initializeTheme = (): void => {
     const handleChange = () => setTheme('system');
     mediaQuery.addEventListener('change', handleChange);
     
-    // Clean up function for when component unmounts
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    // Clean up function for when component unmounts - this should not be returned here
+    mediaQuery.removeEventListener('change', handleChange);
   }
 };

@@ -5,7 +5,7 @@ export interface Transaction {
   amount: number;
   category: string;
   date: Date;
-  type: 'income' | 'expense';
+  type: TransactionType;
   notes?: string;
   source?: 'manual' | 'sms' | 'import';
   description?: string;
@@ -29,6 +29,8 @@ export interface Category {
   description?: string;
   icon?: string;
   color?: string;
+  subcategories?: Category[];
+  metadata?: CategoryMetadata;
 }
 
 export interface CategoryMetadata {
@@ -66,6 +68,8 @@ export interface TransactionSummary {
   netAmount: number;
   count: number;
   period: string;
+  income?: number;
+  expense?: number;
 }
 
 export interface CategorySummary {
@@ -74,6 +78,8 @@ export interface CategorySummary {
   amount: number;
   percentage: number;
   count: number;
+  name?: string;
+  value?: number;
 }
 
 export type TimePeriod = 'week' | 'month' | 'quarter' | 'year' | 'custom';
@@ -83,6 +89,7 @@ export interface TimePeriodData {
   income: number;
   expense: number;
   net: number;
+  date?: string;
 }
 
 export interface TransactionCategoryChange {
@@ -92,4 +99,4 @@ export interface TransactionCategoryChange {
   timestamp: string;
 }
 
-export type TransactionType = 'income' | 'expense';
+export type TransactionType = 'income' | 'expense' | 'transfer';

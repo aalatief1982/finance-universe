@@ -30,3 +30,7 @@ export const MAX_SMS_BATCH_SIZE = 50;
 
 // Maximum days of SMS history to analyze
 export const MAX_SMS_HISTORY_DAYS = 90;
+
+// Supabase configuration
+export const SUPABASE_URL = process.env.REACT_APP_SUPABASE_URL || '';
+export const SUPABASE_ANON_KEY = process.env.REACT_APP_SUPABASE_ANON_KEY || '';
