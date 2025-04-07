@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, List, BarChart2, Settings } from 'lucide-react';
 import Layout from '@/components/Layout';
 import TransactionList from '@/components/transactions/TransactionList';
-import ExpenseChart from '@/components/ExpenseChart';
+import ExpenseChart, { ExpenseByCategory, ExpenseByDate } from '@/components/ExpenseChart';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/UserContext';
 import { INITIAL_TRANSACTIONS, generateChartData } from '@/lib/mock-data';
@@ -16,7 +17,8 @@ import MobileSmsButton from '@/components/dashboard/MobileSmsButton';
 
 const Dashboard = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
-  const [chartData, setChartData] = useState(generateChartData(transactions));
+  const [expensesByCategory, setExpensesByCategory] = useState<ExpenseByCategory[]>([]);
+  const [expensesByDate, setExpensesByDate] = useState<ExpenseByDate[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentTransaction, setCurrentTransaction] = useState<Transaction | null>(null);
@@ -33,22 +35,36 @@ const Dashboard = () => {
   useEffect(() => {
     // Load user data from context
     if (user) {
-      if (user && user.createdAt instanceof Date) {
-        const formattedUser = {
-          ...user,
-          createdAt: typeof user.createdAt === 'object' ? user.createdAt.toISOString() : user.createdAt
-        };
-        // Use formattedUser instead of user directly
-        setUserData(formattedUser);
-      } else {
-        setUserData(user as any); // Type assertion as fallback
-      }
+      // Format the user object to handle Date objects
+      const formattedUser = {
+        ...user,
+        createdAt: user.createdAt instanceof Date 
+          ? user.createdAt.toISOString() 
+          : typeof user.createdAt === 'string' 
+            ? user.createdAt 
+            : undefined
+      };
+      setUserData(formattedUser);
     }
   }, [user]);
   
   useEffect(() => {
     // Update chart data when transactions change
-    setChartData(generateChartData(transactions));
+    const chartData = generateChartData(transactions);
+    
+    // Map the chart data to the expected format for ExpenseChart
+    const categoryData = chartData.categoryData.map(item => ({
+      name: item.name,
+      value: item.value
+    }));
+    
+    const timelineData = chartData.timelineData.map(item => ({
+      name: item.name,
+      value: item.value
+    }));
+    
+    setExpensesByCategory(categoryData);
+    setExpensesByDate(timelineData);
   }, [transactions]);
   
   const handleOpenDialog = () => {
@@ -134,12 +150,16 @@ const Dashboard = () => {
         )}
         
         {viewMode === 'stats' ? (
-          <ExpenseChart categoryData={chartData.categoryData} timelineData={chartData.timelineData} />
+          <ExpenseChart 
+            expensesByCategory={expensesByCategory} 
+            expensesByDate={expensesByDate} 
+          />
         ) : (
           <TransactionList 
             transactions={transactions} 
             onEdit={handleOpenEditDialog}
             onDelete={handleDeleteTransaction}
+            onAdd={handleOpenDialog}
           />
         )}
         

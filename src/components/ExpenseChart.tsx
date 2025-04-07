@@ -6,17 +6,17 @@ import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 
-interface ExpenseByCategory {
+export interface ExpenseByCategory {
   name: string;
   value: number;
 }
 
-interface ExpenseByDate {
-  date: string;
-  amount: number;
+export interface ExpenseByDate {
+  name: string;
+  value: number;
 }
 
-interface ExpenseChartProps {
+export interface ExpenseChartProps {
   expensesByCategory: ExpenseByCategory[];
   expensesByDate: ExpenseByDate[];
 }
@@ -92,12 +92,12 @@ const ExpenseChart = ({ expensesByCategory, expensesByDate }: ExpenseChartProps)
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={expensesByDate} margin={CHART_MARGIN}>
-                      <XAxis dataKey="date" />
+                      <XAxis dataKey="name" />
                       <YAxis 
                         tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

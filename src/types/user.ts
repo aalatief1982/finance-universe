@@ -55,9 +55,17 @@ export interface UserPreferences {
     weekStartsOn?: 'sunday' | 'monday';
     defaultView?: 'list' | 'stats' | 'calendar';
     compactMode?: boolean;
+    dateFormat?: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
+    timeFormat?: '12h' | '24h';
   };
   privacy?: {
     maskAmounts?: boolean;
     requireAuthForSensitiveActions?: boolean;
+    dataSharing?: 'none' | 'anonymous' | 'full';
+  };
+  dataManagement?: {
+    autoBackup?: boolean;
+    backupFrequency?: 'daily' | 'weekly' | 'monthly';
+    dataRetention?: '3months' | '6months' | '1year' | 'forever';
   };
 }

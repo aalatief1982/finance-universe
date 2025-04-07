@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -11,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getEffectiveCurrency, setPreferredCurrency, getPreferredLanguage, setPreferredLanguage } from '@/context/user/preferences-utils';
 import { ThemeOption, CurrencyOption } from '@/context/user/types';
-import { SUPPORTED_LANGUAGES } from '@/utils/locale/settings';
+import { SUPPORTED_LANGUAGES } from '@/utils/locale/data';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -107,16 +108,22 @@ const Settings = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="light">
-                  <Sun className="mr-2 h-4 w-4" />
-                  Light
+                  <div className="flex items-center">
+                    <Sun className="mr-2 h-4 w-4" />
+                    <span>Light</span>
+                  </div>
                 </SelectItem>
                 <SelectItem value="dark">
-                  <Moon className="mr-2 h-4 w-4" />
-                  Dark
+                  <div className="flex items-center">
+                    <Moon className="mr-2 h-4 w-4" />
+                    <span>Dark</span>
+                  </div>
                 </SelectItem>
                 <SelectItem value="system">
-                  <Sun className="mr-2 h-4 w-4" />
-                  System
+                  <div className="flex items-center">
+                    <Sun className="mr-2 h-4 w-4" />
+                    <span>System</span>
+                  </div>
                 </SelectItem>
               </SelectContent>
             </Select>

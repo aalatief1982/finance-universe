@@ -55,7 +55,8 @@ export const getLocaleSettings = (): LocaleSettings => {
     handleError({
       type: ErrorType.STORAGE,
       message: 'Failed to load locale settings',
-      originalError: error
+      originalError: error,
+      timestamp: new Date()
     });
     
     return DEFAULT_LOCALE_SETTINGS;
@@ -152,7 +153,8 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
     handleError({
       type: ErrorType.STORAGE,
       message: 'Failed to update locale settings',
-      originalError: error
+      originalError: error,
+      timestamp: new Date()
     });
   }
 };
