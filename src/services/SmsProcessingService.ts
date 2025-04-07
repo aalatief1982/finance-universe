@@ -2,22 +2,69 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 import { Capacitor } from '@capacitor/core';
+import { SmsMessage } from './NativeSmsService';
 
 class SmsProcessingService {
-  processTransactionsFromSMS(messages: { sender: string; message: string; date: Date }[]): Transaction[] {
+  /**
+   * Process SMS messages in batches to extract transactions
+   * @param messages Array of SMS messages to process
+   * @param onProgress Optional callback to report progress
+   * @returns Array of extracted transactions
+   */
+  processTransactionsFromSMS(
+    messages: { sender: string; message: string; date: Date }[],
+    onProgress?: (processed: number, total: number) => void
+  ): Transaction[] {
     console.log(`Processing ${messages.length} SMS messages for transactions`);
     
     // Process the SMS messages to extract transaction data
-    const transactions = messages.map(msg => {
+    const transactions: Transaction[] = [];
+    const batchSize = 10; // Process messages in batches of 10
+    const totalBatches = Math.ceil(messages.length / batchSize);
+    
+    for (let i = 0; i < totalBatches; i++) {
+      const start = i * batchSize;
+      const end = Math.min(start + batchSize, messages.length);
+      const batch = messages.slice(start, end);
+      
+      console.log(`Processing batch ${i+1}/${totalBatches} (${batch.length} messages)`);
+      
+      // Process current batch
+      const batchTransactions = this.processBatch(batch);
+      transactions.push(...batchTransactions);
+      
+      // Report progress if callback provided
+      if (onProgress) {
+        onProgress(end, messages.length);
+      }
+    }
+    
+    console.log(`Extracted ${transactions.length} transactions from ${messages.length} SMS messages`);
+    return transactions;
+  }
+  
+  /**
+   * Process a batch of SMS messages to extract transactions
+   * @param batch Array of SMS messages to process
+   * @returns Array of extracted transactions
+   */
+  private processBatch(batch: { sender: string; message: string; date: Date }[]): Transaction[] {
+    return batch.map(msg => {
       // Extract transaction details from SMS
       const { amount, title, category, type, currency } = this.extractTransactionDetails(msg.message, msg.sender);
+      
+      // Skip if no amount was detected
+      if (amount === 0) {
+        console.log(`No transaction amount detected in message from ${msg.sender}`);
+        return null;
+      }
       
       // Create a transaction object
       const transaction: Transaction = {
         id: uuidv4(),
         title: title || msg.sender,
-        amount: Math.abs(amount), // Store absolute amount
-        category: category || 'Uncategorized',
+        amount: type === 'expense' ? -Math.abs(amount) : Math.abs(amount), // Apply sign based on type
+        category: category || (type === 'expense' ? 'Uncategorized Expense' : 'Uncategorized Income'),
         date: msg.date.toISOString().split('T')[0],
         type: type || (amount >= 0 ? 'income' : 'expense'),
         source: 'sms',
@@ -39,10 +86,7 @@ class SmsProcessingService {
       });
       
       return transaction;
-    });
-    
-    console.log(`Extracted ${transactions.length} transactions from SMS messages`);
-    return transactions;
+    }).filter(tx => tx !== null) as Transaction[]; // Filter out null transactions
   }
   
   // Helper method to extract transaction details from SMS

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -77,34 +76,21 @@ const ProcessSmsMessages = () => {
       
       setFoundMessages(messages.length);
       
-      // Process messages in batches
-      const batchSize = 10;
-      const totalBatches = Math.ceil(messages.length / batchSize);
-      const transactions: Transaction[] = [];
+      // Convert SmsMessage to format expected by processTransactionsFromSMS
+      const formattedMessages = messages.map(msg => ({
+        sender: msg.address,
+        message: msg.body,
+        date: new Date(msg.timestamp)
+      }));
       
-      for (let i = 0; i < totalBatches; i++) {
-        const start = i * batchSize;
-        const end = Math.min(start + batchSize, messages.length);
-        const batch = messages.slice(start, end);
-        
-        // Update progress
-        setProgress(Math.floor((i / totalBatches) * 100));
-        setProcessedMessages(end);
-        
-        // Process batch
-        const batchTransactions = smsProcessingService.processTransactionsFromSMS(
-          batch.map(msg => ({
-            sender: msg.address,
-            message: msg.body,
-            date: new Date(msg.timestamp)
-          }))
-        );
-        
-        transactions.push(...batchTransactions);
-        
-        // Simulate processing delay
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+      // Process messages with real-time progress updates
+      const transactions = smsProcessingService.processTransactionsFromSMS(
+        formattedMessages,
+        (processed, total) => {
+          setProcessedMessages(processed);
+          setProgress(Math.floor((processed / total) * 100));
+        }
+      );
       
       setExtractedTransactions(transactions);
       setProgress(100);
@@ -116,7 +102,7 @@ const ProcessSmsMessages = () => {
         
         toast({
           title: "Processing complete",
-          description: `Extracted ${transactions.length} transactions from ${processedMessages} messages`,
+          description: `Extracted ${transactions.length} transactions from ${messages.length} messages`,
         });
       } else {
         toast({

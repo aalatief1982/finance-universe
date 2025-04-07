@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
 import { SmsMessage } from '@/services/NativeSmsService';
 import { Capacitor } from '@capacitor/core';
+import { smsProcessingService } from '@/services/SmsProcessingService';
 
 interface SMSTransactionScreenProps {
   onComplete: () => void;
@@ -21,6 +22,7 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [processingProgress, setProcessingProgress] = useState(0);
   const { processTransactionsFromSMS } = useTransactions();
   const { user } = useUser();
   const [groupedMessages, setGroupedMessages] = useState<Record<string, any[]>>({});
@@ -166,21 +168,38 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
   
   const handleImport = () => {
     setIsProcessing(true);
+    setProcessingProgress(0);
     
     // Get selected messages
-    const messagesToProcess = smsMessages
-      .filter(msg => selectedMessages.includes(msg.id))
-      .map(msg => ({
-        sender: msg.address,
-        message: msg.body,
-        date: new Date(msg.timestamp)
-      }));
+    const selectedMsgs = smsMessages.filter(msg => selectedMessages.includes(msg.id));
     
-    // Process messages to extract transactions
-    processTransactionsFromSMS(messagesToProcess);
+    // Format messages for processing
+    const messagesToProcess = selectedMsgs.map(msg => ({
+      sender: msg.address,
+      message: msg.body,
+      date: new Date(msg.timestamp)
+    }));
     
-    // Complete the flow
-    onComplete();
+    // Process messages in batches with progress tracking
+    try {
+      const transactions = smsProcessingService.processTransactionsFromSMS(
+        messagesToProcess,
+        (processed, total) => {
+          setProcessingProgress(Math.floor((processed / total) * 100));
+        }
+      );
+      
+      // Add transactions to store
+      if (transactions.length > 0) {
+        processTransactionsFromSMS(messagesToProcess);
+      }
+      
+      // Complete the flow
+      onComplete();
+    } catch (error) {
+      console.error('Error processing SMS transactions:', error);
+      setIsProcessing(false);
+    }
   };
 
   const handleSelectAll = () => {
