@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -11,6 +10,20 @@ import { smsProviderSelectionService } from '@/services/SmsProviderSelectionServ
 import { smsPermissionService } from '@/services/SmsPermissionService';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
+
+// Define the SMS message interface
+interface SmsMessage {
+  address: string;
+  body: string;
+  timestamp: string;
+}
+
+// Define SMS provider interface
+interface SmsProvider {
+  id: string;
+  name: string;
+  patterns: string[];
+}
 
 // This component would handle importing transactions from SMS
 const ProcessSmsMessages = () => {
@@ -56,7 +69,7 @@ const ProcessSmsMessages = () => {
     try {
       // In a real implementation, this would access actual SMS messages
       // through a Capacitor plugin
-      const messages = await smsProviderSelectionService.accessNativeSms();
+      const messages: SmsMessage[] = await smsProviderSelectionService.accessNativeSms();
       
       if (messages.length === 0) {
         toast({
@@ -71,7 +84,7 @@ const ProcessSmsMessages = () => {
       setFoundMessages(messages.length);
       
       // Get selected providers
-      const selectedProviders = smsProviderSelectionService.getSelectedProviders();
+      const selectedProviders: SmsProvider[] = smsProviderSelectionService.getSelectedProviders();
       
       // Process messages in batches
       const transactions: Transaction[] = [];
@@ -102,7 +115,7 @@ const ProcessSmsMessages = () => {
             id: `sms-${Date.now()}-${i}`,
             title: `Transaction from ${provider.name}`,
             amount: Math.random() > 0.5 ? -Math.floor(Math.random() * 100) : Math.floor(Math.random() * 100),
-            date: new Date(),
+            date: new Date().toISOString().split('T')[0],
             category: 'other',
             type: Math.random() > 0.5 ? 'expense' : 'income',
             source: 'sms',

@@ -25,8 +25,8 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
   if (!currentTransaction) return null;
 
   // Ensure person is one of the allowed values from PEOPLE
-  const personValue = PEOPLE.includes(currentTransaction.person || 'none') 
-    ? currentTransaction.person 
+  const personValue = currentTransaction.person && PEOPLE.includes(currentTransaction.person as any) 
+    ? currentTransaction.person as "none" | "Ahmed" | "Marwa" | "Youssef" | "Salma" | "Mazen"
     : 'none';
 
   return (

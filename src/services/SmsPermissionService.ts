@@ -1,48 +1,54 @@
 
-// Service for handling SMS permission status
 class SmsPermissionService {
-  private permissionGranted: boolean = false;
-
-  constructor() {
-    // Initialize permission status from localStorage
-    this.permissionGranted = localStorage.getItem('smsPermissionGranted') === 'true';
+  private permissionKey = 'sms_permission_granted';
+  
+  /**
+   * Check if we're in a native mobile environment
+   */
+  isNativeEnvironment(): boolean {
+    // In a real app, this would check for Capacitor or Cordova
+    // For demo purposes, check if we're on a mobile device
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
   }
-
-  // Check if SMS permission is granted
+  
+  /**
+   * Check if SMS permission has been granted
+   */
   hasPermission(): boolean {
-    return this.permissionGranted;
+    // In a real app, this would check with Capacitor's Permissions API
+    // For demo purposes, check localStorage
+    return localStorage.getItem(this.permissionKey) === 'true';
   }
-
-  // Save permission status
-  savePermissionStatus(status: boolean): void {
-    this.permissionGranted = status;
-    localStorage.setItem('smsPermissionGranted', status ? 'true' : 'false');
-  }
-
-  // Request SMS permission (simulated for web)
+  
+  /**
+   * Request SMS permission
+   * @returns Promise resolving to boolean indicating if permission was granted
+   */
   async requestPermission(): Promise<boolean> {
-    // In a real app, this would use Capacitor or other native APIs
-    // to request permission from the device
+    // In a real app, this would use Capacitor's Permissions API
+    // For demo purposes, simulate a permission request
     
-    // Simulate permission request dialog
-    if (window.confirm("Allow app to read SMS messages for transaction tracking?")) {
-      this.permissionGranted = true;
-      this.savePermissionStatus(true);
-      return true;
-    } else {
-      this.permissionGranted = false;
-      this.savePermissionStatus(false);
+    // If we're not in a native environment, always deny
+    if (!this.isNativeEnvironment()) {
       return false;
     }
+    
+    // Simulate a delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Always grant for demo
+    localStorage.setItem(this.permissionKey, 'true');
+    return true;
   }
-
-  // Check if running in a native environment (not web)
-  isNativeEnvironment(): boolean {
-    // In a real app, this would check if Capacitor or Cordova is available
-    // For now, always return false since we're in web
-    return false;
+  
+  /**
+   * Set permission status directly (for simulation)
+   */
+  setPermissionStatus(granted: boolean): void {
+    localStorage.setItem(this.permissionKey, granted ? 'true' : 'false');
   }
 }
 
-// Create singleton instance
+// Export a singleton instance
 export const smsPermissionService = new SmsPermissionService();

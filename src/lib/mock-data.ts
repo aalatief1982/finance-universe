@@ -7,6 +7,25 @@ export interface ChartData {
   timelineData: { name: string; value: number }[];
 }
 
+// Add categories for components that need them
+export const CATEGORIES = [
+  'Food & Dining',
+  'Transportation',
+  'Housing',
+  'Entertainment',
+  'Shopping',
+  'Utilities',
+  'Travel',
+  'Healthcare',
+  'Education',
+  'Miscellaneous',
+  'Income',
+  'Transfer'
+];
+
+// Add initial transactions for components that need them
+export const INITIAL_TRANSACTIONS: Transaction[] = [];
+
 export const generateChartData = (transactions: Transaction[]): ChartData => {
   // Generate data for category chart
   const categoryMap = new Map<string, number>();

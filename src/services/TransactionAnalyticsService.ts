@@ -7,32 +7,53 @@ export class TransactionAnalyticsService {
   getTransactionsSummary(): TransactionSummary {
     const transactions = getStoredTransactions();
     
-    const income = transactions
+    const totalIncome = transactions
       .filter(t => t.amount > 0)
       .reduce((sum, t) => sum + t.amount, 0);
     
-    const expenses = transactions
+    const totalExpense = transactions
       .filter(t => t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
-    const balance = income - expenses;
+    const netAmount = totalIncome - totalExpense;
     
-    return { income, expenses, balance };
+    return { 
+      totalIncome, 
+      totalExpense, 
+      netAmount, 
+      count: transactions.length,
+      period: 'all',
+      income: totalIncome,
+      expense: totalExpense,
+      balance: netAmount
+    };
   }
 
   // Get transactions grouped by category
   getTransactionsByCategory(): CategorySummary[] {
     const transactions = getStoredTransactions();
     const categories: Record<string, number> = {};
+    const categoryCounts: Record<string, number> = {};
     
     transactions
       .filter(t => t.amount < 0) // Only include expenses
       .forEach(t => {
         const category = t.category || 'Uncategorized';
         categories[category] = (categories[category] || 0) + Math.abs(t.amount);
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
       });
     
-    return Object.entries(categories).map(([name, value]) => ({ name, value }));
+    const totalExpense = Object.values(categories).reduce((sum, amount) => sum + amount, 0);
+    
+    return Object.entries(categories).map(([name, value]) => ({ 
+      categoryId: name,
+      categoryName: name,
+      name, // For backward compatibility
+      value, // For backward compatibility
+      amount: value,
+      percentage: totalExpense > 0 ? (value / totalExpense) * 100 : 0,
+      count: categoryCounts[name] || 0
+    }));
   }
 
   // Get transactions grouped by time period
@@ -89,9 +110,11 @@ export class TransactionAnalyticsService {
     
     // Convert to array format for charts
     return Object.entries(timelineData).map(([date, data]) => ({
+      period: date,
       date,
       income: data.income,
-      expense: data.expense
+      expense: data.expense,
+      net: data.income - data.expense
     }));
   }
 }
