@@ -1,41 +1,32 @@
 
-/**
- * This file provides a unified interface for accessing environment variables
- * and provides fallbacks for development environments.
- */
+// Feature flags and environment configuration
 
-export const getEnvironmentVariable = (key: string, defaultValue: string = ''): string => {
-  // For Vite, environment variables are accessed through import.meta.env
-  const envKey = `VITE_${key.replace(/^VITE_/, '')}`;
-  
-  if (import.meta.env[envKey]) {
-    return import.meta.env[envKey];
-  }
-  
-  // Fallback to window._env if available (for runtime configuration)
-  if (typeof window !== 'undefined' && window._env && window._env[envKey]) {
-    return window._env[envKey];
-  }
-  
-  return defaultValue;
-};
+// Enable demo mode for development and testing
+export const ENABLE_DEMO_MODE = true;
 
-// Declare the _env property on the window object for TypeScript
-declare global {
-  interface Window {
-    _env?: Record<string, string>;
-  }
-}
+// Enable Supabase authentication (set to false for development without Supabase)
+export const ENABLE_SUPABASE_AUTH = false;
 
-// Supabase configuration
-export const SUPABASE_URL = getEnvironmentVariable('SUPABASE_URL', 'https://cfacrxykzimdfzvbwhba.supabase.co');
-export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmYWNyeHlremltZGZ6dmJ3aGJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNDkxMzQsImV4cCI6MjA1ODgyNTEzNH0.x_ZGHodH9IYx5cgKRinAWQ2WpPX9iJaC32GfSKP0noY');
+// API configuration
+export const API_URL = process.env.REACT_APP_API_URL || 'https://api.example.com';
 
-// Feature flags
-export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
-export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRATION', 'true') === 'true';
-export const ENABLE_DEMO_MODE = getEnvironmentVariable('ENABLE_DEMO_MODE', 'true') === 'true';  // Changed default to true for demo mode
+// App version
+export const APP_VERSION = '0.1.0';
 
-// Configuration options
-export const DEFAULT_CURRENCY = getEnvironmentVariable('DEFAULT_CURRENCY', 'USD');
-export const APP_VERSION = getEnvironmentVariable('APP_VERSION', '1.0.0');
+// Default locale
+export const DEFAULT_LOCALE = 'en-US';
+
+// Default currency
+export const DEFAULT_CURRENCY = 'USD';
+
+// Maximum number of recent transactions to show on dashboard
+export const MAX_RECENT_TRANSACTIONS = 5;
+
+// Enable debug logging
+export const ENABLE_DEBUG_LOGGING = process.env.NODE_ENV === 'development';
+
+// Maximum SMS messages to process in a batch
+export const MAX_SMS_BATCH_SIZE = 50;
+
+// Maximum days of SMS history to analyze
+export const MAX_SMS_HISTORY_DAYS = 90;

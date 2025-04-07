@@ -1,120 +1,83 @@
 
-import { User } from './types';
-import { toast } from '@/hooks/use-toast';
+import { User, UserPreferences, CurrencyOption, ThemeOption } from './types';
+import { setTheme } from './theme-utils';
 
 /**
- * Update user preferences
- * @param user Current user
- * @param setUser Function to set user state
- * @param preferences Preferences to update
+ * Updates user preferences and returns the updated user object
  */
 export const updateUserPreferences = (
-  user: User | null,
-  setUser: (user: User | null) => void,
-  preferences: Partial<User['preferences']>
-): void => {
-  if (!user) return;
-  
-  setUser({
+  user: User,
+  updates: Partial<UserPreferences>
+): User => {
+  // Create a new user object with updated preferences
+  const updatedUser = {
     ...user,
     preferences: {
       ...user.preferences,
-      ...preferences
-    }
-  });
+      ...updates
+    },
+    updatedAt: new Date()
+  };
   
-  toast({
-    title: "Settings updated",
-    description: "Your preferences have been saved successfully."
-  });
+  // Apply theme change if theme was updated
+  if (updates.theme && updates.theme !== user.preferences?.theme) {
+    setTheme(updates.theme);
+  }
+  
+  return updatedUser;
 };
 
 /**
- * Update display options
- * @param user Current user
- * @param setUser Function to set user state
- * @param displayOptions Display options to update
+ * Updates the user's theme preference
  */
-export const updateDisplayOptions = (
-  user: User | null,
-  setUser: (user: User | null) => void,
-  displayOptions: Partial<User['preferences']['displayOptions']>
-): void => {
-  if (!user || !user.preferences) return;
-  
-  setUser({
-    ...user,
-    preferences: {
-      ...user.preferences,
-      displayOptions: {
-        ...user.preferences.displayOptions,
-        ...displayOptions
-      }
-    }
-  });
-  
-  toast({
-    title: "Display settings updated",
-    description: "Your display preferences have been saved."
-  });
+export const updateTheme = (
+  user: User,
+  theme: ThemeOption
+): User => {
+  return updateUserPreferences(user, { theme });
 };
 
 /**
- * Update privacy settings
- * @param user Current user
- * @param setUser Function to set user state
- * @param privacySettings Privacy settings to update
+ * Updates the user's currency preference
  */
-export const updatePrivacySettings = (
-  user: User | null,
-  setUser: (user: User | null) => void,
-  privacySettings: Partial<User['preferences']['privacy']>
-): void => {
-  if (!user || !user.preferences) return;
-  
-  setUser({
-    ...user,
-    preferences: {
-      ...user.preferences,
-      privacy: {
-        ...user.preferences.privacy,
-        ...privacySettings
-      }
-    }
-  });
-  
-  toast({
-    title: "Privacy settings updated",
-    description: "Your privacy preferences have been saved."
-  });
+export const updateCurrency = (
+  user: User,
+  currency: CurrencyOption
+): User => {
+  return updateUserPreferences(user, { currency });
 };
 
 /**
- * Update data management settings
- * @param user Current user
- * @param setUser Function to set user state
- * @param dataManagement Data management settings to update
+ * Updates the user's language preference
  */
-export const updateDataManagement = (
-  user: User | null,
-  setUser: (user: User | null) => void,
-  dataManagement: Partial<User['preferences']['dataManagement']>
-): void => {
-  if (!user || !user.preferences) return;
+export const updateLanguage = (
+  user: User,
+  language: string
+): User => {
+  return updateUserPreferences(user, { language });
+};
+
+/**
+ * Updates the user's notification settings
+ */
+export const updateNotificationSettings = (
+  user: User,
+  notifications: boolean
+): User => {
+  return updateUserPreferences(user, { notifications });
+};
+
+/**
+ * Gets the effective theme (with system preference resolved)
+ */
+export const getEffectiveTheme = (
+  preferences?: UserPreferences
+): 'light' | 'dark' => {
+  const theme = preferences?.theme || 'system';
   
-  setUser({
-    ...user,
-    preferences: {
-      ...user.preferences,
-      dataManagement: {
-        ...user.preferences.dataManagement,
-        ...dataManagement
-      }
-    }
-  });
+  if (theme === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
   
-  toast({
-    title: "Data management updated",
-    description: "Your data management preferences have been saved."
-  });
+  return theme;
 };
