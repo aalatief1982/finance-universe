@@ -32,7 +32,7 @@ export const SUPABASE_URL = getEnvironmentVariable('SUPABASE_URL', 'https://cfac
 export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmYWNyeHlremltZGZ6dmJ3aGJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNDkxMzQsImV4cCI6MjA1ODgyNTEzNH0.x_ZGHodH9IYx5cgKRinAWQ2WpPX9iJaC32GfSKP0noY');
 
 // Feature flags
-export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'true') === 'true';
+export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
 export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRATION', 'true') === 'true';
 export const ENABLE_DEMO_MODE = getEnvironmentVariable('ENABLE_DEMO_MODE', 'false') === 'true';  // Set to false for real device testing
 
