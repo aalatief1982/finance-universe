@@ -1,6 +1,15 @@
 
 import { Capacitor } from '@capacitor/core';
-import { Plugins } from '@capacitor/core';
+import { registerPlugin } from '@capacitor/core';
+
+// Define a type for the AndroidPermissions plugin
+interface AndroidPermissionsPlugin {
+  checkPermission: (options: { permission: string }) => Promise<{ value: boolean }>;
+  requestPermission: (options: { permission: string }) => Promise<{ value: boolean }>;
+}
+
+// Register the Android Permissions plugin
+const AndroidPermissions = registerPlugin<AndroidPermissionsPlugin>('AndroidPermissions');
 
 class SmsPermissionService {
   private permissionKey = 'sms_permission_granted';
@@ -21,9 +30,10 @@ class SmsPermissionService {
     }
     
     try {
-      // Use native Android permissions API directly rather than Permissions helper
-      const { androidPermissions } = Plugins;
-      const result = await androidPermissions.checkPermission({ permission: 'android.permission.READ_SMS' });
+      // Use the AndroidPermissions plugin
+      const result = await AndroidPermissions.checkPermission({ 
+        permission: 'android.permission.READ_SMS' 
+      });
       return result.value;
     } catch (error) {
       console.error('Error checking SMS permission:', error);
@@ -44,9 +54,10 @@ class SmsPermissionService {
     }
     
     try {
-      // Use native Android permissions API directly rather than Permissions helper
-      const { androidPermissions } = Plugins;
-      const result = await androidPermissions.requestPermission({ permission: 'android.permission.READ_SMS' });
+      // Use the AndroidPermissions plugin
+      const result = await AndroidPermissions.requestPermission({ 
+        permission: 'android.permission.READ_SMS' 
+      });
       const granted = result.value;
       localStorage.setItem(this.permissionKey, granted ? 'true' : 'false');
       return granted;
