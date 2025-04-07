@@ -13,7 +13,9 @@ const STORAGE_KEYS = {
   TRANSACTIONS: 'transactions',
   CATEGORIES: 'categories',
   CATEGORY_RULES: 'categoryRules',
-  CATEGORY_CHANGES: 'categoryChanges'
+  CATEGORY_CHANGES: 'categoryChanges',
+  USER_SETTINGS: 'userSettings',
+  LOCALE_SETTINGS: 'localeSettings'
 };
 
 // Transaction Storage Functions
@@ -123,6 +125,15 @@ export const getStoredCategoryRules = (): CategoryRule[] => {
   }
 };
 
+// Add the missing storeCategoryRules function
+export const storeCategoryRules = (rules: CategoryRule[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CATEGORY_RULES, JSON.stringify(rules));
+  } catch (error) {
+    console.error('Error storing category rules:', error);
+  }
+};
+
 export const addCategoryChange = (change: TransactionCategoryChange): void => {
   try {
     const changes = getStoredCategoryChanges();
@@ -143,5 +154,109 @@ export const getStoredCategoryChanges = (): TransactionCategoryChange[] => {
   } catch (error) {
     console.error('Error retrieving category changes from storage:', error);
     return [];
+  }
+};
+
+// Add the missing storeCategoryChanges function
+export const storeCategoryChanges = (changes: TransactionCategoryChange[]): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CATEGORY_CHANGES, JSON.stringify(changes));
+  } catch (error) {
+    console.error('Error storing category changes:', error);
+  }
+};
+
+// User Settings Functions
+export const getUserSettings = () => {
+  try {
+    const storedData = localStorage.getItem(STORAGE_KEYS.USER_SETTINGS);
+    if (!storedData) {
+      return {
+        theme: 'system',
+        currency: 'USD',
+        language: 'en-US',
+        notifications: true,
+        displayOptions: {
+          showCents: true,
+          weekStartsOn: 'sunday',
+          defaultView: 'list',
+          compactMode: false,
+          showCategories: true,
+          showTags: false
+        },
+        privacy: {
+          maskAmounts: false,
+          requireAuthForSensitiveActions: false,
+          dataSharing: 'anonymous'
+        },
+        dataManagement: {
+          autoBackup: false,
+          backupFrequency: 'weekly',
+          dataRetention: '1year'
+        }
+      };
+    }
+    return JSON.parse(storedData);
+  } catch (error) {
+    console.error('Error retrieving user settings from storage:', error);
+    return {
+      theme: 'system',
+      currency: 'USD',
+      language: 'en-US',
+      notifications: true
+    };
+  }
+};
+
+export const storeUserSettings = (settings: any): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.USER_SETTINGS, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Error storing user settings:', error);
+  }
+};
+
+export const updateCurrency = (currency: string): void => {
+  try {
+    const settings = getUserSettings();
+    settings.currency = currency;
+    storeUserSettings(settings);
+  } catch (error) {
+    console.error('Error updating currency setting:', error);
+  }
+};
+
+// Locale Settings Functions
+export const getLocaleSettings = () => {
+  try {
+    const storedData = localStorage.getItem(STORAGE_KEYS.LOCALE_SETTINGS);
+    if (!storedData) {
+      return {
+        dateFormat: 'MM/DD/YYYY',
+        timeFormat: '12h',
+        firstDayOfWeek: 0, // Sunday
+        numberFormat: {
+          decimalSeparator: '.',
+          thousandsSeparator: ',',
+          decimalPlaces: 2
+        }
+      };
+    }
+    return JSON.parse(storedData);
+  } catch (error) {
+    console.error('Error retrieving locale settings from storage:', error);
+    return {
+      dateFormat: 'MM/DD/YYYY',
+      timeFormat: '12h',
+      firstDayOfWeek: 0
+    };
+  }
+};
+
+export const storeLocaleSettings = (settings: any): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LOCALE_SETTINGS, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Error storing locale settings:', error);
   }
 };

@@ -112,7 +112,7 @@ export const confirmPhoneVerificationWithSupabase = async (
     }
     
     // For demo purposes, accept code "1234" or if we're in development, any 4-digit code
-    const isValidCode = code === '1234' || (process.env.NODE_ENV === 'development' && code.length === 4);
+    const isValidCode = code === '1234';
     
     if (!isValidCode) {
       // Decrease attempts remaining
