@@ -5,7 +5,17 @@ export enum ErrorType {
   API = 'API',
   VALIDATION = 'VALIDATION',
   NETWORK = 'NETWORK',
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
+  STORAGE = 'STORAGE',
+  CURRENCY = 'CURRENCY'
+}
+
+// Error severity levels
+export enum ErrorSeverity {
+  INFO = 'info',
+  WARNING = 'warning',
+  ERROR = 'error',
+  CRITICAL = 'critical'
 }
 
 // Error interface
@@ -15,4 +25,5 @@ export interface AppError {
   context?: any;
   originalError?: any;
   timestamp: Date;
+  severity?: ErrorSeverity;
 }

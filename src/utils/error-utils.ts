@@ -51,3 +51,47 @@ export const handleValidationError = (error: any): string => {
   
   return 'Validation failed. Please check your input.';
 };
+
+/**
+ * Handles network errors
+ */
+export const handleNetworkError = (
+  message: string, 
+  context?: any, 
+  showToast: boolean = false
+): AppError => {
+  const error = createError(
+    ErrorType.NETWORK,
+    message,
+    context
+  );
+  
+  handleError(error);
+  
+  // In a real app, this would show a toast notification if showToast is true
+  if (showToast) {
+    console.error('Network Error:', message);
+  }
+  
+  return error;
+};
+
+/**
+ * Handles authentication errors
+ */
+export const handleAuthError = (
+  message: string, 
+  context?: any, 
+  originalError?: any
+): AppError => {
+  const error = createError(
+    ErrorType.AUTH,
+    message,
+    context,
+    originalError
+  );
+  
+  handleError(error);
+  
+  return error;
+};
