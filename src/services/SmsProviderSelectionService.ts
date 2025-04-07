@@ -1,3 +1,4 @@
+
 import { nativeSmsService, SmsMessage } from './NativeSmsService';
 
 // Define the SMS provider interface
@@ -329,8 +330,12 @@ class SmsProviderSelectionService {
       }
       
       // If no match found, add the new detected provider
+      // Make sure the detected provider has isDetected set to true (fixing the type error)
       if (!matchFound) {
-        resetProviders.push(detected);
+        resetProviders.push({
+          ...detected,
+          isDetected: true // Ensure isDetected is explicitly set to true
+        });
       }
     }
     
