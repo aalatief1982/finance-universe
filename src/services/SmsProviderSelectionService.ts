@@ -133,21 +133,34 @@ class SmsProviderSelectionService {
     return this.getSelectedProviders().length > 0;
   }
   
-  // Detect providers from a list of SMS messages
+  // Detect providers from actual SMS messages on the device
   async detectProvidersFromMessages(): Promise<SmsProvider[]> {
     try {
-      // Get all SMS messages
-      const messages = await nativeSmsService.readSmsMessages();
+      console.log('Detecting providers from SMS messages...');
       
-      // Detect providers
+      // Get the stored start date if available
+      const startDate = this.getSmsStartDate();
+      
+      // Get all SMS messages from the device
+      const messages = await nativeSmsService.readSmsMessages(startDate || undefined);
+      console.log(`Retrieved ${messages.length} messages for provider detection`);
+      
+      // Extract provider names from messages
       const detectedProviderNames = nativeSmsService.detectProvidersFromMessages(messages);
+      console.log('Detected provider names:', detectedProviderNames);
       
       // Update provider list with detected providers
       const providers = this.getAllProviders();
       const updatedProviders = providers.map(provider => {
         const isDetected = detectedProviderNames.some(name => 
           name.toLowerCase().includes(provider.name.toLowerCase()) ||
-          provider.name.toLowerCase().includes(name.toLowerCase())
+          provider.name.toLowerCase().includes(name.toLowerCase()) ||
+          provider.patterns.some(pattern => 
+            detectedProviderNames.some(name => 
+              name.toLowerCase().includes(pattern.toLowerCase()) ||
+              pattern.toLowerCase().includes(name.toLowerCase())
+            )
+          )
         );
         
         return {
@@ -156,6 +169,9 @@ class SmsProviderSelectionService {
         };
       });
       
+      // Save the updated providers
+      this.saveProviders(updatedProviders);
+      
       return updatedProviders;
     } catch (error) {
       console.error('Error detecting providers:', error);
@@ -163,37 +179,17 @@ class SmsProviderSelectionService {
     }
   }
   
-  // Added for backward compatibility - simulate provider detection
-  simulateProviderDetection(): SmsProvider[] {
-    const providers = this.getAllProviders();
-    // Mark 2 random providers as detected for demo purposes
-    const updatedProviders = [...providers];
-    
-    // Randomly select up to 2 providers to mark as detected
-    const indices = Array.from({ length: providers.length }, (_, i) => i)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 2);
-    
-    indices.forEach(index => {
-      if (updatedProviders[index]) {
-        updatedProviders[index] = {
-          ...updatedProviders[index],
-          isDetected: true,
-          isSelected: true
-        };
-      }
-    });
-    
-    // Save the updated providers
-    this.saveProviders(updatedProviders);
-    
-    return updatedProviders;
-  }
-  
   // Access SMS in a native environment
   async accessNativeSms(): Promise<SmsMessage[]> {
     try {
-      const messages = await nativeSmsService.readSmsMessages();
+      console.log('Accessing native SMS...');
+      
+      // Get the stored start date if available
+      const startDate = this.getSmsStartDate();
+      
+      // Get all SMS messages from the device
+      const messages = await nativeSmsService.readSmsMessages(startDate || undefined);
+      console.log(`Retrieved ${messages.length} messages from native SMS`);
       
       // Filter messages by selected providers if any
       const selectedProviders = this.getSelectedProviders();

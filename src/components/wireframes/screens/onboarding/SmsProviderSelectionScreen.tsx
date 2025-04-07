@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, MessageSquare, Calendar, Search, Loader2 } from 'lucide-react';
@@ -6,6 +5,7 @@ import WireframeButton from '../../WireframeButton';
 import { smsProviderSelectionService, SmsProvider } from '@/services/SmsProviderSelectionService';
 import { useToast } from '@/components/ui/use-toast';
 import { smsPermissionService } from '@/services/SmsPermissionService';
+import { Capacitor } from '@capacitor/core';
 
 interface SmsProviderSelectionScreenProps {
   onComplete: (selectedProviders: string[]) => void;
@@ -31,19 +31,14 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       setPermissionGranted(hasPermission);
       
       try {
-        // Get providers with detection if permission is granted
+        // Get providers
         let providersToUse = smsProviderSelectionService.getSmsProviders();
         
         // If we're in a native environment and have permission, try to detect providers
-        if (smsPermissionService.isNativeEnvironment() && hasPermission) {
-          // In a real implementation, we would read actual SMS messages here
-          // For now, just simulate detection
-          providersToUse = smsProviderSelectionService.simulateProviderDetection();
-          setHasDetectedProviders(providersToUse.some(p => p.isSelected && p.isDetected));
-        } else if (!smsPermissionService.isNativeEnvironment()) {
-          // In web environment, simulate provider detection
-          providersToUse = smsProviderSelectionService.simulateProviderDetection();
-          setHasDetectedProviders(providersToUse.some(p => p.isSelected && p.isDetected));
+        if (Capacitor.isNativePlatform() && hasPermission) {
+          console.log('Attempting to detect providers from real SMS messages');
+          providersToUse = await smsProviderSelectionService.detectProvidersFromMessages();
+          setHasDetectedProviders(providersToUse.some(p => p.isDetected));
         }
         
         setProviders(providersToUse);
@@ -93,7 +88,7 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
   };
   
   const requestSmsPermission = async () => {
-    if (smsPermissionService.isNativeEnvironment()) {
+    if (Capacitor.isNativePlatform()) {
       const granted = await smsPermissionService.requestPermission();
       setPermissionGranted(granted);
       
@@ -106,11 +101,9 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
         // Try to detect providers now that we have permission
         setIsLoading(true);
         try {
-          // In a real implementation, we would read SMS messages here
-          // For now, just simulate detection
-          const detectedProviders = smsProviderSelectionService.simulateProviderDetection();
+          const detectedProviders = await smsProviderSelectionService.detectProvidersFromMessages();
           setProviders(detectedProviders);
-          setHasDetectedProviders(detectedProviders.some(p => p.isSelected && p.isDetected));
+          setHasDetectedProviders(detectedProviders.some(p => p.isDetected));
         } catch (error) {
           console.error('Error detecting providers:', error);
         } finally {
@@ -124,25 +117,13 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
         });
       }
     } else {
-      // In web environment, simulate permission granted
+      // In web environment, we can't really read SMS
       setPermissionGranted(true);
       smsPermissionService.savePermissionStatus(true);
       
-      // Simulate detection
-      setIsLoading(true);
-      try {
-        const detectedProviders = smsProviderSelectionService.simulateProviderDetection();
-        setProviders(detectedProviders);
-        setHasDetectedProviders(detectedProviders.some(p => p.isSelected && p.isDetected));
-      } catch (error) {
-        console.error('Error simulating provider detection:', error);
-      } finally {
-        setIsLoading(false);
-      }
-      
       toast({
         title: "Development mode",
-        description: "SMS permissions simulated in web environment",
+        description: "SMS permissions can only be granted on a physical device",
       });
     }
   };
@@ -168,14 +149,14 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
     
     // If we're in a native environment and permission hasn't been granted yet,
     // request it before proceeding
-    if (smsPermissionService.isNativeEnvironment() && !permissionGranted) {
+    if (Capacitor.isNativePlatform() && !permissionGranted) {
       const granted = await smsPermissionService.requestPermission();
       setPermissionGranted(granted);
       
       // If permission granted, proceed; otherwise, we'll still continue
       // but the user won't get automatic SMS tracking
       smsPermissionService.savePermissionStatus(granted);
-    } else if (!smsPermissionService.isNativeEnvironment()) {
+    } else if (!Capacitor.isNativePlatform()) {
       // In web environment, just set mock permission to true
       smsPermissionService.savePermissionStatus(true);
     }

@@ -1,6 +1,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { SmsProvider } from './SmsProviderSelectionService';
+import { registerPlugin } from '@capacitor/core';
 
 // Define interfaces for our service
 export interface SmsMessage {
@@ -9,25 +10,34 @@ export interface SmsMessage {
   timestamp: string;
 }
 
+// Define the SmsReader plugin interface
+interface SmsReaderPlugin {
+  readSms: (options?: { startDate?: string }) => Promise<{ messages: SmsMessage[] }>;
+}
+
+// Register the custom plugin
+const SmsReader = registerPlugin<SmsReaderPlugin>('SmsReader');
+
 class NativeSmsService {
   /**
    * Read SMS messages from the device
+   * @param startDate Optional start date to filter messages from
    * @returns Promise resolving to an array of SMS messages
    */
-  async readSmsMessages(): Promise<SmsMessage[]> {
+  async readSmsMessages(startDate?: string): Promise<SmsMessage[]> {
     if (!Capacitor.isNativePlatform()) {
-      // For web development, return mock data
-      return this.getMockSmsMessages();
+      console.log('Not in a native environment, returning empty SMS list');
+      return [];
     }
     
     try {
-      // Use Capacitor to call a custom native plugin method
-      // Note: This requires a custom plugin or additional setup
-      // For now, we'll return mock data
-      return this.getMockSmsMessages();
+      console.log('Reading SMS messages from device...');
+      const result = await SmsReader.readSms({
+        startDate: startDate
+      });
       
-      // When implementing with a real plugin or native code, it would look like:
-      // return await CapacitorCustomPlugin.readSms();
+      console.log(`Read ${result.messages.length} SMS messages from device`);
+      return result.messages;
     } catch (error) {
       console.error('Error reading SMS messages:', error);
       return [];
@@ -101,35 +111,6 @@ class NativeSmsService {
         messageLower.includes(pattern) || senderLower.includes(pattern)
       );
     });
-  }
-  
-  /**
-   * Get mock SMS messages for development/testing
-   * @returns Array of mock SMS messages
-   */
-  private getMockSmsMessages(): SmsMessage[] {
-    return [
-      {
-        address: 'Bank ABC',
-        body: 'Your account was debited with $50.00 for Coffee Shop purchase',
-        timestamp: new Date().toISOString()
-      },
-      {
-        address: 'Credit XYZ',
-        body: 'You made a purchase of $75.50 at Online Store',
-        timestamp: new Date().toISOString()
-      },
-      {
-        address: 'Investment Corp',
-        body: 'Portfolio update: $100.00 dividend payment received',
-        timestamp: new Date().toISOString()
-      },
-      {
-        address: 'Mobile Banking',
-        body: 'Your transfer of $200.00 to John Doe was successful',
-        timestamp: new Date().toISOString()
-      }
-    ];
   }
 }
 

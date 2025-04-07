@@ -21,6 +21,9 @@ const config: CapacitorConfig = {
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
+    },
+    SmsReader: {
+      // Add any plugin-specific configuration here
     }
   },
   android: {
