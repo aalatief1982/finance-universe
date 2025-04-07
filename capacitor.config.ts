@@ -14,16 +14,8 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 0
     },
-    AndroidPermissions: {
-      permissions: [
-        "android.permission.READ_SMS",
-        "android.permission.RECEIVE_SMS",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
-      ]
-    },
-    SmsReader: {
-      // Add any plugin-specific configuration here
+    Permissions: {
+      permissions: ["sms"]
     }
   },
   android: {

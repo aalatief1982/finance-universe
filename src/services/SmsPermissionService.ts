@@ -1,86 +1,83 @@
 
 import { Capacitor } from '@capacitor/core';
-import { registerPlugin } from '@capacitor/core';
-
-// Define a type for the AndroidPermissions plugin
-interface AndroidPermissionsPlugin {
-  checkPermission: (options: { permission: string }) => Promise<{ value: boolean }>;
-  requestPermission: (options: { permission: string }) => Promise<{ value: boolean }>;
-}
-
-// Register the Android Permissions plugin
-const AndroidPermissions = registerPlugin<AndroidPermissionsPlugin>('AndroidPermissions');
+// In a real app, you'd use a Capacitor plugin for SMS permissions
+// For now, we'll simulate this behavior
 
 class SmsPermissionService {
-  private permissionKey = 'sms_permission_granted';
-  
-  /**
-   * Check if we're in a native mobile environment
-   */
+  private permissionStatusKey = 'sms_permission_status';
+  private providersKey = 'sms_providers_selected';
+
+  // Check if running on native platform
   isNativeEnvironment(): boolean {
     return Capacitor.isNativePlatform();
   }
-  
-  /**
-   * Check if SMS permission has been granted
-   */
-  async hasPermission(): Promise<boolean> {
-    if (!this.isNativeEnvironment()) {
-      return localStorage.getItem(this.permissionKey) === 'true';
-    }
+
+  // Check if SMS permission is granted
+  hasPermission(): boolean {
+    // In a real implementation, this would check actual device permissions
+    // For now, we'll use localStorage to simulate permission state
+    if (typeof window === 'undefined') return false;
     
-    try {
-      // Use the AndroidPermissions plugin
-      const result = await AndroidPermissions.checkPermission({ 
-        permission: 'android.permission.READ_SMS' 
-      });
-      return result.value;
-    } catch (error) {
-      console.error('Error checking SMS permission:', error);
-      return false;
-    }
+    const permissionStatus = localStorage.getItem(this.permissionStatusKey);
+    return permissionStatus === 'granted';
   }
-  
-  /**
-   * Request SMS permission
-   * @returns Promise resolving to boolean indicating if permission was granted
-   */
+
+  // Check if SMS can be read (permission is granted)
+  canReadSms(): boolean {
+    return this.hasPermission();
+  }
+
+  // Check if user has selected SMS providers
+  hasProvidersSelected(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    const providers = localStorage.getItem(this.providersKey);
+    // If providers exist and is not an empty array
+    return !!providers && providers !== '[]';
+  }
+
+  // Request SMS permission
   async requestPermission(): Promise<boolean> {
-    if (!this.isNativeEnvironment()) {
-      // For web development, simulate a permission request
+    // In a real implementation, this would request actual device permissions
+    // For demo purposes, we'll simulate a permission request with a delay
+    
+    if (this.isNativeEnvironment()) {
+      try {
+        // In a real app, you would use Capacitor Plugins to request permissions
+        console.log('Requesting SMS permission on native device');
+        
+        // For demo, let's assume permission is granted after a delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Save the permission status
+        this.savePermissionStatus(true);
+        return true;
+      } catch (error) {
+        console.error('Error requesting SMS permission:', error);
+        return false;
+      }
+    } else {
+      // In web environment, simulate permission
+      console.log('Simulating SMS permission request in web environment');
       await new Promise(resolve => setTimeout(resolve, 1000));
-      localStorage.setItem(this.permissionKey, 'true');
+      this.savePermissionStatus(true);
       return true;
     }
-    
-    try {
-      // Use the AndroidPermissions plugin
-      const result = await AndroidPermissions.requestPermission({ 
-        permission: 'android.permission.READ_SMS' 
-      });
-      const granted = result.value;
-      localStorage.setItem(this.permissionKey, granted ? 'true' : 'false');
-      return granted;
-    } catch (error) {
-      console.error('Error requesting SMS permission:', error);
-      return false;
+  }
+
+  // Save permission status to localStorage
+  savePermissionStatus(granted: boolean): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.permissionStatusKey, granted ? 'granted' : 'denied');
     }
   }
-  
-  /**
-   * Set permission status directly (for simulation)
-   */
-  setPermissionStatus(granted: boolean): void {
-    localStorage.setItem(this.permissionKey, granted ? 'true' : 'false');
-  }
-  
-  /**
-   * Save permission status (alias for setPermissionStatus for compatibility)
-   */
-  savePermissionStatus(granted: boolean): void {
-    this.setPermissionStatus(granted);
+
+  // Save selected providers status
+  saveProvidersStatus(hasProviders: boolean): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.providersKey, hasProviders ? 'true' : 'false');
+    }
   }
 }
 
-// Export a singleton instance
 export const smsPermissionService = new SmsPermissionService();

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
@@ -6,11 +5,8 @@ import WireframeButton from '../WireframeButton';
 import { useTransactions } from '@/context/TransactionContext';
 import { useUser } from '@/context/UserContext';
 import { Check, MessageSquare, XCircle, ChevronRight, Globe, DollarSign } from 'lucide-react';
+import { getMockSmsMessages } from '@/lib/sms-parser';
 import { Badge } from '@/components/ui/badge';
-import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
-import { SmsMessage } from '@/services/NativeSmsService';
-import { Capacitor } from '@capacitor/core';
-import { smsProcessingService } from '@/services/SmsProcessingService';
 
 interface SMSTransactionScreenProps {
   onComplete: () => void;
@@ -18,52 +14,41 @@ interface SMSTransactionScreenProps {
 }
 
 const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProps) => {
-  const [smsMessages, setSmsMessages] = useState<(SmsMessage & { id: string })[]>([]);
+  const [smsMessages, setSmsMessages] = useState<any[]>([]);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [processingProgress, setProcessingProgress] = useState(0);
   const { processTransactionsFromSMS } = useTransactions();
   const { user } = useUser();
   const [groupedMessages, setGroupedMessages] = useState<Record<string, any[]>>({});
   
   // Get SMS messages on mount
   useEffect(() => {
-    const fetchSmsMessages = async () => {
-      setIsLoading(true);
-      
-      try {
-        // Get actual SMS messages from the device
-        const messages = await smsProviderSelectionService.accessNativeSms();
-        
-        // Add unique IDs to messages
-        const messagesWithIds = messages.map(msg => ({
-          ...msg,
-          id: Math.random().toString(36).substring(2, 15)
-        }));
-        
-        // Group messages by provider/sender
-        const grouped = messagesWithIds.reduce((groups: Record<string, any[]>, message) => {
-          // Extract provider name - either use sender directly or try to extract from message
-          const providerName = extractProviderName(message.address, message.body);
-          
-          if (!groups[providerName]) {
-            groups[providerName] = [];
-          }
-          groups[providerName].push(message);
-          return groups;
-        }, {});
-        
-        setGroupedMessages(grouped);
-        setSmsMessages(messagesWithIds);
-      } catch (error) {
-        console.error('Error fetching SMS messages:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // In a real app, this would request SMS messages from the device
+    // For the wireframe, we'll use mock data
+    const mockMessages = getMockSmsMessages();
     
-    fetchSmsMessages();
+    // Filter messages by selected providers if any
+    const filteredMessages = user?.smsProviders?.length 
+      ? mockMessages.filter(msg => user.smsProviders?.some(provider => 
+          msg.sender.toLowerCase().includes(provider.toLowerCase()) ||
+          msg.message.toLowerCase().includes(provider.toLowerCase())
+        ))
+      : mockMessages;
+    
+    // Group messages by provider/sender
+    const grouped = filteredMessages.reduce((groups: Record<string, any[]>, message) => {
+      // Extract provider name - either use sender directly or try to extract from message
+      const providerName = extractProviderName(message.sender, message.message);
+      
+      if (!groups[providerName]) {
+        groups[providerName] = [];
+      }
+      groups[providerName].push(message);
+      return groups;
+    }, {});
+    
+    setGroupedMessages(grouped);
+    setSmsMessages(filteredMessages);
   }, [user]);
   
   // Extract a readable provider name from sender or message
@@ -168,38 +153,21 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
   
   const handleImport = () => {
     setIsProcessing(true);
-    setProcessingProgress(0);
     
     // Get selected messages
-    const selectedMsgs = smsMessages.filter(msg => selectedMessages.includes(msg.id));
+    const messagesToProcess = smsMessages
+      .filter(msg => selectedMessages.includes(msg.id))
+      .map(msg => ({
+        sender: msg.sender,
+        message: msg.message,
+        date: msg.date
+      }));
     
-    // Format messages for processing
-    const messagesToProcess = selectedMsgs.map(msg => ({
-      sender: msg.address,
-      message: msg.body,
-      date: new Date(msg.timestamp)
-    }));
+    // Process messages to extract transactions
+    processTransactionsFromSMS(messagesToProcess);
     
-    // Process messages in batches with progress tracking
-    try {
-      const transactions = smsProcessingService.processTransactionsFromSMS(
-        messagesToProcess,
-        (processed, total) => {
-          setProcessingProgress(Math.floor((processed / total) * 100));
-        }
-      );
-      
-      // Add transactions to store
-      if (transactions.length > 0) {
-        processTransactionsFromSMS(messagesToProcess);
-      }
-      
-      // Complete the flow
-      onComplete();
-    } catch (error) {
-      console.error('Error processing SMS transactions:', error);
-      setIsProcessing(false);
-    }
+    // Complete the flow
+    onComplete();
   };
 
   const handleSelectAll = () => {
@@ -259,15 +227,10 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
           )}
           
           <div className="divide-y max-h-80 overflow-y-auto">
-            {isLoading ? (
-              <div className="p-6 text-center">
-                <div className="w-12 h-12 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                <p className="text-gray-500">Loading SMS messages...</p>
-              </div>
-            ) : smsMessages.length > 0 ? (
+            {smsMessages.length > 0 ? (
               smsMessages.map(msg => {
-                const country = detectCountry(msg.body);
-                const currency = detectCurrency(msg.body);
+                const country = detectCountry(msg.message);
+                const currency = detectCurrency(msg.message);
                 
                 return (
                   <div 
@@ -288,13 +251,13 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
                     </div>
                     <div className="flex-1">
                       <div className="flex justify-between">
-                        <h4 className="font-medium text-sm">{msg.address}</h4>
+                        <h4 className="font-medium text-sm">{msg.sender}</h4>
                         <span className="text-xs text-gray-500">
-                          {new Date(msg.timestamp).toLocaleDateString()}
+                          {msg.date.toLocaleDateString()}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        {msg.body}
+                        {msg.message}
                       </p>
                       
                       {/* Display country and currency if detected */}
@@ -319,11 +282,7 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
               })
             ) : (
               <div className="p-6 text-center">
-                <p className="text-gray-500">
-                  {Capacitor.isNativePlatform() 
-                    ? "No SMS messages found. Make sure you've granted SMS permission and have selected providers." 
-                    : "SMS import is only available on physical devices."}
-                </p>
+                <p className="text-gray-500">No SMS messages found</p>
               </div>
             )}
           </div>

@@ -1,37 +1,61 @@
 
-export interface Transaction {
-  id: string;
-  title: string;
-  amount: number;
-  category: string;
-  date: string; // Changed from Date to string
-  type: TransactionType;
-  notes?: string;
-  source?: 'manual' | 'sms' | 'import';
-  description?: string;
-  person?: string;
+import { z } from 'zod';
+import { 
+  transactionSchema, 
+  categorySchema, 
+  categoryRuleSchema, 
+  transactionCategoryChangeSchema,
+  budgetSchema
+} from '@/lib/validation';
+import { SupportedCurrency } from '@/types/locale';
+
+export type TransactionType = 'income' | 'expense' | 'transfer';
+
+// Update the Transaction type to make fromAccount optional and currency a string to fix compatibility issues
+export type Transaction = z.infer<typeof transactionSchema> & {
+  categoryPath?: string;
+  originalCurrency?: string;
+  exchangeRate?: number;
   fromAccount?: string;
   toAccount?: string;
-  currency?: string;
-  originalCurrency?: string;
-  categoryPath?: string; // Add this to support components that use it
-  smsDetails?: {
-    sender: string;
-    message: string;
-    timestamp: string;
+  subcategory?: string; // Subcategory field explicitly defined
+  currency?: string; // String type for currency
+  description?: string;
+  person?: 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | 'none' | null;
+  providerDetails?: {
+    providerName?: string;
+    providerType?: 'bank' | 'payment_app' | 'card' | 'other';
+    providerCountry?: string;
+    accountLastFourDigits?: string;
+    transactionId?: string;
+    balanceAfterTransaction?: number;
+    isInternational?: boolean;
   };
+};
+
+export interface TransactionSummary {
+  income: number;
+  expenses: number;
+  balance: number;
 }
 
-// Add commonly used types related to transactions
-export interface Category {
-  id: string;
+export interface CategorySummary {
   name: string;
-  parentId?: string;
-  description?: string;
-  icon?: string;
+  value: number;
+}
+
+export interface TimePeriodData {
+  date: string;
+  income: number;
+  expense: number;
+}
+
+export type TimePeriod = 'week' | 'month' | 'year';
+
+// Categories and categorization system
+export interface CategoryIcon {
+  name: string;
   color?: string;
-  subcategories?: Category[];
-  metadata?: CategoryMetadata;
 }
 
 export interface CategoryMetadata {
@@ -45,63 +69,112 @@ export interface CategoryMetadata {
   updatedAt: string;
 }
 
-export interface CategoryIcon {
+export type Category = z.infer<typeof categorySchema>;
+
+export type CategoryRule = z.infer<typeof categoryRuleSchema>;
+
+export interface CategoryHierarchy {
+  categories: Category[];
+}
+
+export type TransactionCategoryChange = z.infer<typeof transactionCategoryChangeSchema>;
+
+// New category hierarchical structure - making the relationship with transaction type explicit
+export interface CategoryWithSubcategories {
   name: string;
-  color?: string;
+  subcategories: string[];
+  transactionType: TransactionType;
 }
 
-export interface CategoryWithSubcategories extends Category {
-  subcategories?: CategoryWithSubcategories[];
-  transactionType?: TransactionType; // Add this property for categories-data.ts
-}
+// Budget interfaces aligned with validation
+export type Budget = z.infer<typeof budgetSchema>;
 
-export interface CategoryRule {
-  id: string;
-  pattern: string;
-  categoryId: string;
-  isRegex?: boolean;
-  priority: number;
-  description?: string;
-}
-
-export interface TransactionSummary {
-  totalIncome: number;
-  totalExpense: number;
-  netAmount: number;
-  count: number;
-  period: string;
-  income?: number;
-  expense?: number;
-  // Add these properties to match how it's used in components
-  expenses?: number;
-  balance?: number;
-}
-
-export interface CategorySummary {
-  categoryId: string;
-  categoryName: string;
-  amount: number;
+export interface BudgetProgress {
+  budgetId: string;
+  spent: number;
+  remaining: number;
   percentage: number;
-  count: number;
-  name?: string;
-  value?: number;
+  isOverBudget: boolean;
 }
 
-export type TimePeriod = 'week' | 'month' | 'quarter' | 'year' | 'custom';
-
-export interface TimePeriodData {
-  period: string;
-  income: number;
-  expense: number;
-  net: number;
-  date?: string;
+export interface BudgetSummary {
+  totalBudgeted: number;
+  totalSpent: number;
+  totalRemaining: number;
+  overBudgetCount: number;
 }
 
-export interface TransactionCategoryChange {
-  transactionId: string;
-  oldCategoryId?: string;
-  newCategoryId: string;
+// Data import/export interfaces
+export interface DataBackup {
+  version: string;
   timestamp: string;
+  transactions: Transaction[];
+  categories: Category[];
+  categoryRules: CategoryRule[];
+  categoryChanges: TransactionCategoryChange[];
+  budgets?: Budget[];
 }
 
-export type TransactionType = 'income' | 'expense' | 'transfer';
+// Transaction filtering types
+export interface TransactionFilter {
+  searchQuery?: string;
+  category?: string;
+  type?: 'income' | 'expense' | 'all';
+  startDate?: Date | null;
+  endDate?: Date | null;
+  minAmount?: number;
+  maxAmount?: number;
+  tags?: string[];
+  provider?: string;
+  currency?: string;
+  country?: string;
+}
+
+// Transaction sorting types
+export type TransactionSortField = 'date' | 'title' | 'amount' | 'category' | 'provider';
+export type SortDirection = 'asc' | 'desc';
+
+export interface TransactionSortOptions {
+  field: TransactionSortField;
+  direction: SortDirection;
+}
+
+// Bank and provider types for better categorization and localization
+export interface FinancialProvider {
+  id: string;
+  name: string;
+  country: string;
+  type: 'bank' | 'payment_app' | 'card' | 'other';
+  patterns: string[];
+  logo?: string;
+  defaultCurrency: SupportedCurrency;
+  // Regular expression patterns to extract transaction details from SMS
+  smsPatterns?: {
+    amount?: string;
+    description?: string;
+    date?: string;
+    accountNumber?: string;
+    balance?: string;
+  };
+}
+
+// Interface for handling bank-specific SMS providers
+export interface BankSmsProvider {
+  id: string;
+  name: string;
+  bankName: string;
+  country: string;
+  isActive: boolean;
+  senderPatterns: string[];
+  messagePatterns: {
+    debit?: string;
+    credit?: string;
+    balance?: string;
+  };
+  extractors: {
+    amount: string;
+    description: string;
+    date: string;
+    accountNumber?: string;
+  };
+}

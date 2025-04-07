@@ -1,66 +1,137 @@
 
+import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 
-// Define chart data interface to match what DashboardContent expects
-export interface ChartData {
-  categoryData: { name: string; value: number }[];
-  timelineData: { name: string; value: number }[];
-}
+// Generate a random date within the last 30 days
+const getRandomDate = () => {
+  const now = new Date();
+  const daysAgo = Math.floor(Math.random() * 30);
+  now.setDate(now.getDate() - daysAgo);
+  return now.toISOString().split('T')[0];
+};
 
-// Add categories for components that need them
 export const CATEGORIES = [
-  'Food & Dining',
-  'Transportation',
-  'Housing',
-  'Entertainment',
-  'Shopping',
+  'Food', 
+  'Transportation', 
+  'Entertainment', 
+  'Shopping', 
   'Utilities',
-  'Travel',
+  'Housing',
   'Healthcare',
   'Education',
-  'Miscellaneous',
-  'Income',
-  'Transfer'
+  'Travel',
+  'Gifts',
+  'Personal Care',
+  'Subscriptions',
+  'Other'
 ];
 
-// Add initial transactions for components that need them
-export const INITIAL_TRANSACTIONS: Transaction[] = [];
+export const INITIAL_TRANSACTIONS: Transaction[] = [
+  {
+    id: uuidv4(),
+    title: 'Salary',
+    amount: 3500,
+    category: 'Income',
+    date: getRandomDate(),
+    type: 'income',
+    fromAccount: 'Bank Account', // Add fromAccount to all transactions
+  },
+  {
+    id: uuidv4(),
+    title: 'Rent',
+    amount: -1200,
+    category: 'Housing',
+    date: getRandomDate(),
+    type: 'expense',
+    fromAccount: 'Bank Account', 
+  },
+  {
+    id: uuidv4(),
+    title: 'Groceries',
+    amount: -85.45,
+    category: 'Food',
+    date: getRandomDate(),
+    type: 'expense',
+    fromAccount: 'Credit Card',
+  },
+  {
+    id: uuidv4(),
+    title: 'Uber Rides',
+    amount: -32.99,
+    category: 'Transportation',
+    date: getRandomDate(),
+    type: 'expense',
+    fromAccount: 'Credit Card',
+  },
+  {
+    id: uuidv4(),
+    title: 'Netflix Subscription',
+    amount: -14.99,
+    category: 'Subscriptions',
+    date: getRandomDate(),
+    type: 'expense',
+    fromAccount: 'Bank Account',
+  },
+  {
+    id: uuidv4(),
+    title: 'Restaurant Dinner',
+    amount: -58.75,
+    category: 'Food',
+    date: getRandomDate(),
+    type: 'expense',
+    fromAccount: 'Credit Card',
+  },
+  {
+    id: uuidv4(),
+    title: 'Freelance Work',
+    amount: 450,
+    category: 'Income',
+    date: getRandomDate(),
+    type: 'income',
+    fromAccount: 'Bank Account',
+  },
+  {
+    id: uuidv4(),
+    title: 'Shopping - Clothes',
+    amount: -123.45,
+    category: 'Shopping',
+    date: getRandomDate(),
+    type: 'expense',
+    fromAccount: 'Credit Card',
+  },
+];
 
-export const generateChartData = (transactions: Transaction[]): ChartData => {
-  // Generate data for category chart
-  const categoryMap = new Map<string, number>();
-  transactions.forEach(tx => {
-    if (tx.amount < 0) { // Only consider expenses
-      const category = tx.category || 'Uncategorized';
-      const currentAmount = categoryMap.get(category) || 0;
-      categoryMap.set(category, currentAmount + Math.abs(tx.amount));
-    }
-  });
-  
-  const categoryData = Array.from(categoryMap.entries()).map(([name, value]) => ({
+// Generate data for charts
+export const generateChartData = (transactions: Transaction[]) => {
+  // Category chart data
+  const expensesByCategory = transactions
+    .filter(t => t.amount < 0)
+    .reduce((acc: Record<string, number>, item) => {
+      const category = item.category;
+      if (!acc[category]) {
+        acc[category] = 0;
+      }
+      acc[category] += Math.abs(item.amount);
+      return acc;
+    }, {});
+
+  const categoryData = Object.entries(expensesByCategory).map(([name, value]) => ({
     name,
-    value
+    value,
   }));
-  
-  // Generate timeline data (last 7 days)
-  const today = new Date();
-  const timelineData = [];
-  
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
-    const dayStr = date.toISOString().split('T')[0];
-    
-    // Filter transactions for this day
-    const dayTotal = transactions
-      .filter(tx => tx.date.startsWith(dayStr) && tx.amount < 0)
-      .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-    
-    timelineData.push({
-      name: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      value: dayTotal
-    });
-  }
-  
-  return { categoryData, timelineData };
+
+  // Timeline chart data
+  const sortedTransactions = [...transactions]
+    .filter(t => t.amount < 0)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const expensesByDate = sortedTransactions.map(t => ({
+    date: t.date.slice(5), // MM-DD format
+    amount: t.amount,
+  }));
+
+  return {
+    categoryData,
+    timelineData: expensesByDate,
+  };
 };

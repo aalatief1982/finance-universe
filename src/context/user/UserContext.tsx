@@ -1,209 +1,350 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User, UserContextValue, AuthState, ProfileCompletionStatus } from './types';
-import { authenticateWithPhone, verifyPhoneWithCode } from './auth-utils';
-import { updateUserPreferences } from './preferences-utils';
-import { setTheme } from './theme-utils';
-import { ErrorType, AppError } from '@/types/error';
-import { createError, handleError } from '@/utils/error-utils';
-import { isAuthenticatedWithSupabase } from '@/lib/supabase-auth';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { User, UserContextType } from './types';
+import { toast } from '@/hooks/use-toast';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { ENABLE_SUPABASE_AUTH, ENABLE_DEMO_MODE } from '@/lib/env';
+import {
+  setDemoMode,
+  isDemoMode,
+  getVerificationAttemptsRemaining,
+  getMaxVerificationAttempts,
+  updateUserProfileInSupabase
+} from '@/lib/supabase-auth';
+import { detectSystemTheme, applyThemeToDocument } from './theme-utils';
+import {
+  getUserFromLocalStorage,
+  checkSupabaseAuth,
+  startPhoneVerification as startPhoneVerificationUtil,
+  confirmPhoneVerification as confirmPhoneVerificationUtil,
+  logIn as logInUtil,
+  logOut as logOutUtil,
+  checkUserExists as checkUserExistsUtil,
+  isProfileComplete as isProfileCompleteUtil
+} from './auth-utils';
+import {
+  updateUserPreferences as updateUserPreferencesUtil,
+  updateDisplayOptions as updateDisplayOptionsUtil,
+  updatePrivacySettings as updatePrivacySettingsUtil,
+  updateDataManagement as updateDataManagementUtil
+} from './preferences-utils';
 
-// Create context with default values
-export const UserContext = createContext<UserContextValue>({
+export const UserContext = createContext<UserContextType>({
   user: null,
   auth: {
-    isLoading: true,
     isAuthenticated: false,
+    isLoading: false,
     isVerifying: false,
-    error: null
+    isDemoMode: false
   },
-  login: async () => false,
-  verify: async () => false,
-  logout: async () => {},
   updateUser: () => {},
-  checkProfileCompletion: () => ({ isComplete: false, missingFields: [] }),
+  startPhoneVerification: async () => false,
+  confirmPhoneVerification: async () => false,
+  logIn: () => {},
+  logOut: () => {},
+  isLoading: false,
+  loadUserProfile: async () => null,
+  updateUserPreferences: () => {},
+  updateTheme: () => {},
+  updateCurrency: () => {},
+  updateLanguage: () => {},
+  updateNotificationSettings: () => {},
+  updateDisplayOptions: () => {},
+  updatePrivacySettings: () => {},
+  updateDataManagement: () => {},
+  completeOnboarding: () => {},
+  isProfileComplete: () => false,
+  updateAvatar: () => {},
+  getEffectiveTheme: () => 'light',
+  setDemoModeEnabled: () => {},
+  checkUserExists: async () => false,
 });
 
-// Hook for using the UserContext
-export const useUser = () => useContext(UserContext);
-
-interface UserProviderProps {
-  children: React.ReactNode;
-}
-
-export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [authState, setAuthState] = useState<AuthState>({
-    isLoading: true,
+  const [isLoading, setIsLoading] = useState(false);
+  const [auth, setAuth] = useState({
     isAuthenticated: false,
+    isLoading: true,
     isVerifying: false,
-    error: null
+    verificationAttemptsRemaining: getVerificationAttemptsRemaining(),
+    maxVerificationAttempts: getMaxVerificationAttempts(),
+    isDemoMode: isDemoMode()
   });
   
-  // Load user from localStorage on mount
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        // Check if authenticated with Supabase first
-        const isAuthenticated = await isAuthenticatedWithSupabase();
-        
-        if (!isAuthenticated) {
-          // Try to load from localStorage as fallback
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            const parsedUser: User = JSON.parse(storedUser);
-            setUser(parsedUser);
-            setAuthState(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
-          } else {
-            setAuthState(prev => ({ ...prev, isLoading: false }));
-          }
-        } else {
-          // If authenticated with Supabase but no user in state, try to load from localStorage
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            const parsedUser: User = JSON.parse(storedUser);
-            setUser(parsedUser);
-          }
-          
-          setAuthState(prev => ({ ...prev, isAuthenticated: true, isLoading: false }));
-        }
-      } catch (error) {
-        console.error('Error loading user:', error);
-        setAuthState(prev => ({ 
-          ...prev, 
-          isLoading: false,
-          error: createError(ErrorType.AUTH, 'Failed to load user', {}, error)
-        }));
-      }
-    };
+  // Get effective theme based on user preference and system setting
+  const getEffectiveTheme = useCallback((): 'light' | 'dark' => {
+    if (!user || !user.preferences) return 'light';
+    const userTheme = user.preferences.theme;
     
-    loadUser();
+    if (userTheme === 'system') {
+      return detectSystemTheme();
+    }
+    return userTheme;
+  }, [user]);
+  
+  // Apply theme to document
+  useEffect(() => {
+    applyThemeToDocument(getEffectiveTheme());
+  }, [getEffectiveTheme]);
+  
+  // Listen for system theme changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      const handleChange = () => {
+        if (user?.preferences?.theme === 'system') {
+          applyThemeToDocument(detectSystemTheme());
+        }
+      };
+      
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, [user]);
+  
+  // Set demo mode based on environment or user preference
+  useEffect(() => {
+    setDemoMode(ENABLE_DEMO_MODE);
   }, []);
   
-  // Store user in localStorage when it changes
+  // Enhanced auth check that initializes with local storage first for faster UI response
+  useEffect(() => {
+    // First check localStorage for quicker initial render
+    const localUser = getUserFromLocalStorage();
+    if (localUser) {
+      setUser(localUser);
+      setAuth(prev => ({
+        ...prev,
+        isAuthenticated: localUser.phoneVerified || false,
+        isLoading: ENABLE_SUPABASE_AUTH && isSupabaseConfigured() // Keep loading if we need to verify with Supabase
+      }));
+    }
+    
+    // Then verify with Supabase if needed
+    checkSupabaseAuth(setUser, setAuth);
+  }, []);
+  
+  // Update authentication state with demo mode and attempts remaining
+  const updateAuthState = useCallback(() => {
+    setAuth(prev => ({
+      ...prev,
+      verificationAttemptsRemaining: getVerificationAttemptsRemaining(),
+      maxVerificationAttempts: getMaxVerificationAttempts(),
+      isDemoMode: isDemoMode()
+    }));
+  }, []);
+  
+  // Save user to local storage whenever it changes
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
       
-      // Apply theme preference if set
-      if (user.preferences?.theme) {
-        setTheme(user.preferences.theme);
+      // If Supabase is enabled, also update the user profile there
+      if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && user.id) {
+        updateUserProfileInSupabase(user.id, {
+          full_name: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          phone_verified: user.phoneVerified,
+          gender: user.gender,
+          birth_date: user.birthDate ? user.birthDate.toISOString() : null,
+          avatar_url: user.avatar,
+          occupation: user.occupation,
+          sms_providers: user.smsProviders,
+          completed_onboarding: user.completedOnboarding,
+          last_active: new Date().toISOString()
+        }).catch(error => {
+          console.error("Error updating user profile in Supabase:", error);
+        });
       }
     }
   }, [user]);
   
-  // Save updated user data
-  const updateUser = useCallback((updates: Partial<User>) => {
-    setUser(prev => {
-      if (!prev) return updates as User;
-      
-      const updatedUser = { ...prev, ...updates };
-      
-      // Apply theme if changed
-      if (updates.preferences?.theme && updates.preferences.theme !== prev.preferences?.theme) {
-        setTheme(updates.preferences.theme);
+  // Enhanced updateUser with improved defaults
+  const updateUser = useCallback((userData: Partial<User>) => {
+    setUser(prevUser => {
+      if (!prevUser) {
+        const newUser: User = {
+          id: userData.id || `user_${Date.now()}`,
+          phone: userData.phone || '',
+          phoneVerified: userData.phoneVerified || false,
+          hasProfile: userData.hasProfile || false,
+          fullName: userData.fullName || '',
+          gender: userData.gender || null,
+          birthDate: userData.birthDate || null,
+          email: userData.email,
+          avatar: userData.avatar,
+          occupation: userData.occupation,
+          smsProviders: userData.smsProviders || [],
+          completedOnboarding: userData.completedOnboarding || false,
+          createdAt: new Date(),
+          lastActive: new Date(),
+          registrationStarted: true, // Mark as started registration
+          preferences: userData.preferences || {
+            currency: 'USD',
+            theme: 'light',
+            notifications: true,
+            language: 'en',
+            displayOptions: {
+              showCents: true,
+              weekStartsOn: 'sunday',
+              defaultView: 'list',
+              compactMode: false,
+              showCategories: true,
+              showTags: true
+            }
+          }
+        };
+        return newUser;
       }
+      
+      // Update lastActive timestamp
+      const updatedUser = { 
+        ...prevUser, 
+        ...userData,
+        lastActive: new Date() 
+      };
       
       return updatedUser;
     });
   }, []);
   
-  // Login with phone number
-  const login = useCallback(async (phone: string): Promise<boolean> => {
-    return authenticateWithPhone(
-      phone,
-      updateUser,
-      (isLoading) => setAuthState(prev => ({ ...prev, isLoading })),
-      (error) => setAuthState(prev => ({ ...prev, error }))
-    );
-  }, [updateUser]);
-  
-  // Verify phone code
-  const verify = useCallback(async (phone: string, code: string): Promise<boolean> => {
-    setAuthState(prev => ({ ...prev, isVerifying: true }));
-    
-    const success = await verifyPhoneWithCode(
-      phone,
-      code,
-      updateUser,
-      (isLoading) => setAuthState(prev => ({ ...prev, isLoading })),
-      (error) => setAuthState(prev => ({ ...prev, error })),
-      (verified) => setAuthState(prev => ({ 
-        ...prev, 
-        isAuthenticated: verified,
-        isVerifying: !verified
-      }))
-    );
-    
-    if (!success) {
-      setAuthState(prev => ({ ...prev, isVerifying: false }));
-    }
-    
-    return success;
-  }, [updateUser]);
-  
-  // Logout
-  const logout = useCallback(async (): Promise<void> => {
-    try {
-      // Clear user data
-      setUser(null);
-      localStorage.removeItem('user');
-      
-      // Reset auth state
-      setAuthState({
-        isLoading: false,
-        isAuthenticated: false,
-        isVerifying: false,
-        error: null
-      });
-    } catch (error) {
-      handleError(createError(
-        ErrorType.AUTH,
-        'Logout failed',
-        {},
-        error
-      ));
-    }
+  // Function implementations 
+  const checkUserExists = useCallback((phoneNumber: string): Promise<boolean> => {
+    return checkUserExistsUtil(phoneNumber);
   }, []);
-  
-  // Check if user profile is complete
-  const checkProfileCompletion = useCallback((): ProfileCompletionStatus => {
-    if (!user) {
-      return { isComplete: false, missingFields: ['all'] };
-    }
+
+  const startPhoneVerification = useCallback((phoneNumber: string): Promise<boolean> => {
+    return startPhoneVerificationUtil(phoneNumber, setIsLoading, setAuth, updateUser, updateAuthState);
+  }, [updateUser, updateAuthState]);
+
+  const confirmPhoneVerification = useCallback((code: string): Promise<boolean> => {
+    return confirmPhoneVerificationUtil(code, setIsLoading, setAuth, updateUser, updateAuthState);
+  }, [updateUser, updateAuthState]);
+
+  const logIn = useCallback(() => {
+    logInUtil(updateUser, setAuth, user);
+  }, [updateUser, user]);
+
+  const logOut = useCallback(() => {
+    logOutUtil(setAuth, setUser);
+  }, []);
+
+  const loadUserProfile = useCallback(async (): Promise<User | null> => {
+    // Simulate API call
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setIsLoading(false);
     
-    const missingFields: string[] = [];
-    
-    // Check for mandatory fields
-    if (!user.fullName) missingFields.push('fullName');
-    if (!user.phone) missingFields.push('phone');
-    if (!user.email) missingFields.push('email');
-    
-    // Optional but recommended fields for complete profile
-    if (!user.gender) missingFields.push('gender');
-    if (!user.birthDate) missingFields.push('birthDate');
-    if (!user.occupation) missingFields.push('occupation');
-    
-    return {
-      isComplete: missingFields.length === 0,
-      missingFields
-    };
+    return user;
   }, [user]);
   
-  // Context value
-  const contextValue: UserContextValue = {
-    user,
-    auth: authState,
-    login,
-    verify,
-    logout,
-    updateUser,
-    checkProfileCompletion,
-  };
+  const updateUserPreferences = useCallback((preferences: Partial<User['preferences']>) => {
+    updateUserPreferencesUtil(user, setUser, preferences);
+  }, [user]);
+  
+  const updateTheme = useCallback((theme: 'light' | 'dark' | 'system') => {
+    updateUserPreferences({ theme });
+  }, [updateUserPreferences]);
+  
+  const updateCurrency = useCallback((currency: string) => {
+    updateUserPreferences({ currency });
+  }, [updateUserPreferences]);
+  
+  const updateLanguage = useCallback((language: string) => {
+    updateUserPreferences({ language });
+  }, [updateUserPreferences]);
+  
+  const updateNotificationSettings = useCallback((enabled: boolean, types?: string[]) => {
+    const notificationSettings = { notifications: enabled };
+    updateUserPreferences(notificationSettings);
+  }, [updateUserPreferences]);
+  
+  const updateDisplayOptions = useCallback((displayOptions: Partial<User['preferences']['displayOptions']>) => {
+    updateDisplayOptionsUtil(user, setUser, displayOptions);
+  }, [user]);
+  
+  const updatePrivacySettings = useCallback((privacySettings: Partial<User['preferences']['privacy']>) => {
+    updatePrivacySettingsUtil(user, setUser, privacySettings);
+  }, [user]);
+  
+  const updateDataManagement = useCallback((dataManagement: Partial<User['preferences']['dataManagement']>) => {
+    updateDataManagementUtil(user, setUser, dataManagement);
+  }, [user]);
+  
+  // Enhanced onboarding completion that also updates authentication state
+  const completeOnboarding = useCallback(() => {
+    updateUser({ 
+      completedOnboarding: true,
+      hasProfile: true,
+      registrationStarted: true
+    });
+    
+    // Update auth state to mark as authenticated
+    setAuth(prev => ({ 
+      ...prev, 
+      isAuthenticated: true,
+      isVerifying: false
+    }));
+    
+    // Log in to ensure proper session state
+    logIn();
+  }, [updateUser, logIn]);
+  
+  const isProfileComplete = useCallback((): boolean => {
+    return isProfileCompleteUtil(user);
+  }, [user]);
+  
+  const updateAvatar = useCallback((avatarUrl: string) => {
+    updateUser({ avatar: avatarUrl });
+  }, [updateUser]);
+  
+  // Function to toggle demo mode
+  const setDemoModeEnabled = useCallback((enabled: boolean) => {
+    setDemoMode(enabled);
+    updateAuthState();
+    
+    toast({
+      title: enabled ? "Demo Mode Enabled" : "Demo Mode Disabled",
+      description: enabled 
+        ? "Using mock authentication. Verification code is 1234." 
+        : "Using real authentication services."
+    });
+  }, [updateAuthState]);
   
   return (
-    <UserContext.Provider value={contextValue}>
+    <UserContext.Provider
+      value={{
+        user,
+        auth,
+        updateUser,
+        startPhoneVerification,
+        confirmPhoneVerification,
+        logIn,
+        logOut,
+        isLoading,
+        loadUserProfile,
+        updateUserPreferences,
+        updateTheme,
+        updateCurrency,
+        updateLanguage,
+        updateNotificationSettings,
+        updateDisplayOptions,
+        updatePrivacySettings,
+        updateDataManagement,
+        completeOnboarding,
+        isProfileComplete,
+        updateAvatar,
+        getEffectiveTheme,
+        setDemoModeEnabled,
+        checkUserExists
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
 };
+
+export const useUser = () => useContext(UserContext);

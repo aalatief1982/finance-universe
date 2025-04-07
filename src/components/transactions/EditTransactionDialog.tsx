@@ -3,7 +3,6 @@ import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ExpenseForm from '@/components/ExpenseForm';
 import { Transaction } from '@/types/transaction';
-import { PEOPLE } from '@/lib/categories-data';
 
 interface EditTransactionDialogProps {
   isOpen: boolean;
@@ -24,11 +23,6 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
 }) => {
   if (!currentTransaction) return null;
 
-  // Ensure person is one of the allowed values from PEOPLE
-  const personValue = currentTransaction.person && PEOPLE.includes(currentTransaction.person as any) 
-    ? currentTransaction.person as "none" | "Ahmed" | "Marwa" | "Youssef" | "Salma" | "Mazen"
-    : 'none';
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -43,10 +37,10 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
             type: currentTransaction.type || (currentTransaction.amount >= 0 ? 'income' : 'expense'),
             notes: currentTransaction.notes || '',
             description: currentTransaction.description || '',
-            person: personValue,
+            person: currentTransaction.person || 'none',
             fromAccount: currentTransaction.fromAccount || '',
             toAccount: currentTransaction.toAccount || '',
-            currency: currentTransaction.currency || 'USD',
+            currency: currentTransaction.currency || 'SAR',
           }}
           onCancel={onCancel}
         />

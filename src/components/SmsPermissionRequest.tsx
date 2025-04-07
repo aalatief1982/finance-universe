@@ -26,9 +26,11 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
     
     // Check if permission is already granted
     const checkExistingPermission = async () => {
-      const hasPermission = await smsPermissionService.hasPermission();
-      if (hasPermission) {
-        onGranted();
+      if (Capacitor.isNativePlatform()) {
+        const hasPermission = await smsPermissionService.hasPermission();
+        if (hasPermission) {
+          onGranted();
+        }
       }
     };
     
@@ -39,21 +41,32 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
     setIsRequesting(true);
     
     try {
-      const granted = await smsPermissionService.requestPermission();
-      
-      if (granted) {
+      // For native platforms, use the actual permission API
+      if (Capacitor.isNativePlatform()) {
+        const granted = await smsPermissionService.requestPermission();
+        
+        if (granted) {
+          toast({
+            title: "Permission granted",
+            description: "You've successfully granted SMS reading permission",
+          });
+          onGranted();
+        } else {
+          toast({
+            title: "Permission denied",
+            description: "SMS reading permission is required for automatic tracking",
+            variant: "destructive",
+          });
+          onDenied();
+        }
+      } else {
+        // For web development, simulate permission granting
+        await new Promise(resolve => setTimeout(resolve, 1000));
         toast({
-          title: "Permission granted",
-          description: "You've successfully granted SMS reading permission",
+          title: "Development mode",
+          description: "SMS permissions simulated in web environment",
         });
         onGranted();
-      } else {
-        toast({
-          title: "Permission denied",
-          description: "SMS reading permission is required for automatic tracking",
-          variant: "destructive",
-        });
-        onDenied();
       }
     } catch (error) {
       console.error("Error requesting SMS permission:", error);

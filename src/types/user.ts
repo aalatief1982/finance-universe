@@ -1,41 +1,95 @@
-
-// Define user types
 export interface User {
-  id?: string; // Make id optional to be compatible with both contexts
+  id: string;
+  fullName: string;
   email?: string;
   phone?: string;
-  fullName?: string;
-  avatarUrl?: string;
-  createdAt?: string;
-  lastActive?: string;
-  smsPermissionGranted?: boolean;
+  phoneVerified?: boolean;
+  gender?: 'male' | 'female' | null;
+  birthDate?: Date | null;
+  avatar?: string;
+  occupation?: string;
+  hasProfile?: boolean;
   smsProviders?: string[];
+  detectedSmsProviders?: string[]; // New field for auto-detected providers
+  smsProviderDetectionRun?: boolean; // New field to track if detection has run
   completedOnboarding?: boolean;
-  settings?: UserSettings;
+  createdAt?: Date;
+  lastActive?: Date;
+  smsPermissionGranted?: boolean;
+  settings?: {
+    currency?: string;
+    language?: string;
+    theme: 'light' | 'dark' | 'system';
+    notifications?: boolean;
+  };
 }
 
-export interface UserSettings {
+export interface UserPreferences {
   currency: string;
-  theme: 'light' | 'dark' | 'system';
-  notifications: boolean;
   language: string;
-  categories?: CategorySettings;
+  theme: 'light' | 'dark' | 'system';
+  notifications: {
+    enabled: boolean;
+    types?: Array<'sms' | 'budget' | 'insights' | 'security'>;
+    emailNotifications?: boolean;
+    pushNotifications?: boolean;
+  };
+  displayOptions: {
+    showCents: boolean;
+    weekStartsOn: 'sunday' | 'monday';
+    defaultView: 'list' | 'stats' | 'calendar';
+    compactMode: boolean;
+    showCategories: boolean;
+    showTags: boolean;
+    dateFormat?: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
+    timeFormat?: '12h' | '24h';
+  };
+  privacy: {
+    maskAmounts: boolean;
+    requireAuthForSensitiveActions: boolean;
+    dataSharing: 'none' | 'anonymous' | 'minimal' | 'full';
+    lockScreenTimeout?: number; // in minutes
+    biometricAuth?: boolean;
+  };
+  dataManagement: {
+    autoBackup: boolean;
+    backupFrequency: 'daily' | 'weekly' | 'monthly' | 'never';
+    dataRetention: '3months' | '6months' | '1year' | 'forever';
+    exportFormat?: 'json' | 'csv' | 'pdf';
+    cloudSync?: boolean;
+  };
+  sms?: { // New section for SMS-specific preferences
+    startDate?: string;
+    autoDetectProviders: boolean;
+    showDetectionNotifications: boolean;
+  };
+  categories?: {
+    showUncategorized: boolean;
+    defaultCategorySort: 'alphabetical' | 'custom' | 'most-used';
+    expandSubcategories: boolean;
+  };
+  budgets?: {
+    warningThreshold: number; // percentage
+    criticalThreshold: number; // percentage
+    rolloverUnspent: boolean;
+    startDay?: number; // day of month for monthly budgets
+  };
 }
 
-export interface CategorySettings {
-  customCategories: boolean;
-  hiddenCategories: string[];
+export type ProfileSection = 'personal' | 'preferences' | 'security' | 'notifications' | 'data' | 'categories' | 'budgets';
+
+export interface ProfileMenuItem {
+  title: string;
+  description: string;
+  icon: React.ComponentType;
+  link: string;
+  status?: string;
+  statusColor?: string;
+  section: ProfileSection;
 }
 
-export interface AuthState {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
-// Add ProfileData interface for user profile creation
 export interface ProfileData {
-  image?: string;
+  image?: string | null;
   fullName: string;
   gender: 'male' | 'female' | null;
   birthDate: Date | null;
@@ -44,28 +98,82 @@ export interface ProfileData {
   createdAt?: Date;
 }
 
-// Add UserPreferences interface for locale settings
-export interface UserPreferences {
-  theme?: 'light' | 'dark' | 'system';
-  currency?: 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD' | 'AUD';
-  notifications?: boolean;
-  language?: string;
-  displayOptions?: {
-    showCents?: boolean;
-    weekStartsOn?: 'sunday' | 'monday';
-    defaultView?: 'list' | 'stats' | 'calendar';
-    compactMode?: boolean;
-    dateFormat?: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
-    timeFormat?: '12h' | '24h';
+export interface UserThemePreference {
+  theme: 'light' | 'dark' | 'system';
+  accentColor?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'default';
+  fontSize?: 'small' | 'medium' | 'large';
+  reducedMotion?: boolean;
+  highContrast?: boolean;
+}
+
+export interface UserCurrencyPreference {
+  code: string;
+  symbol: string;
+  symbolPosition: 'before' | 'after';
+  decimalSeparator: '.' | ',';
+  thousandsSeparator: ',' | '.' | ' ' | '';
+  decimalPlaces: number;
+}
+
+export interface UserNotificationSetting {
+  type: 'sms' | 'budget' | 'insights' | 'security';
+  enabled: boolean;
+  channels: {
+    inApp: boolean;
+    email: boolean;
+    push: boolean;
   };
-  privacy?: {
-    maskAmounts?: boolean;
-    requireAuthForSensitiveActions?: boolean;
-    dataSharing?: 'none' | 'anonymous' | 'full';
+  frequency?: 'immediate' | 'daily' | 'weekly';
+}
+
+export interface UserSecuritySettings {
+  requireAuthForSensitiveActions: boolean;
+  twoFactorAuth: boolean;
+  biometricAuth?: boolean;
+  lockScreenTimeout: number; // in minutes
+  lastPasswordChange?: Date;
+  sessionTimeout?: number; // in minutes
+}
+
+export interface UserDataExportOptions {
+  format: 'json' | 'csv' | 'pdf';
+  includeTransactions: boolean;
+  includeCategories: boolean;
+  includeBudgets: boolean;
+  dateRange?: {
+    start: Date;
+    end: Date;
   };
-  dataManagement?: {
-    autoBackup?: boolean;
-    backupFrequency?: 'daily' | 'weekly' | 'monthly';
-    dataRetention?: '3months' | '6months' | '1year' | 'forever';
-  };
+}
+
+export interface PrivacySetting {
+  key: string;
+  label: string;
+  description: string;
+  value: boolean | string;
+  options?: Array<{
+    label: string;
+    value: string;
+  }>;
+}
+
+export interface DisplaySetting {
+  key: string;
+  label: string;
+  description: string;
+  value: boolean | string | number;
+  type: 'toggle' | 'select' | 'radio';
+  options?: Array<{
+    label: string;
+    value: string | number;
+  }>;
+}
+
+export interface SmsProvider { // New interface for detailed SMS provider info
+  id: string;
+  name: string;
+  pattern: string;
+  isSelected: boolean;
+  isDetected: boolean;
+  lastDetected?: Date;
 }

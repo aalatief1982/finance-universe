@@ -1,68 +1,120 @@
 
-import { User, UserPreferences } from './types';
-import { setTheme } from './theme-utils';
+import { User } from './types';
+import { toast } from '@/hooks/use-toast';
 
 /**
- * Updates user preferences and applies relevant changes
+ * Update user preferences
+ * @param user Current user
+ * @param setUser Function to set user state
+ * @param preferences Preferences to update
  */
 export const updateUserPreferences = (
-  user: User, 
-  preferences: Partial<UserPreferences>
-): User => {
-  // Create updated user object
-  const updatedUser = {
+  user: User | null,
+  setUser: (user: User | null) => void,
+  preferences: Partial<User['preferences']>
+): void => {
+  if (!user) return;
+  
+  setUser({
     ...user,
     preferences: {
       ...user.preferences,
       ...preferences
     }
-  };
+  });
   
-  // Apply theme change if present
-  if (preferences.theme && preferences.theme !== user.preferences?.theme) {
-    setTheme(preferences.theme);
-  }
-  
-  // Store updated user in localStorage
-  localStorage.setItem('user', JSON.stringify(updatedUser));
-  
-  return updatedUser;
+  toast({
+    title: "Settings updated",
+    description: "Your preferences have been saved successfully."
+  });
 };
 
 /**
- * Gets the user's effective currency
+ * Update display options
+ * @param user Current user
+ * @param setUser Function to set user state
+ * @param displayOptions Display options to update
  */
-export const getEffectiveCurrency = (user: User | null): string => {
-  if (user?.preferences?.currency) {
-    return user.preferences.currency;
-  }
+export const updateDisplayOptions = (
+  user: User | null,
+  setUser: (user: User | null) => void,
+  displayOptions: Partial<User['preferences']['displayOptions']>
+): void => {
+  if (!user || !user.preferences) return;
   
-  // Default currency from localStorage or fallback
-  return localStorage.getItem('currency') || 'USD';
-};
-
-/**
- * Sets the user's preferred currency
- */
-export const setPreferredCurrency = (currency: string): void => {
-  localStorage.setItem('currency', currency);
-};
-
-/**
- * Gets the user's preferred language
- */
-export const getPreferredLanguage = (user: User | null): string => {
-  if (user?.preferences?.language) {
-    return user.preferences.language;
-  }
+  setUser({
+    ...user,
+    preferences: {
+      ...user.preferences,
+      displayOptions: {
+        ...user.preferences.displayOptions,
+        ...displayOptions
+      }
+    }
+  });
   
-  // Default language from localStorage or fallback
-  return localStorage.getItem('language') || 'en';
+  toast({
+    title: "Display settings updated",
+    description: "Your display preferences have been saved."
+  });
 };
 
 /**
- * Sets the user's preferred language
+ * Update privacy settings
+ * @param user Current user
+ * @param setUser Function to set user state
+ * @param privacySettings Privacy settings to update
  */
-export const setPreferredLanguage = (language: string): void => {
-  localStorage.setItem('language', language);
+export const updatePrivacySettings = (
+  user: User | null,
+  setUser: (user: User | null) => void,
+  privacySettings: Partial<User['preferences']['privacy']>
+): void => {
+  if (!user || !user.preferences) return;
+  
+  setUser({
+    ...user,
+    preferences: {
+      ...user.preferences,
+      privacy: {
+        ...user.preferences.privacy,
+        ...privacySettings
+      }
+    }
+  });
+  
+  toast({
+    title: "Privacy settings updated",
+    description: "Your privacy preferences have been saved."
+  });
+};
+
+/**
+ * Update data management settings
+ * @param user Current user
+ * @param setUser Function to set user state
+ * @param dataManagement Data management settings to update
+ */
+export const updateDataManagement = (
+  user: User | null,
+  setUser: (user: User | null) => void,
+  dataManagement: Partial<User['preferences']['dataManagement']>
+): void => {
+  if (!user || !user.preferences) return;
+  
+  setUser({
+    ...user,
+    preferences: {
+      ...user.preferences,
+      dataManagement: {
+        ...user.preferences.dataManagement,
+        ...dataManagement
+      }
+    }
+  });
+  
+  toast({
+    title: "Data management updated",
+    description: "Your data management preferences have been saved."
+  });
 };

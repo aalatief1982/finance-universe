@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
 import OnboardingScreen from '@/components/wireframes/screens/OnboardingScreen';
@@ -10,9 +10,8 @@ import { smsPermissionService } from '@/services/SmsPermissionService';
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { user, auth, updateUser, checkProfileCompletion } = useUser();
+  const { user, auth, updateUser } = useUser();
   const { toast } = useToast();
-  const [smsPermissionStatus, setSmsPermissionStatus] = useState<boolean>(false);
   
   // Redirect to dashboard if user has already completed onboarding
   useEffect(() => {
@@ -38,18 +37,17 @@ const Onboarding = () => {
     const checkSmsPermissions = async () => {
       // Only check permissions in native environments
       if (smsPermissionService.isNativeEnvironment()) {
-        const hasPermission = await smsPermissionService.hasPermission();
+        const hasPermission = smsPermissionService.hasPermission();
         console.log('SMS permission status:', hasPermission ? 'granted' : 'not granted');
-        setSmsPermissionStatus(hasPermission);
       }
     };
     
     checkSmsPermissions();
   }, []);
   
-  const handleOnboardingComplete = async () => {
+  const handleOnboardingComplete = () => {
     // Check if SMS permissions were granted during onboarding
-    const smsPermissionGranted = await smsPermissionService.hasPermission();
+    const smsPermissionGranted = smsPermissionService.hasPermission();
     
     // Mark onboarding as complete
     updateUser({ 
@@ -57,33 +55,21 @@ const Onboarding = () => {
       smsPermissionGranted
     });
     
-    // Check if profile is complete
-    const profileStatus = checkProfileCompletion();
-    
-    // Navigate based on profile completion
-    if (!profileStatus.isComplete) {
-      // If profile is not complete, redirect to profile page
+    // Notify user with appropriate message based on permission status
+    if (smsPermissionService.isNativeEnvironment() && smsPermissionGranted) {
       toast({
-        title: "Complete your profile",
-        description: "Please fill in your profile information to continue.",
+        title: "Setup complete!",
+        description: "Your account is ready to use with SMS tracking enabled.",
       });
-      navigate('/profile');
     } else {
-      // If profile is complete, notify user and navigate to dashboard
-      if (smsPermissionService.isNativeEnvironment() && smsPermissionGranted) {
-        toast({
-          title: "Setup complete!",
-          description: "Your account is ready to use with SMS tracking enabled.",
-        });
-      } else {
-        toast({
-          title: "Setup complete!",
-          description: "Your account is ready to use.",
-        });
-      }
-      
-      navigate('/dashboard');
+      toast({
+        title: "Setup complete!",
+        description: "Your account is ready to use.",
+      });
     }
+    
+    // Navigate to dashboard
+    navigate('/dashboard');
   };
   
   return (

@@ -1,117 +1,77 @@
 
 import { CategoryWithSubcategories, TransactionType } from '@/types/transaction';
 
-// Define main category hierarchy
-export const categoryHierarchy: CategoryWithSubcategories[] = [
+export const CATEGORY_HIERARCHY: CategoryWithSubcategories[] = [
+  // Income categories
   {
-    id: 'income',
-    name: 'Income',
-    transactionType: 'income',
-    subcategories: [
-      { id: 'salary', name: 'Salary', parentId: 'income' },
-      { id: 'freelance', name: 'Freelance', parentId: 'income' },
-      { id: 'investments', name: 'Investments', parentId: 'income' }
-    ]
+    name: 'Salary',
+    subcategories: ['Main Salary', 'Benefit', 'Bonus'],
+    transactionType: 'income'
   },
   {
-    id: 'food',
-    name: 'Food & Dining',
-    transactionType: 'expense',
-    subcategories: [
-      { id: 'groceries', name: 'Groceries', parentId: 'food' }
-    ]
+    name: 'Transfer from Contacts',
+    subcategories: ['Loan Return'],
+    transactionType: 'income'
   },
   {
-    id: 'transportation',
-    name: 'Transportation',
-    transactionType: 'expense',
-    subcategories: [
-      { id: 'gas', name: 'Gas', parentId: 'transportation' },
-      { id: 'public_transport', name: 'Public Transport', parentId: 'transportation' }
-    ]
+    name: 'Investment',
+    subcategories: ['Sukuk', 'Stocks'],
+    transactionType: 'income'
   },
+  
+  // Expense categories
   {
-    id: 'housing',
-    name: 'Housing',
-    transactionType: 'expense',
-    subcategories: [
-      { id: 'rent', name: 'Rent', parentId: 'housing' },
-      { id: 'mortgage', name: 'Mortgage', parentId: 'housing' },
-      { id: 'utilities', name: 'Utilities', parentId: 'housing' },
-      { id: 'maintenance', name: 'Maintenance', parentId: 'housing' }
-    ]
-  },
-  {
-    id: 'entertainment',
-    name: 'Entertainment',
-    transactionType: 'expense',
-    subcategories: [
-      { id: 'movies', name: 'Movies', parentId: 'entertainment' }
-    ]
-  },
-  {
-    id: 'shopping',
     name: 'Shopping',
-    transactionType: 'expense',
-    subcategories: [
-      { id: 'clothing', name: 'Clothing', parentId: 'shopping' },
-      { id: 'electronics', name: 'Electronics', parentId: 'shopping' },
-      { id: 'gifts', name: 'Gifts', parentId: 'shopping' },
-      { id: 'other_shopping', name: 'Other', parentId: 'shopping' },
-      { id: 'personal', name: 'Personal', parentId: 'shopping' }
-    ]
+    subcategories: ['Grocery', 'Clothing', 'Appliances', 'Misc'],
+    transactionType: 'expense'
   },
   {
-    id: 'misc',
-    name: 'Miscellaneous',
-    transactionType: 'expense',
-    subcategories: [
-      { id: 'other', name: 'Other', parentId: 'misc' }
-    ]
+    name: 'Car',
+    subcategories: ['Gas', 'Maintenance'],
+    transactionType: 'expense'
+  },
+  {
+    name: 'Health',
+    subcategories: ['Hospital', 'Pharmacy', 'Gym', 'Tennis', 'Swimming'],
+    transactionType: 'expense'
+  },
+  {
+    name: 'Education',
+    subcategories: ['School', 'Course'],
+    transactionType: 'expense'
+  },
+  {
+    name: 'Others',
+    subcategories: ['Misc'],
+    transactionType: 'expense'
+  },
+  
+  // Transfer categories
+  {
+    name: 'Local Bank',
+    subcategories: [],
+    transactionType: 'transfer'
+  },
+  {
+    name: 'International Bank',
+    subcategories: [],
+    transactionType: 'transfer'
   }
 ];
 
-// Export a reference to the category hierarchy for components that expect it
-export const CATEGORY_HIERARCHY = categoryHierarchy;
+export const PEOPLE = ['Ahmed', 'Marwa', 'Youssef', 'Salma', 'Mazen'];
 
-// Get all categories flattened into an array
-export const getAllCategories = (): CategoryWithSubcategories[] => {
-  const allCategories: CategoryWithSubcategories[] = [];
-  
-  categoryHierarchy.forEach(category => {
-    allCategories.push({ ...category, subcategories: [] });
-    
-    if (category.subcategories) {
-      category.subcategories.forEach(subcategory => {
-        allCategories.push({ ...subcategory });
-      });
-    }
-  });
-  
-  return allCategories;
-};
+export const CURRENCIES = ['SAR', 'EGP', 'USD', 'BHD', 'AED'];
 
-// Get categories by transaction type (income, expense, transfer)
-export const getCategoriesByType = (type: TransactionType): CategoryWithSubcategories[] => {
-  return categoryHierarchy.filter(category => category.transactionType === type);
-};
-
-// Function for components that expect string[] instead of CategoryWithSubcategories[]
+// Helper function to get categories for a specific transaction type
 export const getCategoriesForType = (type: TransactionType): string[] => {
-  const categories = getCategoriesByType(type);
-  return categories.map(category => category.name);
+  return CATEGORY_HIERARCHY
+    .filter(category => category.transactionType === type)
+    .map(category => category.name);
 };
 
-// Get subcategories for a specific category
-export const getSubcategoriesForCategory = (categoryId: string): string[] => {
-  const category = categoryHierarchy.find(cat => cat.id === categoryId);
-  if (!category || !category.subcategories) return [];
-  
-  return category.subcategories.map(subcat => subcat.name);
+// Helper function to get subcategories for a specific category
+export const getSubcategoriesForCategory = (categoryName: string): string[] => {
+  const category = CATEGORY_HIERARCHY.find(cat => cat.name === categoryName);
+  return category ? category.subcategories : [];
 };
-
-// For use in dropdown menus
-export const PEOPLE = ['none', 'Ahmed', 'Marwa', 'Youssef', 'Salma', 'Mazen'];
-
-// Currency options
-export const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];

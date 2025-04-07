@@ -1,263 +1,317 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Transaction, TransactionSummary, CategorySummary, TimePeriodData } from '@/types/transaction';
-import { v4 as uuidv4 } from 'uuid';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { transactionService } from '@/services/TransactionService';
+import { Transaction } from '@/types/transaction';
+import { useToast } from '@/components/ui/use-toast';
+import { validateData, transactionSchema, validateNewTransaction } from '@/lib/validation';
+import { handleError, handleValidationError } from '@/utils/error-utils';
+import { ErrorType } from '@/types/error';
+import { SupportedCurrency } from '@/types/locale';
 
 interface TransactionContextType {
   transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => void;
-  addBatchTransactions: (transactions: Transaction[]) => void;
-  deleteTransaction: (id: string) => void;
-  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Transaction | null;
+  updateTransaction: (id: string, updates: Partial<Omit<Transaction, 'id'>>) => Transaction | null;
+  deleteTransaction: (id: string) => boolean;
+  processTransactionsFromSMS: (messages: { sender: string; message: string; date: Date }[]) => Transaction[];
+  getTransactionsSummary: () => { income: number; expenses: number; balance: number };
+  getTransactionsByCategory: () => { name: string; value: number }[];
+  getTransactionsByTimePeriod: (period?: 'week' | 'month' | 'year') => { date: string; income: number; expense: number }[];
   isLoading: boolean;
-  // Add missing methods
-  getTransactionsSummary?: () => TransactionSummary;
-  getTransactionsByCategory?: () => CategorySummary[];
-  getTransactionsByTimePeriod?: (period: string) => TimePeriodData[];
-  processTransactionsFromSMS?: (messages: any[]) => void;
-  getCategoryPath?: (categoryId: string) => string;
 }
 
-const TransactionContext = createContext<TransactionContextType>({
-  transactions: [],
-  addTransaction: () => {},
-  addBatchTransactions: () => {},
-  deleteTransaction: () => {},
-  updateTransaction: () => {},
-  isLoading: false,
-  getTransactionsSummary: () => ({ totalIncome: 0, totalExpense: 0, netAmount: 0, count: 0, period: 'all', income: 0, expense: 0 }),
-  getTransactionsByCategory: () => [],
-  getTransactionsByTimePeriod: () => [],
-  processTransactionsFromSMS: () => {},
-  getCategoryPath: () => '',
-});
+const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
-export const useTransactions = () => useContext(TransactionContext);
+export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-export const TransactionProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [transactions, setTransactionsState] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  
-  // Load transactions from localStorage on mount
+  // Load transactions on mount
   useEffect(() => {
-    const loadTransactions = async () => {
-      setIsLoading(true);
-      try {
-        const storedTransactions = localStorage.getItem('transactions');
-        
-        if (storedTransactions) {
-          const parsedTransactions = JSON.parse(storedTransactions);
-          setTransactionsState(parsedTransactions);
-        } else {
-          // Don't use mock data, start with empty array
-          setTransactionsState([]);
-        }
-      } catch (error) {
-        console.error('Error loading transactions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadTransactions();
-  }, []);
-  
-  // Save transactions to localStorage when they change
-  useEffect(() => {
-    if (transactions.length > 0) {
-      localStorage.setItem('transactions', JSON.stringify(transactions));
+    try {
+      const loadedTransactions = transactionService.getAllTransactions();
+      setTransactions(loadedTransactions);
+    } catch (error) {
+      handleError({
+        type: ErrorType.STORAGE,
+        message: 'Failed to load your transactions. Please try again.',
+        originalError: error
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [transactions]);
-  
+  }, []);
+
+  // Save transactions when they change
+  useEffect(() => {
+    if (!isLoading) {
+      try {
+        transactionService.saveTransactions(transactions);
+      } catch (error) {
+        handleError({
+          type: ErrorType.STORAGE,
+          message: 'Failed to save transactions',
+          originalError: error,
+          isSilent: true // Don't show toast for background save failures
+        });
+      }
+    }
+  }, [transactions, isLoading]);
+
   const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: uuidv4(),
-    };
-    
-    setTransactionsState(prevTransactions => [...prevTransactions, newTransaction]);
-  };
-  
-  const addBatchTransactions = (newTransactions: Transaction[]) => {
-    // Make sure all transactions have IDs
-    const transactionsWithIds = newTransactions.map(tx => 
-      tx.id ? tx : { ...tx, id: uuidv4() }
-    );
-    
-    setTransactionsState(prevTransactions => [...prevTransactions, ...transactionsWithIds]);
-  };
-  
-  const deleteTransaction = (id: string) => {
-    setTransactionsState(prevTransactions => 
-      prevTransactions.filter(transaction => transaction.id !== id)
-    );
-  };
-  
-  const updateTransaction = (id: string, updates: Partial<Transaction>) => {
-    setTransactionsState(prevTransactions => 
-      prevTransactions.map(transaction => 
-        transaction.id === id ? { ...transaction, ...updates } : transaction
-      )
-    );
-  };
-
-  // Add the getTransactionsSummary method
-  const getTransactionsSummary = (): TransactionSummary => {
-    const summary = transactions.reduce(
-      (acc, transaction) => {
-        if (transaction.amount > 0) {
-          acc.income += transaction.amount;
-        } else {
-          acc.expense += Math.abs(transaction.amount);
-        }
-        acc.netAmount += transaction.amount;
-        acc.count += 1;
-        return acc;
-      },
-      { totalIncome: 0, totalExpense: 0, netAmount: 0, count: 0, period: 'all', income: 0, expense: 0 }
-    );
-    
-    summary.totalIncome = summary.income;
-    summary.totalExpense = summary.expense;
-    
-    return summary;
-  };
-
-  // Add the getTransactionsByCategory method
-  const getTransactionsByCategory = (): CategorySummary[] => {
-    const categoryTotals: Record<string, { amount: number; count: number }> = {};
-    const totalExpense = transactions.reduce((sum, tx) => sum + (tx.amount < 0 ? Math.abs(tx.amount) : 0), 0);
-    
-    // Calculate amount and count per category
-    transactions.forEach(tx => {
-      if (tx.amount < 0) { // Only consider expenses
-        if (!categoryTotals[tx.category]) {
-          categoryTotals[tx.category] = { amount: 0, count: 0 };
-        }
-        categoryTotals[tx.category].amount += Math.abs(tx.amount);
-        categoryTotals[tx.category].count += 1;
-      }
-    });
-    
-    // Convert to CategorySummary array
-    return Object.entries(categoryTotals).map(([categoryId, data]) => ({
-      categoryId,
-      categoryName: categoryId, // Ideally get real name from category data
-      amount: data.amount,
-      percentage: totalExpense > 0 ? (data.amount / totalExpense) * 100 : 0,
-      count: data.count,
-      name: categoryId, // For charts compatibility
-      value: data.amount // For charts compatibility
-    }));
-  };
-
-  // Add the getTransactionsByTimePeriod method
-  const getTransactionsByTimePeriod = (period: string = 'month'): TimePeriodData[] => {
-    // Group transactions by date period
-    const groupedByDate: Record<string, { income: number; expense: number }> = {};
-    
-    transactions.forEach(tx => {
-      const txDate = new Date(tx.date);
-      let dateKey: string;
+    try {
+      // Use our validation function
+      const validationResult = validateNewTransaction(transaction);
       
-      // Format date key based on the period
-      if (period === 'day') {
-        dateKey = txDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      } else if (period === 'week') {
-        // Get start of week
-        const dayOfWeek = txDate.getDay();
-        const startOfWeek = new Date(txDate);
-        startOfWeek.setDate(txDate.getDate() - dayOfWeek);
-        dateKey = startOfWeek.toISOString().split('T')[0];
-      } else if (period === 'month') {
-        dateKey = `${txDate.getFullYear()}-${String(txDate.getMonth() + 1).padStart(2, '0')}`;
-      } else if (period === 'year') {
-        dateKey = String(txDate.getFullYear());
-      } else {
-        dateKey = txDate.toISOString().split('T')[0];
+      if (!validationResult.success) {
+        handleValidationError(validationResult.error);
+        return null;
       }
       
-      if (!groupedByDate[dateKey]) {
-        groupedByDate[dateKey] = { income: 0, expense: 0 };
-      }
-      
-      if (tx.amount > 0) {
-        groupedByDate[dateKey].income += tx.amount;
-      } else {
-        groupedByDate[dateKey].expense += Math.abs(tx.amount);
-      }
-    });
-    
-    // Convert to TimePeriodData array
-    return Object.entries(groupedByDate).map(([date, data]) => ({
-      period: date,
-      income: data.income,
-      expense: data.expense,
-      net: data.income - data.expense,
-      date
-    }));
-  };
-
-  // Add the processTransactionsFromSMS method
-  const processTransactionsFromSMS = (messages: any[]) => {
-    // Simple implementation that converts SMS messages to transactions
-    const newTransactions = messages.map(msg => {
-      // Extract transaction details from SMS message
-      // This is a simplified implementation - real SMS parsing would be more complex
-      const isExpense = msg.message.toLowerCase().includes('debit') || 
-                         msg.message.toLowerCase().includes('purchase') ||
-                         msg.message.toLowerCase().includes('payment');
-      
-      // Try to extract amount using regex
-      const amountMatch = msg.message.match(/(\d+[.,]\d+|\d+)/);
-      const amount = amountMatch ? parseFloat(amountMatch[0].replace(',', '.')) : 0;
-      
-      return {
-        id: uuidv4(),
-        title: `SMS: ${msg.sender}`,
-        amount: isExpense ? -amount : amount,
-        category: isExpense ? 'Uncategorized Expense' : 'Uncategorized Income',
-        date: new Date(msg.date).toISOString(),
-        type: isExpense ? 'expense' as const : 'income' as const,
-        source: 'sms' as const,
-        smsDetails: {
-          sender: msg.sender,
-          message: msg.message,
-          timestamp: new Date(msg.date).toISOString()
-        }
+      // Ensure transaction is properly typed without forced casting
+      const typedTransaction = {
+        ...transaction,
+        person: transaction.person === 'none' ? null : transaction.person,
+        // Include subcategory if it exists
+        subcategory: transaction.subcategory || undefined
       };
-    });
-    
-    // Add the transactions to the store
-    addBatchTransactions(newTransactions);
-    
-    return newTransactions;
+      
+      const newTransaction = transactionService.addTransaction(typedTransaction);
+      setTransactions(prev => [newTransaction, ...prev]);
+      
+      toast({
+        title: 'Transaction Added',
+        description: 'Your transaction has been added successfully.',
+      });
+      
+      return newTransaction;
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to add transaction. Please try again.',
+        originalError: error
+      });
+      
+      return null;
+    }
   };
 
-  // Add the getCategoryPath method
-  const getCategoryPath = (categoryId: string): string => {
-    // Simple implementation that just returns the category ID
-    // In a real app, this would look up the category hierarchy
-    return categoryId;
+  // Fix updateTransaction method to handle required fields and subcategory
+  const updateTransaction = (id: string, updates: Partial<Omit<Transaction, 'id'>>) => {
+    try {
+      // Find the existing transaction
+      const existingTransaction = transactions.find(t => t.id === id);
+      
+      if (!existingTransaction) {
+        throw new Error(`Transaction with id ${id} not found`);
+      }
+      
+      // Ensure fromAccount is included without forced casting
+      const typedUpdates = {
+        ...updates,
+        fromAccount: updates.fromAccount || existingTransaction.fromAccount || "Cash", // Provide a default
+        // Include subcategory in updates
+        subcategory: updates.subcategory || existingTransaction.subcategory,
+        // Handle person field
+        person: updates.person === 'none' ? null : updates.person
+      };
+      
+      // Create the merged transaction for validation
+      const mergedTransaction = {
+        ...existingTransaction,
+        ...typedUpdates
+      };
+      
+      // Validate the merged transaction
+      const validationResult = validateData(
+        transactionSchema,
+        mergedTransaction
+      );
+      
+      if (!validationResult.success) {
+        handleValidationError(validationResult.error);
+        return null;
+      }
+      
+      const updatedTransaction = transactionService.updateTransaction(id, typedUpdates);
+      
+      if (updatedTransaction) {
+        setTransactions(prev => 
+          prev.map(t => t.id === id ? updatedTransaction : t)
+        );
+        
+        toast({
+          title: 'Transaction Updated',
+          description: 'Your transaction has been updated successfully.',
+        });
+        
+        return updatedTransaction;
+      }
+      
+      return null;
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to update transaction. Please try again.',
+        originalError: error
+      });
+      
+      return null;
+    }
   };
-  
+
+  const deleteTransaction = (id: string) => {
+    try {
+      const success = transactionService.deleteTransaction(id);
+      
+      if (success) {
+        setTransactions(prev => prev.filter(t => t.id !== id));
+        
+        toast({
+          title: 'Transaction Deleted',
+          description: 'Your transaction has been deleted successfully.',
+        });
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to delete transaction. Please try again.',
+        originalError: error
+      });
+      
+      return false;
+    }
+  };
+
+  const processTransactionsFromSMS = (messages: { sender: string; message: string; date: Date }[]) => {
+    try {
+      // Validate SMS messages
+      const validMessages = messages.filter(msg => {
+        if (!msg.sender || !msg.message || !msg.date) {
+          console.warn('Invalid SMS message format', msg);
+          return false;
+        }
+        return true;
+      });
+      
+      if (validMessages.length === 0) {
+        throw new Error('No valid SMS messages provided');
+      }
+      
+      const extractedTransactions = transactionService.processTransactionsFromSMS(validMessages);
+      
+      // Validate each extracted transaction
+      const validTransactions: Transaction[] = [];
+      
+      for (const transaction of extractedTransactions) {
+        // No need for type assertion anymore
+        const validationResult = validateData(transactionSchema, transaction);
+        
+        if (validationResult.success) {
+          validTransactions.push(validationResult.data);
+        } else {
+          console.warn('Invalid transaction extracted from SMS:', validationResult.error);
+        }
+      }
+      
+      if (validTransactions.length > 0) {
+        setTransactions(prev => [...validTransactions, ...prev]);
+        
+        toast({
+          title: 'Transactions Imported',
+          description: `${validTransactions.length} transactions were imported from SMS.`,
+        });
+      } else {
+        toast({
+          title: 'No Transactions Found',
+          description: 'No valid transactions were found in the provided SMS messages.',
+        });
+      }
+      
+      return validTransactions;
+    } catch (error) {
+      handleError({
+        type: ErrorType.PARSING,
+        message: 'Failed to process SMS messages. Please try again.',
+        originalError: error
+      });
+      
+      return [];
+    }
+  };
+
+  const getTransactionsSummary = () => {
+    try {
+      return transactionService.getTransactionsSummary();
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to calculate transaction summary',
+        originalError: error,
+        isSilent: true
+      });
+      
+      return { income: 0, expenses: 0, balance: 0 };
+    }
+  };
+
+  const getTransactionsByCategory = () => {
+    try {
+      return transactionService.getTransactionsByCategory();
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to calculate transactions by category',
+        originalError: error,
+        isSilent: true
+      });
+      
+      return [];
+    }
+  };
+
+  const getTransactionsByTimePeriod = (period: 'week' | 'month' | 'year' = 'month') => {
+    try {
+      return transactionService.getTransactionsByTimePeriod(period);
+    } catch (error) {
+      handleError({
+        type: ErrorType.TRANSACTION,
+        message: 'Failed to calculate transactions by time period',
+        originalError: error,
+        isSilent: true
+      });
+      
+      return [];
+    }
+  };
+
+  const value = {
+    transactions,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    processTransactionsFromSMS,
+    getTransactionsSummary,
+    getTransactionsByCategory,
+    getTransactionsByTimePeriod,
+    isLoading,
+  };
+
   return (
-    <TransactionContext.Provider 
-      value={{ 
-        transactions, 
-        addTransaction, 
-        addBatchTransactions,
-        deleteTransaction, 
-        updateTransaction,
-        isLoading,
-        getTransactionsSummary,
-        getTransactionsByCategory,
-        getTransactionsByTimePeriod,
-        processTransactionsFromSMS,
-        getCategoryPath
-      }}
-    >
+    <TransactionContext.Provider value={value}>
       {children}
     </TransactionContext.Provider>
   );
+};
+
+export const useTransactions = () => {
+  const context = useContext(TransactionContext);
+  if (context === undefined) {
+    throw new Error('useTransactions must be used within a TransactionProvider');
+  }
+  return context;
 };
