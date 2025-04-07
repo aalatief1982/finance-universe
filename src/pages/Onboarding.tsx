@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/context/UserContext';
 import OnboardingScreen from '@/components/wireframes/screens/OnboardingScreen';
@@ -12,6 +12,7 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const { user, auth, updateUser, checkProfileCompletion } = useUser();
   const { toast } = useToast();
+  const [smsPermissionStatus, setSmsPermissionStatus] = useState<boolean>(false);
   
   // Redirect to dashboard if user has already completed onboarding
   useEffect(() => {
@@ -37,17 +38,18 @@ const Onboarding = () => {
     const checkSmsPermissions = async () => {
       // Only check permissions in native environments
       if (smsPermissionService.isNativeEnvironment()) {
-        const hasPermission = smsPermissionService.hasPermission();
+        const hasPermission = await smsPermissionService.hasPermission();
         console.log('SMS permission status:', hasPermission ? 'granted' : 'not granted');
+        setSmsPermissionStatus(hasPermission);
       }
     };
     
     checkSmsPermissions();
   }, []);
   
-  const handleOnboardingComplete = () => {
+  const handleOnboardingComplete = async () => {
     // Check if SMS permissions were granted during onboarding
-    const smsPermissionGranted = smsPermissionService.hasPermission();
+    const smsPermissionGranted = await smsPermissionService.hasPermission();
     
     // Mark onboarding as complete
     updateUser({ 

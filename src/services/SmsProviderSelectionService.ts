@@ -163,6 +163,33 @@ class SmsProviderSelectionService {
     }
   }
   
+  // Added for backward compatibility - simulate provider detection
+  simulateProviderDetection(): SmsProvider[] {
+    const providers = this.getAllProviders();
+    // Mark 2 random providers as detected for demo purposes
+    const updatedProviders = [...providers];
+    
+    // Randomly select up to 2 providers to mark as detected
+    const indices = Array.from({ length: providers.length }, (_, i) => i)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2);
+    
+    indices.forEach(index => {
+      if (updatedProviders[index]) {
+        updatedProviders[index] = {
+          ...updatedProviders[index],
+          isDetected: true,
+          isSelected: true
+        };
+      }
+    });
+    
+    // Save the updated providers
+    this.saveProviders(updatedProviders);
+    
+    return updatedProviders;
+  }
+  
   // Access SMS in a native environment
   async accessNativeSms(): Promise<SmsMessage[]> {
     try {

@@ -1,6 +1,6 @@
 
 import { Capacitor } from '@capacitor/core';
-import { Permissions } from '@capacitor/core';
+import { Plugins } from '@capacitor/core';
 
 class SmsPermissionService {
   private permissionKey = 'sms_permission_granted';
@@ -21,8 +21,10 @@ class SmsPermissionService {
     }
     
     try {
-      const permissionStatus = await Permissions.query({ name: 'android.permission.READ_SMS' });
-      return permissionStatus.state === 'granted';
+      // Use native Android permissions API directly rather than Permissions helper
+      const { androidPermissions } = Plugins;
+      const result = await androidPermissions.checkPermission({ permission: 'android.permission.READ_SMS' });
+      return result.value;
     } catch (error) {
       console.error('Error checking SMS permission:', error);
       return false;
@@ -42,8 +44,10 @@ class SmsPermissionService {
     }
     
     try {
-      const permissionStatus = await Permissions.request({ name: 'android.permission.READ_SMS' });
-      const granted = permissionStatus.state === 'granted';
+      // Use native Android permissions API directly rather than Permissions helper
+      const { androidPermissions } = Plugins;
+      const result = await androidPermissions.requestPermission({ permission: 'android.permission.READ_SMS' });
+      const granted = result.value;
       localStorage.setItem(this.permissionKey, granted ? 'true' : 'false');
       return granted;
     } catch (error) {

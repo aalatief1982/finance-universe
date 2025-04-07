@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, MessageSquare, Calendar, Search, Loader2 } from 'lucide-react';
@@ -26,7 +27,7 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       setIsLoading(true);
       
       // Check if SMS permission is already granted
-      const hasPermission = smsPermissionService.hasPermission();
+      const hasPermission = await smsPermissionService.hasPermission();
       setPermissionGranted(hasPermission);
       
       try {
