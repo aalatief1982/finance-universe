@@ -1,162 +1,164 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Plus, List, BarChart2, Settings } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { Dialog } from '@/components/ui/dialog';
-import { v4 as uuidv4 } from 'uuid';
-import { useToast } from '@/hooks/use-toast';
+import TransactionList from '@/components/transactions/TransactionList';
+import ExpenseChart from '@/components/ExpenseChart';
+import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/UserContext';
+import { INITIAL_TRANSACTIONS, generateChartData } from '@/lib/mock-data';
 import { Transaction } from '@/types/transaction';
-import { useTransactions } from '@/context/TransactionContext';
-import { smsPermissionService } from '@/services/SmsPermissionService';
-import SmsPermissionRequest from '@/components/SmsPermissionRequest';
-
-// Import the component files
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import MobileSmsButton from '@/components/dashboard/MobileSmsButton';
-import DashboardContent from '@/components/dashboard/DashboardContent';
 import TransactionDialog from '@/components/dashboard/TransactionDialog';
+import EditTransactionDialog from '@/components/transactions/EditTransactionDialog';
+import { getCategoriesByType } from '@/lib/categories-data';
+import MobileSmsButton from '@/components/dashboard/MobileSmsButton';
 
 const Dashboard = () => {
-  const [isAddingExpense, setIsAddingExpense] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
-  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
-  const { toast } = useToast();
-  const { user, updateUser } = useUser();
-  const { transactions, addTransaction, isLoading } = useTransactions();
-  const [canReadSms, setCanReadSms] = useState(false);
-
-  // Check if SMS permissions are granted on component mount
+  const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
+  const [chartData, setChartData] = useState(generateChartData(transactions));
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState<Transaction | null>(null);
+  const [userData, setUserData] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'stats'>('list');
+  const navigate = useNavigate();
+  const { user } = useUser();
+  
+  // Get all category names
+  const incomeCategories = getCategoriesByType('income').map(c => c.name);
+  const expenseCategories = getCategoriesByType('expense').map(c => c.name);
+  const allCategories = [...incomeCategories, ...expenseCategories];
+  
   useEffect(() => {
-    const checkSmsPermission = () => {
-      const hasPermission = smsPermissionService.hasPermission();
-      setCanReadSms(hasPermission);
-      
-      // If we're in a native environment and permission isn't granted and user hasn't been asked yet
-      if (smsPermissionService.isNativeEnvironment() && 
-          !hasPermission && 
-          user?.smsPermissionGranted === undefined) {
-        setShowPermissionDialog(true);
+    // Load user data from context
+    if (user) {
+      if (user && user.createdAt instanceof Date) {
+        const formattedUser = {
+          ...user,
+          createdAt: typeof user.createdAt === 'object' ? user.createdAt.toISOString() : user.createdAt
+        };
+        // Use formattedUser instead of user directly
+        setUserData(formattedUser);
+      } else {
+        setUserData(user as any); // Type assertion as fallback
       }
-    };
-    
-    checkSmsPermission();
+    }
   }, [user]);
-
-  const handleAddTransaction = (formData: any) => {
-    try {
-      const newTransaction: Omit<Transaction, 'id'> = {
-        title: formData.title,
-        amount: formData.amount,
-        category: formData.category,
-        date: formData.date,
-        type: formData.amount >= 0 ? 'income' : 'expense',
-        notes: formData.notes || '',
-      };
-
-      addTransaction(newTransaction);
-      setIsAddingExpense(false);
-      
-      toast({
-        title: "Transaction added",
-        description: `${newTransaction.title} has been added successfully.`,
-      });
-    } catch (error) {
-      console.error('Error adding transaction:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add transaction. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRequestSmsPermission = async () => {
-    const granted = await smsPermissionService.requestPermission();
-    
-    if (granted) {
-      setCanReadSms(true);
-      updateUser({ smsPermissionGranted: true });
-      toast({
-        title: "Permission granted",
-        description: "You can now import transactions from SMS",
-      });
-    } else {
-      updateUser({ smsPermissionGranted: false });
-      toast({
-        title: "Permission denied",
-        description: "You'll need to manually add transactions",
-        variant: "destructive",
-      });
-    }
-    
-    setShowPermissionDialog(false);
+  
+  useEffect(() => {
+    // Update chart data when transactions change
+    setChartData(generateChartData(transactions));
+  }, [transactions]);
+  
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
   };
   
-  const handlePermissionDenied = () => {
-    updateUser({ smsPermissionGranted: false });
-    setShowPermissionDialog(false);
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
   };
-
+  
+  const handleOpenEditDialog = (transaction: Transaction) => {
+    setCurrentTransaction(transaction);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setCurrentTransaction(null);
+  };
+  
+  const handleAddTransaction = (formData: Transaction) => {
+    const newTransaction = {
+      ...formData,
+      id: String(transactions.length + 1),
+      amount: formData.type === 'income' ? formData.amount : -formData.amount
+    };
+    setTransactions([...transactions, newTransaction]);
+    handleCloseDialog();
+  };
+  
+  const handleUpdateTransaction = (formData: Transaction) => {
+    if (!currentTransaction) return;
+    
+    const updatedTransaction = {
+      ...formData,
+      id: currentTransaction.id,
+      amount: formData.type === 'income' ? formData.amount : -formData.amount
+    };
+    
+    const updatedTransactions = transactions.map(tx => 
+      tx.id === currentTransaction.id ? updatedTransaction : tx
+    );
+    
+    setTransactions(updatedTransactions);
+    handleCloseEditDialog();
+  };
+  
+  const handleDeleteTransaction = (id: string) => {
+    const updatedTransactions = transactions.filter(tx => tx.id !== id);
+    setTransactions(updatedTransactions);
+  };
+  
+  const handleViewModeChange = (mode: 'list' | 'stats') => {
+    setViewMode(mode);
+  };
+  
   return (
-    <>
-      <Layout>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-6"
-        >
-          <DashboardHeader 
-            user={user} 
-            setIsAddingExpense={setIsAddingExpense}
+    <Layout>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="container max-w-4xl mx-auto py-10"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <div className="space-x-2">
+            <Button variant="outline" size="icon" onClick={() => handleViewModeChange('list')}>
+              <List className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={() => handleViewModeChange('stats')}>
+              <BarChart2 className="h-4 w-4" />
+            </Button>
+            <Button onClick={handleOpenDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Transaction
+            </Button>
+          </div>
+        </div>
+        
+        {userData && userData.smsPermissionGranted && (
+          <MobileSmsButton />
+        )}
+        
+        {viewMode === 'stats' ? (
+          <ExpenseChart categoryData={chartData.categoryData} timelineData={chartData.timelineData} />
+        ) : (
+          <TransactionList 
+            transactions={transactions} 
+            onEdit={handleOpenEditDialog}
+            onDelete={handleDeleteTransaction}
           />
-          
-          {/* Only show SMS button if in mobile environment */}
-          {smsPermissionService.isNativeEnvironment() && (
-            canReadSms ? (
-              <MobileSmsButton />
-            ) : (
-              <div className="sm:hidden mb-4">
-                <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
-                  <p className="text-sm mb-2">Enable automatic expense tracking through SMS</p>
-                  <button 
-                    onClick={handleRequestSmsPermission} 
-                    className="text-xs bg-primary text-white px-3 py-1.5 rounded-md"
-                  >
-                    Grant SMS Permission
-                  </button>
-                </div>
-              </div>
-            )
-          )}
-          
-          <DashboardContent 
-            transactions={transactions}
-            filter={filter}
-            setFilter={setFilter}
-            setIsAddingExpense={setIsAddingExpense}
-            isLoading={isLoading}
-          />
-        </motion.div>
-      </Layout>
-
-      <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
-        <TransactionDialog
-          isOpen={isAddingExpense}
-          onClose={() => setIsAddingExpense(false)}
-          onSubmit={handleAddTransaction}
+        )}
+        
+        <TransactionDialog 
+          isOpen={isDialogOpen} 
+          onClose={handleCloseDialog} 
+          onSubmit={handleAddTransaction} 
         />
-      </Dialog>
-      
-      {/* SMS Permission Dialog */}
-      <Dialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
-        <SmsPermissionRequest
-          onGranted={handleRequestSmsPermission}
-          onDenied={handlePermissionDenied}
+        
+        <EditTransactionDialog
+          isOpen={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          currentTransaction={currentTransaction}
+          onSubmit={handleUpdateTransaction}
+          onCancel={handleCloseEditDialog}
+          categories={allCategories}
         />
-      </Dialog>
-    </>
+      </motion.div>
+    </Layout>
   );
 };
 

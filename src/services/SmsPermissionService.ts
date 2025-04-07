@@ -48,6 +48,13 @@ class SmsPermissionService {
   setPermissionStatus(granted: boolean): void {
     localStorage.setItem(this.permissionKey, granted ? 'true' : 'false');
   }
+  
+  /**
+   * Save permission status (alias for setPermissionStatus for compatibility)
+   */
+  savePermissionStatus(granted: boolean): void {
+    this.setPermissionStatus(granted);
+  }
 }
 
 // Export a singleton instance

@@ -6,6 +6,9 @@ export interface SmsProvider {
   patterns: string[];
   logo?: string;
   enabled: boolean;
+  isSelected?: boolean;
+  isDetected?: boolean;
+  pattern?: string; // Added for backward compatibility
 }
 
 // Define the SMS message interface
@@ -17,6 +20,7 @@ export interface SmsMessage {
 
 class SmsProviderSelectionService {
   private storageKey = 'selected_sms_providers';
+  private startDateKey = 'sms_start_date';
   
   // Default providers for demonstration purposes
   private defaultProviders: SmsProvider[] = [
@@ -24,25 +28,33 @@ class SmsProviderSelectionService {
       id: 'bank1',
       name: 'First National Bank',
       patterns: ['FNB', 'FirstNational'],
-      enabled: false
+      enabled: false,
+      isSelected: false,
+      isDetected: false
     },
     {
       id: 'bank2',
       name: 'City Bank',
       patterns: ['CITY', 'CityBank'],
-      enabled: false
+      enabled: false,
+      isSelected: false,
+      isDetected: false
     },
     {
       id: 'bank3',
       name: 'Universal Credit',
       patterns: ['UCARD', 'UniversalCredit'],
-      enabled: false
+      enabled: false,
+      isSelected: false,
+      isDetected: false
     },
     {
       id: 'bank4',
       name: 'Global Finance',
       patterns: ['GLOBAL', 'GlobalFin'],
-      enabled: false
+      enabled: false,
+      isSelected: false,
+      isDetected: false
     }
   ];
   
@@ -68,15 +80,26 @@ class SmsProviderSelectionService {
     }
   }
   
+  // For backward compatibility with SmsProviderSelectionScreen
+  getSmsProviders(): SmsProvider[] {
+    return this.getAllProviders();
+  }
+  
   // Get only the selected/enabled providers
   getSelectedProviders(): SmsProvider[] {
-    return this.getAllProviders().filter(provider => provider.enabled);
+    return this.getAllProviders().filter(provider => provider.enabled || provider.isSelected);
   }
   
   // Save the provider selection state
   saveProviders(providers: SmsProvider[]): void {
     try {
-      localStorage.setItem(this.storageKey, JSON.stringify(providers));
+      // Ensure both enabled and isSelected are synced
+      const updatedProviders = providers.map(provider => ({
+        ...provider,
+        isSelected: provider.enabled
+      }));
+      
+      localStorage.setItem(this.storageKey, JSON.stringify(updatedProviders));
     } catch (error) {
       console.error('Error saving SMS providers:', error);
     }
@@ -86,14 +109,32 @@ class SmsProviderSelectionService {
   toggleProvider(providerId: string, enabled: boolean): void {
     const providers = this.getAllProviders();
     const updatedProviders = providers.map(provider => 
-      provider.id === providerId ? { ...provider, enabled } : provider
+      provider.id === providerId ? { ...provider, enabled, isSelected: enabled } : provider
     );
     
     this.saveProviders(updatedProviders);
   }
   
+  // Toggle provider selection (for backward compatibility)
+  toggleProviderSelection(providerId: string): SmsProvider[] {
+    const providers = this.getAllProviders();
+    const provider = providers.find(p => p.id === providerId);
+    
+    if (provider) {
+      const newState = !provider.isSelected;
+      this.toggleProvider(providerId, newState);
+    }
+    
+    return this.getAllProviders();
+  }
+  
   // Check if providers have been configured
   hasConfiguredProviders(): boolean {
+    return this.getSelectedProviders().length > 0;
+  }
+  
+  // Check if provider selection is completed (for MobileSmsButton)
+  isProviderSelectionCompleted(): boolean {
     return this.getSelectedProviders().length > 0;
   }
   
@@ -138,6 +179,30 @@ class SmsProviderSelectionService {
         timestamp: new Date().toISOString()
       }
     ];
+  }
+  
+  // Simulate provider detection for testing
+  simulateProviderDetection(): SmsProvider[] {
+    const providers = this.getAllProviders();
+    const detectedIds = ['bank1', 'bank3']; // Simulate detected providers
+    
+    return providers.map(provider => ({
+      ...provider,
+      isDetected: detectedIds.includes(provider.id),
+      // Auto-select detected providers if they aren't already selected
+      isSelected: provider.isSelected || detectedIds.includes(provider.id),
+      enabled: provider.enabled || detectedIds.includes(provider.id)
+    }));
+  }
+  
+  // Get SMS start date (for SmsProviderSelectionScreen)
+  getSmsStartDate(): string | null {
+    return localStorage.getItem(this.startDateKey);
+  }
+  
+  // Save SMS start date (for SmsProviderSelectionScreen)
+  saveSmsStartDate(date: string): void {
+    localStorage.setItem(this.startDateKey, date);
   }
 }
 

@@ -32,3 +32,32 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
 }
+
+// Add ProfileData interface for user profile creation
+export interface ProfileData {
+  image?: string;
+  fullName: string;
+  gender: 'male' | 'female' | null;
+  birthDate: Date | null;
+  email?: string;
+  occupation?: string;
+  createdAt?: Date;
+}
+
+// Add UserPreferences interface for locale settings
+export interface UserPreferences {
+  theme?: 'light' | 'dark' | 'system';
+  currency?: 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CAD' | 'AUD';
+  notifications?: boolean;
+  language?: string;
+  displayOptions?: {
+    showCents?: boolean;
+    weekStartsOn?: 'sunday' | 'monday';
+    defaultView?: 'list' | 'stats' | 'calendar';
+    compactMode?: boolean;
+  };
+  privacy?: {
+    maskAmounts?: boolean;
+    requireAuthForSensitiveActions?: boolean;
+  };
+}
