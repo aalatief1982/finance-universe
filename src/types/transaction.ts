@@ -1,3 +1,4 @@
+
 export interface Transaction {
   id: string;
   title: string;
@@ -71,6 +72,9 @@ export interface TransactionSummary {
   period: string;
   income?: number;
   expense?: number;
+  // Add these properties to match how it's used in components
+  expenses?: number;
+  balance?: number;
 }
 
 export interface CategorySummary {

@@ -46,7 +46,10 @@ const DashboardScreen = ({
   }).slice(0, 5); // Just show the most recent 5
   
   // Calculate summary statistics
-  const { income, expenses, balance } = getTransactionsSummary();
+  const summary = getTransactionsSummary();
+  const totalIncome = summary.totalIncome || 0;
+  const totalExpense = summary.totalExpense || 0;
+  const balance = summary.netAmount || 0;
   
   // Format currency based on selection
   const formatCurrency = (amount: number) => {
@@ -65,8 +68,8 @@ const DashboardScreen = ({
       <div className="mb-4">
         <BalanceCard 
           balance={balance}
-          income={income}
-          expenses={expenses}
+          income={totalIncome}
+          expenses={totalExpense}
           currency={currency}
           setCurrency={setCurrency}
         />

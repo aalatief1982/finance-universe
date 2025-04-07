@@ -1,3 +1,4 @@
+
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
@@ -14,7 +15,7 @@ const setupGlobalErrorHandlers = () => {
       type: ErrorType.UNKNOWN,
       message: event.reason?.message || 'Unhandled Promise Rejection',
       severity: ErrorSeverity.ERROR,
-      details: {
+      context: {
         source: 'unhandledrejection',
         stack: event.reason?.stack,
       },
@@ -33,7 +34,7 @@ const setupGlobalErrorHandlers = () => {
       type: ErrorType.UNKNOWN,
       message: event.error?.message || event.message || 'Uncaught Error',
       severity: ErrorSeverity.CRITICAL,
-      details: {
+      context: {
         source: 'window.onerror',
         fileName: event.filename,
         lineNumber: event.lineno,
@@ -69,7 +70,7 @@ const setupGlobalErrorHandlers = () => {
         type: ErrorType.UNKNOWN,
         message: errorMessage,
         severity: ErrorSeverity.ERROR,
-        details: {
+        context: {
           source: 'react_error',
           fullMessage: errorText
         }
@@ -94,7 +95,7 @@ try {
     type: ErrorType.UNKNOWN,
     message: 'Failed to initialize application',
     severity: ErrorSeverity.CRITICAL,
-    details: {
+    context: {
       stage: 'initialization'
     },
     originalError: error

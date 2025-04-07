@@ -1,97 +1,107 @@
 
-import { AppError, ErrorType } from '@/types/error';
+import { AppError, ErrorType, ErrorSeverity } from '@/types/error';
 
-/**
- * Creates a standardized error object
- */
+// Create a new error instance
 export const createError = (
   type: ErrorType,
   message: string,
-  context?: any,
-  originalError?: any
+  context: any = {},
+  originalError: any = null
 ): AppError => {
   return {
     type,
     message,
     context,
     originalError,
-    timestamp: new Date()
+    timestamp: new Date(),
+    severity: context?.severity || ErrorSeverity.ERROR
   };
 };
 
-/**
- * Handles an error centrally
- */
-export const handleError = (error: AppError): void => {
-  // Log error to console
-  console.error(`[${error.type}] ${error.message}`, {
-    context: error.context,
-    originalError: error.originalError,
-    timestamp: error.timestamp
+// Log and handle errors
+export const handleError = (errorInfo: Partial<AppError> | Error): AppError => {
+  // If a regular Error is passed, convert it to our AppError format
+  if (errorInfo instanceof Error) {
+    return handleError({
+      type: ErrorType.UNKNOWN,
+      message: errorInfo.message,
+      originalError: errorInfo,
+    });
+  }
+  
+  // Ensure we have a complete AppError object
+  const appError: AppError = {
+    type: errorInfo.type || ErrorType.UNKNOWN,
+    message: errorInfo.message || 'An unknown error occurred',
+    context: errorInfo.context || {},
+    originalError: errorInfo.originalError || null,
+    timestamp: errorInfo.timestamp || new Date(),
+    severity: errorInfo.severity || ErrorSeverity.ERROR
+  };
+  
+  // Log the error to console
+  console.error(`[${appError.type}] ${appError.message}`, {
+    context: appError.context,
+    originalError: appError.originalError,
+    severity: appError.severity,
+    timestamp: appError.timestamp
   });
   
-  // In a real app, this might:
-  // - Send error to a monitoring service
-  // - Show a notification to the user
-  // - Take recovery actions
+  // Here you could add additional error handling like sending to monitoring service
+  
+  return appError;
 };
 
-/**
- * Handles validation errors
- */
-export const handleValidationError = (error: any): string => {
-  if (error?.errors?.length > 0) {
-    // Extract validation error messages
-    return error.errors.map((err: any) => err.message).join(', ');
-  }
-  
-  if (typeof error === 'string') {
-    return error;
-  }
-  
-  return 'Validation failed. Please check your input.';
-};
-
-/**
- * Handles network errors
- */
-export const handleNetworkError = (
-  message: string, 
-  context?: any, 
-  showToast: boolean = false
+// Specific error handlers for different types
+export const handleValidationError = (
+  message: string,
+  context: any = {},
+  logOnly: boolean = false
 ): AppError => {
-  const error = createError(
-    ErrorType.NETWORK,
+  const appError = createError(
+    ErrorType.VALIDATION,
     message,
-    context
+    context,
+    null
   );
   
-  handleError(error);
-  
-  // In a real app, this would show a toast notification if showToast is true
-  if (showToast) {
-    console.error('Network Error:', message);
+  if (!logOnly) {
+    // Additional validation error handling logic here
   }
   
-  return error;
+  return handleError(appError);
 };
 
-/**
- * Handles authentication errors
- */
-export const handleAuthError = (
-  message: string, 
-  context?: any, 
-  originalError?: any
+export const handleNetworkError = (
+  message: string,
+  context: any = {},
+  originalError: any = null
 ): AppError => {
-  const error = createError(
+  const appError = createError(
+    ErrorType.NETWORK,
+    message,
+    context,
+    originalError
+  );
+  
+  // Additional network error handling logic here
+  
+  return handleError(appError);
+};
+
+export const handleAuthError = (
+  message: string,
+  context: any = {},
+  originalError: any = null
+): AppError => {
+  const appError = createError(
     ErrorType.AUTH,
     message,
     context,
     originalError
   );
   
-  handleError(error);
+  // Additional auth error handling logic here
   
-  return error;
+  return handleError(appError);
 };

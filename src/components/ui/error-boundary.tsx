@@ -1,3 +1,4 @@
+
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       type: ErrorType.UNKNOWN,
       message: `Error in ${this.props.name || 'component'}: ${error.message}`,
       severity: ErrorSeverity.ERROR,
-      details: { 
+      context: { 
         componentStack: errorInfo.componentStack,
         componentName: this.props.name
       },
