@@ -36,6 +36,17 @@ interface HeaderProps {
   showNavigation?: boolean; // New prop to control navigation visibility
 }
 
+// Exported logo component
+export const XpensiaLogo = () => (
+  <div className="flex items-center space-x-2">
+    <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+      <span className="text-white font-semibold text-lg">X</span>
+    </div>
+    <span className="text-xl font-semibold tracking-tight">Xpensia</span>
+  </div>
+);
+
+
 // Map routes to their corresponding titles - similar to WireframeHeader
 const routeTitleMap: Record<string, string> = {
   '/': 'Home',
