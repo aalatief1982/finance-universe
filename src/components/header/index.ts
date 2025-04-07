@@ -1,7 +1,7 @@
 
 import Header from './Header';
 
-export { Header };
+export default Header;
 export { LogoLink } from './LogoLink';
 export { AuthHeader } from './AuthHeader';
 export { MainNavigation } from './MainNavigation';
