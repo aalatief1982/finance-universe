@@ -1,4 +1,6 @@
 
+import { nativeSmsService, SmsMessage } from './NativeSmsService';
+
 // Define the SMS provider interface
 export interface SmsProvider {
   id: string;
@@ -9,13 +11,6 @@ export interface SmsProvider {
   isSelected?: boolean;
   isDetected?: boolean;
   pattern?: string; // Added for backward compatibility
-}
-
-// Define the SMS message interface
-export interface SmsMessage {
-  address: string;
-  body: string;
-  timestamp: string;
 }
 
 class SmsProviderSelectionService {
@@ -139,60 +134,52 @@ class SmsProviderSelectionService {
   }
   
   // Detect providers from a list of SMS messages
-  detectProvidersFromMessages(messages: SmsMessage[]): SmsProvider[] {
-    const providers = this.getAllProviders();
-    const detectedProviderIds = new Set<string>();
-    
-    messages.forEach(message => {
-      providers.forEach(provider => {
-        const isFromProvider = provider.patterns.some(pattern => 
-          message.address.toLowerCase().includes(pattern.toLowerCase())
+  async detectProvidersFromMessages(): Promise<SmsProvider[]> {
+    try {
+      // Get all SMS messages
+      const messages = await nativeSmsService.readSmsMessages();
+      
+      // Detect providers
+      const detectedProviderNames = nativeSmsService.detectProvidersFromMessages(messages);
+      
+      // Update provider list with detected providers
+      const providers = this.getAllProviders();
+      const updatedProviders = providers.map(provider => {
+        const isDetected = detectedProviderNames.some(name => 
+          name.toLowerCase().includes(provider.name.toLowerCase()) ||
+          provider.name.toLowerCase().includes(name.toLowerCase())
         );
         
-        if (isFromProvider) {
-          detectedProviderIds.add(provider.id);
-        }
+        return {
+          ...provider,
+          isDetected
+        };
       });
-    });
-    
-    return providers.filter(provider => detectedProviderIds.has(provider.id));
+      
+      return updatedProviders;
+    } catch (error) {
+      console.error('Error detecting providers:', error);
+      return this.getAllProviders();
+    }
   }
   
-  // Access SMS in a native environment (mock implementation)
+  // Access SMS in a native environment
   async accessNativeSms(): Promise<SmsMessage[]> {
-    // In a real app, this would use a Capacitor plugin or other native bridge
-    // For now, return mock data
-    return [
-      {
-        address: 'FNB',
-        body: 'Your account was debited with $50.00 for Coffee Shop purchase',
-        timestamp: new Date().toISOString()
-      },
-      {
-        address: 'CITY',
-        body: 'You made a deposit of $100.00 to your savings account',
-        timestamp: new Date().toISOString()
-      },
-      {
-        address: 'UCARD',
-        body: 'A payment of $25.99 was made to Online Store',
-        timestamp: new Date().toISOString()
+    try {
+      const messages = await nativeSmsService.readSmsMessages();
+      
+      // Filter messages by selected providers if any
+      const selectedProviders = this.getSelectedProviders();
+      if (selectedProviders.length > 0) {
+        const selectedProviderNames = selectedProviders.map(p => p.name);
+        return nativeSmsService.filterMessagesByProviders(messages, selectedProviderNames);
       }
-    ];
-  }
-  
-  // Simulate provider detection for testing
-  simulateProviderDetection(): SmsProvider[] {
-    const providers = this.getAllProviders();
-    const detectedIds = ['bank1', 'bank3']; // Simulate detected providers
-    
-    return providers.map(provider => ({
-      ...provider,
-      isDetected: detectedIds.includes(provider.id),
-      // Auto-select detected providers if they aren't already selected
-      isSelected: provider.isSelected || detectedIds.includes(provider.id),
-      enabled: provider.enabled || detectedIds.includes(provider.id)
-    }));
+      
+      return messages;
+    } catch (error) {
+      console.error('Error accessing SMS:', error);
+      return [];
+    }
   }
   
   // Get SMS start date (for SmsProviderSelectionScreen)

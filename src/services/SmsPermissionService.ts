@@ -1,4 +1,7 @@
 
+import { Capacitor } from '@capacitor/core';
+import { Permissions } from '@capacitor/core';
+
 class SmsPermissionService {
   private permissionKey = 'sms_permission_granted';
   
@@ -6,19 +9,24 @@ class SmsPermissionService {
    * Check if we're in a native mobile environment
    */
   isNativeEnvironment(): boolean {
-    // In a real app, this would check for Capacitor or Cordova
-    // For demo purposes, check if we're on a mobile device
-    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-    return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    return Capacitor.isNativePlatform();
   }
   
   /**
    * Check if SMS permission has been granted
    */
-  hasPermission(): boolean {
-    // In a real app, this would check with Capacitor's Permissions API
-    // For demo purposes, check localStorage
-    return localStorage.getItem(this.permissionKey) === 'true';
+  async hasPermission(): Promise<boolean> {
+    if (!this.isNativeEnvironment()) {
+      return localStorage.getItem(this.permissionKey) === 'true';
+    }
+    
+    try {
+      const permissionStatus = await Permissions.query({ name: 'android.permission.READ_SMS' });
+      return permissionStatus.state === 'granted';
+    } catch (error) {
+      console.error('Error checking SMS permission:', error);
+      return false;
+    }
   }
   
   /**
@@ -26,20 +34,22 @@ class SmsPermissionService {
    * @returns Promise resolving to boolean indicating if permission was granted
    */
   async requestPermission(): Promise<boolean> {
-    // In a real app, this would use Capacitor's Permissions API
-    // For demo purposes, simulate a permission request
-    
-    // If we're not in a native environment, always deny
     if (!this.isNativeEnvironment()) {
-      return false;
+      // For web development, simulate a permission request
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      localStorage.setItem(this.permissionKey, 'true');
+      return true;
     }
     
-    // Simulate a delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Always grant for demo
-    localStorage.setItem(this.permissionKey, 'true');
-    return true;
+    try {
+      const permissionStatus = await Permissions.request({ name: 'android.permission.READ_SMS' });
+      const granted = permissionStatus.state === 'granted';
+      localStorage.setItem(this.permissionKey, granted ? 'true' : 'false');
+      return granted;
+    } catch (error) {
+      console.error('Error requesting SMS permission:', error);
+      return false;
+    }
   }
   
   /**

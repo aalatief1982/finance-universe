@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -10,22 +11,9 @@ import { smsProviderSelectionService } from '@/services/SmsProviderSelectionServ
 import { smsPermissionService } from '@/services/SmsPermissionService';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
+import { SmsMessage } from '@/services/NativeSmsService';
+import { smsProcessingService } from '@/services/SmsProcessingService';
 
-// Define the SMS message interface
-interface SmsMessage {
-  address: string;
-  body: string;
-  timestamp: string;
-}
-
-// Define SMS provider interface
-interface SmsProvider {
-  id: string;
-  name: string;
-  patterns: string[];
-}
-
-// This component would handle importing transactions from SMS
 const ProcessSmsMessages = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -38,25 +26,32 @@ const ProcessSmsMessages = () => {
 
   useEffect(() => {
     // Check if SMS permission is granted
-    if (!smsPermissionService.hasPermission()) {
-      toast({
-        title: "Permission required",
-        description: "SMS permission is needed to process messages",
-        variant: "destructive",
-      });
-      navigate('/dashboard');
-    }
+    const checkPermission = async () => {
+      const hasPermission = await smsPermissionService.hasPermission();
+      if (!hasPermission) {
+        toast({
+          title: "Permission required",
+          description: "SMS permission is needed to process messages",
+          variant: "destructive",
+        });
+        navigate('/dashboard');
+        return;
+      }
+      
+      // Check if providers are selected
+      const selectedProviders = smsProviderSelectionService.getSelectedProviders();
+      if (selectedProviders.length === 0) {
+        toast({
+          title: "No providers selected",
+          description: "Please select SMS providers first",
+          variant: "destructive",
+        });
+        navigate('/sms-providers');
+        return;
+      }
+    };
     
-    // Check if providers are selected
-    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
-    if (selectedProviders.length === 0) {
-      toast({
-        title: "No providers selected",
-        description: "Please select SMS providers first",
-        variant: "destructive",
-      });
-      navigate('/sms-providers');
-    }
+    checkPermission();
   }, [navigate, toast]);
 
   const startProcessing = async () => {
@@ -67,8 +62,7 @@ const ProcessSmsMessages = () => {
     setExtractedTransactions([]);
     
     try {
-      // In a real implementation, this would access actual SMS messages
-      // through a Capacitor plugin
+      // Get SMS messages from selected providers
       const messages: SmsMessage[] = await smsProviderSelectionService.accessNativeSms();
       
       if (messages.length === 0) {
@@ -83,46 +77,33 @@ const ProcessSmsMessages = () => {
       
       setFoundMessages(messages.length);
       
-      // Get selected providers
-      const selectedProviders: SmsProvider[] = smsProviderSelectionService.getSelectedProviders();
-      
       // Process messages in batches
+      const batchSize = 10;
+      const totalBatches = Math.ceil(messages.length / batchSize);
       const transactions: Transaction[] = [];
       
-      // In a real implementation, we would process messages in batches
-      // and extract transaction data
-      for (let i = 0; i < messages.length; i++) {
+      for (let i = 0; i < totalBatches; i++) {
+        const start = i * batchSize;
+        const end = Math.min(start + batchSize, messages.length);
+        const batch = messages.slice(start, end);
+        
         // Update progress
-        setProgress(Math.floor((i / messages.length) * 100));
-        setProcessedMessages(i + 1);
+        setProgress(Math.floor((i / totalBatches) * 100));
+        setProcessedMessages(end);
         
-        // Simulate processing delay
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        // Check if message is from a selected provider
-        const provider = selectedProviders.find(p => 
-          messages[i].address.toLowerCase().includes(p.name.toLowerCase()) ||
-          p.name.toLowerCase().includes(messages[i].address.toLowerCase())
+        // Process batch
+        const batchTransactions = smsProcessingService.processTransactionsFromSMS(
+          batch.map(msg => ({
+            sender: msg.address,
+            message: msg.body,
+            date: new Date(msg.timestamp)
+          }))
         );
         
-        if (provider) {
-          // Extract transaction data from message
-          // In a real implementation, this would use regex patterns to extract
-          // amount, date, merchant, etc.
-          
-          // For now, just create a dummy transaction
-          const transaction: Transaction = {
-            id: `sms-${Date.now()}-${i}`,
-            title: `Transaction from ${provider.name}`,
-            amount: Math.random() > 0.5 ? -Math.floor(Math.random() * 100) : Math.floor(Math.random() * 100),
-            date: new Date().toISOString().split('T')[0],
-            category: 'other',
-            type: Math.random() > 0.5 ? 'expense' : 'income',
-            source: 'sms',
-          };
-          
-          transactions.push(transaction);
-        }
+        transactions.push(...batchTransactions);
+        
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       setExtractedTransactions(transactions);

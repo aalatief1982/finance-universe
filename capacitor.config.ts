@@ -15,7 +15,7 @@ const config: CapacitorConfig = {
       launchShowDuration: 0
     },
     Permissions: {
-      permissions: ["sms"]
+      permissions: ["android.permission.READ_SMS", "android.permission.RECEIVE_SMS"]
     }
   },
   android: {
