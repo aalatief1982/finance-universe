@@ -10,7 +10,7 @@ import { smsPermissionService } from '@/services/SmsPermissionService';
 
 const Onboarding = () => {
   const navigate = useNavigate();
-  const { user, auth, updateUser } = useUser();
+  const { user, auth, updateUser, checkProfileCompletion } = useUser();
   const { toast } = useToast();
   
   // Redirect to dashboard if user has already completed onboarding
@@ -55,21 +55,33 @@ const Onboarding = () => {
       smsPermissionGranted
     });
     
-    // Notify user with appropriate message based on permission status
-    if (smsPermissionService.isNativeEnvironment() && smsPermissionGranted) {
-      toast({
-        title: "Setup complete!",
-        description: "Your account is ready to use with SMS tracking enabled.",
-      });
-    } else {
-      toast({
-        title: "Setup complete!",
-        description: "Your account is ready to use.",
-      });
-    }
+    // Check if profile is complete
+    const profileStatus = checkProfileCompletion();
     
-    // Navigate to dashboard
-    navigate('/dashboard');
+    // Navigate based on profile completion
+    if (!profileStatus.isComplete) {
+      // If profile is not complete, redirect to profile page
+      toast({
+        title: "Complete your profile",
+        description: "Please fill in your profile information to continue.",
+      });
+      navigate('/profile');
+    } else {
+      // If profile is complete, notify user and navigate to dashboard
+      if (smsPermissionService.isNativeEnvironment() && smsPermissionGranted) {
+        toast({
+          title: "Setup complete!",
+          description: "Your account is ready to use with SMS tracking enabled.",
+        });
+      } else {
+        toast({
+          title: "Setup complete!",
+          description: "Your account is ready to use.",
+        });
+      }
+      
+      navigate('/dashboard');
+    }
   };
   
   return (

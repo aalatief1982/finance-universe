@@ -1,3 +1,4 @@
+
 import { ErrorType } from '@/types/error';
 import { handleError } from '@/utils/error-utils';
 import { Capacitor } from '@capacitor/core';
@@ -7,7 +8,7 @@ export interface SmsProvider {
   name: string;
   pattern: string;
   isSelected: boolean;
-  isDetected?: boolean; // New field to track if provider was auto-detected
+  isDetected?: boolean; // Field to track if provider was auto-detected
 }
 
 export interface DetectedProvider {
@@ -21,16 +22,10 @@ const SMS_START_DATE_STORAGE_KEY = 'sms_start_date';
 const DETECTED_PROVIDERS_STORAGE_KEY = 'detected_sms_providers';
 
 class SmsProviderSelectionService {
-  // Default SMS providers
-  private defaultProviders: SmsProvider[] = [
-    { id: "bank-abc", name: "Bank ABC", pattern: "Transaction alert: $AMOUNT at...", isSelected: false },
-    { id: "credit-xyz", name: "Credit Card XYZ", pattern: "Your card was charged $AMOUNT...", isSelected: false },
-    { id: "investment", name: "Investment Corp", pattern: "Portfolio update: $AMOUNT deposited...", isSelected: false },
-    { id: "digital-wallet", name: "Digital Wallet", pattern: "Payment of $AMOUNT received...", isSelected: false },
-    { id: "mobile-banking", name: "Mobile Banking", pattern: "You spent $AMOUNT at...", isSelected: false }
-  ];
+  // Default provider templates - will be filled with actual detected providers
+  private defaultProviders: SmsProvider[] = [];
   
-  // Get all available SMS providers
+  // Get all available SMS providers - from actual detection
   getSmsProviders(): SmsProvider[] {
     try {
       const storedProviders = localStorage.getItem(SMS_PROVIDERS_STORAGE_KEY);
@@ -144,7 +139,7 @@ class SmsProviderSelectionService {
     return selectedProviders.length > 0;
   }
   
-  // NEW METHODS FOR PROVIDER DETECTION
+  // METHODS FOR REAL PROVIDER DETECTION
   
   // Save detected providers
   saveDetectedProviders(detectedProviders: DetectedProvider[]): void {
@@ -179,6 +174,7 @@ class SmsProviderSelectionService {
   
   // Analyze SMS message content to detect providers
   detectProviderFromMessage(message: string, sender: string): string | null {
+    // Get existing providers or create a new provider ID if no match
     const providers = this.getSmsProviders();
     
     // First check if the sender matches any known provider name
@@ -208,25 +204,63 @@ class SmsProviderSelectionService {
       }
     }
     
-    return null;
+    // If no match found, this is a new provider
+    // Generate an ID based on the sender
+    const cleanSender = sender.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    return `provider-${cleanSender}-${Math.floor(Math.random() * 1000)}`;
   }
   
-  // Process a batch of SMS messages to detect providers
-  detectProvidersFromMessages(messages: Array<{body: string, address: string}>): DetectedProvider[] {
+  // Create a new provider from a message
+  createProviderFromMessage(message: string, sender: string): SmsProvider {
+    const id = this.detectProviderFromMessage(message, sender) || 
+              `provider-${Math.floor(Math.random() * 10000)}`;
+    
+    // Extract a pattern from the message
+    let pattern = message;
+    
+    // Look for amount patterns (like $50.00 or 50.00 USD)
+    const amountRegex = /\$?\d+(\.\d{2})?\s?[A-Z]{0,3}/g;
+    pattern = pattern.replace(amountRegex, '$AMOUNT');
+    
+    // Truncate long patterns
+    if (pattern.length > 100) {
+      pattern = pattern.substring(0, 100) + '...';
+    }
+    
+    return {
+      id,
+      name: sender,
+      pattern,
+      isSelected: false,
+      isDetected: true
+    };
+  }
+  
+  // Process a batch of SMS messages to detect providers - now with real data
+  detectProvidersFromMessages(messages: Array<{body: string, address: string}>): SmsProvider[] {
     if (!messages || messages.length === 0) {
-      return this.getDetectedProviders();
+      return this.getSmsProviders();
     }
     
     const existingDetected = this.getDetectedProviders();
     const detectedProviderCounts: Record<string, number> = {};
     const lastSeen: Record<string, Date> = {};
+    const newProviders: Record<string, SmsProvider> = {};
     
-    // Count provider occurrences in messages
+    // Process each message to detect or create providers
     messages.forEach(message => {
+      // Try to detect existing provider
       const providerId = this.detectProviderFromMessage(message.body, message.address);
+      
       if (providerId) {
         detectedProviderCounts[providerId] = (detectedProviderCounts[providerId] || 0) + 1;
         lastSeen[providerId] = new Date();
+      } else {
+        // Create a new provider from this message
+        const newProvider = this.createProviderFromMessage(message.body, message.address);
+        newProviders[newProvider.id] = newProvider;
+        detectedProviderCounts[newProvider.id] = 1;
+        lastSeen[newProvider.id] = new Date();
       }
     });
     
@@ -240,7 +274,7 @@ class SmsProviderSelectionService {
       }
     });
     
-    // Convert to array of detected providers
+    // Convert to array of detected providers for storage
     const detectedProviders: DetectedProvider[] = Object.keys(detectedProviderCounts).map(id => ({
       id,
       count: detectedProviderCounts[id],
@@ -253,36 +287,26 @@ class SmsProviderSelectionService {
     // Save detected providers
     this.saveDetectedProviders(detectedProviders);
     
-    return detectedProviders;
-  }
-  
-  // Auto-select providers based on detection (if user hasn't made a selection yet)
-  autoSelectDetectedProviders(): SmsProvider[] {
-    // Only auto-select if user hasn't made any selections yet
-    const providers = this.getSmsProviders();
-    const hasUserSelectedAny = providers.some(p => p.isSelected);
+    // Get existing providers
+    let providers = this.getSmsProviders();
     
-    if (hasUserSelectedAny) {
-      return providers; // User has already made selections, don't override
-    }
+    // Add new providers
+    Object.values(newProviders).forEach(newProvider => {
+      if (!providers.some(p => p.id === newProvider.id)) {
+        providers.push(newProvider);
+      }
+    });
     
-    const detectedProviders = this.getDetectedProviders();
-    
-    // Only consider providers with multiple detections to reduce false positives
-    const significantDetections = detectedProviders.filter(dp => dp.count >= 2);
-    
-    if (significantDetections.length === 0) {
-      return providers; // No significant detections
-    }
-    
-    // Auto-select the detected providers
-    const updatedProviders = providers.map(provider => ({
+    // Update provider detection status
+    providers = providers.map(provider => ({
       ...provider,
-      isSelected: provider.isSelected || significantDetections.some(dp => dp.id === provider.id)
+      isDetected: detectedProviders.some(dp => dp.id === provider.id)
     }));
     
-    this.saveSelectedProviders(updatedProviders);
-    return updatedProviders;
+    // Save all providers
+    this.saveSelectedProviders(providers);
+    
+    return providers;
   }
   
   // Method to check if we're in a native environment (needed for actual SMS access)
@@ -290,23 +314,16 @@ class SmsProviderSelectionService {
     return Capacitor.isNativePlatform();
   }
   
-  // Simulate provider detection for web environment (development/testing)
-  simulateProviderDetection(): SmsProvider[] {
-    // Only use in web environment
-    if (this.isNativeEnvironment()) {
-      return this.getSmsProviders();
+  // Access native SMS for provider detection (in real implementation, this would use a Capacitor plugin)
+  async accessNativeSms(): Promise<Array<{body: string, address: string}>> {
+    if (!this.isNativeEnvironment()) {
+      console.log('Cannot access native SMS in web environment');
+      return [];
     }
     
-    // Simulate detected providers
-    const mockDetectedProviders: DetectedProvider[] = [
-      { id: "bank-abc", count: 5, lastSeen: new Date() },
-      { id: "credit-xyz", count: 3, lastSeen: new Date() }
-    ];
-    
-    this.saveDetectedProviders(mockDetectedProviders);
-    
-    // Auto-select them
-    return this.autoSelectDetectedProviders();
+    // In a real implementation, this would use a Capacitor plugin to access SMS
+    // For now, return an empty array
+    return [];
   }
 }
 

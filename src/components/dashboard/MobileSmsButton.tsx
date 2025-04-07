@@ -1,52 +1,42 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Settings } from 'lucide-react';
-import { smsPermissionService } from '@/services/SmsPermissionService';
+import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
+import { useToast } from '@/hooks/use-toast';
 
 const MobileSmsButton = () => {
-  const canReadSms = smsPermissionService.canReadSms();
-  const hasPermission = smsPermissionService.hasPermission();
-  const hasProviders = smsPermissionService.hasProvidersSelected();
-
-  // If we have permission but no providers selected
-  if (hasPermission && !hasProviders) {
-    return (
-      <div className="sm:hidden">
-        <Button 
-          variant="outline" 
-          className="w-full gap-1 mb-4"
-          asChild
-        >
-          <Link to="/sms-providers">
-            <Settings size={18} />
-            Configure SMS Providers
-          </Link>
-        </Button>
-      </div>
-    );
-  }
-
-  // If we don't have permission, don't show any button
-  if (!hasPermission) {
-    return null;
-  }
-
-  // Default case: everything is set up properly
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const handleSmsButtonClick = () => {
+    // Check if user has selected SMS providers
+    const hasProviders = smsProviderSelectionService.isProviderSelectionCompleted();
+    
+    if (!hasProviders) {
+      // Navigate to SMS provider selection screen
+      toast({
+        title: "SMS Providers Needed",
+        description: "Select the financial institutions that send you SMS alerts",
+      });
+      navigate('/sms-providers');
+    } else {
+      // Navigate to process SMS screen
+      navigate('/process-sms');
+    }
+  };
+  
   return (
-    <div className="sm:hidden">
-      <Button 
-        variant="outline" 
-        className="w-full gap-1 mb-4"
-        asChild
-      >
-        <Link to="/process-sms">
-          <MessageSquare size={18} />
-          Import Transactions from SMS
-        </Link>
-      </Button>
-    </div>
+    <Button 
+      variant="outline" 
+      size="sm" 
+      className="w-full bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
+      onClick={handleSmsButtonClick}
+    >
+      <MessageSquare className="h-4 w-4 mr-2" />
+      Import Transactions from SMS
+    </Button>
   );
 };
 

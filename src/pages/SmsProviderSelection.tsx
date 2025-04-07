@@ -1,50 +1,38 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, ChevronRight, Search, AlertCircle, Check } from 'lucide-react';
+import { Calendar, ChevronRight, Search, AlertCircle, Check, RefreshCw } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { smsProviderSelectionService, SmsProvider } from '@/services/SmsProviderSelectionService';
+import { smsPermissionService } from '@/services/SmsPermissionService';
 
 const SmsProviderSelection = () => {
   const [providers, setProviders] = useState<SmsProvider[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
   const [hasDetectedProviders, setHasDetectedProviders] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  // Load providers on mount and attempt auto-detection
+  // Load providers on mount
   useEffect(() => {
     const loadProviders = async () => {
       setIsLoading(true);
       try {
         // Get initial providers
         let loadedProviders = smsProviderSelectionService.getSmsProviders();
-        
-        // If in web environment, simulate provider detection
-        if (!smsProviderSelectionService.isNativeEnvironment()) {
-          loadedProviders = smsProviderSelectionService.simulateProviderDetection();
-          setHasDetectedProviders(loadedProviders.some(p => p.isSelected && p.isDetected));
-        } else {
-          // In native environment, we'd request SMS access and analyze messages
-          // This requires actual device testing, so we'll fallback to simulation for now
-          const hasPermission = smsProviderSelectionService.hasSmsPermission();
-          
-          if (hasPermission) {
-            // In a real implementation, we would read SMS messages here
-            // For now, we'll just simulate detection in native environment too
-            loadedProviders = smsProviderSelectionService.simulateProviderDetection();
-            setHasDetectedProviders(loadedProviders.some(p => p.isSelected && p.isDetected));
-          }
-        }
-        
         setProviders(loadedProviders);
+        
+        // Check if there are any detected providers
+        setHasDetectedProviders(loadedProviders.some(p => p.isDetected));
         
         // Check if there's a previously saved start date
         const savedDate = smsProviderSelectionService.getSmsStartDate();
@@ -89,6 +77,58 @@ const SmsProviderSelection = () => {
     });
   };
 
+  const handleScanSms = async () => {
+    // Check for SMS permission
+    if (!smsPermissionService.hasPermission()) {
+      const granted = await smsPermissionService.requestPermission();
+      if (!granted) {
+        toast({
+          title: "Permission required",
+          description: "SMS permission is needed to scan for providers",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    setIsScanning(true);
+    
+    try {
+      // In a real implementation, this would access actual SMS messages
+      // through a Capacitor plugin
+      const messages = await smsProviderSelectionService.accessNativeSms();
+      
+      if (messages.length === 0) {
+        toast({
+          title: "No messages found",
+          description: "We couldn't find any SMS messages to analyze",
+          variant: "destructive",
+        });
+        setIsScanning(false);
+        return;
+      }
+      
+      // Process the messages to find providers
+      const detectedProviders = smsProviderSelectionService.detectProvidersFromMessages(messages);
+      setProviders(detectedProviders);
+      setHasDetectedProviders(detectedProviders.some(p => p.isDetected));
+      
+      toast({
+        title: "SMS scan complete",
+        description: `Found ${detectedProviders.filter(p => p.isDetected).length} potential providers`,
+      });
+    } catch (error) {
+      console.error('Error scanning SMS:', error);
+      toast({
+        title: "Error scanning SMS",
+        description: "There was a problem accessing your SMS messages",
+        variant: "destructive",
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
   const handleContinue = () => {
     const selectedProviders = providers.filter(p => p.isSelected);
     
@@ -102,10 +142,7 @@ const SmsProviderSelection = () => {
     }
 
     // In a real app, this would save the selection to state/local storage
-    // Already saving through service, but we'll also save to localStorage for backward compatibility
-    localStorage.setItem('smsProviders', JSON.stringify(
-      selectedProviders.map(p => ({ id: p.id, name: p.name }))
-    ));
+    // Already saving through service
     
     toast({
       title: "Providers selected",
@@ -140,20 +177,41 @@ const SmsProviderSelection = () => {
             <div>
               <h3 className="font-medium text-green-800">Providers Detected!</h3>
               <p className="text-sm text-green-700">
-                We've detected some SMS providers and pre-selected them for you. You can modify this selection.
+                We've detected some SMS providers in your messages. You can modify this selection.
               </p>
             </div>
           </motion.div>
         )}
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-          <Input 
-            placeholder="Search SMS providers..." 
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+            <Input 
+              placeholder="Search SMS providers..." 
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          <Button 
+            onClick={handleScanSms} 
+            disabled={isScanning} 
+            variant="outline" 
+            className="flex-shrink-0"
+          >
+            {isScanning ? (
+              <>
+                <RefreshCw className="mr-1 h-4 w-4 animate-spin" />
+                Scanning...
+              </>
+            ) : (
+              <>
+                <Search className="mr-1 h-4 w-4" />
+                Scan SMS
+              </>
+            )}
+          </Button>
         </div>
 
         {isLoading ? (
@@ -200,7 +258,24 @@ const SmsProviderSelection = () => {
                 </motion.div>
               ))
             ) : (
-              <p className="text-center text-muted-foreground py-4">No providers found</p>
+              <div className="text-center py-10 bg-secondary/30 rounded-lg border border-dashed">
+                <Search className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+                <p className="text-muted-foreground">
+                  {isScanning 
+                    ? "Scanning for providers..." 
+                    : "No providers found. Try scanning your SMS messages."}
+                </p>
+                {!isScanning && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleScanSms} 
+                    className="mt-3"
+                  >
+                    Scan SMS
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -227,7 +302,7 @@ const SmsProviderSelection = () => {
           className="w-full" 
           size={isMobile ? "lg" : "default"}
           onClick={handleContinue}
-          disabled={isLoading}
+          disabled={isLoading || providers.filter(p => p.isSelected).length === 0}
         >
           Continue
         </Button>
