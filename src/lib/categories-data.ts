@@ -1,5 +1,5 @@
 
-import { CategoryWithSubcategories } from '@/types/transaction';
+import { CategoryWithSubcategories, TransactionType } from '@/types/transaction';
 
 // Define main category hierarchy
 export const categoryHierarchy: CategoryWithSubcategories[] = [
@@ -71,6 +71,9 @@ export const categoryHierarchy: CategoryWithSubcategories[] = [
   }
 ];
 
+// Export a reference to the category hierarchy for components that expect it
+export const CATEGORY_HIERARCHY = categoryHierarchy;
+
 // Get all categories flattened into an array
 export const getAllCategories = (): CategoryWithSubcategories[] => {
   const allCategories: CategoryWithSubcategories[] = [];
@@ -89,14 +92,22 @@ export const getAllCategories = (): CategoryWithSubcategories[] => {
 };
 
 // Get categories by transaction type (income, expense, transfer)
-export const getCategoriesByType = (type: 'income' | 'expense' | 'transfer'): CategoryWithSubcategories[] => {
+export const getCategoriesByType = (type: TransactionType): CategoryWithSubcategories[] => {
   return categoryHierarchy.filter(category => category.transactionType === type);
 };
 
+// Function for components that expect string[] instead of CategoryWithSubcategories[]
+export const getCategoriesForType = (type: TransactionType): string[] => {
+  const categories = getCategoriesByType(type);
+  return categories.map(category => category.name);
+};
+
 // Get subcategories for a specific category
-export const getSubcategoriesForCategory = (categoryId: string): CategoryWithSubcategories[] => {
+export const getSubcategoriesForCategory = (categoryId: string): string[] => {
   const category = categoryHierarchy.find(cat => cat.id === categoryId);
-  return category?.subcategories || [];
+  if (!category || !category.subcategories) return [];
+  
+  return category.subcategories.map(subcat => subcat.name);
 };
 
 // For use in dropdown menus

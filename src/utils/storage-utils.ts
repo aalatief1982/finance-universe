@@ -157,7 +157,7 @@ export const getStoredCategoryChanges = (): TransactionCategoryChange[] => {
   }
 };
 
-// Add the missing storeCategoryChanges function
+// Implement the missing storeCategoryChanges function
 export const storeCategoryChanges = (changes: TransactionCategoryChange[]): void => {
   try {
     localStorage.setItem(STORAGE_KEYS.CATEGORY_CHANGES, JSON.stringify(changes));
