@@ -33,6 +33,7 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
             title: currentTransaction.title,
             amount: Math.abs(currentTransaction.amount),
             category: currentTransaction.category,
+            subcategory: currentTransaction.subcategory || "none",
             date: currentTransaction.date,
             type: currentTransaction.type || (currentTransaction.amount >= 0 ? 'income' : 'expense'),
             notes: currentTransaction.notes || '',

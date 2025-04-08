@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,14 +82,14 @@ const ExpenseForm = ({
     title: "",
     amount: undefined,
     category: "",
-    subcategory: "",
+    subcategory: "none", // Set default to "none" instead of empty string
     date: new Date().toISOString().split('T')[0],
     type: "expense",
     fromAccount: "",
     toAccount: "",
     description: "",
     notes: "",
-    person: "none", // Set default to "none" instead of undefined
+    person: "none", // Set default to "none"
     currency: "SAR",
   },
   onCancel,
@@ -114,14 +115,14 @@ const ExpenseForm = ({
       const subcategories = getSubcategoriesForCategory(selectedCategory);
       setAvailableSubcategories(subcategories);
       
-      // If current subcategory is not available, reset it
+      // If current subcategory is not available, reset it to "none"
       const currentSubcategory = form.getValues("subcategory");
-      if (currentSubcategory && !subcategories.includes(currentSubcategory)) {
-        form.setValue("subcategory", "");
+      if (currentSubcategory && currentSubcategory !== "none" && !subcategories.includes(currentSubcategory)) {
+        form.setValue("subcategory", "none");
       }
     } else {
       setAvailableSubcategories([]);
-      form.setValue("subcategory", "");
+      form.setValue("subcategory", "none");
     }
   }, [selectedCategory, form]);
   
@@ -133,7 +134,7 @@ const ExpenseForm = ({
     const currentCategory = form.getValues("category");
     if (currentCategory && !categoryNames.includes(currentCategory)) {
       form.setValue("category", "");
-      form.setValue("subcategory", "");
+      form.setValue("subcategory", "none");
       setSelectedCategoryName("");
     }
   }, [transactionType, form]);
@@ -187,7 +188,7 @@ const ExpenseForm = ({
     setShowCategorySelector(false);
     
     // Reset subcategory when category changes
-    form.setValue('subcategory', '', { shouldValidate: true });
+    form.setValue('subcategory', "none", { shouldValidate: true });
   };
 
   return (
