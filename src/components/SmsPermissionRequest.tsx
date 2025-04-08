@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, MessageSquare, Shield } from 'lucide-react';
+import { AlertTriangle, MessageSquare, Shield, Loader } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { smsPermissionService } from '@/services/SmsPermissionService';
@@ -128,7 +128,12 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
           onClick={handleRequestPermission}
           disabled={isRequesting}
         >
-          {isRequesting ? "Requesting Permission..." : "Grant SMS Permission"}
+          {isRequesting ? (
+            <span className="flex items-center">
+              <Loader className="animate-spin mr-2" size={16} />
+              Requesting Permission...
+            </span>
+          ) : "Grant SMS Permission"}
         </Button>
         <Button 
           variant="outline" 

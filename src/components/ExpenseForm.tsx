@@ -83,7 +83,7 @@ const ExpenseForm = ({
       exit={{ opacity: 0, y: -20 }}
       className="w-full max-w-md mx-auto"
     >
-      <Card className="border border-border shadow-sm">
+      <Card className="border border-border shadow-sm max-h-[80vh] overflow-y-auto">
         <CardHeader>
           <CardTitle className="text-xl font-medium text-center">
             {defaultValues.title ? "Edit Transaction" : "Add New Transaction"}

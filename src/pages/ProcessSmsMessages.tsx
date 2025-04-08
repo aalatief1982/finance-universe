@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Check, Clock, Pause, Play, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Check, Clock, Pause, Play, AlertTriangle, Loader } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -26,29 +25,42 @@ const ProcessSmsMessages = () => {
   const [processedCount, setProcessedCount] = useState(0);
   const [currentTransaction, setCurrentTransaction] = useState<any>(null);
   const [confirmedTransactions, setConfirmedTransactions] = useState<any[]>([]);
+  const [isCheckingPermission, setIsCheckingPermission] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     // Check permission and provider configuration on mount
-    const hasPermission = smsPermissionService.hasPermission();
-    const hasProviders = smsProviderSelectionService.isProviderSelectionCompleted();
-    
-    setPermissionGranted(hasPermission);
-    setProvidersConfigured(hasProviders);
-    
-    // If both permissions and providers are configured, we can start processing immediately
-    if (hasPermission && hasProviders) {
-      // Don't auto-start, just show the processing screen
-    } 
-    // If providers are not configured but permission is granted, navigate to provider selection
-    else if (hasPermission && !hasProviders) {
-      toast({
-        title: "SMS providers needed",
-        description: "Please select the financial institutions to track",
-      });
-      navigate('/profile');
-    }
+    const checkPermissionsAndProviders = async () => {
+      setIsCheckingPermission(true);
+      try {
+        const hasPermission = smsPermissionService.hasPermission();
+        const hasProviders = smsProviderSelectionService.isProviderSelectionCompleted();
+        
+        setPermissionGranted(hasPermission);
+        setProvidersConfigured(hasProviders);
+        
+        // If providers are not configured but permission is granted, navigate to provider selection
+        if (hasPermission && !hasProviders) {
+          toast({
+            title: "SMS providers needed",
+            description: "Please select the financial institutions to track",
+          });
+          navigate('/profile');
+        }
+      } catch (error) {
+        console.error("Error checking permissions:", error);
+        toast({
+          title: "Error",
+          description: "Could not check SMS permissions",
+          variant: "destructive"
+        });
+      } finally {
+        setIsCheckingPermission(false);
+      }
+    };
+
+    checkPermissionsAndProviders();
   }, [navigate, toast]);
 
   const handlePermissionGranted = () => {
@@ -239,6 +251,17 @@ const ProcessSmsMessages = () => {
     
     navigate('/dashboard');
   };
+
+  if (isCheckingPermission) {
+    return (
+      <Layout>
+        <div className="max-w-md mx-auto mt-8 flex flex-col items-center justify-center p-8">
+          <Loader className="animate-spin h-12 w-12 text-primary mb-4" />
+          <p className="text-center text-muted-foreground">Checking SMS permissions...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!permissionGranted) {
     return (

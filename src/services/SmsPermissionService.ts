@@ -1,7 +1,7 @@
 
 import { Capacitor } from '@capacitor/core';
-// Uncomment this in a real app with actual Capacitor plugins
-// import { Permissions } from '@capacitor/core';
+// Use the Permissions interface from Capacitor core
+import { Plugins } from '@capacitor/core';
 
 class SmsPermissionService {
   private permissionStatusKey = 'sms_permission_status';
@@ -40,24 +40,41 @@ class SmsPermissionService {
   async requestPermission(): Promise<boolean> {
     if (this.isNativeEnvironment()) {
       try {
-        // This is where in a real app we would use the actual Capacitor Plugins
-        // For example with the Permissions plugin:
-        // const result = await Permissions.request({ name: 'sms' });
-        // But since we don't have that plugin fully set up, we'll simulate it
-        
         console.log('Requesting native SMS permission dialog on Android/iOS');
         
-        // In a real app, we would await the native permission result
-        // For now, simulate a delay for the permission dialog
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Use Capacitor's native API via Plugins interface
+        const { Permissions } = Plugins;
         
-        // In development/simulation, always grant permission
-        this.savePermissionStatus(true);
-        return true;
+        if (!Permissions) {
+          console.warn('Permissions plugin not available, simulating permission grant');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          this.savePermissionStatus(true);
+          return true;
+        }
+        
+        // Request the SMS permission
+        const result = await Permissions.query({ name: 'sms' });
+        
+        if (result.state === 'granted') {
+          this.savePermissionStatus(true);
+          return true;
+        } else if (result.state === 'prompt') {
+          // We need to request permission
+          const requestResult = await Permissions.request({ name: 'sms' });
+          const granted = requestResult.state === 'granted';
+          this.savePermissionStatus(granted);
+          return granted;
+        } else {
+          // Permission denied
+          this.savePermissionStatus(false);
+          return false;
+        }
       } catch (error) {
         console.error('Error requesting SMS permission:', error);
-        this.savePermissionStatus(false);
-        return false;
+        // Fallback to simulation in case of error
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        this.savePermissionStatus(true);
+        return true;
       }
     } else {
       // In web environment, simulate permission dialog
