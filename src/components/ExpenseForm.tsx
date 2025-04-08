@@ -431,7 +431,7 @@ const ExpenseForm = ({
                       <FormItem>
                         <FormLabel>Subcategory</FormLabel>
                         <Select
-                          value={field.value || ""}
+                          value={field.value || "none"}
                           onValueChange={field.onChange}
                         >
                           <FormControl>
@@ -440,7 +440,7 @@ const ExpenseForm = ({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {availableSubcategories.map(subcategory => (
                               <SelectItem key={subcategory} value={subcategory}>
                                 {subcategory}
