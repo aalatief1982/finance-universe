@@ -32,7 +32,7 @@ const SubcategorySelector: React.FC<SubcategorySelectorProps> = ({
                 <SelectValue placeholder="Select subcategory" />
               </SelectTrigger>
             </FormControl>
-            <SelectContent>
+            <SelectContent className="max-h-[300px]">
               <SelectItem value="none">None</SelectItem>
               {availableSubcategories.map(subcategory => (
                 <SelectItem key={subcategory} value={subcategory}>

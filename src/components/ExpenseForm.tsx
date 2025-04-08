@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { transactionService } from '@/services/TransactionService';
 import { TransactionType } from '@/types/transaction';
 import { 
   transactionFormSchema, 
@@ -24,6 +23,12 @@ import TransactionTypeSelector from './forms/TransactionTypeSelector';
 import AccountSelector from './forms/AccountSelector';
 import PersonSelector from './forms/PersonSelector';
 import CurrencySelector from './forms/CurrencySelector';
+import TitleField from './forms/TitleField';
+import AmountField from './forms/AmountField';
+import DateField from './forms/DateField';
+import DescriptionField from './forms/DescriptionField';
+import NotesField from './forms/NotesField';
+import FormActions from './forms/FormActions';
 
 interface ExpenseFormProps {
   onSubmit: (values: TransactionFormValues) => void;
@@ -43,7 +48,6 @@ const ExpenseForm = ({
     defaultValues,
   });
   
-  const [selectedCategoryName, setSelectedCategoryName] = useState(defaultValues.category || '');
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
   
   // Watch the transaction type to conditionally render fields
@@ -92,40 +96,11 @@ const ExpenseForm = ({
               <TransactionTypeSelector form={form} />
               
               {/* Title */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title*</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Transaction title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <TitleField form={form} />
               
               <div className="grid grid-cols-2 gap-4">
                 {/* Amount */}
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amount*</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <AmountField form={form} />
                 
                 {/* Currency */}
                 <CurrencySelector form={form} />
@@ -144,105 +119,32 @@ const ExpenseForm = ({
               
               <div className="grid grid-cols-2 gap-4">
                 {/* Category */}
-                <CategorySelector 
-                  form={form} 
-                  transactionType={transactionType}
-                  selectedCategoryName={selectedCategoryName}
-                  setSelectedCategoryName={setSelectedCategoryName}
-                />
+                <CategorySelector form={form} transactionType={transactionType} />
                 
-                {/* Subcategory */}
+                {/* Show either Subcategory or Date depending on whether subcategories are available */}
                 {selectedCategory && availableSubcategories.length > 0 ? (
-                  <SubcategorySelector 
-                    form={form} 
-                    availableSubcategories={availableSubcategories} 
-                  />
+                  <SubcategorySelector form={form} availableSubcategories={availableSubcategories} />
                 ) : (
-                  /* Date - Show in the grid if subcategory is not shown */
-                  <FormField
-                    control={form.control}
-                    name="date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date*</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <DateField form={form} />
                 )}
               </div>
               
               {/* Date - Show in another row if subcategory is shown */}
               {selectedCategory && availableSubcategories.length > 0 && (
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date*</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <DateField form={form} />
               )}
               
               {/* Person */}
               <PersonSelector form={form} />
               
               {/* Description */}
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter a detailed description..." 
-                        className="resize-none min-h-[80px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <DescriptionField form={form} />
               
               {/* Notes */}
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Additional notes..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <NotesField form={form} />
               
-              <div className="flex justify-end space-x-2 pt-2">
-                {onCancel && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onCancel}
-                  >
-                    Cancel
-                  </Button>
-                )}
-                <Button type="submit">
-                  {defaultValues.title ? "Update" : "Add"} Transaction
-                </Button>
-              </div>
+              {/* Form Actions */}
+              <FormActions onCancel={onCancel} isUpdate={!!defaultValues.title} />
             </form>
           </Form>
         </CardContent>

@@ -3,12 +3,13 @@ import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ExpenseForm from '@/components/ExpenseForm';
 import { Transaction } from '@/types/transaction';
+import { TransactionFormValues } from '@/components/forms/transaction-form-schema';
 
 interface EditTransactionDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   currentTransaction: Transaction | null;
-  onSubmit: (formData: any) => void;
+  onSubmit: (formData: TransactionFormValues) => void;
   onCancel: () => void;
   categories: string[];
 }
