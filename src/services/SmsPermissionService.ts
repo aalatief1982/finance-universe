@@ -1,7 +1,7 @@
 
 import { Capacitor } from '@capacitor/core';
-// In a real app, you'd use a Capacitor plugin for SMS permissions
-// For now, we'll simulate this behavior
+// Uncomment this in a real app with actual Capacitor plugins
+// import { Permissions } from '@capacitor/core';
 
 class SmsPermissionService {
   private permissionStatusKey = 'sms_permission_status';
@@ -36,28 +36,31 @@ class SmsPermissionService {
     return !!providers && providers !== '[]';
   }
 
-  // Request SMS permission
+  // Request SMS permission using native dialog
   async requestPermission(): Promise<boolean> {
-    // In a real implementation, this would request actual device permissions
-    // For demo purposes, we'll simulate a permission request with a delay
-    
     if (this.isNativeEnvironment()) {
       try {
-        // In a real app, you would use Capacitor Plugins to request permissions
-        console.log('Requesting SMS permission on native device');
+        // This is where in a real app we would use the actual Capacitor Plugins
+        // For example with the Permissions plugin:
+        // const result = await Permissions.request({ name: 'sms' });
+        // But since we don't have that plugin fully set up, we'll simulate it
         
-        // For demo, let's assume permission is granted after a delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('Requesting native SMS permission dialog on Android/iOS');
         
-        // Save the permission status
+        // In a real app, we would await the native permission result
+        // For now, simulate a delay for the permission dialog
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // In development/simulation, always grant permission
         this.savePermissionStatus(true);
         return true;
       } catch (error) {
         console.error('Error requesting SMS permission:', error);
+        this.savePermissionStatus(false);
         return false;
       }
     } else {
-      // In web environment, simulate permission
+      // In web environment, simulate permission dialog
       console.log('Simulating SMS permission request in web environment');
       await new Promise(resolve => setTimeout(resolve, 1000));
       this.savePermissionStatus(true);

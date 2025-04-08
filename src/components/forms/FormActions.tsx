@@ -4,13 +4,23 @@ import { Button } from '@/components/ui/button';
 
 interface FormActionsProps {
   onCancel?: () => void;
-  isUpdate: boolean;
+  isUpdate?: boolean;
+  submitLabel?: string;
+  cancelLabel?: string;
+  isSubmitting?: boolean;
 }
 
 const FormActions: React.FC<FormActionsProps> = ({
   onCancel,
-  isUpdate
+  isUpdate = false,
+  submitLabel,
+  cancelLabel = "Cancel",
+  isSubmitting = false
 }) => {
+  // Default submit label based on whether it's an update
+  const defaultSubmitLabel = isUpdate ? "Update" : "Add";
+  const finalSubmitLabel = submitLabel || `${defaultSubmitLabel} Transaction`;
+
   return (
     <div className="flex justify-end space-x-2 pt-2">
       {onCancel && (
@@ -18,12 +28,13 @@ const FormActions: React.FC<FormActionsProps> = ({
           type="button"
           variant="outline"
           onClick={onCancel}
+          disabled={isSubmitting}
         >
-          Cancel
+          {cancelLabel}
         </Button>
       )}
-      <Button type="submit">
-        {isUpdate ? "Update" : "Add"} Transaction
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Processing..." : finalSubmitLabel}
       </Button>
     </div>
   );

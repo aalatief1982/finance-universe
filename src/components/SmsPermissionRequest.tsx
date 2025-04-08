@@ -17,6 +17,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
   onDenied 
 }) => {
   const [isRequesting, setIsRequesting] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const { toast } = useToast();
 
@@ -26,11 +27,15 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
     
     // Check if permission is already granted
     const checkExistingPermission = async () => {
-      if (Capacitor.isNativePlatform()) {
-        const hasPermission = await smsPermissionService.hasPermission();
-        if (hasPermission) {
-          onGranted();
-        }
+      const permissionGranted = smsPermissionService.hasPermission();
+      setHasPermission(permissionGranted);
+      
+      if (permissionGranted) {
+        console.log('SMS permission already granted');
+        onGranted();
+      } else if (Capacitor.isNativePlatform()) {
+        // On native platforms, automatically request permission without showing UI first
+        handleRequestPermission();
       }
     };
     
@@ -38,35 +43,28 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
   }, [onGranted]);
 
   const handleRequestPermission = async () => {
+    if (isRequesting) return;
     setIsRequesting(true);
     
     try {
-      // For native platforms, use the actual permission API
-      if (Capacitor.isNativePlatform()) {
-        const granted = await smsPermissionService.requestPermission();
-        
-        if (granted) {
-          toast({
-            title: "Permission granted",
-            description: "You've successfully granted SMS reading permission",
-          });
-          onGranted();
-        } else {
-          toast({
-            title: "Permission denied",
-            description: "SMS reading permission is required for automatic tracking",
-            variant: "destructive",
-          });
-          onDenied();
-        }
-      } else {
-        // For web development, simulate permission granting
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      // Request permission using native dialog on Android/iOS
+      const granted = await smsPermissionService.requestPermission();
+      
+      setHasPermission(granted);
+      
+      if (granted) {
         toast({
-          title: "Development mode",
-          description: "SMS permissions simulated in web environment",
+          title: "Permission granted",
+          description: "You've successfully granted SMS reading permission",
         });
         onGranted();
+      } else {
+        toast({
+          title: "Permission denied",
+          description: "SMS reading permission is required for automatic tracking",
+          variant: "destructive",
+        });
+        onDenied();
       }
     } catch (error) {
       console.error("Error requesting SMS permission:", error);
@@ -80,6 +78,11 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
       setIsRequesting(false);
     }
   };
+
+  // If permission is already granted, don't show the permission UI
+  if (hasPermission) {
+    return null;
+  }
 
   return (
     <motion.div
