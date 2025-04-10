@@ -26,6 +26,7 @@ function App() {
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/import-transactions" element={<ImportTransactions />} />
               <Route path="/edit-transaction" element={<EditTransaction />} />
+              <Route path="/edit-transaction/:id" element={<EditTransaction />} />
             </Routes>
             <Toaster />
           </TransactionProvider>

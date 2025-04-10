@@ -1,138 +1,99 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Plus, List, BarChart, Settings } from 'lucide-react';
+import React from 'react';
 import Layout from '@/components/Layout';
-import ExpenseForm from '@/components/ExpenseForm';
-import TransactionList from '@/components/transactions/TransactionList';
-import TransactionSummary from '@/components/transactions/TransactionSummary';
-import CategoryBreakdownChart from '@/components/charts/CategoryBreakdownChart';
-import TimelineChart from '@/components/charts/TimelineChart';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import DashboardStats from '@/components/DashboardStats';
+import ExpenseChart from '@/components/ExpenseChart';
 import { useTransactions } from '@/context/TransactionContext';
-import { useUser } from '@/context/UserContext';
-import { getCategoriesForType } from '@/lib/categories-data';
-import { Link } from 'react-router-dom';
-import { TimePeriod, TransactionType } from '@/types/transaction';
-import DashboardContent from '@/components/dashboard/DashboardContent';
+import { Transaction } from '@/types/transaction';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 const Dashboard = () => {
-  const [isAddingExpense, setIsAddingExpense] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
-  const { transactions, addTransaction, getTransactionsSummary, getTransactionsByCategory, getTransactionsByTimePeriod } = useTransactions();
-  const { user } = useUser();
+  const { transactions, addTransaction } = useTransactions();
   const navigate = useNavigate();
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
-  const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      setCategories(getCategoriesForType('expense'));
-    }
-  }, [user]);
-
-  const handleAddExpense = (data: any) => {
-    // Make sure to assign a valid TransactionType
-    const transactionType: TransactionType = data.amount >= 0 ? 'income' : 'expense';
-    
-    const newTransaction = {
-      title: data.title,
-      amount: data.amount,
-      category: data.category,
-      date: data.date,
-      type: transactionType,
-      notes: data.notes,
-      source: 'manual' as const,
-      fromAccount: 'Main Account'
-    };
-    
-    addTransaction(newTransaction);
-    setIsAddingExpense(false);
+  const handleAddTransaction = () => {
+    navigate('/edit-transaction');
   };
 
+  // For demo purposes - adds a sample transaction
+  const handleAddSampleTransaction = () => {
+    const sampleTransaction: Transaction = {
+      id: uuidv4(),
+      title: 'Sample Transaction',
+      amount: -25.99,
+      category: 'Food',
+      date: new Date().toISOString().split('T')[0],
+      type: 'expense',
+      notes: 'Sample transaction for testing',
+      source: 'manual',
+      fromAccount: 'Cash'
+    };
+    
+    addTransaction(sampleTransaction);
+  };
+  
   return (
     <Layout>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="container max-w-7xl mx-auto py-6 space-y-6"
-      >
-        {isLoading ? (
-          <div className="space-y-6 animate-pulse">
-            <div className="h-6 bg-muted rounded w-1/3 mb-2"></div>
-            <div className="h-4 bg-muted rounded w-2/3 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-32 bg-muted rounded-lg"></div>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="h-80 bg-muted rounded-lg"></div>
-              <div className="h-80 bg-muted rounded-lg"></div>
-            </div>
+      <div className="space-y-6 p-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <Button 
+            onClick={handleAddTransaction}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Add Transaction
+          </Button>
+        </div>
+        
+        <DashboardStats />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-card p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-4">Expense Breakdown</h2>
+            <ExpenseChart />
           </div>
-        ) : (
-          <>
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold">
-                {user ? `Welcome back${user.fullName ? `, ${user.fullName.split(' ')[0]}` : ''}!` : 'Dashboard'}
-              </h1>
-              <div className="flex gap-2">
-                <Button onClick={() => setIsAddingExpense(true)}>
-                  <Plus className="mr-2" size={16} /> Add Transaction
-                </Button>
-                <Button variant="outline" onClick={() => navigate('/import-transactions')}>
-                  Import Transactions
-                </Button>
-              </div>
-            </div>
-
-            {isAddingExpense && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+          
+          <div className="bg-card p-6 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Recent Transactions</h2>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/transactions')}
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add New Transaction</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ExpenseForm 
-                      onSubmit={handleAddExpense} 
-                      categories={categories} 
-                      onCancel={() => setIsAddingExpense(false)} 
-                    />
-                  </CardContent>
-                </Card>
-              </motion.div>
+                View All
+              </Button>
+            </div>
+            
+            {transactions.length > 0 ? (
+              <div className="space-y-4">
+                {transactions.slice(0, 5).map((transaction) => (
+                  <div 
+                    key={transaction.id}
+                    className="flex justify-between items-center p-3 bg-secondary/50 rounded-md"
+                  >
+                    <div>
+                      <p className="font-medium">{transaction.title}</p>
+                      <p className="text-sm text-muted-foreground">{transaction.category} • {transaction.date}</p>
+                    </div>
+                    <p className={transaction.amount < 0 ? "text-red-500" : "text-green-500"}>
+                      {transaction.amount < 0 ? "-" : "+"}${Math.abs(transaction.amount).toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-muted-foreground mb-4">No transactions yet</p>
+                <Button onClick={handleAddSampleTransaction}>Add Sample Transactions</Button>
+              </div>
             )}
-
-            <DashboardContent 
-              transactions={transactions}
-              filter={filter}
-              setFilter={setFilter}
-              setIsAddingExpense={setIsAddingExpense}
-              isLoading={false}
-            />
-          </>
-        )}
-      </motion.div>
+          </div>
+        </div>
+      </div>
     </Layout>
   );
 };

@@ -8,7 +8,6 @@ interface TransactionContextType {
   updateTransaction: (updatedTransaction: Transaction) => void;
   deleteTransaction: (transactionId: string) => void;
   clearTransactions: () => void;
-  // Add these mock methods to fix TypeScript errors in wireframes
   getTransactionsSummary: () => any;
   getTransactionsByCategory: () => any;
   getTransactionsByTimePeriod: (period?: string) => any;
@@ -22,11 +21,25 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const addTransactions = (newTransactions: Transaction[]) => {
-    setTransactions(prevTransactions => [...prevTransactions, ...newTransactions]);
+    // Ensure all transactions have required fields
+    const validTransactions = newTransactions.map(transaction => ({
+      ...transaction,
+      id: transaction.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      source: transaction.source || 'manual'
+    }));
+    
+    setTransactions(prevTransactions => [...prevTransactions, ...validTransactions]);
   };
 
   const addTransaction = (transaction: Transaction) => {
-    addTransactions([transaction]);
+    // Ensure transaction has required fields
+    const validTransaction = {
+      ...transaction,
+      id: transaction.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      source: transaction.source || 'manual'
+    };
+    
+    setTransactions(prevTransactions => [...prevTransactions, validTransaction]);
   };
 
   const updateTransaction = (updatedTransaction: Transaction) => {
@@ -58,17 +71,67 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const getTransactionsByCategory = () => {
     // Group by category logic would go here
-    return [];
+    const categorized: Record<string, Transaction[]> = {};
+    
+    transactions.forEach(transaction => {
+      const category = transaction.category || 'Uncategorized';
+      if (!categorized[category]) {
+        categorized[category] = [];
+      }
+      categorized[category].push(transaction);
+    });
+    
+    return Object.entries(categorized).map(([category, transactions]) => ({
+      category,
+      transactions,
+      total: transactions.reduce((sum, t) => sum + Number(t.amount), 0)
+    }));
   };
 
   const getTransactionsByTimePeriod = (period = 'month') => {
     // Time period grouping logic would go here
-    return [];
+    const now = new Date();
+    let startDate: Date;
+    
+    switch (period) {
+      case 'week':
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'year':
+        startDate = new Date(now);
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 1);
+    }
+    
+    return transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= startDate && transactionDate <= now;
+    });
   };
 
   const processTransactionsFromSMS = (messages: any[]): Transaction[] => {
     // SMS processing logic would go here
-    return [];
+    // This is a mock implementation
+    return messages.map(msg => ({
+      id: `sms-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: msg.body?.substring(0, 30) || 'SMS Transaction',
+      amount: -Math.abs(Math.random() * 100),
+      type: 'expense',
+      category: 'Uncategorized',
+      date: new Date().toISOString().split('T')[0],
+      fromAccount: 'Bank Account',
+      currency: 'USD',
+      description: msg.body || '',
+      source: 'sms'
+    }));
   };
 
   return (
@@ -78,7 +141,6 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       updateTransaction,
       deleteTransaction,
       clearTransactions,
-      // Add mock methods
       getTransactionsSummary,
       getTransactionsByCategory,
       getTransactionsByTimePeriod,

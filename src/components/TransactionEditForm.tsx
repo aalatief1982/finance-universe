@@ -28,8 +28,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       id: uuidv4(),
       title: '',
       amount: 0,
-      type: 'expense',
-      category: '',
+      type: 'expense' as TransactionType,
+      category: 'Uncategorized', // Default category
       date: new Date().toISOString().split('T')[0],
       fromAccount: 'Cash',
       currency: 'USD',
@@ -44,12 +44,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   // Update categories when transaction type changes
   useEffect(() => {
-    const categories = getCategoriesForType(editedTransaction.type as TransactionType);
+    const categories = getCategoriesForType(editedTransaction.type as TransactionType) || [];
     setAvailableCategories(categories);
     
     // If category is already set, update subcategories as well
     if (editedTransaction.category) {
-      const subcategories = getSubcategoriesForCategory(editedTransaction.category);
+      const subcategories = getSubcategoriesForCategory(editedTransaction.category) || [];
       setAvailableSubcategories(subcategories);
     } else {
       setAvailableSubcategories([]);
@@ -66,17 +66,17 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         const transactionType = value as TransactionType;
         
         // Reset category when type changes
-        updated.category = '';
-        updated.subcategory = '';
+        updated.category = 'Uncategorized';
+        updated.subcategory = 'none';
       }
       
       // Special case for category
       if (field === 'category') {
-        const subcategories = getSubcategoriesForCategory(value as string);
+        const subcategories = getSubcategoriesForCategory(value as string) || [];
         setAvailableSubcategories(subcategories);
         
         // Reset subcategory when category changes
-        updated.subcategory = '';
+        updated.subcategory = 'none';
       }
       
       return updated;
@@ -136,7 +136,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <Input 
             type="number" 
             step="0.01"
-            value={Math.abs(editedTransaction.amount)}
+            value={Math.abs(editedTransaction.amount || 0)}
             onChange={(e) => handleChange('amount', 
               editedTransaction.type === 'expense' 
                 ? -Math.abs(parseFloat(e.target.value) || 0) 
@@ -195,16 +195,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <div className="space-y-2">
           <label className="text-sm font-medium">Category*</label>
           <Select 
-            value={editedTransaction.category}
+            value={editedTransaction.category || 'Uncategorized'}
             onValueChange={(value) => handleChange('category', value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {availableCategories.map(category => (
-                <SelectItem key={category} value={category}>{category}</SelectItem>
-              ))}
+              {availableCategories.length > 0 ? (
+                availableCategories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))
+              ) : (
+                <SelectItem value="Uncategorized">Uncategorized</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>

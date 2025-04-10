@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -10,20 +10,35 @@ import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TransactionEditForm from '@/components/TransactionEditForm';
+import { v4 as uuidv4 } from 'uuid';
 
 const EditTransaction = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { addTransactions, updateTransaction } = useTransactions();
+  const params = useParams();
+  const { addTransaction, updateTransaction, transactions } = useTransactions();
   const { toast } = useToast();
   
-  // Get transaction from location state or use empty transaction for new entry
-  const transaction = location.state?.transaction as Transaction | undefined;
+  // Try to get transaction from location state first, then from URL params if available
+  let transaction = location.state?.transaction as Transaction | undefined;
+  
+  // If we have an ID in the URL params, try to find the transaction by ID
+  if (!transaction && params.id) {
+    transaction = transactions.find(t => t.id === params.id);
+  }
+  
   const isNewTransaction = !transaction;
   
   const handleSave = (editedTransaction: Transaction) => {
+    // Ensure we have an id for new transactions
     if (isNewTransaction) {
-      addTransactions([editedTransaction]);
+      const newTransaction = {
+        ...editedTransaction,
+        id: editedTransaction.id || uuidv4(), // Use the existing ID or generate a new one
+        source: editedTransaction.source || 'manual' // Set source to manual if not specified
+      };
+      
+      addTransaction(newTransaction);
       toast({
         title: "Transaction created",
         description: "Your transaction has been successfully created",
