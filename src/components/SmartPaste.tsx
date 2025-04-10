@@ -1,6 +1,7 @@
+
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Paste, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { ClipboardPaste, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,7 +9,11 @@ import { useTransactions } from '@/context/TransactionContext';
 import { Transaction } from '@/types/transaction';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
 
-const SmartPaste: React.FC = () => {
+interface SmartPasteProps {
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string) => void;
+}
+
+const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   const [text, setText] = useState('');
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const [isSmartMatch, setIsSmartMatch] = useState(false);
@@ -40,7 +45,7 @@ const SmartPaste: React.FC = () => {
     // Fallback to basic processing if no smart match
     const amount = parseFloat(text.replace(/[^0-9.-]+/g, ''));
     if (!isNaN(amount)) {
-      setDetectedTransactions([{
+      const transaction = {
         id: `paste-${Math.random().toString(36).substring(2, 9)}`,
         title: `Pasted transaction: ${text.substring(0, 30)}...`,
         amount: amount,
@@ -50,8 +55,15 @@ const SmartPaste: React.FC = () => {
         notes: `Pasted from text: ${text.substring(0, 100)}`,
         source: 'smart-paste',
         fromAccount: 'Cash'
-      }]);
+      } as Transaction;
+
+      setDetectedTransactions([transaction]);
       setIsSmartMatch(false);
+
+      // If onTransactionsDetected is provided, call it
+      if (onTransactionsDetected) {
+        onTransactionsDetected([transaction], text);
+      }
     } else {
       toast({
         title: "No transaction detected",
@@ -86,6 +98,12 @@ const SmartPaste: React.FC = () => {
       setDetectedTransactions([learnedTransaction]);
       setIsSmartMatch(true);
       setConfidence(matchResult.confidence);
+
+      // If onTransactionsDetected is provided, call it
+      if (onTransactionsDetected) {
+        onTransactionsDetected([learnedTransaction], text);
+      }
+      
       return true;
     }
     
@@ -110,7 +128,7 @@ const SmartPaste: React.FC = () => {
       className="p-4 border rounded-lg space-y-4"
     >
       <div className="flex items-center gap-2">
-        <Paste className="text-primary h-5 w-5" />
+        <ClipboardPaste className="text-primary h-5 w-5" />
         <h3 className="text-lg font-medium">Smart Paste</h3>
       </div>
       
