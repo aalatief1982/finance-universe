@@ -1,4 +1,3 @@
-
 import { Transaction, Category, CategoryRule, TransactionCategoryChange } from "@/types/transaction";
 import { handleError } from "@/utils/error-utils";
 import { ErrorType } from "@/types/error";
@@ -162,7 +161,7 @@ export const clearStoredTransactions = (): void => {
 
 export const storeTransaction = (transaction: any): void => {
   try {
-    // Use the validation function to ensure the transaction has all required fields
+    // Use the validation function which will ensure all required fields are present
     const validatedTransaction = validateTransactionForStorage(transaction);
     
     const transactions = getStoredTransactions();
@@ -248,7 +247,7 @@ export const storeCategories = (categories: Category[]): void => {
 
 export const storeCategory = (category: any): void => {
   try {
-    // Use the validation function to ensure the category has all required fields
+    // Use the validation function which will ensure all required fields are present
     const validatedCategory = validateCategoryForStorage(category);
     
     const categories = getStoredCategories();
@@ -368,7 +367,7 @@ export const storeCategoryRules = (rules: CategoryRule[]): void => {
 
 export const storeCategoryRule = (rule: any): void => {
   try {
-    // Use the validation function to ensure the rule has all required fields
+    // Use the validation function which will ensure all required fields are present
     const validatedRule = validateCategoryRuleForStorage(rule);
     
     const rules = getStoredCategoryRules();
@@ -454,7 +453,7 @@ export const storeCategoryChanges = (changes: TransactionCategoryChange[]): void
 
 export const addCategoryChange = (change: any): void => {
   try {
-    // Use the validation function to ensure the change has all required fields
+    // Use the validation function which will ensure all required fields are present
     const validatedChange = validateCategoryChangeForStorage(change);
     
     const changes = getStoredCategoryChanges();
