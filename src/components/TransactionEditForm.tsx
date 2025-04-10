@@ -3,12 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { getCategoriesForType, getSubcategoriesForCategory, PEOPLE, CURRENCIES } from '@/lib/categories-data';
-import { SupportedCurrency } from '@/types/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check, X } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -36,6 +35,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       currency: 'USD',
       description: '',
       notes: '',
+      source: 'manual' // Add the required source field
     };
   });
 
@@ -214,13 +214,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <div className="space-y-2">
             <label className="text-sm font-medium">Subcategory</label>
             <Select 
-              value={editedTransaction.subcategory || ''}
+              value={editedTransaction.subcategory || 'none'}
               onValueChange={(value) => handleChange('subcategory', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select subcategory" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">None</SelectItem>
                 {availableSubcategories.map(subcategory => (
                   <SelectItem key={subcategory} value={subcategory}>{subcategory}</SelectItem>
                 ))}
@@ -245,14 +246,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">Person (Optional)</label>
         <Select 
-          value={editedTransaction.person || ''}
+          value={editedTransaction.person || 'none'}
           onValueChange={(value) => handleChange('person', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Select person" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">None</SelectItem>
+            <SelectItem value="none">None</SelectItem>
             {PEOPLE.map(person => (
               <SelectItem key={person} value={person}>{person}</SelectItem>
             ))}

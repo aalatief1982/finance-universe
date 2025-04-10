@@ -22,7 +22,7 @@ export const transactionFormSchema = z.object({
   }),
   description: z.string().optional(),
   notes: z.string().optional(),
-  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional(),
+  person: z.string().optional(),
   currency: z.string().min(1, {
     message: "Please select a currency.",
   }),
