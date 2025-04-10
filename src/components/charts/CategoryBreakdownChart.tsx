@@ -14,39 +14,34 @@ const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({ data })
   const chartData = data.slice(0, 8); // Limit to 8 categories for better visualization
   
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Spending by Category</CardTitle>
-      </CardHeader>
-      <CardContent className="h-[300px]">
-        {data.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-muted-foreground">
-            No data available
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
-    </Card>
+    <div className="h-[300px] w-full">
+      {data.length === 0 ? (
+        <div className="h-full flex items-center justify-center text-muted-foreground">
+          No data available
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            >
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']} />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
 };
 

@@ -1,184 +1,175 @@
 
 import { Transaction, CategorySummary, TimePeriodData } from '@/types/transaction';
+import { v4 as uuidv4 } from 'uuid';
 
-// Example transactions for development
-export const mockTransactions: Transaction[] = [
+// Initial mock transactions
+export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
-    id: '1',
+    id: uuidv4(),
     title: 'Salary',
     amount: 5000,
     category: 'Income',
     date: '2023-04-01',
     type: 'income',
-    fromAccount: 'Bank Account',
-    source: 'manual',
+    fromAccount: 'Employer',
+    toAccount: 'Bank Account',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
   },
   {
-    id: '2',
+    id: uuidv4(),
     title: 'Rent',
     amount: -1500,
     category: 'Housing',
     date: '2023-04-02',
     type: 'expense',
     fromAccount: 'Bank Account',
-    source: 'manual',
+    toAccount: 'Landlord',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
   },
   {
-    id: '3',
+    id: uuidv4(),
     title: 'Groceries',
-    amount: -200,
+    amount: -250,
     category: 'Food',
-    date: '2023-04-03',
-    type: 'expense',
-    fromAccount: 'Credit Card',
-    source: 'manual',
-  },
-  {
-    id: '4',
-    title: 'Internet Bill',
-    amount: -80,
-    category: 'Utilities',
     date: '2023-04-05',
     type: 'expense',
     fromAccount: 'Bank Account',
-    source: 'manual',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
   },
   {
-    id: '5',
-    title: 'Dinner',
-    amount: -50,
-    category: 'Food',
-    date: '2023-04-10',
-    type: 'expense',
-    fromAccount: 'Cash',
-    source: 'manual',
-  },
-  {
-    id: '6',
+    id: uuidv4(),
     title: 'Gas',
     amount: -45,
     category: 'Transportation',
-    date: '2023-04-12',
+    date: '2023-04-07',
     type: 'expense',
     fromAccount: 'Credit Card',
-    source: 'manual',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
   },
   {
-    id: '7',
-    title: 'Freelance Work',
-    amount: 1000,
-    category: 'Income',
-    date: '2023-04-15',
-    type: 'income',
-    fromAccount: 'Bank Account',
-    source: 'manual',
-  },
-  {
-    id: '8',
-    title: 'Coffee',
-    amount: -5,
+    id: uuidv4(),
+    title: 'Restaurant',
+    amount: -85,
     category: 'Food',
-    date: '2023-04-20',
+    date: '2023-04-10',
+    type: 'expense',
+    fromAccount: 'Credit Card',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Movie tickets',
+    amount: -35,
+    category: 'Entertainment',
+    date: '2023-04-15',
     type: 'expense',
     fromAccount: 'Cash',
-    source: 'manual',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Freelance work',
+    amount: 750,
+    category: 'Income',
+    date: '2023-04-20',
+    type: 'income',
+    fromAccount: 'Client',
+    toAccount: 'Bank Account',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Utility bills',
+    amount: -120,
+    category: 'Housing',
+    date: '2023-04-25',
+    type: 'expense',
+    fromAccount: 'Bank Account',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
   }
 ];
 
-// For use in demo and testing components
-export const INITIAL_TRANSACTIONS = mockTransactions;
-
-// List of categories for dropdowns and filters
-export const CATEGORIES = [
-  'Income', 
-  'Housing', 
-  'Food', 
-  'Transportation', 
-  'Utilities', 
-  'Entertainment', 
-  'Shopping', 
-  'Health', 
-  'Education', 
-  'Personal', 
-  'Travel', 
-  'Gifts', 
-  'Investments', 
-  'Other'
+export const PERSON_OPTIONS = [
+  'none',
+  'Ahmed',
+  'Marwa',
+  'Youssef',
+  'Salma',
+  'Mazen'
 ];
 
-/**
- * Generates chart data from transactions for analytics
- * @param transactions Array of transactions to process
- * @returns Object containing chartData and timelineData
- */
+// Generate chart data based on transactions
 export const generateChartData = (transactions: Transaction[]) => {
-  // Generate category summary data for pie/bar charts
-  const categoryData: CategorySummary[] = [];
-  const categoryMap: Record<string, number> = {};
-  
-  // Generate timeline data for line charts
-  const timelineData: TimePeriodData[] = [];
-  const timelineMap: Record<string, { income: number; expense: number }> = {};
-  
-  try {
-    // Process each transaction
-    transactions.forEach((tx) => {
-      if (!tx) return;
-      
-      // For category breakdown
-      if (tx.type === 'expense' && tx.category) {
-        const category = tx.category;
-        const amount = Math.abs(tx.amount);
-        
-        if (categoryMap[category]) {
-          categoryMap[category] += amount;
-        } else {
-          categoryMap[category] = amount;
-        }
-      }
-      
-      // For timeline
-      try {
-        const date = new Date(tx.date);
-        const month = date.toISOString().substring(0, 7); // YYYY-MM format
-        
-        if (!timelineMap[month]) {
-          timelineMap[month] = { income: 0, expense: a0 };
-        }
-        
-        if (tx.amount > 0) {
-          timelineMap[month].income += tx.amount;
-        } else {
-          timelineMap[month].expense += Math.abs(tx.amount);
-        }
-      } catch (error) {
-        console.error('Error processing transaction date:', error);
-      }
+  // Calculate spending by category
+  const expensesByCategory: Record<string, number> = {};
+  transactions
+    .filter(tx => tx.type === 'expense')
+    .forEach(tx => {
+      const category = tx.category;
+      expensesByCategory[category] = (expensesByCategory[category] || 0) + Math.abs(tx.amount);
     });
+
+  // Convert to array and sort by value
+  const categoryData: CategorySummary[] = Object.entries(expensesByCategory)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
+  // Calculate income and expenses by month
+  const timeData: Record<string, { income: number; expense: number }> = {};
+  transactions.forEach(tx => {
+    const monthYear = tx.date.substring(0, 7); // Format: YYYY-MM
+    if (!timeData[monthYear]) {
+      timeData[monthYear] = { income: 0, expense: 0 };
+    }
     
-    // Convert category map to array
-    Object.entries(categoryMap).forEach(([name, value]) => {
-      categoryData.push({ name, value });
-    });
-    
-    // Sort categoryData by value in descending order
-    categoryData.sort((a, b) => b.value - a.value);
-    
-    // Convert timeline map to array
-    Object.entries(timelineMap).forEach(([date, values]) => {
-      timelineData.push({
-        date,
-        income: values.income,
-        expense: values.expense,
-      });
-    });
-    
-    // Sort timeline data by date
-    timelineData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    return { categoryData, timelineData };
-  } catch (error) {
-    console.error('Error generating chart data:', error);
-    return { categoryData: [], timelineData: [] };
-  }
+    if (tx.type === 'income') {
+      timeData[monthYear].income += Math.abs(tx.amount);
+    } else if (tx.type === 'expense') {
+      timeData[monthYear].expense += Math.abs(tx.amount);
+    }
+  });
+
+  // Convert to array and sort by date
+  const timelineData: TimePeriodData[] = Object.entries(timeData)
+    .map(([date, data]) => ({ date, ...data }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return { categoryData, timelineData };
 };
+
+// Default categories
+export const CATEGORIES = [
+  'Food',
+  'Housing',
+  'Transportation',
+  'Entertainment',
+  'Shopping',
+  'Utilities',
+  'Healthcare',
+  'Personal',
+  'Education',
+  'Travel',
+  'Income',
+  'Gifts',
+  'Investments',
+  'Debt',
+  'Insurance',
+  'Taxes',
+  'Miscellaneous'
+];

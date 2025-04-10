@@ -3,11 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageSquare } from 'lucide-react';
-import { messageProcessingService } from '@/services/MessageProcessingService';
 
 const MobileSmsButton = () => {
-  const hasProviders = messageProcessingService.hasProvidersSelected();
-
   return (
     <div className="sm:hidden">
       <Button 

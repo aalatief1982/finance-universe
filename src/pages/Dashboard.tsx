@@ -1,46 +1,61 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, List, BarChart, Settings } from 'lucide-react';
 import Layout from '@/components/Layout';
 import ExpenseForm from '@/components/ExpenseForm';
 import TransactionList from '@/components/transactions/TransactionList';
+import TransactionSummary from '@/components/transactions/TransactionSummary';
+import CategoryBreakdownChart from '@/components/charts/CategoryBreakdownChart';
+import TimelineChart from '@/components/charts/TimelineChart';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTransactions } from '@/context/TransactionContext';
 import { useUser } from '@/context/UserContext';
 import { getCategoriesForType } from '@/lib/categories-data';
-import { Transaction } from '@/types/transaction';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
-  const { addTransaction, transactions } = useTransactions();
+  const { addTransaction, transactions, getTransactionsSummary, getTransactionsByCategory, getTransactionsByTimePeriod } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<string[]>(getCategoriesForType('expense'));
+  const [chartType, setChartType] = useState('category');
+  const [timePeriod, setTimePeriod] = useState('month');
+  const [categories, setCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      setCategories(getCategoriesForType('expense'));
+    }
+  }, [user]);
 
   const handleAddExpense = (data: any) => {
-    const amount = data.amount * (data.type === 'expense' ? -1 : 1); 
+    const amount = data.type === 'expense' ? -Math.abs(data.amount) : Math.abs(data.amount);
     
-    const newTransaction: Omit<Transaction, 'id'> = {
+    const newTransaction = {
       title: data.title,
       amount,
       category: data.category,
       date: data.date,
       type: data.type,
       notes: data.notes,
-      source: 'manual',
+      source: 'manual' as const,
       fromAccount: data.fromAccount,
       toAccount: data.toAccount,
-      person: data.person,
-      currency: data.currency
+      person: data.person || 'none',
+      currency: data.currency || 'USD'
     };
     
     addTransaction(newTransaction);
     setIsAddingExpense(false);
   };
+
+  const transactionsSummary = getTransactionsSummary();
+  const transactionsByCategory = getTransactionsByCategory();
+  const transactionsByTimePeriod = getTransactionsByTimePeriod(timePeriod);
 
   return (
     <Layout>
@@ -82,18 +97,66 @@ const Dashboard = () => {
           </motion.div>
         )}
 
+        {/* Transaction Summary */}
+        <TransactionSummary summary={transactionsSummary} />
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Spending by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CategoryBreakdownChart data={transactionsByCategory} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>Timeline</CardTitle>
+                <select
+                  value={timePeriod}
+                  onChange={(e) => setTimePeriod(e.target.value)}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                  <option value="year">Yearly</option>
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <TimelineChart data={transactionsByTimePeriod} />
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Transactions List */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex items-center justify-between">
             <CardTitle>Recent Transactions</CardTitle>
+            <div className="space-x-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/transactions">
+                  <List className="mr-2" size={16} /> View All
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/import-transactions">
+                  <BarChart className="mr-2" size={16} /> Import
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/settings">
+                  <Settings className="mr-2" size={16} /> Settings
+                </Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px] w-full">
-              <TransactionList 
-                transactions={transactions} 
-                onEdit={(transaction) => navigate(`/transactions?edit=${transaction.id}`)}
-                onDelete={(id) => console.log('Delete transaction:', id)}
-              />
+              <TransactionList transactions={transactions} />
             </ScrollArea>
           </CardContent>
         </Card>
