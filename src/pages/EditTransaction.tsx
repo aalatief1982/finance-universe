@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -28,6 +28,18 @@ const EditTransaction = () => {
   }
   
   const isNewTransaction = !transaction;
+  
+  // If we're editing a transaction but couldn't find it, redirect to dashboard
+  useEffect(() => {
+    if (params.id && !transaction) {
+      toast({
+        title: "Transaction not found",
+        description: "The transaction you're trying to edit doesn't exist",
+        variant: "destructive"
+      });
+      navigate('/dashboard');
+    }
+  }, [params.id, transaction, navigate, toast]);
   
   const handleSave = (editedTransaction: Transaction) => {
     // Ensure we have an id for new transactions

@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { format, isToday, isYesterday, isSameDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Transaction } from '@/types/transaction';
-import TransactionCard from './TransactionCard';
-import { motion } from 'framer-motion';
+import { formatCurrency } from '@/lib/formatters';
+import { Card } from '@/components/ui/card';
+import TransactionActions from './TransactionActions';
 
 interface TransactionsByDateProps {
   transactions: Transaction[];
@@ -12,110 +13,66 @@ interface TransactionsByDateProps {
 }
 
 const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
-  transactions,
-  onEdit,
-  onDelete
+  transactions
 }) => {
   // Group transactions by date
-  const groupedTransactions = React.useMemo(() => {
-    const groups: { [key: string]: Transaction[] } = {};
-    
-    transactions.forEach((transaction) => {
-      try {
-        const date = new Date(transaction.date);
-        let dateKey = format(date, 'yyyy-MM-dd');
-        
-        if (!groups[dateKey]) {
-          groups[dateKey] = [];
-        }
-        
-        groups[dateKey].push(transaction);
-      } catch (error) {
-        console.error('Invalid date in transaction:', transaction);
-      }
-    });
-    
-    // Sort each group by time
-    Object.keys(groups).forEach((key) => {
-      groups[key].sort((a, b) => 
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-    });
-    
+  const groupedTransactions = transactions.reduce((groups, transaction) => {
+    const date = transaction.date.split('T')[0]; // Get YYYY-MM-DD part
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(transaction);
     return groups;
-  }, [transactions]);
-  
-  // Format date for display
-  const formatDateForDisplay = (dateStr: string): string => {
-    try {
-      const date = new Date(dateStr);
-      
-      if (isToday(date)) {
-        return 'Today';
-      } else if (isYesterday(date)) {
-        return 'Yesterday';
-      } else {
-        return format(date, 'MMMM d');
-      }
-    } catch (error) {
-      return dateStr;
-    }
-  };
-  
-  // Sort the dates (keys) in descending order
-  const sortedDates = Object.keys(groupedTransactions).sort(
-    (a, b) => new Date(b).getTime() - new Date(a).getTime()
+  }, {} as Record<string, Transaction[]>);
+
+  // Sort dates in descending order
+  const sortedDates = Object.keys(groupedTransactions).sort((a, b) => 
+    new Date(b).getTime() - new Date(a).getTime()
   );
-  
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05
-      }
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), 'EEEE, MMMM d, yyyy');
+    } catch (e) {
+      // Fallback for any date parsing issues
+      return dateString;
     }
-  };
-  
-  const itemVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
   };
 
   return (
-    <motion.div 
-      className="space-y-6"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {sortedDates.map((dateKey) => (
-        <div key={dateKey} className="space-y-2">
-          <h2 className="text-base font-medium">
-            {formatDateForDisplay(dateKey)}
-          </h2>
+    <div className="space-y-6">
+      {sortedDates.map(date => (
+        <div key={date} className="space-y-2">
+          <h3 className="font-medium text-muted-foreground">
+            {formatDate(date)}
+          </h3>
           
-          <motion.div className="space-y-3" variants={containerVariants}>
-            {groupedTransactions[dateKey].map((transaction) => (
-              <motion.div 
-                key={transaction.id} 
-                variants={itemVariants}
-                transition={{ duration: 0.2 }}
-              >
-                <TransactionCard 
-                  transaction={transaction}
-                  showActions={false}
-                  className="cursor-pointer hover:shadow-md"
-                  onEdit={onEdit ? () => onEdit(transaction) : undefined}
-                  onDelete={onDelete ? () => onDelete(transaction.id) : undefined}
-                />
-              </motion.div>
+          <div className="space-y-2">
+            {groupedTransactions[date].map(transaction => (
+              <Card key={transaction.id} className="p-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{transaction.title}</h4>
+                    <p className="text-sm text-muted-foreground">{transaction.category}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                      {formatCurrency(transaction.amount)}
+                    </span>
+                    
+                    <TransactionActions 
+                      transaction={transaction} 
+                      variant="dropdown" 
+                    />
+                  </div>
+                </div>
+              </Card>
             ))}
-          </motion.div>
+          </div>
         </div>
       ))}
-    </motion.div>
+    </div>
   );
 };
 

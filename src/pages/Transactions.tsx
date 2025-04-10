@@ -4,23 +4,29 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { CATEGORIES } from '@/lib/mock-data';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, List, Grid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 // Import components
 import TransactionHeader from '@/components/transactions/TransactionHeader';
 import TransactionsByDate from '@/components/transactions/TransactionsByDate';
 import EditTransactionDialog from '@/components/transactions/EditTransactionDialog';
 import MobileActions from '@/components/transactions/MobileActions';
+import SwipeableTransactionCard from '@/components/transactions/SwipeableTransactionCard';
 
 // Import hook
 import { useTransactionsState } from '@/hooks/useTransactionsState';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 const Transactions = () => {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'swipeable'>('list');
+  const navigate = useNavigate();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   
   const {
     transactions,
@@ -65,9 +71,31 @@ const Transactions = () => {
         <div className="sticky top-0 z-10 bg-background pt-6 pb-4 px-4 sm:px-6 lg:px-8 border-b">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Transactions</h1>
-            <Button size="sm" onClick={() => setIsAddingExpense(true)}>
-              Add Transaction
-            </Button>
+            <div className="flex items-center space-x-2">
+              {isMobile && (
+                <div className="border rounded-md p-1">
+                  <Button
+                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'swipeable' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setViewMode('swipeable')}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+              <Button size="sm" onClick={() => navigate('/edit-transaction')}>
+                Add Transaction
+              </Button>
+            </div>
           </div>
           
           {/* Search and Filters */}
@@ -102,15 +130,24 @@ const Transactions = () => {
           className="px-4 sm:px-6 lg:px-8 py-6"
         >
           {filteredTransactions.length > 0 ? (
-            <TransactionsByDate
-              transactions={filteredTransactions}
-              onEdit={openEditDialog}
-              onDelete={handleDeleteTransaction}
-            />
+            isMobile && viewMode === 'swipeable' ? (
+              <div className="space-y-2">
+                {filteredTransactions.map(transaction => (
+                  <SwipeableTransactionCard 
+                    key={transaction.id}
+                    transaction={transaction}
+                  />
+                ))}
+              </div>
+            ) : (
+              <TransactionsByDate
+                transactions={filteredTransactions}
+              />
+            )
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <p className="text-muted-foreground mb-4">No transactions found</p>
-              <Button onClick={() => setIsAddingExpense(true)}>
+              <Button onClick={() => navigate('/edit-transaction')}>
                 Add Transaction
               </Button>
             </div>
@@ -131,7 +168,7 @@ const Transactions = () => {
       />
       
       <MobileActions
-        onAddTransaction={() => setIsAddingExpense(true)}
+        onAddTransaction={() => navigate('/edit-transaction')}
         onToggleFilters={() => {}}
         filtersVisible={false}
       />
