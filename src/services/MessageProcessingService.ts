@@ -53,7 +53,7 @@ class MessageProcessingService {
         category: category || 'Uncategorized',
         date: date ? date : new Date().toISOString().split('T')[0],
         type: type,
-        source: source,
+        source: 'manual', // Changed from 'paste' to 'manual' which should be a valid type
         details: {
           rawMessage: text,
           source: source

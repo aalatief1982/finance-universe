@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BrandTelegram, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { MessageSquare, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,7 +62,7 @@ const TelegramBotSetup: React.FC<TelegramBotSetupProps> = ({
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <BrandTelegram className="text-[#0088cc] h-5 w-5" />
+          <MessageSquare className="text-[#0088cc] h-5 w-5" />
           Telegram Bot Integration
         </CardTitle>
         <CardDescription>
@@ -134,7 +134,7 @@ const TelegramBotSetup: React.FC<TelegramBotSetupProps> = ({
             variant="outline"
             onClick={handleOpenTelegram}
           >
-            <BrandTelegram className="mr-2 h-4 w-4 text-[#0088cc]" />
+            <MessageSquare className="mr-2 h-4 w-4 text-[#0088cc]" />
             Open Telegram
           </Button>
         ) : (
@@ -143,7 +143,7 @@ const TelegramBotSetup: React.FC<TelegramBotSetupProps> = ({
               className="flex-1"
               onClick={handleOpenTelegram}
             >
-              <BrandTelegram className="mr-2 h-4 w-4" />
+              <MessageSquare className="mr-2 h-4 w-4" />
               Open in Telegram
             </Button>
             

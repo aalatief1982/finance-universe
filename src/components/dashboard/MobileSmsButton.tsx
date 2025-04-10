@@ -8,25 +8,6 @@ import { messageProcessingService } from '@/services/MessageProcessingService';
 const MobileSmsButton = () => {
   const hasProviders = messageProcessingService.hasProvidersSelected();
 
-  // If we don't have providers selected, just show the setup button
-  if (!hasProviders) {
-    return (
-      <div className="sm:hidden">
-        <Button 
-          variant="outline" 
-          className="w-full gap-1 mb-4"
-          asChild
-        >
-          <Link to="/import-transactions">
-            <MessageSquare size={18} />
-            Import Transactions
-          </Link>
-        </Button>
-      </div>
-    );
-  }
-
-  // If everything is set up properly
   return (
     <div className="sm:hidden">
       <Button 
