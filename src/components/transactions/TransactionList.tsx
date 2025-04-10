@@ -1,331 +1,463 @@
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Transaction } from '@/types/transaction';
-import TransactionCard from '@/components/transactions/TransactionCard';
-import TransactionFilters from '@/components/transactions/TransactionFilters';
-import TransactionSortControls from '@/components/transactions/TransactionSortControls';
-import TransactionTable from '@/components/TransactionTable';
-import PaginationInfo from '@/components/transactions/PaginationInfo';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { MoreHorizontal, ChevronDown, ChevronUp, Edit, Trash, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Plus, Grid2X2, Table } from 'lucide-react';
-import { formatCurrency } from '@/lib/formatters';
-import { useToast } from '@/components/ui/use-toast';
-import TransactionsContent from '@/components/transactions/TransactionsContent';
-
-// Import hooks
-import { useTransactionsFilters } from '@/hooks/transactions/useTransactionsFilters';
-import { useTransactionsSorting } from '@/hooks/transactions/useTransactionsSorting';
-import { useTransactionsPagination } from '@/hooks/transactions/useTransactionsPagination';
-import { transactionService } from '@/services/TransactionService';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Transaction } from '@/types/transaction';
+import { formatCurrency } from '@/utils/format-utils';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { format } from 'date-fns';
 
 interface TransactionListProps {
   transactions: Transaction[];
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (id: string) => void;
-  onAdd: () => void;
+  isLoading?: boolean;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: (id: string) => void;
   sortField?: string;
   sortDirection?: 'asc' | 'desc';
   onSort?: (field: string) => void;
-  onSortDirectionChange?: (direction: 'asc' | 'desc') => void;
+  showCheckboxes?: boolean;
+  onSelectionChange?: (selectedIds: string[]) => void;
+  emptyMessage?: string;
+  showPagination?: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  getCategoryPath?: (categoryId: string) => string;
 }
 
 const TransactionList: React.FC<TransactionListProps> = ({
   transactions,
+  isLoading = false,
   onEdit,
   onDelete,
-  onAdd,
-  sortField: externalSortField,
-  sortDirection: externalSortDirection,
-  onSort: externalOnSort,
-  onSortDirectionChange: externalOnSortDirectionChange
+  sortField = 'date',
+  sortDirection = 'desc',
+  onSort,
+  showCheckboxes = false,
+  onSelectionChange,
+  emptyMessage = 'No transactions found',
+  showPagination = false,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+  getCategoryPath
 }) => {
-  const { toast } = useToast();
-  // View mode state
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [advancedMode, setAdvancedMode] = useState(false);
-  const [minAmount, setMinAmount] = useState<number>(0);
-  const [maxAmount, setMaxAmount] = useState<number>(0);
-  const [sortBy, setSortBy] = useState<string>('date_desc');
+  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
-  // Use the filtering hook
-  const {
-    filteredTransactions,
-    searchQuery,
-    setSearchQuery,
-    selectedCategory,
-    setSelectedCategory,
-    selectedType,
-    setSelectedType,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    filtersVisible,
-    setFiltersVisible,
-    clearFilters,
-    uniqueCategories,
-    hasActiveFilters
-  } = useTransactionsFilters({ transactions });
+  // Reset selection when transactions change
+  useEffect(() => {
+    setSelectedTransactions([]);
+  }, [transactions]);
 
-  // Use the sorting hook with external control if provided
-  const {
-    sortedTransactions,
-    sortField: internalSortField,
-    sortDirection: internalSortDirection,
-    setSortDirection: internalSetSortDirection,
-    handleSort: internalHandleSort
-  } = useTransactionsSorting({ 
-    filteredTransactions,
-    initialSortField: externalSortField,
-    initialSortDirection: externalSortDirection
-  });
+  // Notify parent of selection changes
+  useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange(selectedTransactions);
+    }
+  }, [selectedTransactions, onSelectionChange]);
 
-  // Determine which sort controls to use
-  const effectiveSortField = externalSortField || internalSortField || 'date';
-  const effectiveSortDirection = externalSortDirection || internalSortDirection || 'desc';
-  const handleSortChange = externalOnSort || internalHandleSort;
-  const handleSortDirectionChange = externalOnSortDirectionChange || internalSetSortDirection;
-
-  // Use the pagination hook
-  const {
-    paginatedTransactions,
-    currentPage,
-    setCurrentPage,
-    itemsPerPage,
-    setItemsPerPage,
-    totalPages
-  } = useTransactionsPagination({ sortedTransactions });
-
-  // Calculate summary
-  const summary = filteredTransactions.reduce(
-    (acc, t) => {
-      if (t.amount > 0) {
-        acc.income += t.amount;
-      } else {
-        acc.expenses += Math.abs(t.amount);
-      }
-      acc.balance += t.amount;
-      return acc;
-    },
-    { income: 0, expenses: 0, balance: 0 }
-  );
-
-  const handleDeleteTransaction = (id: string) => {
-    onDelete(id);
-    toast({
-      title: "Transaction deleted",
-      description: "The transaction has been successfully deleted.",
-    });
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTransactions(transactions.map(t => t.id));
+    } else {
+      setSelectedTransactions([]);
+    }
   };
 
-  // Get the full category path for display
-  const getCategoryPath = (categoryId: string): string => {
-    if (!categoryId) return "";
-    return transactionService.getCategoryPath(categoryId).join(' > ');
+  const handleSelectTransaction = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTransactions(prev => [...prev, id]);
+    } else {
+      setSelectedTransactions(prev => prev.filter(tId => tId !== id));
+    }
   };
 
-  // Transform transactions with category path to avoid errors
-  const prepareTransactionsWithPath = (transactionsToMap: Transaction[]) => {
-    return transactionsToMap.map(transaction => {
-      const enrichedTransaction = {...transaction};
-      enrichedTransaction.categoryPath = getCategoryPath(transaction.category);
-      return enrichedTransaction;
-    });
+  const toggleRowExpand = (id: string) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold tracking-tight">Transactions</h2>
-        <Button onClick={onAdd} size="sm">
-          <Plus size={16} className="mr-1" />
-          Add Transaction
-        </Button>
+  const handleSort = (field: string) => {
+    if (onSort) {
+      onSort(field);
+    }
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (sortField !== field) return null;
+    
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="ml-1 h-4 w-4" /> : 
+      <ChevronDown className="ml-1 h-4 w-4" />;
+  };
+
+  const renderAmount = (transaction: Transaction) => {
+    const isIncome = transaction.amount >= 0;
+    const Icon = isIncome ? ArrowUpRight : ArrowDownRight;
+    
+    return (
+      <div className="flex items-center">
+        <Icon 
+          className={`mr-1 h-4 w-4 ${isIncome ? 'text-green-500' : 'text-red-500'}`} 
+        />
+        <span className={isIncome ? 'text-green-600' : 'text-red-600'}>
+          {formatCurrency(Math.abs(transaction.amount), transaction.currency || 'USD')}
+        </span>
       </div>
+    );
+  };
 
+  const renderCategory = (transaction: Transaction) => {
+    return (
+      <div className="flex items-center">
+        <span className="text-sm">{transaction.category}</span>
+      </div>
+    );
+  };
+
+  const renderType = (type: string) => {
+    switch (type) {
+      case 'income':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Income</Badge>;
+      case 'expense':
+        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Expense</Badge>;
+      case 'transfer':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Transfer</Badge>;
+      default:
+        return <Badge variant="outline">{type}</Badge>;
+    }
+  };
+
+  const renderDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, 'MMM d, yyyy');
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  // Render loading skeletons
+  if (isLoading) {
+    return (
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-medium">Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TransactionFilters
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            selectedType={selectedType}
-            setSelectedType={setSelectedType}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            clearFilters={clearFilters}
-            uniqueCategories={uniqueCategories}
-            filtersVisible={filtersVisible}
-            setFiltersVisible={setFiltersVisible}
-            advancedMode={advancedMode}
-            setAdvancedMode={setAdvancedMode}
-            minAmount={minAmount}
-            setMinAmount={setMinAmount}
-            maxAmount={maxAmount}
-            setMaxAmount={setMaxAmount}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Income</p>
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(summary.income)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Expenses</p>
-              <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(summary.expenses)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Balance</p>
-              <p className={`text-2xl font-bold ${summary.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(summary.balance)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Transaction Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('grid')}
-          >
-            <Grid2X2 size={16} className="mr-2" />
-            Grid View
-          </Button>
-          <Button
-            variant={viewMode === 'table' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('table')}
-          >
-            <Table size={16} className="mr-2" />
-            Table View
-          </Button>
-        </div>
-        {viewMode === 'table' && (
-          <TransactionSortControls
-            sortField={effectiveSortField}
-            sortDirection={effectiveSortDirection}
-            onSort={handleSortChange}
-            onSortDirectionChange={handleSortDirectionChange}
-          />
-        )}
-      </div>
-
-      {/* Transaction List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">
-            {filteredTransactions.length} {filteredTransactions.length === 1 ? 'Transaction' : 'Transactions'}
-            {hasActiveFilters && (
-              <span className="text-sm font-normal text-muted-foreground ml-2">
-                (filtered from {transactions.length})
-              </span>
-            )}
-          </h3>
-          
-          {hasActiveFilters && (
-            <Button variant="outline" size="sm" onClick={clearFilters}>
-              Clear Filters
-            </Button>
-          )}
-        </div>
-
-        {paginatedTransactions.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-muted-foreground">No transactions found matching your filters.</p>
-            {transactions.length > 0 && hasActiveFilters && (
-              <Button variant="link" onClick={clearFilters} className="mt-2">
-                Clear all filters
-              </Button>
-            )}
+        <div className="p-4">
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[250px]" />
+                  <Skeleton className="h-4 w-[200px]" />
+                </div>
+                <Skeleton className="h-4 w-[100px]" />
+              </div>
+            ))}
           </div>
-        ) : (
-          <motion.div
-            className="space-y-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {viewMode === 'grid' ? (
-              paginatedTransactions.map((transaction) => {
-                // Create a transaction with categoryPath added
-                return (
-                  <motion.div
-                    key={transaction.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
-                    className="group"
-                  >
-                    <TransactionCard
-                      transaction={{
-                        ...transaction,
-                        categoryPath: getCategoryPath(transaction.category)
-                      }}
-                      onEdit={() => onEdit(transaction)}
-                      onDelete={() => handleDeleteTransaction(transaction.id)}
-                      showActions={true}
-                      className="cursor-pointer hover:shadow-md transition-shadow"
-                    />
-                  </motion.div>
-                );
-              })
-            ) : (
-              <TransactionTable
-                transactions={prepareTransactionsWithPath(paginatedTransactions)}
-                sortField={effectiveSortField}
-                sortDirection={effectiveSortDirection}
-                onSort={handleSortChange}
-                onRowClick={onEdit}
-              />
-            )}
-          </motion.div>
-        )}
+        </div>
+      </Card>
+    );
+  }
 
-        {/* Pagination */}
-        {filteredTransactions.length > itemsPerPage && (
-          <PaginationInfo
-            currentPage={currentPage}
-            totalPages={totalPages}
-            itemsPerPage={itemsPerPage}
-            totalItems={filteredTransactions.length}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setItemsPerPage}
-          />
+  // Render empty state
+  if (transactions.length === 0) {
+    return (
+      <Card>
+        <div className="p-6 text-center">
+          <p className="text-muted-foreground">{emptyMessage}</p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Render mobile view
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {transactions.map(transaction => (
+          <Card key={transaction.id} className="overflow-hidden">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-medium">{transaction.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {renderDate(transaction.date)}
+                  </p>
+                </div>
+                {renderAmount(transaction)}
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  {renderType(transaction.type)}
+                  <span className="text-sm text-muted-foreground">
+                    {transaction.category}
+                  </span>
+                </div>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {onEdit && (
+                      <DropdownMenuItem onClick={() => onEdit(transaction)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </DropdownMenuItem>
+                    )}
+                    {onDelete && (
+                      <DropdownMenuItem 
+                        onClick={() => onDelete(transaction.id)}
+                        className="text-red-600"
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              
+              {/* Expandable details */}
+              {transaction.notes && (
+                <div className="mt-2 pt-2 border-t text-sm text-muted-foreground">
+                  <p>{transaction.notes}</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+        
+        {/* Mobile pagination */}
+        {showPagination && totalPages > 1 && (
+          <div className="flex justify-center mt-4 space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange && onPageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+            >
+              Previous
+            </Button>
+            <span className="py-2 px-3 text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange && onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
         )}
       </div>
-    </div>
+    );
+  }
+
+  // Render desktop view
+  return (
+    <Card>
+      <ScrollArea className="h-[calc(100vh-300px)]">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {showCheckboxes && (
+                <TableHead className="w-[40px]">
+                  <Checkbox 
+                    checked={selectedTransactions.length === transactions.length && transactions.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
+              )}
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('title')}
+              >
+                <div className="flex items-center">
+                  Title
+                  {renderSortIcon('title')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('amount')}
+              >
+                <div className="flex items-center">
+                  Amount
+                  {renderSortIcon('amount')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('category')}
+              >
+                <div className="flex items-center">
+                  Category
+                  {renderSortIcon('category')}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('date')}
+              >
+                <div className="flex items-center">
+                  Date
+                  {renderSortIcon('date')}
+                </div>
+              </TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {transactions.map(transaction => {
+              const isExpanded = expandedRows[transaction.id] || false;
+              
+              return (
+                <React.Fragment key={transaction.id}>
+                  <TableRow>
+                    {showCheckboxes && (
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedTransactions.includes(transaction.id)}
+                          onCheckedChange={(checked) => 
+                            handleSelectTransaction(transaction.id, checked as boolean)
+                          }
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell>
+                      <div className="font-medium">{transaction.title}</div>
+                      {transaction.notes && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-1 text-xs text-muted-foreground"
+                          onClick={() => toggleRowExpand(transaction.id)}
+                        >
+                          {isExpanded ? 'Hide details' : 'Show details'}
+                          {isExpanded ? 
+                            <ChevronUp className="ml-1 h-3 w-3" /> : 
+                            <ChevronDown className="ml-1 h-3 w-3" />
+                          }
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>{renderAmount(transaction)}</TableCell>
+                    <TableCell>{renderCategory(transaction)}</TableCell>
+                    <TableCell>{renderDate(transaction.date)}</TableCell>
+                    <TableCell>{renderType(transaction.type)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end">
+                        {onEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(transaction)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {onDelete && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(transaction.id)}
+                            className="text-red-600"
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  
+                  {/* Expanded details row */}
+                  {isExpanded && (
+                    <TableRow>
+                      <TableCell 
+                        colSpan={showCheckboxes ? 7 : 6} 
+                        className="bg-muted/50"
+                      >
+                        <div className="p-2">
+                          <div className="grid grid-cols-2 gap-4">
+                            {transaction.notes && (
+                              <div>
+                                <h4 className="text-sm font-medium mb-1">Notes</h4>
+                                <p className="text-sm text-muted-foreground">{transaction.notes}</p>
+                              </div>
+                            )}
+                            {transaction.fromAccount && (
+                              <div>
+                                <h4 className="text-sm font-medium mb-1">Account</h4>
+                                <p className="text-sm text-muted-foreground">{transaction.fromAccount}</p>
+                              </div>
+                            )}
+                            {transaction.person && transaction.person !== 'none' && (
+                              <div>
+                                <h4 className="text-sm font-medium mb-1">Person</h4>
+                                <p className="text-sm text-muted-foreground">{transaction.person}</p>
+                              </div>
+                            )}
+                            {transaction.subcategory && (
+                              <div>
+                                <h4 className="text-sm font-medium mb-1">Subcategory</h4>
+                                <p className="text-sm text-muted-foreground">{transaction.subcategory}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </ScrollArea>
+      
+      {/* Desktop pagination */}
+      {showPagination && totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-2 border-t">
+          <div className="text-sm text-muted-foreground">
+            Showing page {currentPage} of {totalPages}
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange && onPageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange && onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 };
 

@@ -1,280 +1,133 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Check, Clock, Pause, Play, AlertTriangle, Loader } from 'lucide-react';
-import Layout from '@/components/Layout';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import SmsTransactionConfirmation from '@/components/SmsTransactionConfirmation';
-import SmsPermissionRequest from '@/components/SmsPermissionRequest';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { getMockSmsMessages, parseSmsMessage } from '@/lib/sms-parser';
+import Layout from '@/components/Layout';
+import { smsMessageSchema } from '@/lib/validation';
+import { validateData } from '@/lib/validation';
+import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
-import { smsPermissionService } from '@/services/SmsPermissionService';
-import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
-import { transactionService } from '@/services/TransactionService';
-import { Transaction, TransactionType } from '@/types/transaction';
+
+interface SmsMessage {
+  id: string;
+  sender: string;
+  message: string;
+  date?: string;
+  title?: string;
+  amount?: number;
+  category?: string;
+  type?: string;
+  notes?: string;
+  fromAccount?: string;
+  toAccount?: string;
+  person?: string;
+  currency?: string;
+  country?: string;
+  subcategory?: string;
+}
 
 const ProcessSmsMessages = () => {
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const [providersConfigured, setProvidersConfigured] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [totalMessages, setTotalMessages] = useState(0);
-  const [processedCount, setProcessedCount] = useState(0);
-  const [currentTransaction, setCurrentTransaction] = useState<any>(null);
-  const [confirmedTransactions, setConfirmedTransactions] = useState<any[]>([]);
-  const [isCheckingPermission, setIsCheckingPermission] = useState(true);
+  const [smsMessages, setSmsMessages] = useState<SmsMessage[]>([]);
+  const [sender, setSender] = useState('');
+  const [message, setMessage] = useState('');
+  const [date, setDate] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check permission and provider configuration on mount
-    const checkPermissionsAndProviders = async () => {
-      setIsCheckingPermission(true);
-      try {
-        const hasPermission = smsPermissionService.hasPermission();
-        const hasProviders = smsProviderSelectionService.isProviderSelectionCompleted();
-        
-        setPermissionGranted(hasPermission);
-        setProvidersConfigured(hasProviders);
-        
-        // If providers are not configured but permission is granted, navigate to provider selection
-        if (hasPermission && !hasProviders) {
-          toast({
-            title: "SMS providers needed",
-            description: "Please select the financial institutions to track",
-          });
-          navigate('/profile');
-        }
-      } catch (error) {
-        console.error("Error checking permissions:", error);
-        toast({
-          title: "Error",
-          description: "Could not check SMS permissions",
-          variant: "destructive"
-        });
-      } finally {
-        setIsCheckingPermission(false);
-      }
-    };
-
-    checkPermissionsAndProviders();
-  }, [navigate, toast]);
-
-  const handlePermissionGranted = () => {
-    setPermissionGranted(true);
-    smsPermissionService.savePermissionStatus(true);
-    
-    // Check if providers are configured
-    if (!smsProviderSelectionService.isProviderSelectionCompleted()) {
+  const addSmsMessage = () => {
+    if (!sender || !message) {
       toast({
-        title: "SMS providers needed",
-        description: "Please select the financial institutions to track",
+        title: 'Error',
+        description: 'Sender and message are required.',
+        variant: 'destructive',
       });
-      navigate('/profile');
-    }
-  };
-
-  const handlePermissionDenied = () => {
-    toast({
-      title: "Limited functionality",
-      description: "You can still use manual entry for your transactions",
-    });
-    navigate('/dashboard');
-  };
-
-  const startProcessing = () => {
-    setIsProcessing(true);
-    setIsPaused(false);
-    
-    // Get mock messages for selected providers only
-    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
-    const mockMessages = getMockSmsMessages().filter(msg => 
-      selectedProviders.some(provider => 
-        msg.sender.toLowerCase().includes(provider.name.toLowerCase()) ||
-        msg.message.toLowerCase().includes(provider.name.toLowerCase())
-      )
-    );
-    
-    setTotalMessages(mockMessages.length);
-    
-    // Process the first message
-    processNextMessage(mockMessages, 0, []);
-  };
-
-  const processNextMessage = (messages: any[], index: number, confirmed: any[]) => {
-    if (index >= messages.length) {
-      // All messages processed
-      finishProcessing(confirmed);
       return;
     }
 
-    const message = messages[index];
-    const parsedTransaction = parseSmsMessage(message.message, message.sender);
-    
-    if (parsedTransaction) {
-      // Determine transaction type based on the amount and content
-      let transactionType: TransactionType = parsedTransaction.amount < 0 ? 'expense' : 'income';
-      
-      // Check if it's a transfer by looking for transfer-related keywords
-      const transferKeywords = ['transfer', 'sent to', 'to account', 'حوالة', 'تحويل'];
-      if (transferKeywords.some(keyword => message.message.toLowerCase().includes(keyword))) {
-        transactionType = 'transfer';
-      }
-      
-      // Show the transaction for confirmation
-      setCurrentTransaction({
-        id: uuidv4(),
-        message: message.message,
-        sender: message.sender,
-        amount: parsedTransaction.amount,
-        date: message.date.toLocaleDateString(),
-        inferredCategory: parsedTransaction.category,
-        description: parsedTransaction.description,
-        currency: parsedTransaction.currency,
-        country: parsedTransaction.country,
-        fromAccount: message.sender,
-        type: transactionType,
-        // Try to extract toAccount for transfers
-        ...(transactionType === 'transfer' && {
-          toAccount: extractToAccount(message.message)
-        })
-      });
-    } else {
-      // Skip this message if it couldn't be parsed
-      processNextMessage(messages, index + 1, confirmed);
-    }
-    
-    setProcessedCount(index + 1);
-    setProgress(((index + 1) / messages.length) * 100);
-  };
-
-  // Helper function to extract recipient account from transfer messages
-  const extractToAccount = (message: string): string => {
-    // This is a simplified version - in a real app, it would be more sophisticated
-    const patterns = [
-      /(?:to|sent to|transferred to|recipient)[\s:]+([\w\s.']+?)(?:\s+on|\s+at|\s+for|\s+with|$)/i,
-      /(?:to account|account number|account no|a\/c)[\s:#]+([0-9*]+)/i,
-      /(?:حوالة|تحويل)[\s:]+([\w\s.']+?)(?:\s+في|\s+بتاريخ|\s+على|$)/i
-    ];
-    
-    for (const pattern of patterns) {
-      const match = message.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-    
-    return 'Unknown Recipient';
-  };
-
-  const handleConfirmTransaction = (transaction: any) => {
-    const updatedConfirmed = [...confirmedTransactions, transaction];
-    setConfirmedTransactions(updatedConfirmed);
-    
-    // Get mock messages again (in a real app we'd keep track of the original array)
-    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
-    const mockMessages = getMockSmsMessages().filter(msg => 
-      selectedProviders.some(provider => 
-        msg.sender.toLowerCase().includes(provider.name.toLowerCase()) ||
-        msg.message.toLowerCase().includes(provider.name.toLowerCase())
-      )
-    );
-    
-    const nextIndex = processedCount;
-    
-    if (nextIndex < mockMessages.length) {
-      processNextMessage(mockMessages, nextIndex, updatedConfirmed);
-    } else {
-      finishProcessing(updatedConfirmed);
-    }
-  };
-
-  const handleDeclineTransaction = () => {
-    // Skip this transaction and move to the next
-    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
-    const mockMessages = getMockSmsMessages().filter(msg => 
-      selectedProviders.some(provider => 
-        msg.sender.toLowerCase().includes(provider.name.toLowerCase()) ||
-        msg.message.toLowerCase().includes(provider.name.toLowerCase())
-      )
-    );
-    
-    const nextIndex = processedCount;
-    
-    if (nextIndex < mockMessages.length) {
-      processNextMessage(mockMessages, nextIndex, confirmedTransactions);
-    } else {
-      finishProcessing(confirmedTransactions);
-    }
-  };
-
-  const togglePause = () => {
-    setIsPaused(!isPaused);
-  };
-
-  const finishProcessing = (confirmedTransactions: any[]) => {
-    setIsProcessing(false);
-    setCurrentTransaction(null);
-    
-    // In a real app, this would save these transactions to your state management or database
-    if (confirmedTransactions.length > 0) {
-      // Convert to the format used by our transaction store
-      const formattedTransactions: Transaction[] = confirmedTransactions.map(t => ({
-        id: t.id,
-        title: t.description,
-        amount: t.amount,
-        category: t.inferredCategory,
-        subcategory: t.subcategory,
-        date: new Date(t.date).toISOString(),
-        type: t.type,
-        notes: t.message,
-        source: 'sms',
-        fromAccount: t.fromAccount,
-        toAccount: t.toAccount,
-        person: t.person,
-        currency: t.currency,
-        country: t.country
-      }));
-      
-      // Use the transaction service to save transactions
-      const existingTransactions = transactionService.getAllTransactions();
-      transactionService.saveTransactions([...formattedTransactions, ...existingTransactions]);
-    }
-    
-    toast({
-      title: "Processing complete",
-      description: `${confirmedTransactions.length} transactions imported successfully`,
+    // Validate the SMS message
+    const validationResult = validateData(smsMessageSchema, {
+      sender: sender,
+      message: message,
+      date: new Date()
     });
-    
-    navigate('/dashboard');
+
+    if (!validationResult.success) {
+      toast({
+        title: 'Validation Error',
+        description: validationResult.error,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newSmsMessage: SmsMessage = {
+      id: uuidv4(),
+      sender: sender,
+      message: message,
+      date: date,
+    };
+
+    setSmsMessages([...smsMessages, newSmsMessage]);
+    setSender('');
+    setMessage('');
+    setDate('');
   };
 
-  if (isCheckingPermission) {
-    return (
-      <Layout>
-        <div className="max-w-md mx-auto mt-8 flex flex-col items-center justify-center p-8">
-          <Loader className="animate-spin h-12 w-12 text-primary mb-4" />
-          <p className="text-center text-muted-foreground">Checking SMS permissions...</p>
-        </div>
-      </Layout>
-    );
-  }
+  const removeSmsMessage = (id: string) => {
+    setSmsMessages(smsMessages.filter((msg) => msg.id !== id));
+  };
 
-  if (!permissionGranted) {
-    return (
-      <Layout>
-        <div className="max-w-md mx-auto mt-8">
-          <SmsPermissionRequest 
-            onGranted={handlePermissionGranted}
-            onDenied={handlePermissionDenied}
-          />
-        </div>
-      </Layout>
+  const handleInputChange = (
+    id: string,
+    field: keyof SmsMessage,
+    value: any
+  ) => {
+    setSmsMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.id === id ? { ...msg, [field]: value } : msg
+      )
     );
-  }
+  };
+
+  const processMessages = () => {
+    if (smsMessages.length === 0) {
+      toast({
+        title: 'No messages to process',
+        description: 'Please add SMS messages to process.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Map SMS messages to Transaction objects
+    const mappedTransactions: Transaction[] = smsMessages.map(msg => ({
+      id: msg.id,
+      title: msg.title,
+      amount: msg.amount,
+      category: msg.category,
+      subcategory: msg.subcategory,
+      date: msg.date || new Date().toISOString().split('T')[0],
+      type: msg.type,
+      notes: msg.notes,
+      source: 'import', // Change from 'sms' to 'import'
+      fromAccount: msg.fromAccount,
+      toAccount: msg.toAccount,
+      person: msg.person,
+      currency: msg.currency,
+      country: msg.country
+    }));
+
+    // Log the mapped transactions for debugging
+    console.log('Mapped Transactions:', mappedTransactions);
+
+    // Navigate to the dashboard and pass the transactions as state
+    navigate('/dashboard', { state: { transactions: mappedTransactions } });
+  };
 
   return (
     <Layout>
@@ -282,94 +135,180 @@ const ProcessSmsMessages = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md mx-auto space-y-6"
+        className="container mx-auto py-8"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate('/dashboard')}
-              className="mr-2"
-            >
-              <ArrowLeft size={20} />
-            </Button>
-            <h1 className="text-2xl font-bold">Process SMS Messages</h1>
-          </div>
-          
-          {isProcessing && (
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={togglePause}
-            >
-              {isPaused ? <Play size={20} /> : <Pause size={20} />}
-            </Button>
-          )}
-        </div>
-        
-        {isProcessing && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Processing messages: {processedCount} of {totalMessages}</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} />
+        <h1 className="text-2xl font-bold mb-4">Process SMS Messages</h1>
+
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>Add SMS Message</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="sender">Sender</Label>
+              <Input
+                type="text"
+                id="sender"
+                value={sender}
+                onChange={(e) => setSender(e.target.value)}
+              />
             </div>
-            
-            {isPaused && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center text-yellow-800">
-                <Clock className="shrink-0 mr-2 text-yellow-500" size={20} />
-                <p className="text-sm">Processing paused. Resume to continue.</p>
-              </div>
-            )}
-            
-            {currentTransaction && !isPaused && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Review this transaction:</p>
-                <SmsTransactionConfirmation
-                  transaction={currentTransaction}
-                  onConfirm={handleConfirmTransaction}
-                  onDecline={handleDeclineTransaction}
-                  onEdit={(transaction) => setCurrentTransaction(transaction)}
+            <div className="grid gap-2">
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="date">Date (YYYY-MM-DD)</Label>
+              <Input
+                type="date"
+                id="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </div>
+            <Button onClick={addSmsMessage}>Add Message</Button>
+          </CardContent>
+        </Card>
+
+        {smsMessages.map((msg) => (
+          <Card key={msg.id} className="mb-4">
+            <CardHeader>
+              <CardTitle>SMS Message</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-2">
+                <Label>Sender</Label>
+                <Input
+                  type="text"
+                  value={msg.sender}
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'sender', e.target.value)
+                  }
                 />
               </div>
-            )}
-          </div>
-        )}
-        
-        {!isProcessing && (
-          <div className="space-y-6 text-center">
-            <div className="mx-auto bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center">
-              <MessageSquare className="text-primary h-10 w-10" />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold">Process SMS Messages</h2>
-              <p className="text-muted-foreground">
-                We'll scan your SMS messages from financial institutions to extract transaction data automatically.
-              </p>
-            </div>
-            
-            <div className="flex items-start bg-secondary p-4 rounded-lg text-left">
-              <AlertTriangle className="text-amber-500 mr-3 mt-1 shrink-0" size={20} />
-              <div className="space-y-1">
-                <p className="font-medium">Batch Processing</p>
-                <p className="text-sm text-muted-foreground">
-                  You'll be asked to confirm each transaction we extract. You can pause at any time.
-                </p>
+              <div className="grid gap-2">
+                <Label>Message</Label>
+                <Textarea
+                  value={msg.message}
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'message', e.target.value)
+                  }
+                />
               </div>
-            </div>
-            
-            <Button 
-              onClick={startProcessing}
-              className="w-full"
-            >
-              Start Processing
-            </Button>
-          </div>
-        )}
+              <div className="grid gap-2">
+                <Label>Date (YYYY-MM-DD)</Label>
+                <Input
+                  type="date"
+                  value={msg.date || ''}
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'date', e.target.value)
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Title</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'title', e.target.value)
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'amount', parseFloat(e.target.value))
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Category</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'category', e.target.value)
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Type</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'type', e.target.value)
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Notes</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'notes', e.target.value)
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>From Account</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'fromAccount', e.target.value)
+                  }
+                />
+              </div>
+               <div className="grid gap-2">
+                <Label>To Account</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'toAccount', e.target.value)
+                  }
+                />
+              </div>
+               <div className="grid gap-2">
+                <Label>Person</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'person', e.target.value)
+                  }
+                />
+              </div>
+               <div className="grid gap-2">
+                <Label>Currency</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'currency', e.target.value)
+                  }
+                />
+              </div>
+               <div className="grid gap-2">
+                <Label>Country</Label>
+                <Input
+                  type="text"
+                  onChange={(e) =>
+                    handleInputChange(msg.id, 'country', e.target.value)
+                  }
+                />
+              </div>
+              <Button variant="destructive" onClick={() => removeSmsMessage(msg.id)}>
+                Remove Message
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+
+        <Button onClick={processMessages} className="w-full">
+          Process Messages
+        </Button>
       </motion.div>
     </Layout>
   );

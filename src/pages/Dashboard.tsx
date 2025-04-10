@@ -1,135 +1,160 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Plus, List, BarChart, Calendar, Settings } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { Dialog } from '@/components/ui/dialog';
-import { v4 as uuidv4 } from 'uuid';
-import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/context/UserContext';
-import { Transaction } from '@/types/transaction';
+import ExpenseForm from '@/components/ExpenseForm';
+import TransactionList from '@/components/transactions/TransactionList';
+import TransactionSummary from '@/components/transactions/TransactionSummary';
+import CategoryBreakdownChart from '@/components/charts/CategoryBreakdownChart';
+import TimelineChart from '@/components/charts/TimelineChart';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTransactions } from '@/context/TransactionContext';
-import { smsPermissionService } from '@/services/SmsPermissionService';
-
-// Import the component files
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import MobileSmsButton from '@/components/dashboard/MobileSmsButton';
-import DashboardContent from '@/components/dashboard/DashboardContent';
-import TransactionDialog from '@/components/dashboard/TransactionDialog';
+import { useUser } from '@/context/UserContext';
+import { getCategoriesForType } from '@/lib/categories-data';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
-  const { toast } = useToast();
+  const { addTransaction, transactions, getTransactionsSummary, getTransactionsByCategory, getTransactionsByTimePeriod } = useTransactions();
   const { user } = useUser();
-  const { transactions, addTransaction, isLoading } = useTransactions();
-  const [canReadSms, setCanReadSms] = useState(false);
+  const navigate = useNavigate();
+  const [chartType, setChartType] = useState('category');
+  const [timePeriod, setTimePeriod] = useState<'week' | 'month' | 'year'>('month');
+  const [categories, setCategories] = useState<string[]>([]);
 
-  // Check if SMS permissions are granted on component mount
   useEffect(() => {
-    const checkSmsPermission = () => {
-      const hasPermission = smsPermissionService.canReadSms();
-      setCanReadSms(hasPermission);
+    if (user) {
+      setCategories(getCategoriesForType('expense'));
+    }
+  }, [user]);
+
+  const handleAddExpense = (data: any) => {
+    const newTransaction: Omit<Transaction, 'id'> = {
+      title: data.title,
+      amount: data.amount,
+      category: data.category,
+      date: data.date,
+      type: data.amount >= 0 ? 'income' : 'expense',
+      notes: data.notes,
+      source: 'manual', // Adding required source field
     };
     
-    checkSmsPermission();
-  }, []);
-
-  const handleAddTransaction = (formData: any) => {
-    try {
-      const newTransaction: Omit<Transaction, 'id'> = {
-        title: formData.title,
-        amount: formData.amount,
-        category: formData.category,
-        date: formData.date,
-        type: formData.amount >= 0 ? 'income' : 'expense',
-        notes: formData.notes || '',
-      };
-
-      addTransaction(newTransaction);
-      setIsAddingExpense(false);
-      
-      toast({
-        title: "Transaction added",
-        description: `${newTransaction.title} has been added successfully.`,
-      });
-    } catch (error) {
-      console.error('Error adding transaction:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add transaction. Please try again.",
-        variant: "destructive",
-      });
-    }
+    addTransaction(newTransaction);
+    setIsAddingExpense(false);
   };
 
-  const handleRequestSmsPermission = async () => {
-    const granted = await smsPermissionService.requestPermission();
-    
-    if (granted) {
-      setCanReadSms(true);
-      toast({
-        title: "Permission granted",
-        description: "You can now import transactions from SMS",
-      });
-    } else {
-      toast({
-        title: "Permission denied",
-        description: "You'll need to manually add transactions",
-        variant: "destructive",
-      });
-    }
-  };
+  const transactionsSummary = getTransactionsSummary();
+  const transactionsByCategory = getTransactionsByCategory();
+  const transactionsByTimePeriod = getTransactionsByTimePeriod(timePeriod);
 
   return (
-    <>
-      <Layout>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-6"
-        >
-          <DashboardHeader 
-            user={user} 
-            setIsAddingExpense={setIsAddingExpense}
-          />
-          
-          {/* Only show SMS button if in mobile environment */}
-          {smsPermissionService.isNativeEnvironment() && (
-            canReadSms ? (
-              <MobileSmsButton />
-            ) : (
-              <div className="sm:hidden mb-4">
-                <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
-                  <p className="text-sm mb-2">Enable automatic expense tracking through SMS</p>
-                  <button 
-                    onClick={handleRequestSmsPermission} 
-                    className="text-xs bg-primary text-white px-3 py-1.5 rounded-md"
-                  >
-                    Grant SMS Permission
-                  </button>
-                </div>
-              </div>
-            )
-          )}
-          
-          <DashboardContent 
-            transactions={transactions}
-            filter={filter}
-            setFilter={setFilter}
-            setIsAddingExpense={setIsAddingExpense}
-            isLoading={isLoading}
-          />
-        </motion.div>
-      </Layout>
+    <Layout>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="container max-w-7xl mx-auto py-6 space-y-6"
+      >
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">
+            {user ? `Welcome back, ${user.firstName}!` : 'Dashboard'}
+          </h1>
+          <Button onClick={() => setIsAddingExpense(true)}>
+            <Plus className="mr-2" size={16} /> Add Transaction
+          </Button>
+        </div>
 
-      <Dialog open={isAddingExpense} onOpenChange={setIsAddingExpense}>
-        <TransactionDialog
-          isOpen={isAddingExpense}
-          onClose={() => setIsAddingExpense(false)}
-          onSubmit={handleAddTransaction}
-        />
-      </Dialog>
-    </>
+        {/* Add Expense Form */}
+        {isAddingExpense && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Add New Transaction</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ExpenseForm
+                  onSubmit={handleAddExpense}
+                  categories={categories}
+                  onCancel={() => setIsAddingExpense(false)}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Summary Section */}
+        <TransactionSummary summary={transactionsSummary} />
+
+        {/* Charts and Analytics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Spending by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CategoryBreakdownChart data={transactionsByCategory} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between w-full">
+                <CardTitle>Timeline</CardTitle>
+                <select
+                  value={timePeriod}
+                  onChange={(e) => setTimePeriod(e.target.value as 'week' | 'month' | 'year')}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                  <option value="year">Yearly</option>
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <TimelineChart data={transactionsByTimePeriod} />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Transactions List */}
+        <Card>
+          <CardHeader className="flex items-center justify-between">
+            <CardTitle>Recent Transactions</CardTitle>
+            <div className="space-x-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/transactions">
+                  <List className="mr-2" size={16} /> View All
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/import-transactions">
+                  <BarChart className="mr-2" size={16} /> Import
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/settings">
+                  <Settings className="mr-2" size={16} /> Settings
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] w-full">
+              <TransactionList transactions={transactions} />
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </Layout>
   );
 };
 

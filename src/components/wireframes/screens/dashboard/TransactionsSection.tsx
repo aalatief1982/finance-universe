@@ -18,6 +18,16 @@ const TransactionsSection = ({
   currency, 
   formatCurrency 
 }: TransactionsSectionProps) => {
+
+  const formatAmount = (transaction: Transaction) => {
+    const currencySymbol = transaction.currency === 'USD' ? '$' :
+                          transaction.currency === 'EUR' ? '€' : 
+                          'SAR ';
+    
+    const amount = Math.abs(transaction.amount).toFixed(2);
+    return `${currencySymbol}${amount}`;
+  };
+
   return (
     <div className="space-y-2 max-h-52 overflow-y-auto">
       {transactions.length > 0 ? (

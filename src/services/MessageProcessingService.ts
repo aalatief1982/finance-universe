@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { Transaction } from '@/types/transaction';
+import { Transaction, TransactionSource } from '@/types/transaction';
 
 class MessageProcessingService {
   private providersKey = 'message_providers_selected';
@@ -53,7 +53,7 @@ class MessageProcessingService {
         category: category || 'Uncategorized',
         date: date ? date : new Date().toISOString().split('T')[0],
         type: type,
-        source: 'manual', // Changed from 'paste' to 'manual' which should be a valid type
+        source: source === 'telegram' ? 'telegram' : 'manual', // Correctly typed source
         details: {
           rawMessage: text,
           source: source

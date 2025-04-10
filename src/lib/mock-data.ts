@@ -1,137 +1,86 @@
 
-import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 
-// Generate a random date within the last 30 days
-const getRandomDate = () => {
-  const now = new Date();
-  const daysAgo = Math.floor(Math.random() * 30);
-  now.setDate(now.getDate() - daysAgo);
-  return now.toISOString().split('T')[0];
-};
-
-export const CATEGORIES = [
-  'Food', 
-  'Transportation', 
-  'Entertainment', 
-  'Shopping', 
-  'Utilities',
-  'Housing',
-  'Healthcare',
-  'Education',
-  'Travel',
-  'Gifts',
-  'Personal Care',
-  'Subscriptions',
-  'Other'
-];
-
-export const INITIAL_TRANSACTIONS: Transaction[] = [
+// Example transactions for development
+export const mockTransactions: Transaction[] = [
   {
-    id: uuidv4(),
+    id: '1',
     title: 'Salary',
-    amount: 3500,
+    amount: 5000,
     category: 'Income',
-    date: getRandomDate(),
+    date: '2023-04-01',
     type: 'income',
-    fromAccount: 'Bank Account', // Add fromAccount to all transactions
+    fromAccount: 'Bank Account',
+    source: 'manual',
   },
   {
-    id: uuidv4(),
+    id: '2',
     title: 'Rent',
-    amount: -1200,
+    amount: -1500,
     category: 'Housing',
-    date: getRandomDate(),
-    type: 'expense',
-    fromAccount: 'Bank Account', 
-  },
-  {
-    id: uuidv4(),
-    title: 'Groceries',
-    amount: -85.45,
-    category: 'Food',
-    date: getRandomDate(),
-    type: 'expense',
-    fromAccount: 'Credit Card',
-  },
-  {
-    id: uuidv4(),
-    title: 'Uber Rides',
-    amount: -32.99,
-    category: 'Transportation',
-    date: getRandomDate(),
-    type: 'expense',
-    fromAccount: 'Credit Card',
-  },
-  {
-    id: uuidv4(),
-    title: 'Netflix Subscription',
-    amount: -14.99,
-    category: 'Subscriptions',
-    date: getRandomDate(),
+    date: '2023-04-02',
     type: 'expense',
     fromAccount: 'Bank Account',
+    source: 'manual',
   },
   {
-    id: uuidv4(),
-    title: 'Restaurant Dinner',
-    amount: -58.75,
+    id: '3',
+    title: 'Groceries',
+    amount: -200,
     category: 'Food',
-    date: getRandomDate(),
+    date: '2023-04-03',
     type: 'expense',
     fromAccount: 'Credit Card',
+    source: 'manual',
   },
   {
-    id: uuidv4(),
+    id: '4',
+    title: 'Internet Bill',
+    amount: -80,
+    category: 'Utilities',
+    date: '2023-04-05',
+    type: 'expense',
+    fromAccount: 'Bank Account',
+    source: 'manual',
+  },
+  {
+    id: '5',
+    title: 'Dinner',
+    amount: -50,
+    category: 'Food',
+    date: '2023-04-10',
+    type: 'expense',
+    fromAccount: 'Cash',
+    source: 'manual',
+  },
+  {
+    id: '6',
+    title: 'Gas',
+    amount: -45,
+    category: 'Transportation',
+    date: '2023-04-12',
+    type: 'expense',
+    fromAccount: 'Credit Card',
+    source: 'manual',
+  },
+  {
+    id: '7',
     title: 'Freelance Work',
-    amount: 450,
+    amount: 1000,
     category: 'Income',
-    date: getRandomDate(),
+    date: '2023-04-15',
     type: 'income',
     fromAccount: 'Bank Account',
+    source: 'manual',
   },
   {
-    id: uuidv4(),
-    title: 'Shopping - Clothes',
-    amount: -123.45,
-    category: 'Shopping',
-    date: getRandomDate(),
+    id: '8',
+    title: 'Coffee',
+    amount: -5,
+    category: 'Food',
+    date: '2023-04-20',
     type: 'expense',
-    fromAccount: 'Credit Card',
-  },
+    fromAccount: 'Cash',
+    source: 'manual',
+  }
 ];
-
-// Generate data for charts
-export const generateChartData = (transactions: Transaction[]) => {
-  // Category chart data
-  const expensesByCategory = transactions
-    .filter(t => t.amount < 0)
-    .reduce((acc: Record<string, number>, item) => {
-      const category = item.category;
-      if (!acc[category]) {
-        acc[category] = 0;
-      }
-      acc[category] += Math.abs(item.amount);
-      return acc;
-    }, {});
-
-  const categoryData = Object.entries(expensesByCategory).map(([name, value]) => ({
-    name,
-    value,
-  }));
-
-  // Timeline chart data
-  const sortedTransactions = [...transactions]
-    .filter(t => t.amount < 0)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  const expensesByDate = sortedTransactions.map(t => ({
-    date: t.date.slice(5), // MM-DD format
-    amount: t.amount,
-  }));
-
-  return {
-    categoryData,
-    timelineData: expensesByDate,
-  };
-};

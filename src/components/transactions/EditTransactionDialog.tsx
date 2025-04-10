@@ -24,6 +24,13 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
 }) => {
   if (!currentTransaction) return null;
 
+  // Convert person value to a valid option for the form
+  const personValue = currentTransaction.person || 'none';
+  // Make sure personValue is a valid option
+  const safePersonValue = ['none', 'Ahmed', 'Marwa', 'Youssef', 'Salma', 'Mazen'].includes(personValue as string) 
+    ? personValue 
+    : 'none';
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -39,7 +46,7 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
             type: currentTransaction.type || (currentTransaction.amount >= 0 ? 'income' : 'expense'),
             notes: currentTransaction.notes || '',
             description: currentTransaction.description || '',
-            person: currentTransaction.person || 'none',
+            person: safePersonValue as 'none' | 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen',
             fromAccount: currentTransaction.fromAccount || '',
             toAccount: currentTransaction.toAccount || '',
             currency: currentTransaction.currency || 'SAR',
