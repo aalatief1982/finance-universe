@@ -16,6 +16,7 @@ import { useTransactions } from '@/context/TransactionContext';
 import { useUser } from '@/context/UserContext';
 import { getCategoriesForType } from '@/lib/categories-data';
 import { Link } from 'react-router-dom';
+import { TimePeriod } from '@/types/transaction';
 
 const Dashboard = () => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
@@ -23,8 +24,8 @@ const Dashboard = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [chartType, setChartType] = useState('category');
-  const [timePeriod, setTimePeriod] = useState('month');
-  const [categories, setCategories] = useState<string[]>([]);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('month');
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -33,20 +34,15 @@ const Dashboard = () => {
   }, [user]);
 
   const handleAddExpense = (data: any) => {
-    const amount = data.type === 'expense' ? -Math.abs(data.amount) : Math.abs(data.amount);
-    
     const newTransaction = {
       title: data.title,
-      amount,
+      amount: data.amount,
       category: data.category,
       date: data.date,
-      type: data.type,
+      type: data.amount >= 0 ? 'income' : 'expense',
       notes: data.notes,
-      source: 'manual' as const,
-      fromAccount: data.fromAccount,
-      toAccount: data.toAccount,
-      person: data.person || 'none',
-      currency: data.currency || 'USD'
+      source: 'manual',
+      fromAccount: 'Main Account'
     };
     
     addTransaction(newTransaction);
@@ -67,14 +63,13 @@ const Dashboard = () => {
       >
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">
-            {user ? `Welcome back, ${user.fullName ? user.fullName.split(' ')[0] : 'User'}!` : 'Dashboard'}
+            {user ? `Welcome back${user.firstName ? `, ${user.firstName}` : ''}!` : 'Dashboard'}
           </h1>
           <Button onClick={() => setIsAddingExpense(true)}>
             <Plus className="mr-2" size={16} /> Add Transaction
           </Button>
         </div>
 
-        {/* Add Expense Form */}
         {isAddingExpense && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -87,20 +82,18 @@ const Dashboard = () => {
                 <CardTitle>Add New Transaction</CardTitle>
               </CardHeader>
               <CardContent>
-                <ExpenseForm
-                  onSubmit={handleAddExpense}
-                  categories={categories}
-                  onCancel={() => setIsAddingExpense(false)}
+                <ExpenseForm 
+                  onSubmit={handleAddExpense} 
+                  categories={categories} 
+                  onCancel={() => setIsAddingExpense(false)} 
                 />
               </CardContent>
             </Card>
           </motion.div>
         )}
 
-        {/* Transaction Summary */}
         <TransactionSummary summary={transactionsSummary} />
 
-        {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -115,9 +108,9 @@ const Dashboard = () => {
             <CardHeader>
               <div className="flex items-center justify-between w-full">
                 <CardTitle>Timeline</CardTitle>
-                <select
+                <select 
                   value={timePeriod}
-                  onChange={(e) => setTimePeriod(e.target.value)}
+                  onChange={(e) => setTimePeriod(e.target.value as TimePeriod)}
                   className="border rounded px-2 py-1 text-sm"
                 >
                   <option value="week">Weekly</option>
@@ -132,7 +125,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Transactions List */}
         <Card>
           <CardHeader className="flex items-center justify-between">
             <CardTitle>Recent Transactions</CardTitle>

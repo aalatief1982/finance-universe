@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
@@ -164,7 +165,9 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
       }));
     
     // Process messages to extract transactions
-    processTransactionsFromSMS(messagesToProcess);
+    if (processTransactionsFromSMS) {
+      processTransactionsFromSMS(messagesToProcess);
+    }
     
     // Complete the flow
     onComplete();

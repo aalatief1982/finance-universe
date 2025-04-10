@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction, TransactionSummary, CategorySummary, TimePeriodData, TimePeriod, TransactionType, TransactionSource } from '@/types/transaction';
-import { saveTransactions, getTransactions } from '@/utils/storage-utils';
+import { storeTransactions, getStoredTransactions } from '@/utils/storage-utils';
 
 interface TransactionContextType {
   transactions: Transaction[];
@@ -15,6 +15,7 @@ interface TransactionContextType {
   getTransactionsByTimePeriod: (period: TimePeriod) => TimePeriodData[];
   clearAllTransactions: () => void;
   addTransactions: (transactions: Transaction[]) => void;
+  processTransactionsFromSMS?: (smsMessages: any[]) => void; // Adding this method
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -32,7 +33,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     // Load transactions from storage when component mounts
-    const loadedTransactions = getTransactions();
+    const loadedTransactions = getStoredTransactions();
     if (loadedTransactions && loadedTransactions.length > 0) {
       // Make sure all transactions have required fields
       const validTransactions = loadedTransactions.filter(
@@ -45,7 +46,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Save transactions to storage whenever they change
   useEffect(() => {
     if (transactions.length > 0) {
-      saveTransactions(transactions);
+      storeTransactions(transactions);
     }
   }, [transactions]);
 
@@ -124,6 +125,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         break;
       case 'all':
         // Find the earliest transaction date
+        if (transactions.length === 0) return [];
         const dates = transactions.map(tx => new Date(tx.date));
         startDate = new Date(Math.min(...dates.map(date => date.getTime())));
         break;
@@ -157,8 +159,73 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const clearAllTransactions = useCallback(() => {
     setTransactions([]);
-    saveTransactions([]);
+    storeTransactions([]);
   }, []);
+
+  // Add a function to process SMS messages and extract transactions
+  const processTransactionsFromSMS = useCallback((smsMessages: any[]) => {
+    // In a real app, this would process SMS messages to extract transaction data
+    // For now, we'll create a simple implementation that creates transactions from messages
+    const extractedTransactions = smsMessages.map(sms => {
+      // Very basic extraction logic - in a real app, this would be much more sophisticated
+      const messageText = sms.message || '';
+      
+      // Attempt to find amount using a simple regex pattern
+      const amountMatch = messageText.match(/(\$|USD|SAR|AED|EGP)\s*(\d+[.,]\d+|\d+)/i);
+      let amount = 0;
+      if (amountMatch) {
+        // Extract the numeric part and replace comma with dot for parsing
+        const amountStr = amountMatch[2].replace(',', '.');
+        amount = parseFloat(amountStr);
+      }
+      
+      // Simple logic to determine if it's an expense or income
+      const isExpense = /debit|purchase|payment|paid|withdraw|spent|charged|deducted/i.test(messageText);
+      const isIncome = /credit|deposit|received|salary|transferred to you|sent you/i.test(messageText);
+      
+      const transactionType: TransactionType = isIncome ? 'income' : (isExpense ? 'expense' : 'expense');
+      
+      // Simple category detection
+      let category = 'Other';
+      if (/food|restaurant|cafe|dining|pizza|burger|coffee/i.test(messageText)) {
+        category = 'Food & Dining';
+      } else if (/transport|uber|lyft|taxi|bus|train|metro|subway/i.test(messageText)) {
+        category = 'Transportation';
+      } else if (/shop|store|supermarket|grocery|mall|amazon|online/i.test(messageText)) {
+        category = 'Shopping';
+      } else if (/bill|utility|electric|water|gas|internet|phone/i.test(messageText)) {
+        category = 'Bills & Utilities';
+      } else if (/entertainment|movie|cinema|theatre|netflix|spotify/i.test(messageText)) {
+        category = 'Entertainment';
+      }
+      
+      // Create a transaction from the SMS message
+      const transaction: Transaction = {
+        id: uuidv4(),
+        title: `Transaction from ${sms.sender}`,
+        amount: transactionType === 'expense' ? -Math.abs(amount) : Math.abs(amount),
+        category,
+        date: sms.date || new Date().toISOString().split('T')[0],
+        type: transactionType,
+        notes: `Extracted from SMS: ${messageText.substring(0, 100)}${messageText.length > 100 ? '...' : ''}`,
+        source: 'import',
+        fromAccount: 'Main Account',
+        smsDetails: {
+          sender: sms.sender,
+          message: messageText,
+          timestamp: sms.timestamp || new Date().toISOString()
+        }
+      };
+      
+      return transaction;
+    });
+    
+    // Add the extracted transactions to the state
+    const validTransactions = extractedTransactions.filter(tx => tx.amount !== 0);
+    addTransactions(validTransactions);
+    
+    return validTransactions.length;
+  }, [addTransactions]);
 
   const value = {
     transactions,
@@ -170,7 +237,8 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     getTransactionsByCategory,
     getTransactionsByTimePeriod,
     clearAllTransactions,
-    addTransactions
+    addTransactions,
+    processTransactionsFromSMS
   };
 
   return (
