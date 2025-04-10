@@ -1,3 +1,4 @@
+
 import { Transaction, Category, CategoryRule, TransactionCategoryChange } from "@/types/transaction";
 import { handleError } from "@/utils/error-utils";
 import { ErrorType } from "@/types/error";
@@ -14,6 +15,12 @@ import {
 } from "@/lib/validation";
 import { User, UserPreferences } from "@/types/user";
 import { LocaleSettings, SupportedCurrency } from "@/types/locale";
+import { 
+  validateTransactionForStorage, 
+  validateCategoryForStorage, 
+  validateCategoryRuleForStorage,
+  validateCategoryChangeForStorage
+} from "@/utils/storage-utils-fixes";
 
 // Storage keys
 const TRANSACTIONS_STORAGE_KEY = 'transactions';
@@ -153,16 +160,18 @@ export const clearStoredTransactions = (): void => {
   }
 };
 
-export const storeTransaction = (transaction: Transaction): void => {
+export const storeTransaction = (transaction: any): void => {
   try {
-    const transactions = getStoredTransactions();
-    const existingIndex = transactions.findIndex(t => t.id === transaction.id);
+    // Use the validation function to ensure the transaction has all required fields
+    const validatedTransaction = validateTransactionForStorage(transaction);
     
-    // No need for type casting now
+    const transactions = getStoredTransactions();
+    const existingIndex = transactions.findIndex(t => t.id === validatedTransaction.id);
+    
     if (existingIndex >= 0) {
-      transactions[existingIndex] = transaction;
+      transactions[existingIndex] = validatedTransaction;
     } else {
-      transactions.unshift(transaction);
+      transactions.unshift(validatedTransaction);
     }
     
     storeTransactions(transactions);
@@ -237,15 +246,18 @@ export const storeCategories = (categories: Category[]): void => {
   }
 };
 
-export const storeCategory = (category: Category): void => {
+export const storeCategory = (category: any): void => {
   try {
+    // Use the validation function to ensure the category has all required fields
+    const validatedCategory = validateCategoryForStorage(category);
+    
     const categories = getStoredCategories();
-    const existingIndex = categories.findIndex(c => c.id === category.id);
+    const existingIndex = categories.findIndex(c => c.id === validatedCategory.id);
     
     if (existingIndex >= 0) {
-      categories[existingIndex] = category;
+      categories[existingIndex] = validatedCategory;
     } else {
-      categories.push(category);
+      categories.push(validatedCategory);
     }
     
     storeCategories(categories);
@@ -354,15 +366,18 @@ export const storeCategoryRules = (rules: CategoryRule[]): void => {
   }
 };
 
-export const storeCategoryRule = (rule: CategoryRule): void => {
+export const storeCategoryRule = (rule: any): void => {
   try {
+    // Use the validation function to ensure the rule has all required fields
+    const validatedRule = validateCategoryRuleForStorage(rule);
+    
     const rules = getStoredCategoryRules();
-    const existingIndex = rules.findIndex(r => r.id === rule.id);
+    const existingIndex = rules.findIndex(r => r.id === validatedRule.id);
     
     if (existingIndex >= 0) {
-      rules[existingIndex] = rule;
+      rules[existingIndex] = validatedRule;
     } else {
-      rules.push(rule);
+      rules.push(validatedRule);
     }
     
     storeCategoryRules(rules);
@@ -437,10 +452,13 @@ export const storeCategoryChanges = (changes: TransactionCategoryChange[]): void
   }
 };
 
-export const addCategoryChange = (change: TransactionCategoryChange): void => {
+export const addCategoryChange = (change: any): void => {
   try {
+    // Use the validation function to ensure the change has all required fields
+    const validatedChange = validateCategoryChangeForStorage(change);
+    
     const changes = getStoredCategoryChanges();
-    changes.push(change);
+    changes.push(validatedChange);
     storeCategoryChanges(changes);
   } catch (error) {
     handleError({
