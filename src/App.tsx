@@ -1,165 +1,67 @@
-
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { MotionConfig } from 'framer-motion';
-import ExpenseTrackerWireframes from './components/wireframes/ExpenseTrackerWireframes';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { ThemeProvider } from "@/components/theme-provider"
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
-import ProcessSmsMessages from './pages/ProcessSmsMessages';
+import Accounts from './pages/Accounts';
 import Settings from './pages/Settings';
-import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
-import Onboarding from './pages/Onboarding';
 import Profile from './pages/Profile';
-import SmsProviderSelection from './pages/SmsProviderSelection';
-import Analytics from './pages/Analytics';
-import NotFound from './pages/NotFound';
-import Index from './pages/Index';
-import { UserProvider, useUser } from './context/UserContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Onboarding from './pages/Onboarding';
+import { UserProvider } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
-import ErrorBoundary from './components/ui/error-boundary';
-import { Toaster } from './components/ui/toaster';
-import Header from './components/header';
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { auth } = useUser();
-  
-  if (auth.isLoading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  }
-  
-  if (!auth.isAuthenticated) {
-    return <Navigate to="/signup" />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Public route component that redirects to dashboard if user is authenticated
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { auth, user } = useUser();
-  
-  if (auth.isLoading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  }
-  
-  if (auth.isAuthenticated) {
-    return <Navigate to="/dashboard" />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Inside the UserProvider, we need to ensure TransactionProvider wraps all routes that use transactions
-function AppRoutes() {
-  const { auth, user } = useUser();
-
-  React.useEffect(() => {
-    // Redirect to dashboard if user is authenticated and on home page
-    if (auth.isAuthenticated && window.location.pathname === '/') {
-      window.location.href = '/dashboard';
-    }
-  }, [auth.isAuthenticated]);
-
-  return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/wireframes" element={<ExpenseTrackerWireframes />} />
-      
-      <Route path="/signin" element={
-        <PublicRoute>
-          <SignIn />
-        </PublicRoute>
-      } />
-      
-      <Route path="/signup" element={
-        <PublicRoute>
-          <SignUp />
-        </PublicRoute>
-      } />
-      
-      <Route path="/onboarding" element={
-        <PublicRoute>
-          <Onboarding />
-        </PublicRoute>
-      } />
-      
-      {/* Wrap all protected routes that need transaction data with TransactionProvider */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <TransactionProvider>
-            <Dashboard />
-          </TransactionProvider>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/transactions" element={
-        <ProtectedRoute>
-          <TransactionProvider>
-            <Transactions />
-          </TransactionProvider>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/analytics" element={
-        <ProtectedRoute>
-          <TransactionProvider>
-            <Analytics />
-          </TransactionProvider>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/process-sms" element={
-        <ProtectedRoute>
-          <TransactionProvider>
-            <ProcessSmsMessages />
-          </TransactionProvider>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Profile />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/sms-providers" element={
-        <ProtectedRoute>
-          <SmsProviderSelection />
-        </ProtectedRoute>
-      } />
-      
-      {/* Catch all route for 404 pages */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-}
+import { SettingsProvider } from './context/SettingsContext';
+import { AppStateProvider } from './context/AppContext';
+import { CategoryProvider } from './context/CategoryContext';
+import { CurrencyProvider } from './context/CurrencyContext';
+import { AccountProvider } from './context/AccountContext';
+import { Toaster } from "@/components/ui/toaster"
+import { ScrollToTop } from './components/ScrollToTop';
+import { Category } from './pages/Category';
+import { Budget } from './pages/Budget';
+import { AuthRoute } from './components/AuthRoute';
+import { GuestRoute } from './components/GuestRoute';
+import { useUser } from './context/UserContext';
+import { authService } from './services/AuthService';
+import { useToast } from '@/components/ui/use-toast';
+import ImportTransactions from './pages/ImportTransactions';
 
 function App() {
   return (
-    <ErrorBoundary>
-      <UserProvider>
-        {/* Remove the TransactionProvider from here since we're adding it per-route */}
-        <MotionConfig reducedMotion="user">
-          <Router>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <div className="flex-1">
-                <AppRoutes />
-              </div>
-            </div>
-            <Toaster />
-          </Router>
-        </MotionConfig>
-      </UserProvider>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <BrowserRouter>
+        <UserProvider>
+          <TransactionProvider>
+            <SettingsProvider>
+              <AppStateProvider>
+                <CategoryProvider>
+                  <CurrencyProvider>
+                    <AccountProvider>
+                      <Routes>
+                        <Route path="/" element={<AuthRoute><Dashboard /></AuthRoute>} />
+                        <Route path="/dashboard" element={<AuthRoute><Dashboard /></AuthRoute>} />
+                        <Route path="/transactions" element={<AuthRoute><Transactions /></AuthRoute>} />
+                        <Route path="/accounts" element={<AuthRoute><Accounts /></AuthRoute>} />
+                        <Route path="/settings" element={<AuthRoute><Settings /></AuthRoute>} />
+                        <Route path="/profile" element={<AuthRoute><Profile /></AuthRoute>} />
+                        <Route path="/category" element={<AuthRoute><Category /></AuthRoute>} />
+                        <Route path="/budget" element={<AuthRoute><Budget /></AuthRoute>} />
+                        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+                        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+                        <Route path="/onboarding" element={<GuestRoute><Onboarding /></GuestRoute>} />
+                        <Route path="/import-transactions" element={<ImportTransactions />} />
+                      </Routes>
+                      <Toaster />
+                    </AccountProvider>
+                  </CurrencyProvider>
+                </CategoryProvider>
+              </AppStateProvider>
+            </SettingsProvider>
+          </TransactionProvider>
+        </UserProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

@@ -13,9 +13,6 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 0
-    },
-    Permissions: {
-      permissions: ["sms", "readSms", "receiveSms"]
     }
   },
   android: {
