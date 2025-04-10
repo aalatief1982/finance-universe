@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useTransactions } from '@/context/TransactionContext';
 import { Transaction } from '@/types/transaction';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
+import { storeTransaction } from '@/utils/storage-utils';
 
 interface SmartPasteProps {
   onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string) => void;
@@ -111,7 +112,12 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
+    // Add to transaction context
     addTransaction(transaction);
+    
+    // Store in local storage
+    storeTransaction(transaction);
+    
     setText('');
     setDetectedTransactions([]);
     toast({
