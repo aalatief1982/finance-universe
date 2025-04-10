@@ -91,9 +91,14 @@ const Dashboard = () => {
               <h1 className="text-2xl font-bold">
                 {user ? `Welcome back${user.fullName ? `, ${user.fullName.split(' ')[0]}` : ''}!` : 'Dashboard'}
               </h1>
-              <Button onClick={() => setIsAddingExpense(true)}>
-                <Plus className="mr-2" size={16} /> Add Transaction
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => setIsAddingExpense(true)}>
+                  <Plus className="mr-2" size={16} /> Add Transaction
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/import-transactions')}>
+                  Import Transactions
+                </Button>
+              </div>
             </div>
 
             {isAddingExpense && (
