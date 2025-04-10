@@ -2,7 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction, TransactionSummary, CategorySummary, TimePeriodData, TimePeriod, TransactionType, TransactionSource } from '@/types/transaction';
-import { storeTransactions, getStoredTransactions } from '@/utils/storage-utils';
+import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
+import { validateTransactionForStorage } from '@/utils/storage-utils-fixes';
 
 interface TransactionContextType {
   transactions: Transaction[];
@@ -51,13 +52,13 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [transactions]);
 
   const addTransaction = useCallback((transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction = {
+    const validatedTransaction = validateTransactionForStorage({
       ...transaction,
       id: uuidv4(),
       date: transaction.date || new Date().toISOString().split('T')[0],
-    } as Transaction;
+    });
 
-    setTransactions(prev => [newTransaction, ...prev]);
+    setTransactions(prev => [validatedTransaction, ...prev]);
   }, []);
 
   const addTransactions = useCallback((newTransactions: Transaction[]) => {
@@ -199,7 +200,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         category = 'Entertainment';
       }
       
-      // Create a transaction from the SMS message
+      // Create a transaction from the SMS message with the correct structure
       const transaction: Transaction = {
         id: uuidv4(),
         title: `Transaction from ${sms.sender}`,
@@ -208,12 +209,14 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         date: sms.date || new Date().toISOString().split('T')[0],
         type: transactionType,
         notes: `Extracted from SMS: ${messageText.substring(0, 100)}${messageText.length > 100 ? '...' : ''}`,
-        source: 'import',
+        source: 'sms',
         fromAccount: 'Main Account',
-        smsDetails: {
-          sender: sms.sender,
-          message: messageText,
-          timestamp: sms.timestamp || new Date().toISOString()
+        details: {
+          sms: {
+            sender: sms.sender,
+            message: messageText,
+            timestamp: sms.timestamp || new Date().toISOString()
+          }
         }
       };
       

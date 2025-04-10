@@ -16,6 +16,11 @@ export interface Transaction {
   source: TransactionSource;
   details?: {
     [key: string]: any;
+    sms?: {
+      sender: string;
+      message: string;
+      timestamp: string;
+    }
   };
   currency?: string;
   person?: string | 'none' | 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen';
@@ -83,7 +88,7 @@ export interface CategorySummary {
   value: number;
 }
 
-export type TimePeriod = 'week' | 'month' | 'year';
+export type TimePeriod = 'week' | 'month' | 'year' | 'all';
 
 export interface TimePeriodData {
   date: string;

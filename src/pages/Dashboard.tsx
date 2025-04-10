@@ -16,7 +16,7 @@ import { useTransactions } from '@/context/TransactionContext';
 import { useUser } from '@/context/UserContext';
 import { getCategoriesForType } from '@/lib/categories-data';
 import { Link } from 'react-router-dom';
-import { TimePeriod } from '@/types/transaction';
+import { TimePeriod, TransactionType } from '@/types/transaction';
 
 const Dashboard = () => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
@@ -34,14 +34,17 @@ const Dashboard = () => {
   }, [user]);
 
   const handleAddExpense = (data: any) => {
+    // Make sure to assign a valid TransactionType
+    const transactionType: TransactionType = data.amount >= 0 ? 'income' : 'expense';
+    
     const newTransaction = {
       title: data.title,
       amount: data.amount,
       category: data.category,
       date: data.date,
-      type: data.amount >= 0 ? 'income' : 'expense',
+      type: transactionType,
       notes: data.notes,
-      source: 'manual',
+      source: 'manual' as const,
       fromAccount: 'Main Account'
     };
     
@@ -63,7 +66,7 @@ const Dashboard = () => {
       >
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">
-            {user ? `Welcome back${user.firstName ? `, ${user.firstName}` : ''}!` : 'Dashboard'}
+            {user ? `Welcome back${user.name ? `, ${user.name}` : ''}!` : 'Dashboard'}
           </h1>
           <Button onClick={() => setIsAddingExpense(true)}>
             <Plus className="mr-2" size={16} /> Add Transaction
