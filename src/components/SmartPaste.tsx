@@ -1,159 +1,105 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Clipboard, Plus, AlertTriangle, CheckCircle2, RefreshCcw, Edit, Brain, Sparkles } from 'lucide-react';
+import { Paste, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { messageProcessingService } from '@/services/MessageProcessingService';
-import { Transaction, TransactionType } from '@/types/transaction';
+import { useTransactions } from '@/context/TransactionContext';
+import { Transaction } from '@/types/transaction';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
-interface SmartPasteProps {
-  onTransactionsDetected: (transactions: Transaction[]) => void;
-}
-
-const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
-  const [pasteContent, setPasteContent] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+const SmartPaste: React.FC = () => {
+  const [text, setText] = useState('');
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
-  const [usedLearning, setUsedLearning] = useState(false);
+  const [isSmartMatch, setIsSmartMatch] = useState(false);
   const [confidence, setConfidence] = useState(0);
-  const [saveForLearning, setSaveForLearning] = useState(true);
+  const { addTransaction } = useTransactions();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  
-  // Get learning engine functionality
-  const { 
-    findBestMatch, 
-    learnFromTransaction,
-    config
-  } = useLearningEngine();
+  const { findBestMatch } = useLearningEngine();
 
-  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const clipboardText = e.clipboardData.getData('text');
-    if (clipboardText) {
-      setPasteContent(clipboardText);
-      processText(clipboardText);
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setText(text);
+      processText(text);
+    } catch (err) {
+      toast({
+        title: "Error reading clipboard",
+        description: "Failed to read text from clipboard. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const processText = (text: string) => {
-    setIsProcessing(true);
-    try {
-      // Reset state
-      setUsedLearning(false);
-      setConfidence(0);
-      
-      // First, check if we have a learned match
-      const matchResult = findBestMatch(text);
-      
-      if (matchResult.matched && matchResult.entry) {
-        // We found a learned match!
-        const learnedEntry = matchResult.entry;
-        setConfidence(matchResult.confidence);
-        
-        // Convert learned entry to a transaction
-        const learnedTransaction: Transaction = {
-          id: `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          title: learnedEntry.confirmedFields.account || 'Transaction',
-          amount: learnedEntry.confirmedFields.amount,
-          type: learnedEntry.confirmedFields.type,
-          category: learnedEntry.confirmedFields.category,
-          subcategory: learnedEntry.confirmedFields.subcategory,
-          date: new Date().toISOString().split('T')[0],
-          notes: `Extracted from: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`,
-          fromAccount: learnedEntry.confirmedFields.account,
-          person: learnedEntry.confirmedFields.person,
-          currency: learnedEntry.confirmedFields.currency,
-          source: 'import'
-        };
-        
-        setDetectedTransactions([learnedTransaction]);
-        setUsedLearning(true);
-        
-        toast({
-          title: "Smart suggestion!",
-          description: `Found a similar past transaction (${Math.round(matchResult.confidence * 100)}% match)`,
-        });
-      } else {
-        // Fall back to regular processing
-        const transaction = messageProcessingService.processMessageText(text);
-        
-        if (transaction) {
-          setDetectedTransactions([transaction]);
-          toast({
-            title: "Transaction detected!",
-            description: `Found a ${transaction.type} of ${Math.abs(transaction.amount)} ${transaction.currency}`,
-          });
-        } else {
-          toast({
-            title: "No transaction detected",
-            description: "We couldn't identify a transaction in the pasted text. Try adjusting the text or paste a different message.",
-            variant: "destructive",
-          });
-          setDetectedTransactions([]);
-        }
-      }
-    } catch (error) {
-      console.error("Error processing text:", error);
+    // First, try with the learning engine
+    if (processWithLearningEngine(text)) {
+      return;
+    }
+    
+    // Fallback to basic processing if no smart match
+    const amount = parseFloat(text.replace(/[^0-9.-]+/g, ''));
+    if (!isNaN(amount)) {
+      setDetectedTransactions([{
+        id: `paste-${Math.random().toString(36).substring(2, 9)}`,
+        title: `Pasted transaction: ${text.substring(0, 30)}...`,
+        amount: amount,
+        category: 'Uncategorized',
+        date: new Date().toISOString().split('T')[0],
+        type: amount > 0 ? 'income' : 'expense',
+        notes: `Pasted from text: ${text.substring(0, 100)}`,
+        source: 'smart-paste',
+        fromAccount: 'Cash'
+      }]);
+      setIsSmartMatch(false);
+    } else {
       toast({
-        title: "Processing error",
-        description: "An error occurred while processing the text. Please try again.",
-        variant: "destructive",
+        title: "No transaction detected",
+        description: "Could not automatically detect transaction details from the pasted text.",
       });
       setDetectedTransactions([]);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
-  const handleImportTransactions = () => {
-    if (detectedTransactions.length > 0) {
-      // Import the transactions
-      onTransactionsDetected(detectedTransactions);
+  const processWithLearningEngine = (text: string) => {
+    const matchResult = findBestMatch(text);
+    
+    if (matchResult.matched && matchResult.entry) {
+      const learnedEntry = matchResult.entry;
       
-      // If learning is enabled and user wants to save this format
-      if (config.enabled && saveForLearning) {
-        detectedTransactions.forEach(transaction => {
-          learnFromTransaction(pasteContent, transaction);
-        });
-        
-        if (!usedLearning) {
-          toast({
-            title: "Format saved",
-            description: "This message format will be used for future suggestions",
-          });
-        }
-      }
+      // Create a transaction using the learned data
+      const learnedTransaction = {
+        id: `smartpaste-${Math.random().toString(36).substring(2, 9)}`,
+        title: `Smart paste: ${text.substring(0, 30)}...`,
+        amount: learnedEntry.confirmedFields.amount,
+        category: learnedEntry.confirmedFields.category,
+        subcategory: learnedEntry.confirmedFields.subcategory,
+        date: new Date().toISOString().split('T')[0],
+        type: learnedEntry.confirmedFields.type,
+        notes: `Smart-detected from text: ${text.substring(0, 100)}`,
+        fromAccount: learnedEntry.confirmedFields.account,
+        person: learnedEntry.confirmedFields.person,
+        currency: learnedEntry.confirmedFields.currency,
+        source: 'smart-paste' as 'smart-paste'
+      };
       
-      // Reset state
-      setPasteContent('');
-      setDetectedTransactions([]);
-      setSaveForLearning(true);
+      setDetectedTransactions([learnedTransaction]);
+      setIsSmartMatch(true);
+      setConfidence(matchResult.confidence);
+      return true;
     }
+    
+    return false;
   };
 
-  const handleClear = () => {
-    setPasteContent('');
+  const handleAddTransaction = (transaction: Transaction) => {
+    addTransaction(transaction);
+    setText('');
     setDetectedTransactions([]);
-    setUsedLearning(false);
-    setConfidence(0);
-    setSaveForLearning(true);
-  };
-
-  const handleEdit = (transaction: Transaction) => {
-    // Navigate to the edit transaction page with the transaction data
-    navigate('/edit-transaction', { state: { transaction } });
-  };
-
-  const handleAddManually = () => {
-    // Navigate to the add transaction page
-    navigate('/edit-transaction');
+    toast({
+      title: "Transaction added",
+      description: "The transaction has been added to your list.",
+    });
   };
 
   return (
@@ -163,144 +109,62 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
       transition={{ duration: 0.3 }}
       className="p-4 border rounded-lg space-y-4"
     >
-      <div className="flex items-center gap-2 mb-2">
-        <Clipboard className="text-primary h-5 w-5" />
+      <div className="flex items-center gap-2">
+        <Paste className="text-primary h-5 w-5" />
         <h3 className="text-lg font-medium">Smart Paste</h3>
       </div>
       
       <div className="space-y-2">
-        <label htmlFor="paste-area" className="text-sm text-muted-foreground">
-          Paste your transaction message below:
-        </label>
-        <Textarea
-          id="paste-area"
-          value={pasteContent}
-          onChange={(e) => setPasteContent(e.target.value)}
-          onPaste={handlePaste}
-          placeholder="Paste a bank transaction SMS or notification here..."
-          className="min-h-[120px] font-mono text-sm"
+        <Input
+          placeholder="Paste transaction details here..."
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            processText(e.target.value);
+          }}
         />
+        <Button onClick={handlePaste} className="w-full">
+          Paste from Clipboard
+        </Button>
       </div>
       
       {detectedTransactions.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium flex items-center gap-1">
-            {usedLearning ? (
-              <>
-                <Sparkles className="text-yellow-500 h-4 w-4" />
-                <span>Smart Suggestion</span>
-                <Badge variant="outline" className="ml-2">
-                  {Math.round(confidence * 100)}% match
-                </Badge>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="text-green-500 h-4 w-4" />
-                <span>Detected Transaction</span>
-              </>
-            )}
-          </h4>
-          
-          {detectedTransactions.map(transaction => (
-            <motion.div
-              key={transaction.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className={`p-3 ${usedLearning ? 'bg-yellow-50 dark:bg-yellow-950/20' : 'bg-secondary'} rounded-md text-sm`}
-            >
-              <div className="flex justify-between">
-                <span className="font-medium">{transaction.title}</span>
-                <span className={transaction.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
-                  {transaction.type === 'expense' ? '-' : '+'}{Math.abs(transaction.amount)} {transaction.currency}
-                </span>
-              </div>
-              <div className="text-muted-foreground text-xs mt-1">
-                {transaction.category} • {transaction.date}
-              </div>
-              <div className="flex justify-end mt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEdit(transaction)}
-                  className="flex items-center gap-1"
-                >
-                  <Edit className="h-3 w-3" /> Edit
+          {detectedTransactions.map((transaction) => (
+            <div key={transaction.id} className="p-3 border rounded-md">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h4 className="font-medium">{transaction.title}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Amount: {transaction.amount}, Category: {transaction.category}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => handleAddTransaction(transaction)}>
+                  Add Transaction
                 </Button>
               </div>
-            </motion.div>
-          ))}
-          
-          {config.enabled && !usedLearning && (
-            <div className="flex items-center space-x-2 pt-2 mt-2 border-t">
-              <Switch
-                id="save-format"
-                checked={saveForLearning}
-                onCheckedChange={setSaveForLearning}
-              />
-              <Label htmlFor="save-format" className="text-xs text-muted-foreground flex items-center">
-                <Brain className="h-3 w-3 mr-1" />
-                Save this format for future suggestions
-              </Label>
+              {isSmartMatch ? (
+                <div className="flex items-center mt-2 text-green-500">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Smart Match (Confidence: {Math.round(confidence * 100)}%)
+                </div>
+              ) : (
+                <div className="flex items-center mt-2 text-yellow-500">
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                  Basic Detection
+                </div>
+              )}
             </div>
-          )}
+          ))}
         </div>
       )}
       
-      <div className="flex gap-2">
-        <Button 
-          className="flex-1" 
-          onClick={() => processText(pasteContent)}
-          disabled={!pasteContent || isProcessing}
-        >
-          {isProcessing ? (
-            <>
-              <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            <>
-              <Plus className="mr-2 h-4 w-4" />
-              Detect Transaction
-            </>
-          )}
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          onClick={handleClear}
-          disabled={!pasteContent && detectedTransactions.length === 0}
-        >
-          Clear
-        </Button>
-      </div>
-      
-      {detectedTransactions.length > 0 ? (
-        <Button 
-          variant="default"
-          className="w-full"
-          onClick={handleImportTransactions}
-        >
-          Import Transaction
-        </Button>
-      ) : (
-        <Button 
-          variant="outline"
-          className="w-full"
-          onClick={handleAddManually}
-        >
-          Add Transaction Manually
-        </Button>
-      )}
-      
-      <div className="text-xs text-muted-foreground border-t pt-2">
-        <div className="flex items-start gap-1">
-          <AlertTriangle className="text-amber-500 h-4 w-4 flex-shrink-0 mt-0.5" />
-          <p>
-            For best results, paste the complete message from your bank notification.
-            We support various message formats from major banks.
-          </p>
+      {text && detectedTransactions.length === 0 && (
+        <div className="text-muted-foreground flex items-center gap-1 border rounded-md p-4 bg-muted/50">
+          <XCircle className="h-4 w-4" />
+          No transaction details detected. Please try again or enter manually.
         </div>
-      </div>
+      )}
     </motion.div>
   );
 };

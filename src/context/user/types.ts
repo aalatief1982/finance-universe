@@ -1,4 +1,3 @@
-
 import { User as UserType } from '@/types/user';
 
 export interface User extends UserType {
