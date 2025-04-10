@@ -21,6 +21,7 @@ export interface LearnedEntry {
     account: string;
     currency: SupportedCurrency;
     person?: string;
+    vendor?: string; // Added vendor field to the type definition
   };
   timestamp: string; // ISO date string
   tokens: string[]; // tokenized message for faster matching
