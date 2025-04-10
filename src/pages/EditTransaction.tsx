@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import TransactionEditForm from '@/components/TransactionEditForm';
 import { v4 as uuidv4 } from 'uuid';
+import { storeTransaction } from '@/utils/storage-utils';
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -50,13 +51,23 @@ const EditTransaction = () => {
         source: editedTransaction.source || 'manual' // Set source to manual if not specified
       };
       
+      // Add to context
       addTransaction(newTransaction);
+      
+      // Save to local storage
+      storeTransaction(newTransaction);
+      
       toast({
         title: "Transaction created",
         description: "Your transaction has been successfully created",
       });
     } else {
+      // Update in context
       updateTransaction(editedTransaction);
+      
+      // Update in local storage
+      storeTransaction(editedTransaction);
+      
       toast({
         title: "Transaction updated",
         description: "Your transaction has been successfully updated",

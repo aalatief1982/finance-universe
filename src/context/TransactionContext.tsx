@@ -1,6 +1,6 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
+import { getStoredTransactions, storeTransactions, storeTransaction, removeTransaction } from '@/utils/storage-utils';
 
 interface TransactionContextType {
   transactions: Transaction[];
@@ -20,6 +20,12 @@ const TransactionContext = createContext<TransactionContextType | undefined>(und
 export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  // Load transactions from local storage on component mount
+  useEffect(() => {
+    const storedTransactions = getStoredTransactions();
+    setTransactions(storedTransactions);
+  }, []);
+
   const addTransactions = (newTransactions: Transaction[]) => {
     // Ensure all transactions have required fields
     const validTransactions = newTransactions.map(transaction => ({
@@ -28,7 +34,15 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       source: transaction.source || 'manual'
     }));
     
-    setTransactions(prevTransactions => [...prevTransactions, ...validTransactions]);
+    // Update state
+    setTransactions(prevTransactions => {
+      const updatedTransactions = [...prevTransactions, ...validTransactions];
+      
+      // Store in local storage
+      storeTransactions(updatedTransactions);
+      
+      return updatedTransactions;
+    });
   };
 
   const addTransaction = (transaction: Transaction) => {
@@ -39,25 +53,46 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       source: transaction.source || 'manual'
     };
     
-    setTransactions(prevTransactions => [...prevTransactions, validTransaction]);
+    // Update state
+    setTransactions(prevTransactions => {
+      const updatedTransactions = [...prevTransactions, validTransaction];
+      
+      // Store in local storage
+      storeTransactions(updatedTransactions);
+      
+      return updatedTransactions;
+    });
   };
 
   const updateTransaction = (updatedTransaction: Transaction) => {
-    setTransactions(prevTransactions => 
-      prevTransactions.map(transaction => 
+    setTransactions(prevTransactions => {
+      const updatedTransactions = prevTransactions.map(transaction => 
         transaction.id === updatedTransaction.id ? updatedTransaction : transaction
-      )
-    );
+      );
+      
+      // Store in local storage
+      storeTransactions(updatedTransactions);
+      
+      return updatedTransactions;
+    });
   };
 
   const deleteTransaction = (transactionId: string) => {
-    setTransactions(prevTransactions => 
-      prevTransactions.filter(transaction => transaction.id !== transactionId)
-    );
+    setTransactions(prevTransactions => {
+      const filteredTransactions = prevTransactions.filter(transaction => transaction.id !== transactionId);
+      
+      // Store in local storage
+      storeTransactions(filteredTransactions);
+      
+      return filteredTransactions;
+    });
   };
 
   const clearTransactions = () => {
     setTransactions([]);
+    
+    // Clear from local storage
+    storeTransactions([]);
   };
 
   // Mock methods for wireframes
