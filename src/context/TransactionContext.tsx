@@ -201,7 +201,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       
       // Create a transaction from the SMS message with the correct structure
-      const transaction: Transaction = {
+      const transaction: Transaction = validateTransactionForStorage({
         id: uuidv4(),
         title: `Transaction from ${sms.sender}`,
         amount: transactionType === 'expense' ? -Math.abs(amount) : Math.abs(amount),
@@ -218,7 +218,7 @@ export const TransactionProvider: React.FC<{ children: React.ReactNode }> = ({ c
             timestamp: sms.timestamp || new Date().toISOString()
           }
         }
-      };
+      });
       
       return transaction;
     });
