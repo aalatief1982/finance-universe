@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -15,6 +16,7 @@ import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LearnedEntry } from '@/types/learning';
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -22,8 +24,12 @@ const EditTransaction = () => {
   const params = useParams();
   const { addTransaction, updateTransaction, transactions } = useTransactions();
   const { toast } = useToast();
-  const { learnFromTransaction, config } = useLearningEngine();
+  const { learnFromTransaction, config, getLearnedEntries } = useLearningEngine();
   const [saveForLearning, setSaveForLearning] = React.useState(config.saveAutomatically);
+  const [matchDetails, setMatchDetails] = useState<{
+    entry: LearnedEntry | null;
+    confidence: number;
+  } | null>(null);
   
   // Try to get transaction from location state first, then from URL params if available
   let transaction = location.state?.transaction as Transaction | undefined;
@@ -32,6 +38,7 @@ const EditTransaction = () => {
   const rawMessage = location.state?.rawMessage as string | undefined;
   const senderHint = location.state?.senderHint as string | undefined;
   const isSuggested = location.state?.isSuggested as boolean | undefined;
+  const confidenceScore = location.state?.confidence as number | undefined;
   
   // If we have an ID in the URL params, try to find the transaction by ID
   if (!transaction && params.id) {
@@ -39,6 +46,31 @@ const EditTransaction = () => {
   }
   
   const isNewTransaction = !transaction;
+  
+  // Find the matching entry when we have a raw message
+  useEffect(() => {
+    if (rawMessage && transaction && transaction.source === 'smart-paste') {
+      const entries = getLearnedEntries();
+      if (entries.length > 0) {
+        // Find the entry that might have been used for this match
+        const entry = entries.find(e => {
+          // Look for an entry where the field values match our transaction
+          return (
+            e.confirmedFields.type === transaction?.type &&
+            e.confirmedFields.category === transaction?.category &&
+            Math.abs(e.confirmedFields.amount - (transaction?.amount || 0)) < 0.01
+          );
+        });
+        
+        if (entry) {
+          setMatchDetails({
+            entry,
+            confidence: confidenceScore || 0.8,
+          });
+        }
+      }
+    }
+  }, [rawMessage, transaction, getLearnedEntries, confidenceScore]);
   
   // If we're editing a transaction but couldn't find it, redirect to dashboard
   useEffect(() => {
@@ -114,7 +146,7 @@ const EditTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full py-4 sm:py-6 space-y-4 sm:space-y-6"
+        className="w-full py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6"
       >
         <div className="flex items-center space-x-4">
           <Button 
@@ -143,6 +175,35 @@ const EditTransaction = () => {
             <p className="text-xs font-mono break-words">
               <span className="font-semibold">Source message:</span> {rawMessage}
             </p>
+          </div>
+        )}
+        
+        {matchDetails && matchDetails.entry && (
+          <div className="border border-red-300 bg-red-50 dark:bg-red-950/20 p-4 rounded-md">
+            <h3 className="text-red-600 dark:text-red-400 font-medium mb-2">Smart Matching Details</h3>
+            <div className="text-sm text-red-600 dark:text-red-400 space-y-2">
+              <p><strong>Match Confidence:</strong> {Math.round(matchDetails.confidence * 100)}%</p>
+              <p><strong>Matched Template:</strong> {matchDetails.entry.rawMessage.substring(0, 50)}...</p>
+              <div>
+                <p className="font-semibold mb-1">Matched Fields:</p>
+                <ul className="list-disc list-inside pl-2 space-y-1">
+                  <li>Transaction Type: {matchDetails.entry.confirmedFields.type}</li>
+                  <li>Amount: {matchDetails.entry.confirmedFields.amount} {matchDetails.entry.confirmedFields.currency}</li>
+                  <li>Category: {matchDetails.entry.confirmedFields.category}</li>
+                  <li>Account: {matchDetails.entry.confirmedFields.account}</li>
+                  {matchDetails.entry.confirmedFields.person && (
+                    <li>Person: {matchDetails.entry.confirmedFields.person}</li>
+                  )}
+                  {matchDetails.entry.confirmedFields.vendor && (
+                    <li>Vendor: {matchDetails.entry.confirmedFields.vendor}</li>
+                  )}
+                </ul>
+              </div>
+              <p className="italic text-xs mt-2">
+                The transaction details were auto-filled based on this previously learned pattern.
+                You can still edit any field before saving.
+              </p>
+            </div>
           </div>
         )}
         

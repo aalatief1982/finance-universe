@@ -22,7 +22,7 @@ const NotesField: React.FC<NotesFieldProps> = ({
           <FormControl>
             <Textarea 
               placeholder="Additional notes..." 
-              className="min-h-[100px] resize-vertical"
+              className="min-h-[150px] resize-vertical font-mono text-sm"
               {...field} 
             />
           </FormControl>

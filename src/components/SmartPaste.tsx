@@ -11,7 +11,7 @@ import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { storeTransaction } from '@/utils/storage-utils';
 
 interface SmartPasteProps {
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string) => void;
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void;
 }
 
 const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
@@ -102,7 +102,7 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
 
       // If onTransactionsDetected is provided, call it
       if (onTransactionsDetected) {
-        onTransactionsDetected([learnedTransaction], text);
+        onTransactionsDetected([learnedTransaction], text, undefined, matchResult.confidence);
       }
       
       return true;

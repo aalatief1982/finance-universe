@@ -19,7 +19,7 @@ const ImportTransactions = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleTransactionsDetected = (transactions: Transaction[], rawMessage?: string, senderHint?: string) => {
+  const handleTransactionsDetected = (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => {
     setDetectedTransactions(transactions);
     
     if (transactions.length === 1 && rawMessage) {
@@ -28,7 +28,8 @@ const ImportTransactions = () => {
         state: { 
           transaction: transactions[0],
           rawMessage,
-          senderHint
+          senderHint,
+          confidence
         } 
       });
       return;
