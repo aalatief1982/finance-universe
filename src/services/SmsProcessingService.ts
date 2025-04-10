@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { Transaction } from '@/types/transaction';
+import { Transaction, TransactionType } from '@/types/transaction';
 
 class SmsProcessingService {
   // Process SMS messages to extract transaction information
@@ -51,6 +51,8 @@ class SmsProcessingService {
       // Use the message date or fallback to current date
       const transactionDate = message.date.toISOString().split('T')[0];
       
+      const txType: TransactionType = amount >= 0 ? 'income' : 'expense';
+      
       // Create a transaction
       const transaction: Transaction = {
         id: uuidv4(),
@@ -58,7 +60,7 @@ class SmsProcessingService {
         amount: amount,
         category: this.suggestCategory(message.message, amount),
         date: transactionDate,
-        type: amount >= 0 ? 'income' : 'expense',
+        type: txType,
         source: 'import', // Using 'import' as source type
         details: {
           rawMessage: message.message,

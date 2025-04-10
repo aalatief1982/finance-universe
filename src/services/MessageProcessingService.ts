@@ -1,103 +1,19 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { Transaction, TransactionSource } from '@/types/transaction';
+import { Transaction, TransactionType } from '@/types/transaction';
 
 class MessageProcessingService {
-  private providersKey = 'message_providers_selected';
-
-  // Check if user has selected message providers
-  hasProvidersSelected(): boolean {
-    if (typeof window === 'undefined') return false;
-    
-    const providers = localStorage.getItem(this.providersKey);
-    // If providers exist and is not an empty array
-    return !!providers && providers !== '[]';
-  }
-
-  // Save selected providers status
-  saveProvidersStatus(providers: string[]): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.providersKey, JSON.stringify(providers));
-    }
-  }
-
-  // Get selected providers
-  getSelectedProviders(): string[] {
+  processMessageText(text: string): Transaction | null {
     try {
-      const providers = localStorage.getItem(this.providersKey);
-      return providers ? JSON.parse(providers) : [];
-    } catch (error) {
-      console.error('Error getting selected providers:', error);
-      return [];
-    }
-  }
-
-  // Process message text to extract transaction details
-  processMessageText(text: string, source: string = 'paste'): Transaction | null {
-    try {
-      // Extract transaction details
-      const { amount, title, category, currency, date } = this.extractTransactionDetails(text);
+      // Simple pattern matching to extract amount
+      const amountMatch = text.match(/(\$|SAR|AED|USD|EUR|EGP)\s?(\d+(\.\d+)?)|(\d+(\.\d+)?)\s?(\$|SAR|AED|USD|EUR|EGP)/i);
       
-      if (!amount) {
-        return null;
-      }
+      if (!amountMatch) return null;
       
-      // Determine transaction type based on amount
-      const type = amount >= 0 ? 'income' : 'expense';
+      // Extract amount and currency
+      let amount = 0;
+      let currency: string | undefined;
       
-      // Create a transaction object
-      const transaction: Transaction = {
-        id: uuidv4(),
-        title: title || 'Transaction',
-        amount: amount,
-        category: category || 'Uncategorized',
-        date: date ? date : new Date().toISOString().split('T')[0],
-        type: type,
-        source: source === 'telegram' ? 'telegram' : 'manual', // Correctly typed source
-        details: {
-          rawMessage: text,
-          source: source
-        },
-        currency: currency || 'SAR', // Default currency
-        fromAccount: source === 'telegram' ? 'Telegram Bot' : 'Smart Paste',
-      };
-      
-      return transaction;
-    } catch (error) {
-      console.error('Error processing message:', error);
-      return null;
-    }
-  }
-  
-  // Process multiple messages and return extracted transactions
-  processMessagesInBatch(messages: string[], source: string = 'paste'): Transaction[] {
-    const transactions: Transaction[] = [];
-    
-    for (const message of messages) {
-      const transaction = this.processMessageText(message, source);
-      if (transaction) {
-        transactions.push(transaction);
-      }
-    }
-    
-    return transactions;
-  }
-  
-  // Helper method to extract transaction details from message text
-  private extractTransactionDetails(message: string): { 
-    amount: number; 
-    title?: string; 
-    category?: string;
-    currency?: string;
-    date?: string;
-  } {
-    // Simple pattern matching to extract amount
-    const amountMatch = message.match(/(\$|SAR|AED|USD|EUR|EGP)\s?(\d+(\.\d+)?)|(\d+(\.\d+)?)\s?(\$|SAR|AED|USD|EUR|EGP)/i);
-    let amount = 0;
-    let currency: string | undefined;
-    
-    if (amountMatch) {
-      // Extract the currency and amount
       if (amountMatch[2]) {
         amount = parseFloat(amountMatch[2]);
         currency = amountMatch[1];
@@ -106,50 +22,119 @@ class MessageProcessingService {
         currency = amountMatch[6];
       }
       
-      // Assume it's an expense by default
-      amount = -amount;
-    }
-    
-    // Extract date if available
-    const dateMatch = message.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/);
-    let date: string | undefined;
-    
-    if (dateMatch) {
-      // Extract day, month, year and format as YYYY-MM-DD
-      const day = dateMatch[1].padStart(2, '0');
-      const month = dateMatch[2].padStart(2, '0');
-      // If year is 2 digits, assume 20XX
-      const year = dateMatch[3].length === 2 ? `20${dateMatch[3]}` : dateMatch[3];
-      date = `${year}-${month}-${day}`;
-    }
-    
-    // Try to extract title
-    let title: string | undefined;
-    
-    if (message.includes('purchase') || message.includes('payment')) {
-      const atIndex = message.indexOf(' at ');
-      const forIndex = message.indexOf(' for ');
+      // Default to expense (negative amount)
+      if (amount > 0) {
+        amount = -amount;
+      }
       
-      if (atIndex > -1) {
-        title = message.substring(atIndex + 4).split(' ')[0];
-      } else if (forIndex > -1) {
-        title = message.substring(forIndex + 5).split(' ')[0];
+      // Check for deposit/income keywords
+      if (text.toLowerCase().includes('deposit') || 
+          text.toLowerCase().includes('credit') ||
+          text.toLowerCase().includes('salary') ||
+          text.toLowerCase().includes('received')) {
+        amount = Math.abs(amount); // Make it positive for income
+      }
+      
+      // Use current date
+      const transactionDate = new Date().toISOString().split('T')[0];
+      
+      const txType: TransactionType = amount >= 0 ? 'income' : 'expense';
+      
+      // Create transaction
+      const transaction: Transaction = {
+        id: uuidv4(),
+        title: this.extractTitle(text) || 'Transaction',
+        amount: amount,
+        category: this.suggestCategory(text, amount),
+        date: transactionDate,
+        type: txType,
+        source: 'import',
+        details: {
+          rawMessage: text,
+        },
+        currency: currency || 'SAR',
+        fromAccount: this.extractBank(text),
+      };
+      
+      return transaction;
+    } catch (error) {
+      console.error('Error processing message text:', error);
+      return null;
+    }
+  }
+  
+  private extractTitle(messageText: string): string | null {
+    // Extract merchant name or transaction description
+    const patterns = [
+      /at\s+([A-Za-z0-9\s&]+)/i,
+      /to\s+([A-Za-z0-9\s&]+)/i,
+      /from\s+([A-Za-z0-9\s&]+)/i,
+      /purchase\s+at\s+([A-Za-z0-9\s&]+)/i,
+      /payment\s+to\s+([A-Za-z0-9\s&]+)/i,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = messageText.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim();
       }
     }
     
-    // Try to determine category
-    let category: string | undefined;
+    return null;
+  }
+  
+  private suggestCategory(messageText: string, amount: number): string {
+    const text = messageText.toLowerCase();
     
-    if (message.toLowerCase().includes('restaurant') || message.toLowerCase().includes('cafe')) {
-      category = 'Food';
-    } else if (message.toLowerCase().includes('uber') || message.toLowerCase().includes('taxi')) {
-      category = 'Transportation';
-    } else if (message.toLowerCase().includes('salary') || message.toLowerCase().includes('deposit')) {
-      category = 'Income';
-      amount = Math.abs(amount); // Make it positive for income
+    // Basic category rules based on keywords
+    if (text.includes('restaurant') || text.includes('café') || text.includes('cafe') || text.includes('food')) {
+      return 'Food';
+    } else if (text.includes('transport') || text.includes('uber') || text.includes('taxi') || text.includes('train')) {
+      return 'Transportation';
+    } else if (text.includes('salary') || text.includes('deposit') || amount > 0) {
+      return 'Income';
+    } else if (text.includes('bill') || text.includes('utility')) {
+      return 'Utilities';
+    } else if (text.includes('transfer')) {
+      return 'Transfer';
+    } else if (text.includes('shopping') || text.includes('purchase') || text.includes('amazon')) {
+      return 'Shopping';
+    } else if (text.includes('health') || text.includes('doctor') || text.includes('pharmacy')) {
+      return 'Health';
     }
     
-    return { amount, title, category, currency, date };
+    return 'Uncategorized';
+  }
+  
+  private extractBank(text: string): string {
+    // Simplistic bank name extraction from message text
+    const knownBanks = {
+      'SABB': 'SABB Bank',
+      'AlAhli': 'Al Ahli Bank',
+      'RiyadBank': 'Riyad Bank',
+      'AlRajhi': 'Al Rajhi Bank',
+      'BankAlbilad': 'Bank Albilad',
+      'CITI': 'Citibank',
+      'HSBC': 'HSBC Bank',
+      'Emirates': 'Emirates NBD',
+      'ADCB': 'Abu Dhabi Commercial Bank',
+      'DIB': 'Dubai Islamic Bank',
+      'QNB': 'Qatar National Bank',
+      'QIB': 'Qatar Islamic Bank',
+      'KFH': 'Kuwait Finance House',
+      'NBK': 'National Bank of Kuwait',
+      'BAJ': 'Bank AlJazira',
+      'BSF': 'Banque Saudi Fransi',
+      'SNB': 'Saudi National Bank'
+    };
+    
+    for (const [code, name] of Object.entries(knownBanks)) {
+      if (text.toUpperCase().includes(code.toUpperCase())) {
+        return name;
+      }
+    }
+    
+    return 'Unknown Bank';
   }
 }
 
