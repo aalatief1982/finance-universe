@@ -19,8 +19,20 @@ const ImportTransactions = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleTransactionsDetected = (transactions: Transaction[]) => {
+  const handleTransactionsDetected = (transactions: Transaction[], rawMessage?: string, senderHint?: string) => {
     setDetectedTransactions(transactions);
+    
+    if (transactions.length === 1 && rawMessage) {
+      // For a single transaction with raw message, navigate to edit with context
+      navigate('/edit-transaction', { 
+        state: { 
+          transaction: transactions[0],
+          rawMessage,
+          senderHint
+        } 
+      });
+      return;
+    }
     
     // Add transactions to the store
     addTransactions(transactions);

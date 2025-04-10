@@ -1,13 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clipboard, Plus, AlertTriangle, CheckCircle2, RefreshCcw, Edit } from 'lucide-react';
+import { Clipboard, Plus, AlertTriangle, CheckCircle2, RefreshCcw, Edit, Brain, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { messageProcessingService } from '@/services/MessageProcessingService';
 import { Transaction, TransactionType } from '@/types/transaction';
+import { useLearningEngine } from '@/hooks/useLearningEngine';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface SmartPasteProps {
   onTransactionsDetected: (transactions: Transaction[]) => void;
@@ -17,8 +21,18 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   const [pasteContent, setPasteContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
+  const [usedLearning, setUsedLearning] = useState(false);
+  const [confidence, setConfidence] = useState(0);
+  const [saveForLearning, setSaveForLearning] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Get learning engine functionality
+  const { 
+    findBestMatch, 
+    learnFromTransaction,
+    config
+  } = useLearningEngine();
 
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const clipboardText = e.clipboardData.getData('text');
@@ -31,22 +45,59 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   const processText = (text: string) => {
     setIsProcessing(true);
     try {
-      // Process the pasted text to extract transaction data
-      const transaction = messageProcessingService.processMessageText(text);
+      // Reset state
+      setUsedLearning(false);
+      setConfidence(0);
       
-      if (transaction) {
-        setDetectedTransactions([transaction]);
+      // First, check if we have a learned match
+      const matchResult = findBestMatch(text);
+      
+      if (matchResult.matched && matchResult.entry) {
+        // We found a learned match!
+        const learnedEntry = matchResult.entry;
+        setConfidence(matchResult.confidence);
+        
+        // Convert learned entry to a transaction
+        const learnedTransaction: Transaction = {
+          id: `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          title: learnedEntry.confirmedFields.account || 'Transaction',
+          amount: learnedEntry.confirmedFields.amount,
+          type: learnedEntry.confirmedFields.type,
+          category: learnedEntry.confirmedFields.category,
+          subcategory: learnedEntry.confirmedFields.subcategory,
+          date: new Date().toISOString().split('T')[0],
+          notes: `Extracted from: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`,
+          fromAccount: learnedEntry.confirmedFields.account,
+          person: learnedEntry.confirmedFields.person,
+          currency: learnedEntry.confirmedFields.currency,
+          source: 'smart-paste'
+        };
+        
+        setDetectedTransactions([learnedTransaction]);
+        setUsedLearning(true);
+        
         toast({
-          title: "Transaction detected!",
-          description: `Found a ${transaction.type} of ${Math.abs(transaction.amount)} ${transaction.currency}`,
+          title: "Smart suggestion!",
+          description: `Found a similar past transaction (${Math.round(matchResult.confidence * 100)}% match)`,
         });
       } else {
-        toast({
-          title: "No transaction detected",
-          description: "We couldn't identify a transaction in the pasted text. Try adjusting the text or paste a different message.",
-          variant: "destructive",
-        });
-        setDetectedTransactions([]);
+        // Fall back to regular processing
+        const transaction = messageProcessingService.processMessageText(text);
+        
+        if (transaction) {
+          setDetectedTransactions([transaction]);
+          toast({
+            title: "Transaction detected!",
+            description: `Found a ${transaction.type} of ${Math.abs(transaction.amount)} ${transaction.currency}`,
+          });
+        } else {
+          toast({
+            title: "No transaction detected",
+            description: "We couldn't identify a transaction in the pasted text. Try adjusting the text or paste a different message.",
+            variant: "destructive",
+          });
+          setDetectedTransactions([]);
+        }
       }
     } catch (error) {
       console.error("Error processing text:", error);
@@ -63,15 +114,36 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
 
   const handleImportTransactions = () => {
     if (detectedTransactions.length > 0) {
+      // Import the transactions
       onTransactionsDetected(detectedTransactions);
+      
+      // If learning is enabled and user wants to save this format
+      if (config.enabled && saveForLearning) {
+        detectedTransactions.forEach(transaction => {
+          learnFromTransaction(pasteContent, transaction);
+        });
+        
+        if (!usedLearning) {
+          toast({
+            title: "Format saved",
+            description: "This message format will be used for future suggestions",
+          });
+        }
+      }
+      
+      // Reset state
       setPasteContent('');
       setDetectedTransactions([]);
+      setSaveForLearning(true);
     }
   };
 
   const handleClear = () => {
     setPasteContent('');
     setDetectedTransactions([]);
+    setUsedLearning(false);
+    setConfidence(0);
+    setSaveForLearning(true);
   };
 
   const handleEdit = (transaction: Transaction) => {
@@ -113,8 +185,20 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
       {detectedTransactions.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium flex items-center gap-1">
-            <CheckCircle2 className="text-green-500 h-4 w-4" />
-            Detected Transaction
+            {usedLearning ? (
+              <>
+                <Sparkles className="text-yellow-500 h-4 w-4" />
+                <span>Smart Suggestion</span>
+                <Badge variant="outline" className="ml-2">
+                  {Math.round(confidence * 100)}% match
+                </Badge>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="text-green-500 h-4 w-4" />
+                <span>Detected Transaction</span>
+              </>
+            )}
           </h4>
           
           {detectedTransactions.map(transaction => (
@@ -122,7 +206,7 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
               key={transaction.id}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-3 bg-secondary rounded-md text-sm"
+              className={`p-3 ${usedLearning ? 'bg-yellow-50 dark:bg-yellow-950/20' : 'bg-secondary'} rounded-md text-sm`}
             >
               <div className="flex justify-between">
                 <span className="font-medium">{transaction.title}</span>
@@ -145,6 +229,20 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
               </div>
             </motion.div>
           ))}
+          
+          {config.enabled && !usedLearning && (
+            <div className="flex items-center space-x-2 pt-2 mt-2 border-t">
+              <Switch
+                id="save-format"
+                checked={saveForLearning}
+                onCheckedChange={setSaveForLearning}
+              />
+              <Label htmlFor="save-format" className="text-xs text-muted-foreground flex items-center">
+                <Brain className="h-3 w-3 mr-1" />
+                Save this format for future suggestions
+              </Label>
+            </div>
+          )}
         </div>
       )}
       

@@ -1,163 +1,182 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { BrandTelegram, AlertTriangle, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useUser } from '@/context/UserContext';
+import { useLearningEngine } from '@/hooks/useLearningEngine';
 
-interface TelegramBotSetupProps {
-  botUsername?: string;
-  onConnect?: () => void;
-}
-
-const TelegramBotSetup: React.FC<TelegramBotSetupProps> = ({ 
-  botUsername = 'FinanceExpenseBot',
-  onConnect
-}) => {
-  const [copied, setCopied] = useState(false);
+const TelegramBotSetup: React.FC = () => {
+  const [botToken, setBotToken] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [enableLearning, setEnableLearning] = useState(true);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Check if user has already connected to the Telegram bot
-    const connected = localStorage.getItem('telegram_bot_connected') === 'true';
-    setIsConnected(connected);
-  }, []);
-
-  const handleCopyUsername = () => {
-    navigator.clipboard.writeText(`@${botUsername}`);
-    setCopied(true);
-    
-    toast({
-      title: "Username copied",
-      description: `@${botUsername} has been copied to your clipboard`,
-    });
-    
-    setTimeout(() => setCopied(false), 3000);
-  };
+  const { user, updateUser } = useUser();
+  const { config, updateConfig } = useLearningEngine();
 
   const handleConnect = () => {
-    // In a real implementation, this would connect to the Telegram bot
-    // For now, we'll just simulate a connection
-    localStorage.setItem('telegram_bot_connected', 'true');
-    setIsConnected(true);
+    // For demonstration, simulate connecting to Telegram
+    setIsConnecting(true);
     
-    toast({
-      title: "Connected to Telegram bot",
-      description: "You can now forward bank messages to the bot",
-    });
-    
-    if (onConnect) {
-      onConnect();
-    }
+    setTimeout(() => {
+      setIsConnecting(false);
+      setIsConnected(true);
+      
+      // Save the bot token to user context
+      if (user) {
+        updateUser({
+          ...user,
+          telegramConnected: true,
+          telegramBotToken: botToken
+        });
+      }
+      
+      // Update learning engine config
+      updateConfig({
+        enabled: enableLearning
+      });
+      
+      toast({
+        title: "Telegram connected",
+        description: "Your Telegram bot is now set up and ready to receive transaction messages.",
+      });
+    }, 2000);
   };
 
-  const handleOpenTelegram = () => {
-    window.open(`https://t.me/${botUsername}`, '_blank');
+  const handleDisconnect = () => {
+    // For demonstration, simulate disconnecting from Telegram
+    setIsConnecting(true);
+    
+    setTimeout(() => {
+      setIsConnecting(false);
+      setIsConnected(false);
+      setBotToken('');
+      
+      // Remove the bot token from user context
+      if (user) {
+        updateUser({
+          ...user,
+          telegramConnected: false,
+          telegramBotToken: ''
+        });
+      }
+      
+      toast({
+        title: "Telegram disconnected",
+        description: "Your Telegram bot has been disconnected.",
+      });
+    }, 1000);
   };
+
+  // Check if user already has Telegram connected
+  React.useEffect(() => {
+    if (user?.telegramConnected && user?.telegramBotToken) {
+      setBotToken(user.telegramBotToken);
+      setIsConnected(true);
+    }
+  }, [user]);
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="text-[#0088cc] h-5 w-5" />
-          Telegram Bot Integration
-        </CardTitle>
-        <CardDescription>
-          Connect to our Telegram bot to easily import transactions from your bank messages
-        </CardDescription>
-      </CardHeader>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="p-4 border rounded-lg space-y-6"
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <BrandTelegram className="text-primary h-5 w-5" />
+        <h3 className="text-lg font-medium">Telegram Bot Setup</h3>
+      </div>
       
-      <CardContent>
-        {isConnected ? (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-start gap-2"
-          >
-            <CheckCircle2 className="text-green-500 h-5 w-5 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-green-700">Connected to Telegram Bot</p>
-              <p className="text-sm text-green-600">
-                You can now forward bank messages to <span className="font-medium">@{botUsername}</span>
-              </p>
-            </div>
-          </motion.div>
-        ) : (
+      {!isConnected ? (
+        <>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Bot Username</label>
-              <div className="flex">
-                <Input 
-                  value={`@${botUsername}`} 
-                  readOnly 
-                  className="rounded-r-none"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-l-none border-l-0"
-                  onClick={handleCopyUsername}
-                >
-                  {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
+              <label htmlFor="bot-token" className="text-sm font-medium">
+                Telegram Bot Token
+              </label>
+              <Input
+                id="bot-token"
+                value={botToken}
+                onChange={(e) => setBotToken(e.target.value)}
+                placeholder="Enter your Telegram bot token"
+                type="password"
+              />
+              <p className="text-xs text-muted-foreground">
+                You can create a new bot and get its token via BotFather on Telegram.
+              </p>
             </div>
             
-            <div className="border rounded-lg p-3 space-y-3">
-              <p className="text-sm font-medium">How to connect:</p>
-              <ol className="text-sm space-y-2 pl-5 list-decimal">
-                <li>Open Telegram and search for <span className="font-medium">@{botUsername}</span></li>
-                <li>Start a conversation with the bot by clicking <span className="font-medium">Start</span></li>
-                <li>Follow the instructions provided by the bot</li>
-                <li>Forward your bank messages to the bot to import transactions</li>
-              </ol>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="enable-learning"
+                checked={enableLearning}
+                onCheckedChange={setEnableLearning}
+              />
+              <Label htmlFor="enable-learning" className="text-sm flex items-center">
+                <Brain className="h-4 w-4 mr-1" />
+                Enable smart learning from messages
+              </Label>
             </div>
             
-            <div className="flex items-start gap-2 bg-amber-50 p-3 rounded-lg border border-amber-200">
-              <AlertTriangle className="text-amber-500 h-5 w-5 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-700">
-                For your security, never share sensitive information like PINs or passwords with the bot.
-                The bot only reads the transaction details from the messages you forward.
+            <Button
+              onClick={handleConnect}
+              disabled={!botToken || isConnecting}
+              className="w-full"
+            >
+              {isConnecting ? 'Connecting...' : 'Connect to Telegram'}
+            </Button>
+          </div>
+          
+          <div className="text-xs text-muted-foreground border-t pt-4">
+            <div className="flex items-start gap-1">
+              <AlertTriangle className="text-amber-500 h-4 w-4 flex-shrink-0 mt-0.5" />
+              <p>
+                Create a new bot on Telegram by messaging @BotFather and following the
+                instructions. After setup, forward your bank messages to this bot.
               </p>
             </div>
           </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="flex gap-2">
-        {isConnected ? (
+        </>
+      ) : (
+        <div className="space-y-4">
+          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md">
+            <p className="text-sm font-medium text-green-700 dark:text-green-300">
+              Your Telegram bot is connected!
+            </p>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+              Forward your bank SMS messages to your bot to automatically import transactions.
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="enable-learning"
+              checked={config.enabled}
+              onCheckedChange={(checked) => updateConfig({ enabled: checked })}
+            />
+            <Label htmlFor="enable-learning" className="text-sm flex items-center">
+              <Brain className="h-4 w-4 mr-1" />
+              Smart learning is {config.enabled ? 'enabled' : 'disabled'}
+            </Label>
+          </div>
+          
           <Button
-            className="w-full"
             variant="outline"
-            onClick={handleOpenTelegram}
+            onClick={handleDisconnect}
+            disabled={isConnecting}
+            className="w-full"
           >
-            <MessageSquare className="mr-2 h-4 w-4 text-[#0088cc]" />
-            Open Telegram
+            Disconnect Telegram Bot
           </Button>
-        ) : (
-          <>
-            <Button
-              className="flex-1"
-              onClick={handleOpenTelegram}
-            >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Open in Telegram
-            </Button>
-            
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={handleConnect}
-            >
-              Connect Manually
-            </Button>
-          </>
-        )}
-      </CardFooter>
-    </Card>
+        </div>
+      )}
+    </motion.div>
   );
 };
 
