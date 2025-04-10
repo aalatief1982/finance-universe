@@ -11,7 +11,7 @@ const LEARNING_CONFIG_KEY = 'xpensia_learning_config';
 const DEFAULT_CONFIG: LearningEngineConfig = {
   enabled: true,
   maxEntries: 200,
-  minConfidenceThreshold: 0.8,
+  minConfidenceThreshold: 0.3,
   saveAutomatically: true
 };
 
