@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
@@ -99,7 +98,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 py-2">
       {/* Transaction Type */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Transaction Type*</label>
@@ -272,17 +271,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           value={editedTransaction.description || ''}
           onChange={(e) => handleChange('description', e.target.value)}
           placeholder="Enter a detailed description..."
-          className="resize-none min-h-[80px]"
+          className="min-h-[100px]"
         />
       </div>
       
       {/* Notes */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Notes (Optional)</label>
-        <Input 
+        <Textarea 
           value={editedTransaction.notes || ''}
           onChange={(e) => handleChange('notes', e.target.value)}
           placeholder="Additional notes..."
+          className="min-h-[80px]"
         />
       </div>
       

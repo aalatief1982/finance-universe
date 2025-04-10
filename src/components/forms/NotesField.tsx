@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from './transaction-form-schema';
 
@@ -20,7 +20,11 @@ const NotesField: React.FC<NotesFieldProps> = ({
         <FormItem>
           <FormLabel>Notes</FormLabel>
           <FormControl>
-            <Input placeholder="Additional notes..." {...field} />
+            <Textarea 
+              placeholder="Additional notes..." 
+              className="min-h-[100px] resize-vertical"
+              {...field} 
+            />
           </FormControl>
           <FormMessage />
         </FormItem>

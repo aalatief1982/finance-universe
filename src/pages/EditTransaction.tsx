@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -115,7 +114,7 @@ const EditTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container max-w-4xl mx-auto py-6 space-y-6"
+        className="w-full py-4 sm:py-6 space-y-4 sm:space-y-6"
       >
         <div className="flex items-center space-x-4">
           <Button 
@@ -125,7 +124,7 @@ const EditTransaction = () => {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-bold">
+          <h1 className="text-xl sm:text-2xl font-bold">
             {isNewTransaction ? "Add Transaction" : "Edit Transaction"}
           </h1>
         </div>
@@ -139,18 +138,21 @@ const EditTransaction = () => {
           </Alert>
         )}
         
-        <Card className="max-h-[calc(100vh-180px)]">
-          <CardHeader>
+        {rawMessage && (
+          <div className="bg-muted p-3 rounded-md">
+            <p className="text-xs font-mono break-words">
+              <span className="font-semibold">Source message:</span> {rawMessage}
+            </p>
+          </div>
+        )}
+        
+        <Card className="w-full">
+          <CardHeader className="pb-2">
             <CardTitle>
               {isNewTransaction ? "Create a new transaction" : "Edit transaction details"}
             </CardTitle>
-            {rawMessage && (
-              <CardDescription className="text-xs font-mono line-clamp-2 mt-1">
-                Source: {rawMessage}
-              </CardDescription>
-            )}
           </CardHeader>
-          <CardContent className="overflow-y-auto max-h-[calc(100vh-240px)] pb-6 space-y-6">
+          <CardContent className="pt-0">
             <TransactionEditForm 
               transaction={transaction} 
               onSave={handleSave} 

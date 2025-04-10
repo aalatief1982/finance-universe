@@ -9,14 +9,14 @@ interface LayoutProps {
   children: React.ReactNode;
   hideNavigation?: boolean;
   className?: string;
-  withPadding?: boolean; // Add the withPadding prop
+  withPadding?: boolean;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
   hideNavigation = false,
   className = '',
-  withPadding = true // Default to true
+  withPadding = true
 }) => {
   const isMobile = useIsMobile();
   
@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({
         </>
       )}
       
-      <main className={`flex-1 container mx-auto ${withPadding ? 'px-4 pt-4 pb-20' : 'p-0'} ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}>
+      <main className={`flex-1 container mx-auto ${withPadding ? 'px-4 pt-16 pb-20' : 'p-0'} ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}>
         <AnimatePresence mode="wait">
           {children}
         </AnimatePresence>

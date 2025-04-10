@@ -22,7 +22,7 @@ const DescriptionField: React.FC<DescriptionFieldProps> = ({
           <FormControl>
             <Textarea 
               placeholder="Enter a detailed description..." 
-              className="resize-none min-h-[80px]"
+              className="min-h-[120px] resize-vertical"
               {...field}
             />
           </FormControl>
