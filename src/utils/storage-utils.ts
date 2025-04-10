@@ -2,12 +2,16 @@
 import { Transaction, TransactionSummary, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { validateTransactionForStorage, validateCategoryForStorage, validateCategoryRuleForStorage, validateCategoryChangeForStorage } from './storage-utils-fixes';
+import { UserPreferences } from '@/types/user';
+import { SupportedCurrency, LocaleSettings } from '@/types/locale';
 
 // Storage keys for local storage
 const TRANSACTIONS_STORAGE_KEY = 'xpensia_transactions';
 const CATEGORIES_STORAGE_KEY = 'xpensia_categories';
 const CATEGORY_RULES_STORAGE_KEY = 'xpensia_category_rules';
 const CATEGORY_CHANGES_STORAGE_KEY = 'xpensia_category_changes';
+const USER_SETTINGS_STORAGE_KEY = 'xpensia_user_settings';
+const LOCALE_SETTINGS_STORAGE_KEY = 'xpensia_locale_settings';
 
 // Helper function to safely get data from localStorage
 const getFromStorage = <T>(key: string, defaultValue: T): T => {
@@ -186,4 +190,76 @@ export const getCategoryHierarchy = (): any[] => {
   };
   
   return rootCategories.map(buildHierarchy);
+};
+
+// User settings storage functions
+export const getUserSettings = (): UserPreferences => {
+  return getFromStorage<UserPreferences>(USER_SETTINGS_STORAGE_KEY, {
+    currency: 'USD',
+    language: 'en',
+    theme: 'light',
+    notifications: {
+      enabled: true,
+      types: ['sms', 'budget', 'insights']
+    },
+    displayOptions: {
+      showCents: true,
+      weekStartsOn: 'sunday',
+      defaultView: 'list',
+      compactMode: false,
+      showCategories: true,
+      showTags: true
+    },
+    privacy: {
+      maskAmounts: false,
+      requireAuthForSensitiveActions: true,
+      dataSharing: 'none'
+    },
+    dataManagement: {
+      autoBackup: false,
+      backupFrequency: 'weekly',
+      dataRetention: 'forever'
+    }
+  });
+};
+
+export const storeUserSettings = (settings: UserPreferences): void => {
+  setInStorage(USER_SETTINGS_STORAGE_KEY, settings);
+};
+
+// Locale settings storage functions
+export const getLocaleSettings = (): LocaleSettings => {
+  return getFromStorage<LocaleSettings>(LOCALE_SETTINGS_STORAGE_KEY, {
+    locale: 'en-US',
+    currency: 'USD',
+    dateFormat: 'MM/dd/yyyy',
+    timeFormat: 'h:mm a',
+    firstDayOfWeek: 0,
+    numberFormat: {
+      useGrouping: true,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }
+  });
+};
+
+export const storeLocaleSettings = (settings: LocaleSettings): void => {
+  setInStorage(LOCALE_SETTINGS_STORAGE_KEY, settings);
+};
+
+// Currency update function
+export const updateCurrency = (currency: SupportedCurrency): void => {
+  // Update in user settings
+  const userSettings = getUserSettings();
+  storeUserSettings({
+    ...userSettings,
+    currency
+  });
+  
+  // Update in locale settings
+  const localeSettings = getLocaleSettings();
+  storeLocaleSettings({
+    ...localeSettings,
+    currency
+  });
 };
