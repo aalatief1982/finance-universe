@@ -13,6 +13,8 @@ export interface User extends UserType {
   avatar?: string;
   occupation?: string;
   smsProviders: string[];
+  telegramConnected?: boolean;
+  telegramBotToken?: string;
   completedOnboarding: boolean;
   createdAt?: Date;
   lastActive?: Date;

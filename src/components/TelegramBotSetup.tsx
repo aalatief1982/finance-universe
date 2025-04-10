@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BrandTelegram, AlertTriangle, Brain } from 'lucide-react';
+import { MessageSquare, AlertTriangle, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -89,7 +89,7 @@ const TelegramBotSetup: React.FC = () => {
       className="p-4 border rounded-lg space-y-6"
     >
       <div className="flex items-center gap-2 mb-2">
-        <BrandTelegram className="text-primary h-5 w-5" />
+        <MessageSquare className="text-primary h-5 w-5" />
         <h3 className="text-lg font-medium">Telegram Bot Setup</h3>
       </div>
       

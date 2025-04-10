@@ -2,7 +2,7 @@
 export type TransactionType = 'income' | 'expense' | 'transfer';
 
 // Source type used throughout the app
-export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram';
+export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smart-paste' | 'sms-import';
 
 export interface Transaction {
   id: string;

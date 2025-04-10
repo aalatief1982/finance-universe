@@ -70,7 +70,7 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
           fromAccount: learnedEntry.confirmedFields.account,
           person: learnedEntry.confirmedFields.person,
           currency: learnedEntry.confirmedFields.currency,
-          source: 'smart-paste'
+          source: 'import'
         };
         
         setDetectedTransactions([learnedTransaction]);

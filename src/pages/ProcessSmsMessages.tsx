@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -96,7 +95,7 @@ const ProcessSmsMessages = () => {
               date: new Date().toISOString().split('T')[0],
               type: fields.type,
               notes: `Smart match: ${message.message.substring(0, 100)}`,
-              source: 'sms-import',
+              source: 'sms',
               fromAccount: fields.account,
               person: fields.person,
               currency: fields.currency,
@@ -156,7 +155,7 @@ const ProcessSmsMessages = () => {
       date: new Date().toISOString().split('T')[0],
       type: typeValue,
       notes: message.message.substring(0, 100),
-      source: 'sms-import',
+      source: 'sms',
       fromAccount: 'Main Account',
       toAccount: '',
       person: '',
