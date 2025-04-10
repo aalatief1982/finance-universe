@@ -22,16 +22,18 @@ const ImportTransactions = () => {
   const handleTransactionsDetected = (transactions: Transaction[]) => {
     setDetectedTransactions(transactions);
     
-    // In a real implementation, we would show these transactions to the user
-    // For simplicity, we'll just add them directly
-    transactions.forEach(transaction => {
-      addTransactions(transactions);
-      
-      toast({
-        title: "Transactions imported",
-        description: `Successfully imported ${transactions.length} transaction(s)`,
-      });
+    // Add transactions to the store
+    addTransactions(transactions);
+    
+    toast({
+      title: "Transactions imported",
+      description: `Successfully imported ${transactions.length} transaction(s)`,
     });
+    
+    // Optional: Navigate back to dashboard after successful import
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 1500);
   };
 
   return (
