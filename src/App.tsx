@@ -10,6 +10,7 @@ import { UserProvider } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
+import EditTransaction from './pages/EditTransaction';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/import-transactions" element={<ImportTransactions />} />
+              <Route path="/edit-transaction" element={<EditTransaction />} />
             </Routes>
             <Toaster />
           </TransactionProvider>

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clipboard, Plus, AlertTriangle, CheckCircle2, RefreshCcw, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,11 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { messageProcessingService } from '@/services/MessageProcessingService';
 import { Transaction, TransactionType } from '@/types/transaction';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SupportedCurrency } from '@/types/locale';
-import { getCategoriesForType, getSubcategoriesForCategory, PEOPLE, CURRENCIES } from '@/lib/categories-data';
 
 interface SmartPasteProps {
   onTransactionsDetected: (transactions: Transaction[]) => void;
@@ -21,11 +17,8 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   const [pasteContent, setPasteContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedTransaction, setEditedTransaction] = useState<Transaction | null>(null);
-  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const clipboardText = e.clipboardData.getData('text');
@@ -73,10 +66,6 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
       onTransactionsDetected(detectedTransactions);
       setPasteContent('');
       setDetectedTransactions([]);
-      toast({
-        title: "Transactions imported",
-        description: `Successfully imported ${detectedTransactions.length} transaction(s)`,
-      });
     }
   };
 
@@ -86,65 +75,13 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   };
 
   const handleEdit = (transaction: Transaction) => {
-    // Set available categories based on transaction type
-    const categories = getCategoriesForType(transaction.type);
-    setAvailableCategories(categories);
-    
-    // If a category is selected, update subcategories
-    if (transaction.category) {
-      const subcategories = getSubcategoriesForCategory(transaction.category);
-      setAvailableSubcategories(subcategories);
-    }
-    
-    setEditedTransaction({...transaction});
-    setIsEditing(true);
+    // Navigate to the edit transaction page with the transaction data
+    navigate('/edit-transaction', { state: { transaction } });
   };
 
-  const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
-    if (!editedTransaction) return;
-    
-    setEditedTransaction(prev => {
-      if (!prev) return prev;
-      
-      const updated = {...prev, [field]: value};
-      
-      // Handle special cases
-      if (field === 'type') {
-        const transactionType = value as TransactionType;
-        const categories = getCategoriesForType(transactionType);
-        setAvailableCategories(categories);
-        
-        // Reset category and subcategory when type changes
-        updated.category = '';
-        updated.subcategory = '';
-      }
-      
-      if (field === 'category') {
-        const subcategories = getSubcategoriesForCategory(value as string);
-        setAvailableSubcategories(subcategories);
-        
-        // Reset subcategory when category changes
-        updated.subcategory = '';
-      }
-      
-      return updated;
-    });
-  };
-
-  const handleSaveEdit = () => {
-    if (editedTransaction) {
-      setDetectedTransactions([editedTransaction]);
-      setIsEditing(false);
-      
-      toast({
-        title: "Transaction updated",
-        description: "Transaction details have been updated",
-      });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
+  const handleAddManually = () => {
+    // Navigate to the add transaction page
+    navigate('/edit-transaction');
   };
 
   return (
@@ -239,13 +176,21 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
         </Button>
       </div>
       
-      {detectedTransactions.length > 0 && (
+      {detectedTransactions.length > 0 ? (
         <Button 
           variant="default"
           className="w-full"
           onClick={handleImportTransactions}
         >
           Import Transaction
+        </Button>
+      ) : (
+        <Button 
+          variant="outline"
+          className="w-full"
+          onClick={handleAddManually}
+        >
+          Add Transaction Manually
         </Button>
       )}
       
@@ -258,174 +203,6 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
           </p>
         </div>
       </div>
-
-      {/* Edit Transaction Dialog */}
-      <Dialog open={isEditing} onOpenChange={(open) => !open && setIsEditing(false)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Transaction</DialogTitle>
-          </DialogHeader>
-          {editedTransaction && (
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Transaction Type</label>
-                <Select 
-                  value={editedTransaction.type}
-                  onValueChange={(value) => handleChange('type', value as TransactionType)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="expense">Expense</SelectItem>
-                    <SelectItem value="income">Income</SelectItem>
-                    <SelectItem value="transfer">Transfer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Title</label>
-                <Input 
-                  value={editedTransaction.title || ''}
-                  onChange={(e) => handleChange('title', e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">From Account</label>
-                <Input 
-                  value={editedTransaction.fromAccount || ''}
-                  onChange={(e) => handleChange('fromAccount', e.target.value)}
-                />
-              </div>
-              
-              {editedTransaction.type === 'transfer' && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">To Account</label>
-                  <Input 
-                    value={editedTransaction.toAccount || ''}
-                    onChange={(e) => handleChange('toAccount', e.target.value)}
-                  />
-                </div>
-              )}
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Amount</label>
-                  <Input 
-                    type="number" 
-                    value={Math.abs(editedTransaction.amount)}
-                    onChange={(e) => handleChange('amount', Number(e.target.value) * (editedTransaction.type === 'expense' ? -1 : 1))}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Currency</label>
-                  <Select 
-                    value={editedTransaction.currency || 'USD'}
-                    onValueChange={(value) => handleChange('currency', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map(currency => (
-                        <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Category</label>
-                <Select 
-                  value={editedTransaction.category}
-                  onValueChange={(value) => handleChange('category', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCategories.map(category => (
-                      <SelectItem key={category} value={category}>{category}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {availableSubcategories.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Subcategory</label>
-                  <Select 
-                    value={editedTransaction.subcategory || ''}
-                    onValueChange={(value) => handleChange('subcategory', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select subcategory" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableSubcategories.map(subcategory => (
-                        <SelectItem key={subcategory} value={subcategory}>{subcategory}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Person (Optional)</label>
-                <Select 
-                  value={editedTransaction.person || ''}
-                  onValueChange={(value) => handleChange('person', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select person" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {PEOPLE.map(person => (
-                      <SelectItem key={person} value={person}>{person}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Description (Optional)</label>
-                <Input 
-                  value={editedTransaction.description || ''}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Date</label>
-                <Input 
-                  type="date"
-                  value={editedTransaction.date}
-                  onChange={(e) => handleChange('date', e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Notes (Optional)</label>
-                <Textarea 
-                  value={editedTransaction.notes || ''}
-                  onChange={(e) => handleChange('notes', e.target.value)}
-                  className="min-h-[80px]"
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-2">
-                <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                <Button onClick={handleSaveEdit}>Save</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </motion.div>
   );
 };
