@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { getNavItems } from './route-constants';
-import { Home, PieChart, List, MessageSquare, Settings, User } from 'lucide-react';
+import { Home, PieChart, List, MessageSquare, Settings, User, Upload } from 'lucide-react';
 
 // Map of icon names to their components
 const iconMap = {
@@ -13,7 +12,8 @@ const iconMap = {
   'List': List,
   'MessageSquare': MessageSquare,
   'Settings': Settings,
-  'User': User
+  'User': User,
+  'Upload': Upload
 };
 
 export const MainNavigation: React.FC = () => {

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Menu, X, LineChart, Home, BarChart3, 
-  MessageSquare, Settings, User
+  MessageSquare, Settings, User, Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -16,6 +16,7 @@ const MobileNav: React.FC = () => {
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Transactions', path: '/transactions', icon: <BarChart3 size={20} /> },
     { name: 'Analytics', path: '/analytics', icon: <LineChart size={20} /> },
+    { name: 'Import Transactions', path: '/import-transactions', icon: <Upload size={20} /> },
     { name: 'SMS Processing', path: '/process-sms', icon: <MessageSquare size={20} /> },
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },

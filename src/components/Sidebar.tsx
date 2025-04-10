@@ -7,7 +7,8 @@ import {
   BarChart3, 
   MessageSquare, 
   Settings,
-  User
+  User,
+  Upload
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -17,6 +18,7 @@ const Sidebar: React.FC = () => {
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Transactions', path: '/transactions', icon: <BarChart3 size={20} /> },
     { name: 'Analytics', path: '/analytics', icon: <LineChart size={20} /> },
+    { name: 'Import Transactions', path: '/import-transactions', icon: <Upload size={20} /> },
     { name: 'SMS Processing', path: '/process-sms', icon: <MessageSquare size={20} /> },
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
