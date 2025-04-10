@@ -1,3 +1,4 @@
+
 export enum ErrorType {
   VALIDATION = 'validation',
   API = 'api',
@@ -9,6 +10,7 @@ export enum ErrorType {
   AUTH = 'authentication',
   TIMEOUT = 'timeout',
   TRANSACTION = 'transaction',
+  FORMATTING = 'formatting',
   UNKNOWN = 'unknown'
 }
 
@@ -42,6 +44,7 @@ export const errorSeverityDefaults: Record<ErrorType, ErrorSeverity> = {
   [ErrorType.AUTH]: ErrorSeverity.ERROR,
   [ErrorType.TIMEOUT]: ErrorSeverity.WARNING,
   [ErrorType.TRANSACTION]: ErrorSeverity.ERROR,
+  [ErrorType.FORMATTING]: ErrorSeverity.WARNING, // Add this line for the formatting error severity
   [ErrorType.UNKNOWN]: ErrorSeverity.ERROR
 };
 
