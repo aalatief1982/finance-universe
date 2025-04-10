@@ -35,6 +35,51 @@ const Dashboard = () => {
     addTransaction(sampleTransaction);
   };
   
+  // Calculate summary statistics
+  const summary = transactions.reduce(
+    (acc, transaction) => {
+      if (transaction.amount > 0) {
+        acc.income += transaction.amount;
+      } else {
+        acc.expenses += Math.abs(transaction.amount);
+      }
+      acc.balance += transaction.amount;
+      return acc;
+    },
+    { income: 0, expenses: 0, balance: 0 }
+  );
+
+  // Generate chart data
+  const categoryData = transactions
+    .filter(t => t.amount < 0)
+    .reduce((acc, transaction) => {
+      const { category, amount } = transaction;
+      if (!acc[category]) {
+        acc[category] = 0;
+      }
+      acc[category] += Math.abs(amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+  const timelineData = transactions
+    .filter(t => t.amount < 0)
+    .reduce((acc, transaction) => {
+      const date = transaction.date.slice(0, 10); // Get YYYY-MM-DD
+      if (!acc[date]) {
+        acc[date] = 0;
+      }
+      acc[date] += Math.abs(transaction.amount);
+      return acc;
+    }, {} as Record<string, number>);
+
+  // Format data for charts
+  const expensesByCategory = Object.entries(categoryData)
+    .map(([name, value]) => ({ name, value }));
+
+  const expensesByDate = Object.entries(timelineData)
+    .map(([date, amount]) => ({ date, amount }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
   return (
     <Layout>
       <div className="space-y-6 p-6">
@@ -48,12 +93,19 @@ const Dashboard = () => {
           </Button>
         </div>
         
-        <DashboardStats />
+        <DashboardStats 
+          income={summary.income} 
+          expenses={summary.expenses} 
+          balance={summary.balance} 
+        />
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-card p-6 rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Expense Breakdown</h2>
-            <ExpenseChart />
+            <ExpenseChart 
+              expensesByCategory={expensesByCategory}
+              expensesByDate={expensesByDate}
+            />
           </div>
           
           <div className="bg-card p-6 rounded-lg shadow">

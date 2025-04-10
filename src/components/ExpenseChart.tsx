@@ -37,8 +37,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const ExpenseChart = ({ expensesByCategory, expensesByDate }: ExpenseChartProps) => {
+const ExpenseChart = ({ expensesByCategory = [], expensesByDate = [] }: ExpenseChartProps) => {
   const [activeTab, setActiveTab] = useState('category');
+
+  // Safe check for empty data
+  const hasExpensesByCategory = Array.isArray(expensesByCategory) && expensesByCategory.length > 0;
+  const hasExpensesByDate = Array.isArray(expensesByDate) && expensesByDate.length > 0;
 
   return (
     <motion.div
@@ -58,7 +62,7 @@ const ExpenseChart = ({ expensesByCategory, expensesByDate }: ExpenseChartProps)
             </TabsList>
             
             <TabsContent value="category" className="pt-2">
-              {expensesByCategory.length > 0 ? (
+              {hasExpensesByCategory ? (
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart margin={CHART_MARGIN}>
@@ -88,7 +92,7 @@ const ExpenseChart = ({ expensesByCategory, expensesByDate }: ExpenseChartProps)
             </TabsContent>
             
             <TabsContent value="timeline" className="pt-2">
-              {expensesByDate.length > 0 ? (
+              {hasExpensesByDate ? (
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={expensesByDate} margin={CHART_MARGIN}>
