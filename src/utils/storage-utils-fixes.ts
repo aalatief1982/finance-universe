@@ -16,7 +16,7 @@ export const validateTransactionForStorage = (transaction: any): Transaction => 
     type: transaction.type === 'income' || transaction.type === 'expense' || transaction.type === 'transfer' 
       ? transaction.type 
       : (transaction.amount >= 0 ? 'income' : 'expense'),
-    source: transaction.source === 'manual' || transaction.source === 'import' || transaction.source === 'sms' 
+    source: transaction.source === 'manual' || transaction.source === 'import' || transaction.source === 'sms' || transaction.source === 'telegram'
       ? transaction.source 
       : 'manual',
     fromAccount: transaction.fromAccount || 'Main Account'

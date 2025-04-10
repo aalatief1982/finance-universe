@@ -161,7 +161,7 @@ export const clearStoredTransactions = (): void => {
 
 export const storeTransaction = (transaction: any): void => {
   try {
-    // Use the validation function which will ensure all required fields are present
+    // Use the validation function from storage-utils-fixes.ts
     const validatedTransaction = validateTransactionForStorage(transaction);
     
     const transactions = getStoredTransactions();
@@ -247,7 +247,7 @@ export const storeCategories = (categories: Category[]): void => {
 
 export const storeCategory = (category: any): void => {
   try {
-    // Use the validation function which will ensure all required fields are present
+    // Use the validation function from storage-utils-fixes.ts
     const validatedCategory = validateCategoryForStorage(category);
     
     const categories = getStoredCategories();
@@ -367,7 +367,7 @@ export const storeCategoryRules = (rules: CategoryRule[]): void => {
 
 export const storeCategoryRule = (rule: any): void => {
   try {
-    // Use the validation function which will ensure all required fields are present
+    // Use the validation function from storage-utils-fixes.ts
     const validatedRule = validateCategoryRuleForStorage(rule);
     
     const rules = getStoredCategoryRules();
@@ -453,7 +453,7 @@ export const storeCategoryChanges = (changes: TransactionCategoryChange[]): void
 
 export const addCategoryChange = (change: any): void => {
   try {
-    // Use the validation function which will ensure all required fields are present
+    // Use the validation function from storage-utils-fixes.ts
     const validatedChange = validateCategoryChangeForStorage(change);
     
     const changes = getStoredCategoryChanges();
