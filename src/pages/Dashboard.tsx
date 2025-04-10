@@ -66,7 +66,7 @@ const Dashboard = () => {
       >
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">
-            {user ? `Welcome back${user.name ? `, ${user.name}` : ''}!` : 'Dashboard'}
+            {user ? `Welcome back${user.fullName ? `, ${user.fullName.split(' ')[0]}` : ''}!` : 'Dashboard'}
           </h1>
           <Button onClick={() => setIsAddingExpense(true)}>
             <Plus className="mr-2" size={16} /> Add Transaction

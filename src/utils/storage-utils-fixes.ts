@@ -31,6 +31,11 @@ export const validateTransactionForStorage = (transaction: any): Transaction => 
     delete transaction.smsDetails;
   }
   
+  // Ensure fromAccount is set
+  if (!transaction.fromAccount) {
+    transaction.fromAccount = 'Main Account';
+  }
+  
   return transaction as Transaction;
 };
 
