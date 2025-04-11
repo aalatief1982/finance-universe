@@ -28,7 +28,10 @@ const LearningTester: React.FC = () => {
     amount: [],
     currency: [],
     vendor: [],
-    account: []
+    account: [],
+    type: [],
+    date: [],
+    title: []
   });
   const [labelingHistory, setLabelingHistory] = useState<Array<Record<string, string>>>([]);
   const [dummyTransaction, setDummyTransaction] = useState<Transaction>({
@@ -70,7 +73,10 @@ const LearningTester: React.FC = () => {
         amount: extractAmountTokens(message),
         currency: extractCurrencyTokens(message),
         vendor: extractVendorTokens(message),
-        account: extractAccountTokens(message)
+        account: extractAccountTokens(message),
+        type: [],
+        date: [],
+        title: []
       };
       setManualFieldTokenMap(tokenMap);
       
@@ -78,7 +84,7 @@ const LearningTester: React.FC = () => {
       const initialLabels: Record<string, string> = {};
       messageTokens.forEach(token => {
         for (const [field, tokens] of Object.entries(tokenMap)) {
-          if (tokens.includes(token)) {
+          if (tokens && tokens.includes(token)) {
             initialLabels[token] = field;
             break;
           }
@@ -97,7 +103,7 @@ const LearningTester: React.FC = () => {
     
     const fieldMap = matchResult.entry.fieldTokenMap;
     for (const [field, tokens] of Object.entries(fieldMap)) {
-      if (tokens.includes(token)) {
+      if (tokens && tokens.includes(token)) {
         return field;
       }
     }
@@ -112,11 +118,14 @@ const LearningTester: React.FC = () => {
         amount: [],
         currency: [],
         vendor: [],
-        account: []
+        account: [],
+        type: [],
+        date: [],
+        title: []
       };
       
       // Group tokens by their label
-      Object.entries(tokenLabels).forEach(([token, label]) => {
+      Object.entries(tokenLabels || {}).forEach(([token, label]) => {
         if (label && label !== 'unlabeled' && label !== 'ignore' && labelFieldMap[label]) {
           labelFieldMap[label].push(token);
         }
@@ -127,7 +136,7 @@ const LearningTester: React.FC = () => {
       ).length;
       
       // Total tokens with meaningful labels
-      const labeledTokenCount = Object.values(tokenLabels)
+      const labeledTokenCount = Object.values(tokenLabels || {})
         .filter(label => label && label !== 'unlabeled' && label !== 'ignore')
         .length;
       
@@ -148,15 +157,17 @@ const LearningTester: React.FC = () => {
     const fieldMap = matchResult.entry.fieldTokenMap;
     const totalFields = Object.keys(fieldMap).length;
     const matchedFields = Object.entries(fieldMap).filter(([_, tokens]) => 
-      tokens.some(token => messageTokens.includes(token))
+      tokens && tokens.some(token => messageTokens.includes(token))
     ).length;
     
     // Count total token overlaps
     let tokenOverlapCount = 0;
     Object.values(fieldMap).forEach(fieldTokens => {
-      fieldTokens.forEach(token => {
-        if (messageTokens.includes(token)) tokenOverlapCount++;
-      });
+      if (fieldTokens) {
+        fieldTokens.forEach(token => {
+          if (messageTokens.includes(token)) tokenOverlapCount++;
+        });
+      }
     });
     
     // Estimate sender hint bonus (simplified calculation)
@@ -200,6 +211,9 @@ const LearningTester: React.FC = () => {
   const handleDropToken = (field: string, token: string) => {
     setManualFieldTokenMap(prev => {
       const updated = { ...prev };
+      if (!updated[field]) {
+        updated[field] = [];
+      }
       if (!updated[field].includes(token)) {
         updated[field].push(token);
       }
@@ -228,7 +242,10 @@ const LearningTester: React.FC = () => {
       amount: [],
       currency: [],
       vendor: [],
-      account: []
+      account: [],
+      type: [],
+      date: [],
+      title: []
     });
   };
 
@@ -243,7 +260,10 @@ const LearningTester: React.FC = () => {
           amount: [],
           currency: [],
           vendor: [],
-          account: []
+          account: [],
+          type: [],
+          date: [],
+          title: []
         };
         
         Object.entries(previousState).forEach(([token, label]) => {
@@ -268,7 +288,10 @@ const LearningTester: React.FC = () => {
       amount: extractAmountTokens(message),
       currency: extractCurrencyTokens(message),
       vendor: extractVendorTokens(message),
-      account: extractAccountTokens(message)
+      account: extractAccountTokens(message),
+      type: [],
+      date: [],
+      title: []
     };
     
     // Create initial token labels
@@ -276,7 +299,7 @@ const LearningTester: React.FC = () => {
     messageTokens.forEach(token => {
       let found = false;
       for (const [field, tokens] of Object.entries(tokenMap)) {
-        if (tokens.includes(token)) {
+        if (tokens && tokens.includes(token)) {
           autoLabels[token] = field;
           found = true;
           break;
@@ -321,13 +344,17 @@ const LearningTester: React.FC = () => {
   const handleRemoveToken = (field: string, token: string) => {
     setManualFieldTokenMap(prev => {
       const updated = { ...prev };
-      updated[field] = updated[field].filter(t => t !== token);
+      if (updated[field]) {
+        updated[field] = updated[field].filter(t => t !== token);
+      }
       return updated;
     });
     
     setTokenLabels(prev => {
       const updated = { ...prev };
-      delete updated[token];
+      if (token in updated) {
+        delete updated[token];
+      }
       return updated;
     });
   };
