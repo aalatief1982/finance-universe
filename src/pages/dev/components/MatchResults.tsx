@@ -1,4 +1,4 @@
-// Updated MatchResults.tsx with Drag-and-Drop Tagging
+// Updated MatchResults.tsx with complete drop & removal support and new fields
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,6 @@ interface MatchResultsProps {
   matchResult: MatchResult | null;
   isLabelingMode: boolean;
   messageTokens: string[];
-  tokenLabels: Record<string, string>;
   manualFieldTokenMap: Record<string, string[]>;
   dummyTransaction: Transaction;
   setDummyTransaction: React.Dispatch<React.SetStateAction<Transaction>>;
@@ -32,7 +31,7 @@ interface MatchResultsProps {
     calculatedScore: number;
   } | null;
   handleDropToken: (field: string, token: string) => void;
-  getTokenFieldMatch: (token: string) => string | null;
+  handleRemoveToken: (field: string, token: string) => void;
   clearAllLabels: () => void;
   undoLastLabeling: () => void;
   applyAutomaticLabels: () => void;
@@ -44,13 +43,12 @@ const MatchResults: React.FC<MatchResultsProps> = ({
   matchResult,
   isLabelingMode,
   messageTokens,
-  tokenLabels,
   manualFieldTokenMap,
   dummyTransaction,
   setDummyTransaction,
   confidenceBreakdown,
   handleDropToken,
-  getTokenFieldMatch,
+  handleRemoveToken,
   clearAllLabels,
   undoLastLabeling,
   applyAutomaticLabels,
@@ -58,17 +56,9 @@ const MatchResults: React.FC<MatchResultsProps> = ({
   labelingHistory
 }) => {
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return "bg-green-500";
-    if (confidence >= 0.6) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
-  // Add handleRemoveToken function to remove tokens from fields
-  const handleRemoveToken = (field: string, token: string) => {
-    const updatedFieldTokenMap = { ...manualFieldTokenMap };
-    updatedFieldTokenMap[field] = updatedFieldTokenMap[field].filter(t => t !== token);
-    // This function doesn't directly update the state since we don't have access to the setter here
-    // But we can pass it to the DropFieldZone component, which will call it with the right parameters
+    if (confidence >= 0.8) return 'bg-green-500';
+    if (confidence >= 0.6) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   return (
@@ -76,11 +66,11 @@ const MatchResults: React.FC<MatchResultsProps> = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>
-            {isLabelingMode ? "Token Labeling Mode" : "Match Result"}
+            {isLabelingMode ? 'Token Labeling Mode' : 'Match Result'}
           </CardTitle>
           {!isLabelingMode && matchResult && (
-            <Badge variant={matchResult.matched ? "default" : "outline"} className="ml-2">
-              {matchResult.matched ? "Match Found" : "No Match"}
+            <Badge variant={matchResult.matched ? 'default' : 'outline'} className="ml-2">
+              {matchResult.matched ? 'Match Found' : 'No Match'}
             </Badge>
           )}
         </div>
@@ -89,31 +79,15 @@ const MatchResults: React.FC<MatchResultsProps> = ({
             <div className="flex items-center justify-between mt-2">
               <span>Drag tokens into the correct fields below</span>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={clearAllLabels}
-                  className="flex items-center gap-1 text-xs"
-                >
+                <Button variant="outline" size="sm" onClick={clearAllLabels} className="flex items-center gap-1 text-xs">
                   <X className="h-3 w-3" />
                   Clear All
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={undoLastLabeling}
-                  disabled={labelingHistory.length === 0}
-                  className="flex items-center gap-1 text-xs"
-                >
+                <Button variant="outline" size="sm" onClick={undoLastLabeling} disabled={labelingHistory.length === 0} className="flex items-center gap-1 text-xs">
                   <ChevronUp className="h-3 w-3" />
                   Undo
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={applyAutomaticLabels}
-                  className="flex items-center gap-1 text-xs"
-                >
+                <Button variant="outline" size="sm" onClick={applyAutomaticLabels} className="flex items-center gap-1 text-xs">
                   <RefreshCw className="h-3 w-3" />
                   Auto-detect
                 </Button>
@@ -121,12 +95,9 @@ const MatchResults: React.FC<MatchResultsProps> = ({
             </div>
           ) : (
             <>
-              Confidence Score: 
+              Confidence Score:
               <div className="w-full bg-muted rounded-full h-2 mt-1">
-                <div 
-                  className={`h-2 rounded-full ${getConfidenceColor(matchResult?.confidence || 0)}`} 
-                  style={{ width: `${(matchResult?.confidence || 0) * 100}%` }} 
-                />
+                <div className={`h-2 rounded-full ${getConfidenceColor(matchResult?.confidence || 0)}`} style={{ width: `${(matchResult?.confidence || 0) * 100}%` }} />
               </div>
               <span className="ml-2">{((matchResult?.confidence || 0) * 100).toFixed(1)}%</span>
             </>
@@ -149,9 +120,9 @@ const MatchResults: React.FC<MatchResultsProps> = ({
               <DropFieldZone field="currency" tokens={manualFieldTokenMap.currency} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
               <DropFieldZone field="vendor" tokens={manualFieldTokenMap.vendor} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
               <DropFieldZone field="account" tokens={manualFieldTokenMap.account} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
-              <DropFieldZone field="type" tokens={manualFieldTokenMap.type || []} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
-              <DropFieldZone field="date" tokens={manualFieldTokenMap.date || []} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
-              <DropFieldZone field="title" tokens={manualFieldTokenMap.title || []} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="type" tokens={manualFieldTokenMap.type} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="date" tokens={manualFieldTokenMap.date} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="title" tokens={manualFieldTokenMap.title} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
             </div>
           </>
         )}
@@ -161,7 +132,7 @@ const MatchResults: React.FC<MatchResultsProps> = ({
         )}
 
         {(isLabelingMode || matchResult?.entry) && (
-          <Tabs defaultValue={isLabelingMode ? "fieldmap" : "fieldmap"} className="w-full">
+          <Tabs defaultValue="fieldmap" className="w-full">
             <TabsList className="w-full grid grid-cols-3">
               <TabsTrigger value="fieldmap">Field Token Map</TabsTrigger>
               {!isLabelingMode && <TabsTrigger value="entry">Entry Details</TabsTrigger>}
@@ -171,11 +142,7 @@ const MatchResults: React.FC<MatchResultsProps> = ({
             </TabsList>
 
             <TabsContent value="fieldmap" className="space-y-4 mt-4">
-              <FieldTokenMap 
-                fieldTokenMap={isLabelingMode ? manualFieldTokenMap : (matchResult?.entry?.fieldTokenMap || {})} 
-                messageTokens={messageTokens}
-                isLabelingMode={isLabelingMode}
-              />
+              <FieldTokenMap fieldTokenMap={isLabelingMode ? manualFieldTokenMap : (matchResult?.entry?.fieldTokenMap || {})} messageTokens={messageTokens} isLabelingMode={isLabelingMode} />
             </TabsContent>
 
             {!isLabelingMode && matchResult?.entry && (
@@ -198,11 +165,7 @@ const MatchResults: React.FC<MatchResultsProps> = ({
 
             {isLabelingMode && (
               <TabsContent value="learning" className="space-y-4 mt-4">
-                <LearningSettings 
-                  dummyTransaction={dummyTransaction}
-                  setDummyTransaction={setDummyTransaction}
-                  onLearnFromCurrentMessage={learnFromCurrentMessage}
-                />
+                <LearningSettings dummyTransaction={dummyTransaction} setDummyTransaction={setDummyTransaction} onLearnFromCurrentMessage={learnFromCurrentMessage} />
               </TabsContent>
             )}
           </Tabs>
