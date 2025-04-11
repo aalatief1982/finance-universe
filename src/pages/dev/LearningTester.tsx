@@ -10,6 +10,7 @@ import { learningEngineService } from '@/services/LearningEngineService';
 import { MatchResult, LearnedEntry } from '@/types/learning';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
+import { useLearningEngine } from '@/hooks/useLearningEngine';
 
 // Import our new components
 import MessageInput from './components/MessageInput';
@@ -43,23 +44,31 @@ const LearningTester: React.FC = () => {
   });
   
   const { toast } = useToast();
+  const {
+    findBestMatch,
+    tokenize,
+    extractAmountTokens,
+    extractCurrencyTokens,
+    extractVendorTokens,
+    extractAccountTokens,
+    learnFromTransaction,
+    clearLearnedEntries
+  } = useLearningEngine();
 
   // Generate tokens from the current message
   const messageTokens = useMemo(() => {
     if (!message) return [];
-    return learningEngineService.tokenize ? 
-      learningEngineService.tokenize(message) : 
-      message.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(Boolean);
-  }, [message]);
+    return tokenize(message);
+  }, [message, tokenize]);
 
   // Initial automatic tokenization
   useEffect(() => {
     if (message && !isLabelingMode) {
       const tokenMap = {
-        amount: learningEngineService.extractAmountTokens(message),
-        currency: learningEngineService.extractCurrencyTokens(message),
-        vendor: learningEngineService.extractVendorTokens(message),
-        account: learningEngineService.extractAccountTokens(message)
+        amount: extractAmountTokens(message),
+        currency: extractCurrencyTokens(message),
+        vendor: extractVendorTokens(message),
+        account: extractAccountTokens(message)
       };
       setManualFieldTokenMap(tokenMap);
       
@@ -78,7 +87,7 @@ const LearningTester: React.FC = () => {
       });
       setTokenLabels(initialLabels);
     }
-  }, [message, messageTokens, isLabelingMode]);
+  }, [message, messageTokens, isLabelingMode, extractAmountTokens, extractCurrencyTokens, extractVendorTokens, extractAccountTokens]);
 
   // Check if a token exists in any field token map
   const getTokenFieldMatch = (token: string) => {
@@ -164,7 +173,7 @@ const LearningTester: React.FC = () => {
     };
   }, [matchResult, messageTokens, senderHint, isLabelingMode, tokenLabels]);
 
-  const findBestMatch = () => {
+  const findBestMatchHandler = () => {
     if (!message) {
       toast({
         title: "Message required",
@@ -174,7 +183,7 @@ const LearningTester: React.FC = () => {
       return;
     }
 
-    const result = learningEngineService.findBestMatch(message, senderHint);
+    const result = findBestMatch(message, senderHint);
     setMatchResult(result);
   };
 
@@ -263,10 +272,10 @@ const LearningTester: React.FC = () => {
     setLabelingHistory([...labelingHistory, { ...tokenLabels }]);
     
     const tokenMap = {
-      amount: learningEngineService.extractAmountTokens(message),
-      currency: learningEngineService.extractCurrencyTokens(message),
-      vendor: learningEngineService.extractVendorTokens(message),
-      account: learningEngineService.extractAccountTokens(message)
+      amount: extractAmountTokens(message),
+      currency: extractCurrencyTokens(message),
+      vendor: extractVendorTokens(message),
+      account: extractAccountTokens(message)
     };
     
     // Create initial token labels
@@ -300,18 +309,7 @@ const LearningTester: React.FC = () => {
     }
 
     try {
-      // Fix the type issue by explicitly creating the expected object shape
-      if (isLabelingMode) {
-        const typedTokenMap = {
-          amount: manualFieldTokenMap.amount || [],
-          currency: manualFieldTokenMap.currency || [],
-          vendor: manualFieldTokenMap.vendor || [],
-          account: manualFieldTokenMap.account || []
-        };
-        learningEngineService.learnFromTransaction(message, dummyTransaction, senderHint, typedTokenMap);
-      } else {
-        learningEngineService.learnFromTransaction(message, dummyTransaction, senderHint);
-      }
+      learnFromTransaction(message, dummyTransaction, senderHint, isLabelingMode ? manualFieldTokenMap : undefined);
       
       toast({
         title: "Learning success",
@@ -326,9 +324,9 @@ const LearningTester: React.FC = () => {
     }
   };
 
-  const clearLearningEntries = () => {
+  const clearLearningEntriesHandler = () => {
     if (window.confirm("Are you sure you want to clear all learned entries? This action cannot be undone.")) {
-      learningEngineService.clearLearnedEntries();
+      clearLearnedEntries();
       toast({
         title: "Memory cleared",
         description: "All learned entries have been removed",
@@ -351,7 +349,7 @@ const LearningTester: React.FC = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={clearLearningEntries}
+              onClick={clearLearningEntriesHandler}
               className="flex items-center gap-2 text-destructive hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />
@@ -374,7 +372,7 @@ const LearningTester: React.FC = () => {
             setSenderHint={setSenderHint}
             isLabelingMode={isLabelingMode}
             toggleLabelingMode={toggleLabelingMode}
-            onTestMatching={findBestMatch}
+            onTestMatching={findBestMatchHandler}
           />
         </Card>
 

@@ -17,10 +17,10 @@ export const useLearningEngine = () => {
    * Learn from a confirmed transaction
    */
   const learnFromTransaction = useCallback(
-    (rawMessage: string, transaction: Transaction, senderHint?: string) => {
+    (rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: Record<string, string[]>) => {
       setIsLoading(true);
       try {
-        learningEngineService.learnFromTransaction(rawMessage, transaction, senderHint);
+        learningEngineService.learnFromTransaction(rawMessage, transaction, senderHint, customFieldTokenMap);
       } catch (error) {
         console.error('Error learning from transaction:', error);
       } finally {
@@ -80,6 +80,27 @@ export const useLearningEngine = () => {
     }
   }, []);
 
+  // Additional utility functions from the service
+  const tokenize = useCallback((msg: string) => {
+    return learningEngineService.tokenize(msg);
+  }, []);
+
+  const extractAmountTokens = useCallback((msg: string) => {
+    return learningEngineService.extractAmountTokens(msg);
+  }, []);
+
+  const extractCurrencyTokens = useCallback((msg: string) => {
+    return learningEngineService.extractCurrencyTokens(msg);
+  }, []);
+
+  const extractVendorTokens = useCallback((msg: string) => {
+    return learningEngineService.extractVendorTokens(msg);
+  }, []);
+
+  const extractAccountTokens = useCallback((msg: string) => {
+    return learningEngineService.extractAccountTokens(msg);
+  }, []);
+
   return {
     isLoading,
     config,
@@ -87,6 +108,11 @@ export const useLearningEngine = () => {
     findBestMatch,
     updateConfig,
     getLearnedEntries,
-    clearLearnedEntries
+    clearLearnedEntries,
+    tokenize,
+    extractAmountTokens,
+    extractCurrencyTokens,
+    extractVendorTokens,
+    extractAccountTokens
   };
 };
