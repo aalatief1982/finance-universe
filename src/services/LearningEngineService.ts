@@ -1,4 +1,3 @@
-
 // Enhanced LearningEngineService.ts - Field-Based Learning
 import { v4 as uuidv4 } from 'uuid';
 import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
@@ -39,13 +38,13 @@ class LearningEngineService {
     return { ...this.config };
   }
 
-  public learnFromTransaction(raw: string, txn: Transaction, senderHint = '', customFieldTokenMap?: Record<string, string[]>): void {
+  public learnFromTransaction(raw: string, txn: Transaction, senderHint = ''): void {
     if (!this.config.enabled || !raw || !txn) return;
     const entries = this.getLearnedEntries();
     const tokens = this.tokenize(raw);
     const id = uuidv4();
 
-    const fieldTokenMap = customFieldTokenMap || {
+    const fieldTokenMap = {
       amount: this.extractAmountTokens(raw),
       currency: this.extractCurrencyTokens(raw),
       vendor: this.extractVendorTokens(raw),
@@ -64,7 +63,7 @@ class LearningEngineService {
         account: txn.fromAccount || '',
         currency: txn.currency as SupportedCurrency,
         person: txn.person,
-        vendor: txn.title || '' // Using title instead of vendor
+        vendor: txn.vendor || ''
       },
       tokens,
       fieldTokenMap,
@@ -103,8 +102,7 @@ class LearningEngineService {
     return { entry: null, confidence: bestScore, matched: false };
   }
 
-  // Making methods public so they can be used by LearningTester
-  public compareFields(fieldMap: any, tokens: string[]): number {
+  private compareFields(fieldMap: any, tokens: string[]): number {
     let score = 0;
     const totalFields = Object.keys(fieldMap).length;
     Object.values(fieldMap).forEach((fieldTokens: string[]) => {
@@ -114,7 +112,7 @@ class LearningEngineService {
     return totalFields ? score / totalFields : 0;
   }
 
-  public tokenize(msg: string): string[] {
+  private tokenize(msg: string): string[] {
     return msg
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
@@ -122,26 +120,26 @@ class LearningEngineService {
       .filter(Boolean);
   }
 
-  public extractAmountTokens(msg: string): string[] {
+  private extractAmountTokens(msg: string): string[] {
     const match = msg.match(/\b(\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?)\b/g);
     return match ? match.map(m => m.replace(/,/g, '')) : [];
   }
 
-  public extractCurrencyTokens(msg: string): string[] {
+  private extractCurrencyTokens(msg: string): string[] {
     return ['sar', 'egp', 'usd', 'aed', 'bhd'].filter(cur => msg.toLowerCase().includes(cur));
   }
 
-  public extractVendorTokens(msg: string): string[] {
+  private extractVendorTokens(msg: string): string[] {
     const match = msg.match(/(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/i);
     return match ? match[1].toLowerCase().split(/\s+/).filter(Boolean) : [];
   }
 
-  public extractAccountTokens(msg: string): string[] {
+  private extractAccountTokens(msg: string): string[] {
     const match = msg.match(/\*{2,}\d+/);
     return match ? [match[0].replace(/\*/g, '')] : [];
   }
 
-  public getLearnedEntries(): LearnedEntry[] {
+  private getLearnedEntries(): LearnedEntry[] {
     try {
       const stored = localStorage.getItem(LEARNING_STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
