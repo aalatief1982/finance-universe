@@ -59,12 +59,20 @@ class LearningEngineService {
     const tokens = this.tokenize(raw);
     const id = uuidv4();
 
+
+
+
     const fieldTokenMap: FieldTokenMap = {
       amount: this.extractAmountTokens(raw),
       currency: this.extractCurrencyTokens(raw),
       vendor: this.extractVendorTokens(raw),
       account: this.extractAccountTokens(raw)
     };
+
+        // Register tokens to MasterMind
+        Object.entries(fieldTokenMap).forEach(([field, tokens]) => {
+          tokens.forEach(token => masterMindService.registerToken(token, field));
+        });
 
     // Override with custom token map if provided
     if (customFieldTokenMap) {
