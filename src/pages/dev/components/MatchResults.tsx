@@ -1,3 +1,4 @@
+
 // Updated MatchResults.tsx with complete drop & removal support and new fields
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -20,6 +21,7 @@ interface MatchResultsProps {
   matchResult: MatchResult | null;
   isLabelingMode: boolean;
   messageTokens: string[];
+  tokenLabels?: Record<string, string>;
   manualFieldTokenMap: Record<string, string[]>;
   dummyTransaction: Transaction;
   setDummyTransaction: React.Dispatch<React.SetStateAction<Transaction>>;
@@ -32,6 +34,7 @@ interface MatchResultsProps {
   } | null;
   handleDropToken: (field: string, token: string) => void;
   handleRemoveToken: (field: string, token: string) => void;
+  getTokenFieldMatch?: (token: string) => string | null;
   clearAllLabels: () => void;
   undoLastLabeling: () => void;
   applyAutomaticLabels: () => void;
@@ -43,12 +46,14 @@ const MatchResults: React.FC<MatchResultsProps> = ({
   matchResult,
   isLabelingMode,
   messageTokens,
+  tokenLabels = {},
   manualFieldTokenMap,
   dummyTransaction,
   setDummyTransaction,
   confidenceBreakdown,
   handleDropToken,
   handleRemoveToken,
+  getTokenFieldMatch,
   clearAllLabels,
   undoLastLabeling,
   applyAutomaticLabels,

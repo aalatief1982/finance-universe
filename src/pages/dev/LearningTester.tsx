@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DndProvider } from 'react-dnd';
@@ -396,6 +397,7 @@ const LearningTester: React.FC = () => {
                 setDummyTransaction={setDummyTransaction}
                 confidenceBreakdown={confidenceBreakdown}
                 handleDropToken={handleDropToken}
+                handleRemoveToken={handleRemoveToken}
                 getTokenFieldMatch={getTokenFieldMatch}
                 clearAllLabels={clearAllLabels}
                 undoLastLabeling={undoLastLabeling}
