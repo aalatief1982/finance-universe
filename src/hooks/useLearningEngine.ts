@@ -46,6 +46,20 @@ export const useLearningEngine = () => {
   );
 
   /**
+   * Infer fields from text message when no learned match is found
+   */
+  const inferFieldsFromText = useCallback((message: string): Partial<Transaction> | null => {
+    if (!message) return null;
+    
+    try {
+      return learningEngineService.inferFieldsFromText(message);
+    } catch (error) {
+      console.error('Error inferring fields from text:', error);
+      return null;
+    }
+  }, []);
+
+  /**
    * Update the learning engine configuration
    */
   const updateConfig = useCallback((newConfig: Partial<LearningEngineConfig>) => {
@@ -106,6 +120,7 @@ export const useLearningEngine = () => {
     config,
     learnFromTransaction,
     findBestMatch,
+    inferFieldsFromText,
     updateConfig,
     getLearnedEntries,
     clearLearnedEntries,
@@ -113,7 +128,6 @@ export const useLearningEngine = () => {
     extractAmountTokens,
     extractCurrencyTokens,
     extractVendorTokens,
-    extractAccountTokens,
-    inferFieldsFromText 
+    extractAccountTokens
   };
 };

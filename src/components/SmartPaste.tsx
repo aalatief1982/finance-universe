@@ -1,3 +1,4 @@
+
 // Updated SmartPaste.tsx with merged enhancements
 import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
@@ -9,12 +10,18 @@ import { useTransactions } from '@/context/TransactionContext';
 import { Transaction } from '@/types/transaction';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { storeTransaction } from '@/utils/storage-utils';
+import ExpenseForm from '@/components/ExpenseForm';
+import { CATEGORIES } from '@/lib/mock-data';
 
-const SmartPaste: React.FC = () => {
+const SmartPaste: React.FC<{
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void;
+}> = ({ onTransactionsDetected }) => {
   const [text, setText] = useState('');
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const [isSmartMatch, setIsSmartMatch] = useState(false);
   const [confidence, setConfidence] = useState(0);
+  const [showForm, setShowForm] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const { addTransaction } = useTransactions();
   const { toast } = useToast();
   const { findBestMatch, inferFieldsFromText } = useLearningEngine();
@@ -34,6 +41,15 @@ const SmartPaste: React.FC = () => {
   };
 
   const processText = (text: string) => {
+    if (!text || text.trim() === '') {
+      toast({
+        title: 'Empty Text',
+        description: 'Please paste a transaction message first.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
     const result = findBestMatch(text);
 
     if (result.matched && result.entry) {
@@ -73,7 +89,7 @@ const SmartPaste: React.FC = () => {
         type: inferred.type || 'expense',
         currency: inferred.currency || 'SAR',
         fromAccount: inferred.account || 'Unknown',
-        date: inferred.date || new Date().toISOString(),
+        date: inferred.date || new Date().toISOString().split('T')[0],
         description: text,
         notes: 'Detected by rule-based fallback',
         source: 'smart-paste'
@@ -92,6 +108,25 @@ const SmartPaste: React.FC = () => {
     toast({ title: 'Transaction Added', description: `${txn.title} saved.` });
     setDetectedTransactions([]);
     setText('');
+    
+    if (onTransactionsDetected) {
+      onTransactionsDetected([txn], text, undefined, isSmartMatch ? confidence : 0);
+    }
+  };
+  
+  const handleEditTransaction = (txn: Transaction) => {
+    setSelectedTransaction(txn);
+    setShowForm(true);
+  };
+  
+  const handleFormSubmit = (values: any) => {
+    const updatedTransaction: Transaction = {
+      ...selectedTransaction!,
+      ...values
+    };
+    handleAddTransaction(updatedTransaction);
+    setShowForm(false);
+    setSelectedTransaction(null);
   };
 
   return (
@@ -112,13 +147,29 @@ const SmartPaste: React.FC = () => {
           value={text}
           onChange={(e) => {
             setText(e.target.value);
-            processText(e.target.value);
+            if (e.target.value) {
+              processText(e.target.value);
+            }
           }}
         />
         <Button onClick={handlePaste} className="w-full">Paste from Clipboard</Button>
       </div>
 
-      {detectedTransactions.length > 0 && (
+      {showForm && selectedTransaction && (
+        <div className="mt-4">
+          <ExpenseForm 
+            onSubmit={handleFormSubmit}
+            categories={CATEGORIES}
+            defaultValues={selectedTransaction}
+            onCancel={() => {
+              setShowForm(false);
+              setSelectedTransaction(null);
+            }}
+          />
+        </div>
+      )}
+
+      {!showForm && detectedTransactions.length > 0 && (
         <div className="space-y-2">
           {detectedTransactions.map(txn => (
             <div key={txn.id} className="p-3 border rounded-md">
@@ -127,9 +178,14 @@ const SmartPaste: React.FC = () => {
                   <h4 className="font-medium">{txn.title}</h4>
                   <p className="text-sm text-muted-foreground">Amount: {txn.amount} | Category: {txn.category}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleAddTransaction(txn)}>
-                  Add Transaction
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEditTransaction(txn)}>
+                    Edit
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleAddTransaction(txn)}>
+                    Add
+                  </Button>
+                </div>
               </div>
               <div className={`flex items-center mt-2 ${isSmartMatch ? 'text-green-500' : 'text-yellow-500'}`}>
                 {isSmartMatch ? <CheckCircle className="h-4 w-4 mr-1" /> : <AlertTriangle className="h-4 w-4 mr-1" />}
@@ -140,7 +196,7 @@ const SmartPaste: React.FC = () => {
         </div>
       )}
 
-      {text && detectedTransactions.length === 0 && (
+      {text && !showForm && detectedTransactions.length === 0 && (
         <div className="text-muted-foreground flex items-center gap-1 border rounded-md p-4 bg-muted/50">
           <XCircle className="h-4 w-4" />
           No transaction detected.
