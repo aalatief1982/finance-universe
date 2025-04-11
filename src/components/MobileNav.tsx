@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,16 +28,8 @@ const MobileNav: React.FC = () => {
     { name: 'SMS Processing', path: '/process-sms', icon: <MessageSquare size={20} /> },
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
+    { name: 'Learning Tester', path: '/dev/learning-tester', icon: <BrainCircuit size={20} /> }
   ];
-
-  // Add developer tools in development mode only
-  if (process.env.NODE_ENV === 'development') {
-    navItems.push({ 
-      name: 'Learning Tester', 
-      path: '/dev/learning-tester', 
-      icon: <BrainCircuit size={20} /> 
-    });
-  }
   
   return (
     <>
