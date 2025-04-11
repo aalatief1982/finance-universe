@@ -195,6 +195,7 @@ const LearningTester: React.FC = () => {
     setIsLabelingMode(!isLabelingMode);
   };
 
+  /*
   const handleTokenLabelChange = (token: string, newLabel: string) => {
     // Save current state for undo
     setLabelingHistory([...labelingHistory, { ...tokenLabels }]);
@@ -218,8 +219,24 @@ const LearningTester: React.FC = () => {
     });
     
     setManualFieldTokenMap(updatedFieldTokenMap);
-  };
+  };*/
 
+  const handleDropToken = (field: string, token: string) => {
+    setManualFieldTokenMap(prev => {
+      const updated = { ...prev };
+      if (!updated[field].includes(token)) {
+        updated[field].push(token);
+      }
+      return updated;
+    });
+  
+    // Optional: also update tokenLabels state if still needed for coloring/highlights
+    setTokenLabels(prev => ({
+      ...prev,
+      [token]: field
+    }));
+  };
+  
   const clearAllLabels = () => {
     // Save current state for undo
     setLabelingHistory([...labelingHistory, { ...tokenLabels }]);

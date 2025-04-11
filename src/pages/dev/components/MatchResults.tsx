@@ -1,11 +1,12 @@
-
+// Updated MatchResults.tsx with Drag-and-Drop Tagging
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { CardTitle, CardDescription, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, ChevronUp, RefreshCw } from 'lucide-react';
-import TokenLabeling from './TokenLabeling';
+import DropFieldZone from '@/components/ui/DropFieldZone';
+import DraggableToken from '@/components/ui/DraggableToken';
 import ConfidenceDisplay from './ConfidenceDisplay';
 import FieldTokenMap from './FieldTokenMap';
 import EntryDetails from './EntryDetails';
@@ -19,7 +20,6 @@ interface MatchResultsProps {
   matchResult: MatchResult | null;
   isLabelingMode: boolean;
   messageTokens: string[];
-  tokenLabels: Record<string, string>;
   manualFieldTokenMap: Record<string, string[]>;
   dummyTransaction: Transaction;
   setDummyTransaction: React.Dispatch<React.SetStateAction<Transaction>>;
@@ -30,8 +30,7 @@ interface MatchResultsProps {
     senderBonus: number;
     calculatedScore: number;
   } | null;
-  getTokenFieldMatch: (token: string) => string | null;
-  handleTokenLabelChange: (token: string, newLabel: string) => void;
+  handleDropToken: (field: string, token: string) => void;
   clearAllLabels: () => void;
   undoLastLabeling: () => void;
   applyAutomaticLabels: () => void;
@@ -43,20 +42,17 @@ const MatchResults: React.FC<MatchResultsProps> = ({
   matchResult,
   isLabelingMode,
   messageTokens,
-  tokenLabels,
   manualFieldTokenMap,
   dummyTransaction,
   setDummyTransaction,
   confidenceBreakdown,
-  getTokenFieldMatch,
-  handleTokenLabelChange,
+  handleDropToken,
   clearAllLabels,
   undoLastLabeling,
   applyAutomaticLabels,
   learnFromCurrentMessage,
   labelingHistory
 }) => {
-  // Helper function to get the confidence color
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.8) return "bg-green-500";
     if (confidence >= 0.6) return "bg-yellow-500";
@@ -79,7 +75,7 @@ const MatchResults: React.FC<MatchResultsProps> = ({
         <CardDescription>
           {isLabelingMode ? (
             <div className="flex items-center justify-between mt-2">
-              <span>Manually assign field types to tokens</span>
+              <span>Drag tokens into the correct fields below</span>
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -125,26 +121,30 @@ const MatchResults: React.FC<MatchResultsProps> = ({
           )}
         </CardDescription>
       </CardHeader>
-      
-      <CardContent className="space-y-6">
-        {/* Token Visualization */}
-        <TokenLabeling 
-          messageTokens={messageTokens}
-          tokenLabels={tokenLabels}
-          isLabelingMode={isLabelingMode}
-          getTokenFieldMatch={getTokenFieldMatch}
-          handleTokenLabelChange={handleTokenLabelChange}
-        />
 
-        {/* Confidence Breakdown */}
-        {confidenceBreakdown && (
-          <ConfidenceDisplay 
-            confidenceBreakdown={confidenceBreakdown} 
-            isLabelingMode={isLabelingMode} 
-          />
+      <CardContent className="space-y-6">
+        {isLabelingMode && (
+          <>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-2">Tokens</h3>
+            <div className="flex flex-wrap border p-3 rounded-md bg-background">
+              {messageTokens.map(token => (
+                <DraggableToken key={token} token={token} />
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <DropFieldZone field="amount" tokens={manualFieldTokenMap.amount} onDropToken={handleDropToken} />
+              <DropFieldZone field="currency" tokens={manualFieldTokenMap.currency} onDropToken={handleDropToken} />
+              <DropFieldZone field="vendor" tokens={manualFieldTokenMap.vendor} onDropToken={handleDropToken} />
+              <DropFieldZone field="account" tokens={manualFieldTokenMap.account} onDropToken={handleDropToken} />
+            </div>
+          </>
         )}
 
-        {/* Field Token Map Table */}
+        {confidenceBreakdown && (
+          <ConfidenceDisplay confidenceBreakdown={confidenceBreakdown} isLabelingMode={isLabelingMode} />
+        )}
+
         {(isLabelingMode || matchResult?.entry) && (
           <Tabs defaultValue={isLabelingMode ? "fieldmap" : "fieldmap"} className="w-full">
             <TabsList className="w-full grid grid-cols-3">
@@ -154,7 +154,7 @@ const MatchResults: React.FC<MatchResultsProps> = ({
               {isLabelingMode && <TabsTrigger value="preview">Transaction Preview</TabsTrigger>}
               {isLabelingMode && <TabsTrigger value="learning">Learning Settings</TabsTrigger>}
             </TabsList>
-            
+
             <TabsContent value="fieldmap" className="space-y-4 mt-4">
               <FieldTokenMap 
                 fieldTokenMap={isLabelingMode ? manualFieldTokenMap : (matchResult?.entry?.fieldTokenMap || {})} 
@@ -162,25 +162,25 @@ const MatchResults: React.FC<MatchResultsProps> = ({
                 isLabelingMode={isLabelingMode}
               />
             </TabsContent>
-            
+
             {!isLabelingMode && matchResult?.entry && (
               <TabsContent value="entry" className="space-y-4 mt-4">
                 <EntryDetails entry={matchResult.entry} />
               </TabsContent>
             )}
-            
+
             {!isLabelingMode && matchResult?.entry && (
               <TabsContent value="json" className="space-y-4 mt-4">
                 <JsonDataView entry={matchResult.entry} />
               </TabsContent>
             )}
-            
+
             {isLabelingMode && (
               <TabsContent value="preview" className="space-y-4 mt-4">
                 <TransactionPreview transaction={dummyTransaction} />
               </TabsContent>
             )}
-            
+
             {isLabelingMode && (
               <TabsContent value="learning" className="space-y-4 mt-4">
                 <LearningSettings 
