@@ -11,7 +11,11 @@ import { TransactionProvider } from './context/TransactionContext';
 import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
 import EditTransaction from './pages/EditTransaction';
-import LearningTester from './pages/dev/LearningTester';
+
+// Import dev-only components
+const LearningTester = process.env.NODE_ENV === 'development' 
+  ? React.lazy(() => import('./pages/dev/LearningTester'))
+  : null;
 
 function App() {
   return (
@@ -29,8 +33,17 @@ function App() {
               <Route path="/edit-transaction" element={<EditTransaction />} />
               <Route path="/edit-transaction/:id" element={<EditTransaction />} />
               
-              {/* Learning Tester route - now always available */}
-              <Route path="/dev/learning-tester" element={<LearningTester />} />
+              {/* Dev-only routes */}
+              {process.env.NODE_ENV === 'development' && (
+                <Route 
+                  path="/dev/learning-tester" 
+                  element={
+                    <React.Suspense fallback={<div>Loading...</div>}>
+                      {LearningTester && <LearningTester />}
+                    </React.Suspense>
+                  } 
+                />
+              )}
             </Routes>
             <Toaster />
           </TransactionProvider>

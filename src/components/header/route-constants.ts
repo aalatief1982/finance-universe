@@ -20,7 +20,6 @@ export const routeTitleMap: Record<string, string> = {
   '/wireframes/sms-provider': 'SMS Provider',
   '/wireframes/sms-transaction': 'SMS Transaction',
   '/import-transactions': 'Import Transactions',
-  '/dev/learning-tester': 'Learning Tester',
 };
 
 // Navigation items that appear in the header
@@ -54,12 +53,6 @@ export const getNavItems = () => [
     path: '/process-sms', 
     icon: 'MessageSquare', 
     description: 'Import transactions from SMS' 
-  },
-  { 
-    title: 'Learning Tester', 
-    path: '/dev/learning-tester', 
-    icon: 'BrainCircuit', 
-    description: 'Test and improve transaction parsing' 
   },
   { 
     title: 'Settings', 
