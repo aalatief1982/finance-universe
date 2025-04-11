@@ -1,8 +1,9 @@
 
 // src/components/ui/DraggableToken.tsx
-import React, { forwardRef } from 'react';
+import React from 'react';
 import { useDrag } from 'react-dnd';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface DraggableTokenProps {
   token: string;
@@ -17,18 +18,18 @@ const DraggableToken: React.FC<DraggableTokenProps> = ({ token }) => {
     })
   }), [token]);
 
-  // Create a custom Badge with ref forwarding
-  const BadgeWithRef = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-    (props, ref) => <Badge {...props} ref={ref} />
-  );
-  
   return (
-    <BadgeWithRef
+    <div 
       ref={dragRef}
-      className={`cursor-move px-2 py-1 text-xs ${isDragging ? 'opacity-50' : 'opacity-100'}`}
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+        "border-transparent bg-primary text-primary-foreground",
+        "cursor-move",
+        isDragging ? 'opacity-50' : 'opacity-100'
+      )}
     >
       {token}
-    </BadgeWithRef>
+    </div>
   );
 };
 
