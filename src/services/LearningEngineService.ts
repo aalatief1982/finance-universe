@@ -42,13 +42,14 @@ class LearningEngineService {
     return { ...this.config }; 
   }
 
-  public learnFromTransaction(raw: string, txn: Transaction, senderHint = ''): void { 
+  public learnFromTransaction(raw: string, txn: Transaction, senderHint = '', customTokenMap?: Record<string, string[]>): void { 
     if (!this.config.enabled || !raw || !txn) return; 
     const entries = this.getLearnedEntries(); 
     const tokens = this.tokenize(raw); 
     const id = uuidv4();
 
-    const fieldTokenMap = {
+    // Use customTokenMap if provided, otherwise extract tokens automatically
+    const fieldTokenMap = customTokenMap || {
       amount: this.extractAmountTokens(raw),
       currency: this.extractCurrencyTokens(raw),
       vendor: this.extractVendorTokens(raw),
@@ -125,21 +126,22 @@ class LearningEngineService {
       .filter(Boolean); 
   }
 
-  private extractAmountTokens(msg: string): string[] { 
+  // Make token extraction methods public for manual labeling
+  public extractAmountTokens(msg: string): string[] { 
     const match = msg.match(/\b(\d{1,3}(,\d{3})*(.\d+)?|\d+(.\d+)?)\b/g); 
     return match ? match.map(m => m.replace(/,/g, '')) : []; 
   }
 
-  private extractCurrencyTokens(msg: string): string[] { 
+  public extractCurrencyTokens(msg: string): string[] { 
     return ['sar', 'egp', 'usd', 'aed', 'bhd'].filter(cur => msg.toLowerCase().includes(cur)); 
   }
 
-  private extractVendorTokens(msg: string): string[] { 
+  public extractVendorTokens(msg: string): string[] { 
     const match = msg.match(/(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/i); 
     return match ? match[1].toLowerCase().split(/\s+/).filter(Boolean) : []; 
   }
 
-  private extractAccountTokens(msg: string): string[] { 
+  public extractAccountTokens(msg: string): string[] { 
     const match = msg.match(/\*{2,}\d+/); 
     return match ? [match[0].replace(/\*/g, '')] : []; 
   }
