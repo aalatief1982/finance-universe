@@ -8,7 +8,8 @@ import {
   MessageSquare, 
   Settings,
   User,
-  Upload
+  Upload,
+  BrainCircuit
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -23,6 +24,15 @@ const Sidebar: React.FC = () => {
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
+
+  // Add developer tools in development mode only
+  if (process.env.NODE_ENV === 'development') {
+    navItems.push({ 
+      name: 'Learning Tester', 
+      path: '/dev/learning-tester', 
+      icon: <BrainCircuit size={20} /> 
+    });
+  }
 
   const isActive = (path: string) => {
     return location.pathname === path;

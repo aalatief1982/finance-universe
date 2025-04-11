@@ -1,17 +1,26 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Menu, X, LineChart, Home, BarChart3, 
-  MessageSquare, Settings, User, Upload
+  Menu, 
+  X, 
+  Home, 
+  BarChart3, 
+  LineChart, 
+  MessageSquare, 
+  Settings, 
+  User, 
+  Upload,
+  BrainCircuit
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const MobileNav: React.FC = () => {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-
+  
+  const toggleMenu = () => setIsOpen(!isOpen);
+  
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Transactions', path: '/transactions', icon: <BarChart3 size={20} /> },
@@ -22,43 +31,47 @@ const MobileNav: React.FC = () => {
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
   ];
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
+  // Add developer tools in development mode only
+  if (process.env.NODE_ENV === 'development') {
+    navItems.push({ 
+      name: 'Learning Tester', 
+      path: '/dev/learning-tester', 
+      icon: <BrainCircuit size={20} /> 
+    });
+  }
+  
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border py-2 px-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Xpensia</h2>
-        
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu size={24} />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0">
-            <div className="flex flex-col h-full">
-              <div className="px-6 py-6 flex items-center justify-between">
-                <h2 className="text-xl font-bold">Xpensia</h2>
-                <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
-                  <X size={20} />
-                </Button>
-              </div>
-              
-              <nav className="flex-1 px-3 py-2">
-                <ul className="space-y-1">
+    <>
+      <button 
+        onClick={toggleMenu}
+        className="fixed top-4 right-4 z-30 p-2 rounded-md bg-background shadow-md"
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: "100%" }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: "100%" }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-20 bg-background/95 backdrop-blur-sm"
+          >
+            <div className="flex flex-col h-full pt-16 pb-6 px-6">
+              <nav className="flex-1">
+                <ul className="space-y-2">
                   {navItems.map((item) => (
                     <li key={item.path}>
                       <Link
                         to={item.path}
-                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive(item.path)
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        className={`flex items-center p-3 rounded-md transition-colors ${
+                          location.pathname === item.path 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'text-muted-foreground hover:bg-muted'
                         }`}
-                        onClick={() => setOpen(false)}
+                        onClick={() => setIsOpen(false)}
                       >
                         <span className="mr-3">{item.icon}</span>
                         {item.name}
@@ -68,22 +81,22 @@ const MobileNav: React.FC = () => {
                 </ul>
               </nav>
               
-              <div className="p-4 border-t border-border">
+              <div className="mt-auto pt-6 border-t border-border">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <User size={16} />
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <User size={20} />
                   </div>
-                  <div className="ml-2">
-                    <p className="text-sm font-medium">User Profile</p>
-                    <p className="text-xs text-muted-foreground">Manage Account</p>
+                  <div className="ml-3">
+                    <p className="font-medium">User Profile</p>
+                    <p className="text-sm text-muted-foreground">Manage Account</p>
                   </div>
                 </div>
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
