@@ -142,6 +142,10 @@ const MatchResults: React.FC<MatchResultsProps> = ({
               <DropFieldZone field="currency" tokens={manualFieldTokenMap.currency} onDropToken={handleDropToken} />
               <DropFieldZone field="vendor" tokens={manualFieldTokenMap.vendor} onDropToken={handleDropToken} />
               <DropFieldZone field="account" tokens={manualFieldTokenMap.account} onDropToken={handleDropToken} />
+              <DropFieldZone field="type" tokens={manualFieldTokenMap.type} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="date" tokens={manualFieldTokenMap.date} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="title" tokens={manualFieldTokenMap.title} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+
             </div>
           </>
         )}
