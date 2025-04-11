@@ -42,7 +42,17 @@ class LearningEngineService {
     return { ...this.config }; 
   }
 
-  public learnFromTransaction(raw: string, txn: Transaction, senderHint = '', customTokenMap?: Record<string, string[]>): void { 
+  public learnFromTransaction(
+    raw: string, 
+    txn: Transaction, 
+    senderHint = '', 
+    customTokenMap?: { 
+      amount: string[], 
+      currency: string[], 
+      vendor: string[], 
+      account: string[] 
+    }
+  ): void { 
     if (!this.config.enabled || !raw || !txn) return; 
     const entries = this.getLearnedEntries(); 
     const tokens = this.tokenize(raw); 
