@@ -31,6 +31,48 @@ class LearningEngineService {
     this.config = this.loadConfig();
   }
 
+  public inferFieldsFromText(message: string): Partial<Transaction> {
+  const tokens = this.tokenize(message);
+  const amount = this.extractAmountTokens(message)[0];
+  const currency = this.extractCurrencyTokens(message)[0];
+  const vendor = this.extractVendorTokens(message)[0];
+  const account = this.extractAccountTokens(message)[0];
+  const type = this.inferTypeFromText(message);
+  const date = this.extractDateFromText(message);
+
+  return {
+    amount: parseFloat(amount || '0'),
+    currency: currency || 'SAR',
+    vendor,
+    account,
+    type,
+    date,
+    category: vendor ? this.lookupCategoryForVendor(vendor) : 'Uncategorized',
+    subcategory: ''
+  };
+}
+
+  private inferTypeFromText(message: string): TransactionType {
+  const t = message.toLowerCase();
+  if (t.includes('شراء') || t.includes('debited') || t.includes('سداد')) return 'expense';
+  if (t.includes('حوالة واردة') || t.includes('credited')) return 'income';
+  return 'expense';
+}
+
+  private extractDateFromText(message: string): string | undefined {
+  const match = message.match(/\\d{4}-\\d{2}-\\d{2}|\\d{2}-\\d{2}-\\d{4}/);
+  return match ? match[0] : undefined;
+}
+
+  private lookupCategoryForVendor(vendor: string): string {
+  const lower = vendor.toLowerCase();
+  if (lower.includes('othaim') || lower.includes('tamimi')) return 'Groceries';
+  if (lower.includes('careem') || lower.includes('uber')) return 'Transport';
+  if (lower.includes('aldrees') || lower.includes('gas')) return 'Fuel';
+  return 'Uncategorized';
+}
+
+
   private loadConfig(): LearningEngineConfig {
     try {
       const stored = localStorage.getItem(LEARNING_CONFIG_KEY);
