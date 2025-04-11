@@ -1,65 +1,50 @@
-
-// LearningEngineService.ts
-
-import { v4 as uuidv4 } from 'uuid'; 
-import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning'; 
-import { Transaction } from '@/types/transaction'; 
+// Enhanced LearningEngineService.ts - Field-Based Learning
+import { v4 as uuidv4 } from 'uuid';
+import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
+import { Transaction } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 
-const LEARNING_STORAGE_KEY = 'xpensia_learned_entries'; 
+const LEARNING_STORAGE_KEY = 'xpensia_learned_entries';
 const LEARNING_CONFIG_KEY = 'xpensia_learning_config';
 
-const DEFAULT_CONFIG: LearningEngineConfig = { 
-  enabled: true, 
-  maxEntries: 200, 
-  minConfidenceThreshold: 0.75, 
-  saveAutomatically: true 
+const DEFAULT_CONFIG: LearningEngineConfig = {
+  enabled: true,
+  maxEntries: 200,
+  minConfidenceThreshold: 0.75,
+  saveAutomatically: true
 };
 
-class LearningEngineService { 
+class LearningEngineService {
   private config: LearningEngineConfig;
 
-  constructor() { 
-    this.config = this.loadConfig(); 
+  constructor() {
+    this.config = this.loadConfig();
   }
 
-  private loadConfig(): LearningEngineConfig { 
-    try { 
-      const stored = localStorage.getItem(LEARNING_CONFIG_KEY); 
-      if (stored) return { ...DEFAULT_CONFIG, ...JSON.parse(stored) }; 
-    } catch (err) { 
-      console.error('Config load error:', err); 
-    } 
-    return DEFAULT_CONFIG; 
+  private loadConfig(): LearningEngineConfig {
+    try {
+      const stored = localStorage.getItem(LEARNING_CONFIG_KEY);
+      if (stored) return { ...DEFAULT_CONFIG, ...JSON.parse(stored) };
+    } catch (err) { console.error('Config load error:', err); }
+    return DEFAULT_CONFIG;
   }
 
-  public saveConfig(config: Partial<LearningEngineConfig>) { 
-    this.config = { ...this.config, ...config }; 
-    localStorage.setItem(LEARNING_CONFIG_KEY, JSON.stringify(this.config)); 
+  public saveConfig(config: Partial<LearningEngineConfig>) {
+    this.config = { ...this.config, ...config };
+    localStorage.setItem(LEARNING_CONFIG_KEY, JSON.stringify(this.config));
   }
 
-  public getConfig(): LearningEngineConfig { 
-    return { ...this.config }; 
+  public getConfig(): LearningEngineConfig {
+    return { ...this.config };
   }
 
-  public learnFromTransaction(
-    raw: string, 
-    txn: Transaction, 
-    senderHint = '', 
-    customTokenMap?: { 
-      amount: string[], 
-      currency: string[], 
-      vendor: string[], 
-      account: string[] 
-    }
-  ): void { 
-    if (!this.config.enabled || !raw || !txn) return; 
-    const entries = this.getLearnedEntries(); 
-    const tokens = this.tokenize(raw); 
+  public learnFromTransaction(raw: string, txn: Transaction, senderHint = ''): void {
+    if (!this.config.enabled || !raw || !txn) return;
+    const entries = this.getLearnedEntries();
+    const tokens = this.tokenize(raw);
     const id = uuidv4();
 
-    // Use customTokenMap if provided, otherwise extract tokens automatically
-    const fieldTokenMap = customTokenMap || {
+    const fieldTokenMap = {
       amount: this.extractAmountTokens(raw),
       currency: this.extractCurrencyTokens(raw),
       vendor: this.extractVendorTokens(raw),
@@ -78,7 +63,7 @@ class LearningEngineService {
         account: txn.fromAccount || '',
         currency: txn.currency as SupportedCurrency,
         person: txn.person,
-        vendor: txn.description || '' // Use description as vendor since vendor doesn't exist
+        vendor: txn.vendor || ''
       },
       tokens,
       fieldTokenMap,
@@ -90,21 +75,15 @@ class LearningEngineService {
     localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(entries));
   }
 
-  public findBestMatch(message: string, senderHint = ''): MatchResult { 
-    if (!this.config.enabled || !message) return { entry: null, confidence: 0, matched: false }; 
-    const entries = this.getLearnedEntries(); 
+  public findBestMatch(message: string, senderHint = ''): MatchResult {
+    if (!this.config.enabled || !message) return { entry: null, confidence: 0, matched: false };
+    const entries = this.getLearnedEntries();
     const tokens = this.tokenize(message);
 
     let bestMatch: LearnedEntry | null = null;
     let bestScore = 0;
 
     for (const entry of entries) {
-      // Ensure fieldTokenMap exists before comparing
-      if (!entry.fieldTokenMap) {
-        console.warn('Entry missing fieldTokenMap:', entry.id);
-        continue;
-      }
-      
       let score = this.compareFields(entry.fieldTokenMap, tokens);
       if (senderHint && entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
         score += 0.1;
@@ -123,71 +102,56 @@ class LearningEngineService {
     return { entry: null, confidence: bestScore, matched: false };
   }
 
-  private compareFields(fieldMap: any, tokens: string[]): number { 
-    // Add null/undefined check for fieldMap
-    if (!fieldMap) {
-      console.warn('Null or undefined fieldMap in compareFields');
-      return 0;
+  private compareFields(fieldMap: any, tokens: string[]): number {
+    let score = 0;
+    const totalFields = Object.keys(fieldMap).length;
+    Object.values(fieldMap).forEach((fieldTokens: string[]) => {
+      const match = fieldTokens.some(token => tokens.includes(token));
+      if (match) score += 1;
+    });
+    return totalFields ? score / totalFields : 0;
+  }
+
+  private tokenize(msg: string): string[] {
+    return msg
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
+  private extractAmountTokens(msg: string): string[] {
+    const match = msg.match(/\b(\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?)\b/g);
+    return match ? match.map(m => m.replace(/,/g, '')) : [];
+  }
+
+  private extractCurrencyTokens(msg: string): string[] {
+    return ['sar', 'egp', 'usd', 'aed', 'bhd'].filter(cur => msg.toLowerCase().includes(cur));
+  }
+
+  private extractVendorTokens(msg: string): string[] {
+    const match = msg.match(/(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/i);
+    return match ? match[1].toLowerCase().split(/\s+/).filter(Boolean) : [];
+  }
+
+  private extractAccountTokens(msg: string): string[] {
+    const match = msg.match(/\*{2,}\d+/);
+    return match ? [match[0].replace(/\*/g, '')] : [];
+  }
+
+  private getLearnedEntries(): LearnedEntry[] {
+    try {
+      const stored = localStorage.getItem(LEARNING_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error('Error loading entries:', e);
+      return [];
     }
-    
-    let score = 0; 
-    const fieldKeys = Object.keys(fieldMap);
-    const totalFields = fieldKeys.length; 
-    
-    for (const field of fieldKeys) {
-      const fieldTokens = fieldMap[field];
-      // Ensure fieldTokens is an array before using some method
-      if (Array.isArray(fieldTokens)) {
-        const match = fieldTokens.some(token => tokens.includes(token)); 
-        if (match) score += 1;
-      }
-    }
-    
-    return totalFields ? score / totalFields : 0; 
   }
 
-  // Make the tokenize method public so it can be used by the tester
-  public tokenize(msg: string): string[] { 
-    return msg 
-      .toLowerCase() 
-      .replace(/[^\w\s]/g, ' ') 
-      .split(/\s+/) 
-      .filter(Boolean); 
+  public clearLearnedEntries(): void {
+    localStorage.removeItem(LEARNING_STORAGE_KEY);
   }
-
-  // Make token extraction methods public for manual labeling
-  public extractAmountTokens(msg: string): string[] { 
-    const match = msg.match(/\b(\d{1,3}(,\d{3})*(.\d+)?|\d+(.\d+)?)\b/g); 
-    return match ? match.map(m => m.replace(/,/g, '')) : []; 
-  }
-
-  public extractCurrencyTokens(msg: string): string[] { 
-    return ['sar', 'egp', 'usd', 'aed', 'bhd'].filter(cur => msg.toLowerCase().includes(cur)); 
-  }
-
-  public extractVendorTokens(msg: string): string[] { 
-    const match = msg.match(/(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/i); 
-    return match ? match[1].toLowerCase().split(/\s+/).filter(Boolean) : []; 
-  }
-
-  public extractAccountTokens(msg: string): string[] { 
-    const match = msg.match(/\*{2,}\d+/); 
-    return match ? [match[0].replace(/\*/g, '')] : []; 
-  }
-
-  public getLearnedEntries(): LearnedEntry[] { 
-    try { 
-      const stored = localStorage.getItem(LEARNING_STORAGE_KEY); 
-      return stored ? JSON.parse(stored) : []; 
-    } catch (e) { 
-      console.error('Error loading entries:', e); 
-      return []; 
-    } 
-  }
-
-  public clearLearnedEntries(): void { 
-    localStorage.removeItem(LEARNING_STORAGE_KEY); 
-  } 
 }
 
 export const learningEngineService = new LearningEngineService();
