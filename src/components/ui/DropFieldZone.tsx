@@ -12,7 +12,7 @@ interface DropFieldZoneProps {
   onRemoveToken: (field: string, token: string) => void;
 }
 
-const DropFieldZone: React.FC<DropFieldZoneProps> = ({ field, tokens, onDropToken, onRemoveToken }) => {
+const DropFieldZone: React.FC<DropFieldZoneProps> = ({ field, tokens = [], onDropToken, onRemoveToken }) => {
   const [{ isOver, canDrop }, drop] = useDrop({
     accept: 'token',
     drop: (item: { token: string }) => {
@@ -36,7 +36,7 @@ const DropFieldZone: React.FC<DropFieldZoneProps> = ({ field, tokens, onDropToke
     >
       <h4 className="text-xs font-bold uppercase mb-2">{field}</h4>
       <div className="flex flex-wrap gap-2">
-        {tokens.map(token => (
+        {tokens && tokens.map(token => (
           <Badge
             key={token}
             className="flex items-center gap-1 px-2 py-1 text-xs cursor-pointer bg-teal-600 text-white hover:bg-teal-700"
