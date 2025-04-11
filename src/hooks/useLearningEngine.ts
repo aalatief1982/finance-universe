@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { learningEngineService } from '@/services/LearningEngineService';
+import { learningEngineService, FieldTokenMap } from '@/services/LearningEngineService';
 import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
 import { Transaction } from '@/types/transaction';
 
@@ -17,7 +17,7 @@ export const useLearningEngine = () => {
    * Learn from a confirmed transaction
    */
   const learnFromTransaction = useCallback(
-    (rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: Record<string, string[]>) => {
+    (rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: Partial<FieldTokenMap>) => {
       setIsLoading(true);
       try {
         learningEngineService.learnFromTransaction(rawMessage, transaction, senderHint, customFieldTokenMap);
