@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -860,3 +861,80 @@ const LearningTester: React.FC = () => {
                                 value={dummyTransaction.currency}
                                 onChange={(e) => setDummyTransaction({
                                   ...dummyTransaction,
+                                  currency: e.target.value as SupportedCurrency
+                                })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Vendor/Description</label>
+                              <Input
+                                placeholder="Vendor name"
+                                value={dummyTransaction.description || ''}
+                                onChange={(e) => setDummyTransaction({
+                                  ...dummyTransaction,
+                                  description: e.target.value
+                                })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Account</label>
+                              <Input
+                                placeholder="Account"
+                                value={dummyTransaction.fromAccount || ''}
+                                onChange={(e) => setDummyTransaction({
+                                  ...dummyTransaction,
+                                  fromAccount: e.target.value
+                                })}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Type</label>
+                              <select
+                                className="w-full rounded-md border border-input bg-background px-3 py-2"
+                                value={dummyTransaction.type}
+                                onChange={(e) => setDummyTransaction({
+                                  ...dummyTransaction,
+                                  type: e.target.value as TransactionType
+                                })}
+                              >
+                                <option value="expense">Expense</option>
+                                <option value="income">Income</option>
+                                <option value="transfer">Transfer</option>
+                              </select>
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">Category</label>
+                              <Input
+                                placeholder="Category"
+                                value={dummyTransaction.category || ''}
+                                onChange={(e) => setDummyTransaction({
+                                  ...dummyTransaction,
+                                  category: e.target.value
+                                })}
+                              />
+                            </div>
+                          </div>
+                          <div className="mt-6">
+                            <Button 
+                              onClick={learnFromCurrentMessage}
+                              className="w-full flex items-center justify-center gap-2"
+                            >
+                              <Save className="h-4 w-4" />
+                              Save as New Learned Entry
+                            </Button>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    )}
+                  </Tabs>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </motion.div>
+    </Layout>
+  );
+};
+
+export default LearningTester;
