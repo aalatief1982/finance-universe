@@ -113,6 +113,7 @@ export const useLearningEngine = () => {
     extractAmountTokens,
     extractCurrencyTokens,
     extractVendorTokens,
-    extractAccountTokens
+    extractAccountTokens,
+    inferFieldsFromText 
   };
 };
