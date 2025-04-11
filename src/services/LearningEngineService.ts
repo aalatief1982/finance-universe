@@ -99,14 +99,17 @@ class LearningEngineService {
     let bestScore = 0;
 
     for (const entry of entries) {
-      let score = this.compareFields(entry.fieldTokenMap, tokens);
-      if (senderHint && entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
-        score += 0.1;
-        if (score > 1) score = 1;
-      }
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = entry;
+      // Ensure fieldTokenMap exists before comparing
+      if (entry && entry.fieldTokenMap) {
+        let score = this.compareFields(entry.fieldTokenMap, tokens);
+        if (senderHint && entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
+          score += 0.1;
+          if (score > 1) score = 1;
+        }
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = entry;
+        }
       }
     }
 
@@ -118,12 +121,26 @@ class LearningEngineService {
   }
 
   private compareFields(fieldMap: any, tokens: string[]): number { 
+    // Add null and undefined check to prevent Object.keys() errors
+    if (!fieldMap) {
+      console.warn('Field map is undefined or null in compareFields');
+      return 0;
+    }
+    
     let score = 0; 
-    const totalFields = Object.keys(fieldMap).length; 
-    Object.values(fieldMap).forEach((fieldTokens: string[]) => { 
-      const match = fieldTokens.some(token => tokens.includes(token)); 
-      if (match) score += 1; 
-    }); 
+    const totalFields = Object.keys(fieldMap).length;
+    
+    // Only proceed if we have fields to compare
+    if (totalFields > 0) {
+      Object.values(fieldMap).forEach((fieldTokens: string[]) => { 
+        // Ensure fieldTokens is an array before using some()
+        if (Array.isArray(fieldTokens)) {
+          const match = fieldTokens.some(token => tokens.includes(token)); 
+          if (match) score += 1; 
+        }
+      }); 
+    }
+    
     return totalFields ? score / totalFields : 0; 
   }
 
