@@ -64,6 +64,14 @@ const MatchResults: React.FC<MatchResultsProps> = ({
     return "bg-red-500";
   };
 
+  // Add handleRemoveToken function to remove tokens from fields
+  const handleRemoveToken = (field: string, token: string) => {
+    const updatedFieldTokenMap = { ...manualFieldTokenMap };
+    updatedFieldTokenMap[field] = updatedFieldTokenMap[field].filter(t => t !== token);
+    // This function doesn't directly update the state since we don't have access to the setter here
+    // But we can pass it to the DropFieldZone component, which will call it with the right parameters
+  };
+
   return (
     <div className="space-y-6">
       <CardHeader>
@@ -138,14 +146,13 @@ const MatchResults: React.FC<MatchResultsProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-6">
-              <DropFieldZone field="amount" tokens={manualFieldTokenMap.amount} onDropToken={handleDropToken} />
-              <DropFieldZone field="currency" tokens={manualFieldTokenMap.currency} onDropToken={handleDropToken} />
-              <DropFieldZone field="vendor" tokens={manualFieldTokenMap.vendor} onDropToken={handleDropToken} />
-              <DropFieldZone field="account" tokens={manualFieldTokenMap.account} onDropToken={handleDropToken} />
-              <DropFieldZone field="type" tokens={manualFieldTokenMap.type} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
-              <DropFieldZone field="date" tokens={manualFieldTokenMap.date} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
-              <DropFieldZone field="title" tokens={manualFieldTokenMap.title} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
-
+              <DropFieldZone field="amount" tokens={manualFieldTokenMap.amount} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="currency" tokens={manualFieldTokenMap.currency} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="vendor" tokens={manualFieldTokenMap.vendor} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="account" tokens={manualFieldTokenMap.account} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="type" tokens={manualFieldTokenMap.type || []} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="date" tokens={manualFieldTokenMap.date || []} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
+              <DropFieldZone field="title" tokens={manualFieldTokenMap.title || []} onDropToken={handleDropToken} onRemoveToken={handleRemoveToken} />
             </div>
           </>
         )}

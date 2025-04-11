@@ -1,6 +1,7 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import Layout from '@/components/Layout';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -341,22 +342,20 @@ const LearningTester: React.FC = () => {
     }
   };
 
+  // Handle removing tokens from fields
   const handleRemoveToken = (field: string, token: string) => {
     setManualFieldTokenMap(prev => {
       const updated = { ...prev };
       updated[field] = updated[field].filter(t => t !== token);
       return updated;
     });
-  
+    
     setTokenLabels(prev => {
       const updated = { ...prev };
-      if (updated[token]) {
-        delete updated[token];
-      }
+      delete updated[token];
       return updated;
     });
   };
-  
 
   const clearLearningEntriesHandler = () => {
     if (window.confirm("Are you sure you want to clear all learned entries? This action cannot be undone.")) {
@@ -411,26 +410,27 @@ const LearningTester: React.FC = () => {
         </Card>
 
         {(matchResult || (isLabelingMode && messageTokens.length > 0)) && (
-          <Card>
-            <MatchResults 
-              matchResult={matchResult}
-              isLabelingMode={isLabelingMode}
-              messageTokens={messageTokens}
-              tokenLabels={tokenLabels}
-              manualFieldTokenMap={manualFieldTokenMap}
-              dummyTransaction={dummyTransaction}
-              setDummyTransaction={setDummyTransaction}
-              confidenceBreakdown={confidenceBreakdown}
-              handleDropToken={handleDropToken}
-              getTokenFieldMatch={getTokenFieldMatch}
-              //handleTokenLabelChange={handleTokenLabelChange}
-              clearAllLabels={clearAllLabels}
-              undoLastLabeling={undoLastLabeling}
-              applyAutomaticLabels={applyAutomaticLabels}
-              learnFromCurrentMessage={learnFromCurrentMessage}
-              labelingHistory={labelingHistory}
-            />
-          </Card>
+          <DndProvider backend={HTML5Backend}>
+            <Card>
+              <MatchResults 
+                matchResult={matchResult}
+                isLabelingMode={isLabelingMode}
+                messageTokens={messageTokens}
+                tokenLabels={tokenLabels}
+                manualFieldTokenMap={manualFieldTokenMap}
+                dummyTransaction={dummyTransaction}
+                setDummyTransaction={setDummyTransaction}
+                confidenceBreakdown={confidenceBreakdown}
+                handleDropToken={handleDropToken}
+                getTokenFieldMatch={getTokenFieldMatch}
+                clearAllLabels={clearAllLabels}
+                undoLastLabeling={undoLastLabeling}
+                applyAutomaticLabels={applyAutomaticLabels}
+                learnFromCurrentMessage={learnFromCurrentMessage}
+                labelingHistory={labelingHistory}
+              />
+            </Card>
+          </DndProvider>
         )}
       </motion.div>
     </Layout>
