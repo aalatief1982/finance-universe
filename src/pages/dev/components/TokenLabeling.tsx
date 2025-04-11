@@ -117,7 +117,11 @@ const TokenLabeling: React.FC<TokenLabelingProps> = ({
                     )}
                   </Badge>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-40">
+                <DropdownMenuContent 
+                  align="start"
+                  sideOffset={5}
+                  className="w-40 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+                >
                   {TOKEN_FIELD_TYPES.map((type) => (
                     <DropdownMenuItem 
                       key={type.value}
