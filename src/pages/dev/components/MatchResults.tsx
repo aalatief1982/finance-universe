@@ -1,4 +1,3 @@
-
 // Updated MatchResults.tsx with Drag-and-Drop Tagging
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';

@@ -196,32 +196,6 @@ const LearningTester: React.FC = () => {
     setIsLabelingMode(!isLabelingMode);
   };
 
-  /*
-  const handleTokenLabelChange = (token: string, newLabel: string) => {
-    // Save current state for undo
-    setLabelingHistory([...labelingHistory, { ...tokenLabels }]);
-    
-    // Update the token label
-    const updatedLabels = { ...tokenLabels, [token]: newLabel };
-    setTokenLabels(updatedLabels);
-    
-    // Update the manual field token map
-    const updatedFieldTokenMap = {
-      amount: [],
-      currency: [],
-      vendor: [],
-      account: []
-    };
-    
-    Object.entries(updatedLabels).forEach(([token, label]) => {
-      if (label !== 'unlabeled' && label !== 'ignore' && updatedFieldTokenMap[label]) {
-        updatedFieldTokenMap[label].push(token);
-      }
-    });
-    
-    setManualFieldTokenMap(updatedFieldTokenMap);
-  };*/
-
   const handleDropToken = (field: string, token: string) => {
     setManualFieldTokenMap(prev => {
       const updated = { ...prev };
