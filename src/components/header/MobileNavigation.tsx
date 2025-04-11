@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Menu, Home, PieChart, List, MessageSquare, Settings, User, Upload } from 'lucide-react';
+import { LogOut, Menu, Home, PieChart, List, MessageSquare, Settings, User, Upload, BrainCircuit } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -23,7 +23,8 @@ const iconMap = {
   'MessageSquare': MessageSquare,
   'Settings': Settings,
   'User': User,
-  'Upload': Upload
+  'Upload': Upload,
+  'BrainCircuit': BrainCircuit
 };
 
 interface MobileNavigationProps {
