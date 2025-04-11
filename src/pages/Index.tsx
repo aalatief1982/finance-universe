@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/UserContext';
-import { XpensiaLogo } from '@/components/header';
+import { XpensiaLog } from '@/components/header';
 
 const Index = () => {
   const { auth } = useUser();
