@@ -341,6 +341,23 @@ const LearningTester: React.FC = () => {
     }
   };
 
+  const handleRemoveToken = (field: string, token: string) => {
+    setManualFieldTokenMap(prev => {
+      const updated = { ...prev };
+      updated[field] = updated[field].filter(t => t !== token);
+      return updated;
+    });
+  
+    setTokenLabels(prev => {
+      const updated = { ...prev };
+      if (updated[token]) {
+        delete updated[token];
+      }
+      return updated;
+    });
+  };
+  
+
   const clearLearningEntriesHandler = () => {
     if (window.confirm("Are you sure you want to clear all learned entries? This action cannot be undone.")) {
       clearLearnedEntries();

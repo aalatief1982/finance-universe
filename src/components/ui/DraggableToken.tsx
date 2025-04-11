@@ -1,18 +1,28 @@
+// src/components/ui/DraggableToken.tsx
 import React from 'react';
+import { useDrag } from 'react-dnd';
+import { Badge } from '@/components/ui/badge';
 
-interface Props {
+interface DraggableTokenProps {
   token: string;
 }
 
-const DraggableToken: React.FC<Props> = ({ token }) => {
+const DraggableToken: React.FC<DraggableTokenProps> = ({ token }) => {
+  const [{ isDragging }, dragRef] = useDrag(() => ({
+    type: 'token',
+    item: { token },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging()
+    })
+  }), [token]);
+
   return (
-    <div
-      draggable
-      onDragStart={(e) => e.dataTransfer.setData('text/plain', token)}
-      className="inline-block px-2 py-1 m-1 bg-muted text-sm rounded cursor-grab"
+    <Badge
+      ref={dragRef}
+      className={`cursor-move px-2 py-1 text-xs ${isDragging ? 'opacity-50' : 'opacity-100'}`}
     >
       {token}
-    </div>
+    </Badge>
   );
 };
 

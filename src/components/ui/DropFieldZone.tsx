@@ -1,27 +1,54 @@
+// src/components/ui/DropFieldZone.tsx
 import React from 'react';
+import { useDrop } from 'react-dnd';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
-interface Props {
+interface DropFieldZoneProps {
   field: string;
   tokens: string[];
   onDropToken: (field: string, token: string) => void;
+  onRemoveToken: (field: string, token: string) => void;
 }
 
-const DropFieldZone: React.FC<Props> = ({ field, tokens, onDropToken }) => {
+const DropFieldZone: React.FC<DropFieldZoneProps> = ({ field, tokens, onDropToken, onRemoveToken }) => {
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: 'token',
+    drop: (item: { token: string }) => {
+      onDropToken(field, item.token);
+    },
+    collect: monitor => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop()
+    })
+  });
+
+  const isActive = isOver && canDrop;
+
   return (
     <div
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        const token = e.dataTransfer.getData('text/plain');
-        onDropToken(field, token);
-      }}
-      className="min-h-[40px] p-2 border rounded-md bg-white mb-3"
+      ref={drop}
+      className={cn(
+        'p-4 border rounded-md min-h-[80px] bg-muted/20 transition-all',
+        isActive ? 'border-primary bg-primary/10' : 'border-muted'
+      )}
     >
-      <strong>{field.toUpperCase()}</strong>
-      <div className="flex flex-wrap mt-2">
-        {tokens.map((token, i) => (
-          <span key={i} className="px-2 py-1 m-1 bg-primary text-white text-xs rounded">
+      <h4 className="text-xs font-bold uppercase mb-2">{field}</h4>
+      <div className="flex flex-wrap gap-2">
+        {tokens.map(token => (
+          <Badge
+            key={token}
+            className="flex items-center gap-1 px-2 py-1 text-xs cursor-pointer bg-teal-600 text-white hover:bg-teal-700"
+          >
             {token}
-          </span>
+            <span
+              onClick={() => onRemoveToken(field, token)}
+              className="ml-1 text-white hover:text-red-300 text-xs"
+              style={{ cursor: 'pointer' }}
+            >
+              ×
+            </span>
+          </Badge>
         ))}
       </div>
     </div>
