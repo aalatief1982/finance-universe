@@ -68,7 +68,7 @@ const Transactions = () => {
   return (
     <>
       <Layout withPadding={false}>
-        <div className="sticky top-0 z-10 bg-background pt-6 pb-4 px-4 sm:px-6 lg:px-8 border-b">
+        <div className="sticky top-16 z-10 bg-background pt-6 pb-4 px-4 sm:px-6 lg:px-8 border-b">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Transactions</h1>
             <div className="flex items-center space-x-2">
@@ -127,7 +127,7 @@ const Transactions = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="px-4 sm:px-6 lg:px-8 py-6"
+          className="px-4 sm:px-6 lg:px-8 py-6 mt-2"
         >
           {filteredTransactions.length > 0 ? (
             isMobile && viewMode === 'swipeable' ? (
