@@ -116,7 +116,8 @@ class LearningEngineService {
     return totalFields ? score / totalFields : 0; 
   }
 
-  private tokenize(msg: string): string[] { 
+  // Make the tokenize method public so it can be used by the tester
+  public tokenize(msg: string): string[] { 
     return msg 
       .toLowerCase() 
       .replace(/[^\w\s]/g, ' ') 
