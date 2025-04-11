@@ -9,7 +9,7 @@ import { Sun, Moon } from 'lucide-react';
 import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
 
 const ThemeSettings = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme() || { theme: 'light', setTheme: () => {} };
   
   const handleThemeChange = (isDark: boolean) => {
     const newTheme = isDark ? 'dark' : 'light';

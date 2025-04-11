@@ -15,8 +15,8 @@ import LearningTester from './pages/dev/LearningTester';
 
 function App() {
   return (
-    <ThemeProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider defaultTheme="light" attribute="class">
         <UserProvider>
           <TransactionProvider>
             <Routes>
@@ -35,8 +35,8 @@ function App() {
             <Toaster />
           </TransactionProvider>
         </UserProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 
