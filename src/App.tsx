@@ -12,6 +12,8 @@ import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
 import EditTransaction from './pages/EditTransaction';
 import LearningTester from './pages/dev/LearningTester';
+import MasterMind from '@/pages/MasterMind';
+
 
 function App() {
   return (
@@ -28,6 +30,7 @@ function App() {
               <Route path="/import-transactions" element={<ImportTransactions />} />
               <Route path="/edit-transaction" element={<EditTransaction />} />
               <Route path="/edit-transaction/:id" element={<EditTransaction />} />
+              <Route path="/mastermind" element={<MasterMind />} />
               
               {/* Learning Tester route - now always available */}
               <Route path="/dev/learning-tester" element={<LearningTester />} />
