@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -395,9 +394,15 @@ const LearningTester: React.FC = () => {
     }
 
     try {
-      // If in labeling mode, use the manual field token map
+      // Fix the type issue by explicitly creating the expected object shape
       if (isLabelingMode) {
-        learningEngineService.learnFromTransaction(message, dummyTransaction, senderHint, manualFieldTokenMap);
+        const typedTokenMap = {
+          amount: manualFieldTokenMap.amount || [],
+          currency: manualFieldTokenMap.currency || [],
+          vendor: manualFieldTokenMap.vendor || [],
+          account: manualFieldTokenMap.account || []
+        };
+        learningEngineService.learnFromTransaction(message, dummyTransaction, senderHint, typedTokenMap);
       } else {
         learningEngineService.learnFromTransaction(message, dummyTransaction, senderHint);
       }
@@ -855,183 +860,3 @@ const LearningTester: React.FC = () => {
                                 value={dummyTransaction.currency}
                                 onChange={(e) => setDummyTransaction({
                                   ...dummyTransaction,
-                                  currency: e.target.value as SupportedCurrency
-                                })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Description/Vendor</label>
-                              <Input
-                                placeholder="Coffee Shop"
-                                value={dummyTransaction.description || ''}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  description: e.target.value
-                                })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Type</label>
-                              <select
-                                className="flex w-full rounded-md border border-input bg-background px-3 py-2 h-10 text-sm ring-offset-background file:border-0 file:bg-transparent placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                value={dummyTransaction.type}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  type: e.target.value as TransactionType
-                                })}
-                              >
-                                <option value="expense">Expense</option>
-                                <option value="income">Income</option>
-                                <option value="transfer">Transfer</option>
-                              </select>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Category</label>
-                              <Input
-                                placeholder="Food & Dining"
-                                value={dummyTransaction.category}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  category: e.target.value
-                                })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Account</label>
-                              <Input
-                                placeholder="Main Account"
-                                value={dummyTransaction.fromAccount || ''}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  fromAccount: e.target.value
-                                })}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-                    )}
-                  </Tabs>
-                )}
-              </CardContent>
-            </Card>
-
-            {!isLabelingMode && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Learn New Entry</CardTitle>
-                  <CardDescription>
-                    Add the current message to the learning engine with custom transaction data
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Amount</label>
-                      <Input
-                        type="number"
-                        placeholder="100.00"
-                        value={dummyTransaction.amount || ''}
-                        onChange={(e) => setDummyTransaction({
-                          ...dummyTransaction,
-                          amount: parseFloat(e.target.value) || 0
-                        })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Currency</label>
-                      <Input
-                        placeholder="USD"
-                        value={dummyTransaction.currency}
-                        onChange={(e) => setDummyTransaction({
-                          ...dummyTransaction,
-                          currency: e.target.value as SupportedCurrency
-                        })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Description/Vendor</label>
-                      <Input
-                        placeholder="Coffee Shop"
-                        value={dummyTransaction.description || ''}
-                        onChange={(e) => setDummyTransaction({
-                          ...dummyTransaction,
-                          description: e.target.value
-                        })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Type</label>
-                      <select
-                        className="flex w-full rounded-md border border-input bg-background px-3 py-2 h-10 text-sm ring-offset-background file:border-0 file:bg-transparent placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        value={dummyTransaction.type}
-                        onChange={(e) => setDummyTransaction({
-                          ...dummyTransaction,
-                          type: e.target.value as TransactionType
-                        })}
-                      >
-                        <option value="expense">Expense</option>
-                        <option value="income">Income</option>
-                        <option value="transfer">Transfer</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Category</label>
-                      <Input
-                        placeholder="Food & Dining"
-                        value={dummyTransaction.category}
-                        onChange={(e) => setDummyTransaction({
-                          ...dummyTransaction,
-                          category: e.target.value
-                        })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Account</label>
-                      <Input
-                        placeholder="Main Account"
-                        value={dummyTransaction.fromAccount || ''}
-                        onChange={(e) => setDummyTransaction({
-                          ...dummyTransaction,
-                          fromAccount: e.target.value
-                        })}
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button 
-                    variant="outline" 
-                    onClick={learnFromCurrentMessage}
-                    className="w-full"
-                  >
-                    Save as Learning Entry
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
-            
-            {isLabelingMode && (
-              <Button 
-                onClick={learnFromCurrentMessage}
-                className="w-full flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                Save Labeled Entry to Learning Engine
-              </Button>
-            )}
-          </div>
-        )}
-
-        <div className="bg-muted p-4 rounded-md flex items-center gap-2 text-sm">
-          <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          <p className="text-muted-foreground">
-            <strong>Developer Tool:</strong> Changes made here are saved to local storage and will affect the learning engine's behavior.
-          </p>
-        </div>
-      </motion.div>
-    </Layout>
-  );
-};
-
-export default LearningTester;
