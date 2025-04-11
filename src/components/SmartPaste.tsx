@@ -88,7 +88,7 @@ const SmartPaste: React.FC<{
         subcategory: inferred.subcategory || '',
         type: inferred.type || 'expense',
         currency: inferred.currency || 'SAR',
-        fromAccount: inferred.account || 'Unknown',
+        fromAccount: inferred.fromAccount || 'Unknown',
         date: inferred.date || new Date().toISOString().split('T')[0],
         description: text,
         notes: 'Detected by rule-based fallback',

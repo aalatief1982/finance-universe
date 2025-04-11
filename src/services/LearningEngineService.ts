@@ -2,7 +2,7 @@
 // Enhanced LearningEngineService.ts - Field-Based Learning
 import { v4 as uuidv4 } from 'uuid';
 import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
-import { Transaction } from '@/types/transaction';
+import { Transaction, TransactionType } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 import { masterMindService } from '@/services/MasterMindService';
 
@@ -32,46 +32,45 @@ class LearningEngineService {
   }
 
   public inferFieldsFromText(message: string): Partial<Transaction> {
-  const tokens = this.tokenize(message);
-  const amount = this.extractAmountTokens(message)[0];
-  const currency = this.extractCurrencyTokens(message)[0];
-  const vendor = this.extractVendorTokens(message)[0];
-  const account = this.extractAccountTokens(message)[0];
-  const type = this.inferTypeFromText(message);
-  const date = this.extractDateFromText(message);
+    const tokens = this.tokenize(message);
+    const amount = this.extractAmountTokens(message)[0];
+    const currency = this.extractCurrencyTokens(message)[0];
+    const vendorTokens = this.extractVendorTokens(message)[0];
+    const account = this.extractAccountTokens(message)[0];
+    const type = this.inferTypeFromText(message);
+    const date = this.extractDateFromText(message);
 
-  return {
-    amount: parseFloat(amount || '0'),
-    currency: currency || 'SAR',
-    vendor,
-    account,
-    type,
-    date,
-    category: vendor ? this.lookupCategoryForVendor(vendor) : 'Uncategorized',
-    subcategory: ''
-  };
-}
+    return {
+      amount: parseFloat(amount || '0'),
+      currency: currency || 'SAR',
+      description: vendorTokens, // Use description instead of vendor
+      fromAccount: account, // Use fromAccount instead of account
+      type,
+      date,
+      category: vendorTokens ? this.lookupCategoryForVendor(vendorTokens) : 'Uncategorized',
+      subcategory: ''
+    };
+  }
 
   private inferTypeFromText(message: string): TransactionType {
-  const t = message.toLowerCase();
-  if (t.includes('شراء') || t.includes('debited') || t.includes('سداد')) return 'expense';
-  if (t.includes('حوالة واردة') || t.includes('credited')) return 'income';
-  return 'expense';
-}
+    const t = message.toLowerCase();
+    if (t.includes('شراء') || t.includes('debited') || t.includes('سداد')) return 'expense';
+    if (t.includes('حوالة واردة') || t.includes('credited')) return 'income';
+    return 'expense';
+  }
 
   private extractDateFromText(message: string): string | undefined {
-  const match = message.match(/\\d{4}-\\d{2}-\\d{2}|\\d{2}-\\d{2}-\\d{4}/);
-  return match ? match[0] : undefined;
-}
+    const match = message.match(/\\d{4}-\\d{2}-\\d{2}|\\d{2}-\\d{2}-\\d{4}/);
+    return match ? match[0] : undefined;
+  }
 
   private lookupCategoryForVendor(vendor: string): string {
-  const lower = vendor.toLowerCase();
-  if (lower.includes('othaim') || lower.includes('tamimi')) return 'Groceries';
-  if (lower.includes('careem') || lower.includes('uber')) return 'Transport';
-  if (lower.includes('aldrees') || lower.includes('gas')) return 'Fuel';
-  return 'Uncategorized';
-}
-
+    const lower = vendor.toLowerCase();
+    if (lower.includes('othaim') || lower.includes('tamimi')) return 'Groceries';
+    if (lower.includes('careem') || lower.includes('uber')) return 'Transport';
+    if (lower.includes('aldrees') || lower.includes('gas')) return 'Fuel';
+    return 'Uncategorized';
+  }
 
   private loadConfig(): LearningEngineConfig {
     try {
@@ -101,9 +100,6 @@ class LearningEngineService {
     const tokens = this.tokenize(raw);
     const id = uuidv4();
 
-
-
-
     const fieldTokenMap: FieldTokenMap = {
       amount: this.extractAmountTokens(raw),
       currency: this.extractCurrencyTokens(raw),
@@ -111,10 +107,10 @@ class LearningEngineService {
       account: this.extractAccountTokens(raw)
     };
 
-        // Register tokens to MasterMind
-        Object.entries(fieldTokenMap).forEach(([field, tokens]) => {
-          tokens.forEach(token => masterMindService.registerToken(token, field));
-        });
+    // Register tokens to MasterMind
+    Object.entries(fieldTokenMap).forEach(([field, tokens]) => {
+      tokens.forEach(token => masterMindService.registerToken(token, field));
+    });
 
     // Override with custom token map if provided
     if (customFieldTokenMap) {
