@@ -30,6 +30,9 @@ const LearningTester: React.FC = () => {
     category: 'Uncategorized',
     fromAccount: '',
     toAccount: '',
+    // Add the missing required properties
+    title: '',
+    source: 'manual'
   });
   const { toast } = useToast();
 
