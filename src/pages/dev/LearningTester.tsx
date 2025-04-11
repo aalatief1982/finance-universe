@@ -3,10 +3,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { learningEngineService } from '@/services/LearningEngineService';
 import { MatchResult, LearnedEntry } from '@/types/learning';
@@ -82,17 +83,19 @@ const LearningTester: React.FC = () => {
       
       // Create initial token labels
       const initialLabels: Record<string, string> = {};
-      messageTokens.forEach(token => {
-        for (const [field, tokens] of Object.entries(tokenMap)) {
-          if (tokens && tokens.includes(token)) {
-            initialLabels[token] = field;
-            break;
+      if (messageTokens) {
+        messageTokens.forEach(token => {
+          for (const [field, tokens] of Object.entries(tokenMap)) {
+            if (tokens && tokens.includes(token)) {
+              initialLabels[token] = field;
+              break;
+            }
           }
-        }
-        if (!initialLabels[token]) {
-          initialLabels[token] = 'unlabeled';
-        }
-      });
+          if (!initialLabels[token]) {
+            initialLabels[token] = 'unlabeled';
+          }
+        });
+      }
       setTokenLabels(initialLabels);
     }
   }, [message, messageTokens, isLabelingMode, extractAmountTokens, extractCurrencyTokens, extractVendorTokens, extractAccountTokens]);
@@ -381,6 +384,16 @@ const LearningTester: React.FC = () => {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Learning Engine Tester</h1>
           <div className="flex gap-2">
+            <Link to="/mastermind">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <BrainCircuit className="h-4 w-4" />
+                View MasterMind
+              </Button>
+            </Link>
             <Button 
               variant="outline" 
               size="sm" 
