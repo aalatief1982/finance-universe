@@ -404,8 +404,9 @@ const LearningTester: React.FC = () => {
               dummyTransaction={dummyTransaction}
               setDummyTransaction={setDummyTransaction}
               confidenceBreakdown={confidenceBreakdown}
+              handleDropToken={handleDropToken}
               getTokenFieldMatch={getTokenFieldMatch}
-              handleTokenLabelChange={handleTokenLabelChange}
+              //handleTokenLabelChange={handleTokenLabelChange}
               clearAllLabels={clearAllLabels}
               undoLastLabeling={undoLastLabeling}
               applyAutomaticLabels={applyAutomaticLabels}
