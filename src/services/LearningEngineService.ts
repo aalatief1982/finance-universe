@@ -1,8 +1,10 @@
-// Enhanced LearningEngineService.ts - Context-Aware Parsing
+
+// Enhanced LearningEngineService.ts - Field-Based Learning
 import { v4 as uuidv4 } from 'uuid';
 import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
 import { Transaction } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
+import { masterMindService } from '@/services/MasterMindService';
 
 const LEARNING_STORAGE_KEY = 'xpensia_learned_entries';
 const LEARNING_CONFIG_KEY = 'xpensia_learning_config';
@@ -13,6 +15,14 @@ const DEFAULT_CONFIG: LearningEngineConfig = {
   minConfidenceThreshold: 0.75,
   saveAutomatically: true
 };
+
+// Define the structure of fieldTokenMap
+export interface FieldTokenMap {
+  amount: string[];
+  currency: string[];
+  vendor: string[];
+  account: string[];
+}
 
 class LearningEngineService {
   private config: LearningEngineConfig;
@@ -38,20 +48,31 @@ class LearningEngineService {
     return { ...this.config };
   }
 
-  public learnFromTransaction(raw: string, txn: Transaction, senderHint = ''): void {
+  public learnFromTransaction(
+    raw: string, 
+    txn: Transaction, 
+    senderHint = '',
+    customFieldTokenMap?: Partial<FieldTokenMap>
+  ): void {
     if (!this.config.enabled || !raw || !txn) return;
     const entries = this.getLearnedEntries();
     const tokens = this.tokenize(raw);
     const id = uuidv4();
 
-    const fieldTokenMap = {
+    const fieldTokenMap: FieldTokenMap = {
       amount: this.extractAmountTokens(raw),
       currency: this.extractCurrencyTokens(raw),
       vendor: this.extractVendorTokens(raw),
-      account: this.extractAccountTokens(raw),
-      type: this.extractTypeTokens(raw),
-      date: this.extractDateTokens(raw)
+      account: this.extractAccountTokens(raw)
     };
+
+    // Override with custom token map if provided
+    if (customFieldTokenMap) {
+      if (customFieldTokenMap.amount) fieldTokenMap.amount = customFieldTokenMap.amount;
+      if (customFieldTokenMap.currency) fieldTokenMap.currency = customFieldTokenMap.currency;
+      if (customFieldTokenMap.vendor) fieldTokenMap.vendor = customFieldTokenMap.vendor;
+      if (customFieldTokenMap.account) fieldTokenMap.account = customFieldTokenMap.account;
+    }
 
     const newEntry: LearnedEntry = {
       id,
@@ -65,10 +86,7 @@ class LearningEngineService {
         account: txn.fromAccount || '',
         currency: txn.currency as SupportedCurrency,
         person: txn.person,
-        vendor: txn.vendor || '',
-        date: txn.date,
-        description: raw,
-        title: `${txn.category} | ${txn.subcategory} | ${txn.amount}`
+        vendor: txn.description || '' // Changed from txn.vendor to txn.description
       },
       tokens,
       fieldTokenMap,
@@ -117,7 +135,7 @@ class LearningEngineService {
     return totalFields ? score / totalFields : 0;
   }
 
-  private tokenize(msg: string): string[] {
+  public tokenize(msg: string): string[] {
     return msg
       .toLowerCase()
       .replace(/[^\w\s]/g, ' ')
@@ -125,56 +143,26 @@ class LearningEngineService {
       .filter(Boolean);
   }
 
-  private extractAmountTokens(msg: string): string[] {
+  public extractAmountTokens(msg: string): string[] {
     const match = msg.match(/\b(\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?)\b/g);
     return match ? match.map(m => m.replace(/,/g, '')) : [];
   }
 
-  private extractCurrencyTokens(msg: string): string[] {
-    const currencies = ['sar', 'egp', 'usd', 'aed', 'bhd', 'ريال', 'جنيه', 'دولار'];
-    return currencies.filter(cur => msg.toLowerCase().includes(cur));
+  public extractCurrencyTokens(msg: string): string[] {
+    return ['sar', 'egp', 'usd', 'aed', 'bhd'].filter(cur => msg.toLowerCase().includes(cur));
   }
 
-  private extractVendorTokens(msg: string): string[] {
+  public extractVendorTokens(msg: string): string[] {
     const match = msg.match(/(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/i);
     return match ? match[1].toLowerCase().split(/\s+/).filter(Boolean) : [];
   }
 
-  private extractAccountTokens(msg: string): string[] {
+  public extractAccountTokens(msg: string): string[] {
     const match = msg.match(/\*{2,}\d+/);
     return match ? [match[0].replace(/\*/g, '')] : [];
   }
 
-  private extractTypeTokens(msg: string): string[] {
-    const expenseIndicators = ['شراء', 'سداد فاتورة', 'debited'];
-    const incomeIndicators = ['حوالة واردة', 'credited'];
-    const tokens = this.tokenize(msg);
-    const typeTokens: string[] = [];
-
-    if (tokens.some(token => expenseIndicators.includes(token))) {
-      typeTokens.push('Expense');
-    } else if (tokens.some(token => incomeIndicators.includes(token))) {
-      typeTokens.push('Income');
-    }
-
-    return typeTokens;
-  }
-
-  private extractDateTokens(msg: string): string[] {
-    const datePatterns = [
-      /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/g,
-      /\b\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/g
-    ];
-
-    const matches: string[] = [];
-    datePatterns.forEach(pattern => {
-      const match = msg.match(pattern);
-      if (match) matches.push(...match);
-    });
-    return matches;
-  }
-
-  private getLearnedEntries(): LearnedEntry[] {
+  public getLearnedEntries(): LearnedEntry[] {
     try {
       const stored = localStorage.getItem(LEARNING_STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
