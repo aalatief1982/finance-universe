@@ -2,70 +2,32 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { 
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent 
-} from "@/components/ui/collapsible";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { learningEngineService } from '@/services/LearningEngineService';
 import { MatchResult, LearnedEntry } from '@/types/learning';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
-import { 
-  AlertCircle,
-  ChevronDown, 
-  ChevronUp, 
-  FileText, 
-  Trash2,
-  CircleDot,
-  CircleCheck,
-  CircleX,
-  Info,
-  Check,
-  X,
-  TableIcon,
-  Pencil,
-  Tag,
-  RefreshCw,
-  Save
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
-// Token field types available for manual labeling
-const TOKEN_FIELD_TYPES = [
-  { value: 'amount', label: 'Amount', color: 'blue' },
-  { value: 'currency', label: 'Currency', color: 'green' },
-  { value: 'vendor', label: 'Vendor', color: 'orange' },
-  { value: 'account', label: 'Account', color: 'purple' },
-  { value: 'unlabeled', label: 'Unlabeled', color: 'gray' },
-  { value: 'ignore', label: 'Ignore', color: 'red' }
-];
+// Import our new components
+import MessageInput from './components/MessageInput';
+import MatchResults from './components/MatchResults';
 
 const LearningTester: React.FC = () => {
   const [message, setMessage] = useState<string>('');
   const [senderHint, setSenderHint] = useState<string>('');
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
-  const [isJsonExpanded, setIsJsonExpanded] = useState(false);
+  const [isLabelingMode, setIsLabelingMode] = useState(false);
+  const [tokenLabels, setTokenLabels] = useState<Record<string, string>>({});
+  const [manualFieldTokenMap, setManualFieldTokenMap] = useState<Record<string, string[]>>({
+    amount: [],
+    currency: [],
+    vendor: [],
+    account: []
+  });
+  const [labelingHistory, setLabelingHistory] = useState<Array<Record<string, string>>>([]);
   const [dummyTransaction, setDummyTransaction] = useState<Transaction>({
     id: '',
     date: new Date().toISOString(),
@@ -79,17 +41,6 @@ const LearningTester: React.FC = () => {
     title: '',
     source: 'manual'
   });
-  
-  // For token labeling functionality
-  const [isLabelingMode, setIsLabelingMode] = useState(false);
-  const [tokenLabels, setTokenLabels] = useState<Record<string, string>>({});
-  const [manualFieldTokenMap, setManualFieldTokenMap] = useState<Record<string, string[]>>({
-    amount: [],
-    currency: [],
-    vendor: [],
-    account: []
-  });
-  const [labelingHistory, setLabelingHistory] = useState<Array<Record<string, string>>>([]);
   
   const { toast } = useToast();
 
@@ -140,52 +91,6 @@ const LearningTester: React.FC = () => {
       }
     }
     return null;
-  };
-
-  // Get the token match status and return appropriate styling
-  const getTokenStyle = (token: string) => {
-    if (isLabelingMode) {
-      const labelType = tokenLabels[token] || 'unlabeled';
-      const fieldType = TOKEN_FIELD_TYPES.find(t => t.value === labelType);
-      
-      const fieldColors: Record<string, string> = {
-        amount: "bg-blue-100 text-blue-800 border-blue-300",
-        currency: "bg-green-100 text-green-800 border-green-300",
-        vendor: "bg-orange-100 text-orange-800 border-orange-300",
-        account: "bg-purple-100 text-purple-800 border-purple-300",
-        unlabeled: "bg-muted text-muted-foreground",
-        ignore: "bg-red-100 text-red-800 border-red-300"
-      };
-      
-      return {
-        className: fieldColors[labelType] || "bg-muted text-muted-foreground",
-        icon: labelType !== 'unlabeled' ? <Tag className="h-3 w-3 mr-1" /> : <CircleDot className="h-3 w-3 mr-1" />,
-        field: labelType !== 'unlabeled' ? labelType : null
-      };
-    }
-    
-    const fieldMatch = getTokenFieldMatch(token);
-    
-    if (!fieldMatch) {
-      return {
-        className: "bg-muted text-muted-foreground",
-        icon: <CircleDot className="h-3 w-3 mr-1" />
-      };
-    }
-    
-    // Color coding based on field type
-    const fieldColors: Record<string, string> = {
-      amount: "bg-blue-100 text-blue-800 border-blue-300",
-      currency: "bg-green-100 text-green-800 border-green-300",
-      vendor: "bg-orange-100 text-orange-800 border-orange-300",
-      account: "bg-purple-100 text-purple-800 border-purple-300"
-    };
-    
-    return {
-      className: fieldColors[fieldMatch] || "bg-primary/20 text-primary border-primary/30",
-      icon: <CircleCheck className="h-3 w-3 mr-1" />,
-      field: fieldMatch
-    };
   };
 
   // Calculate confidence breakdown details
@@ -432,12 +337,6 @@ const LearningTester: React.FC = () => {
     }
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return "bg-green-500";
-    if (confidence >= 0.6) return "bg-yellow-500";
-    return "bg-red-500";
-  };
-
   return (
     <Layout>
       <motion.div
@@ -468,469 +367,37 @@ const LearningTester: React.FC = () => {
               Paste a bank message to test the learning engine's matching capability
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Message</label>
-              <Textarea
-                placeholder="Paste your bank message here..."
-                className="min-h-[100px]"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Sender Hint (optional)</label>
-              <Input
-                placeholder="e.g., Bank name or phone number"
-                value={senderHint}
-                onChange={(e) => setSenderHint(e.target.value)}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button onClick={findBestMatch} className="flex-1 mr-2">Test Matching</Button>
-            <Button 
-              variant={isLabelingMode ? "secondary" : "outline"} 
-              onClick={toggleLabelingMode}
-              className="flex items-center gap-1"
-            >
-              <Pencil className="h-4 w-4" />
-              {isLabelingMode ? "Exit Labeling Mode" : "Enter Labeling Mode"}
-            </Button>
-          </CardFooter>
+          <MessageInput 
+            message={message}
+            setMessage={setMessage}
+            senderHint={senderHint}
+            setSenderHint={setSenderHint}
+            isLabelingMode={isLabelingMode}
+            toggleLabelingMode={toggleLabelingMode}
+            onTestMatching={findBestMatch}
+          />
         </Card>
 
         {(matchResult || (isLabelingMode && messageTokens.length > 0)) && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>
-                    {isLabelingMode ? "Token Labeling Mode" : "Match Result"}
-                  </CardTitle>
-                  {!isLabelingMode && matchResult && (
-                    <Badge variant={matchResult.matched ? "default" : "outline"} className="ml-2">
-                      {matchResult.matched ? "Match Found" : "No Match"}
-                    </Badge>
-                  )}
-                </div>
-                <CardDescription>
-                  {isLabelingMode ? (
-                    <div className="flex items-center justify-between mt-2">
-                      <span>Manually assign field types to tokens</span>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={clearAllLabels}
-                          className="flex items-center gap-1 text-xs"
-                        >
-                          <X className="h-3 w-3" />
-                          Clear All
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={undoLastLabeling}
-                          disabled={labelingHistory.length === 0}
-                          className="flex items-center gap-1 text-xs"
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                          Undo
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={applyAutomaticLabels}
-                          className="flex items-center gap-1 text-xs"
-                        >
-                          <RefreshCw className="h-3 w-3" />
-                          Auto-detect
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      Confidence Score: 
-                      <div className="w-full bg-muted rounded-full h-2 mt-1">
-                        <div 
-                          className={`h-2 rounded-full ${getConfidenceColor(matchResult?.confidence || 0)}`} 
-                          style={{ width: `${(matchResult?.confidence || 0) * 100}%` }} 
-                        />
-                      </div>
-                      <span className="ml-2">{((matchResult?.confidence || 0) * 100).toFixed(1)}%</span>
-                    </>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                {/* Token Visualization */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium flex items-center">
-                    {isLabelingMode ? (
-                      <>
-                        <Tag className="h-4 w-4 mr-1" />
-                        Token Labeling
-                      </>
-                    ) : (
-                      <>
-                        <CircleDot className="h-4 w-4 mr-1" />
-                        Token Analysis
-                      </>
-                    )}
-                  </h3>
-                  <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-md">
-                    {messageTokens.length === 0 ? (
-                      <p className="text-sm text-muted-foreground italic">No tokens found in message</p>
-                    ) : (
-                      messageTokens.map((token, index) => {
-                        const style = getTokenStyle(token);
-                        return isLabelingMode ? (
-                          <DropdownMenu key={`${token}-${index}`}>
-                            <DropdownMenuTrigger asChild>
-                              <Badge 
-                                variant="outline" 
-                                className={`flex items-center gap-1 cursor-pointer ${style.className} border hover:bg-muted/50`}
-                              >
-                                {style.icon}
-                                {token}
-                                {style.field && (
-                                  <span className="ml-1 text-[9px] px-1 bg-background/50 rounded">
-                                    {style.field}
-                                  </span>
-                                )}
-                              </Badge>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-40">
-                              {TOKEN_FIELD_TYPES.map((type) => (
-                                <DropdownMenuItem 
-                                  key={type.value}
-                                  className={`text-sm flex items-center gap-2 ${
-                                    tokenLabels[token] === type.value ? 'bg-muted/60' : ''
-                                  }`}
-                                  onClick={() => handleTokenLabelChange(token, type.value)}
-                                >
-                                  <div className={`w-2 h-2 rounded-full bg-${type.color}-500`} />
-                                  {type.label}
-                                  {tokenLabels[token] === type.value && (
-                                    <Check className="h-3 w-3 ml-auto" />
-                                  )}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        ) : (
-                          <Badge 
-                            key={`${token}-${index}`} 
-                            variant="outline" 
-                            className={`flex items-center gap-1 ${style.className} border`}
-                          >
-                            {style.icon}
-                            {token}
-                            {style.field && (
-                              <span className="ml-1 text-[9px] px-1 bg-background/50 rounded">
-                                {style.field}
-                              </span>
-                            )}
-                          </Badge>
-                        );
-                      })
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <div className="flex items-center">
-                      <CircleDot className="h-3 w-3 mr-1 text-muted-foreground" />
-                      <span className="text-muted-foreground">Unmatched</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CircleCheck className="h-3 w-3 mr-1 text-blue-600" />
-                      <span className="text-blue-600">amount</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CircleCheck className="h-3 w-3 mr-1 text-green-600" />
-                      <span className="text-green-600">currency</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CircleCheck className="h-3 w-3 mr-1 text-orange-600" />
-                      <span className="text-orange-600">vendor</span>
-                    </div>
-                    <div className="flex items-center">
-                      <CircleCheck className="h-3 w-3 mr-1 text-purple-600" />
-                      <span className="text-purple-600">account</span>
-                    </div>
-                    {isLabelingMode && (
-                      <div className="flex items-center">
-                        <CircleX className="h-3 w-3 mr-1 text-red-600" />
-                        <span className="text-red-600">ignore</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Confidence Breakdown */}
-                {confidenceBreakdown && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-medium flex items-center">
-                      <Info className="h-4 w-4 mr-1" />
-                      {isLabelingMode ? "Label Analysis" : "Confidence Breakdown"}
-                    </h3>
-                    <Card className="bg-muted/30">
-                      <CardContent className="p-4 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">Matched Fields:</span>
-                            <span className="font-medium ml-2">
-                              {confidenceBreakdown.matchedFields}/{confidenceBreakdown.totalFields}
-                            </span>
-                          </div>
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">Token Overlaps:</span>
-                            <span className="font-medium ml-2">
-                              {confidenceBreakdown.tokenOverlapCount}
-                            </span>
-                          </div>
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">Sender Hint Bonus:</span>
-                            <span className={`font-medium ml-2 ${confidenceBreakdown.senderBonus > 0 ? 'text-green-600' : ''}`}>
-                              +{(confidenceBreakdown.senderBonus * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                          <div className="text-sm">
-                            <span className="text-muted-foreground">Calculated Score:</span>
-                            <span className="font-medium ml-2">
-                              {(confidenceBreakdown.calculatedScore * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                {/* Field Token Map Table */}
-                {(isLabelingMode || matchResult?.entry) && (
-                  <Tabs defaultValue={isLabelingMode ? "fieldmap" : "fieldmap"} className="w-full">
-                    <TabsList className="w-full grid grid-cols-3">
-                      <TabsTrigger value="fieldmap">Field Token Map</TabsTrigger>
-                      {!isLabelingMode && <TabsTrigger value="entry">Entry Details</TabsTrigger>}
-                      {!isLabelingMode && <TabsTrigger value="json">JSON Data</TabsTrigger>}
-                      {isLabelingMode && <TabsTrigger value="preview">Transaction Preview</TabsTrigger>}
-                      {isLabelingMode && <TabsTrigger value="learning">Learning Settings</TabsTrigger>}
-                    </TabsList>
-                    
-                    <TabsContent value="fieldmap" className="space-y-4 mt-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Field</TableHead>
-                            <TableHead>Tokens</TableHead>
-                            <TableHead className="text-right">Found</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(isLabelingMode ? manualFieldTokenMap : matchResult?.entry?.fieldTokenMap || {}).map(([field, tokens]) => {
-                            const found = tokens.some(token => messageTokens.includes(token));
-                            return (
-                              <TableRow key={field}>
-                                <TableCell className="font-medium">{field}</TableCell>
-                                <TableCell>
-                                  <div className="flex flex-wrap gap-1">
-                                    {tokens.map((token, i) => (
-                                      <Badge 
-                                        key={`${field}-${token}-${i}`} 
-                                        variant="outline"
-                                        className={`text-xs ${messageTokens.includes(token) ? 'bg-primary/20 border-primary/30' : 'bg-muted'}`}
-                                      >
-                                        {token}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  {found ? 
-                                    <Check className="ml-auto h-4 w-4 text-green-600" /> : 
-                                    <X className="ml-auto h-4 w-4 text-muted-foreground" />
-                                  }
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                    </TabsContent>
-                    
-                    {!isLabelingMode && (
-                      <TabsContent value="entry" className="space-y-4 mt-4">
-                        <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="original-message">
-                            <AccordionTrigger className="text-sm font-medium">
-                              Original Learned Message
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="bg-muted p-3 rounded-md text-sm whitespace-pre-wrap overflow-auto max-h-[150px]">
-                                {matchResult?.entry?.rawMessage}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                          
-                          <AccordionItem value="confirmed-fields">
-                            <AccordionTrigger className="text-sm font-medium">
-                              Confirmed Fields
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid grid-cols-2 gap-2 rounded-md">
-                                {matchResult?.entry?.confirmedFields && Object.entries(matchResult.entry.confirmedFields).map(([key, value]) => (
-                                  <div key={key} className="bg-muted p-2 rounded">
-                                    <div className="text-xs text-muted-foreground">{key}</div>
-                                    <div className="font-medium">{value !== undefined ? String(value) : "N/A"}</div>
-                                  </div>
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                      </TabsContent>
-                    )}
-                    
-                    {!isLabelingMode && (
-                      <TabsContent value="json" className="space-y-4 mt-4">
-                        <div className="bg-muted p-3 rounded-md">
-                          <pre className="text-xs overflow-auto max-h-[300px] whitespace-pre-wrap">
-                            {JSON.stringify(matchResult?.entry, null, 2)}
-                          </pre>
-                        </div>
-                      </TabsContent>
-                    )}
-                    
-                    {isLabelingMode && (
-                      <TabsContent value="preview" className="space-y-4 mt-4">
-                        <div className="bg-muted/30 p-4 rounded-md">
-                          <h3 className="text-sm font-medium mb-3">Transaction Preview</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-1">Type</div>
-                              <div className="font-medium">{dummyTransaction.type}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-1">Amount</div>
-                              <div className="font-medium">{dummyTransaction.amount}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-1">Currency</div>
-                              <div className="font-medium">{dummyTransaction.currency}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-1">Category</div>
-                              <div className="font-medium">{dummyTransaction.category}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-1">Description/Vendor</div>
-                              <div className="font-medium">{dummyTransaction.description || '(None)'}</div>
-                            </div>
-                            <div>
-                              <div className="text-xs text-muted-foreground mb-1">Account</div>
-                              <div className="font-medium">{dummyTransaction.fromAccount || '(None)'}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-                    )}
-                    
-                    {isLabelingMode && (
-                      <TabsContent value="learning" className="space-y-4 mt-4">
-                        <div className="p-4 rounded-md border">
-                          <h3 className="text-sm font-medium mb-4">Transaction Data</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Amount</label>
-                              <Input
-                                type="number"
-                                placeholder="100.00"
-                                value={dummyTransaction.amount || ''}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  amount: parseFloat(e.target.value) || 0
-                                })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Currency</label>
-                              <Input
-                                placeholder="USD"
-                                value={dummyTransaction.currency}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  currency: e.target.value as SupportedCurrency
-                                })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Vendor/Description</label>
-                              <Input
-                                placeholder="Vendor name"
-                                value={dummyTransaction.description || ''}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  description: e.target.value
-                                })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Account</label>
-                              <Input
-                                placeholder="Account"
-                                value={dummyTransaction.fromAccount || ''}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  fromAccount: e.target.value
-                                })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Type</label>
-                              <select
-                                className="w-full rounded-md border border-input bg-background px-3 py-2"
-                                value={dummyTransaction.type}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  type: e.target.value as TransactionType
-                                })}
-                              >
-                                <option value="expense">Expense</option>
-                                <option value="income">Income</option>
-                                <option value="transfer">Transfer</option>
-                              </select>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Category</label>
-                              <Input
-                                placeholder="Category"
-                                value={dummyTransaction.category || ''}
-                                onChange={(e) => setDummyTransaction({
-                                  ...dummyTransaction,
-                                  category: e.target.value
-                                })}
-                              />
-                            </div>
-                          </div>
-                          <div className="mt-6">
-                            <Button 
-                              onClick={learnFromCurrentMessage}
-                              className="w-full flex items-center justify-center gap-2"
-                            >
-                              <Save className="h-4 w-4" />
-                              Save as New Learned Entry
-                            </Button>
-                          </div>
-                        </div>
-                      </TabsContent>
-                    )}
-                  </Tabs>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <MatchResults 
+              matchResult={matchResult}
+              isLabelingMode={isLabelingMode}
+              messageTokens={messageTokens}
+              tokenLabels={tokenLabels}
+              manualFieldTokenMap={manualFieldTokenMap}
+              dummyTransaction={dummyTransaction}
+              setDummyTransaction={setDummyTransaction}
+              confidenceBreakdown={confidenceBreakdown}
+              getTokenFieldMatch={getTokenFieldMatch}
+              handleTokenLabelChange={handleTokenLabelChange}
+              clearAllLabels={clearAllLabels}
+              undoLastLabeling={undoLastLabeling}
+              applyAutomaticLabels={applyAutomaticLabels}
+              learnFromCurrentMessage={learnFromCurrentMessage}
+              labelingHistory={labelingHistory}
+            />
+          </Card>
         )}
       </motion.div>
     </Layout>
