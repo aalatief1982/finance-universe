@@ -21,10 +21,16 @@ export interface LearnedEntry {
     account: string;
     currency: SupportedCurrency;
     person?: string;
-    vendor?: string; // Added vendor field to the type definition
+    vendor?: string;
+  };
+  tokens: string[]; // tokenized message for faster matching
+  fieldTokenMap: {
+    amount: string[];
+    currency: string[];
+    vendor: string[];
+    account: string[];
   };
   timestamp: string; // ISO date string
-  tokens: string[]; // tokenized message for faster matching
   confidence?: number; // last matching confidence
 }
 

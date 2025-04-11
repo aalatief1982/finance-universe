@@ -67,7 +67,7 @@ class LearningEngineService {
         account: txn.fromAccount || '',
         currency: txn.currency as SupportedCurrency,
         person: txn.person,
-        vendor: txn.vendor || ''
+        vendor: txn.description || '' // Use description as vendor since vendor doesn't exist
       },
       tokens,
       fieldTokenMap,
