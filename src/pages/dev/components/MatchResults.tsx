@@ -1,3 +1,4 @@
+
 // Updated MatchResults.tsx with Drag-and-Drop Tagging
 import React from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -13,13 +14,14 @@ import EntryDetails from './EntryDetails';
 import JsonDataView from './JsonDataView';
 import TransactionPreview from './TransactionPreview';
 import LearningSettings from './LearningSettings';
-import { MatchResult, LearnedEntry } from '@/types/learning';
+import { MatchResult } from '@/types/learning';
 import { Transaction } from '@/types/transaction';
 
 interface MatchResultsProps {
   matchResult: MatchResult | null;
   isLabelingMode: boolean;
   messageTokens: string[];
+  tokenLabels: Record<string, string>;
   manualFieldTokenMap: Record<string, string[]>;
   dummyTransaction: Transaction;
   setDummyTransaction: React.Dispatch<React.SetStateAction<Transaction>>;
@@ -31,6 +33,7 @@ interface MatchResultsProps {
     calculatedScore: number;
   } | null;
   handleDropToken: (field: string, token: string) => void;
+  getTokenFieldMatch: (token: string) => string | null;
   clearAllLabels: () => void;
   undoLastLabeling: () => void;
   applyAutomaticLabels: () => void;
@@ -42,11 +45,13 @@ const MatchResults: React.FC<MatchResultsProps> = ({
   matchResult,
   isLabelingMode,
   messageTokens,
+  tokenLabels,
   manualFieldTokenMap,
   dummyTransaction,
   setDummyTransaction,
   confidenceBreakdown,
   handleDropToken,
+  getTokenFieldMatch,
   clearAllLabels,
   undoLastLabeling,
   applyAutomaticLabels,
