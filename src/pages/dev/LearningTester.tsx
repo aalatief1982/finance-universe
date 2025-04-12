@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DndProvider } from 'react-dnd';
@@ -20,6 +19,7 @@ import MessageInput from './components/MessageInput';
 import MatchResults from './components/MatchResults';
 
 const LearningTester: React.FC = () => {
+  
   const [message, setMessage] = useState<string>('');
   const [senderHint, setSenderHint] = useState<string>('');
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
@@ -67,7 +67,7 @@ const LearningTester: React.FC = () => {
     return tokenize(message);
   }, [message, tokenize]);
 
-  // Initial automatic tokenization
+  
   useEffect(() => {
     if (message && !isLabelingMode) {
       const tokenMap = {
@@ -100,7 +100,8 @@ const LearningTester: React.FC = () => {
     }
   }, [message, messageTokens, isLabelingMode, extractAmountTokens, extractCurrencyTokens, extractVendorTokens, extractAccountTokens]);
 
-  // Check if a token exists in any field token map
+  
+
   const getTokenFieldMatch = (token: string) => {
     if (!matchResult?.entry?.fieldTokenMap) return null;
     
@@ -113,81 +114,7 @@ const LearningTester: React.FC = () => {
     return null;
   };
 
-  // Calculate confidence breakdown details
-  const confidenceBreakdown = useMemo(() => {
-    if (isLabelingMode) {
-      // Create a field map from the manual labels
-      const labelFieldMap: Record<string, string[]> = {
-        amount: [],
-        currency: [],
-        vendor: [],
-        account: [],
-        type: [],
-        date: [],
-        title: []
-      };
-      
-      // Group tokens by their label
-      Object.entries(tokenLabels || {}).forEach(([token, label]) => {
-        if (label && label !== 'unlabeled' && label !== 'ignore' && labelFieldMap[label]) {
-          labelFieldMap[label].push(token);
-        }
-      });
-      
-      const totalFields = Object.keys(labelFieldMap).filter(
-        key => labelFieldMap[key].length > 0
-      ).length;
-      
-      // Total tokens with meaningful labels
-      const labeledTokenCount = Object.values(tokenLabels || {})
-        .filter(label => label && label !== 'unlabeled' && label !== 'ignore')
-        .length;
-      
-      // Estimate sender hint bonus (simplified calculation)
-      const senderBonus = senderHint ? 0.1 : 0;
-        
-      return {
-        matchedFields: totalFields,
-        totalFields: Object.keys(labelFieldMap).length,
-        tokenOverlapCount: labeledTokenCount,
-        senderBonus,
-        calculatedScore: (totalFields ? totalFields / Object.keys(labelFieldMap).length : 0) + senderBonus
-      };
-    }
-    
-    if (!matchResult?.entry) return null;
-    
-    const fieldMap = matchResult.entry.fieldTokenMap;
-    const totalFields = Object.keys(fieldMap).length;
-    const matchedFields = Object.entries(fieldMap).filter(([_, tokens]) => 
-      tokens && tokens.some(token => messageTokens.includes(token))
-    ).length;
-    
-    // Count total token overlaps
-    let tokenOverlapCount = 0;
-    Object.values(fieldMap).forEach(fieldTokens => {
-      if (fieldTokens) {
-        fieldTokens.forEach(token => {
-          if (messageTokens.includes(token)) tokenOverlapCount++;
-        });
-      }
-    });
-    
-    // Estimate sender hint bonus (simplified calculation)
-    const senderBonus = 
-      senderHint && 
-      matchResult.entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())
-        ? 0.1
-        : 0;
-        
-    return {
-      matchedFields,
-      totalFields,
-      tokenOverlapCount,
-      senderBonus,
-      calculatedScore: (totalFields ? matchedFields / totalFields : 0) + senderBonus
-    };
-  }, [matchResult, messageTokens, senderHint, isLabelingMode, tokenLabels]);
+  
 
   const findBestMatchHandler = () => {
     if (!message) {
@@ -202,6 +129,8 @@ const LearningTester: React.FC = () => {
     const result = findBestMatch(message, senderHint);
     setMatchResult(result);
   };
+
+  
 
   const toggleLabelingMode = () => {
     if (!isLabelingMode) {
@@ -251,6 +180,8 @@ const LearningTester: React.FC = () => {
       title: []
     });
   };
+
+  
 
   const undoLastLabeling = () => {
     if (labelingHistory.length > 0) {
@@ -343,7 +274,7 @@ const LearningTester: React.FC = () => {
     }
   };
 
-  // Handle removing tokens from fields
+  
   const handleRemoveToken = (field: string, token: string) => {
     setManualFieldTokenMap(prev => {
       const updated = { ...prev };
@@ -361,6 +292,8 @@ const LearningTester: React.FC = () => {
       return updated;
     });
   };
+
+  
 
   const clearLearningEntriesHandler = () => {
     if (window.confirm("Are you sure you want to clear all learned entries? This action cannot be undone.")) {
