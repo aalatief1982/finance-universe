@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useDrag } from 'react-dnd/dist/hooks';
+import { useDrag } from 'react-dnd';
 import { cn } from '@/lib/utils';
 
 interface DraggableTokenProps {
