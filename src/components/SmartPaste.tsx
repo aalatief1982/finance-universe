@@ -134,7 +134,7 @@ const SmartPaste: React.FC<{
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="p-4 border rounded-lg space-y-4"
+      className="w-full p-4 border rounded-lg space-y-4 sm:p-6"
     >
       <div className="flex items-center gap-2">
         <ClipboardPaste className="text-primary h-5 w-5" />
