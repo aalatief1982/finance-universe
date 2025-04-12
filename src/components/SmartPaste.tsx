@@ -1,3 +1,4 @@
+
 // src/components/SmartPaste.tsx
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -6,12 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useTransactions } from '@/context/TransactionContext';
-import { Transaction } from '@/types/transaction';
+import { Transaction, TransactionType } from '@/types/transaction';
 import { storeTransaction } from '@/utils/storage-utils';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
 
-const SmartPaste: React.FC = () => {
+interface SmartPasteProps {
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void;
+}
+
+const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   const [text, setText] = useState('');
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const [isSmartMatch, setIsSmartMatch] = useState(false);
@@ -44,7 +49,7 @@ const SmartPaste: React.FC = () => {
         title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
         amount: parseFloat(parsed.amount),
         currency: parsed.currency || 'SAR',
-        type: parsed.type || 'expense',
+        type: (parsed.type as TransactionType) || 'expense',
         fromAccount: parsed.account || 'Unknown',
         category: categoryInfo.category,
         subcategory: categoryInfo.subcategory,
@@ -56,6 +61,11 @@ const SmartPaste: React.FC = () => {
 
       setDetectedTransactions([autoTxn]);
       setIsSmartMatch(true);
+      
+      // Call the callback if provided
+      if (onTransactionsDetected) {
+        onTransactionsDetected([autoTxn], rawText, undefined, isSmartMatch ? 0.8 : 0.5);
+      }
     } else {
       setDetectedTransactions([]);
       toast({

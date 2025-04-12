@@ -2,7 +2,6 @@
 // src/components/ui/DraggableToken.tsx
 import React from 'react';
 import { useDrag } from 'react-dnd';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface DraggableTokenProps {
