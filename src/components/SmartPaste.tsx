@@ -2,7 +2,7 @@
 // src/components/SmartPaste.tsx
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ClipboardPaste, CheckCircle, XCircle } from 'lucide-react';
+import { ClipboardPaste, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,6 +11,7 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { storeTransaction } from '@/utils/storage-utils';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface SmartPasteProps {
   onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void;
@@ -21,6 +22,8 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const [isSmartMatch, setIsSmartMatch] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { addTransaction } = useTransactions();
   const { toast } = useToast();
 
@@ -39,40 +42,123 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
   };
 
   const processText = async (rawText: string) => {
-    const parsed = await extractTransactionEntities(rawText);
-
-    if (parsed.amount) {
-      const categoryInfo = findCategoryForVendor(parsed.vendor || '', parsed.type || 'expense');
-
-      const autoTxn: Transaction = {
-        id: `ml-${Math.random().toString(36).substring(2, 9)}`,
-        title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
-        amount: parseFloat(parsed.amount),
-        currency: parsed.currency || 'SAR',
-        type: (parsed.type as TransactionType) || 'expense',
-        fromAccount: parsed.account || 'Unknown',
-        category: categoryInfo.category,
-        subcategory: categoryInfo.subcategory,
-        date: parsed.date || new Date().toISOString(),
-        description: rawText,
-        notes: 'Extracted with Transformers.js',
-        source: 'smart-paste',
-      };
-
-      setDetectedTransactions([autoTxn]);
-      setIsSmartMatch(true);
-      
-      // Call the callback if provided
-      if (onTransactionsDetected) {
-        onTransactionsDetected([autoTxn], rawText, undefined, isSmartMatch ? 0.8 : 0.5);
-      }
-    } else {
-      setDetectedTransactions([]);
-      toast({
-        title: 'No transaction detected',
-        description: 'Could not extract structured data from the message.',
-      });
+    if (!rawText.trim()) {
+      return;
     }
+    
+    setIsProcessing(true);
+    setError(null);
+    
+    try {
+      const parsed = await extractTransactionEntities(rawText);
+
+      if (parsed.amount) {
+        const categoryInfo = findCategoryForVendor(parsed.vendor || '', parsed.type || 'expense');
+
+        const autoTxn: Transaction = {
+          id: `ml-${Math.random().toString(36).substring(2, 9)}`,
+          title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
+          amount: parseFloat(parsed.amount),
+          currency: parsed.currency || 'SAR',
+          type: (parsed.type as TransactionType) || 'expense',
+          fromAccount: parsed.account || 'Unknown',
+          category: categoryInfo.category,
+          subcategory: categoryInfo.subcategory,
+          date: parsed.date || new Date().toISOString(),
+          description: rawText,
+          notes: 'Extracted with Transformers.js',
+          source: 'smart-paste',
+        };
+
+        setDetectedTransactions([autoTxn]);
+        setIsSmartMatch(true);
+        
+        // Call the callback if provided
+        if (onTransactionsDetected) {
+          onTransactionsDetected([autoTxn], rawText, undefined, isSmartMatch ? 0.8 : 0.5);
+        }
+      } else {
+        setDetectedTransactions([]);
+        toast({
+          title: 'No transaction detected',
+          description: 'Could not extract structured data from the message.',
+        });
+      }
+    } catch (error) {
+      console.error('Error processing text:', error);
+      let errorMessage = 'Could not process the text. Please try again.';
+      
+      // Check if it's a JSON parsing error with HTML content
+      if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
+        errorMessage = 'The ML model could not be loaded properly. The app will use simple text analysis instead.';
+        
+        // Basic fallback parsing logic
+        const fallbackTransaction = createFallbackTransaction(rawText);
+        if (fallbackTransaction) {
+          setDetectedTransactions([fallbackTransaction]);
+          setIsSmartMatch(false);
+          
+          // Call the callback if provided
+          if (onTransactionsDetected) {
+            onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3);
+          }
+        }
+      }
+      
+      setError(errorMessage);
+      toast({
+        title: 'Processing Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Fallback function to extract basic transaction data when ML model fails
+  const createFallbackTransaction = (text: string): Transaction | null => {
+    // Simple regex to find amounts (numbers with optional decimal places)
+    const amountMatch = text.match(/(\d+(\.\d+)?)/);
+    const amount = amountMatch ? parseFloat(amountMatch[0]) : 0;
+    
+    if (!amount) return null;
+    
+    // Try to identify if it's an expense or income
+    const lowerText = text.toLowerCase();
+    const isExpense = lowerText.includes('debit') || 
+                     lowerText.includes('purchase') || 
+                     lowerText.includes('paid') ||
+                     lowerText.includes('withdraw');
+    
+    const isIncome = lowerText.includes('credit') || 
+                    lowerText.includes('deposit') || 
+                    lowerText.includes('received') ||
+                    lowerText.includes('salary');
+    
+    // Extract potential vendor name (just a simple approach)
+    let vendor = "Unknown";
+    if (text.includes('at') || text.includes('to') || text.includes('from')) {
+      const parts = text.split(/\s+(?:at|to|from)\s+/);
+      if (parts.length > 1) {
+        vendor = parts[1].split(/\s+/)[0];
+      }
+    }
+    
+    return {
+      id: `fallback-${Math.random().toString(36).substring(2, 9)}`,
+      title: `Fallback: ${vendor} | ${amount}`,
+      amount: isIncome ? amount : -Math.abs(amount),
+      currency: 'SAR', // Default currency
+      type: isIncome ? 'income' : 'expense',
+      fromAccount: 'Unknown',
+      category: 'Uncategorized',
+      subcategory: '',
+      date: new Date().toISOString(),
+      description: text,
+      notes: 'Extracted with fallback parser',
+      source: 'smart-paste',
+    };
   };
 
   const handleAddTransaction = (txn: Transaction) => {
@@ -81,6 +167,7 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
     toast({ title: 'Transaction Added', description: `${txn.title} saved.` });
     setDetectedTransactions([]);
     setText('');
+    setError(null);
   };
 
   return (
@@ -95,18 +182,35 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
         <h3 className="text-lg font-medium">Smart Paste</h3>
       </div>
 
+      {error && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-700">{error}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-2">
         <Input
           placeholder="Paste a bank SMS message..."
           value={text}
           onChange={(e) => {
             setText(e.target.value);
-            processText(e.target.value);
+            if (e.target.value.trim()) {
+              processText(e.target.value);
+            } else {
+              setDetectedTransactions([]);
+              setError(null);
+            }
           }}
           className="w-full text-sm"
+          disabled={isProcessing}
         />
-        <Button onClick={handlePaste} className="w-full sm:w-auto text-sm">
-          Paste from Clipboard
+        <Button 
+          onClick={handlePaste} 
+          className="w-full sm:w-auto text-sm"
+          disabled={isProcessing}
+        >
+          {isProcessing ? "Processing..." : "Paste from Clipboard"}
         </Button>
       </div>
 
@@ -131,15 +235,24 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
                 </Button>
               </div>
               <div className="flex items-center mt-2 text-green-500 text-sm">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                AI Model Matched
+                {isSmartMatch ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    AI Model Matched
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
+                    Basic Text Analysis
+                  </>
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {text && detectedTransactions.length === 0 && (
+      {text && !isProcessing && detectedTransactions.length === 0 && !error && (
         <div className="text-muted-foreground flex items-center gap-1 border rounded-md p-4 bg-muted/50">
           <XCircle className="h-4 w-4" />
           No transaction detected.
