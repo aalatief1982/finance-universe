@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { DndProvider } from 'react-dnd';
+import { DndProvider } from 'react-dnd/dist/core';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
