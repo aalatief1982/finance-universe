@@ -2,7 +2,15 @@
 import { useState, useMemo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
-import { MatchResult } from '@/types/learning';
+import { MatchResult, PositionedToken } from '@/types/learning';
+
+/**
+ * Helper function to get token text from a PositionedToken or string
+ */
+const getTokenText = (token: string | PositionedToken): string => {
+  if (typeof token === 'string') return token;
+  return token.token;
+};
 
 /**
  * Hook for handling matching operations
@@ -64,18 +72,28 @@ const useMatchOperations = (
     
     const fieldMap = matchResult.entry.fieldTokenMap;
     const totalFields = Object.keys(fieldMap).length;
-    const matchedFields = Object.entries(fieldMap).filter(([_, tokens]) => 
-      tokens && tokens.some(token => messageTokens.includes(token))
-    ).length;
     
-    // Count total token overlaps
+    // Count fields with at least one matching token
+    let matchedFields = 0;
     let tokenOverlapCount = 0;
-    Object.values(fieldMap).forEach(fieldTokens => {
-      if (fieldTokens) {
-        fieldTokens.forEach(token => {
-          if (messageTokens.includes(token)) tokenOverlapCount++;
-        });
-      }
+    
+    Object.entries(fieldMap).forEach(([_, tokens]) => {
+      if (!tokens || !Array.isArray(tokens)) return;
+      
+      // Check if any token in this field matches with messageTokens
+      const hasMatch = tokens.some(token => 
+        messageTokens.includes(typeof token === 'string' ? token : token.token)
+      );
+      
+      if (hasMatch) matchedFields++;
+      
+      // Count individual token matches
+      tokens.forEach(token => {
+        const tokenText = getTokenText(token);
+        if (messageTokens.includes(tokenText)) {
+          tokenOverlapCount++;
+        }
+      });
     });
     
     // Estimate sender hint bonus (simplified calculation)
@@ -113,8 +131,14 @@ const useMatchOperations = (
     
     const fieldMap = matchResult.entry.fieldTokenMap;
     for (const [field, tokens] of Object.entries(fieldMap)) {
-      if (tokens && tokens.includes(token)) {
-        return field;
+      if (!tokens || !Array.isArray(tokens)) continue;
+      
+      // Check if this token is in the field's tokens
+      for (const fieldToken of tokens) {
+        const tokenText = getTokenText(fieldToken);
+        if (tokenText === token) {
+          return field;
+        }
       }
     }
     return null;

@@ -3,9 +3,28 @@ import React from 'react';
 import { Check, X } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
+import { PositionedToken } from '@/types/learning';
+
+// This helper function extracts token text from either string or PositionedToken
+const getTokenText = (token: string | PositionedToken): string => {
+  if (typeof token === 'string') return token;
+  return token.token;
+};
+
+// This helper function checks if a token is included in a tokens array
+const isTokenInArray = (token: string | PositionedToken, array: string[]): boolean => {
+  if (typeof token === 'string') {
+    return array.includes(token);
+  }
+  return array.includes(token.token);
+};
+
+interface FieldTokenMap {
+  [key: string]: (string | PositionedToken)[];
+}
 
 interface FieldTokenMapProps {
-  fieldTokenMap: Record<string, string[]>;
+  fieldTokenMap: FieldTokenMap;
   messageTokens: string[];
   isLabelingMode: boolean;
 }
@@ -26,21 +45,24 @@ const FieldTokenMap: React.FC<FieldTokenMapProps> = ({
       </TableHeader>
       <TableBody>
         {Object.entries(fieldTokenMap).map(([field, tokens]) => {
-          const found = tokens.some(token => messageTokens.includes(token));
+          const found = tokens.some(token => isTokenInArray(token, messageTokens));
           return (
             <TableRow key={field}>
               <TableCell className="font-medium">{field}</TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">
-                  {tokens.map((token, i) => (
-                    <Badge 
-                      key={`${field}-${token}-${i}`} 
-                      variant="outline"
-                      className={`text-xs ${messageTokens.includes(token) ? 'bg-primary/20 border-primary/30' : 'bg-muted'}`}
-                    >
-                      {token}
-                    </Badge>
-                  ))}
+                  {tokens.map((token, i) => {
+                    const tokenText = getTokenText(token);
+                    return (
+                      <Badge 
+                        key={`${field}-${tokenText}-${i}`} 
+                        variant="outline"
+                        className={`text-xs ${messageTokens.includes(tokenText) ? 'bg-primary/20 border-primary/30' : 'bg-muted'}`}
+                      >
+                        {tokenText}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </TableCell>
               <TableCell className="text-right">

@@ -14,7 +14,7 @@ import EntryDetails from './EntryDetails';
 import JsonDataView from './JsonDataView';
 import TransactionPreview from './TransactionPreview';
 import LearningSettings from './LearningSettings';
-import { MatchResult } from '@/types/learning';
+import { MatchResult, PositionedToken } from '@/types/learning';
 import { Transaction } from '@/types/transaction';
 
 interface MatchResultsProps {
@@ -64,6 +64,20 @@ const MatchResults: React.FC<MatchResultsProps> = ({
     if (confidence >= 0.8) return 'bg-green-500';
     if (confidence >= 0.6) return 'bg-yellow-500';
     return 'bg-red-500';
+  };
+
+  // Convert PositionedToken[] to string[] for fieldTokenMap display
+  const getFieldTokenMapForDisplay = () => {
+    if (isLabelingMode) {
+      return manualFieldTokenMap;
+    }
+    
+    if (!matchResult?.entry?.fieldTokenMap) {
+      return {};
+    }
+    
+    // The fieldTokenMap here contains PositionedToken[], which we need to handle
+    return matchResult.entry.fieldTokenMap;
   };
 
   return (
@@ -147,7 +161,7 @@ const MatchResults: React.FC<MatchResultsProps> = ({
             </TabsList>
 
             <TabsContent value="fieldmap" className="space-y-4 mt-4">
-              <FieldTokenMap fieldTokenMap={isLabelingMode ? manualFieldTokenMap : (matchResult?.entry?.fieldTokenMap || {})} messageTokens={messageTokens} isLabelingMode={isLabelingMode} />
+              <FieldTokenMap fieldTokenMap={getFieldTokenMapForDisplay()} messageTokens={messageTokens} isLabelingMode={isLabelingMode} />
             </TabsContent>
 
             {!isLabelingMode && matchResult?.entry && (
