@@ -379,16 +379,16 @@ const LearningTester: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container max-w-4xl mx-auto py-8 space-y-6"
+        className="w-full px-4 sm:px-6 md:px-8 max-w-full space-y-6 py-8"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
           <h1 className="text-2xl font-bold">Learning Engine Tester</h1>
           <div className="flex gap-2">
             <Link to="/mastermind">
               <Button 
                 variant="outline" 
                 size="sm"
-                className="flex items-center gap-2"
+                className="w-full sm:w-auto text-sm flex items-center gap-2"
               >
                 <BrainCircuit className="h-4 w-4" />
                 View MasterMind
@@ -398,7 +398,7 @@ const LearningTester: React.FC = () => {
               variant="outline" 
               size="sm" 
               onClick={clearLearningEntriesHandler}
-              className="flex items-center gap-2 text-destructive hover:text-destructive"
+              className="w-full sm:w-auto text-sm flex items-center gap-2"
             >
               <Trash2 className="h-4 w-4" />
               Clear Memory
