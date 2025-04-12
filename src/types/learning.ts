@@ -7,6 +7,18 @@ import { TransactionType } from "./transaction";
 import { SupportedCurrency } from "./locale";
 
 /**
+ * Enhanced token structure with position information
+ */
+export interface PositionedToken {
+  token: string;
+  position: number;
+  context?: {
+    before?: string[];
+    after?: string[];
+  };
+}
+
+/**
  * Represents a learned entry from a previously confirmed transaction
  */
 export interface LearnedEntry {
@@ -25,13 +37,15 @@ export interface LearnedEntry {
   };
   tokens: string[]; // tokenized message for faster matching
   fieldTokenMap: {
-    amount: string[];
-    currency: string[];
-    vendor: string[];
-    account: string[];
+    amount: PositionedToken[];
+    currency: PositionedToken[];
+    vendor: PositionedToken[];
+    account: PositionedToken[];
+    date: PositionedToken[]; // Adding date field explicitly
   };
   timestamp: string; // ISO date string
   confidence?: number; // last matching confidence
+  userConfirmed: boolean; // Flag to indicate if this entry was confirmed by user
 }
 
 /**

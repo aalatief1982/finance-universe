@@ -99,8 +99,9 @@ const EditTransaction = () => {
       // Save to local storage
       storeTransaction(newTransaction);
       
-      // Learn from this transaction if it came from a raw message
-      if (config.enabled && rawMessage && saveForLearning) {
+      // Learn from this transaction explicitly only if user enabled learning
+      // This is the ONLY place where learning should happen - after user confirmation
+      if (rawMessage && saveForLearning) {
         learnFromTransaction(rawMessage, newTransaction, senderHint || '');
         
         toast({
@@ -120,8 +121,8 @@ const EditTransaction = () => {
       // Update in local storage
       storeTransaction(editedTransaction);
       
-      // Learn from this transaction if it came from a raw message
-      if (config.enabled && rawMessage && saveForLearning) {
+      // Learn from this transaction only if it's from smart paste and user confirmed
+      if (rawMessage && saveForLearning) {
         learnFromTransaction(rawMessage, editedTransaction, senderHint || '');
         
         toast({

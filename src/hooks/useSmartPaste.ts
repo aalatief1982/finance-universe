@@ -61,7 +61,7 @@ export const useSmartPaste = (
         setDetectedTransactions([autoTxn]);
         setIsSmartMatch(true);
         
-        // Call the callback if provided
+        // Call the callback if provided but DO NOT learn yet - wait for user confirmation
         if (onTransactionsDetected) {
           onTransactionsDetected([autoTxn], rawText, undefined, isSmartMatch ? 0.8 : 0.5);
         }
@@ -86,7 +86,7 @@ export const useSmartPaste = (
           setDetectedTransactions([fallbackTransaction]);
           setIsSmartMatch(false);
           
-          // Call the callback if provided
+          // Call the callback if provided - but don't learn yet
           if (onTransactionsDetected) {
             onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3);
           }
