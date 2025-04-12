@@ -183,7 +183,8 @@ const useTokenOperations = (message: string, isLabelingMode: boolean) => {
     messageTokens.forEach(token => {
       let found = false;
       for (const [field, tokens] of Object.entries(tokenMap)) {
-        if (tokens && tokens.includes(token)) {
+        // Add type check here to ensure tokens is an array
+        if (Array.isArray(tokens) && tokens.includes(token)) {
           autoLabels[token] = field;
           found = true;
           break;
