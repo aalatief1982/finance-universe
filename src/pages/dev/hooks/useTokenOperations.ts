@@ -62,11 +62,12 @@ const useTokenOperations = (message: string, isLabelingMode: boolean) => {
     }
   }, [message, messageTokens, isLabelingMode, extractAmountTokens, extractCurrencyTokens, extractVendorTokens, extractAccountTokens]);
 
-  const getTokenFieldMatch = (token: string, fieldTokenMap: any) => {
+  const getTokenFieldMatch = (token: string, fieldTokenMap: Record<string, string[]>) => {
     if (!fieldTokenMap) return null;
     
     for (const [field, tokens] of Object.entries(fieldTokenMap)) {
-      if (tokens && tokens.includes(token)) {
+      // Add type check here to ensure tokens is an array
+      if (Array.isArray(tokens) && tokens.includes(token)) {
         return field;
       }
     }
