@@ -696,9 +696,10 @@ class LearningEngineService {
   }
 
   public extractVendorTokensWithPosition(msg: string): PositionedToken[] {
+    // FIX: Add the global flag 'g' to each regex pattern
     const patterns = [
-      { regex: /(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/i, group: 1 },
-      { regex: /(?:paid to|purchase at|bought from)[:\s]*([^\n]+)/i, group: 1 }
+      { regex: /(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/gi, group: 1 },
+      { regex: /(?:paid to|purchase at|bought from)[:\s]*([^\n]+)/gi, group: 1 }
     ];
     
     const result: PositionedToken[] = [];
