@@ -153,6 +153,7 @@ export const useSmartPaste = (
     text,
     setText,
     detectedTransactions,
+    setDetectedTransactions,
     isSmartMatch,
     isProcessing,
     error,

@@ -25,6 +25,7 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
     text,
     setText,
     detectedTransactions,
+    setDetectedTransactions,
     isSmartMatch,
     isProcessing,
     error,
@@ -39,6 +40,7 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
     } else {
       // If text is cleared, reset detected transactions
       setText('');
+      setDetectedTransactions([]);
     }
   };
 
