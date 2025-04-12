@@ -55,9 +55,9 @@ const ImportTransactions = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container max-w-4xl mx-auto py-6 space-y-6 mt-4"
+        className="w-full px-4 sm:px-6 md:px-8 max-w-full space-y-6 mt-4 py-6"
       >
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Button 
             variant="outline" 
             size="icon"
