@@ -1,5 +1,3 @@
-
-// src/components/SmartPaste.tsx
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ClipboardPaste, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
@@ -183,9 +181,9 @@ const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
       </div>
 
       {error && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-200">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-700">{error}</AlertDescription>
+        <Alert variant="destructive" className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <AlertDescription className="text-destructive-foreground">{error}</AlertDescription>
         </Alert>
       )}
 
