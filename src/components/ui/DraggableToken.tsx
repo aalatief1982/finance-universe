@@ -1,7 +1,7 @@
 
 // src/components/ui/DraggableToken.tsx
 import React from 'react';
-import { useDrag } from 'react-dnd';
+import { useDrag } from 'react-dnd/dist/hooks';
 import { cn } from '@/lib/utils';
 
 interface DraggableTokenProps {

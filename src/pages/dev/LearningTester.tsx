@@ -1,6 +1,7 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { DndProvider } from 'react-dnd';
+import { DndProvider } from 'react-dnd/dist/core';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -114,7 +115,81 @@ const LearningTester: React.FC = () => {
     return null;
   };
 
-  
+  // Calculate confidence breakdown details
+  const confidenceBreakdown = useMemo(() => {
+    if (isLabelingMode) {
+      // Create a field map from the manual labels
+      const labelFieldMap: Record<string, string[]> = {
+        amount: [],
+        currency: [],
+        vendor: [],
+        account: [],
+        type: [],
+        date: [],
+        title: []
+      };
+      
+      // Group tokens by their label
+      Object.entries(tokenLabels || {}).forEach(([token, label]) => {
+        if (label && label !== 'unlabeled' && label !== 'ignore' && labelFieldMap[label]) {
+          labelFieldMap[label].push(token);
+        }
+      });
+      
+      const totalFields = Object.keys(labelFieldMap).filter(
+        key => labelFieldMap[key].length > 0
+      ).length;
+      
+      // Total tokens with meaningful labels
+      const labeledTokenCount = Object.values(tokenLabels || {})
+        .filter(label => label && label !== 'unlabeled' && label !== 'ignore')
+        .length;
+      
+      // Estimate sender hint bonus (simplified calculation)
+      const senderBonus = senderHint ? 0.1 : 0;
+        
+      return {
+        matchedFields: totalFields,
+        totalFields: Object.keys(labelFieldMap).length,
+        tokenOverlapCount: labeledTokenCount,
+        senderBonus,
+        calculatedScore: (totalFields ? totalFields / Object.keys(labelFieldMap).length : 0) + senderBonus
+      };
+    }
+    
+    if (!matchResult?.entry) return null;
+    
+    const fieldMap = matchResult.entry.fieldTokenMap;
+    const totalFields = Object.keys(fieldMap).length;
+    const matchedFields = Object.entries(fieldMap).filter(([_, tokens]) => 
+      tokens && tokens.some(token => messageTokens.includes(token))
+    ).length;
+    
+    // Count total token overlaps
+    let tokenOverlapCount = 0;
+    Object.values(fieldMap).forEach(fieldTokens => {
+      if (fieldTokens) {
+        fieldTokens.forEach(token => {
+          if (messageTokens.includes(token)) tokenOverlapCount++;
+        });
+      }
+    });
+    
+    // Estimate sender hint bonus (simplified calculation)
+    const senderBonus = 
+      senderHint && 
+      matchResult.entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())
+        ? 0.1
+        : 0;
+        
+    return {
+      matchedFields,
+      totalFields,
+      tokenOverlapCount,
+      senderBonus,
+      calculatedScore: (totalFields ? matchedFields / totalFields : 0) + senderBonus
+    };
+  }, [matchResult, messageTokens, senderHint, isLabelingMode, tokenLabels]);
 
   const findBestMatchHandler = () => {
     if (!message) {
