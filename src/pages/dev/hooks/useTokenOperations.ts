@@ -47,7 +47,8 @@ const useTokenOperations = (message: string, isLabelingMode: boolean) => {
       if (messageTokens) {
         messageTokens.forEach(token => {
           for (const [field, tokens] of Object.entries(tokenMap)) {
-            if (tokens && tokens.includes(token)) {
+            // Type check to ensure tokens is an array before using includes
+            if (Array.isArray(tokens) && tokens.includes(token)) {
               initialLabels[token] = field;
               break;
             }
