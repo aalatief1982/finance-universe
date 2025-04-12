@@ -1,5 +1,3 @@
-
-// src/components/ui/DropFieldZone.tsx
 import React from 'react';
 import { useDrop } from 'react-dnd';
 import { cn } from '@/lib/utils';

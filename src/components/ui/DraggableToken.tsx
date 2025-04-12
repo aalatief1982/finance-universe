@@ -1,5 +1,3 @@
-
-// src/components/ui/DraggableToken.tsx
 import React from 'react';
 import { useDrag } from 'react-dnd';
 import { cn } from '@/lib/utils';
