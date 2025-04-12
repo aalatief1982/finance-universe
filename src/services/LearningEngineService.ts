@@ -1,4 +1,3 @@
-
 // Enhanced LearningEngineService.ts - Field-Based Learning with Position Awareness
 import { v4 as uuidv4 } from 'uuid';
 import { LearnedEntry, LearningEngineConfig, MatchResult, PositionedToken } from '@/types/learning';
@@ -8,13 +7,40 @@ import { masterMindService } from '@/services/MasterMindService';
 
 const LEARNING_STORAGE_KEY = 'xpensia_learned_entries';
 const LEARNING_CONFIG_KEY = 'xpensia_learning_config';
+const SENDER_TEMPLATES_KEY = 'xpensia_sender_templates';
+const SEQUENCE_PATTERNS_KEY = 'xpensia_sequence_patterns';
 
 const DEFAULT_CONFIG: LearningEngineConfig = {
   enabled: true,
   maxEntries: 200,
   minConfidenceThreshold: 0.75,
-  saveAutomatically: false // Changed to false - require explicit confirmation
+  saveAutomatically: false, // Changed to false - require explicit confirmation
+  validationRequired: true, // New field for validation
+  userConfirmationWeight: 0.2 // Weight for user confirmation in confidence score
 };
+
+// Interface for sender-specific templates
+interface SenderTemplate {
+  sender: string;
+  templates: string[];
+  commonPatterns: {
+    [key: string]: {
+      beforeTokens: string[];
+      afterTokens: string[];
+    }
+  };
+  confirmationCount: number;
+}
+
+// Interface for sequence patterns
+interface SequencePattern {
+  id: string;
+  sequenceType: string; // e.g., "amount-follows-currency", "date-precedes-reference"
+  fieldPair: [string, string]; // e.g., ["amount", "currency"]
+  occurrenceCount: number;
+  confidence: number;
+  confirmedByUser: boolean;
+}
 
 // Define the structure of fieldTokenMap
 export interface FieldTokenMap {
@@ -23,6 +49,8 @@ export interface FieldTokenMap {
   vendor: PositionedToken[];
   account: PositionedToken[];
   date: PositionedToken[];
+  title?: PositionedToken[]; // Made optional to match existing code
+  type?: PositionedToken[]; // Added for completeness
 }
 
 class LearningEngineService {
@@ -32,7 +60,7 @@ class LearningEngineService {
     this.config = this.loadConfig();
   }
 
-  public inferFieldsFromText(message: string): Partial<Transaction> {
+  public inferFieldsFromText(message: string): Partial<Transaction> | null {
     const tokens = this.tokenize(message);
     const amountToken = this.extractAmountTokensWithPosition(message)[0];
     const currencyToken = this.extractCurrencyTokensWithPosition(message)[0];
@@ -112,6 +140,180 @@ class LearningEngineService {
     return { ...this.config };
   }
 
+  // Get all sender templates
+  private getSenderTemplates(): SenderTemplate[] {
+    try {
+      const stored = localStorage.getItem(SENDER_TEMPLATES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      console.error('Error loading sender templates:', err);
+      return [];
+    }
+  }
+
+  // Save sender templates
+  private saveSenderTemplates(templates: SenderTemplate[]) {
+    localStorage.setItem(SENDER_TEMPLATES_KEY, JSON.stringify(templates));
+  }
+
+  // Get all sequence patterns
+  private getSequencePatterns(): SequencePattern[] {
+    try {
+      const stored = localStorage.getItem(SEQUENCE_PATTERNS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      console.error('Error loading sequence patterns:', err);
+      return [];
+    }
+  }
+
+  // Save sequence patterns
+  private saveSequencePatterns(patterns: SequencePattern[]) {
+    localStorage.setItem(SEQUENCE_PATTERNS_KEY, JSON.stringify(patterns));
+  }
+
+  // Update sender template based on a new message
+  private updateSenderTemplate(raw: string, senderHint: string, fieldTokenMap: FieldTokenMap) {
+    if (!senderHint) return;
+
+    const templates = this.getSenderTemplates();
+    let template = templates.find(t => t.sender.toLowerCase() === senderHint.toLowerCase());
+
+    if (!template) {
+      template = {
+        sender: senderHint,
+        templates: [],
+        commonPatterns: {},
+        confirmationCount: 0
+      };
+      templates.push(template);
+    }
+
+    // Add this message as a template if it's not already there
+    if (!template.templates.includes(raw)) {
+      template.templates.push(raw);
+    }
+
+    // Update confirmation count
+    template.confirmationCount++;
+
+    // Update common patterns for each field
+    Object.entries(fieldTokenMap).forEach(([field, tokens]) => {
+      if (!tokens || tokens.length === 0) return;
+
+      if (!template!.commonPatterns[field]) {
+        template!.commonPatterns[field] = {
+          beforeTokens: [],
+          afterTokens: []
+        };
+      }
+
+      // Collect common context tokens
+      tokens.forEach(token => {
+        if (token.context) {
+          if (token.context.before) {
+            token.context.before.forEach(beforeToken => {
+              if (!template!.commonPatterns[field].beforeTokens.includes(beforeToken)) {
+                template!.commonPatterns[field].beforeTokens.push(beforeToken);
+              }
+            });
+          }
+          if (token.context.after) {
+            token.context.after.forEach(afterToken => {
+              if (!template!.commonPatterns[field].afterTokens.includes(afterToken)) {
+                template!.commonPatterns[field].afterTokens.push(afterToken);
+              }
+            });
+          }
+        }
+      });
+    });
+
+    this.saveSenderTemplates(templates);
+  }
+
+  // Extract sequence patterns from fieldTokenMap
+  private extractSequencePatterns(fieldTokenMap: FieldTokenMap): void {
+    const patterns = this.getSequencePatterns();
+    const fieldKeys = Object.keys(fieldTokenMap);
+
+    // Check each field pair for sequential patterns
+    for (let i = 0; i < fieldKeys.length; i++) {
+      for (let j = 0; j < fieldKeys.length; j++) {
+        if (i === j) continue;
+
+        const field1 = fieldKeys[i];
+        const field2 = fieldKeys[j];
+        const tokens1 = fieldTokenMap[field1 as keyof FieldTokenMap];
+        const tokens2 = fieldTokenMap[field2 as keyof FieldTokenMap];
+
+        if (!tokens1 || !tokens2 || tokens1.length === 0 || tokens2.length === 0) continue;
+
+        // Check if field1 tokens typically come before field2 tokens
+        tokens1.forEach(token1 => {
+          tokens2.forEach(token2 => {
+            if (token1.position < token2.position) {
+              // Field1 comes before Field2
+              this.updateSequencePattern(patterns, `${field1}-precedes-${field2}`, [field1, field2], true);
+            } else if (token1.position > token2.position) {
+              // Field2 comes before Field1
+              this.updateSequencePattern(patterns, `${field2}-precedes-${field1}`, [field2, field1], true);
+            }
+          });
+        });
+      }
+    }
+
+    this.saveSequencePatterns(patterns);
+  }
+
+  // Update or create a sequence pattern
+  private updateSequencePattern(
+    patterns: SequencePattern[],
+    sequenceType: string,
+    fieldPair: [string, string],
+    confirmedByUser: boolean
+  ) {
+    let pattern = patterns.find(p => p.sequenceType === sequenceType);
+
+    if (!pattern) {
+      pattern = {
+        id: uuidv4(),
+        sequenceType,
+        fieldPair,
+        occurrenceCount: 0,
+        confidence: 0,
+        confirmedByUser: false
+      };
+      patterns.push(pattern);
+    }
+
+    pattern.occurrenceCount++;
+    
+    // Update confidence based on occurrence count
+    pattern.confidence = Math.min(0.9, pattern.occurrenceCount / 10);
+    
+    // If this is a user-confirmed pattern, mark it as such
+    if (confirmedByUser && !pattern.confirmedByUser) {
+      pattern.confirmedByUser = true;
+      // Boost confidence for user-confirmed patterns
+      pattern.confidence = Math.min(0.95, pattern.confidence + 0.2);
+    }
+  }
+
+  // Validate transaction data before learning
+  private validateTransactionData(txn: Transaction): boolean {
+    if (!this.config.validationRequired) return true;
+
+    // Basic validation checks
+    if (!txn.amount || txn.amount <= 0) return false;
+    if (!txn.currency) return false;
+    if (!txn.type) return false;
+    if (!txn.fromAccount && txn.type === 'expense') return false;
+    
+    return true;
+  }
+
   public learnFromTransaction(
     raw: string, 
     txn: Transaction, 
@@ -119,6 +321,13 @@ class LearningEngineService {
     customFieldTokenMap?: Partial<FieldTokenMap>
   ): void {
     if (!this.config.enabled || !raw || !txn) return;
+
+    // Validate transaction data if validation is required
+    if (!this.validateTransactionData(txn)) {
+      console.warn('Transaction validation failed, not learning from this transaction');
+      return;
+    }
+
     const entries = this.getLearnedEntries();
     const tokens = this.tokenize(raw);
     const id = uuidv4();
@@ -145,7 +354,15 @@ class LearningEngineService {
       if (customFieldTokenMap.vendor) fieldTokenMap.vendor = customFieldTokenMap.vendor;
       if (customFieldTokenMap.account) fieldTokenMap.account = customFieldTokenMap.account;
       if (customFieldTokenMap.date) fieldTokenMap.date = customFieldTokenMap.date;
+      if (customFieldTokenMap.title) fieldTokenMap.title = customFieldTokenMap.title;
+      if (customFieldTokenMap.type) fieldTokenMap.type = customFieldTokenMap.type;
     }
+
+    // Extract and store sequence patterns
+    this.extractSequencePatterns(fieldTokenMap);
+
+    // Update sender template with the new message
+    this.updateSenderTemplate(raw, senderHint, fieldTokenMap);
 
     const newEntry: LearnedEntry = {
       id,
@@ -159,12 +376,16 @@ class LearningEngineService {
         account: txn.fromAccount || '',
         currency: txn.currency as SupportedCurrency,
         person: txn.person,
-        vendor: txn.description || '' // Changed from txn.vendor to txn.description
+        vendor: txn.description || '' 
       },
       tokens,
       fieldTokenMap,
       timestamp: new Date().toISOString(),
-      userConfirmed: true // Mark as user confirmed
+      userConfirmed: true, // Mark as user confirmed
+      confirmationHistory: [{ // New field to track confirmation history
+        timestamp: new Date().toISOString(),
+        source: 'user-explicit', // 'auto', 'user-explicit', 'system'
+      }]
     };
 
     if (entries.length >= this.config.maxEntries) entries.pop();
@@ -183,12 +404,49 @@ class LearningEngineService {
     let bestMatch: LearnedEntry | null = null;
     let bestScore = 0;
 
+    // Get sequence patterns to use in matching
+    const sequencePatterns = this.getSequencePatterns();
+    
+    // Try to find a matching sender template first
+    let senderTemplateBonus = 0;
+    if (senderHint) {
+      const senderTemplates = this.getSenderTemplates();
+      const template = senderTemplates.find(t => t.sender.toLowerCase() === senderHint.toLowerCase());
+      
+      if (template && template.confirmationCount > 0) {
+        // Calculate similarity with known templates
+        template.templates.forEach(knownTemplate => {
+          const similarity = this.calculateTextSimilarity(message, knownTemplate);
+          if (similarity > 0.7) { // High similarity threshold
+            senderTemplateBonus = Math.min(0.15, similarity * 0.2);
+          }
+        });
+      }
+    }
+
     for (const entry of confirmedEntries) {
+      // Start with field matches
       let score = this.compareFieldsWithPosition(entry.fieldTokenMap, message);
+      
+      // Add sender bonus
       if (senderHint && entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
         score += 0.1;
-        if (score > 1) score = 1;
       }
+      
+      // Add sender template bonus
+      score += senderTemplateBonus;
+      
+      // Add sequence pattern bonus
+      const sequenceBonus = this.evaluateSequencePatterns(message, sequencePatterns);
+      score += sequenceBonus;
+      
+      // Add user confirmation bonus based on history
+      const confirmationBonus = this.calculateConfirmationBonus(entry);
+      score += confirmationBonus;
+      
+      // Normalize score to max 1.0
+      if (score > 1) score = 1;
+      
       if (score > bestScore) {
         bestScore = score;
         bestMatch = entry;
@@ -200,6 +458,86 @@ class LearningEngineService {
       return { entry: bestMatch, confidence: bestScore, matched: true };
     }
     return { entry: null, confidence: bestScore, matched: false };
+  }
+
+  private calculateTextSimilarity(text1: string, text2: string): number {
+    const tokens1 = this.tokenize(text1);
+    const tokens2 = this.tokenize(text2);
+    
+    const commonTokens = tokens1.filter(token => tokens2.includes(token));
+    return commonTokens.length / Math.max(tokens1.length, tokens2.length);
+  }
+
+  private evaluateSequencePatterns(message: string, patterns: SequencePattern[]): number {
+    if (patterns.length === 0) return 0;
+    
+    // Extract all token types with positions
+    const amountTokens = this.extractAmountTokensWithPosition(message);
+    const currencyTokens = this.extractCurrencyTokensWithPosition(message);
+    const vendorTokens = this.extractVendorTokensWithPosition(message);
+    const accountTokens = this.extractAccountTokensWithPosition(message);
+    const dateTokens = this.extractDateTokensWithPosition(message);
+    
+    const fieldTokenMap: FieldTokenMap = {
+      amount: amountTokens,
+      currency: currencyTokens,
+      vendor: vendorTokens,
+      account: accountTokens,
+      date: dateTokens
+    };
+    
+    let patternBonus = 0;
+    let patternsEvaluated = 0;
+    
+    // Check each pattern
+    patterns.forEach(pattern => {
+      if (pattern.confidence <= 0) return;
+      
+      const [field1, field2] = pattern.fieldPair;
+      const tokens1 = fieldTokenMap[field1 as keyof FieldTokenMap];
+      const tokens2 = fieldTokenMap[field2 as keyof FieldTokenMap];
+      
+      if (!tokens1 || !tokens2 || tokens1.length === 0 || tokens2.length === 0) return;
+      
+      // Check if the sequence appears in this message
+      let patternMatched = false;
+      
+      if (pattern.sequenceType.includes('precedes')) {
+        // field1 should come before field2
+        tokens1.forEach(token1 => {
+          tokens2.forEach(token2 => {
+            if (token1.position < token2.position) {
+              patternMatched = true;
+            }
+          });
+        });
+      }
+      
+      if (patternMatched) {
+        patternBonus += pattern.confidence * (pattern.confirmedByUser ? 0.15 : 0.1);
+        patternsEvaluated++;
+      }
+    });
+    
+    // Normalize bonus - higher weight for confirmed patterns, cap at 0.2
+    return Math.min(0.2, patternBonus);
+  }
+
+  private calculateConfirmationBonus(entry: LearnedEntry): number {
+    // Check if entry has confirmation history
+    if (!entry.confirmationHistory || entry.confirmationHistory.length === 0) {
+      return entry.userConfirmed ? this.config.userConfirmationWeight : 0;
+    }
+    
+    // More weight for entries with multiple confirmations
+    const confirmationCount = entry.confirmationHistory.length;
+    const userExplicitCount = entry.confirmationHistory.filter(c => c.source === 'user-explicit').length;
+    
+    // Calculate bonus - more weight for user explicit confirmations
+    let bonus = (userExplicitCount * 0.15) + ((confirmationCount - userExplicitCount) * 0.05);
+    
+    // Cap the bonus
+    return Math.min(this.config.userConfirmationWeight, bonus);
   }
 
   private compareFieldsWithPosition(fieldMap: FieldTokenMap, message: string): number {
@@ -459,9 +797,25 @@ class LearningEngineService {
         if (!entry.userConfirmed) {
           return {
             ...entry,
-            userConfirmed: true // Assume all existing entries were user-confirmed
+            userConfirmed: true, // Assume all existing entries were user-confirmed
+            confirmationHistory: entry.confirmationHistory || [{ 
+              timestamp: entry.timestamp || new Date().toISOString(),
+              source: 'system-migration'
+            }]
           };
         }
+        
+        // Ensure confirmationHistory exists
+        if (!entry.confirmationHistory) {
+          return {
+            ...entry,
+            confirmationHistory: [{
+              timestamp: entry.timestamp || new Date().toISOString(),
+              source: entry.userConfirmed ? 'user-explicit' : 'system-migration'
+            }]
+          };
+        }
+        
         return entry;
       });
       
@@ -474,6 +828,8 @@ class LearningEngineService {
 
   public clearLearnedEntries(): void {
     localStorage.removeItem(LEARNING_STORAGE_KEY);
+    localStorage.removeItem(SENDER_TEMPLATES_KEY);
+    localStorage.removeItem(SEQUENCE_PATTERNS_KEY);
   }
 }
 

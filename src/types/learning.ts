@@ -19,6 +19,15 @@ export interface PositionedToken {
 }
 
 /**
+ * Record of confirmation events
+ */
+export interface ConfirmationEvent {
+  timestamp: string;
+  source: 'auto' | 'user-explicit' | 'system' | 'system-migration';
+  confidence?: number;
+}
+
+/**
  * Represents a learned entry from a previously confirmed transaction
  */
 export interface LearnedEntry {
@@ -42,10 +51,13 @@ export interface LearnedEntry {
     vendor: PositionedToken[];
     account: PositionedToken[];
     date: PositionedToken[]; // Adding date field explicitly
+    title?: PositionedToken[]; // Optional fields
+    type?: PositionedToken[];
   };
   timestamp: string; // ISO date string
   confidence?: number; // last matching confidence
   userConfirmed: boolean; // Flag to indicate if this entry was confirmed by user
+  confirmationHistory?: ConfirmationEvent[]; // History of confirmations
 }
 
 /**
@@ -56,6 +68,8 @@ export interface LearningEngineConfig {
   maxEntries: number;
   minConfidenceThreshold: number;
   saveAutomatically: boolean;
+  validationRequired?: boolean; // Added: validate transaction data before learning
+  userConfirmationWeight?: number; // Added: weight for user confirmations in scoring
 }
 
 /**

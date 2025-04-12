@@ -13,18 +13,12 @@ const getTokenText = (token: string | PositionedToken): string => {
 
 // This helper function checks if a token is included in a tokens array
 const isTokenInArray = (token: string | PositionedToken, array: string[]): boolean => {
-  if (typeof token === 'string') {
-    return array.includes(token);
-  }
-  return array.includes(token.token);
+  const tokenText = getTokenText(token);
+  return array.includes(tokenText);
 };
 
-interface FieldTokenMap {
-  [key: string]: (string | PositionedToken)[];
-}
-
 interface FieldTokenMapProps {
-  fieldTokenMap: FieldTokenMap;
+  fieldTokenMap: Record<string, (string | PositionedToken)[]>;
   messageTokens: string[];
   isLabelingMode: boolean;
 }

@@ -13,6 +13,14 @@ const getTokenText = (token: string | PositionedToken): string => {
 };
 
 /**
+ * Helper function to check if a token is in the array
+ */
+const isTokenInArray = (token: string | PositionedToken, array: string[]): boolean => {
+  const tokenText = getTokenText(token);
+  return array.includes(tokenText);
+};
+
+/**
  * Hook for handling matching operations
  */
 const useMatchOperations = (
@@ -81,16 +89,13 @@ const useMatchOperations = (
       if (!tokens || !Array.isArray(tokens)) return;
       
       // Check if any token in this field matches with messageTokens
-      const hasMatch = tokens.some(token => 
-        messageTokens.includes(typeof token === 'string' ? token : token.token)
-      );
+      const hasMatch = tokens.some(token => isTokenInArray(token, messageTokens));
       
       if (hasMatch) matchedFields++;
       
       // Count individual token matches
       tokens.forEach(token => {
-        const tokenText = getTokenText(token);
-        if (messageTokens.includes(tokenText)) {
+        if (isTokenInArray(token, messageTokens)) {
           tokenOverlapCount++;
         }
       });
@@ -135,8 +140,7 @@ const useMatchOperations = (
       
       // Check if this token is in the field's tokens
       for (const fieldToken of tokens) {
-        const tokenText = getTokenText(fieldToken);
-        if (tokenText === token) {
+        if (getTokenText(fieldToken) === token) {
           return field;
         }
       }
