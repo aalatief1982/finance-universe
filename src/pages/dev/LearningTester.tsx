@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { DndProvider } from 'react-dnd/core';
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -348,7 +347,6 @@ const LearningTester: React.FC = () => {
       });
     }
   };
-
   
   const handleRemoveToken = (field: string, token: string) => {
     setManualFieldTokenMap(prev => {
@@ -367,8 +365,6 @@ const LearningTester: React.FC = () => {
       return updated;
     });
   };
-
-  
 
   const clearLearningEntriesHandler = () => {
     if (window.confirm("Are you sure you want to clear all learned entries? This action cannot be undone.")) {
