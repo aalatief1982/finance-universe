@@ -24,6 +24,8 @@ const Sidebar: React.FC = () => {
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
     { name: 'Master Mind', path: '/mastermind', icon: <BrainCircuit size={20} /> },
     { name: 'Learning Tester', path: '/dev/learning-tester', icon: <BrainCircuit size={20} /> },
+    { name: 'Build Template', path: '/build-template', icon: <BrainCircuit size={20} /> }
+    {},
   ];
 
   const isActive = (path: string) => {
