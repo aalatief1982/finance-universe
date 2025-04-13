@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 interface User {
   displayName: string | null;
@@ -15,6 +15,20 @@ export const useAuth = () => {
 
   const [user, setUser] = useState<User | null>(null);
 
+  // Check localStorage for authentication state on initialization
+  useEffect(() => {
+    const hasAuth = localStorage.getItem('auth') === 'true';
+    setAuthState({ isAuthenticated: hasAuth, loading: false });
+    
+    if (hasAuth) {
+      setUser({
+        displayName: 'Test User',
+        email: 'user@example.com',
+        photoURL: null,
+      });
+    }
+  }, []);
+
   const login = useCallback(async () => {
     // Mock login implementation
     setAuthState({ isAuthenticated: true, loading: false });
@@ -23,6 +37,7 @@ export const useAuth = () => {
       email: 'user@example.com',
       photoURL: null,
     });
+    localStorage.setItem('auth', 'true');
     return true;
   }, []);
 
@@ -30,11 +45,12 @@ export const useAuth = () => {
     // Mock logout implementation
     setAuthState({ isAuthenticated: false, loading: false });
     setUser(null);
+    localStorage.removeItem('auth');
     return true;
   }, []);
 
   const loadAuthState = useCallback(() => {
-    // Mock loading auth state
+    // Mock loading auth state - now this just checks localStorage
     const hasAuth = localStorage.getItem('auth') === 'true';
     setAuthState({ isAuthenticated: hasAuth, loading: false });
     if (hasAuth) {

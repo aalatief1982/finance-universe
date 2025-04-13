@@ -60,10 +60,8 @@ function App() {
         />
         
         <Route path="/train-model" element={<TrainModel />} />
-        
       </Routes>
       
-      {/* Replace Toast with Toaster component */}
       <Toaster />
     </BrowserRouter>
   );
