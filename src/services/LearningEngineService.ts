@@ -132,6 +132,25 @@ class LearningEngineService {
   
     return null;
   }
+  public matchUsingTemplateStructure(message: string): {
+    confidence: number;
+    inferredTransaction: Partial<Transaction>;
+    matchedTemplate?: Template;
+  } | null {
+    const template = this.checkStructuralTemplateMatch(message);
+    if (!template) return null;
+  
+    const inferred = this.inferFieldsFromText(message);
+    return {
+      confidence: 0.4,
+      inferredTransaction: {
+        ...inferred,
+        type: template.type,
+        fromAccount: template.fromAccount
+      },
+      matchedTemplate: template
+    };
+  }
   
   private computeTemplateHash(message: string): string {
     let normalized = message
