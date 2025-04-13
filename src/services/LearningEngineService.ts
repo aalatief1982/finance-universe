@@ -133,12 +133,7 @@ class LearningEngineService {
   
     return null;
   }
-<<<<<<< HEAD
  /*public matchUsingTemplateStructure(message: string): {
-=======
-
-  public matchUsingTemplateStructure(message: string): {
->>>>>>> 6abb84fd57eea51ed53df07cfc6aee5a3c2b8964
     confidence: number;
     inferredTransaction: Partial<Transaction>;
     matchedTemplate?: Template;
