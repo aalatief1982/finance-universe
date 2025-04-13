@@ -393,72 +393,33 @@ class LearningEngineService {
     localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(entries));
   }
 
-  public findBestMatch(message: string, senderHint = ''): MatchResult {
-    if (!this.config.enabled || !message) return { entry: null, confidence: 0, matched: false };
-    const entries = this.getLearnedEntries();
-    const tokens = this.tokenize(message);
-
-    // Filter to only use entries that were confirmed by users
-    const confirmedEntries = entries.filter(entry => entry.userConfirmed);
-    
-    let bestMatch: LearnedEntry | null = null;
-    let bestScore = 0;
-
-    // Get sequence patterns to use in matching
-    const sequencePatterns = this.getSequencePatterns();
-    
-    // Try to find a matching sender template first
-    let senderTemplateBonus = 0;
-    if (senderHint) {
-      const senderTemplates = this.getSenderTemplates();
-      const template = senderTemplates.find(t => t.sender.toLowerCase() === senderHint.toLowerCase());
-      
-      if (template && template.confirmationCount > 0) {
-        // Calculate similarity with known templates
-        template.templates.forEach(knownTemplate => {
-          const similarity = this.calculateTextSimilarity(message, knownTemplate);
-          if (similarity > 0.7) { // High similarity threshold
-            senderTemplateBonus = Math.min(0.15, similarity * 0.2);
-          }
-        });
-      }
-    }
-
-    for (const entry of confirmedEntries) {
-      // Start with field matches
-      let score = this.compareFieldsWithPosition(entry.fieldTokenMap, message);
-      
-      // Add sender bonus
-      if (senderHint && entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
-        score += 0.1;
-      }
-      
-      // Add sender template bonus
-      score += senderTemplateBonus;
-      
-      // Add sequence pattern bonus
-      const sequenceBonus = this.evaluateSequencePatterns(message, sequencePatterns);
-      score += sequenceBonus;
-      
-      // Add user confirmation bonus based on history
-      const confirmationBonus = this.calculateConfirmationBonus(entry);
-      score += confirmationBonus;
-      
-      // Normalize score to max 1.0
-      if (score > 1) score = 1;
-      
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = entry;
-      }
-    }
-
-    if (bestMatch && bestScore >= this.config.minConfidenceThreshold) {
-      bestMatch.confidence = bestScore;
-      return { entry: bestMatch, confidence: bestScore, matched: true };
-    }
-    return { entry: null, confidence: bestScore, matched: false };
+public findBestMatch(message: string, senderHint = ''): MatchResult {
+  if (!this.config.enabled || !message) {
+    return { entry: null, confidence: 0, matched: false };
   }
+
+  const entries = this.getLearnedEntries();
+  const confirmedEntries = entries.filter(entry => entry.userConfirmed);
+
+  let bestMatch: LearnedEntry | null = null;
+  let bestScore = 0;
+
+  for (const entry of confirmedEntries) {
+    const score = this.calculateConfidenceScore(entry, message, senderHint);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = entry;
+    }
+  }
+
+  if (bestMatch && bestScore >= this.config.minConfidenceThreshold) {
+    bestMatch.confidence = bestScore;
+    return { entry: bestMatch, confidence: bestScore, matched: true };
+  }
+
+  return { entry: null, confidence: bestScore, matched: false };
+}
 
   private calculateTextSimilarity(text1: string, text2: string): number {
     const tokens1 = this.tokenize(text1);
@@ -467,6 +428,41 @@ class LearningEngineService {
     const commonTokens = tokens1.filter(token => tokens2.includes(token));
     return commonTokens.length / Math.max(tokens1.length, tokens2.length);
   }
+
+  private scoreContextHints(message: string, fieldTokenMap: FieldTokenMap): number {
+  let score = 0;
+
+  const contextRules: Record<string, string[]> = {
+    amount: ['مبلغ', 'amount'],
+    currency: ['sar', 'egp', 'usd'],
+    vendor: ['لدى', 'vendor', 'merchant', 'from'],
+    account: ['بطاقة', 'account', 'card'],
+    date: ['في', 'on', 'at']
+  };
+
+  Object.entries(fieldTokenMap).forEach(([field, tokens]) => {
+    tokens.forEach(token => {
+      const beforeTokens = token.context?.before || [];
+      if (contextRules[field]) {
+        const matched = beforeTokens.some(before =>
+          contextRules[field].includes(before.toLowerCase())
+        );
+        if (matched) {
+          score += 0.02; // Small boost per match
+        }
+      }
+    });
+  });
+
+  return Math.min(0.1, score); // Cap at 10%
+}
+private scoreArabicHeuristics(message: string): number {
+  const arabicSequence = ['شراء', 'بطاقة', 'مبلغ', 'لدى', 'في'];
+  const normalized = this.tokenize(message).join(' ');
+  const matched = arabicSequence.filter(token => normalized.includes(token));
+  return matched.length >= 4 ? 0.05 : matched.length * 0.01;
+}
+
 
   private evaluateSequencePatterns(message: string, patterns: SequencePattern[]): number {
     if (patterns.length === 0) return 0;
@@ -539,6 +535,56 @@ class LearningEngineService {
     // Cap the bonus
     return Math.min(this.config.userConfirmationWeight, bonus);
   }
+  
+private calculateConfidenceScore(entry: LearnedEntry, message: string, senderHint: string = ''): number {
+  let score = 0;
+
+  // STEP 1 – Template Structure Match (40%)
+  const templateSimilarity = this.calculateTextSimilarity(entry.rawMessage, message);
+  const structureScore = templateSimilarity >= 0.85 ? 0.4 : templateSimilarity * 0.4;
+  score += structureScore;
+
+  // STEP 2 – Sender Match + Coupling (20%)
+  let senderScore = 0;
+  const senderTemplates = this.getSenderTemplates();
+  const matchedSender = senderTemplates.find(t =>
+    t.sender.toLowerCase() === senderHint.toLowerCase()
+  );
+
+  if (matchedSender && matchedSender.confirmationCount > 0) {
+    const senderTemplateMatch = matchedSender.templates.some(template => {
+      return this.calculateTextSimilarity(template, message) >= 0.8;
+    });
+    if (senderTemplateMatch) {
+      senderScore += 0.2; // Full bonus for matching sender + structure
+    } else if (entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
+      senderScore += 0.1; // Partial credit for sender name overlap
+    }
+  }
+  score += senderScore;
+
+  // STEP 3 – Field Token Map Match (20%)
+  const fieldMatchScore = this.compareFieldsWithPosition(entry.fieldTokenMap, message);
+  score += fieldMatchScore * 0.2;
+
+  // STEP 4 – Contextual Cues (10%)
+  const contextBonus = this.scoreContextHints(message, entry.fieldTokenMap);
+  score += contextBonus;
+
+  // STEP 5 – Known Sequence Patterns (5%)
+  const sequenceBonus = this.evaluateSequencePatterns(message, this.getSequencePatterns());
+  score += sequenceBonus;
+
+  // STEP 6 – Arabic Transaction Heuristics (5%)
+  const arabicBonus = this.scoreArabicHeuristics(message);
+  score += arabicBonus;
+
+  // STEP 7 – User Confirmation History Bonus
+  const confirmationBonus = this.calculateConfirmationBonus(entry);
+  score += confirmationBonus;
+
+  return Math.min(1.0, score); // Normalize final score
+}
 
   private compareFieldsWithPosition(fieldMap: FieldTokenMap, message: string): number {
     let score = 0;
