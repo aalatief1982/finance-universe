@@ -20,34 +20,31 @@ const ImportTransactions = () => {
   const navigate = useNavigate();
 
   const handleTransactionsDetected = (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => {
-    setDetectedTransactions(transactions);
-    
-    if (transactions.length === 1 && rawMessage) {
-      // For a single transaction with raw message, navigate to edit with context
-      navigate('/edit-transaction', { 
-        state: { 
-          transaction: transactions[0],
-          rawMessage,
-          senderHint,
-          confidence
-        } 
-      });
-      return;
-    }
-    
-    // Add transactions to the store
-    addTransactions(transactions);
-    
-    toast({
-      title: "Transactions imported",
-      description: `Successfully imported ${transactions.length} transaction(s)`,
+    const entries = learningEngineService.getLearnedEntries();
+  
+    // Calculate matchedCount manually
+    const matchedCount = entries.filter(entry => {
+      return (
+        Math.abs(entry.confirmedFields.amount - (transactions[0]?.amount || 0)) < 0.01 &&
+        entry.confirmedFields.category === transactions[0]?.category &&
+        entry.confirmedFields.type === transactions[0]?.type
+      );
+    }).length;
+  
+    // Navigate to edit with all info
+    navigate('/edit-transaction', {
+      state: {
+        transaction: transactions[0],
+        rawMessage,
+        senderHint,
+        confidence,
+        matchedCount,
+        totalTemplates: entries.length,
+        isSuggested: true
+      }
     });
-    
-    // Optional: Navigate back to dashboard after successful import
-    setTimeout(() => {
-      navigate('/dashboard');
-    }, 1500);
   };
+  
 
   return (
     <Layout>
