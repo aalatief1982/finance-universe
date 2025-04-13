@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import { Label } from './ui/label';
 import TransactionInput from './smart-paste/TransactionInput';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
+import ErrorAlert from './smart-paste/ErrorAlert';
 
 interface SmartPasteProps {
   senderHint?: string;
@@ -94,11 +95,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
           </div>
         </form>
 
-        {error && (
-          <div className="p-3 text-sm border border-orange-200 bg-orange-50 text-orange-700 rounded-md">
-            {error}
-          </div>
-        )}
+        <ErrorAlert error={error} />
 
         {detectedTransactions.length > 0 && (
           <div className="space-y-3 mt-2">

@@ -4,6 +4,7 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
 import { useToast } from '@/components/ui/use-toast';
+import { resetNERModel } from '@/ml/ner';
 
 export const useSmartPaste = (
   onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void
@@ -38,6 +39,7 @@ export const useSmartPaste = (
     setError(null);
     
     try {
+      // Try ML-based extraction first
       const parsed = await extractTransactionEntities(rawText);
 
       if (parsed.amount) {
@@ -54,7 +56,7 @@ export const useSmartPaste = (
           subcategory: categoryInfo.subcategory,
           date: parsed.date || new Date().toISOString(),
           description: rawText,
-          notes: 'Extracted with Transformers.js',
+          notes: 'Extracted with ML',
           source: 'smart-paste',
         };
 
@@ -66,38 +68,52 @@ export const useSmartPaste = (
           onTransactionsDetected([autoTxn], rawText, undefined, isSmartMatch ? 0.8 : 0.5);
         }
       } else {
-        setDetectedTransactions([]);
-        toast({
-          title: 'No transaction detected',
-          description: 'Could not extract structured data from the message.',
-        });
-      }
-    } catch (error) {
-      console.error('Error processing text:', error);
-      let errorMessage = 'Could not process the text. Please try again.';
-      
-      // Check if it's a JSON parsing error with HTML content
-      if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
-        errorMessage = 'The ML model could not be loaded properly. The app will use simple text analysis instead.';
-        
-        // Basic fallback parsing logic
+        // If ML parsing didn't find an amount, use fallback
         const fallbackTransaction = createFallbackTransaction(rawText);
+        
         if (fallbackTransaction) {
           setDetectedTransactions([fallbackTransaction]);
           setIsSmartMatch(false);
           
-          // Call the callback if provided - but don't learn yet
           if (onTransactionsDetected) {
             onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3);
           }
+        } else {
+          setDetectedTransactions([]);
+          toast({
+            title: 'No transaction detected',
+            description: 'Could not extract data from the message.',
+          });
         }
+      }
+    } catch (error) {
+      console.error('Error processing text:', error);
+      
+      // If ML model loading failed, reset it so we can try again later
+      resetNERModel();
+      
+      // Always try fallback method
+      const fallbackTransaction = createFallbackTransaction(rawText);
+      
+      let errorMessage = 'Could not process the text with ML model. Using simple text analysis instead.';
+      
+      if (fallbackTransaction) {
+        setDetectedTransactions([fallbackTransaction]);
+        setIsSmartMatch(false);
+        
+        if (onTransactionsDetected) {
+          onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3);
+        }
+      } else {
+        errorMessage = 'Could not extract transaction details from the message.';
+        setDetectedTransactions([]);
       }
       
       setError(errorMessage);
       toast({
-        title: 'Processing Error',
+        title: 'Processing Note',
         description: errorMessage,
-        variant: 'destructive',
+        variant: fallbackTransaction ? 'default' : 'destructive',
       });
     } finally {
       setIsProcessing(false);
@@ -107,8 +123,8 @@ export const useSmartPaste = (
   // Fallback function to extract basic transaction data when ML model fails
   const createFallbackTransaction = (text: string): Transaction | null => {
     // Simple regex to find amounts (numbers with optional decimal places)
-    const amountMatch = text.match(/(\d+(\.\d+)?)/);
-    const amount = amountMatch ? parseFloat(amountMatch[0]) : 0;
+    const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
+    const amount = amountMatch ? parseFloat(amountMatch[0].replace(',', '.')) : 0;
     
     if (!amount) return null;
     
@@ -117,17 +133,24 @@ export const useSmartPaste = (
     const isExpense = lowerText.includes('debit') || 
                      lowerText.includes('purchase') || 
                      lowerText.includes('paid') ||
-                     lowerText.includes('withdraw');
+                     lowerText.includes('withdraw') ||
+                     lowerText.includes('شراء') ||
+                     lowerText.includes('دفع') ||
+                     lowerText.includes('سحب');
     
     const isIncome = lowerText.includes('credit') || 
                     lowerText.includes('deposit') || 
                     lowerText.includes('received') ||
-                    lowerText.includes('salary');
+                    lowerText.includes('salary') ||
+                    lowerText.includes('إيداع') ||
+                    lowerText.includes('استلام') ||
+                    lowerText.includes('راتب');
     
     // Extract potential vendor name (just a simple approach)
     let vendor = "Unknown";
-    if (text.includes('at') || text.includes('to') || text.includes('from')) {
-      const parts = text.split(/\s+(?:at|to|from)\s+/);
+    if (text.includes('at') || text.includes('to') || text.includes('from') || 
+        text.includes('في') || text.includes('إلى') || text.includes('من')) {
+      const parts = text.split(/\s+(?:at|to|from|في|إلى|من)\s+/);
       if (parts.length > 1) {
         vendor = parts[1].split(/\s+/)[0];
       }
@@ -137,7 +160,7 @@ export const useSmartPaste = (
       id: `fallback-${Math.random().toString(36).substring(2, 9)}`,
       title: `Fallback: ${vendor} | ${amount}`,
       amount: isIncome ? amount : -Math.abs(amount),
-      currency: 'SAR', // Default currency
+      currency: detectCurrency(text),
       type: isIncome ? 'income' : 'expense',
       fromAccount: 'Unknown',
       category: 'Uncategorized',
@@ -147,6 +170,26 @@ export const useSmartPaste = (
       notes: 'Extracted with fallback parser',
       source: 'smart-paste',
     };
+  };
+  
+  // Detect currency from text
+  const detectCurrency = (text: string): string => {
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('sar') || lowerText.includes('ريال') || lowerText.includes('سعودي')) {
+      return 'SAR';
+    } else if (lowerText.includes('egp') || lowerText.includes('جنيه') || lowerText.includes('مصري')) {
+      return 'EGP';
+    } else if (lowerText.includes('usd') || lowerText.includes('$') || lowerText.includes('dollar')) {
+      return 'USD';
+    } else if (lowerText.includes('eur') || lowerText.includes('€') || lowerText.includes('euro')) {
+      return 'EUR';
+    } else if (lowerText.includes('aed') || lowerText.includes('درهم') || lowerText.includes('إماراتي')) {
+      return 'AED';
+    }
+    
+    // Default currency (from user preferences)
+    return 'SAR';
   };
 
   return {
