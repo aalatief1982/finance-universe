@@ -12,7 +12,8 @@ import {
   Settings, 
   User, 
   Upload,
-  BrainCircuit
+  BrainCircuit,
+  School
 } from 'lucide-react';
 
 const MobileNav: React.FC = () => {
@@ -30,6 +31,7 @@ const MobileNav: React.FC = () => {
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
     { name: 'Master Mind', path: '/mastermind', icon: <BrainCircuit size={20} /> },
+    { name: 'Train Model', path: '/train-model', icon: <School size={20} /> },
     { name: 'Learning Tester', path: '/dev/learning-tester', icon: <BrainCircuit size={20} /> }
   ];
   

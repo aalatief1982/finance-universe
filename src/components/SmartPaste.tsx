@@ -1,101 +1,124 @@
-
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ClipboardPaste } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useTransactions } from '@/context/TransactionContext';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { Transaction } from '@/types/transaction';
-import { storeTransaction } from '@/utils/storage-utils';
-import { useSmartPaste } from '@/hooks/useSmartPaste';
-import TransactionInput from './smart-paste/TransactionInput';
-import ErrorAlert from './smart-paste/ErrorAlert';
-import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
-import NoTransactionMessage from './smart-paste/NoTransactionMessage';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { useNavigate } from 'react-router-dom';
 
 interface SmartPasteProps {
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void;
+  senderHint?: string;
 }
 
-const SmartPaste: React.FC<SmartPasteProps> = ({ onTransactionsDetected }) => {
-  const [showDebug, setShowDebug] = useState(false);
-  const { addTransaction } = useTransactions();
+const SmartPaste = ({ senderHint }: SmartPasteProps) => {
+  const [message, setMessage] = useState('');
+  const [inferredTransaction, setInferredTransaction] = useState<Partial<Transaction> | null>(null);
   const { toast } = useToast();
-  
-  const {
-    text,
-    setText,
-    detectedTransactions,
-    setDetectedTransactions,
-    isSmartMatch,
-    isProcessing,
-    error,
-    handlePaste,
-    processText
-  } = useSmartPaste(onTransactionsDetected);
+  const { findBestMatch, inferFieldsFromText } = useLearningEngine();
+  const navigate = useNavigate();
 
-  const handleTextChange = (newText: string) => {
-    setText(newText);
-    if (newText.trim()) {
-      processText(newText);
+  const handleCaptureMessage = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!message.trim()) {
+      toast({
+        title: "Error",
+        description: "Message cannot be empty",
+        variant: "destructive",
+      })
+      return;
+    }
+
+    const results = findBestMatch(message, '');
+    
+    if (results.matched && results.entry) {
+      // Display matched entry
+      toast({
+        title: "Matched!",
+        description: (
+          <div>
+            <p>Matched with confidence: {results.confidence.toFixed(2)}</p>
+            <pre>{JSON.stringify(results.entry.confirmedFields, null, 2)}</pre>
+          </div>
+        ),
+      });
     } else {
-      // If text is cleared, reset detected transactions
-      setText('');
-      setDetectedTransactions([]);
+      // If match confidence is low, offer to train the model
+      if (results.confidence < 0.5) {
+        // Show toast with option to train model
+        toast({
+          title: "Low match confidence",
+          description: (
+            <div className="flex flex-col gap-2">
+              <p>This message doesn't match any known patterns well.</p>
+              <Button 
+                onClick={() => {
+                  navigate('/train-model', { 
+                    state: { message, sender: senderHint }
+                  });
+                }}
+                size="sm"
+              >
+                Train Model
+              </Button>
+            </div>
+          ),
+        });
+      }
+      
+      const inferredTransaction = inferFieldsFromText(message);
+      
+      if (inferredTransaction) {
+        setInferredTransaction(inferredTransaction);
+        toast({
+          title: "Inferred Transaction",
+          description: (
+            <div>
+              <p>Could not find a good match, but here's what we inferred:</p>
+              <pre>{JSON.stringify(inferredTransaction, null, 2)}</pre>
+            </div>
+          ),
+        });
+      } else {
+        toast({
+          title: "No Match Found",
+          description: "Could not find a match or infer transaction details.",
+        });
+      }
     }
   };
 
-  const handleAddTransaction = (txn: Transaction) => {
-    addTransaction(txn);
-    storeTransaction(txn);
-    toast({ title: 'Transaction Added', description: `${txn.title} saved.` });
-    setDetectedTransactions([]);
-    setText('');
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="w-full p-4 border rounded-lg space-y-4 sm:p-6"
-    >
-      <div className="flex items-center gap-2">
-        <ClipboardPaste className="text-primary h-5 w-5" />
-        <h3 className="text-lg font-medium">Smart Paste</h3>
-      </div>
-
-      <ErrorAlert error={error} />
-
-      <TransactionInput 
-        text={text}
-        isProcessing={isProcessing}
-        onTextChange={handleTextChange}
-        onPaste={handlePaste}
-      />
-
-      {detectedTransactions.length > 0 && (
-        <div className="space-y-2">
-          {detectedTransactions.map((txn) => (
-            <DetectedTransactionCard
-              key={txn.id}
-              transaction={txn}
-              isSmartMatch={isSmartMatch}
-              onAddTransaction={handleAddTransaction}
-            />
-          ))}
+    <Card>
+      <CardHeader>
+        <CardTitle>Smart Paste</CardTitle>
+        <CardDescription>
+          Paste a message from your bank or SMS app to automatically extract
+          transaction details.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="message">Message</Label>
+          <Textarea
+            id="message"
+            placeholder="Paste your message here..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
         </div>
-      )}
+        <Button onClick={handleCaptureMessage}>Capture Message</Button>
 
-      <NoTransactionMessage 
-        show={text && !isProcessing && detectedTransactions.length === 0 && !error}
-      />
-
-      {showDebug && (
-        <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-64">
-          {JSON.stringify(detectedTransactions, null, 2)}
-        </pre>
-      )}
-    </motion.div>
+        {inferredTransaction && (
+          <div className="mt-4">
+            <h3>Inferred Transaction Details:</h3>
+            <pre>{JSON.stringify(inferredTransaction, null, 2)}</pre>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
