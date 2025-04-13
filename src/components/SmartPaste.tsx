@@ -131,6 +131,21 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         <NoTransactionMessage 
           show={!isProcessing && text.trim() && detectedTransactions.length === 0 && !error} 
         />
+
+        {structureMatch && (
+          <div className="border border-purple-400 bg-purple-50 dark:bg-purple-900/20 text-sm text-purple-800 dark:text-purple-200 p-4 rounded-md">
+            <p><strong>Structure Match Debug:</strong></p>
+            <p><strong>Matched Template Hash:</strong> {structureMatch.templateHash}</p>
+            <p><strong>Confidence:</strong> {Math.round(structureMatch.confidence * 100)}%</p>
+            <p><strong>Matched Fields:</strong></p>
+            <ul className="list-disc list-inside ml-4">
+              {Object.entries(structureMatch.inferredTransaction).map(([key, value]) => (
+                <li key={key}><strong>{key}:</strong> {value?.toString()}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
       </CardContent>
     </Card>
   );

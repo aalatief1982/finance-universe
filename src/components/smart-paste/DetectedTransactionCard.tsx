@@ -24,6 +24,21 @@ const DetectedTransactionCard: React.FC<DetectedTransactionCardProps> = ({
             Amount: {transaction.amount} | Category: {transaction.category}
           </p>
         </div>
+        
+            {transaction.notes?.includes('template') && (
+      <span className="text-xs text-purple-600 font-semibold">Template Structure Match</span>
+    )}
+
+    {transaction.notes?.includes('ML') && (
+      <span className="text-xs text-blue-600 font-semibold">Extracted with ML</span>
+    )}
+
+    {transaction.notes?.includes('fallback') && (
+      <span className="text-xs text-gray-500 font-semibold">Fallback Parser Used</span>
+    )}
+
+
+
         <Button
           variant="outline"
           size="sm"
