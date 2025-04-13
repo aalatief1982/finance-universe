@@ -112,6 +112,27 @@ class LearningEngineService {
     }
   }
 
+  private checkStructuralTemplateMatch(message: string): Template | null {
+    const templates: Template[] = JSON.parse(localStorage.getItem('xpensia_template_registry') || '[]');
+    const normalize = (text: string) =>
+      text.toLowerCase().replace(/\d{4}-\d{2}-\d{2}/g, '{date}')
+      .replace(/\d{2}:\d{2}:\d{2}/g, '')
+      .replace(/\d+\.\d{2}/g, '{amount}')
+      .replace(/\*{2,}\d+/g, '{account}')
+      .replace(/SAR|USD|EGP|AED/gi, '{currency}')
+      .replace(/لدى:\s?(.+?)(?=\n|$)/g, 'لدى: {vendor}');
+  
+    const normalized = normalize(message);
+  
+    for (const t of templates) {
+      if (normalize(t.raw) === normalized || t.generated === normalized) {
+        return t;
+      }
+    }
+  
+    return null;
+  }
+  
   private computeTemplateHash(message: string): string {
     let normalized = message
       .replace(/\*{2,}\d+/g, '{account}')                // masked account numbers
@@ -702,6 +723,17 @@ class LearningEngineService {
       bestMatch.confidence = bestScore;
       return { entry: bestMatch, confidence: bestScore, matched: true };
     }
+
+    const structuralMatch = this.checkStructuralTemplateMatch(message);
+    if (structuralMatch) {
+      return {
+        entry: null,
+        confidence: 0.4,
+        matched: true,
+        fallbackTemplate: structuralMatch
+      };
+    }
+
 
     return { entry: null, confidence: bestScore, matched: false, shouldTrain };
   }
