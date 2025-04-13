@@ -17,6 +17,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LearnedEntry } from '@/types/learning';
+import SmartPasteSummary from '@/components/SmartPasteSummary';
+
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -178,7 +180,14 @@ const EditTransaction = () => {
             </p>
           </div>
         )}
-        
+        {confidenceScore !== undefined && location.state?.matchedCount !== undefined && location.state?.totalTemplates !== undefined && (
+          <SmartPasteSummary
+            confidence={confidenceScore}
+            matchedCount={location.state.matchedCount}
+            totalTemplates={location.state.totalTemplates}
+          />
+        )}
+
         {matchDetails && matchDetails.entry && (
           <div className="border border-red-300 bg-red-50 dark:bg-red-950/20 p-4 rounded-md">
             <h3 className="text-red-600 dark:text-red-400 font-medium mb-2">Smart Matching Details</h3>
