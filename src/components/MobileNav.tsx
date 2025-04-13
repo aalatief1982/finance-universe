@@ -1,95 +1,134 @@
+import React from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Menu } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Brain, Calendar, CreditCard, FileText, LayoutDashboard, Settings, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Menu, 
-  X, 
-  Home, 
-  BarChart3, 
-  LineChart, 
-  MessageSquare, 
-  Settings, 
-  User, 
-  Upload,
-  BrainCircuit
-} from 'lucide-react';
+const navigationItems = [
+  {
+    label: 'Dashboard',
+    path: '/',
+    icon: LayoutDashboard,
+  },
+  {
+    label: 'Transactions',
+    path: '/transactions',
+    icon: CreditCard,
+  },
+  {
+    label: 'Reports',
+    path: '/reports',
+    icon: FileText,
+  },
+  {
+    label: 'Calendar',
+    path: '/calendar',
+    icon: Calendar,
+  },
+  {
+    label: 'Train Model',
+    path: '/train-model',
+    icon: Brain, // or another appropriate icon
+  },
+];
 
 const MobileNav: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const location = useLocation();
-  
-  const toggleMenu = () => setIsOpen(!isOpen);
-  
-  const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
-    { name: 'Transactions', path: '/transactions', icon: <BarChart3 size={20} /> },
-    { name: 'Analytics', path: '/analytics', icon: <LineChart size={20} /> },
-    { name: 'Import Transactions', path: '/import-transactions', icon: <Upload size={20} /> },
-    { name: 'SMS Processing', path: '/process-sms', icon: <MessageSquare size={20} /> },
-    { name: 'Profile', path: '/profile', icon: <User size={20} /> },
-    { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
-    { name: 'Master Mind', path: '/mastermind', icon: <BrainCircuit size={20} /> },
-    { name: 'Learning Tester', path: '/dev/learning-tester', icon: <BrainCircuit size={20} /> }
-  ];
-  
-  return (
-    <>
-      <button 
-        onClick={toggleMenu}
-        className="fixed top-4 right-4 z-30 p-2 rounded-md bg-background shadow-md"
-        aria-label={isOpen ? "Close menu" : "Open menu"}
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-20 bg-background/95 backdrop-blur-sm"
-          >
-            <div className="flex flex-col h-full pt-16 pb-6 px-6">
-              <nav className="flex-1">
-                <ul className="space-y-2">
-                  {navItems.map((item) => (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={`flex items-center p-3 rounded-md transition-colors ${
-                          location.pathname === item.path 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'text-muted-foreground hover:bg-muted'
-                        }`}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <span className="mr-3">{item.icon}</span>
-                        {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-              
-              <div className="mt-auto pt-6 border-t border-border">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                    <User size={20} />
-                  </div>
-                  <div className="ml-3">
-                    <p className="font-medium">User Profile</p>
-                    <p className="text-sm text-muted-foreground">Manage Account</p>
-                  </div>
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Menu />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-full sm:w-64">
+        <SheetHeader>
+          <SheetTitle>Menu</SheetTitle>
+          <SheetDescription>
+            Explore Xpensia
+          </SheetDescription>
+        </SheetHeader>
+        <div className="py-4">
+          {user ? (
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Avatar>
+                  <AvatarImage src={user.photoURL} alt={user.displayName || 'Avatar'} />
+                  <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                  <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open user menu</span>
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          ) : (
+            <div className="mb-4">
+              <Button variant="secondary" onClick={() => navigate('/login')}>Login</Button>
+            </div>
+          )}
+          <div className="grid gap-4">
+            {navigationItems.map((item) => (
+              <Button
+                key={item.label}
+                variant="ghost"
+                className="justify-start"
+                asChild
+              >
+                <Link to={item.path} className="flex items-center w-full">
+                  <item.icon className="mr-2 h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+        {/* Add any additional content or links here */}
+      </SheetContent>
+    </Sheet>
   );
 };
 
