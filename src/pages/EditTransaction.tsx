@@ -241,6 +241,15 @@ const EditTransaction = () => {
           />
         )}
 
+        {matchDetails?.confidence === 0.4 && (
+          <Alert className="bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-300 border-purple-300">
+            <AlertDescription className="text-sm">
+              This transaction was matched using a saved <strong>template structure</strong> with partial confidence (40%).<br />
+              You can review and adjust the fields before saving to improve future detection.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {matchDetails && matchDetails.entry && (
           <div className="border border-red-300 bg-red-50 dark:bg-red-950/20 p-4 rounded-md">
             <h3 className="text-red-600 dark:text-red-400 font-medium mb-2">Smart Matching Details</h3>
