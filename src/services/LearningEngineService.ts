@@ -409,6 +409,60 @@ class LearningEngineService {
     localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(entries));
   }
 
+  public saveUserTraining(raw: string, txn: Transaction, senderHint: string, fieldTokenMap: FieldTokenMap): void {
+  const entries = this.getLearnedEntries();
+
+  const tokens = this.tokenize(raw);
+  const id = uuidv4();
+
+  // Register tokens to MasterMind
+  Object.entries(fieldTokenMap).forEach(([field, positionedTokens]) => {
+    positionedTokens.forEach(pt => {
+      masterMindService.registerTokenWithPosition(pt.token, field, pt.position, pt.context);
+    });
+  });
+
+  // Sequence Patterns
+  this.extractSequencePatterns(fieldTokenMap);
+
+  // Sender Template
+  this.updateSenderTemplate(raw, senderHint, fieldTokenMap);
+
+  const templateHash = this.computeTemplateHash(raw);
+  const structureSignature = this.computeStructureSignature(fieldTokenMap);
+
+  const entry: LearnedEntry = {
+    id,
+    rawMessage: raw,
+    tokens,
+    senderHint,
+    fieldTokenMap,
+    confirmedFields: {
+      type: txn.type,
+      amount: txn.amount,
+      category: txn.category,
+      subcategory: txn.subcategory,
+      account: txn.fromAccount,
+      currency: txn.currency,
+      person: txn.person,
+      vendor: txn.description || ''
+    },
+    timestamp: new Date().toISOString(),
+    userConfirmed: true,
+    templateHash,
+    structureSignature,
+    confirmationHistory: [{
+      timestamp: new Date().toISOString(),
+      source: 'user-explicit'
+    }]
+  };
+
+  // Keep at max limit
+  if (entries.length >= this.config.maxEntries) entries.pop();
+  entries.unshift(entry);
+  localStorage.setItem('xpensia_learned_entries', JSON.stringify(entries));
+}
+
 public findBestMatch(message: string, senderHint = ''): MatchResult {
   if (!this.config.enabled || !message) {
     return { entry: null, confidence: 0, matched: false };

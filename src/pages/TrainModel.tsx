@@ -13,6 +13,8 @@ import { masterMindService } from '@/services/MasterMindService';
 import { Transaction } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 import { PositionedToken } from '@/types/learning';
+import { learningEngineService } from '@/services/LearningEngineService';
+
 
 // Interface for selected text ranges
 interface TextSelection {
@@ -59,6 +61,11 @@ const TrainModel = () => {
     subcategory: '',
     title: ''
   });
+  const handleSaveTraining = () => {
+  learningEngineService.saveUserTraining(message, transaction, senderHint, manualFieldTokenMap);
+  toast({ title: 'Saved', description: 'Training data saved successfully.' });
+  navigate('/dashboard');
+};
   
   // Initialize transaction data from passed message if available
   useEffect(() => {
