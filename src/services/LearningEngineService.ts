@@ -43,7 +43,7 @@ interface SequencePattern {
 }
 
 // Define the structure of fieldTokenMap
-export interface FieldTokenMap {
+interface FieldTokenMap {
   amount: PositionedToken[];
   currency: PositionedToken[];
   vendor: PositionedToken[];
