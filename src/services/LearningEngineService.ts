@@ -1,6 +1,7 @@
+
 // Enhanced LearningEngineService.ts - Field-Based Learning with Position Awareness
 import { v4 as uuidv4 } from 'uuid';
-import { LearnedEntry, LearningEngineConfig, MatchResult, PositionedToken } from '@/types/learning';
+import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 import { masterMindService } from '@/services/MasterMindService';
@@ -43,7 +44,7 @@ interface SequencePattern {
 }
 
 // Define the structure of fieldTokenMap
-interface FieldTokenMap {
+export interface FieldTokenMap {
   amount: PositionedToken[];
   currency: PositionedToken[];
   vendor: PositionedToken[];
@@ -51,6 +52,15 @@ interface FieldTokenMap {
   date: PositionedToken[];
   title?: PositionedToken[]; // Made optional to match existing code
   type?: PositionedToken[]; // Added for completeness
+}
+
+export interface PositionedToken {
+  token: string;
+  position: number;
+  context?: {
+    before?: string[];
+    after?: string[];
+  };
 }
 
 class LearningEngineService {
@@ -114,7 +124,6 @@ class LearningEngineService {
     // Optional: Use a simple hash or checksum (keep readable for now)
     return normalized;
   }
-
 
   private inferTypeFromText(message: string): TransactionType {
     const t = message.toLowerCase();
@@ -840,3 +849,186 @@ class LearningEngineService {
           ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
           : []
       };
+      
+      return { 
+        token: match[0], 
+        position,
+        context
+      };
+    });
+  }
+  
+  private extractCurrencyTokensWithPosition(message: string): PositionedToken[] {
+    const currencyMatches = Array.from(message.matchAll(/\b(?:SAR|USD|EGP|AED|EUR|GBP)\b/gi));
+    const symbolMatches = Array.from(message.matchAll(/[$€£¥﷼]/g));
+    
+    const allMatches = [
+      ...currencyMatches.map(match => ({ text: match[0], index: match.index || 0 })),
+      ...symbolMatches.map(match => ({ text: match[0], index: match.index || 0 }))
+    ];
+    
+    return allMatches.map(match => {
+      const position = match.index;
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      const tokenPosition = messageTokens.findIndex(t => t.includes(match.text));
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: match.text, 
+        position,
+        context
+      };
+    });
+  }
+  
+  private extractVendorTokensWithPosition(message: string): PositionedToken[] {
+    // Define vendor pattern hints
+    const vendorHints = [
+      { pattern: /\b(?:at|from|to|by)\s+([A-Z][A-Za-z0-9\s&]+)(?:\s|$)/i, group: 1 },
+      { pattern: /\blocation\s*:\s*([A-Za-z0-9\s&]+)(?:\s|$)/i, group: 1 },
+      { pattern: /\bmerchant\s*:\s*([A-Za-z0-9\s&]+)(?:\s|$)/i, group: 1 },
+      { pattern: /\bلدى\s+([A-Za-z0-9\s&]+)(?:\s|$)/i, group: 1 }
+    ];
+    
+    let matches: { text: string, index: number }[] = [];
+    
+    // Apply each pattern and collect matches
+    vendorHints.forEach(hint => {
+      const patternMatches = Array.from(message.matchAll(hint.pattern));
+      matches = [
+        ...matches,
+        ...patternMatches.map(match => ({ 
+          text: match[hint.group].trim(), 
+          index: (match.index || 0) + match[0].indexOf(match[hint.group])
+        }))
+      ];
+    });
+    
+    // If no matches, try to extract words that look like vendor names
+    if (matches.length === 0) {
+      const namePattern = /\b([A-Z][a-z]{2,}\s*(?:[A-Z][a-z]*)?)\b/g;
+      const nameMatches = Array.from(message.matchAll(namePattern));
+      matches = nameMatches.map(match => ({ text: match[1], index: match.index || 0 }));
+    }
+    
+    return matches.map(match => {
+      const position = match.index;
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      let tokenPosition = -1;
+      
+      // Find the token that contains our vendor name
+      for (let i = 0; i < messageTokens.length; i++) {
+        if (messageTokens[i].includes(match.text.split(' ')[0])) {
+          tokenPosition = i;
+          break;
+        }
+      }
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: match.text, 
+        position,
+        context
+      };
+    });
+  }
+  
+  private extractAccountTokensWithPosition(message: string): PositionedToken[] {
+    // Account number patterns
+    const patterns = [
+      /\b(?:card|account|a\/c|acct)(?:\s*#|\s*no|\s*number)?(?:\s*ending)?(?:\s*in)?(?:\s*with)?\s*(?:[:\-*])?\s*([*\d]{4,}|x{4,}\d{4})/i,
+      /\b(?:card|account|a\/c|acct)(?:\s*#|\s*no|\s*number)?(?:\s*:\s*)([*\d]{4,}|x{4,}\d{4})/i,
+      /\*{6,}\d{4}/,
+      /x{6,}\d{4}/,
+      /\bبطاقة\s+([*\d]{4,})/i
+    ];
+    
+    let allMatches: { text: string, index: number }[] = [];
+    
+    // Apply each pattern
+    patterns.forEach(pattern => {
+      const matches = Array.from(message.matchAll(pattern));
+      if (matches.length > 0) {
+        matches.forEach(match => {
+          // If the pattern has a capture group, use it, otherwise use the full match
+          const text = match[1] || match[0];
+          allMatches.push({ text, index: match.index || 0 });
+        });
+      }
+    });
+    
+    return allMatches.map(match => {
+      const position = match.index;
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      const tokenPosition = messageTokens.findIndex(t => t.includes(match.text));
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: match.text, 
+        position,
+        context
+      };
+    });
+  }
+  
+  private tokenize(message: string): string[] {
+    if (!message) return [];
+    return message
+      .replace(/[^\w\s]/g, ' ')
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+  
+  public getLearnedEntries(): LearnedEntry[] {
+    try {
+      const stored = localStorage.getItem(LEARNING_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error retrieving learned entries:', error);
+      return [];
+    }
+  }
+  
+  public clearLearnedEntries(): void {
+    localStorage.removeItem(LEARNING_STORAGE_KEY);
+    localStorage.removeItem(SENDER_TEMPLATES_KEY);
+    localStorage.removeItem(SEQUENCE_PATTERNS_KEY);
+  }
+}
+
+export const learningEngineService = new LearningEngineService();
+export default learningEngineService;
