@@ -1,5 +1,3 @@
-
-// src/ml/ner.ts
 import { pipeline } from '@huggingface/transformers';
 
 let extractor: any = null;
@@ -28,11 +26,10 @@ export async function loadNERModel() {
   isLoading = true;
   
   try {
-    // Try to use a smaller, more readily available model
+    // Remove the quantized option and use a more standard configuration
     extractor = await pipeline(
       'token-classification', 
-      'Xenova/distilbert-base-multilingual-cased-ner-hrl',
-      { quantized: true }
+      'Xenova/distilbert-base-multilingual-cased-ner-hrl'
     );
     isLoading = false;
     console.log('NER model loaded successfully');
