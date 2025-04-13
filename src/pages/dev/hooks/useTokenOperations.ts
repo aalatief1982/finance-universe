@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
+import { PositionedToken } from '@/types/learning';
 
 /**
  * Hook for handling token operations
@@ -30,11 +32,12 @@ const useTokenOperations = (message: string, isLabelingMode: boolean) => {
   
   useEffect(() => {
     if (message && !isLabelingMode) {
+      // These functions now return strings with proper typing
       const tokenMap = {
-        amount: extractAmountTokens(message),
-        currency: extractCurrencyTokens(message),
-        vendor: extractVendorTokens(message),
-        account: extractAccountTokens(message),
+        amount: extractAmountTokens(message).map(pt => pt.token),
+        currency: extractCurrencyTokens(message).map(pt => pt.token),
+        vendor: extractVendorTokens(message).map(pt => pt.token),
+        account: extractAccountTokens(message).map(pt => pt.token),
         type: [],
         date: [],
         title: []
@@ -167,11 +170,12 @@ const useTokenOperations = (message: string, isLabelingMode: boolean) => {
     // Save current state for undo
     setLabelingHistory([...labelingHistory, { ...tokenLabels }]);
     
+    // These functions return PositionedToken[], so we need to extract just the tokens
     const tokenMap = {
-      amount: extractAmountTokens(message),
-      currency: extractCurrencyTokens(message),
-      vendor: extractVendorTokens(message),
-      account: extractAccountTokens(message),
+      amount: extractAmountTokens(message).map(pt => pt.token),
+      currency: extractCurrencyTokens(message).map(pt => pt.token),
+      vendor: extractVendorTokens(message).map(pt => pt.token),
+      account: extractAccountTokens(message).map(pt => pt.token),
       type: [],
       date: [],
       title: []

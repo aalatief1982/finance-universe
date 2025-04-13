@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { learningEngineService } from '@/services/LearningEngineService';
-import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
+import { LearnedEntry, LearningEngineConfig, MatchResult, PositionedToken } from '@/types/learning';
 import { Transaction } from '@/types/transaction';
 
 /**
@@ -94,24 +94,24 @@ export const useLearningEngine = () => {
     }
   }, []);
 
-  // Additional utility methods - now using the public methods provided by the service
-  const tokenize = useCallback((msg: string) => {
+  // Additional utility methods - now properly typed to return PositionedToken arrays
+  const tokenize = useCallback((msg: string): string[] => {
     return learningEngineService.tokenize(msg);
   }, []);
 
-  const extractAmountTokens = useCallback((msg: string) => {
+  const extractAmountTokens = useCallback((msg: string): PositionedToken[] => {
     return learningEngineService.extractAmountTokensWithPosition(msg);
   }, []);
 
-  const extractCurrencyTokens = useCallback((msg: string) => {
+  const extractCurrencyTokens = useCallback((msg: string): PositionedToken[] => {
     return learningEngineService.extractCurrencyTokensWithPosition(msg);
   }, []);
 
-  const extractVendorTokens = useCallback((msg: string) => {
+  const extractVendorTokens = useCallback((msg: string): PositionedToken[] => {
     return learningEngineService.extractVendorTokensWithPosition(msg);
   }, []);
 
-  const extractAccountTokens = useCallback((msg: string) => {
+  const extractAccountTokens = useCallback((msg: string): PositionedToken[] => {
     return learningEngineService.extractAccountTokensWithPosition(msg);
   }, []);
 
