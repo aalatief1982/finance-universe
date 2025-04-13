@@ -32,7 +32,8 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     isProcessing,
     error,
     handlePaste,
-    processText
+    processText,
+    structureMatch
   } = useSmartPaste(onTransactionsDetected, useHighAccuracy);
 
   const { toast } = useToast();

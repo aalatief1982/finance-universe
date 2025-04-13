@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { resetNERModel } from '@/ml/ner';
 import { learningEngineService } from '@/services/LearningEngineService';
 
@@ -16,6 +16,7 @@ export const useSmartPaste = (
   const [isSmartMatch, setIsSmartMatch] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [structureMatch, setStructureMatch] = useState<any>(null);
   const { toast } = useToast();
 
   const handlePaste = async () => {
@@ -39,6 +40,7 @@ export const useSmartPaste = (
     
     setIsProcessing(true);
     setError(null);
+    setStructureMatch(null);
     
     try {
       // First try template matching with learning engine
@@ -80,35 +82,36 @@ export const useSmartPaste = (
         return;
       }
       // Check structure-based fallback if no template match
-console.log("Trying structure-based fallback");
-const structureMatch = learningEngineService.matchUsingTemplateStructure(rawText);
+      console.log("Trying structure-based fallback");
+      const structMatchResult = learningEngineService.matchUsingTemplateStructure(rawText);
+      setStructureMatch(structMatchResult);
 
-if (structureMatch) {
-  const categoryInfo = findCategoryForVendor(structureMatch.inferredTransaction.vendor || '', structureMatch.inferredTransaction.type || 'expense');
+      if (structMatchResult) {
+        const categoryInfo = findCategoryForVendor(structMatchResult.inferredTransaction.vendor || '', structMatchResult.inferredTransaction.type || 'expense');
 
-  const fallbackTxn: Transaction = {
-    id: `structure-${Math.random().toString(36).substring(2, 9)}`,
-    title: `Template Structure: ${categoryInfo.category} | ${structureMatch.inferredTransaction.amount}`,
-    amount: structureMatch.inferredTransaction.amount || 0,
-    currency: structureMatch.inferredTransaction.currency || 'SAR',
-    type: structureMatch.inferredTransaction.type || 'expense',
-    fromAccount: structureMatch.inferredTransaction.fromAccount || 'Unknown',
-    category: categoryInfo.category,
-    subcategory: categoryInfo.subcategory,
-    date: structureMatch.inferredTransaction.date || new Date().toISOString(),
-    description: structureMatch.inferredTransaction.vendor || '',
-    notes: 'Matched by structure template',
-    source: 'smart-paste'
-  };
+        const fallbackTxn: Transaction = {
+          id: `structure-${Math.random().toString(36).substring(2, 9)}`,
+          title: `Template Structure: ${categoryInfo.category} | ${structMatchResult.inferredTransaction.amount}`,
+          amount: structMatchResult.inferredTransaction.amount || 0,
+          currency: structMatchResult.inferredTransaction.currency || 'SAR',
+          type: structMatchResult.inferredTransaction.type || 'expense',
+          fromAccount: structMatchResult.inferredTransaction.fromAccount || 'Unknown',
+          category: categoryInfo.category,
+          subcategory: categoryInfo.subcategory,
+          date: structMatchResult.inferredTransaction.date || new Date().toISOString(),
+          description: structMatchResult.inferredTransaction.vendor || '',
+          notes: 'Matched by structure template',
+          source: 'smart-paste'
+        };
 
-  setDetectedTransactions([fallbackTxn]);
-  setIsSmartMatch(true);
-  if (onTransactionsDetected) {
-    onTransactionsDetected([fallbackTxn], rawText, senderHint, structureMatch.confidence, true);
-  }
-  setIsProcessing(false);
-  return;
-}
+        setDetectedTransactions([fallbackTxn]);
+        setIsSmartMatch(true);
+        if (onTransactionsDetected) {
+          onTransactionsDetected([fallbackTxn], rawText, senderHint, structMatchResult.confidence, true);
+        }
+        setIsProcessing(false);
+        return;
+      }
 
       // If no template match, try ML-based extraction
       console.log("No template match found, trying ML extraction");
@@ -275,6 +278,7 @@ if (structureMatch) {
     isProcessing,
     error,
     handlePaste,
-    processText
+    processText,
+    structureMatch
   };
 };
