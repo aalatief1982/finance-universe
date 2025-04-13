@@ -1,3 +1,4 @@
+
 // Enhanced LearningEngineService.ts - Field-Based Learning with Position Awareness
 import { v4 as uuidv4 } from 'uuid';
 import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
@@ -132,6 +133,7 @@ class LearningEngineService {
   
     return null;
   }
+
   public matchUsingTemplateStructure(message: string): {
     confidence: number;
     inferredTransaction: Partial<Transaction>;
@@ -172,7 +174,8 @@ class LearningEngineService {
     return 'expense';
   }
 
-  private extractDateTokensWithPosition(message: string): PositionedToken[] {
+  // Changed from private to public
+  public extractDateTokensWithPosition(message: string): PositionedToken[] {
     const matches = Array.from(message.matchAll(/\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4}|\d{2}\/\d{2}\/\d{4}|\d{2}\.\d{2}\.\d{4}/g));
     return matches.map(match => {
       const position = match.index || 0;
@@ -824,7 +827,7 @@ class LearningEngineService {
     return Math.max(0, Math.min(1, 1 - difference));
   }
 
-  // Expose calculations methods for use in useLearningEngine
+  // Changed from private to public
   public calculateTextSimilarity(text1: string, text2: string): number {
     const tokens1 = this.tokenize(text1);
     const tokens2 = this.tokenize(text2);
@@ -833,7 +836,8 @@ class LearningEngineService {
     return commonTokens.length / Math.max(tokens1.length, tokens2.length);
   }
 
-  private scoreContextHints(message: string, fieldTokenMap: FieldTokenMap): number {
+  // Changed from private to public
+  public scoreContextHints(message: string, fieldTokenMap: FieldTokenMap): number {
     let score = 0;
 
     const contextRules: Record<string, string[]> = {
@@ -892,8 +896,8 @@ class LearningEngineService {
     localStorage.removeItem(LEARNING_STORAGE_KEY);
   }
 
-  // Tokenize a message for faster matching
-  private tokenize(message: string): string[] {
+  // Changed from private to public
+  public tokenize(message: string): string[] {
     return message
       .toLowerCase()
       .replace(/[^\w\s\u0600-\u06FF]/g, ' ') // Keep Arabic characters
@@ -901,8 +905,8 @@ class LearningEngineService {
       .filter(token => token.length > 0);
   }
 
-  // Extract amount tokens with position information
-  private extractAmountTokensWithPosition(message: string): PositionedToken[] {
+  // Changed from private to public
+  public extractAmountTokensWithPosition(message: string): PositionedToken[] {
     const matches = Array.from(message.matchAll(/\b\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?\b/g));
     return matches.map(match => {
       const position = match.index || 0;
@@ -929,8 +933,8 @@ class LearningEngineService {
     });
   }
 
-  // Extract currency tokens with position information
-  private extractCurrencyTokensWithPosition(message: string): PositionedToken[] {
+  // Changed from private to public
+  public extractCurrencyTokensWithPosition(message: string): PositionedToken[] {
     const matches = Array.from(message.matchAll(/\b(SAR|USD|EGP|AED|EUR|GBP|ريال|دولار|جنيه|درهم|يورو)\b/gi));
     return matches.map(match => {
       const position = match.index || 0;
@@ -957,8 +961,8 @@ class LearningEngineService {
     });
   }
 
-  // Extract vendor tokens with position information
-  private extractVendorTokensWithPosition(message: string): PositionedToken[] {
+  // Changed from private to public
+  public extractVendorTokensWithPosition(message: string): PositionedToken[] {
     // This is a simplified approach - in a real app, you'd use NER or a vendor database
     const vendorPatterns = [
       /(?:at|from|to|لدى|من|إلى)\s+([A-Za-z\u0600-\u06FF]+(?:\s+[A-Za-z\u0600-\u06FF]+)?)/g,
@@ -1000,8 +1004,8 @@ class LearningEngineService {
     return results;
   }
 
-  // Extract account tokens with position information
-  private extractAccountTokensWithPosition(message: string): PositionedToken[] {
+  // Changed from private to public
+  public extractAccountTokensWithPosition(message: string): PositionedToken[] {
     // Look for masked account numbers like ****1234
     const matches = Array.from(message.matchAll(/\*+\d+|\d{4}\s*\d{4}\s*\d{4}\s*\d{4}|\baccount\s+\w+|\bcard\s+\w+|\bبطاقة\s+\w+/gi));
     return matches.map(match => {
