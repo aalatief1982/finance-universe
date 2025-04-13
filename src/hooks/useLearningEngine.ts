@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { learningEngineService, FieldTokenMap } from '@/services/LearningEngineService';
+import { learningEngineService } from '@/services/LearningEngineService';
 import { LearnedEntry, LearningEngineConfig, MatchResult } from '@/types/learning';
 import { Transaction } from '@/types/transaction';
 
@@ -17,7 +17,7 @@ export const useLearningEngine = () => {
    * Learn from a confirmed transaction
    */
   const learnFromTransaction = useCallback(
-    (rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: Partial<FieldTokenMap>) => {
+    (rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: Partial<any>) => {
       setIsLoading(true);
       try {
         learningEngineService.learnFromTransaction(rawMessage, transaction, senderHint, customFieldTokenMap);
@@ -94,25 +94,25 @@ export const useLearningEngine = () => {
     }
   }, []);
 
-  // Additional utility functions from the service
+  // Additional utility methods - now using the public methods provided by the service
   const tokenize = useCallback((msg: string) => {
     return learningEngineService.tokenize(msg);
   }, []);
 
   const extractAmountTokens = useCallback((msg: string) => {
-    return learningEngineService.extractAmountTokens(msg);
+    return learningEngineService.extractAmountTokensWithPosition(msg);
   }, []);
 
   const extractCurrencyTokens = useCallback((msg: string) => {
-    return learningEngineService.extractCurrencyTokens(msg);
+    return learningEngineService.extractCurrencyTokensWithPosition(msg);
   }, []);
 
   const extractVendorTokens = useCallback((msg: string) => {
-    return learningEngineService.extractVendorTokens(msg);
+    return learningEngineService.extractVendorTokensWithPosition(msg);
   }, []);
 
   const extractAccountTokens = useCallback((msg: string) => {
-    return learningEngineService.extractAccountTokens(msg);
+    return learningEngineService.extractAccountTokensWithPosition(msg);
   }, []);
 
   return {

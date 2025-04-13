@@ -43,8 +43,8 @@ interface SequencePattern {
   confirmedByUser: boolean;
 }
 
-// Define the structure of fieldTokenMap
-export interface FieldTokenMap {
+// Define the structure of fieldTokenMap - using type and not interface to avoid conflict
+export type FieldTokenMap = {
   amount: PositionedToken[];
   currency: PositionedToken[];
   vendor: PositionedToken[];
@@ -773,7 +773,8 @@ class LearningEngineService {
     return Math.max(0, Math.min(1, 1 - difference));
   }
 
-  private calculateTextSimilarity(text1: string, text2: string): number {
+  // Expose calculations methods for use in useLearningEngine
+  public calculateTextSimilarity(text1: string, text2: string): number {
     const tokens1 = this.tokenize(text1);
     const tokens2 = this.tokenize(text2);
     
@@ -830,8 +831,8 @@ class LearningEngineService {
     return Math.min(0.1, entry.confirmationHistory.length * 0.02);
   }
 
-  // Add method to extract token positions from text
-  private extractAmountTokensWithPosition(message: string): PositionedToken[] {
+  // Make these methods public so they can be used in useLearningEngine
+  public extractAmountTokensWithPosition(message: string): PositionedToken[] {
     const matches = Array.from(message.matchAll(/\b\d+(?:[.,]\d+)?\b/g));
     return matches.map(match => {
       const position = match.index || 0;
@@ -858,7 +859,7 @@ class LearningEngineService {
     });
   }
   
-  private extractCurrencyTokensWithPosition(message: string): PositionedToken[] {
+  public extractCurrencyTokensWithPosition(message: string): PositionedToken[] {
     const currencyMatches = Array.from(message.matchAll(/\b(?:SAR|USD|EGP|AED|EUR|GBP)\b/gi));
     const symbolMatches = Array.from(message.matchAll(/[$€£¥﷼]/g));
     
@@ -892,7 +893,7 @@ class LearningEngineService {
     });
   }
   
-  private extractVendorTokensWithPosition(message: string): PositionedToken[] {
+  public extractVendorTokensWithPosition(message: string): PositionedToken[] {
     // Define vendor pattern hints
     const vendorHints = [
       { pattern: /\b(?:at|from|to|by)\s+([A-Z][A-Za-z0-9\s&]+)(?:\s|$)/i, group: 1 },
@@ -955,7 +956,7 @@ class LearningEngineService {
     });
   }
   
-  private extractAccountTokensWithPosition(message: string): PositionedToken[] {
+  public extractAccountTokensWithPosition(message: string): PositionedToken[] {
     // Account number patterns
     const patterns = [
       /\b(?:card|account|a\/c|acct)(?:\s*#|\s*no|\s*number)?(?:\s*ending)?(?:\s*in)?(?:\s*with)?\s*(?:[:\-*])?\s*([*\d]{4,}|x{4,}\d{4})/i,
@@ -1004,7 +1005,8 @@ class LearningEngineService {
     });
   }
   
-  private tokenize(message: string): string[] {
+  // Make tokenize public for useLearningEngine
+  public tokenize(message: string): string[] {
     if (!message) return [];
     return message
       .replace(/[^\w\s]/g, ' ')
