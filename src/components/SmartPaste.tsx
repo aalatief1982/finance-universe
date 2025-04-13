@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -11,9 +12,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface SmartPasteProps {
   senderHint?: string;
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void;
 }
 
-const SmartPaste = ({ senderHint }: SmartPasteProps) => {
+const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {
   const [message, setMessage] = useState('');
   const [inferredTransaction, setInferredTransaction] = useState<Partial<Transaction> | null>(null);
   const { toast } = useToast();
@@ -44,6 +46,11 @@ const SmartPaste = ({ senderHint }: SmartPasteProps) => {
           </div>
         ),
       });
+      
+      // Call the callback if provided
+      if (onTransactionsDetected && results.entry.confirmedFields) {
+        onTransactionsDetected([results.entry.confirmedFields as Transaction], message, senderHint, results.confidence);
+      }
     } else {
       // If match confidence is low, offer to train the model
       if (results.confidence < 0.5) {
@@ -81,6 +88,11 @@ const SmartPaste = ({ senderHint }: SmartPasteProps) => {
             </div>
           ),
         });
+        
+        // Call the callback with inferred transaction if provided
+        if (onTransactionsDetected && inferredTransaction.amount !== undefined) {
+          onTransactionsDetected([inferredTransaction as Transaction], message, senderHint, 0.3);
+        }
       } else {
         toast({
           title: "No Match Found",
