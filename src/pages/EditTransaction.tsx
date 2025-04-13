@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -18,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LearnedEntry } from '@/types/learning';
 import SmartPasteSummary from '@/components/SmartPasteSummary';
-
+import { learningEngineService } from '@/services/LearningEngineService';
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -54,21 +53,33 @@ const EditTransaction = () => {
     if (rawMessage && transaction && transaction.source === 'smart-paste') {
       const entries = getLearnedEntries();
       if (entries.length > 0) {
+        console.log("Looking for matching entry for smart-paste transaction");
         // Find the entry that might have been used for this match
         const entry = entries.find(e => {
           // Look for an entry where the field values match our transaction
-          return (
-            e.confirmedFields.type === transaction?.type &&
-            e.confirmedFields.category === transaction?.category &&
-            Math.abs(e.confirmedFields.amount - (transaction?.amount || 0)) < 0.01
-          );
+          const typeMatch = e.confirmedFields.type === transaction?.type;
+          const categoryMatch = e.confirmedFields.category === transaction?.category;
+          const amountMatch = Math.abs(e.confirmedFields.amount - (transaction?.amount || 0)) < 0.01;
+          
+          const result = typeMatch && categoryMatch && amountMatch;
+          console.log("Matching entry?", {
+            entry: e.id, 
+            typeMatch, 
+            categoryMatch, 
+            amountMatch, 
+            result
+          });
+          return result;
         });
         
         if (entry) {
+          console.log("Found matching entry:", entry.id);
           setMatchDetails({
             entry,
             confidence: confidenceScore || 0.8,
           });
+        } else {
+          console.log("No matching entry found among", entries.length, "entries");
         }
       }
     }

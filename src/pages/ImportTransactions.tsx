@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { learningEngineService } from '@/services/LearningEngineService';
 
 const ImportTransactions = () => {
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
