@@ -49,7 +49,23 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
       
       // Call the callback if provided
       if (onTransactionsDetected && results.entry.confirmedFields) {
-        onTransactionsDetected([results.entry.confirmedFields as Transaction], message, senderHint, results.confidence);
+        // Convert the confirmedFields to a full Transaction object
+        const transaction: Transaction = {
+          id: `match-${Date.now()}`,
+          title: results.entry.confirmedFields.vendor || 'Transaction',
+          amount: results.entry.confirmedFields.amount || 0,
+          category: results.entry.confirmedFields.category || 'Uncategorized',
+          date: results.entry.confirmedFields.date || new Date().toISOString(),
+          type: results.entry.confirmedFields.type || 'expense',
+          source: 'smart-paste',
+          fromAccount: results.entry.confirmedFields.account || 'Unknown',
+          description: message,
+          ...(results.entry.confirmedFields.subcategory && { subcategory: results.entry.confirmedFields.subcategory }),
+          ...(results.entry.confirmedFields.currency && { currency: results.entry.confirmedFields.currency }),
+          ...(results.entry.confirmedFields.person && { person: results.entry.confirmedFields.person })
+        };
+        
+        onTransactionsDetected([transaction], message, senderHint, results.confidence);
       }
     } else {
       // If match confidence is low, offer to train the model
@@ -91,7 +107,23 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         
         // Call the callback with inferred transaction if provided
         if (onTransactionsDetected && inferredTransaction.amount !== undefined) {
-          onTransactionsDetected([inferredTransaction as Transaction], message, senderHint, 0.3);
+          // Convert the inferred fields to a full Transaction object
+          const transaction: Transaction = {
+            id: `inferred-${Date.now()}`,
+            title: inferredTransaction.vendor || 'Inferred Transaction',
+            amount: inferredTransaction.amount || 0,
+            category: inferredTransaction.category || 'Uncategorized',
+            date: inferredTransaction.date || new Date().toISOString(),
+            type: inferredTransaction.type || 'expense',
+            source: 'smart-paste',
+            fromAccount: inferredTransaction.account || 'Unknown',
+            description: message,
+            ...(inferredTransaction.subcategory && { subcategory: inferredTransaction.subcategory }),
+            ...(inferredTransaction.currency && { currency: inferredTransaction.currency }),
+            ...(inferredTransaction.person && { person: inferredTransaction.person })
+          };
+          
+          onTransactionsDetected([transaction], message, senderHint, 0.3);
         }
       } else {
         toast({
