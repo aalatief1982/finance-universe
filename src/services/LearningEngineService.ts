@@ -153,6 +153,34 @@ class LearningEngineService {
     };
   }*/
   
+    public matchUsingTemplateStructure(message: string): {
+      inferredTransaction: Partial<Transaction>,
+      confidence: number
+    } | null {
+      const templateRegistry = JSON.parse(localStorage.getItem('xpensia_template_registry') || '[]');
+    
+      for (const template of templateRegistry) {
+        const regex = new RegExp(template.regexPattern, 'i'); // assumes regexPattern is saved
+        if (regex.test(message)) {
+          return {
+            inferredTransaction: {
+              amount: 0, // leave 0 or extract if you want
+              currency: 'SAR',
+              fromAccount: template.fromAccount || '',
+              type: template.type || 'expense',
+              vendor: '',
+              category: template.category || 'Uncategorized',
+              subcategory: '',
+              date: '',
+            },
+            confidence: 0.4
+          };
+        }
+      }
+    
+      return null;
+    }
+    
   private computeTemplateHash(message: string): string {
     let normalized = message
       .replace(/\*{2,}\d+/g, '{account}')                // masked account numbers
