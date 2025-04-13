@@ -49,7 +49,6 @@ const ImportTransactions = () => {
     });
   };
   
-
   return (
     <Layout>
       <motion.div
