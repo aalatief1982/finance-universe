@@ -14,6 +14,7 @@ import EditTransaction from './pages/EditTransaction';
 import LearningTester from './pages/dev/LearningTester';
 import MasterMind from '@/pages/MasterMind';
 import TrainModel from '@/pages/TrainModel';
+import BuildTemplate from './pages/BuildTemplate';
 
 function App() {
   return (
@@ -32,7 +33,7 @@ function App() {
               <Route path="/edit-transaction/:id" element={<EditTransaction />} />
               <Route path="/mastermind" element={<MasterMind />} />
               <Route path="/train-model" element={<TrainModel />} />
-              
+              <Route path="/build-template" element={<BuildTemplate />} />
               {/* Learning Tester route - now always available */}
               <Route path="/dev/learning-tester" element={<LearningTester />} />
             </Routes>
