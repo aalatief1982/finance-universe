@@ -7,7 +7,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { resetNERModel } from '@/ml/ner';
 
 export const useSmartPaste = (
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void,
+  useHighAccuracy: boolean = false
 ) => {
   const [text, setText] = useState('');
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
@@ -39,8 +40,8 @@ export const useSmartPaste = (
     setError(null);
     
     try {
-      // Try ML-based extraction first
-      const parsed = await extractTransactionEntities(rawText);
+      // Try ML-based extraction first, passing the high accuracy flag
+      const parsed = await extractTransactionEntities(rawText, useHighAccuracy);
 
       if (parsed.amount) {
         const categoryInfo = findCategoryForVendor(parsed.vendor || '', parsed.type || 'expense');

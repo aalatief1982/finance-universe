@@ -1,11 +1,21 @@
+
 import { pipeline } from '@huggingface/transformers';
+import { ModelConfig, getNERModelConfig } from './config';
 
 let extractor: any = null;
 let isLoading = false;
 let loadError: Error | null = null;
+let currentConfig: ModelConfig | null = null;
 
-export async function loadNERModel() {
-  if (extractor) return extractor;
+export async function loadNERModel(config?: ModelConfig) {
+  // Use provided config or get default
+  const modelConfig = config || currentConfig || getNERModelConfig();
+  
+  // If model is already loaded with the same config, return it
+  if (extractor && currentConfig && 
+      currentConfig.modelId === modelConfig.modelId) {
+    return extractor;
+  }
   
   // If already attempting to load, return a promise that will resolve when loading completes
   if (isLoading) {
@@ -24,13 +34,18 @@ export async function loadNERModel() {
   }
 
   isLoading = true;
+  currentConfig = modelConfig;
   
   try {
-    // Remove the quantized option and use a more standard configuration
+    console.log(`Loading NER model: ${modelConfig.modelId}`);
+    
+    // Load the model using the config
     extractor = await pipeline(
-      'token-classification', 
-      'Xenova/distilbert-base-multilingual-cased-ner-hrl'
+      modelConfig.task,
+      modelConfig.modelId,
+      modelConfig.options
     );
+    
     isLoading = false;
     console.log('NER model loaded successfully');
     return extractor;
@@ -46,8 +61,13 @@ export function resetNERModel() {
   extractor = null;
   isLoading = false;
   loadError = null;
+  currentConfig = null;
 }
 
 export function isNERModelReady() {
   return !!extractor;
+}
+
+export function getCurrentModelConfig(): ModelConfig | null {
+  return currentConfig;
 }

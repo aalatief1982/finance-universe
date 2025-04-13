@@ -7,11 +7,13 @@ import { useToast } from "@/hooks/use-toast"
 import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { Transaction } from '@/types/transaction';
 import { useSmartPaste } from '@/hooks/useSmartPaste';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ZapIcon } from 'lucide-react';
 import { Label } from './ui/label';
 import TransactionInput from './smart-paste/TransactionInput';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import ErrorAlert from './smart-paste/ErrorAlert';
+import NoTransactionMessage from './smart-paste/NoTransactionMessage';
+import { Switch } from './ui/switch';
 
 interface SmartPasteProps {
   senderHint?: string;
@@ -19,6 +21,8 @@ interface SmartPasteProps {
 }
 
 const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {
+  const [useHighAccuracy, setUseHighAccuracy] = useState(false);
+  
   const {
     text,
     setText,
@@ -29,7 +33,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     error,
     handlePaste,
     processText
-  } = useSmartPaste(onTransactionsDetected);
+  } = useSmartPaste(onTransactionsDetected, useHighAccuracy);
 
   const { toast } = useToast();
   
@@ -79,6 +83,19 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
               dir="auto" // Auto-detect text direction for Arabic
             />
           </div>
+          
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="high-accuracy" 
+              checked={useHighAccuracy}
+              onCheckedChange={setUseHighAccuracy}
+            />
+            <Label htmlFor="high-accuracy" className="flex items-center text-sm">
+              <ZapIcon className="w-4 h-4 mr-1" /> 
+              High accuracy mode (slower)
+            </Label>
+          </div>
+          
           <div className="flex flex-col sm:flex-row gap-2">
             <Button type="submit" disabled={isProcessing || !text.trim()}>
               {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -111,11 +128,9 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
           </div>
         )}
 
-        {!isProcessing && text.trim() && detectedTransactions.length === 0 && !error && (
-          <div className="py-4 text-center text-sm text-muted-foreground">
-            Press "Capture Message" to analyze the text
-          </div>
-        )}
+        <NoTransactionMessage 
+          show={!isProcessing && text.trim() && detectedTransactions.length === 0 && !error} 
+        />
       </CardContent>
     </Card>
   );

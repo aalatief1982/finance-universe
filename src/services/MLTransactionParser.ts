@@ -1,10 +1,11 @@
 
 // src/services/MLTransactionParser.ts
 import { loadNERModel, isNERModelReady } from '@/ml/ner';
+import { getNERModelConfig } from '@/ml/config';
 import { handleError } from '@/utils/error-utils';
 import { ErrorType } from '@/types/error';
 
-export async function extractTransactionEntities(text: string) {
+export async function extractTransactionEntities(text: string, useHighAccuracy = false) {
   // Default entity structure
   const entities = {
     amount: '',
@@ -16,13 +17,18 @@ export async function extractTransactionEntities(text: string) {
   };
 
   try {
+    // Get appropriate model config based on complexity of the text
+    // For complex texts (longer), we might want higher accuracy
+    const isComplexText = text.length > 150;
+    const modelConfig = getNERModelConfig(useHighAccuracy || isComplexText);
+    
     // Check if model is available
     if (!isNERModelReady()) {
       console.log('NER model not ready, trying to load...');
-      await loadNERModel();
+      await loadNERModel(modelConfig);
     }
 
-    const ner = await loadNERModel();
+    const ner = await loadNERModel(modelConfig);
     const result = await ner(text);
 
     // Process entity results
