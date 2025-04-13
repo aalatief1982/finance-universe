@@ -852,4 +852,182 @@ class LearningEngineService {
             contextRules[field].includes(before.toLowerCase())
           );
           if (matched) {
-            score +=
+            score += 0.05; // Small bonus for context match
+          }
+        }
+      });
+    });
+
+    return score;
+  }
+
+  // Calculate bonus based on confirmation history
+  private calculateConfirmationBonus(entry: LearnedEntry): number {
+    if (!entry.confirmationHistory || entry.confirmationHistory.length === 0) {
+      return 0;
+    }
+    
+    // Count user explicit confirmations
+    const userConfirmations = entry.confirmationHistory.filter(
+      event => event.source === 'user-explicit'
+    ).length;
+    
+    // Apply diminishing returns for multiple confirmations
+    return Math.min(0.1, userConfirmations * this.config.userConfirmationWeight);
+  }
+
+  // Get all learned entries
+  public getLearnedEntries(): LearnedEntry[] {
+    try {
+      const stored = localStorage.getItem(LEARNING_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      console.error('Error loading learned entries:', err);
+      return [];
+    }
+  }
+
+  // Clear all learned entries
+  public clearLearnedEntries(): void {
+    localStorage.removeItem(LEARNING_STORAGE_KEY);
+  }
+
+  // Tokenize a message for faster matching
+  private tokenize(message: string): string[] {
+    return message
+      .toLowerCase()
+      .replace(/[^\w\s\u0600-\u06FF]/g, ' ') // Keep Arabic characters
+      .split(/\s+/)
+      .filter(token => token.length > 0);
+  }
+
+  // Extract amount tokens with position information
+  private extractAmountTokensWithPosition(message: string): PositionedToken[] {
+    const matches = Array.from(message.matchAll(/\b\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?\b/g));
+    return matches.map(match => {
+      const position = match.index || 0;
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      const tokenPosition = messageTokens.findIndex(t => t.includes(match[0]));
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: match[0], 
+        position,
+        context
+      };
+    });
+  }
+
+  // Extract currency tokens with position information
+  private extractCurrencyTokensWithPosition(message: string): PositionedToken[] {
+    const matches = Array.from(message.matchAll(/\b(SAR|USD|EGP|AED|EUR|GBP|ريال|دولار|جنيه|درهم|يورو)\b/gi));
+    return matches.map(match => {
+      const position = match.index || 0;
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      const tokenPosition = messageTokens.findIndex(t => t.includes(match[0]));
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: match[0], 
+        position,
+        context
+      };
+    });
+  }
+
+  // Extract vendor tokens with position information
+  private extractVendorTokensWithPosition(message: string): PositionedToken[] {
+    // This is a simplified approach - in a real app, you'd use NER or a vendor database
+    const vendorPatterns = [
+      /(?:at|from|to|لدى|من|إلى)\s+([A-Za-z\u0600-\u06FF]+(?:\s+[A-Za-z\u0600-\u06FF]+)?)/g,
+      /(?:merchant|vendor|تاجر|متجر)\s+([A-Za-z\u0600-\u06FF]+(?:\s+[A-Za-z\u0600-\u06FF]+)?)/g
+    ];
+    
+    let results: PositionedToken[] = [];
+    
+    vendorPatterns.forEach(pattern => {
+      const matches = Array.from(message.matchAll(pattern));
+      
+      matches.forEach(match => {
+        if (match[1]) { // The capture group with the vendor name
+          const position = (match.index || 0) + match[0].indexOf(match[1]);
+          const contextSize = 2;
+          
+          // Get context around the token
+          const messageTokens = message.split(/\s+/);
+          const tokenPosition = messageTokens.findIndex(t => t.includes(match[1]));
+          
+          const context = {
+            before: tokenPosition > 0 
+              ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+              : [],
+            after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+              ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+              : []
+          };
+          
+          results.push({ 
+            token: match[1], 
+            position,
+            context
+          });
+        }
+      });
+    });
+    
+    return results;
+  }
+
+  // Extract account tokens with position information
+  private extractAccountTokensWithPosition(message: string): PositionedToken[] {
+    // Look for masked account numbers like ****1234
+    const matches = Array.from(message.matchAll(/\*+\d+|\d{4}\s*\d{4}\s*\d{4}\s*\d{4}|\baccount\s+\w+|\bcard\s+\w+|\bبطاقة\s+\w+/gi));
+    return matches.map(match => {
+      const position = match.index || 0;
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      const tokenPosition = messageTokens.findIndex(t => t.includes(match[0]));
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: match[0], 
+        position,
+        context
+      };
+    });
+  }
+}
+
+export const learningEngineService = new LearningEngineService();
