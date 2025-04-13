@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -47,28 +46,24 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         ),
       });
       
-      // Call the callback if provided
-      if (onTransactionsDetected && results.entry.confirmedFields) {
-        // Convert the confirmedFields to a full Transaction object
-        const transaction: Transaction = {
-          id: `match-${Date.now()}`,
-          title: results.entry.confirmedFields.vendor || 'Transaction',
-          amount: results.entry.confirmedFields.amount || 0,
-          category: results.entry.confirmedFields.category || 'Uncategorized',
-          // Use a direct date string since 'date' might not exist in confirmedFields
-          date: typeof results.entry.confirmedFields.date === 'string' 
-            ? results.entry.confirmedFields.date 
-            : new Date().toISOString(),
-          type: results.entry.confirmedFields.type || 'expense',
-          source: 'smart-paste',
-          // Use fromAccount rather than account
-          fromAccount: results.entry.confirmedFields.account || 'Unknown',
-          description: message,
-          ...(results.entry.confirmedFields.subcategory && { subcategory: results.entry.confirmedFields.subcategory }),
-          ...(results.entry.confirmedFields.currency && { currency: results.entry.confirmedFields.currency }),
-          ...(results.entry.confirmedFields.person && { person: results.entry.confirmedFields.person })
-        };
-        
+      const transaction: Transaction = {
+        id: `match-${Date.now()}`,
+        title: results.entry.confirmedFields.vendor || 'Transaction',
+        amount: results.entry.confirmedFields.amount || 0,
+        category: results.entry.confirmedFields.category || 'Uncategorized',
+        date: typeof results.entry.confirmedFields.date === 'string' 
+          ? results.entry.confirmedFields.date 
+          : new Date().toISOString(),
+        type: results.entry.confirmedFields.type || 'expense',
+        source: 'smart-paste',
+        fromAccount: results.entry.confirmedFields.account || 'Unknown',
+        description: message,
+        ...(results.entry.confirmedFields.subcategory && { subcategory: results.entry.confirmedFields.subcategory }),
+        ...(results.entry.confirmedFields.currency && { currency: results.entry.confirmedFields.currency }),
+        ...(results.entry.confirmedFields.person && { person: results.entry.confirmedFields.person })
+      };
+      
+      if (onTransactionsDetected) {
         onTransactionsDetected([transaction], message, senderHint, results.confidence);
       }
     } else {
@@ -114,14 +109,12 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
           // Convert the inferred fields to a full Transaction object
           const transaction: Transaction = {
             id: `inferred-${Date.now()}`,
-            // Use description or a default since 'vendor' isn't on Transaction
             title: inferredFields.description || 'Inferred Transaction',
             amount: inferredFields.amount || 0,
             category: inferredFields.category || 'Uncategorized',
             date: inferredFields.date || new Date().toISOString(),
             type: inferredFields.type || 'expense',
             source: 'smart-paste',
-            // Use fromAccount since 'account' isn't on Transaction
             fromAccount: inferredFields.fromAccount || 'Unknown',
             description: message,
             ...(inferredFields.subcategory && { subcategory: inferredFields.subcategory }),
