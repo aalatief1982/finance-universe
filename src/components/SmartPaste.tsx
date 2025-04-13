@@ -55,9 +55,13 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
           title: results.entry.confirmedFields.vendor || 'Transaction',
           amount: results.entry.confirmedFields.amount || 0,
           category: results.entry.confirmedFields.category || 'Uncategorized',
-          date: results.entry.confirmedFields.date || new Date().toISOString(),
+          // Use a direct date string since 'date' might not exist in confirmedFields
+          date: typeof results.entry.confirmedFields.date === 'string' 
+            ? results.entry.confirmedFields.date 
+            : new Date().toISOString(),
           type: results.entry.confirmedFields.type || 'expense',
           source: 'smart-paste',
+          // Use fromAccount rather than account
           fromAccount: results.entry.confirmedFields.account || 'Unknown',
           description: message,
           ...(results.entry.confirmedFields.subcategory && { subcategory: results.entry.confirmedFields.subcategory }),
@@ -91,36 +95,38 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         });
       }
       
-      const inferredTransaction = inferFieldsFromText(message);
+      const inferredFields = inferFieldsFromText(message);
       
-      if (inferredTransaction) {
-        setInferredTransaction(inferredTransaction);
+      if (inferredFields) {
+        setInferredTransaction(inferredFields);
         toast({
           title: "Inferred Transaction",
           description: (
             <div>
               <p>Could not find a good match, but here's what we inferred:</p>
-              <pre>{JSON.stringify(inferredTransaction, null, 2)}</pre>
+              <pre>{JSON.stringify(inferredFields, null, 2)}</pre>
             </div>
           ),
         });
         
         // Call the callback with inferred transaction if provided
-        if (onTransactionsDetected && inferredTransaction.amount !== undefined) {
+        if (onTransactionsDetected && inferredFields.amount !== undefined) {
           // Convert the inferred fields to a full Transaction object
           const transaction: Transaction = {
             id: `inferred-${Date.now()}`,
-            title: inferredTransaction.vendor || 'Inferred Transaction',
-            amount: inferredTransaction.amount || 0,
-            category: inferredTransaction.category || 'Uncategorized',
-            date: inferredTransaction.date || new Date().toISOString(),
-            type: inferredTransaction.type || 'expense',
+            // Use description or a default since 'vendor' isn't on Transaction
+            title: inferredFields.description || 'Inferred Transaction',
+            amount: inferredFields.amount || 0,
+            category: inferredFields.category || 'Uncategorized',
+            date: inferredFields.date || new Date().toISOString(),
+            type: inferredFields.type || 'expense',
             source: 'smart-paste',
-            fromAccount: inferredTransaction.account || 'Unknown',
+            // Use fromAccount since 'account' isn't on Transaction
+            fromAccount: inferredFields.fromAccount || 'Unknown',
             description: message,
-            ...(inferredTransaction.subcategory && { subcategory: inferredTransaction.subcategory }),
-            ...(inferredTransaction.currency && { currency: inferredTransaction.currency }),
-            ...(inferredTransaction.person && { person: inferredTransaction.person })
+            ...(inferredFields.subcategory && { subcategory: inferredFields.subcategory }),
+            ...(inferredFields.currency && { currency: inferredFields.currency }),
+            ...(inferredFields.person && { person: inferredFields.person })
           };
           
           onTransactionsDetected([transaction], message, senderHint, 0.3);
