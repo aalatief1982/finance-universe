@@ -764,44 +764,6 @@ class LearningEngineService {
     return Math.max(0, Math.min(1, 1 - difference));
   }
 
-  // Keep using this existing method for template hash similarity
-  private templateHashSimilarity(hash1: string, hash2: string): number {
-    if (!hash1 || !hash2) return 0;
-    
-    // Split into segments and remove empty strings
-    const segments1 = hash1.split(/[\s,;:]+/).filter(Boolean);
-    const segments2 = hash2.split(/[\s,;:]+/).filter(Boolean);
-    
-    // Count matching segments
-    const uniqueSegments1 = new Set(segments1);
-    const uniqueSegments2 = new Set(segments2);
-    
-    let matchCount = 0;
-    for (const segment of uniqueSegments1) {
-      if (uniqueSegments2.has(segment)) {
-        matchCount++;
-      }
-    }
-    
-    // Structural placeholders should have higher weight
-    const structuralTokens = ['{account}', '{amount}', '{date}', 'مبلغ', 'بطاقة', 'لدى', 'في'];
-    let structuralMatchBonus = 0;
-    
-    for (const token of structuralTokens) {
-      if (hash1.includes(token) && hash2.includes(token)) {
-        structuralMatchBonus += 0.05; // 5% bonus per structural token match
-      }
-    }
-    
-    // Calculate base similarity
-    const totalUniqueSegments = uniqueSegments1.size + uniqueSegments2.size;
-    const baseSimilarity = totalUniqueSegments > 0 ? 
-      (2 * matchCount) / totalUniqueSegments : 0;
-    
-    // Add structural bonus but cap at 1.0
-    return Math.min(1.0, baseSimilarity + structuralMatchBonus);
-  }
-
   private calculateTextSimilarity(text1: string, text2: string): number {
     const tokens1 = this.tokenize(text1);
     const tokens2 = this.tokenize(text2);
@@ -811,34 +773,264 @@ class LearningEngineService {
   }
 
   private scoreContextHints(message: string, fieldTokenMap: FieldTokenMap): number {
-  let score = 0;
+    let score = 0;
 
-  const contextRules: Record<string, string[]> = {
-    amount: ['مبلغ', 'amount'],
-    currency: ['sar', 'egp', 'usd'],
-    vendor: ['لدى', 'vendor', 'merchant', 'from'],
-    account: ['بطاقة', 'account', 'card'],
-    date: ['في', 'on', 'at']
-  };
+    const contextRules: Record<string, string[]> = {
+      amount: ['مبلغ', 'amount'],
+      currency: ['sar', 'egp', 'usd'],
+      vendor: ['لدى', 'vendor', 'merchant', 'from'],
+      account: ['بطاقة', 'account', 'card'],
+      date: ['في', 'on', 'at']
+    };
 
-  Object.entries(fieldTokenMap).forEach(([field, tokens]) => {
-    tokens.forEach(token => {
-      const beforeTokens = token.context?.before || [];
-      if (contextRules[field]) {
-        const matched = beforeTokens.some(before =>
-          contextRules[field].includes(before.toLowerCase())
-        );
-        if (matched) {
-          score += 0.02; // Small boost per match
+    Object.entries(fieldTokenMap).forEach(([field, tokens]) => {
+      tokens.forEach(token => {
+        const beforeTokens = token.context?.before || [];
+        if (contextRules[field]) {
+          const matched = beforeTokens.some(before =>
+            contextRules[field].includes(before.toLowerCase())
+          );
+          if (matched) {
+            score += 0.02; // Small boost per match
+          }
         }
+      });
+    });
+
+    return Math.min(0.1, score); // Cap at 10%
+  }
+
+  private scoreArabicHeuristics(message: string): number {
+    const arabicSequence = ['شراء', 'بطاقة', 'مبلغ', 'لدى', 'في'];
+    const normalized = this.tokenize(message).join(' ');
+    const matched = arabicSequence.filter(token => normalized.includes(token));
+    return matched.length >= 4 ? 0.1 : matched.length / arabicSequence.length * 0.1;
+  }
+
+  private calculateConfirmationBonus(entry: LearnedEntry): number {
+    if (!entry.confirmationHistory || entry.confirmationHistory.length === 0) {
+      return 0;
+    }
+    
+    // User-confirmed entries get a confidence boost
+    if (entry.userConfirmed) {
+      return this.config.userConfirmationWeight || 0.2;
+    }
+    
+    // Multiple confirmations should increase confidence
+    return Math.min(0.1, entry.confirmationHistory.length * 0.02);
+  }
+
+  // Add method to extract token positions from text
+  private extractAmountTokensWithPosition(message: string): PositionedToken[] {
+    const matches = Array.from(message.matchAll(/\b\d+(?:[.,]\d+)?\b/g));
+    return matches.map(match => {
+      const position = match.index || 0;
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      const tokenPosition = messageTokens.findIndex(t => t.includes(match[0]));
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: match[0], 
+        position,
+        context
+      };
+    });
+  }
+
+  private extractCurrencyTokensWithPosition(message: string): PositionedToken[] {
+    const currencyPatterns = [
+      /\b(?:SAR|ريال|سعودي)\b/i,
+      /\b(?:USD|دولار|dollar)\b/i,
+      /\b(?:EUR|يورو|euro)\b/i,
+      /\b(?:EGP|جنيه|مصري)\b/i,
+      /\b(?:AED|درهم|إماراتي)\b/i
+    ];
+    
+    let results: PositionedToken[] = [];
+    
+    currencyPatterns.forEach(pattern => {
+      const matches = Array.from(message.matchAll(pattern));
+      results = results.concat(matches.map(match => {
+        const position = match.index || 0;
+        const contextSize = 2;
+        
+        // Get context around the token
+        const messageTokens = message.split(/\s+/);
+        const tokenPosition = messageTokens.findIndex(t => t.includes(match[0]));
+        
+        const context = {
+          before: tokenPosition > 0 
+            ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+            : [],
+          after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+            ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+            : []
+        };
+        
+        return { 
+          token: match[0], 
+          position,
+          context
+        };
+      }));
+    });
+    
+    return results;
+  }
+
+  private extractVendorTokensWithPosition(message: string): PositionedToken[] {
+    // This is a simplified approach - would need a more sophisticated vendor extraction
+    // in a production system, possibly with a database of known vendors
+    const commonVendorIndicators = /(?:لدى|at|from|vendor|merchant|to)[::\s]+([A-Za-zأ-ي0-9\s]+)(?:\s|$)/i;
+    const matches = Array.from(message.matchAll(commonVendorIndicators));
+    
+    return matches.map(match => {
+      const vendorText = match[1] ? match[1].trim() : '';
+      const position = (match.index || 0) + match[0].indexOf(vendorText);
+      const contextSize = 2;
+      
+      // Get context around the token
+      const messageTokens = message.split(/\s+/);
+      const tokenPosition = messageTokens.findIndex(t => t.includes(vendorText));
+      
+      const context = {
+        before: tokenPosition > 0 
+          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+          : [],
+        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+          : []
+      };
+      
+      return { 
+        token: vendorText, 
+        position,
+        context
+      };
+    });
+  }
+
+  private extractAccountTokensWithPosition(message: string): PositionedToken[] {
+    const accountPatterns = [
+      /\b(?:بطاقة|card|account)[::\s]+([*\dX]+)(?:\s|$)/i,
+      /\b([*\dX]{4,})\b/i
+    ];
+    
+    let results: PositionedToken[] = [];
+    
+    accountPatterns.forEach(pattern => {
+      const matches = Array.from(message.matchAll(pattern));
+      results = results.concat(matches.map(match => {
+        const accountText = match[1] ? match[1].trim() : match[0].trim();
+        const position = (match.index || 0) + match[0].indexOf(accountText);
+        const contextSize = 2;
+        
+        // Get context around the token
+        const messageTokens = message.split(/\s+/);
+        const tokenPosition = messageTokens.findIndex(t => t.includes(accountText));
+        
+        const context = {
+          before: tokenPosition > 0 
+            ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
+            : [],
+          after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
+            ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
+            : []
+        };
+        
+        return { 
+          token: accountText, 
+          position,
+          context
+        };
+      }));
+    });
+    
+    return results;
+  }
+
+  // Method to get all learned entries
+  public getLearnedEntries(): LearnedEntry[] {
+    try {
+      const stored = localStorage.getItem(LEARNING_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error loading learned entries:', error);
+      return [];
+    }
+  }
+
+  // Method to clear all learned entries
+  public clearLearnedEntries(): void {
+    localStorage.removeItem(LEARNING_STORAGE_KEY);
+  }
+
+  // Tokenize a message into tokens
+  public tokenize(message: string): string[] {
+    if (!message) return [];
+    // Split on whitespace and punctuation, filter out empty tokens
+    return message
+      .toLowerCase()
+      .split(/[\s,.;:!?()[\]{}'"]+/)
+      .filter(Boolean);
+  }
+
+  // Extract amount tokens from message
+  public extractAmountTokens(message: string): string[] {
+    if (!message) return [];
+    const matches = message.match(/\b\d+(?:[.,]\d+)?\b/g);
+    return matches || [];
+  }
+
+  // Extract currency tokens from message
+  public extractCurrencyTokens(message: string): string[] {
+    if (!message) return [];
+    const matches = message.match(/\b(?:SAR|ريال|سعودي|USD|دولار|dollar|EUR|يورو|euro|EGP|جنيه|مصري|AED|درهم|إماراتي)\b/ig);
+    return matches ? matches.map(m => m.toUpperCase()) : [];
+  }
+
+  // Extract vendor tokens from message
+  public extractVendorTokens(message: string): string[] {
+    if (!message) return [];
+    const vendorIndicators = /(?:لدى|at|from|vendor|merchant|to)[::\s]+([A-Za-zأ-ي0-9\s]+)(?:\s|$)/i;
+    const match = message.match(vendorIndicators);
+    return match && match[1] ? [match[1].trim()] : [];
+  }
+
+  // Extract account tokens from message
+  public extractAccountTokens(message: string): string[] {
+    if (!message) return [];
+    const accountPatterns = [
+      /(?:بطاقة|card|account)[::\s]+([*\dX]+)(?:\s|$)/i,
+      /\b([*\dX]{4,})\b/i
+    ];
+    
+    const results: string[] = [];
+    
+    accountPatterns.forEach(pattern => {
+      const match = message.match(pattern);
+      if (match && match[1]) {
+        results.push(match[1].trim());
       }
     });
-  });
-
-  return Math.min(0.1, score); // Cap at 10%
+    
+    return results;
+  }
 }
-private scoreArabicHeuristics(message: string): number {
-  const arabicSequence = ['شراء', 'بطاقة', 'مبلغ', 'لدى', 'في'];
-  const normalized = this.tokenize(message).join(' ');
-  const matched = arabicSequence.filter(token => normalized.includes(token));
-  return matched.length >= 4 ? 0.
+
+// Export singleton instance
+export const learningEngineService = new LearningEngineService();
+// Export the relevant types for use in other parts of the application
+export type { FieldTokenMap };
