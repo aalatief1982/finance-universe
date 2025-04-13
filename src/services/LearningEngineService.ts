@@ -574,13 +574,19 @@ class LearningEngineService {
     let bestScore = 0;
 
     for (const entry of confirmedEntries) {
+      // Initialize score as a let variable to allow reassignment
+      let score = 0;
 
-      const templateSimilarity = this.compareTemplateHash(
-      this.computeTemplateHash(message),
-      entry.templateHash
-    );
-    score += templateSimilarity * 0.2;
-      const score = this.calculateConfidenceScore(entry, message, senderHint);
+      // STEP 1 – Template Structure Match (40%)
+      const templateSimilarity = this.calculateTextSimilarity(entry.rawMessage, message);
+      const structureScore = templateSimilarity >= 0.85 ? 0.4 : templateSimilarity * 0.4;
+      score += structureScore;
+
+      const templateSimilarity2 = this.compareTemplateHash(
+        this.computeTemplateHash(message),
+        entry.templateHash
+      );
+      score += templateSimilarity2 * 0.2;
 
       if (score > bestScore) {
         bestScore = score;
@@ -593,7 +599,7 @@ class LearningEngineService {
       return { entry: bestMatch, confidence: bestScore, matched: true };
     }
 
-    return { entry: null, confidence: bestScore, matched: false,shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD // Add this new flag
+    return { entry: null, confidence: bestScore, matched: false, shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD // Add this new flag
           };
   }
 
@@ -722,6 +728,7 @@ private compareTemplateHash(newHash: string, existingHash: string): number {
   }
   
 private calculateConfidenceScore(entry: LearnedEntry, message: string, senderHint: string = ''): number {
+  // Initialize score as a let variable to allow reassignment
   let score = 0;
 
   // STEP 1 – Template Structure Match (40%)
