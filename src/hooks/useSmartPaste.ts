@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { resetNERModel } from '@/ml/ner';
 import { learningEngineService } from '@/services/LearningEngineService';
 
@@ -16,9 +15,7 @@ export const useSmartPaste = (
   const [isSmartMatch, setIsSmartMatch] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [structureMatch, setStructureMatch] = useState<any>(null);
   const { toast } = useToast();
-  const [currentSenderHint, setCurrentSenderHint] = useState<string | undefined>(undefined);
 
   const handlePaste = async () => {
     try {
@@ -35,28 +32,18 @@ export const useSmartPaste = (
   };
 
   const processText = async (rawText: string) => {
-    if (!rawText.trim()) {
-      return;
-    }
-    
+    if (!rawText.trim()) return;
     setIsProcessing(true);
     setError(null);
-    setStructureMatch(null);
-    
+
     try {
-      // First try template matching with learning engine
-      console.log("Trying template matching with LearningEngine");
+      // 1. Try LearningEngine template match
       const match = learningEngineService.findBestMatch(rawText);
-      console.log("Template match result:", match);
-      
-      // If we have a good match from templates, use it
       if (match.matched && match.entry) {
-        console.log("Using template match with confidence:", match.confidence);
-        
         const { confirmedFields } = match.entry;
         const categoryInfo = findCategoryForVendor(confirmedFields.vendor || '', confirmedFields.type || 'expense');
-        
-        const templateTxn: Transaction = {
+
+        const txn: Transaction = {
           id: `template-${Math.random().toString(36).substring(2, 9)}`,
           title: `Template: ${categoryInfo.category} | ${confirmedFields.amount}`,
           amount: confirmedFields.amount,
@@ -71,61 +58,44 @@ export const useSmartPaste = (
           source: 'smart-paste',
           person: confirmedFields.person
         };
-        
-        setDetectedTransactions([templateTxn]);
+
+        setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        
-        if (onTransactionsDetected) {
-          onTransactionsDetected([templateTxn], rawText, match.entry.senderHint, match.confidence, false);
-        }
-        
-        setIsProcessing(false);
+        onTransactionsDetected?.([txn], rawText, match.entry.senderHint, match.confidence, false);
         return;
       }
-      
-      // Check structure-based fallback if no template match
-      console.log("Trying structure-based fallback");
-      const structMatchResult = learningEngineService.matchUsingTemplateStructure(rawText);
-      setStructureMatch(structMatchResult);
 
-      if (structMatchResult) {
-        const categoryInfo = findCategoryForVendor(
-          structMatchResult.inferredTransaction.description || '', 
-          structMatchResult.inferredTransaction.type || 'expense'
-        );
+      // 2. Structure-based fallback
+      const structureMatch = learningEngineService.matchUsingTemplateStructure?.(rawText);
+      if (structureMatch && structureMatch.inferredTransaction) {
+        const categoryInfo = findCategoryForVendor(structureMatch.inferredTransaction.vendor || '', structureMatch.inferredTransaction.type || 'expense');
 
-        const fallbackTxn: Transaction = {
+        const txn: Transaction = {
           id: `structure-${Math.random().toString(36).substring(2, 9)}`,
-          title: `Template Structure: ${categoryInfo.category} | ${structMatchResult.inferredTransaction.amount}`,
-          amount: structMatchResult.inferredTransaction.amount || 0,
-          currency: structMatchResult.inferredTransaction.currency || 'SAR',
-          type: structMatchResult.inferredTransaction.type || 'expense',
-          fromAccount: structMatchResult.inferredTransaction.fromAccount || 'Unknown',
+          title: `Structure: ${categoryInfo.category} | ${structureMatch.inferredTransaction.amount}`,
+          amount: structureMatch.inferredTransaction.amount || 0,
+          currency: structureMatch.inferredTransaction.currency || 'SAR',
+          type: structureMatch.inferredTransaction.type || 'expense',
+          fromAccount: structureMatch.inferredTransaction.fromAccount || 'Unknown',
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
-          date: structMatchResult.inferredTransaction.date || new Date().toISOString(),
-          description: structMatchResult.inferredTransaction.description || '',
+          date: structureMatch.inferredTransaction.date || new Date().toISOString(),
+          description: structureMatch.inferredTransaction.vendor || '',
           notes: 'Matched by structure template',
           source: 'smart-paste'
         };
 
-        setDetectedTransactions([fallbackTxn]);
+        setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        if (onTransactionsDetected) {
-          onTransactionsDetected([fallbackTxn], rawText, currentSenderHint, structMatchResult.confidence, true);
-        }
-        setIsProcessing(false);
+        onTransactionsDetected?.([txn], rawText, undefined, structureMatch.confidence, true);
         return;
       }
 
-      // If no template match, try ML-based extraction
-      console.log("No template match found, trying ML extraction");
+      // 3. ML fallback
       const parsed = await extractTransactionEntities(rawText, useHighAccuracy);
-
       if (parsed.amount) {
         const categoryInfo = findCategoryForVendor(parsed.vendor || '', parsed.type || 'expense');
-
-        const autoTxn: Transaction = {
+        const txn: Transaction = {
           id: `ml-${Math.random().toString(36).substring(2, 9)}`,
           title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
           amount: parseFloat(parsed.amount),
@@ -137,141 +107,65 @@ export const useSmartPaste = (
           date: parsed.date || new Date().toISOString(),
           description: parsed.vendor || '',
           notes: 'Extracted with ML',
-          source: 'smart-paste',
+          source: 'smart-paste'
         };
 
-        setDetectedTransactions([autoTxn]);
+        setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        
-        if (onTransactionsDetected) {
-          // Pass the shouldTrain flag from the match result
-          onTransactionsDetected([autoTxn], rawText, undefined, match.confidence, match.shouldTrain);
-        }
-      } else {
-        // If ML parsing didn't find an amount, use fallback
-        console.log("ML extraction failed, using fallback");
-        const fallbackTransaction = createFallbackTransaction(rawText);
-        
-        if (fallbackTransaction) {
-          setDetectedTransactions([fallbackTransaction]);
-          setIsSmartMatch(false);
-          
-          if (onTransactionsDetected) {
-            // Pass the shouldTrain flag from the match result
-            onTransactionsDetected([fallbackTransaction], rawText, undefined, match.confidence, match.shouldTrain);
-          }
-        } else {
-          setDetectedTransactions([]);
-          toast({
-            title: 'No transaction detected',
-            description: 'Could not extract data from the message.',
-          });
-        }
+        onTransactionsDetected?.([txn], rawText, undefined, 0.65, true);
+        return;
       }
-    } catch (error) {
-      console.error('Error processing text:', error);
-      
-      // If ML model loading failed, reset it so we can try again later
-      resetNERModel();
-      
-      // Always try fallback method
-      const fallbackTransaction = createFallbackTransaction(rawText);
-      
-      let errorMessage = 'Could not process the text with ML model. Using simple text analysis instead.';
-      
-      if (fallbackTransaction) {
-        setDetectedTransactions([fallbackTransaction]);
+
+      // 4. Final basic fallback
+      const fallbackTxn = createFallbackTransaction(rawText);
+      if (fallbackTxn) {
+        setDetectedTransactions([fallbackTxn]);
         setIsSmartMatch(false);
-        
-        if (onTransactionsDetected) {
-          onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3, true); // Always suggest training for fallback
-        }
+        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true);
       } else {
-        errorMessage = 'Could not extract transaction details from the message.';
+        setDetectedTransactions([]);
+        toast({ title: 'No transaction detected', description: 'Message could not be parsed.' });
+      }
+
+    } catch (error) {
+      console.error(error);
+      resetNERModel();
+      const fallbackTxn = createFallbackTransaction(rawText);
+      setError('ML failed. Using fallback.');
+      if (fallbackTxn) {
+        setDetectedTransactions([fallbackTxn]);
+        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true);
+      } else {
         setDetectedTransactions([]);
       }
-      
-      setError(errorMessage);
-      toast({
-        title: 'Processing Note',
-        description: errorMessage,
-        variant: fallbackTransaction ? 'default' : 'destructive',
-      });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Fallback function to extract basic transaction data when ML model fails
   const createFallbackTransaction = (text: string): Transaction | null => {
-    // Simple regex to find amounts (numbers with optional decimal places)
     const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
     const amount = amountMatch ? parseFloat(amountMatch[0].replace(',', '.')) : 0;
-    
     if (!amount) return null;
-    
-    // Try to identify if it's an expense or income
-    const lowerText = text.toLowerCase();
-    const isExpense = lowerText.includes('debit') || 
-                     lowerText.includes('purchase') || 
-                     lowerText.includes('paid') ||
-                     lowerText.includes('withdraw') ||
-                     lowerText.includes('شراء') ||
-                     lowerText.includes('دفع') ||
-                     lowerText.includes('سحب');
-    
-    const isIncome = lowerText.includes('credit') || 
-                    lowerText.includes('deposit') || 
-                    lowerText.includes('received') ||
-                    lowerText.includes('salary') ||
-                    lowerText.includes('إيداع') ||
-                    lowerText.includes('استلام') ||
-                    lowerText.includes('راتب');
-    
-    // Extract potential vendor name (just a simple approach)
-    let vendor = "Unknown";
-    if (text.includes('at') || text.includes('to') || text.includes('from') || 
-        text.includes('في') || text.includes('إلى') || text.includes('من')) {
-      const parts = text.split(/\s+(?:at|to|from|في|إلى|من)\s+/);
-      if (parts.length > 1) {
-        vendor = parts[1].split(/\s+/)[0];
-      }
-    }
-    
+
+    const lower = text.toLowerCase();
+    const isExpense = lower.includes('شراء') || lower.includes('paid');
+    const isIncome = lower.includes('راتب') || lower.includes('credited');
+
     return {
       id: `fallback-${Math.random().toString(36).substring(2, 9)}`,
-      title: `Fallback: ${vendor} | ${amount}`,
+      title: `Fallback: ${amount}`,
       amount: isIncome ? amount : -Math.abs(amount),
-      currency: detectCurrency(text),
+      currency: 'SAR',
       type: isIncome ? 'income' : 'expense',
       fromAccount: 'Unknown',
       category: 'Uncategorized',
       subcategory: '',
       date: new Date().toISOString(),
       description: text,
-      notes: 'Extracted with fallback parser',
-      source: 'smart-paste',
+      notes: 'Parsed fallback',
+      source: 'smart-paste'
     };
-  };
-  
-  // Detect currency from text
-  const detectCurrency = (text: string): string => {
-    const lowerText = text.toLowerCase();
-    
-    if (lowerText.includes('sar') || lowerText.includes('ريال') || lowerText.includes('سعودي')) {
-      return 'SAR';
-    } else if (lowerText.includes('egp') || lowerText.includes('جنيه') || lowerText.includes('مصري')) {
-      return 'EGP';
-    } else if (lowerText.includes('usd') || lowerText.includes('$') || lowerText.includes('dollar')) {
-      return 'USD';
-    } else if (lowerText.includes('eur') || lowerText.includes('€') || lowerText.includes('euro')) {
-      return 'EUR';
-    } else if (lowerText.includes('aed') || lowerText.includes('درهم') || lowerText.includes('إماراتي')) {
-      return 'AED';
-    }
-    
-    // Default currency (from user preferences)
-    return 'SAR';
   };
 
   return {
@@ -283,8 +177,6 @@ export const useSmartPaste = (
     isProcessing,
     error,
     handlePaste,
-    processText,
-    structureMatch,
-    setCurrentSenderHint
+    processText
   };
 };
