@@ -574,6 +574,12 @@ class LearningEngineService {
     let bestScore = 0;
 
     for (const entry of confirmedEntries) {
+
+      const templateSimilarity = this.compareTemplateHash(
+      this.computeTemplateHash(message),
+      entry.templateHash
+    );
+    score += templateSimilarity * 0.2;
       const score = this.calculateConfidenceScore(entry, message, senderHint);
 
       if (score > bestScore) {
@@ -632,6 +638,15 @@ private scoreArabicHeuristics(message: string): number {
   const matched = arabicSequence.filter(token => normalized.includes(token));
   return matched.length >= 4 ? 0.05 : matched.length * 0.01;
 }
+
+private compareTemplateHash(newHash: string, existingHash: string): number {
+  if (!newHash || !existingHash) return 0;
+  const tokens1 = newHash.split(/\s+/);
+  const tokens2 = existingHash.split(/\s+/);
+  const overlap = tokens1.filter(t => tokens2.includes(t));
+  return overlap.length / Math.max(tokens1.length, tokens2.length);
+}
+  
 
 
   private evaluateSequencePatterns(message: string, patterns: SequencePattern[]): number {
