@@ -133,8 +133,12 @@ class LearningEngineService {
   
     return null;
   }
+<<<<<<< HEAD
+ /*public matchUsingTemplateStructure(message: string): {
+=======
 
   public matchUsingTemplateStructure(message: string): {
+>>>>>>> 6abb84fd57eea51ed53df07cfc6aee5a3c2b8964
     confidence: number;
     inferredTransaction: Partial<Transaction>;
     matchedTemplate?: Template;
@@ -152,7 +156,7 @@ class LearningEngineService {
       },
       matchedTemplate: template
     };
-  }
+  }*/
   
   private computeTemplateHash(message: string): string {
     let normalized = message
@@ -166,6 +170,44 @@ class LearningEngineService {
     // Optional: Use a simple hash or checksum (keep readable for now)
     return normalized;
   }
+  private normalizeTemplate(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[0-9\*\.\:\-\/\;]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  
+
+  public matchUsingTemplateStructure(message: string): {
+    inferredTransaction: Partial<Transaction>;
+    confidence: number;
+  } | null {
+    const normalized = this.normalizeTemplate(message);
+    const entries = this.getLearnedEntries();
+  
+    for (const entry of entries) {
+      if (entry.templateHash && this.normalizeTemplate(entry.templateHash) === normalized) {
+        const inferredTransaction = {
+          amount: entry.confirmedFields.amount,
+          currency: entry.confirmedFields.currency,
+          type: entry.confirmedFields.type,
+          fromAccount: entry.confirmedFields.account,
+          vendor: entry.confirmedFields.vendor,
+          category: entry.confirmedFields.category,
+          subcategory: entry.confirmedFields.subcategory,
+          date: new Date().toISOString(),
+        };
+        return {
+          inferredTransaction,
+          confidence: 0.4
+        };
+      }
+    }
+  
+    return null;
+  }
+  
 
   private inferTypeFromText(message: string): TransactionType {
     const t = message.toLowerCase();
@@ -456,7 +498,6 @@ class LearningEngineService {
       id,
       rawMessage: raw,
       senderHint,
-      templateHash,
       confirmedFields: {
         type: txn.type,
         amount: parseFloat(txn.amount.toString()),
@@ -471,6 +512,7 @@ class LearningEngineService {
       fieldTokenMap,
       timestamp: new Date().toISOString(),
       userConfirmed: true, // Mark as user confirmed
+      templateHash: this.generateTemplateHash(raw), // <--- ADD THIS
       confirmationHistory: [{ // New field to track confirmation history
         timestamp: new Date().toISOString(),
         source: 'user-explicit', // 'auto', 'user-explicit', 'system'
@@ -482,6 +524,18 @@ class LearningEngineService {
     localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(entries));
   }
 
+  private generateTemplateHash(text: string): string {
+    // Replace numbers and variable data with placeholders
+    return text
+      .replace(/\b\d{2,4}[-\/:.]?\d{1,2}[-\/:.]?\d{1,4}\b/g, '{date}')
+      .replace(/\d+(?:\.\d{1,2})?/g, '{amount}')
+      .replace(/\*{2,}\d+/g, '{account}')
+      .replace(/\b(SAR|EGP|USD|AED|BHD|EUR)\b/gi, '{currency}')
+      .replace(/(?<=لدى:|vendor:|at:)\s*[^\n]+/gi, '{vendor}')
+      .toLowerCase()
+      .trim();
+  }
+  
   public saveUserTraining(raw: string, txn: Partial<Transaction>, senderHint: string, fieldTokenMap: Record<string, string[]>): void {
     const entries = this.getLearnedEntries();
   
