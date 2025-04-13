@@ -12,13 +12,11 @@ import Settings from "./pages/Settings";
 import { RequireAuth } from "./components/RequireAuth";
 import { useAuth } from "./hooks/useAuth";
 import { useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { Toast } from "@/components/ui/toast";
+import { Toaster } from "@/components/ui/toaster";
 import TrainModel from '@/pages/TrainModel';
 
 function App() {
   const { authState, loadAuthState } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     loadAuthState();
@@ -65,7 +63,8 @@ function App() {
         
       </Routes>
       
-      <Toast />
+      {/* Replace Toast with Toaster component */}
+      <Toaster />
     </BrowserRouter>
   );
 }
