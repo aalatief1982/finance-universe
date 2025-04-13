@@ -81,6 +81,20 @@ class LearningEngineService {
     };
   }
 
+  private computeTemplateHash(message: string): string {
+  let normalized = message
+    .replace(/\*{2,}\d+/g, '{account}')                // masked account numbers
+    .replace(/\b\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?\b/g, '{amount}') // numbers
+    .replace(/\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4}/g, '{date}') // date formats
+    .replace(/\s+/g, ' ') // collapse whitespace
+    .trim()
+    .toLowerCase();
+
+  // Optional: Use a simple hash or checksum (keep readable for now)
+  return normalized;
+}
+
+
   private inferTypeFromText(message: string): TransactionType {
     const t = message.toLowerCase();
     if (t.includes('شراء') || t.includes('debited') || t.includes('سداد')) return 'expense';
@@ -363,11 +377,13 @@ class LearningEngineService {
 
     // Update sender template with the new message
     this.updateSenderTemplate(raw, senderHint, fieldTokenMap);
+    const templateHash = this.computeTemplateHash(raw);
 
     const newEntry: LearnedEntry = {
       id,
       rawMessage: raw,
       senderHint,
+      templateHash,
       confirmedFields: {
         type: txn.type,
         amount: parseFloat(txn.amount.toString()),

@@ -34,6 +34,9 @@ export interface LearnedEntry {
   id: string;
   rawMessage: string;
   senderHint: string;
+  templateHash?: string;
+  structureSignature?: string; // optional, coming in Step 5
+  senderMatchCount?: number; // optional, inferred during learning
   confirmedFields: {
     type: TransactionType;
     amount: number;
