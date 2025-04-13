@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
@@ -33,10 +33,18 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     error,
     handlePaste,
     processText,
-    structureMatch
+    structureMatch,
+    setCurrentSenderHint
   } = useSmartPaste(onTransactionsDetected, useHighAccuracy);
 
   const { toast } = useToast();
+  
+  // Set the senderHint when it changes
+  useEffect(() => {
+    if (senderHint) {
+      setCurrentSenderHint(senderHint);
+    }
+  }, [senderHint, setCurrentSenderHint]);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -18,6 +18,7 @@ export const useSmartPaste = (
   const [error, setError] = useState<string | null>(null);
   const [structureMatch, setStructureMatch] = useState<any>(null);
   const { toast } = useToast();
+  const [currentSenderHint, setCurrentSenderHint] = useState<string | undefined>(undefined);
 
   const handlePaste = async () => {
     try {
@@ -81,13 +82,17 @@ export const useSmartPaste = (
         setIsProcessing(false);
         return;
       }
+      
       // Check structure-based fallback if no template match
       console.log("Trying structure-based fallback");
       const structMatchResult = learningEngineService.matchUsingTemplateStructure(rawText);
       setStructureMatch(structMatchResult);
 
       if (structMatchResult) {
-        const categoryInfo = findCategoryForVendor(structMatchResult.inferredTransaction.vendor || '', structMatchResult.inferredTransaction.type || 'expense');
+        const categoryInfo = findCategoryForVendor(
+          structMatchResult.inferredTransaction.description || '', 
+          structMatchResult.inferredTransaction.type || 'expense'
+        );
 
         const fallbackTxn: Transaction = {
           id: `structure-${Math.random().toString(36).substring(2, 9)}`,
@@ -99,7 +104,7 @@ export const useSmartPaste = (
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
           date: structMatchResult.inferredTransaction.date || new Date().toISOString(),
-          description: structMatchResult.inferredTransaction.vendor || '',
+          description: structMatchResult.inferredTransaction.description || '',
           notes: 'Matched by structure template',
           source: 'smart-paste'
         };
@@ -107,7 +112,7 @@ export const useSmartPaste = (
         setDetectedTransactions([fallbackTxn]);
         setIsSmartMatch(true);
         if (onTransactionsDetected) {
-          onTransactionsDetected([fallbackTxn], rawText, senderHint, structMatchResult.confidence, true);
+          onTransactionsDetected([fallbackTxn], rawText, currentSenderHint, structMatchResult.confidence, true);
         }
         setIsProcessing(false);
         return;
@@ -279,6 +284,7 @@ export const useSmartPaste = (
     error,
     handlePaste,
     processText,
-    structureMatch
+    structureMatch,
+    setCurrentSenderHint
   };
 };

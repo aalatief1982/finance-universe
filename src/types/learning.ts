@@ -5,6 +5,7 @@
 
 import { TransactionType } from "./transaction";
 import { SupportedCurrency } from "./locale";
+import { Template } from "./template";
 
 /**
  * Enhanced token structure with position information
@@ -82,5 +83,6 @@ export interface MatchResult {
   entry: LearnedEntry | null;
   confidence: number;
   matched: boolean;
-  shouldTrain?: boolean; // NEW
+  shouldTrain?: boolean;
+  fallbackTemplate?: Template; // Added to support template fallback
 }
