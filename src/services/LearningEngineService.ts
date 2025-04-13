@@ -103,17 +103,17 @@ class LearningEngineService {
   }
 
   private computeTemplateHash(message: string): string {
-  let normalized = message
-    .replace(/\*{2,}\d+/g, '{account}')                // masked account numbers
-    .replace(/\b\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?\b/g, '{amount}') // numbers
-    .replace(/\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4}/g, '{date}') // date formats
-    .replace(/\s+/g, ' ') // collapse whitespace
-    .trim()
-    .toLowerCase();
+    let normalized = message
+      .replace(/\*{2,}\d+/g, '{account}')                // masked account numbers
+      .replace(/\b\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?\b/g, '{amount}') // numbers
+      .replace(/\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4}/g, '{date}') // date formats
+      .replace(/\s+/g, ' ') // collapse whitespace
+      .trim()
+      .toLowerCase();
 
-  // Optional: Use a simple hash or checksum (keep readable for now)
-  return normalized;
-}
+    // Optional: Use a simple hash or checksum (keep readable for now)
+    return normalized;
+  }
 
 
   private inferTypeFromText(message: string): TransactionType {
@@ -562,6 +562,44 @@ class LearningEngineService {
     };
   }
 
+  // New method to calculate similarity between template hashes
+  private templateHashSimilarity(hash1: string, hash2: string): number {
+    if (!hash1 || !hash2) return 0;
+    
+    // Split into segments and remove empty strings
+    const segments1 = hash1.split(/[\s,;:]+/).filter(Boolean);
+    const segments2 = hash2.split(/[\s,;:]+/).filter(Boolean);
+    
+    // Count matching segments
+    const uniqueSegments1 = new Set(segments1);
+    const uniqueSegments2 = new Set(segments2);
+    
+    let matchCount = 0;
+    for (const segment of uniqueSegments1) {
+      if (uniqueSegments2.has(segment)) {
+        matchCount++;
+      }
+    }
+    
+    // Structural placeholders should have higher weight
+    const structuralTokens = ['{account}', '{amount}', '{date}', 'مبلغ', 'بطاقة', 'لدى', 'في'];
+    let structuralMatchBonus = 0;
+    
+    for (const token of structuralTokens) {
+      if (hash1.includes(token) && hash2.includes(token)) {
+        structuralMatchBonus += 0.05; // 5% bonus per structural token match
+      }
+    }
+    
+    // Calculate base similarity
+    const totalUniqueSegments = uniqueSegments1.size + uniqueSegments2.size;
+    const baseSimilarity = totalUniqueSegments > 0 ? 
+      (2 * matchCount) / totalUniqueSegments : 0;
+    
+    // Add structural bonus but cap at 1.0
+    return Math.min(1.0, baseSimilarity + structuralMatchBonus);
+  }
+
   public findBestMatch(message: string, senderHint = ''): MatchResult {
     if (!this.config.enabled || !message) {
       return { entry: null, confidence: 0, matched: false };
@@ -572,6 +610,7 @@ class LearningEngineService {
 
     let bestMatch: LearnedEntry | null = null;
     let bestScore = 0;
+    const messageTemplateHash = this.computeTemplateHash(message);
 
     for (const entry of confirmedEntries) {
       // Initialize score as a let variable to allow reassignment
@@ -582,11 +621,63 @@ class LearningEngineService {
       const structureScore = templateSimilarity >= 0.85 ? 0.4 : templateSimilarity * 0.4;
       score += structureScore;
 
-      const templateSimilarity2 = this.compareTemplateHash(
-        this.computeTemplateHash(message),
-        entry.templateHash
+      // STEP 2 - Template Hash Similarity (25%) - NEW LOGIC
+      const hashSimilarity = this.templateHashSimilarity(
+        messageTemplateHash,
+        entry.templateHash || this.computeTemplateHash(entry.rawMessage)
       );
-      score += templateSimilarity2 * 0.2;
+      
+      // Boost score significantly if hash similarity is high
+      if (hashSimilarity > 0.75) {
+        score += 0.25; // Full 25% bonus for high structural similarity
+      } else {
+        score += hashSimilarity * 0.25;
+      }
+
+      // STEP 3 - Remaining Checks (35% total) - using existing code
+      // Sender Match + Coupling (15%) 
+      let senderScore = 0;
+      const senderTemplates = this.getSenderTemplates();
+      const matchedSender = senderTemplates.find(t =>
+        t.sender.toLowerCase() === senderHint.toLowerCase()
+      );
+
+      if (matchedSender && matchedSender.confirmationCount > 0) {
+        const senderTemplateMatch = matchedSender.templates.some(template => {
+          return this.calculateTextSimilarity(template, message) >= 0.8;
+        });
+        if (senderTemplateMatch) {
+          senderScore += 0.15; // Full bonus for matching sender + structure
+        } else if (entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
+          senderScore += 0.075; // Partial credit for sender name overlap
+        }
+      }
+      score += senderScore;
+
+      // Field Token Map Match (10%)
+      const fieldMatchScore = this.compareFieldsWithPosition(entry.fieldTokenMap, message);
+      score += fieldMatchScore * 0.1;
+
+      // Contextual Cues and Patterns (10%)
+      const contextBonus = this.scoreContextHints(message, entry.fieldTokenMap);
+      const sequenceBonus = this.evaluateSequencePatterns(message, this.getSequencePatterns());
+      score += (contextBonus + sequenceBonus) * 0.5; // Scale to fit within 10%
+
+      // User Confirmation History Bonus
+      const confirmationBonus = this.calculateConfirmationBonus(entry);
+      score += confirmationBonus;
+
+      // Debug logging to help troubleshoot matching
+      console.log(`Match evaluation for entry ${entry.id.substring(0, 8)}:`, {
+        templateSimilarity: templateSimilarity.toFixed(2),
+        hashSimilarity: hashSimilarity.toFixed(2),
+        senderScore: senderScore.toFixed(2),
+        fieldMatchScore: fieldMatchScore.toFixed(2),
+        contextBonus: contextBonus.toFixed(2),
+        sequenceBonus: sequenceBonus.toFixed(2),
+        confirmationBonus: confirmationBonus.toFixed(2),
+        totalScore: score.toFixed(2)
+      });
 
       if (score > bestScore) {
         bestScore = score;
@@ -594,13 +685,20 @@ class LearningEngineService {
       }
     }
 
+    // Log the final result
+    console.log(`Best match found:`, bestMatch ? {
+      id: bestMatch.id.substring(0, 8),
+      confidence: bestScore.toFixed(2),
+      vendor: bestMatch.confirmedFields.vendor,
+      amount: bestMatch.confirmedFields.amount
+    } : 'No match');
+
     if (bestMatch && bestScore >= this.config.minConfidenceThreshold) {
       bestMatch.confidence = bestScore;
       return { entry: bestMatch, confidence: bestScore, matched: true };
     }
 
-    return { entry: null, confidence: bestScore, matched: false, shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD // Add this new flag
-          };
+    return { entry: null, confidence: bestScore, matched: false, shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD };
   }
 
   private calculateTextSimilarity(text1: string, text2: string): number {
@@ -646,11 +744,7 @@ private scoreArabicHeuristics(message: string): number {
 }
 
 private compareTemplateHash(newHash: string, existingHash: string): number {
-  if (!newHash || !existingHash) return 0;
-  const tokens1 = newHash.split(/\s+/);
-  const tokens2 = existingHash.split(/\s+/);
-  const overlap = tokens1.filter(t => tokens2.includes(t));
-  return overlap.length / Math.max(tokens1.length, tokens2.length);
+  return this.templateHashSimilarity(newHash, existingHash);
 }
   
 
