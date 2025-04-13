@@ -152,35 +152,7 @@ class LearningEngineService {
       matchedTemplate: template
     };
   }*/
-  
-    public matchUsingTemplateStructure(message: string): {
-      inferredTransaction: Partial<Transaction>,
-      confidence: number
-    } | null {
-      const templateRegistry = JSON.parse(localStorage.getItem('xpensia_template_registry') || '[]');
-    
-      for (const template of templateRegistry) {
-        const regex = new RegExp(template.regexPattern, 'i'); // assumes regexPattern is saved
-        if (regex.test(message)) {
-          return {
-            inferredTransaction: {
-              amount: 0, // leave 0 or extract if you want
-              currency: 'SAR',
-              fromAccount: template.fromAccount || '',
-              type: template.type || 'expense',
-              vendor: '',
-              category: template.category || 'Uncategorized',
-              subcategory: '',
-              date: '',
-            },
-            confidence: 0.4
-          };
-        }
-      }
-    
-      return null;
-    }
-    
+     
   private computeTemplateHash(message: string): string {
     let normalized = message
       .replace(/\*{2,}\d+/g, '{account}')                // masked account numbers
@@ -193,44 +165,63 @@ class LearningEngineService {
     // Optional: Use a simple hash or checksum (keep readable for now)
     return normalized;
   }
-  private normalizeTemplate(text: string): string {
-    return text
-      .toLowerCase()
-      .replace(/[0-9\*\.\:\-\/\;]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
+
   
 
-  public matchUsingTemplateStructure(message: string): {
-    inferredTransaction: Partial<Transaction>;
-    confidence: number;
-  } | null {
-    const normalized = this.normalizeTemplate(message);
-    const entries = this.getLearnedEntries();
-  
-    for (const entry of entries) {
-      if (entry.templateHash && this.normalizeTemplate(entry.templateHash) === normalized) {
-        const inferredTransaction = {
-          amount: entry.confirmedFields.amount,
-          currency: entry.confirmedFields.currency,
-          type: entry.confirmedFields.type,
-          fromAccount: entry.confirmedFields.account,
-          vendor: entry.confirmedFields.vendor,
-          category: entry.confirmedFields.category,
-          subcategory: entry.confirmedFields.subcategory,
-          date: new Date().toISOString(),
-        };
-        return {
-          inferredTransaction,
-          confidence: 0.4
-        };
-      }
+  // Matches a message against existing template structures (ignoring dynamic values)
+public matchUsingTemplateStructure(message: string): {
+  confidence: number;
+  templateHash: string;
+  inferredTransaction: Partial<Transaction>;
+} | null {
+  const entries = this.getLearnedEntries();
+  const normalizedMessage = this.normalizeTemplate(message);
+
+  for (const entry of entries) {
+    if (!entry.templateHash) continue;
+
+    const similarity = this.compareTemplateStructure(normalizedMessage, entry.templateHash);
+
+    if (similarity >= 0.85) {
+      return {
+        confidence: 0.4, // fixed score for structure-based match
+        templateHash: entry.templateHash,
+        inferredTransaction: {
+          ...entry.confirmedFields,
+          description: entry.confirmedFields.vendor,
+          notes: 'Structure-based match',
+        }
+      };
     }
-  
-    return null;
   }
-  
+
+  return null;
+}
+
+// Strips out variable values and normalizes message
+private normalizeTemplate(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\d{4}-\d{2}-\d{2}/g, '{date}')
+    .replace(/\d{1,2}:\d{2}(?::\d{2})?/g, '{time}')
+    .replace(/\d+(?:\.\d+)?/g, '{amount}')
+    .replace(/\*{2,}\d+/g, '{account}')
+    .replace(/sar|egp|usd|aed|eur/gi, '{currency}')
+    .replace(/[^\w\s{}:;\/\-,×]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Basic template similarity using token overlap
+private compareTemplateStructure(msg1: string, msg2: string): number {
+  const tokens1 = msg1.split(/\s+/);
+  const tokens2 = msg2.split(/\s+/);
+
+  const common = tokens1.filter(t => tokens2.includes(t));
+  const union = new Set([...tokens1, ...tokens2]);
+
+  return common.length / union.size;
+}
 
   private inferTypeFromText(message: string): TransactionType {
     const t = message.toLowerCase();
