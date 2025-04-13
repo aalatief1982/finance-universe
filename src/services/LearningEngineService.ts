@@ -81,6 +81,27 @@ class LearningEngineService {
     };
   }
 
+  // Added method to compute structure signature for a field token map
+  public computeStructureSignature(fieldTokenMap: FieldTokenMap): string {
+    try {
+      // Create signature based on field positions and relationships
+      const signature = Object.entries(fieldTokenMap)
+        .filter(([_, tokens]) => tokens && tokens.length > 0)
+        .map(([field, tokens]) => {
+          // For each field, calculate average position
+          const avgPosition = tokens.reduce((sum, token) => sum + token.position, 0) / tokens.length;
+          return `${field}:${avgPosition.toFixed(0)}`;
+        })
+        .sort() // Sort to ensure consistent signature regardless of original order
+        .join('|');
+      
+      return signature || 'no-structure'; // Return default if no valid structure
+    } catch (error) {
+      console.error('Error generating structure signature:', error);
+      return 'signature-error';
+    }
+  }
+
   private computeTemplateHash(message: string): string {
   let normalized = message
     .replace(/\*{2,}\d+/g, '{account}')                // masked account numbers
@@ -409,88 +430,166 @@ class LearningEngineService {
     localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(entries));
   }
 
-  public saveUserTraining(raw: string, txn: Transaction, senderHint: string, fieldTokenMap: FieldTokenMap): void {
-  const entries = this.getLearnedEntries();
-
-  const tokens = this.tokenize(raw);
-  const id = uuidv4();
-
-  // Register tokens to MasterMind
-  Object.entries(fieldTokenMap).forEach(([field, positionedTokens]) => {
-    positionedTokens.forEach(pt => {
-      masterMindService.registerTokenWithPosition(pt.token, field, pt.position, pt.context);
+  public saveUserTraining(raw: string, txn: Partial<Transaction>, senderHint: string, fieldTokenMap: Record<string, string[]>): void {
+    const entries = this.getLearnedEntries();
+  
+    const tokens = this.tokenize(raw);
+    const id = uuidv4();
+  
+    // Convert string[] fieldTokenMap to PositionedToken[] format
+    const positionedTokenMap: FieldTokenMap = {
+      amount: [],
+      currency: [],
+      vendor: [],
+      account: [],
+      date: []
+    };
+  
+    // Extract positions for tokens if they exist in the message
+    Object.entries(fieldTokenMap).forEach(([field, tokenValues]) => {
+      tokenValues.forEach(tokenValue => {
+        const regex = new RegExp(`\\b${tokenValue}\\b`, 'g');
+        const matches = Array.from(raw.matchAll(regex));
+        
+        if (matches.length > 0) {
+          const position = matches[0].index || 0;
+          const context = this.getContextForPosition(raw, position, tokenValue.length);
+          
+          const positionedToken: PositionedToken = {
+            token: tokenValue,
+            position,
+            context
+          };
+          
+          if (field === 'amount') positionedTokenMap.amount.push(positionedToken);
+          else if (field === 'currency') positionedTokenMap.currency.push(positionedToken);
+          else if (field === 'vendor') positionedTokenMap.vendor.push(positionedToken);
+          else if (field === 'account') positionedTokenMap.account.push(positionedToken);
+          else if (field === 'date') positionedTokenMap.date.push(positionedToken);
+          else if (field === 'title' && !positionedTokenMap.title) {
+            positionedTokenMap.title = [positionedToken];
+          }
+        }
+      });
     });
-  });
-
-  // Sequence Patterns
-  this.extractSequencePatterns(fieldTokenMap);
-
-  // Sender Template
-  this.updateSenderTemplate(raw, senderHint, fieldTokenMap);
-
-  const templateHash = this.computeTemplateHash(raw);
-  const structureSignature = this.computeStructureSignature(fieldTokenMap);
-
-  const entry: LearnedEntry = {
-    id,
-    rawMessage: raw,
-    tokens,
-    senderHint,
-    fieldTokenMap,
-    confirmedFields: {
-      type: txn.type,
-      amount: txn.amount,
-      category: txn.category,
-      subcategory: txn.subcategory,
-      account: txn.fromAccount,
-      currency: txn.currency,
-      person: txn.person,
-      vendor: txn.description || ''
-    },
-    timestamp: new Date().toISOString(),
-    userConfirmed: true,
-    templateHash,
-    structureSignature,
-    confirmationHistory: [{
+  
+    // Register tokens to MasterMind
+    Object.entries(positionedTokenMap).forEach(([field, positionedTokens]) => {
+      positionedTokens.forEach(pt => {
+        masterMindService.registerTokenWithPosition(pt.token, field, pt.position, pt.context);
+      });
+    });
+  
+    // Sequence Patterns
+    this.extractSequencePatterns(positionedTokenMap);
+  
+    // Sender Template
+    this.updateSenderTemplate(raw, senderHint, positionedTokenMap);
+  
+    const templateHash = this.computeTemplateHash(raw);
+    const structureSignature = this.computeStructureSignature(positionedTokenMap);
+  
+    // Make sure the transaction has all required fields
+    const fullTransaction: Transaction = {
+      id: id, // Use the generated id
+      amount: txn.amount || 0,
+      currency: txn.currency || 'SAR' as SupportedCurrency,
+      description: txn.description || '',
+      fromAccount: txn.fromAccount || '',
+      type: txn.type || 'expense',
+      date: txn.date || new Date().toISOString(),
+      category: txn.category || 'Uncategorized',
+      subcategory: txn.subcategory || '',
+      title: txn.title || '',
+      source: 'manual'
+    };
+  
+    const entry: LearnedEntry = {
+      id,
+      rawMessage: raw,
+      tokens,
+      senderHint,
+      fieldTokenMap: positionedTokenMap,
+      confirmedFields: {
+        type: fullTransaction.type,
+        amount: fullTransaction.amount,
+        category: fullTransaction.category,
+        subcategory: fullTransaction.subcategory,
+        account: fullTransaction.fromAccount,
+        currency: fullTransaction.currency,
+        person: fullTransaction.person,
+        vendor: fullTransaction.description || ''
+      },
       timestamp: new Date().toISOString(),
-      source: 'user-explicit'
-    }]
-  };
-
-  // Keep at max limit
-  if (entries.length >= this.config.maxEntries) entries.pop();
-  entries.unshift(entry);
-  localStorage.setItem('xpensia_learned_entries', JSON.stringify(entries));
-}
-
-public findBestMatch(message: string, senderHint = ''): MatchResult {
-  if (!this.config.enabled || !message) {
-    return { entry: null, confidence: 0, matched: false };
+      userConfirmed: true,
+      templateHash,
+      structureSignature,
+      confirmationHistory: [{
+        timestamp: new Date().toISOString(),
+        source: 'user-explicit'
+      }]
+    };
+  
+    // Keep at max limit
+    if (entries.length >= this.config.maxEntries) entries.pop();
+    entries.unshift(entry);
+    localStorage.setItem('xpensia_learned_entries', JSON.stringify(entries));
   }
-
-  const entries = this.getLearnedEntries();
-  const confirmedEntries = entries.filter(entry => entry.userConfirmed);
-
-  let bestMatch: LearnedEntry | null = null;
-  let bestScore = 0;
-
-  for (const entry of confirmedEntries) {
-    const score = this.calculateConfidenceScore(entry, message, senderHint);
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = entry;
+  
+  // Helper method to get context for a position in text
+  private getContextForPosition(text: string, position: number, length: number): { before?: string[], after?: string[] } {
+    const contextSize = 2;
+    const tokens = text.split(/\s+/);
+    
+    // Find which token contains our position
+    let tokenIndex = -1;
+    let currentPos = 0;
+    
+    for (let i = 0; i < tokens.length; i++) {
+      if (currentPos <= position && position < currentPos + tokens[i].length) {
+        tokenIndex = i;
+        break;
+      }
+      // Add token length + 1 for the space
+      currentPos += tokens[i].length + 1;
     }
+    
+    if (tokenIndex === -1) return {};
+    
+    return {
+      before: tokenIndex > 0 ? tokens.slice(Math.max(0, tokenIndex - contextSize), tokenIndex) : [],
+      after: tokenIndex < tokens.length - 1 ? tokens.slice(tokenIndex + 1, Math.min(tokens.length, tokenIndex + contextSize + 1)) : []
+    };
   }
 
-  if (bestMatch && bestScore >= this.config.minConfidenceThreshold) {
-    bestMatch.confidence = bestScore;
-    return { entry: bestMatch, confidence: bestScore, matched: true };
-  }
+  public findBestMatch(message: string, senderHint = ''): MatchResult {
+    if (!this.config.enabled || !message) {
+      return { entry: null, confidence: 0, matched: false };
+    }
 
-  return { entry: null, confidence: bestScore, matched: false,shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD // Add this new flag
-         };
-}
+    const entries = this.getLearnedEntries();
+    const confirmedEntries = entries.filter(entry => entry.userConfirmed);
+
+    let bestMatch: LearnedEntry | null = null;
+    let bestScore = 0;
+
+    for (const entry of confirmedEntries) {
+      const score = this.calculateConfidenceScore(entry, message, senderHint);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = entry;
+      }
+    }
+
+    if (bestMatch && bestScore >= this.config.minConfidenceThreshold) {
+      bestMatch.confidence = bestScore;
+      return { entry: bestMatch, confidence: bestScore, matched: true };
+    }
+
+    return { entry: null, confidence: bestScore, matched: false,shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD // Add this new flag
+          };
+  }
 
   private calculateTextSimilarity(text1: string, text2: string): number {
     const tokens1 = this.tokenize(text1);
