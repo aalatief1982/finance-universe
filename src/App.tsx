@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter,
   Routes,
@@ -5,19 +6,19 @@ import {
 } from "react-router-dom";
 import { Home } from "./pages/Home";
 import { Dev } from "./pages/Dev";
-import { Settings } from "./pages/Settings";
-import { Budget } from "./pages/Budget";
 import { Auth } from "./pages/Auth";
+import { Budget } from "./pages/Budget";
+import Settings from "./pages/Settings";
 import { RequireAuth } from "./components/RequireAuth";
 import { useAuth } from "./hooks/useAuth";
 import { useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast"
-import { Toast } from "@/components/ui/toast"
+import { useToast } from "@/components/ui/use-toast";
+import { Toast } from "@/components/ui/toast";
 import TrainModel from '@/pages/TrainModel';
 
 function App() {
   const { authState, loadAuthState } = useAuth();
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   useEffect(() => {
     loadAuthState();

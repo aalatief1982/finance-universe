@@ -1,10 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import TrainModelForm from '@/components/train-model/TrainModelForm';
 import SelectionDropdown from '@/components/train-model/SelectionDropdown';
@@ -76,13 +74,41 @@ const TrainModel: React.FC = () => {
       // Extract field values from the message
       const inferredFields = learningEngineService.inferFieldsFromText(state.message);
       
-      // Create fieldTokenMap from the message
+      // Create fieldTokenMap from the message - using public methods instead of private ones
       const fieldTokenMap = {
-        amount: learningEngineService.extractAmountTokensWithPosition(state.message),
-        currency: learningEngineService.extractCurrencyTokensWithPosition(state.message),
-        vendor: learningEngineService.extractVendorTokensWithPosition(state.message),
-        account: learningEngineService.extractAccountTokensWithPosition(state.message),
-        date: learningEngineService.extractDateTokensWithPosition(state.message),
+        amount: learningEngineService.extractAmountTokens(state.message).map(token => ({
+          token,
+          position: state.message.indexOf(token),
+          context: {
+            before: state.message.slice(Math.max(0, state.message.indexOf(token) - 20), state.message.indexOf(token)).split(/\s+/),
+            after: state.message.slice(state.message.indexOf(token) + token.length, Math.min(state.message.length, state.message.indexOf(token) + token.length + 20)).split(/\s+/)
+          }
+        })),
+        currency: learningEngineService.extractCurrencyTokens(state.message).map(token => ({
+          token,
+          position: state.message.indexOf(token),
+          context: {
+            before: state.message.slice(Math.max(0, state.message.indexOf(token) - 20), state.message.indexOf(token)).split(/\s+/),
+            after: state.message.slice(state.message.indexOf(token) + token.length, Math.min(state.message.length, state.message.indexOf(token) + token.length + 20)).split(/\s+/)
+          }
+        })),
+        vendor: learningEngineService.extractVendorTokens(state.message).map(token => ({
+          token,
+          position: state.message.indexOf(token),
+          context: {
+            before: state.message.slice(Math.max(0, state.message.indexOf(token) - 20), state.message.indexOf(token)).split(/\s+/),
+            after: state.message.slice(state.message.indexOf(token) + token.length, Math.min(state.message.length, state.message.indexOf(token) + token.length + 20)).split(/\s+/)
+          }
+        })),
+        account: learningEngineService.extractAccountTokens(state.message).map(token => ({
+          token,
+          position: state.message.indexOf(token),
+          context: {
+            before: state.message.slice(Math.max(0, state.message.indexOf(token) - 20), state.message.indexOf(token)).split(/\s+/),
+            after: state.message.slice(state.message.indexOf(token) + token.length, Math.min(state.message.length, state.message.indexOf(token) + token.length + 20)).split(/\s+/)
+          }
+        })),
+        date: [] // Using empty array since there's no public method for date tokens
       };
       
       setState(prev => ({

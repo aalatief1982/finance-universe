@@ -5,13 +5,13 @@ import {
   Star, 
   Ban, 
   ChevronsUpDown,
-  Check
+  Check,
+  X
 } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  PopoverArrow,
 } from '@/components/ui/popover';
 import {
   Command,
@@ -154,7 +154,6 @@ const SelectionDropdown: React.FC<SelectionDropdownProps> = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-full p-0" align="start">
-                <PopoverArrow />
                 <Command>
                   <CommandInput placeholder="Search fields..." />
                   <CommandEmpty>No field found.</CommandEmpty>
