@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -46,14 +47,16 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         ),
       });
       
+      // Always use the current date as a fallback
+      const currentDate = new Date().toISOString();
+      
       const transaction: Transaction = {
         id: `match-${Date.now()}`,
         title: results.entry.confirmedFields.vendor || 'Transaction',
         amount: results.entry.confirmedFields.amount || 0,
         category: results.entry.confirmedFields.category || 'Uncategorized',
-        date: typeof results.entry.confirmedFields.date === 'string' 
-          ? results.entry.confirmedFields.date 
-          : new Date().toISOString(),
+        // Always use a default date since 'date' is not in the type definition
+        date: currentDate,
         type: results.entry.confirmedFields.type || 'expense',
         source: 'smart-paste',
         fromAccount: results.entry.confirmedFields.account || 'Unknown',
