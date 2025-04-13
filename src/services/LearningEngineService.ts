@@ -94,22 +94,6 @@ class LearningEngineService {
   return normalized;
 }
 
-private computeStructureSignature(fieldMap: FieldTokenMap): string {
-  const entries: string[] = [];
-
-  for (const [field, tokens] of Object.entries(fieldMap)) {
-    if (!tokens || tokens.length === 0) continue;
-
-    const avgPos = Math.round(
-      tokens.reduce((sum, t) => sum + t.position, 0) / tokens.length
-    );
-
-    entries.push(`${field}@${avgPos}`);
-  }
-
-  // Sort to ensure consistent signature
-  return entries.sort().join('|');
-}
 
   private inferTypeFromText(message: string): TransactionType {
     const t = message.toLowerCase();
@@ -391,6 +375,9 @@ private computeStructureSignature(fieldMap: FieldTokenMap): string {
     // Extract and store sequence patterns
     this.extractSequencePatterns(fieldTokenMap);
 
+    const structureSignature = this.computeStructureSignature(fieldTokenMap);
+
+
     // Update sender template with the new message
     this.updateSenderTemplate(raw, senderHint, fieldTokenMap);
     const templateHash = this.computeTemplateHash(raw);
@@ -400,6 +387,7 @@ private computeStructureSignature(fieldMap: FieldTokenMap): string {
       rawMessage: raw,
       senderHint,
       templateHash,
+      structureSignature,
       confirmedFields: {
         type: txn.type,
         amount: parseFloat(txn.amount.toString()),

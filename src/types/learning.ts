@@ -35,6 +35,7 @@ export interface LearnedEntry {
   rawMessage: string;
   senderHint: string;
   templateHash?: string;
+  structureSignature?: string;
   structureSignature?: string; // optional, coming in Step 5
   senderMatchCount?: number; // optional, inferred during learning
   confirmedFields: {
