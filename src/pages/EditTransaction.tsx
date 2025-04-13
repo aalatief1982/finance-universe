@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -40,6 +41,15 @@ const EditTransaction = () => {
   const senderHint = location.state?.senderHint as string | undefined;
   const isSuggested = location.state?.isSuggested as boolean | undefined;
   const confidenceScore = location.state?.confidence as number | undefined;
+  const shouldTrain = location.state?.shouldTrain as boolean | undefined;
+  
+  console.log("EditTransaction state:", { 
+    rawMessage: !!rawMessage, 
+    senderHint, 
+    isSuggested, 
+    confidenceScore,
+    shouldTrain 
+  });
   
   // If we have an ID in the URL params, try to find the transaction by ID
   if (!transaction && params.id) {
@@ -47,6 +57,18 @@ const EditTransaction = () => {
   }
   
   const isNewTransaction = !transaction;
+  
+  // Handle navigating to training page
+  const handleGoToTraining = () => {
+    if (rawMessage) {
+      navigate('/train-model', { 
+        state: { 
+          rawMessage,
+          senderHint
+        }
+      });
+    }
+  };
   
   // Find the matching entry when we have a raw message
   useEffect(() => {
@@ -184,6 +206,25 @@ const EditTransaction = () => {
           </Alert>
         )}
         
+        {shouldTrain && rawMessage && (
+          <Alert className="bg-yellow-50 border-yellow-500 text-yellow-800">
+            <div className="flex justify-between items-center">
+              <AlertDescription className="text-sm flex-1">
+                <span className="font-semibold">Low confidence match.</span> Would you like to train the system to better recognize messages like this in the future?
+              </AlertDescription>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 bg-yellow-100 border-yellow-300 hover:bg-yellow-200"
+                onClick={handleGoToTraining}
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Train Model
+              </Button>
+            </div>
+          </Alert>
+        )}
+        
         {rawMessage && (
           <div className="bg-muted p-3 rounded-md">
             <p className="text-xs font-mono break-words">
@@ -191,6 +232,7 @@ const EditTransaction = () => {
             </p>
           </div>
         )}
+        
         {confidenceScore !== undefined && location.state?.matchedCount !== undefined && location.state?.totalTemplates !== undefined && (
           <SmartPasteSummary
             confidence={confidenceScore}

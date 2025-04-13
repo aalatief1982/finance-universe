@@ -5,9 +5,10 @@ import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
 import { useToast } from '@/components/ui/use-toast';
 import { resetNERModel } from '@/ml/ner';
+import { learningEngineService } from '@/services/LearningEngineService';
 
 export const useSmartPaste = (
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void,
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean) => void,
   useHighAccuracy: boolean = false
 ) => {
   const [text, setText] = useState('');
@@ -40,7 +41,47 @@ export const useSmartPaste = (
     setError(null);
     
     try {
-      // Try ML-based extraction first, passing the high accuracy flag
+      // First try template matching with learning engine
+      console.log("Trying template matching with LearningEngine");
+      const match = learningEngineService.findBestMatch(rawText);
+      console.log("Template match result:", match);
+      
+      // If we have a good match from templates, use it
+      if (match.matched && match.entry) {
+        console.log("Using template match with confidence:", match.confidence);
+        
+        const { confirmedFields } = match.entry;
+        const categoryInfo = findCategoryForVendor(confirmedFields.vendor || '', confirmedFields.type || 'expense');
+        
+        const templateTxn: Transaction = {
+          id: `template-${Math.random().toString(36).substring(2, 9)}`,
+          title: `Template: ${categoryInfo.category} | ${confirmedFields.amount}`,
+          amount: confirmedFields.amount,
+          currency: confirmedFields.currency,
+          type: confirmedFields.type,
+          fromAccount: confirmedFields.account || 'Unknown',
+          category: confirmedFields.category || categoryInfo.category,
+          subcategory: confirmedFields.subcategory || categoryInfo.subcategory,
+          date: new Date().toISOString(),
+          description: confirmedFields.vendor || '',
+          notes: 'Extracted from template',
+          source: 'smart-paste',
+          person: confirmedFields.person
+        };
+        
+        setDetectedTransactions([templateTxn]);
+        setIsSmartMatch(true);
+        
+        if (onTransactionsDetected) {
+          onTransactionsDetected([templateTxn], rawText, match.entry.senderHint, match.confidence, false);
+        }
+        
+        setIsProcessing(false);
+        return;
+      }
+
+      // If no template match, try ML-based extraction
+      console.log("No template match found, trying ML extraction");
       const parsed = await extractTransactionEntities(rawText, useHighAccuracy);
 
       if (parsed.amount) {
@@ -56,7 +97,7 @@ export const useSmartPaste = (
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
           date: parsed.date || new Date().toISOString(),
-          description: rawText,
+          description: parsed.vendor || '',
           notes: 'Extracted with ML',
           source: 'smart-paste',
         };
@@ -64,12 +105,13 @@ export const useSmartPaste = (
         setDetectedTransactions([autoTxn]);
         setIsSmartMatch(true);
         
-        // Call the callback if provided but DO NOT learn yet - wait for user confirmation
         if (onTransactionsDetected) {
-          onTransactionsDetected([autoTxn], rawText, undefined, isSmartMatch ? 0.8 : 0.5);
+          // Pass the shouldTrain flag from the match result
+          onTransactionsDetected([autoTxn], rawText, undefined, match.confidence, match.shouldTrain);
         }
       } else {
         // If ML parsing didn't find an amount, use fallback
+        console.log("ML extraction failed, using fallback");
         const fallbackTransaction = createFallbackTransaction(rawText);
         
         if (fallbackTransaction) {
@@ -77,7 +119,8 @@ export const useSmartPaste = (
           setIsSmartMatch(false);
           
           if (onTransactionsDetected) {
-            onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3);
+            // Pass the shouldTrain flag from the match result
+            onTransactionsDetected([fallbackTransaction], rawText, undefined, match.confidence, match.shouldTrain);
           }
         } else {
           setDetectedTransactions([]);
@@ -103,7 +146,7 @@ export const useSmartPaste = (
         setIsSmartMatch(false);
         
         if (onTransactionsDetected) {
-          onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3);
+          onTransactionsDetected([fallbackTransaction], rawText, undefined, 0.3, true); // Always suggest training for fallback
         }
       } else {
         errorMessage = 'Could not extract transaction details from the message.';

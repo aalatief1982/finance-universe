@@ -616,12 +616,12 @@ class LearningEngineService {
       // Initialize score as a let variable to allow reassignment
       let score = 0;
 
-      // STEP 1 – Template Structure Match (40%)
+      // STEP 1 – Template Structure Match (50%) - INCREASED WEIGHT
       const templateSimilarity = this.calculateTextSimilarity(entry.rawMessage, message);
-      const structureScore = templateSimilarity >= 0.85 ? 0.4 : templateSimilarity * 0.4;
+      const structureScore = templateSimilarity >= 0.85 ? 0.5 : templateSimilarity * 0.5;
       score += structureScore;
 
-      // STEP 2 - Template Hash Similarity (25%) - NEW LOGIC
+      // STEP 2 - Template Hash Similarity (30%) - INCREASED WEIGHT
       const hashSimilarity = this.templateHashSimilarity(
         messageTemplateHash,
         entry.templateHash || this.computeTemplateHash(entry.rawMessage)
@@ -629,13 +629,13 @@ class LearningEngineService {
       
       // Boost score significantly if hash similarity is high
       if (hashSimilarity > 0.75) {
-        score += 0.25; // Full 25% bonus for high structural similarity
+        score += 0.3; // Full 30% bonus for high structural similarity
       } else {
-        score += hashSimilarity * 0.25;
+        score += hashSimilarity * 0.3;
       }
 
-      // STEP 3 - Remaining Checks (35% total) - using existing code
-      // Sender Match + Coupling (15%) 
+      // STEP 3 - Remaining Checks (20% total) - REDUCED WEIGHT
+      // Sender Match + Coupling (10%)
       let senderScore = 0;
       const senderTemplates = this.getSenderTemplates();
       const matchedSender = senderTemplates.find(t =>
@@ -647,21 +647,16 @@ class LearningEngineService {
           return this.calculateTextSimilarity(template, message) >= 0.8;
         });
         if (senderTemplateMatch) {
-          senderScore += 0.15; // Full bonus for matching sender + structure
+          senderScore += 0.1; // Full bonus for matching sender + structure
         } else if (entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
-          senderScore += 0.075; // Partial credit for sender name overlap
+          senderScore += 0.05; // Partial credit for sender name overlap
         }
       }
       score += senderScore;
 
-      // Field Token Map Match (10%)
-      const fieldMatchScore = this.compareFieldsWithPosition(entry.fieldTokenMap, message);
+      // Field token structure and positions (10%) - FOCUS ON STRUCTURE NOT VALUES
+      const fieldMatchScore = this.compareFieldStructure(entry.fieldTokenMap, message);
       score += fieldMatchScore * 0.1;
-
-      // Contextual Cues and Patterns (10%)
-      const contextBonus = this.scoreContextHints(message, entry.fieldTokenMap);
-      const sequenceBonus = this.evaluateSequencePatterns(message, this.getSequencePatterns());
-      score += (contextBonus + sequenceBonus) * 0.5; // Scale to fit within 10%
 
       // User Confirmation History Bonus
       const confirmationBonus = this.calculateConfirmationBonus(entry);
@@ -673,8 +668,6 @@ class LearningEngineService {
         hashSimilarity: hashSimilarity.toFixed(2),
         senderScore: senderScore.toFixed(2),
         fieldMatchScore: fieldMatchScore.toFixed(2),
-        contextBonus: contextBonus.toFixed(2),
-        sequenceBonus: sequenceBonus.toFixed(2),
         confirmationBonus: confirmationBonus.toFixed(2),
         totalScore: score.toFixed(2)
       });
@@ -693,12 +686,120 @@ class LearningEngineService {
       amount: bestMatch.confirmedFields.amount
     } : 'No match');
 
+    const shouldTrain = bestScore < TRAIN_MODEL_THRESHOLD;
+    console.log(`Should train? ${shouldTrain} (score: ${bestScore}, threshold: ${TRAIN_MODEL_THRESHOLD})`);
+
     if (bestMatch && bestScore >= this.config.minConfidenceThreshold) {
       bestMatch.confidence = bestScore;
       return { entry: bestMatch, confidence: bestScore, matched: true };
     }
 
-    return { entry: null, confidence: bestScore, matched: false, shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD };
+    return { entry: null, confidence: bestScore, matched: false, shouldTrain };
+  }
+
+  // NEW METHOD: Compare field structure instead of values
+  private compareFieldStructure(fieldMap: FieldTokenMap, message: string): number {
+    let score = 0;
+    const totalFields = Object.keys(fieldMap).length;
+    let fieldsStructureMatched = 0;
+    
+    // Extract tokens with positions from the message
+    const messageAmountTokens = this.extractAmountTokensWithPosition(message);
+    const messageCurrencyTokens = this.extractCurrencyTokensWithPosition(message);
+    const messageVendorTokens = this.extractVendorTokensWithPosition(message);
+    const messageAccountTokens = this.extractAccountTokensWithPosition(message);
+    const messageDateTokens = this.extractDateTokensWithPosition(message);
+    
+    const messageFieldMap = {
+      amount: messageAmountTokens,
+      currency: messageCurrencyTokens,
+      vendor: messageVendorTokens,
+      account: messageAccountTokens,
+      date: messageDateTokens
+    };
+    
+    // Score each field type based on STRUCTURE not values
+    Object.entries(fieldMap).forEach(([field, learnedTokens]) => {
+      if (learnedTokens.length === 0) return;
+      
+      const currentFieldTokens = messageFieldMap[field as keyof typeof messageFieldMap];
+      
+      if (currentFieldTokens.length > 0) {
+        fieldsStructureMatched++;
+        
+        // Compare relative positions
+        const positionScore = this.compareRelativePositions(learnedTokens, currentFieldTokens);
+        score += positionScore;
+      }
+    });
+    
+    // Calculate final score based on fields structure matched
+    return totalFields > 0 ? fieldsStructureMatched / totalFields : 0;
+  }
+  
+  // NEW METHOD: Compare relative positions of tokens
+  private compareRelativePositions(learnedTokens: PositionedToken[], messageTokens: PositionedToken[]): number {
+    // Calculate average position of learned tokens
+    const avgLearnedPosition = learnedTokens.reduce(
+      (sum, token) => sum + token.position, 0
+    ) / learnedTokens.length;
+    
+    // Calculate average position of message tokens
+    const avgMessagePosition = messageTokens.reduce(
+      (sum, token) => sum + token.position, 0
+    ) / messageTokens.length;
+    
+    // Get message length for normalization
+    const learnedMessageLength = Math.max(...learnedTokens.map(t => t.position)) + 1;
+    const messageLength = Math.max(...messageTokens.map(t => t.position)) + 1;
+    
+    // Normalize positions by message length
+    const normalizedLearnedPosition = avgLearnedPosition / learnedMessageLength;
+    const normalizedMessagePosition = avgMessagePosition / messageLength;
+    
+    // Calculate difference - closer to 0 is better
+    const difference = Math.abs(normalizedLearnedPosition - normalizedMessagePosition);
+    
+    // Convert to a score (1 - difference, capped between 0 and 1)
+    return Math.max(0, Math.min(1, 1 - difference));
+  }
+
+  // Keep using this existing method for template hash similarity
+  private templateHashSimilarity(hash1: string, hash2: string): number {
+    if (!hash1 || !hash2) return 0;
+    
+    // Split into segments and remove empty strings
+    const segments1 = hash1.split(/[\s,;:]+/).filter(Boolean);
+    const segments2 = hash2.split(/[\s,;:]+/).filter(Boolean);
+    
+    // Count matching segments
+    const uniqueSegments1 = new Set(segments1);
+    const uniqueSegments2 = new Set(segments2);
+    
+    let matchCount = 0;
+    for (const segment of uniqueSegments1) {
+      if (uniqueSegments2.has(segment)) {
+        matchCount++;
+      }
+    }
+    
+    // Structural placeholders should have higher weight
+    const structuralTokens = ['{account}', '{amount}', '{date}', 'مبلغ', 'بطاقة', 'لدى', 'في'];
+    let structuralMatchBonus = 0;
+    
+    for (const token of structuralTokens) {
+      if (hash1.includes(token) && hash2.includes(token)) {
+        structuralMatchBonus += 0.05; // 5% bonus per structural token match
+      }
+    }
+    
+    // Calculate base similarity
+    const totalUniqueSegments = uniqueSegments1.size + uniqueSegments2.size;
+    const baseSimilarity = totalUniqueSegments > 0 ? 
+      (2 * matchCount) / totalUniqueSegments : 0;
+    
+    // Add structural bonus but cap at 1.0
+    return Math.min(1.0, baseSimilarity + structuralMatchBonus);
   }
 
   private calculateTextSimilarity(text1: string, text2: string): number {
@@ -740,430 +841,4 @@ private scoreArabicHeuristics(message: string): number {
   const arabicSequence = ['شراء', 'بطاقة', 'مبلغ', 'لدى', 'في'];
   const normalized = this.tokenize(message).join(' ');
   const matched = arabicSequence.filter(token => normalized.includes(token));
-  return matched.length >= 4 ? 0.05 : matched.length * 0.01;
-}
-
-private compareTemplateHash(newHash: string, existingHash: string): number {
-  return this.templateHashSimilarity(newHash, existingHash);
-}
-  
-
-
-  private evaluateSequencePatterns(message: string, patterns: SequencePattern[]): number {
-    if (patterns.length === 0) return 0;
-    
-    // Extract all token types with positions
-    const amountTokens = this.extractAmountTokensWithPosition(message);
-    const currencyTokens = this.extractCurrencyTokensWithPosition(message);
-    const vendorTokens = this.extractVendorTokensWithPosition(message);
-    const accountTokens = this.extractAccountTokensWithPosition(message);
-    const dateTokens = this.extractDateTokensWithPosition(message);
-    
-    const fieldTokenMap: FieldTokenMap = {
-      amount: amountTokens,
-      currency: currencyTokens,
-      vendor: vendorTokens,
-      account: accountTokens,
-      date: dateTokens
-    };
-    
-    let patternBonus = 0;
-    let patternsEvaluated = 0;
-    
-    // Check each pattern
-    patterns.forEach(pattern => {
-      if (pattern.confidence <= 0) return;
-      
-      const [field1, field2] = pattern.fieldPair;
-      const tokens1 = fieldTokenMap[field1 as keyof FieldTokenMap];
-      const tokens2 = fieldTokenMap[field2 as keyof FieldTokenMap];
-      
-      if (!tokens1 || !tokens2 || tokens1.length === 0 || tokens2.length === 0) return;
-      
-      // Check if the sequence appears in this message
-      let patternMatched = false;
-      
-      if (pattern.sequenceType.includes('precedes')) {
-        // field1 should come before field2
-        tokens1.forEach(token1 => {
-          tokens2.forEach(token2 => {
-            if (token1.position < token2.position) {
-              patternMatched = true;
-            }
-          });
-        });
-      }
-      
-      if (patternMatched) {
-        patternBonus += pattern.confidence * (pattern.confirmedByUser ? 0.15 : 0.1);
-        patternsEvaluated++;
-      }
-    });
-    
-    // Normalize bonus - higher weight for confirmed patterns, cap at 0.2
-    return Math.min(0.2, patternBonus);
-  }
-
-  private calculateConfirmationBonus(entry: LearnedEntry): number {
-    // Check if entry has confirmation history
-    if (!entry.confirmationHistory || entry.confirmationHistory.length === 0) {
-      return entry.userConfirmed ? this.config.userConfirmationWeight : 0;
-    }
-    
-    // More weight for entries with multiple confirmations
-    const confirmationCount = entry.confirmationHistory.length;
-    const userExplicitCount = entry.confirmationHistory.filter(c => c.source === 'user-explicit').length;
-    
-    // Calculate bonus - more weight for user explicit confirmations
-    let bonus = (userExplicitCount * 0.15) + ((confirmationCount - userExplicitCount) * 0.05);
-    
-    // Cap the bonus
-    return Math.min(this.config.userConfirmationWeight, bonus);
-  }
-  
-private calculateConfidenceScore(entry: LearnedEntry, message: string, senderHint: string = ''): number {
-  // Initialize score as a let variable to allow reassignment
-  let score = 0;
-
-  // STEP 1 – Template Structure Match (40%)
-  const templateSimilarity = this.calculateTextSimilarity(entry.rawMessage, message);
-  const structureScore = templateSimilarity >= 0.85 ? 0.4 : templateSimilarity * 0.4;
-  score += structureScore;
-
-  // STEP 2 – Sender Match + Coupling (20%)
-  let senderScore = 0;
-  const senderTemplates = this.getSenderTemplates();
-  const matchedSender = senderTemplates.find(t =>
-    t.sender.toLowerCase() === senderHint.toLowerCase()
-  );
-
-  if (matchedSender && matchedSender.confirmationCount > 0) {
-    const senderTemplateMatch = matchedSender.templates.some(template => {
-      return this.calculateTextSimilarity(template, message) >= 0.8;
-    });
-    if (senderTemplateMatch) {
-      senderScore += 0.2; // Full bonus for matching sender + structure
-    } else if (entry.senderHint?.toLowerCase().includes(senderHint.toLowerCase())) {
-      senderScore += 0.1; // Partial credit for sender name overlap
-    }
-  }
-  score += senderScore;
-
-  // STEP 3 – Field Token Map Match (20%)
-  const fieldMatchScore = this.compareFieldsWithPosition(entry.fieldTokenMap, message);
-  score += fieldMatchScore * 0.2;
-
-  // STEP 4 – Contextual Cues (10%)
-  const contextBonus = this.scoreContextHints(message, entry.fieldTokenMap);
-  score += contextBonus;
-
-  // STEP 5 – Known Sequence Patterns (5%)
-  const sequenceBonus = this.evaluateSequencePatterns(message, this.getSequencePatterns());
-  score += sequenceBonus;
-
-  // STEP 6 – Arabic Transaction Heuristics (5%)
-  const arabicBonus = this.scoreArabicHeuristics(message);
-  score += arabicBonus;
-
-  // STEP 7 – User Confirmation History Bonus
-  const confirmationBonus = this.calculateConfirmationBonus(entry);
-  score += confirmationBonus;
-
-  return Math.min(1.0, score); // Normalize final score
-}
-
-  private compareFieldsWithPosition(fieldMap: FieldTokenMap, message: string): number {
-    let score = 0;
-    const totalFields = Object.keys(fieldMap).length;
-    let fieldsMatched = 0;
-    
-    // Extract tokens with positions from the message
-    const messageAmountTokens = this.extractAmountTokensWithPosition(message);
-    const messageCurrencyTokens = this.extractCurrencyTokensWithPosition(message);
-    const messageVendorTokens = this.extractVendorTokensWithPosition(message);
-    const messageAccountTokens = this.extractAccountTokensWithPosition(message);
-    const messageDateTokens = this.extractDateTokensWithPosition(message);
-    
-    const messageFieldMap = {
-      amount: messageAmountTokens,
-      currency: messageCurrencyTokens,
-      vendor: messageVendorTokens,
-      account: messageAccountTokens,
-      date: messageDateTokens
-    };
-    
-    // Score each field type
-    Object.entries(fieldMap).forEach(([field, learnedTokens]) => {
-      if (learnedTokens.length === 0) return;
-      
-      const currentFieldTokens = messageFieldMap[field as keyof typeof messageFieldMap];
-      
-      if (currentFieldTokens.length > 0) {
-        fieldsMatched++;
-        
-        // Additional scoring for position similarity
-        const positionScore = this.calculatePositionScore(learnedTokens, currentFieldTokens);
-        score += (1 + positionScore) / 2; // Weight regular match and position match equally
-      }
-    });
-    
-    // Calculate final score based on fields matched and position accuracy
-    return totalFields > 0 ? score / totalFields : 0;
-  }
-  
-  private calculatePositionScore(learnedTokens: PositionedToken[], messageTokens: PositionedToken[]): number {
-    // Simple case: if no tokens to compare
-    if (learnedTokens.length === 0 || messageTokens.length === 0) return 0;
-    
-    // Compare context similarity
-    let contextSimilaritySum = 0;
-    let comparisons = 0;
-    
-    for (const learned of learnedTokens) {
-      for (const message of messageTokens) {
-        // Skip tokens that don't match at all
-        if (learned.token !== message.token) continue;
-        
-        // Calculate context similarity if context exists
-        if (learned.context && message.context) {
-          let beforeSimilarity = 0;
-          let afterSimilarity = 0;
-          
-          // Compare before context
-          if (learned.context.before && learned.context.before.length > 0 &&
-              message.context.before && message.context.before.length > 0) {
-            const commonBefore = learned.context.before.filter(token => 
-              message.context?.before?.includes(token));
-            beforeSimilarity = commonBefore.length / Math.max(learned.context.before.length, message.context.before.length);
-          }
-          
-          // Compare after context
-          if (learned.context.after && learned.context.after.length > 0 &&
-              message.context.after && message.context.after.length > 0) {
-            const commonAfter = learned.context.after.filter(token => 
-              message.context?.after?.includes(token));
-            afterSimilarity = commonAfter.length / Math.max(learned.context.after.length, message.context.after.length);
-          }
-          
-          const contextSimilarity = (beforeSimilarity + afterSimilarity) / 2;
-          contextSimilaritySum += contextSimilarity;
-          comparisons++;
-        }
-      }
-    }
-    
-    return comparisons > 0 ? contextSimilaritySum / comparisons : 0;
-  }
-
-  public tokenize(msg: string): string[] {
-    return msg
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter(Boolean);
-  }
-
-  public extractAmountTokensWithPosition(msg: string): PositionedToken[] {
-    const matches = Array.from(msg.matchAll(/\b(\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?)\b/g));
-    return matches.map(match => {
-      const position = match.index || 0;
-      const tokenValue = match[0].replace(/,/g, '');
-      
-      // Get context around the token
-      const contextSize = 2;
-      const messageTokens = msg.split(/\s+/);
-      const tokenPosition = messageTokens.findIndex(t => t.includes(match[0]));
-      
-      const context = {
-        before: tokenPosition > 0 
-          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
-          : [],
-        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
-          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
-          : []
-      };
-      
-      return { 
-        token: tokenValue, 
-        position,
-        context
-      };
-    });
-  }
-
-  public extractCurrencyTokensWithPosition(msg: string): PositionedToken[] {
-    const currencies = ['sar', 'egp', 'usd', 'aed', 'bhd'];
-    const result: PositionedToken[] = [];
-    
-    currencies.forEach(currency => {
-      const regex = new RegExp(`\\b${currency}\\b`, 'gi');
-      const matches = Array.from(msg.matchAll(regex));
-      
-      matches.forEach(match => {
-        const position = match.index || 0;
-        
-        // Get context around the token
-        const contextSize = 2;
-        const messageTokens = msg.split(/\s+/);
-        const tokenPosition = messageTokens.findIndex(t => t.toLowerCase() === currency);
-        
-        const context = {
-          before: tokenPosition > 0 
-            ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
-            : [],
-          after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
-            ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
-            : []
-        };
-        
-        result.push({ 
-          token: currency, 
-          position,
-          context
-        });
-      });
-    });
-    
-    return result;
-  }
-
-  public extractVendorTokensWithPosition(msg: string): PositionedToken[] {
-    // FIX: Add the global flag 'g' to each regex pattern
-    const patterns = [
-      { regex: /(?:لدى|from|at|vendor|to)[:\s]*([^\n]+)/gi, group: 1 },
-      { regex: /(?:paid to|purchase at|bought from)[:\s]*([^\n]+)/gi, group: 1 }
-    ];
-    
-    const result: PositionedToken[] = [];
-    
-    for (const pattern of patterns) {
-      const matches = Array.from(msg.matchAll(pattern.regex));
-      
-      matches.forEach(match => {
-        if (match[pattern.group]) {
-          const vendorText = match[pattern.group].trim();
-          const position = (match.index || 0) + match[0].indexOf(vendorText);
-          
-          // Get context around the token
-          const contextSize = 2;
-          const messageTokens = msg.split(/\s+/);
-          const tokenPosition = messageTokens.findIndex(t => t.includes(vendorText));
-          
-          const context = {
-            before: tokenPosition > 0 
-              ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
-              : [],
-            after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
-              ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
-              : []
-          };
-          
-          // Split the vendor text into tokens and add each one
-          vendorText.toLowerCase().split(/\s+/).filter(Boolean).forEach((token, i) => {
-            result.push({ 
-              token, 
-              position: position + i,
-              context
-            });
-          });
-        }
-      });
-    }
-    
-    return result;
-  }
-
-  public extractAccountTokensWithPosition(msg: string): PositionedToken[] {
-    const matches = Array.from(msg.matchAll(/\*{2,}\d+/g));
-    return matches.map(match => {
-      const position = match.index || 0;
-      const token = match[0].replace(/\*/g, '');
-      
-      // Get context around the token
-      const contextSize = 2;
-      const messageTokens = msg.split(/\s+/);
-      const tokenPosition = messageTokens.findIndex(t => t.includes(match[0]));
-      
-      const context = {
-        before: tokenPosition > 0 
-          ? messageTokens.slice(Math.max(0, tokenPosition - contextSize), tokenPosition) 
-          : [],
-        after: tokenPosition >= 0 && tokenPosition < messageTokens.length - 1 
-          ? messageTokens.slice(tokenPosition + 1, Math.min(messageTokens.length, tokenPosition + contextSize + 1)) 
-          : []
-      };
-      
-      return { 
-        token, 
-        position,
-        context
-      };
-    });
-  }
-  
-  // Compatibility methods for backward compatibility
-  public extractAmountTokens(msg: string): string[] {
-    return this.extractAmountTokensWithPosition(msg).map(pt => pt.token);
-  }
-  
-  public extractCurrencyTokens(msg: string): string[] {
-    return this.extractCurrencyTokensWithPosition(msg).map(pt => pt.token);
-  }
-  
-  public extractVendorTokens(msg: string): string[] {
-    return this.extractVendorTokensWithPosition(msg).map(pt => pt.token);
-  }
-  
-  public extractAccountTokens(msg: string): string[] {
-    return this.extractAccountTokensWithPosition(msg).map(pt => pt.token);
-  }
-
-  public getLearnedEntries(): LearnedEntry[] {
-    try {
-      const stored = localStorage.getItem(LEARNING_STORAGE_KEY);
-      if (!stored) return [];
-      
-      const entries = JSON.parse(stored);
-      
-      // Migrate old entries if needed
-      const migratedEntries = entries.map((entry: any) => {
-        if (!entry.userConfirmed) {
-          return {
-            ...entry,
-            userConfirmed: true, // Assume all existing entries were user-confirmed
-            confirmationHistory: entry.confirmationHistory || [{ 
-              timestamp: entry.timestamp || new Date().toISOString(),
-              source: 'system-migration'
-            }]
-          };
-        }
-        
-        // Ensure confirmationHistory exists
-        if (!entry.confirmationHistory) {
-          return {
-            ...entry,
-            confirmationHistory: [{
-              timestamp: entry.timestamp || new Date().toISOString(),
-              source: entry.userConfirmed ? 'user-explicit' : 'system-migration'
-            }]
-          };
-        }
-        
-        return entry;
-      });
-      
-      return migratedEntries;
-    } catch (e) {
-      console.error('Error loading entries:', e);
-      return [];
-    }
-  }
-
-  public clearLearnedEntries(): void {
-    localStorage.removeItem(LEARNING_STORAGE_KEY);
-    localStorage.removeItem(SENDER_TEMPLATES_KEY);
-    localStorage.removeItem(SEQUENCE_PATTERNS_KEY);
-  }
-}
-
-export const learningEngineService = new LearningEngineService();
+  return matched.length >= 4 ? 0.

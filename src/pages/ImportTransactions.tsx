@@ -20,7 +20,7 @@ const ImportTransactions = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleTransactionsDetected = (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => {
+  const handleTransactionsDetected = (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean) => {
     const entries = learningEngineService.getLearnedEntries();
   
     // Calculate matchedCount manually
@@ -32,6 +32,8 @@ const ImportTransactions = () => {
       );
     }).length;
   
+    console.log("Navigate to edit with shouldTrain:", shouldTrain);
+
     // Navigate to edit with all info
     navigate('/edit-transaction', {
       state: {
@@ -41,7 +43,8 @@ const ImportTransactions = () => {
         confidence,
         matchedCount,
         totalTemplates: entries.length,
-        isSuggested: true
+        isSuggested: true,
+        shouldTrain // Pass the shouldTrain flag to the edit screen
       }
     });
   };
