@@ -61,11 +61,22 @@ const TrainModel = () => {
     subcategory: '',
     title: ''
   });
+  
+  // Create a state for manualFieldTokenMap
+  const [manualFieldTokenMap, setManualFieldTokenMap] = useState<Record<string, string[]>>({
+    amount: [],
+    currency: [],
+    vendor: [],
+    account: [],
+    date: [],
+    title: []
+  });
+  
   const handleSaveTraining = () => {
-  learningEngineService.saveUserTraining(message, transaction, senderHint, manualFieldTokenMap);
-  toast({ title: 'Saved', description: 'Training data saved successfully.' });
-  navigate('/dashboard');
-};
+    learningEngineService.saveUserTraining(message, transaction, senderHint, manualFieldTokenMap);
+    toast({ title: 'Saved', description: 'Training data saved successfully.' });
+    navigate('/dashboard');
+  };
   
   // Initialize transaction data from passed message if available
   useEffect(() => {
