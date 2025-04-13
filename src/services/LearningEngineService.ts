@@ -9,7 +9,7 @@ const LEARNING_STORAGE_KEY = 'xpensia_learned_entries';
 const LEARNING_CONFIG_KEY = 'xpensia_learning_config';
 const SENDER_TEMPLATES_KEY = 'xpensia_sender_templates';
 const SEQUENCE_PATTERNS_KEY = 'xpensia_sequence_patterns';
-
+const TRAIN_MODEL_THRESHOLD = 0.5;
 const DEFAULT_CONFIG: LearningEngineConfig = {
   enabled: true,
   maxEntries: 200,
@@ -375,9 +375,6 @@ class LearningEngineService {
     // Extract and store sequence patterns
     this.extractSequencePatterns(fieldTokenMap);
 
-    const structureSignature = this.computeStructureSignature(fieldTokenMap);
-
-
     // Update sender template with the new message
     this.updateSenderTemplate(raw, senderHint, fieldTokenMap);
     const templateHash = this.computeTemplateHash(raw);
@@ -387,7 +384,6 @@ class LearningEngineService {
       rawMessage: raw,
       senderHint,
       templateHash,
-      structureSignature,
       confirmedFields: {
         type: txn.type,
         amount: parseFloat(txn.amount.toString()),
@@ -438,7 +434,8 @@ public findBestMatch(message: string, senderHint = ''): MatchResult {
     return { entry: bestMatch, confidence: bestScore, matched: true };
   }
 
-  return { entry: null, confidence: bestScore, matched: false };
+  return { entry: null, confidence: bestScore, matched: false,shouldTrain: bestScore < TRAIN_MODEL_THRESHOLD // Add this new flag
+         };
 }
 
   private calculateTextSimilarity(text1: string, text2: string): number {
