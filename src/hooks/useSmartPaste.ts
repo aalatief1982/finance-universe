@@ -79,6 +79,36 @@ export const useSmartPaste = (
         setIsProcessing(false);
         return;
       }
+      // Check structure-based fallback if no template match
+console.log("Trying structure-based fallback");
+const structureMatch = learningEngineService.matchUsingTemplateStructure(rawText);
+
+if (structureMatch) {
+  const categoryInfo = findCategoryForVendor(structureMatch.inferredTransaction.vendor || '', structureMatch.inferredTransaction.type || 'expense');
+
+  const fallbackTxn: Transaction = {
+    id: `structure-${Math.random().toString(36).substring(2, 9)}`,
+    title: `Template Structure: ${categoryInfo.category} | ${structureMatch.inferredTransaction.amount}`,
+    amount: structureMatch.inferredTransaction.amount || 0,
+    currency: structureMatch.inferredTransaction.currency || 'SAR',
+    type: structureMatch.inferredTransaction.type || 'expense',
+    fromAccount: structureMatch.inferredTransaction.fromAccount || 'Unknown',
+    category: categoryInfo.category,
+    subcategory: categoryInfo.subcategory,
+    date: structureMatch.inferredTransaction.date || new Date().toISOString(),
+    description: structureMatch.inferredTransaction.vendor || '',
+    notes: 'Matched by structure template',
+    source: 'smart-paste'
+  };
+
+  setDetectedTransactions([fallbackTxn]);
+  setIsSmartMatch(true);
+  if (onTransactionsDetected) {
+    onTransactionsDetected([fallbackTxn], rawText, senderHint, structureMatch.confidence, true);
+  }
+  setIsProcessing(false);
+  return;
+}
 
       // If no template match, try ML-based extraction
       console.log("No template match found, trying ML extraction");
