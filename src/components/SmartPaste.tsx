@@ -17,7 +17,7 @@ import { Switch } from './ui/switch';
 
 interface SmartPasteProps {
   senderHint?: string;
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number,matchOrigin?: "template" | "structure" | "ml" | "fallback") => void;
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean, matchOrigin?: "template" | "structure" | "ml" | "fallback") => void;
 }
 
 const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {
@@ -34,12 +34,11 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     handlePaste,
     processText,
     structureMatch,
-    setCurrentSenderHint
+    setCurrentSenderHint,
+    matchOrigin
   } = useSmartPaste(onTransactionsDetected, useHighAccuracy);
 
   const { toast } = useToast();
-  const [matchOrigin, setMatchOrigin] = useState<"template" | "structure" | "ml" | "fallback" | undefined>();
-
 
   // Set the senderHint when it changes
   useEffect(() => {
@@ -63,7 +62,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
 
   const handleAddTransaction = (transaction: Transaction) => {
     if (onTransactionsDetected) {
-      onTransactionsDetected([transaction], text, senderHint, isSmartMatch ? 0.8 : 0.5);
+      onTransactionsDetected([transaction], text, senderHint, isSmartMatch ? 0.8 : 0.5, false, matchOrigin);
     }
     
     toast({
@@ -128,14 +127,14 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         {detectedTransactions.length > 0 && (
           <div className="space-y-3 mt-2">
             <h3 className="text-sm font-medium">Detected Transaction:</h3>
-            {detectedTransactions.map(transaction => (
+            {detectedTransactions.map((txn) => (
               <DetectedTransactionCard
-              key={txn.id}
-              transaction={txn}
-              isSmartMatch={isSmartMatch}
-              onAddTransaction={handleAddTransaction}
-              origin={matchOrigin} // 🔥 Add this line
-            />
+                key={txn.id}
+                transaction={txn}
+                isSmartMatch={isSmartMatch}
+                onAddTransaction={handleAddTransaction}
+                origin={matchOrigin}
+              />
             ))}
           </div>
         )}

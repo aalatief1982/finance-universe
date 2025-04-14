@@ -1,92 +1,91 @@
 
 import React from 'react';
-import { CheckCircle, AlertTriangle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Plus, Check } from 'lucide-react';
 import { Transaction } from '@/types/transaction';
+import { formatCurrency } from '@/utils/format-utils';
 
 interface DetectedTransactionCardProps {
   transaction: Transaction;
   isSmartMatch: boolean;
   onAddTransaction: (transaction: Transaction) => void;
-  origin?: "template" | "structure" | "ml" | "fallback"; // 🔥 New
+  origin?: "template" | "structure" | "ml" | "fallback";
 }
 
-const DetectedTransactionCard: React.FC<DetectedTransactionCardProps> = ({ 
-  transaction, 
+const DetectedTransactionCard = ({
+  transaction,
   isSmartMatch,
-  onAddTransaction 
-}) => {
+  onAddTransaction,
+  origin
+}: DetectedTransactionCardProps) => {
+  const getOriginDisplay = () => {
+    switch (origin) {
+      case 'template':
+        return { label: 'Template Match', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' };
+      case 'structure':
+        return { label: 'Structure Match', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' };
+      case 'ml':
+        return { label: 'AI Extracted', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
+      case 'fallback':
+        return { label: 'Fallback', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' };
+      default:
+        return { label: 'Unknown', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' };
+    }
+  };
+
+  const originInfo = getOriginDisplay();
+
   return (
-    <div className="p-3 border rounded-md">
-      <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-2">
-        <div>
-          <h4 className="font-medium">{transaction.title}</h4>
-          {origin && (
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-              origin === 'template'
-                ? 'bg-green-100 text-green-800'
-                : origin === 'structure'
-                ? 'bg-blue-100 text-blue-800'
-                : origin === 'ml'
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-gray-200 text-gray-800'
-            }`}
+    <Card className="overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium">{transaction.title}</h3>
+              {isSmartMatch && (
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900/30 dark:text-green-300">
+                  <Check className="inline h-3 w-3 mr-1" />
+                  Smart Match
+                </span>
+              )}
+              {origin && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${originInfo.color}`}>
+                  {originInfo.label}
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {transaction.description || transaction.fromAccount || 'No description'}
+            </p>
+            <p className="text-lg font-semibold mt-2">
+              {formatCurrency(transaction.amount, transaction.currency)}
+            </p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                {transaction.type}
+              </span>
+              <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                {transaction.category}
+              </span>
+              {transaction.subcategory && (
+                <span className="text-xs bg-muted px-2 py-1 rounded-md">
+                  {transaction.subcategory}
+                </span>
+              )}
+            </div>
+          </div>
+          <Button 
+            size="sm" 
+            className="shrink-0"
+            onClick={() => onAddTransaction(transaction)}
           >
-            {origin === 'template'
-              ? 'Template Match'
-              : origin === 'structure'
-              ? 'Structure Match'
-              : origin === 'ml'
-              ? 'AI Extracted'
-              : 'Fallback'}
-          </span>
-        )}
-
-
-
-          <p className="text-sm text-muted-foreground">
-            Amount: {transaction.amount} | Category: {transaction.category}
-          </p>
+            <Plus className="h-4 w-4 mr-1" />
+            Add
+          </Button>
         </div>
-        
-            {transaction.notes?.includes('template') && (
-      <span className="text-xs text-purple-600 font-semibold">Template Structure Match</span>
-    )}
-
-    {transaction.notes?.includes('ML') && (
-      <span className="text-xs text-blue-600 font-semibold">Extracted with ML</span>
-    )}
-
-    {transaction.notes?.includes('fallback') && (
-      <span className="text-xs text-gray-500 font-semibold">Fallback Parser Used</span>
-    )}
-
-
-
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full sm:w-auto text-sm"
-          onClick={() => onAddTransaction(transaction)}
-        >
-          Add Transaction
-        </Button>
-      </div>
-      <div className="flex items-center mt-2 text-green-500 text-sm">
-        {isSmartMatch ? (
-          <>
-            <CheckCircle className="h-4 w-4 mr-1" />
-            AI Model Matched
-          </>
-        ) : (
-          <>
-            <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
-            Basic Text Analysis
-          </>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

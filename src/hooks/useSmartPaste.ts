@@ -1,10 +1,12 @@
-import { useState } from 'react';
+
+import { useState, useCallback } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
 import { useToast } from '@/components/ui/use-toast';
 import { resetNERModel } from '@/ml/ner';
 import { learningEngineService } from '@/services/LearningEngineService';
+import { useNavigate } from 'react-router-dom';
 
 export const useSmartPaste = (
   onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean, matchOrigin?: "template" | "structure" | "ml" | "fallback") => void,
@@ -16,7 +18,10 @@ export const useSmartPaste = (
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const [matchOrigin, setMatchOrigin] = useState<...>();
+  const [matchOrigin, setMatchOrigin] = useState<"template" | "structure" | "ml" | "fallback" | undefined>();
+  const [currentSenderHint, setCurrentSenderHint] = useState<string | undefined>();
+  const [structureMatch, setStructureMatch] = useState<any>(null);
+  const navigate = useNavigate();
 
   const handlePaste = async () => {
     try {
@@ -62,13 +67,15 @@ export const useSmartPaste = (
 
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        onTransactionsDetected?.([txn], rawText, match.entry.senderHint, match.confidence, false,"template");
         setMatchOrigin("template");
+        onTransactionsDetected?.([txn], rawText, match.entry.senderHint, match.confidence, false, "template");
         return;
       }
 
       // 2. Structure-based fallback
       const structureMatch = learningEngineService.matchUsingTemplateStructure?.(rawText);
+      setStructureMatch(structureMatch);
+      
       if (structureMatch && structureMatch.inferredTransaction) {
         const categoryInfo = findCategoryForVendor(structureMatch.inferredTransaction.vendor || '', structureMatch.inferredTransaction.type || 'expense');
 
@@ -89,9 +96,8 @@ export const useSmartPaste = (
 
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        onTransactionsDetected?.([txn], rawText, undefined, structureMatch.confidence, true,"structure");
         setMatchOrigin("structure");
-
+        onTransactionsDetected?.([txn], rawText, undefined, structureMatch.confidence, true, "structure");
         return;
       }
 
@@ -116,9 +122,8 @@ export const useSmartPaste = (
 
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        onTransactionsDetected?.([txn], rawText, undefined, 0.65, true,"ml");
         setMatchOrigin("ml");
-
+        onTransactionsDetected?.([txn], rawText, undefined, 0.65, true, "ml");
         return;
       }
 
@@ -127,7 +132,19 @@ export const useSmartPaste = (
       if (fallbackTxn) {
         setDetectedTransactions([fallbackTxn]);
         setIsSmartMatch(false);
-        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true,"fallback");
+        setMatchOrigin("fallback");
+        
+        // Check if confidence is low (< 0.4) for fallback
+        const fallbackConfidence = 0.3;
+        
+        // Redirect to Train Model page if confidence is low
+        if (fallbackConfidence < 0.4) {
+          navigate(`/train-model?msg=${encodeURIComponent(rawText)}&sender=${encodeURIComponent(currentSenderHint || '')}`);
+          setIsProcessing(false);
+          return;
+        }
+        
+        onTransactionsDetected?.([fallbackTxn], rawText, undefined, fallbackConfidence, true, "fallback");
       } else {
         setDetectedTransactions([]);
         toast({ title: 'No transaction detected', description: 'Message could not be parsed.' });
@@ -140,7 +157,19 @@ export const useSmartPaste = (
       setError('ML failed. Using fallback.');
       if (fallbackTxn) {
         setDetectedTransactions([fallbackTxn]);
-        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true,"fallback");
+        setMatchOrigin("fallback");
+        
+        // Check if confidence is low (< 0.4) for error fallback
+        const fallbackConfidence = 0.3;
+        
+        // Redirect to Train Model page if confidence is low
+        if (fallbackConfidence < 0.4) {
+          navigate(`/train-model?msg=${encodeURIComponent(rawText)}&sender=${encodeURIComponent(currentSenderHint || '')}`);
+          setIsProcessing(false);
+          return;
+        }
+        
+        onTransactionsDetected?.([fallbackTxn], rawText, undefined, fallbackConfidence, true, "fallback");
       } else {
         setDetectedTransactions([]);
       }
@@ -184,6 +213,9 @@ export const useSmartPaste = (
     isProcessing,
     error,
     handlePaste,
-    processText
+    processText,
+    structureMatch,
+    setCurrentSenderHint,
+    matchOrigin
   };
 };

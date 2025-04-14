@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Save, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import AttributeSelectionDropdown from '@/components/train-model/AttributeSelectionDropdown';
 import TransactionAttributesForm from '@/components/train-model/TransactionAttributesForm';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
@@ -38,13 +38,18 @@ const TrainModel = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { learnFromTransaction, inferFieldsFromText } = useLearningEngine();
   
+  // Get message and sender from URL parameters
+  const messageFromUrl = searchParams.get('msg') || '';
+  const senderFromUrl = searchParams.get('sender') || '';
+  
   // State for the message and selections
-  const [message, setMessage] = useState<string>(location.state?.message || '');
-  const [senderHint, setSenderHint] = useState<string>(location.state?.sender || '');
+  const [message, setMessage] = useState<string>(messageFromUrl || location.state?.message || '');
+  const [senderHint, setSenderHint] = useState<string>(senderFromUrl || location.state?.sender || '');
   const [selections, setSelections] = useState<TextSelection[]>([]);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
@@ -73,22 +78,43 @@ const TrainModel = () => {
     title: []
   });
   
+  // Initialize transaction data from passed message if available
+  useEffect(() => {
+    if (message) {
+      // Try to infer fields from the message
+      const inferredFields = inferFieldsFromText(message);
+      if (inferredFields) {
+        console.log("Inferred fields from message:", inferredFields);
+        setTransaction(prev => ({ ...prev, ...inferredFields }));
+      }
+      
+      // Use template structure service to try extracting structured data
+      try {
+        const structureMatch = learningEngineService.matchUsingTemplateStructure?.(message);
+        if (structureMatch && structureMatch.inferredTransaction) {
+          console.log("Structure match:", structureMatch);
+          // Apply structured data on top of inferred fields
+          setTransaction(prev => ({ 
+            ...prev, 
+            ...structureMatch.inferredTransaction,
+            // If amount is a string, convert it to number
+            amount: typeof structureMatch.inferredTransaction.amount === 'string' 
+              ? parseFloat(structureMatch.inferredTransaction.amount) 
+              : structureMatch.inferredTransaction.amount
+          }));
+        }
+      } catch (error) {
+        console.error("Error extracting structure:", error);
+      }
+    }
+  }, [message, inferFieldsFromText]);
+
   const handleSaveTraining = () => {
     learningEngineService.saveUserTraining(message, transaction, senderHint, manualFieldTokenMap);
     toast({ title: 'Saved', description: 'Training data saved successfully.' });
     navigate('/dashboard');
   };
   
-  // Initialize transaction data from passed message if available
-  useEffect(() => {
-    if (message) {
-      const inferredFields = inferFieldsFromText(message);
-      if (inferredFields) {
-        setTransaction(prev => ({ ...prev, ...inferredFields }));
-      }
-    }
-  }, [message, inferFieldsFromText]);
-
   // Handle text selection
   const handleTextSelection = () => {
     if (textareaRef.current) {
