@@ -1,10 +1,13 @@
-
-export interface Template {
+export interface StructureTemplateEntry {
   id: string;
-  name: string;
-  type: 'expense' | 'income' | 'transfer';
-  fromAccount: string;
-  raw: string;
-  generated?: string;
-  timestamp?: string;
+  template: string;
+  rawExample: string;
+  defaultValues: {
+    type: string;
+    fromAccount: string;
+    currency: string;
+    sender?: string;
+  };
+  fields: string[];
+  createdAt: string;
 }

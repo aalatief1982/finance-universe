@@ -17,6 +17,31 @@ interface Template {
             fromAccount: string;
             }
 
+            const handleGenerateTemplate = () => {
+              const structure = TemplateStructureService.generateTemplateStructure(rawMessage);
+              setGeneratedTemplate(structure.template);
+              setDetectedFields(structure.fields);
+            };
+
+            const handleSave = () => {
+              const newEntry: StructureTemplateEntry = {
+                id: uuidv4(),
+                template: generatedTemplate,
+                rawExample: rawMessage,
+                defaultValues: {
+                  type,
+                  fromAccount,
+                  currency,
+                  sender,
+                },
+                fields: detectedFields,
+                createdAt: new Date().toISOString()
+              };
+              saveStructureTemplate(newEntry);
+              toast({ title: "Template saved", description: "You can now match messages with this structure." });
+            };
+            
+
             const BuildTemplate: React.FC = () => {
               const [message, setMessage] = useState('');
                 const [template, setTemplate] = useState('');

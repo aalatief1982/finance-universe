@@ -12,6 +12,8 @@ const CATEGORY_RULES_STORAGE_KEY = 'xpensia_category_rules';
 const CATEGORY_CHANGES_STORAGE_KEY = 'xpensia_category_changes';
 const USER_SETTINGS_STORAGE_KEY = 'xpensia_user_settings';
 const LOCALE_SETTINGS_STORAGE_KEY = 'xpensia_locale_settings';
+const STRUCTURE_KEY = 'xpensia_structure_templates';
+
 
 // Helper function to safely get data from localStorage
 const getFromStorage = <T>(key: string, defaultValue: T): T => {
@@ -40,6 +42,21 @@ export const getStoredTransactions = (): Transaction[] => {
 
 export const storeTransactions = (transactions: Transaction[]): void => {
   setInStorage(TRANSACTIONS_STORAGE_KEY, transactions);
+};
+
+export const saveStructureTemplate = (template: StructureTemplateEntry) => {
+  const current = getStructureTemplates();
+  current.unshift(template);
+  localStorage.setItem(STRUCTURE_KEY, JSON.stringify(current.slice(0, 50)));
+};
+
+export const getStructureTemplates = (): StructureTemplateEntry[] => {
+  try {
+    const stored = localStorage.getItem(STRUCTURE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (e) {
+    return [];
+  }
 };
 
 export const storeTransaction = (transaction: any): void => {
