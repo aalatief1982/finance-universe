@@ -1,9 +1,9 @@
-
 import { Transaction, TransactionSummary, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { validateTransactionForStorage, validateCategoryForStorage, validateCategoryRuleForStorage, validateCategoryChangeForStorage } from './storage-utils-fixes';
 import { UserPreferences } from '@/types/user';
 import { SupportedCurrency, LocaleSettings } from '@/types/locale';
+import { StructureTemplateEntry } from '@/types/template';
 
 // Storage keys for local storage
 const TRANSACTIONS_STORAGE_KEY = 'xpensia_transactions';

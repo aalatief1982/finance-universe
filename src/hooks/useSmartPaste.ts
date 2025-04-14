@@ -47,7 +47,8 @@ export const useSmartPaste = (
       const match = learningEngineService.findBestMatch(rawText);
       if (match.matched && match.entry) {
         const { confirmedFields } = match.entry;
-        const categoryInfo = findCategoryForVendor(confirmedFields.vendor || '', confirmedFields.type || 'expense');
+        const vendorName = confirmedFields.vendor || '';
+        const categoryInfo = findCategoryForVendor(vendorName, confirmedFields.type || 'expense');
 
         const txn: Transaction = {
           id: `template-${Math.random().toString(36).substring(2, 9)}`,
@@ -59,7 +60,7 @@ export const useSmartPaste = (
           category: confirmedFields.category || categoryInfo.category,
           subcategory: confirmedFields.subcategory || categoryInfo.subcategory,
           date: new Date().toISOString(),
-          description: confirmedFields.vendor || '',
+          description: vendorName,
           notes: 'Extracted from template',
           source: 'smart-paste',
           person: confirmedFields.person
@@ -77,7 +78,8 @@ export const useSmartPaste = (
       setStructureMatch(structureMatch);
       
       if (structureMatch && structureMatch.inferredTransaction) {
-        const categoryInfo = findCategoryForVendor(structureMatch.inferredTransaction.vendor || '', structureMatch.inferredTransaction.type || 'expense');
+        const vendorName = structureMatch.inferredTransaction.vendor || '';
+        const categoryInfo = findCategoryForVendor(vendorName, structureMatch.inferredTransaction.type || 'expense');
 
         const txn: Transaction = {
           id: `structure-${Math.random().toString(36).substring(2, 9)}`,
@@ -89,7 +91,7 @@ export const useSmartPaste = (
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
           date: structureMatch.inferredTransaction.date || new Date().toISOString(),
-          description: structureMatch.inferredTransaction.vendor || '',
+          description: vendorName,
           notes: 'Matched by structure template',
           source: 'smart-paste'
         };
@@ -128,6 +130,7 @@ export const useSmartPaste = (
       }
 
       // 4. Final basic fallback
+      // Check if fallback confidence is low (< 0.4) for fallback
       const fallbackTxn = createFallbackTransaction(rawText);
       if (fallbackTxn) {
         setDetectedTransactions([fallbackTxn]);

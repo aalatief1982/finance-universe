@@ -1,3 +1,4 @@
+
 export interface StructureTemplateEntry {
   id: string;
   template: string;
@@ -10,4 +11,12 @@ export interface StructureTemplateEntry {
   };
   fields: string[];
   createdAt: string;
+}
+
+export interface Template {
+  id: string;
+  template: string;
+  rules?: Array<string>;
+  confidence?: number;
+  fallbackOptions?: Record<string, any>;
 }
