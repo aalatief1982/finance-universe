@@ -22,7 +22,7 @@ interface TextSelection {
   text: string;
   startOffset: number;
   endOffset: number;
-  attributeType?: 'direct' | 'infer' | 'ignore';
+  attributeType?: 'direct' | 'infer' | 'ignore' | 'copy';
   field?: string;
   value?: string;
   inferValue?: string;
