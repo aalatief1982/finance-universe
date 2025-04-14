@@ -16,6 +16,7 @@ export const useSmartPaste = (
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [matchOrigin, setMatchOrigin] = useState<...>();
 
   const handlePaste = async () => {
     try {

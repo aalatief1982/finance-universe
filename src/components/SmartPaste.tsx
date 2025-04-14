@@ -38,7 +38,9 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   } = useSmartPaste(onTransactionsDetected, useHighAccuracy);
 
   const { toast } = useToast();
-  
+  const [matchOrigin, setMatchOrigin] = useState<"template" | "structure" | "ml" | "fallback" | undefined>();
+
+
   // Set the senderHint when it changes
   useEffect(() => {
     if (senderHint) {
@@ -128,11 +130,12 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
             <h3 className="text-sm font-medium">Detected Transaction:</h3>
             {detectedTransactions.map(transaction => (
               <DetectedTransactionCard
-                key={transaction.id}
-                transaction={transaction}
-                isSmartMatch={isSmartMatch}
-                onAddTransaction={handleAddTransaction}
-              />
+              key={txn.id}
+              transaction={txn}
+              isSmartMatch={isSmartMatch}
+              onAddTransaction={handleAddTransaction}
+              origin={matchOrigin} // 🔥 Add this line
+            />
             ))}
           </div>
         )}
