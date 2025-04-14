@@ -12,18 +12,22 @@ export const learningEngineService = {
    * @returns A MatchResult object indicating whether a match was found and the confidence level.
    */
   findBestMatch(text: string, senderHint?: string): MatchResult {
-    // Detect Arabic bank transaction format
+    // Improved Arabic bank transaction matching - match a wider variety of transaction formats
     const isArabicBankTransaction = 
       (text.includes('شراء') || text.includes('مبلغ') || text.includes('بطاقة')) && 
       (text.includes('SAR') || text.includes('ريال'));
 
-    // Detect "لدى:" pattern which indicates vendor in Arabic bank messages
+    // Check for pattern indicators like card info, amount, vendor location
+    const hasCardInfo = text.includes('بطاقة:') || text.includes('بطاقة');
+    const hasAmountInfo = text.includes('مبلغ:') || text.includes('مبلغ');
     const hasVendorPattern = text.includes('لدى:') || text.includes('لدى');
     
-    // If it looks like an Arabic bank transaction with a vendor
-    if (isArabicBankTransaction && hasVendorPattern) {
-      // Extract amount
-      const amountMatch = text.match(/مبلغ: ([A-Z]{3}) ([\d.,]+)/);
+    // If it looks like an Arabic bank transaction with all key components
+    if (isArabicBankTransaction && hasCardInfo && hasAmountInfo && hasVendorPattern) {
+      console.log("Found Arabic bank transaction match");
+      
+      // Extract amount - handle both formats: مبلغ: SAR 162.00 and similar
+      const amountMatch = text.match(/مبلغ:?\s*([A-Z]{3})\s*([\d.,]+)/);
       const amount = amountMatch ? parseFloat(amountMatch[2].replace(',', '.')) : 0;
       
       // Extract currency
@@ -33,11 +37,15 @@ export const learningEngineService = {
       const vendorMatch = text.match(/لدى:?\s*([^,\n]+)/);
       const vendor = vendorMatch ? vendorMatch[1].trim() : '';
       
-      // Extract date if available
-      const dateMatch = text.match(/في: (\d{4}-\d{2}-\d{2})/);
+      // Extract date if available with improved pattern matching
+      const dateMatch = text.match(/في:?\s*(\d{4}-\d{2}-\d{2})/);
       const date = dateMatch ? dateMatch[1] : new Date().toISOString().split('T')[0];
 
-      // Create a mock learned entry to simulate a template match
+      // Extract card info
+      const cardMatch = text.match(/بطاقة:?\s*\*+(\d+)/);
+      const cardNumber = cardMatch ? `***${cardMatch[1]}` : '';
+
+      // Create a mock learned entry with high confidence
       const mockEntry: LearnedEntry = {
         id: 'template-arabic-bank',
         rawMessage: 'شراء عبر نقاط البيع\nبطاقة: ***xxxx;mada;\nمبلغ: SAR xxx.xx\nلدى: {vendor}\nفي: {date}',
@@ -47,7 +55,7 @@ export const learningEngineService = {
           type: 'expense',
           amount: amount,
           category: 'Shopping',
-          account: 'Card',
+          account: cardNumber || 'Card',
           currency: currency as any,
           vendor: vendor
         },
@@ -60,13 +68,13 @@ export const learningEngineService = {
           date: []
         },
         timestamp: new Date().toISOString(),
-        confidence: 0.85,
+        confidence: 0.95, // Very high confidence for exact template match
         userConfirmed: true
       };
 
       return {
         entry: mockEntry,
-        confidence: 0.85, // High confidence for this pattern
+        confidence: 0.95, // High confidence (above the 0.4 threshold)
         matched: true
       };
     }
