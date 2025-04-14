@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -148,7 +147,28 @@ const TrainModel = () => {
   };
 
   // Handle attribute type selection from dropdown
-  const handleAttributeSelect = (type: 'direct' | 'infer' | 'ignore', field?: string, value?: string) => {
+  const handleAttributeSelect = (type: 'direct' | 'infer' | 'ignore' | 'copy', field?: string, value?: string) => {
+    if (type === 'copy' && currentSelection) {
+      // Handle copy operation
+      navigator.clipboard.writeText(currentSelection.text)
+        .then(() => {
+          toast({ 
+            title: "Copied", 
+            description: "Text copied to clipboard" 
+          });
+        })
+        .catch(err => {
+          console.error('Failed to copy text: ', err);
+          toast({ 
+            title: "Copy failed", 
+            description: "Failed to copy text to clipboard", 
+            variant: "destructive" 
+          });
+        });
+      setShowDropdown(false);
+      return;
+    }
+    
     if (currentSelection) {
       const newSelection: TextSelection = {
         id: `selection-${Date.now()}`,
@@ -205,7 +225,6 @@ const TrainModel = () => {
     }
   };
 
-  // Create field token map from selections
   const createFieldTokenMap = (): FieldTokenMap => {
     const fieldTokenMap: FieldTokenMap = {
       amount: [],
@@ -304,6 +323,15 @@ const TrainModel = () => {
     };
   }, []);
 
+  // Prevent default mobile text selection behavior on the textarea
+  const preventDefaultTextSelectionBehavior = (e: React.TouchEvent<HTMLTextAreaElement>) => {
+    // We don't prevent default completely as we still want the selection to work
+    // But this helps suppress the native selection menu on some devices
+    setTimeout(() => {
+      handleTextSelection();
+    }, 100);
+  };
+
   return (
     <Layout>
       <div className="container max-w-5xl py-6">
@@ -345,6 +373,7 @@ const TrainModel = () => {
                   onChange={(e) => setMessage(e.target.value)}
                   onMouseUp={handleTextSelection}
                   onKeyUp={handleTextSelection}
+                  onTouchEnd={preventDefaultTextSelectionBehavior}
                   className="min-h-[200px] text-base"
                   placeholder="Message content here..."
                 />
@@ -354,7 +383,6 @@ const TrainModel = () => {
               </CardContent>
             </Card>
             
-            {/* Selection summaries */}
             {selections.length > 0 && (
               <Card className="mb-6">
                 <CardContent className="p-4">
@@ -398,7 +426,6 @@ const TrainModel = () => {
           </div>
         </div>
         
-        {/* Floating attribute selection dropdown */}
         {showDropdown && (
           <div
             ref={dropdownRef}
@@ -411,6 +438,7 @@ const TrainModel = () => {
             <AttributeSelectionDropdown
               onSelect={handleAttributeSelect}
               onClose={() => setShowDropdown(false)}
+              selectedText={currentSelection?.text}
             />
           </div>
         )}

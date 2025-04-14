@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,17 +11,19 @@ import {
   Store, 
   Calendar, 
   FileText, 
-  CreditCard
+  CreditCard,
+  Copy
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 
 interface AttributeSelectionDropdownProps {
-  onSelect: (type: 'direct' | 'infer' | 'ignore', field?: string, value?: string) => void;
+  onSelect: (type: 'direct' | 'infer' | 'ignore' | 'copy', field?: string, value?: string) => void;
   onClose: () => void;
+  selectedText?: string;
 }
 
-const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({ onSelect, onClose }) => {
+const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({ onSelect, onClose, selectedText }) => {
   const [mode, setMode] = useState<'main' | 'direct' | 'infer'>('main');
   const [selectedField, setSelectedField] = useState<string>('');
   const [inferValue, setInferValue] = useState<string>('');
@@ -35,6 +36,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
     if (selectedField && inferValue) {
       onSelect('infer', selectedField, inferValue);
     }
+  };
+
+  const handleCopy = () => {
+    onSelect('copy', undefined, selectedText);
   };
   
   const directAttributes = [
@@ -87,6 +92,16 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
             >
               <X size={14} />
               <span>Ignore</span>
+            </Button>
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-start gap-2"
+              onClick={handleCopy}
+            >
+              <Copy size={14} />
+              <span>Copy</span>
             </Button>
           </div>
         )}
