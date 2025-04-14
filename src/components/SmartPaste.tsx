@@ -17,7 +17,7 @@ import { Switch } from './ui/switch';
 
 interface SmartPasteProps {
   senderHint?: string;
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number) => void;
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number,matchOrigin?: "template" | "structure" | "ml" | "fallback") => void;
 }
 
 const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {

@@ -7,7 +7,7 @@ import { resetNERModel } from '@/ml/ner';
 import { learningEngineService } from '@/services/LearningEngineService';
 
 export const useSmartPaste = (
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean) => void,
+  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean, matchOrigin?: "template" | "structure" | "ml" | "fallback") => void,
   useHighAccuracy: boolean = false
 ) => {
   const [text, setText] = useState('');
