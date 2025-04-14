@@ -8,6 +8,7 @@ interface DetectedTransactionCardProps {
   transaction: Transaction;
   isSmartMatch: boolean;
   onAddTransaction: (transaction: Transaction) => void;
+  origin?: "template" | "structure" | "ml" | "fallback"; // 🔥 New
 }
 
 const DetectedTransactionCard: React.FC<DetectedTransactionCardProps> = ({ 
@@ -20,6 +21,30 @@ const DetectedTransactionCard: React.FC<DetectedTransactionCardProps> = ({
       <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-2">
         <div>
           <h4 className="font-medium">{transaction.title}</h4>
+          {origin && (
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+              origin === 'template'
+                ? 'bg-green-100 text-green-800'
+                : origin === 'structure'
+                ? 'bg-blue-100 text-blue-800'
+                : origin === 'ml'
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-gray-200 text-gray-800'
+            }`}
+          >
+            {origin === 'template'
+              ? 'Template Match'
+              : origin === 'structure'
+              ? 'Structure Match'
+              : origin === 'ml'
+              ? 'AI Extracted'
+              : 'Fallback'}
+          </span>
+        )}
+
+
+
           <p className="text-sm text-muted-foreground">
             Amount: {transaction.amount} | Category: {transaction.category}
           </p>
