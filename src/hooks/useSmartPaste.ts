@@ -106,7 +106,8 @@ export const useSmartPaste = (
       // 3. ML fallback
       const parsed = await extractTransactionEntities(rawText, useHighAccuracy);
       if (parsed.amount) {
-        const categoryInfo = findCategoryForVendor(parsed.description || '', parsed.type || 'expense');
+        // Use the vendor property instead of description since that's what's available in the parsed output
+        const categoryInfo = findCategoryForVendor(parsed.vendor || '', parsed.type || 'expense');
         const txn: Transaction = {
           id: `ml-${Math.random().toString(36).substring(2, 9)}`,
           title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
@@ -117,7 +118,7 @@ export const useSmartPaste = (
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
           date: parsed.date || new Date().toISOString(),
-          description: parsed.description || '',
+          description: parsed.vendor || '', // Use vendor as description
           notes: 'Extracted with ML',
           source: 'smart-paste'
         };

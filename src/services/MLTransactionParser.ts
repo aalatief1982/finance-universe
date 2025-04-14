@@ -11,7 +11,7 @@ export async function extractTransactionEntities(text: string, useHighAccuracy =
     amount: '',
     currency: '',
     type: '',
-    vendor: '',
+    vendor: '',  // We'll keep vendor property as is
     account: '',
     date: '',
   };
