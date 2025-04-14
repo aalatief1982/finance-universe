@@ -1,4 +1,4 @@
 
-#!/bin/sh
+#!/bin/bash
 # This is a helper script to start the development server
-npx vite
+node_modules/.bin/vite "$@"
