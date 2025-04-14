@@ -62,7 +62,8 @@ export const useSmartPaste = (
 
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        onTransactionsDetected?.([txn], rawText, match.entry.senderHint, match.confidence, false);
+        onTransactionsDetected?.([txn], rawText, match.entry.senderHint, match.confidence, false,"template");
+        setMatchOrigin("template");
         return;
       }
 
@@ -88,7 +89,9 @@ export const useSmartPaste = (
 
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        onTransactionsDetected?.([txn], rawText, undefined, structureMatch.confidence, true);
+        onTransactionsDetected?.([txn], rawText, undefined, structureMatch.confidence, true,"structure");
+        setMatchOrigin("structure");
+
         return;
       }
 
@@ -113,7 +116,9 @@ export const useSmartPaste = (
 
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        onTransactionsDetected?.([txn], rawText, undefined, 0.65, true);
+        onTransactionsDetected?.([txn], rawText, undefined, 0.65, true,"ml");
+        setMatchOrigin("ml");
+
         return;
       }
 
@@ -122,7 +127,7 @@ export const useSmartPaste = (
       if (fallbackTxn) {
         setDetectedTransactions([fallbackTxn]);
         setIsSmartMatch(false);
-        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true);
+        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true,"fallback");
       } else {
         setDetectedTransactions([]);
         toast({ title: 'No transaction detected', description: 'Message could not be parsed.' });
@@ -135,7 +140,7 @@ export const useSmartPaste = (
       setError('ML failed. Using fallback.');
       if (fallbackTxn) {
         setDetectedTransactions([fallbackTxn]);
-        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true);
+        onTransactionsDetected?.([fallbackTxn], rawText, undefined, 0.3, true,"fallback");
       } else {
         setDetectedTransactions([]);
       }
@@ -152,6 +157,7 @@ export const useSmartPaste = (
     const lower = text.toLowerCase();
     const isExpense = lower.includes('شراء') || lower.includes('paid');
     const isIncome = lower.includes('راتب') || lower.includes('credited');
+    setMatchOrigin("fallback");
 
     return {
       id: `fallback-${Math.random().toString(36).substring(2, 9)}`,
