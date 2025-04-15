@@ -24,22 +24,44 @@ interface AttributeSelectionDropdownProps {
   selectedText?: string;
 }
 
+/**
+ * Dropdown component for selecting attribute types during text selection.
+ * Provides options for direct attribute tagging, inference, ignoring, and copying text.
+ * Supports different modes with appropriate input fields for each.
+ */
 const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({ onSelect, onClose, selectedText }) => {
   const [mode, setMode] = useState<'main' | 'direct' | 'infer'>('main');
   const [selectedField, setSelectedField] = useState<string>('');
   const [inferValue, setInferValue] = useState<string>('');
   
+  console.log("[AttributeSelectionDropdown] Rendered with text:", selectedText?.substring(0, 20));
+  
+  /**
+   * Handles direct attribute selection for tagging text.
+   * Immediately invokes the parent callback with the selected field.
+   */
   const handleDirectAttributeSelect = (field: string) => {
+    console.log("[AttributeSelectionDropdown] Direct attribute selected:", field);
     onSelect('direct', field);
   };
   
+  /**
+   * Handles attribute inference with user-provided values.
+   * Validates input and invokes parent callback with field and value.
+   */
   const handleInferAttributeSelect = () => {
     if (selectedField && inferValue) {
+      console.log("[AttributeSelectionDropdown] Infer attribute selected:", { field: selectedField, value: inferValue });
       onSelect('infer', selectedField, inferValue);
     }
   };
 
+  /**
+   * Handles copy operation for selected text.
+   * Invokes parent callback with the 'copy' type.
+   */
   const handleCopy = () => {
+    console.log("[AttributeSelectionDropdown] Copy selected for text:", selectedText?.substring(0, 20));
     onSelect('copy', undefined, selectedText);
   };
   
@@ -60,7 +82,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
           <div className="space-y-1">
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-medium">Selection Options</p>
-              <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+              <Button variant="ghost" size="sm" onClick={() => {
+                console.log("[AttributeSelectionDropdown] Close clicked");
+                onClose();
+              }} className="h-6 w-6 p-0">
                 <X size={14} />
               </Button>
             </div>
@@ -69,7 +94,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               variant="outline" 
               size="sm" 
               className="w-full justify-start gap-2"
-              onClick={() => setMode('direct')}
+              onClick={() => {
+                console.log("[AttributeSelectionDropdown] Direct mode selected");
+                setMode('direct');
+              }}
             >
               <Tag size={14} />
               <span>Direct Attribute</span>
@@ -79,7 +107,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               variant="outline" 
               size="sm" 
               className="w-full justify-start gap-2"
-              onClick={() => setMode('infer')}
+              onClick={() => {
+                console.log("[AttributeSelectionDropdown] Infer mode selected");
+                setMode('infer');
+              }}
             >
               <Brain size={14} />
               <span>Infer Attribute</span>
@@ -89,7 +120,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               variant="outline" 
               size="sm" 
               className="w-full justify-start gap-2"
-              onClick={() => onSelect('ignore')}
+              onClick={() => {
+                console.log("[AttributeSelectionDropdown] Ignore selected");
+                onSelect('ignore');
+              }}
             >
               <X size={14} />
               <span>Ignore</span>
@@ -111,7 +145,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
           <div className="space-y-1">
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-medium">Select Attribute</p>
-              <Button variant="ghost" size="sm" onClick={() => setMode('main')} className="h-6 w-6 p-0">
+              <Button variant="ghost" size="sm" onClick={() => {
+                console.log("[AttributeSelectionDropdown] Back to main");
+                setMode('main');
+              }} className="h-6 w-6 p-0">
                 <X size={14} />
               </Button>
             </div>
@@ -135,7 +172,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
           <div className="space-y-2">
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-medium">Infer Attribute</p>
-              <Button variant="ghost" size="sm" onClick={() => setMode('main')} className="h-6 w-6 p-0">
+              <Button variant="ghost" size="sm" onClick={() => {
+                console.log("[AttributeSelectionDropdown] Back to main");
+                setMode('main');
+              }} className="h-6 w-6 p-0">
                 <X size={14} />
               </Button>
             </div>
@@ -143,7 +183,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
             <div className="space-y-2">
               <Select 
                 value={selectedField} 
-                onValueChange={setSelectedField}
+                onValueChange={(value) => {
+                  console.log("[AttributeSelectionDropdown] Field selected for inference:", value);
+                  setSelectedField(value);
+                }}
               >
                 <SelectTrigger className="w-full h-8 text-xs">
                   <SelectValue placeholder="Select field" />
@@ -160,7 +203,10 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               <Input 
                 placeholder="Value to infer" 
                 value={inferValue} 
-                onChange={(e) => setInferValue(e.target.value)}
+                onChange={(e) => {
+                  console.log("[AttributeSelectionDropdown] Infer value changed:", e.target.value);
+                  setInferValue(e.target.value);
+                }}
                 className="h-8 text-xs"
               />
               

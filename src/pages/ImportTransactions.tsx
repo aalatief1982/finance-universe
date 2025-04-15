@@ -14,12 +14,23 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { learningEngineService } from '@/services/LearningEngineService';
 
+/**
+ * ImportTransactions page component for handling different import methods.
+ * Provides UI for smart paste and Telegram bot setup methods.
+ * Manages the transaction detection flow and forwards to edit page.
+ */
 const ImportTransactions = () => {
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const { addTransactions } = useTransactions();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  console.log("[ImportTransactions] Page initialized");
+
+  /**
+   * Handles detected transactions from the SmartPaste component.
+   * Calculates matching statistics and navigates to the edit page.
+   */
   const handleTransactionsDetected = (
     transactions: Transaction[], 
     rawMessage?: string, 
@@ -28,7 +39,17 @@ const ImportTransactions = () => {
     shouldTrain?: boolean,
     matchOrigin?: "template" | "structure" | "ml" | "fallback"
   ) => {
+    console.log("[ImportTransactions] Transactions detected", { 
+      count: transactions.length, 
+      rawMessageLength: rawMessage?.length, 
+      senderHint, 
+      confidence, 
+      shouldTrain,
+      matchOrigin 
+    });
+    
     const entries = learningEngineService.getLearnedEntries();
+    console.log("[ImportTransactions] Retrieved learned entries", { count: entries.length });
   
     // Calculate matchedCount manually
     const matchedCount = entries.filter(entry => {
@@ -38,8 +59,17 @@ const ImportTransactions = () => {
         entry.confirmedFields.type === transactions[0]?.type
       );
     }).length;
+
+    console.log("[ImportTransactions] Match statistics", { 
+      matchedCount, 
+      totalTemplates: entries.length 
+    });
   
-    console.log("Navigate to edit with shouldTrain:", shouldTrain, "matchOrigin:", matchOrigin);
+    console.log("[ImportTransactions] Navigate to edit with parameters:", { 
+      shouldTrain, 
+      matchOrigin,
+      transaction: transactions[0]
+    });
     
     // Navigate to edit with all info
     navigate('/edit-transaction', {
@@ -69,7 +99,10 @@ const ImportTransactions = () => {
           <Button 
             variant="outline" 
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              console.log("[ImportTransactions] Navigating back");
+              navigate(-1);
+            }}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -84,7 +117,9 @@ const ImportTransactions = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="smart-paste" className="w-full">
+            <Tabs defaultValue="smart-paste" className="w-full" onValueChange={(value) => {
+              console.log("[ImportTransactions] Tab changed to:", value);
+            }}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="smart-paste">Smart Paste</TabsTrigger>
                 <TabsTrigger value="telegram">Telegram Bot</TabsTrigger>

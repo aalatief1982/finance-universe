@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -12,6 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
+/**
+ * ProcessSmsMessages component for processing SMS messages to extract transactions.
+ * Displays a list of SMS messages and allows selecting which to process.
+ * Integrates with the learning engine to identify and classify transactions.
+ */
 const ProcessSmsMessages = () => {
   const [mockMessages, setMockMessages] = useState<any[]>([]);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
@@ -23,7 +29,14 @@ const ProcessSmsMessages = () => {
   const navigate = useNavigate();
   const { findBestMatch, learnFromTransaction, config } = useLearningEngine();
 
+  console.log("[ProcessSmsMessages] Component initialized");
+
+  /**
+   * Loads mock SMS messages and checks for learned matches.
+   * Filters messages based on user's selected SMS providers.
+   */
   useEffect(() => {
+    console.log("[ProcessSmsMessages] Loading mock messages");
     // Mock SMS messages for demonstration
     const initialMessages = [
       { id: '1', sender: 'Bank of America', message: 'You spent $50 at The Coffee Shop on 03/15/2024.' },
@@ -31,6 +44,7 @@ const ProcessSmsMessages = () => {
       { id: '3', sender: 'Citibank', message: 'Purchase of $75 at Amazon.com on 03/13/2024.' },
     ];
 
+    console.log("[ProcessSmsMessages] User SMS providers:", user?.smsProviders);
     // Filter messages by selected providers if any
     const filteredMessages = user?.smsProviders?.length
       ? initialMessages.filter(msg => user.smsProviders?.some(provider =>
@@ -39,13 +53,21 @@ const ProcessSmsMessages = () => {
       ))
       : initialMessages;
 
+    console.log("[ProcessSmsMessages] Filtered messages:", filteredMessages.length);
     setMockMessages(filteredMessages);
     
     // Check for learned matches
+    console.log("[ProcessSmsMessages] Checking for learned matches");
     const matches: Record<string, { confidence: number; matched: boolean }> = {};
     
     filteredMessages.forEach(msg => {
       const matchResult = findBestMatch(msg.message, msg.sender);
+      console.log("[ProcessSmsMessages] Match result for message:", { 
+        id: msg.id, 
+        confidence: matchResult.confidence, 
+        matched: matchResult.matched
+      });
+      
       if (matchResult.confidence > 0) {
         matches[msg.id] = { 
           confidence: matchResult.confidence,
@@ -57,7 +79,12 @@ const ProcessSmsMessages = () => {
     setMatchedMessages(matches);
   }, [user, findBestMatch]);
 
+  /**
+   * Toggles message selection in the list.
+   * Adds or removes the message ID from the selected list.
+   */
   const toggleMessage = (id: string) => {
+    console.log("[ProcessSmsMessages] Toggling message selection:", id);
     setSelectedMessages(prev =>
       prev.includes(id)
         ? prev.filter(msgId => msgId !== id)
@@ -65,25 +92,38 @@ const ProcessSmsMessages = () => {
     );
   };
 
+  /**
+   * Handles importing selected SMS messages as transactions.
+   * Processes messages and creates transaction objects.
+   */
   const handleImport = () => {
+    console.log("[ProcessSmsMessages] Importing selected messages:", selectedMessages.length);
     setIsProcessing(true);
 
     // Process each selected message
     const selectedMsgs = mockMessages.filter(msg => selectedMessages.includes(msg.id));
+    console.log("[ProcessSmsMessages] Messages to process:", selectedMsgs.length);
     
     // Simulate processing and transaction creation
     setTimeout(() => {
       const extractedTransactions = selectedMsgs.map(message => {
+        console.log("[ProcessSmsMessages] Processing message:", message.id);
         let transaction: Transaction;
         
         // Check if we have a learned match
         const matchInfo = matchedMessages[message.id];
+        console.log("[ProcessSmsMessages] Match info for message:", { 
+          id: message.id, 
+          matchInfo 
+        });
         
         if (matchInfo?.matched) {
           // Use the learned match
+          console.log("[ProcessSmsMessages] Using learned match");
           const matchResult = findBestMatch(message.message, message.sender);
           
           if (matchResult.entry) {
+            console.log("[ProcessSmsMessages] Match entry found:", matchResult.entry);
             const fields = matchResult.entry.confirmedFields;
             
             transaction = {
@@ -102,44 +142,66 @@ const ProcessSmsMessages = () => {
             } as Transaction;
           } else {
             // Fallback to basic extraction
+            console.log("[ProcessSmsMessages] Match entry not found, using basic extraction");
             transaction = createBasicTransaction(message);
           }
         } else {
           // Basic extraction logic
+          console.log("[ProcessSmsMessages] No learned match, using basic extraction");
           transaction = createBasicTransaction(message);
         }
 
+        console.log("[ProcessSmsMessages] Created transaction:", transaction);
         return transaction;
       });
 
+      console.log("[ProcessSmsMessages] All transactions extracted:", extractedTransactions.length);
+
       // Add transactions to context
       extractedTransactions.forEach(transaction => {
+        console.log("[ProcessSmsMessages] Adding transaction to context:", transaction.id);
         addTransaction(transaction);
         
         // Learn from this transaction if enabled
         if (config.enabled && enableLearning) {
+          console.log("[ProcessSmsMessages] Learning from transaction:", {
+            id: transaction.id,
+            learning: enableLearning
+          });
+          
           const message = selectedMsgs.find(msg => 
             transaction.notes?.includes(msg.message.substring(0, 20))
           );
           
           if (message) {
+            console.log("[ProcessSmsMessages] Learning from message:", message.id);
             learnFromTransaction(message.message, transaction, message.sender);
           }
         }
       });
 
       setIsProcessing(false);
+      console.log("[ProcessSmsMessages] Processing complete, navigating to transactions page");
       navigate('/transactions'); // Redirect to transactions page
     }, 2000);
   };
   
-  // Helper to create a basic transaction from a message
+  /**
+   * Creates a basic transaction from an SMS message.
+   * Extracts transaction details using simple pattern matching.
+   */
   const createBasicTransaction = (message: any): Transaction => {
+    console.log("[ProcessSmsMessages] Creating basic transaction from message:", message.id);
     // Basic extraction logic (replace with your actual parsing logic)
     const extractedTitle = `SMS Transaction from ${message.sender}`;
     const extractedAmount = parseFloat(message.message.match(/\$(\d+\.?\d*)/)?.[1] || '0');
     const extractedCategory = 'Uncategorized';
     const extractedSubcategory = '';
+
+    console.log("[ProcessSmsMessages] Extracted details:", {
+      title: extractedTitle,
+      amount: extractedAmount
+    });
 
     // Ensure we use a valid TransactionType
     const typeValue: TransactionType = message.message.toLowerCase().includes('received') 
@@ -229,7 +291,10 @@ const ProcessSmsMessages = () => {
                   <Switch
                     id="enable-learning"
                     checked={enableLearning}
-                    onCheckedChange={setEnableLearning}
+                    onCheckedChange={(checked) => {
+                      console.log("[ProcessSmsMessages] Learning enabled:", checked);
+                      setEnableLearning(checked);
+                    }}
                     disabled={!config.enabled}
                   />
                   <Label htmlFor="enable-learning" className="text-sm flex items-center">

@@ -20,6 +20,11 @@ interface SmartPasteProps {
   onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean, matchOrigin?: "template" | "structure" | "ml" | "fallback") => void;
 }
 
+/**
+ * SmartPaste component for extracting transaction data from pasted text.
+ * Provides multiple detection methods and displays parsed transaction information.
+ * Manages text input, processing state, and detected transactions.
+ */
 const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {
   const [useHighAccuracy, setUseHighAccuracy] = useState(false);
   
@@ -40,16 +45,26 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
 
   const { toast } = useToast();
 
+  console.log("[SmartPaste] Component initialized", { senderHint, useHighAccuracy });
+
   // Set the senderHint when it changes
   useEffect(() => {
     if (senderHint) {
+      console.log("[SmartPaste] Setting sender hint:", senderHint);
       setCurrentSenderHint(senderHint);
     }
   }, [senderHint, setCurrentSenderHint]);
   
+  /**
+   * Handles form submission for processing entered text.
+   * Validates input and triggers the text processing pipeline.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[SmartPaste] Form submitted with text length:", text.length);
+    
     if (!text.trim()) {
+      console.log("[SmartPaste] Empty text submission prevented");
       toast({
         title: "Error",
         description: "Please paste or enter a message first",
@@ -57,10 +72,22 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
       });
       return;
     }
+    console.log("[SmartPaste] Processing text...");
     processText(text);
   };
 
+  /**
+   * Handles adding a detected transaction to the system.
+   * Forwards the transaction to parent components and shows user feedback.
+   */
   const handleAddTransaction = (transaction: Transaction) => {
+    console.log("[SmartPaste] Adding transaction:", { 
+      id: transaction.id, 
+      title: transaction.title, 
+      amount: transaction.amount,
+      matchOrigin 
+    });
+    
     if (onTransactionsDetected) {
       onTransactionsDetected([transaction], text, senderHint, isSmartMatch ? 0.8 : 0.5, false, matchOrigin);
     }
@@ -88,7 +115,10 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
               id="message"
               placeholder="Paste your message here..."
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                console.log("[SmartPaste] Text changed, new length:", e.target.value.length);
+                setText(e.target.value);
+              }}
               className="min-h-[100px]"
               dir="auto" // Auto-detect text direction for Arabic
             />
@@ -98,7 +128,10 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
             <Switch 
               id="high-accuracy" 
               checked={useHighAccuracy}
-              onCheckedChange={setUseHighAccuracy}
+              onCheckedChange={(checked) => {
+                console.log("[SmartPaste] High accuracy mode:", checked);
+                setUseHighAccuracy(checked);
+              }}
             />
             <Label htmlFor="high-accuracy" className="flex items-center text-sm">
               <ZapIcon className="w-4 h-4 mr-1" /> 
@@ -114,7 +147,10 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
             <Button 
               type="button" 
               variant="outline" 
-              onClick={handlePaste}
+              onClick={() => {
+                console.log("[SmartPaste] Paste from clipboard clicked");
+                handlePaste();
+              }}
               disabled={isProcessing}
             >
               Paste from Clipboard
