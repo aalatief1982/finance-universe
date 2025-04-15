@@ -12,14 +12,14 @@ export const learningEngineService = {
    * @param text - The text to match against existing templates.
    * @returns A MatchResult object indicating whether a match was found and the confidence level.
    */
-  findBestMatch(text: string, senderHint?: string): MatchResult {
+  /*findBestMatch(text: string, senderHint?: string): MatchResult {
     // Mock implementation: Always return a non-match with low confidence.
     return {
       entry: null,
       confidence: 0,
       matched: false,
     };
-  },
+  }*/,
 
   matchUsingTemplateStructure(rawText: string): any {
     // This is a mock implementation
@@ -84,6 +84,8 @@ export const learningEngineService = {
     return null;
   },
 
+  
+
   getLearnedEntries(): LearnedEntry[] {
     return [];
   },
@@ -146,6 +148,78 @@ export const learningEngineService = {
     
     return { amount, description, type };
   },
+
+  findBestMatch(text: string, senderHint = ''): MatchResult {
+  const templatesRaw = localStorage.getItem('xpensia_structure_templates');
+  if (!templatesRaw) {
+    return { entry: null, confidence: 0, matched: false };
+  }
+
+  const templates = JSON.parse(templatesRaw);
+
+  // Generate a simplified structure hash from input text
+  const normalizedText = text.toLowerCase().replace(/\s+/g, ' ').trim();
+
+  let bestMatch = null;
+  let bestConfidence = 0;
+
+  for (const template of templates) {
+    const normalizedTemplate = template.template.toLowerCase().replace(/\s+/g, ' ').trim();
+
+    const similarity = computeStructuralSimilarity(normalizedText, normalizedTemplate);
+
+    if (similarity > bestConfidence) {
+      bestConfidence = similarity;
+      bestMatch = template;
+    }
+  }
+
+  if (bestMatch && bestConfidence >= 0.4) {
+    // Apply fallback transaction logic
+    const inferredTransaction: Partial<Transaction> = {
+      amount: 0,
+      category: 'Uncategorized',
+      currency: bestMatch.defaultValues?.currency || 'SAR',
+      fromAccount: bestMatch.defaultValues?.fromAccount || 'Unknown',
+      type: bestMatch.defaultValues?.type?.toLowerCase() === 'income' ? 'income' : 'expense',
+      description: bestMatch.rawExample || '',
+      source: 'smart-paste',
+    };
+
+    return {
+      matched: true,
+      confidence: bestConfidence,
+      entry: {
+        id: bestMatch.id,
+        rawMessage: bestMatch.rawExample,
+        senderHint: bestMatch.defaultValues?.sender || '',
+        confirmedFields: inferredTransaction,
+        fieldTokenMap: {},
+        tokens: [],
+        timestamp: bestMatch.createdAt,
+        userConfirmed: true,
+        confirmationHistory: [],
+        confidence: bestConfidence,
+      },
+    };
+  }
+
+  return { entry: null, confidence: bestConfidence, matched: false };
+},
+
+  function computeStructuralSimilarity(text: string, template: string): number {
+  // Count total words in template (excluding placeholders)
+  const templateTokens = template.split(/\s+/);
+  const staticTokens = templateTokens.filter(t => !t.includes('{'));
+
+  const matchCount = staticTokens.filter(token =>
+    text.includes(token)
+  ).length;
+
+  const confidence = matchCount / staticTokens.length;
+  return Number(confidence.toFixed(2)); // e.g., 0.75
+}
+,
 
   /**
    * Clear all learned entries
