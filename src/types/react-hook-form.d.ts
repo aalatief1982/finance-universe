@@ -25,6 +25,7 @@ declare module 'react-hook-form' {
     reset: (values?: TFieldValues) => void;
     setValue: (name: string, value: any) => void;
     getValues: () => TFieldValues;
+    watch: (name?: string | string[]) => any; // Add missing watch property
   };
   
   export function useForm<TFieldValues extends FieldValues = FieldValues>(options?: {

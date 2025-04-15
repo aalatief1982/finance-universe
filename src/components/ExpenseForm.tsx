@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,7 +60,7 @@ const ExpenseForm = ({
       setAvailableSubcategories(subcategories);
       
       // If current subcategory is not available, reset it to "none"
-      const currentSubcategory = form.getValues("subcategory");
+      const currentSubcategory = form.getValues().subcategory;
       if (currentSubcategory && currentSubcategory !== "none" && !subcategories.includes(currentSubcategory)) {
         form.setValue("subcategory", "none");
       }
