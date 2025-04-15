@@ -11,7 +11,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { learningEngineService } from '@/services/LearningEngineService';
 
 /**
@@ -117,22 +116,17 @@ const ImportTransactions = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="smart-paste" className="w-full" onValueChange={(value) => {
-              console.log("[ImportTransactions] Tab changed to:", value);
-            }}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="smart-paste">Smart Paste</TabsTrigger>
-                <TabsTrigger value="telegram">Telegram Bot</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="smart-paste" className="mt-4">
+            <div className="space-y-4">
+              <div className="border-b pb-4">
+                <h3 className="text-lg font-medium mb-3">Smart Paste</h3>
                 <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
-              </TabsContent>
+              </div>
               
-              <TabsContent value="telegram" className="mt-4">
+              <div>
+                <h3 className="text-lg font-medium mb-3">Telegram Bot</h3>
                 <TelegramBotSetup />
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </motion.div>

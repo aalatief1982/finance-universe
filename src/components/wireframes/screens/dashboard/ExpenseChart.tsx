@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { BarChart, PieChart, LineChart, RefreshCcw } from 'lucide-react';
 import { useTransactions } from '@/context/TransactionContext';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ExpenseChart = () => {
   const [chartType, setChartType] = useState<'bar' | 'pie' | 'line'>('bar');
@@ -26,19 +25,26 @@ const ExpenseChart = () => {
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm font-medium text-gray-700">Expense Overview</h3>
         <div className="flex items-center space-x-1">
-          <Tabs value={chartType} onValueChange={(value) => setChartType(value as 'bar' | 'pie' | 'line')}>
-            <TabsList>
-              <TabsTrigger value="bar" className="p-1 rounded-md">
-                <BarChart size={16} className={chartType === 'bar' ? 'text-primary' : 'text-gray-400'} />
-              </TabsTrigger>
-              <TabsTrigger value="pie" className="p-1 rounded-md">
-                <PieChart size={16} className={chartType === 'pie' ? 'text-primary' : 'text-gray-400'} />
-              </TabsTrigger>
-              <TabsTrigger value="line" className="p-1 rounded-md">
-                <LineChart size={16} className={chartType === 'line' ? 'text-primary' : 'text-gray-400'} />
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center space-x-1 bg-white rounded-md border">
+            <button 
+              className={`p-1 rounded-md ${chartType === 'bar' ? 'bg-primary/10 text-primary' : 'text-gray-400'}`}
+              onClick={() => setChartType('bar')}
+            >
+              <BarChart size={16} />
+            </button>
+            <button 
+              className={`p-1 rounded-md ${chartType === 'pie' ? 'bg-primary/10 text-primary' : 'text-gray-400'}`}
+              onClick={() => setChartType('pie')}
+            >
+              <PieChart size={16} />
+            </button>
+            <button 
+              className={`p-1 rounded-md ${chartType === 'line' ? 'bg-primary/10 text-primary' : 'text-gray-400'}`}
+              onClick={() => setChartType('line')}
+            >
+              <LineChart size={16} />
+            </button>
+          </div>
           <button className="p-1 rounded-md hover:bg-gray-200" title="Refresh">
             <RefreshCcw size={16} className="text-gray-400" />
           </button>

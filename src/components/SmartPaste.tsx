@@ -126,14 +126,13 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
           
           <div className="flex items-center space-x-2">
             <Switch 
-              id="high-accuracy" 
               checked={useHighAccuracy}
               onCheckedChange={(checked) => {
                 console.log("[SmartPaste] High accuracy mode:", checked);
                 setUseHighAccuracy(checked);
               }}
             />
-            <Label htmlFor="high-accuracy" className="flex items-center text-sm">
+            <Label className="flex items-center text-sm">
               <ZapIcon className="w-4 h-4 mr-1" /> 
               High accuracy mode (slower)
             </Label>
