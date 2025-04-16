@@ -2,35 +2,6 @@
 import * as React from 'react';
 
 declare module 'react' {
-  export type KeyboardEvent<T = Element> = React.SyntheticEvent<T> & {
-    altKey: boolean;
-    charCode: number;
-    ctrlKey: boolean;
-    key: string;
-    keyCode: number;
-    locale: string;
-    location: number;
-    metaKey: boolean;
-    repeat: boolean;
-    shiftKey: boolean;
-    which: number;
-  };
-
-  export type ChangeEvent<T = Element> = React.SyntheticEvent<T> & {
-    target: EventTarget & T;
-  };
-
-  export interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
-    // Extended with additional attributes
-    role?: string;
-    'aria-label'?: string;
-    'aria-labelledby'?: string;
-    'aria-describedby'?: string;
-    'aria-disabled'?: boolean;
-    'aria-busy'?: boolean;
-  }
-  
-  // Make ReactNode accept Elements properly
   export type ReactNode = 
     | React.ReactElement
     | string
@@ -41,24 +12,31 @@ declare module 'react' {
     | React.ReactNodeArray
     | React.ReactPortal
     | Iterable<React.ReactNode>;
-    
-  export type ReactNodeArray = Array<ReactNode>;
-  
-  // Fix "Element is not assignable to type 'string'" errors
-  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
-    type: T;
-    props: P;
-    key: Key | null;
+
+  export interface Element extends React.ReactElement<any, any> {
+    // Extend Element type to be more flexible
+    toString?(): string;
   }
 
-  // Add JSX.Element to be compatible with ReactNode
-  export interface Element extends React.ReactElement<any, any> {}
+  export interface HTMLAttributes<T> {
+    children?: ReactNode;
+  }
 
-  // Update FormEvent to be more flexible
   export interface FormEvent<T = Element> extends React.SyntheticEvent<T> {
     currentTarget: EventTarget & T;
     target: EventTarget & T;
     preventDefault(): void;
     stopPropagation(): void;
   }
+
+  // Update ReactElement to be more permissive
+  export interface ReactElement<P = any, T extends string | React.JSXElementConstructor<any> = string | React.JSXElementConstructor<any>> {
+    type: T;
+    props: P;
+    key: React.Key | null;
+    toString?(): string;
+  }
 }
+
+export {};
+
