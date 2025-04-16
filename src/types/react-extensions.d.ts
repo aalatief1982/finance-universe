@@ -53,4 +53,12 @@ declare module 'react' {
 
   // Add JSX.Element to be compatible with ReactNode
   export interface Element extends React.ReactElement<any, any> {}
+
+  // Update FormEvent to be more flexible
+  export interface FormEvent<T = Element> extends React.SyntheticEvent<T> {
+    currentTarget: EventTarget & T;
+    target: EventTarget & T;
+    preventDefault(): void;
+    stopPropagation(): void;
+  }
 }

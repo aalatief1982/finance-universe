@@ -1,5 +1,12 @@
 
 #!/usr/bin/env node
 
-console.log('Starting Vite development server...');
-console.log('Server running at http://localhost:8080');
+const { execSync } = require('child_process');
+
+try {
+  console.log('Starting Vite development server...');
+  execSync('npx vite', { stdio: 'inherit' });
+} catch (error) {
+  console.error('Failed to start Vite:', error.message);
+  process.exit(1);
+}
