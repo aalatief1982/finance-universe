@@ -7,6 +7,7 @@ declare module '@/components/smart-paste/DetectedTransactionCard' {
     isSmartMatch: boolean;
     onAddTransaction: (transaction: Transaction) => void;
     origin: "template" | "structure" | "ml" | "fallback";
+    key?: string;
   }
   
   export const DetectedTransactionCard: React.FC<DetectedTransactionCardProps>;

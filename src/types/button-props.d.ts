@@ -4,9 +4,12 @@ declare module '@/components/ui/button' {
 
   export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-    size?: 'default' | 'sm' | 'lg' | 'icon';
+    size?: 'default' | 'sm' | 'lg' | 'xl' | 'icon';
     asChild?: boolean;
     children?: React.ReactNode;
+    className?: string;
+    onClick?: React.MouseEventHandler<HTMLButtonElement>;
+    type?: 'button' | 'submit' | 'reset';
   }
 
   export const Button: React.ForwardRefExoticComponent<

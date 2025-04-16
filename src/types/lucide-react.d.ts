@@ -114,7 +114,7 @@ declare module 'lucide-react' {
   export const Calendar2: LucideIcon;
   export const CircleUser: LucideIcon;
   
-  // Add missing icons
+  // Added missing icons
   export const ArrowUpCircle: LucideIcon;
   export const ArrowDownCircle: LucideIcon;
   export const TrendingUp: LucideIcon;
@@ -135,4 +135,6 @@ declare module 'lucide-react' {
   export const ArrowRightLeft: LucideIcon;
   export const Brain: LucideIcon;
   export const PiggyBank: LucideIcon;
+  export const CheckCircle2: LucideIcon;
+  export const FolderOpen: LucideIcon;
 }
