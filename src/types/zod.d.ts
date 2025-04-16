@@ -25,12 +25,12 @@ declare module 'zod' {
   export function object(shape: ZodRawShape): ZodObject<ZodRawShape>;
   export function array(schema: ZodType): ZodType<any[]>;
   
-  // Fix the enum function declaration
+  // Fix the enum function declaration to use enum_ to avoid reserved keyword issues
   export function enum_<T extends readonly [string, ...string[]]>(values: T): ZodType<T[number]>;
   
   export function infer<T extends ZodType>(schema: T): T['_output'];
   
-  export function coerce: {
+  export function coerce(): {
     number(): ZodType<number>;
     string(): ZodType<string>;
     boolean(): ZodType<boolean>;
