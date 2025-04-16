@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { DndProvider } from 'react-dnd/dist/core';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -7,29 +7,18 @@ import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { MatchResult, LearnedEntry } from '@/types/learning';
-import { Transaction, TransactionType } from '@/types/transaction';
-import { SupportedCurrency } from '@/types/locale';
-import { useLearningEngine } from '@/hooks/useLearningEngine';
+import { useNavigate } from 'react-router-dom';
+import { useTransactionBuilder } from '@/context/transaction-builder';
+import { extractStructure } from '@/lib/structure-extractor';
+import { getTemplateByHash, saveNewTemplate } from '@/lib/template-manager';
+import { fallbackMLInference } from '@/services/transformers';
 
 // Import our components
 import MessageInput from './components/MessageInput';
 import MatchResults from './components/MatchResults';
 import PageHeader from './components/PageHeader';
 import useLearningTester from './hooks/useLearningTester';
-
-
-
-//New Logic - aalatief 16/04/2025
-import { extractStructure } from "../../lib/structure-extractor";
-import { getTemplateByHash, saveNewTemplate } from "../../lib/template-manager";
-import { fallbackMLInference } from "../../services/transformers";
-import { useTransactionBuilder } from "../../context/transaction-builder";
-import { useNavigate } from "react-router-dom";
-///////////////////////////////////////////
-
 
 const LearningTester: React.FC = () => {
   const {
@@ -116,8 +105,6 @@ const LearningTester: React.FC = () => {
   );
 };
 
-////New Logic - aaaltief 16/04/2025
-
 const handleCaptureMessage = async (rawMessage: string) => {
   const { structure, hash, detectedFields } = extractStructure(rawMessage);
   const { setDraft } = useTransactionBuilder();
@@ -178,27 +165,5 @@ const handleCaptureMessage = async (rawMessage: string) => {
   setDraft(transactionDraft);
   navigate("/edit-transaction");
 };
-export function initTypeKeywordDefaults(): void {
-  const key = 'xpensia_type_keywords';
-  const exists = localStorage.getItem(key);
-  if (!exists) {
-    localStorage.setItem(key, JSON.stringify(DEFAULT_TYPE_KEYWORDS));
-    console.log('[Init] Type keyword mapping loaded into localStorage');
-  }
-}
 
-export function getTypeKeywordMap(): Record<string, string[]> {
-  const data = localStorage.getItem('xpensia_type_keywords');
-  return data ? JSON.parse(data) : DEFAULT_TYPE_KEYWORDS;
-}
-
-// 📌 Ensure initialization is triggered on module load
-declare global {
-  interface Window { __xpensia_keyword_init?: boolean; }
-}
-
-if (typeof window !== 'undefined' && !window.__xpensia_keyword_init) {
-  initTypeKeywordDefaults();
-  window.__xpensia_keyword_init = true;
-}
 export default LearningTester;

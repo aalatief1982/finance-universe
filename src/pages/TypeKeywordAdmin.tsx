@@ -1,4 +1,5 @@
-// 📁 Path: src/pages/TypeKeywordAdmin.tsx (🆕 New)
+
+// 📁 Path: src/pages/TypeKeywordAdmin.tsx
 
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
