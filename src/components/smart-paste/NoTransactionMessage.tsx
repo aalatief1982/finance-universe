@@ -6,7 +6,13 @@ interface NoTransactionMessageProps {
   show: boolean;
 }
 
+/**
+ * Displays a message when no transaction could be detected from the input.
+ * Only renders when explicitly set to show.
+ */
 const NoTransactionMessage: React.FC<NoTransactionMessageProps> = ({ show }) => {
+  console.log("[NoTransactionMessage] Rendering with show:", show);
+  
   if (!show) return null;
   
   return (

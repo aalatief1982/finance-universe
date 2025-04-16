@@ -14,6 +14,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useTransactionBuilder } from '@/context/transaction-builder';
 
+/**
+ * EditTransaction component provides a form to review and edit transaction details.
+ * Handles validation, source-based field styling, and saving to the transaction store.
+ */
 const EditTransaction = () => {
   const { draft, clearDraft } = useTransactionBuilder();
   const navigate = useNavigate();
@@ -22,11 +26,21 @@ const EditTransaction = () => {
 
   const [saveForLearning, setSaveForLearning] = useState(true);
 
+  console.log("[EditTransaction] Component initialized, draft:", draft?.type?.value, draft?.amount?.value);
+
   useEffect(() => {
-    if (!draft) navigate('/');
+    if (!draft) {
+      console.log("[EditTransaction] No draft available, redirecting to home");
+      navigate('/');
+    }
   }, [draft, navigate]);
 
+  /**
+   * Validates and saves the completed transaction from draft data.
+   * Performs field validation and transforms draft fields into a permanent transaction.
+   */
   const handleSave = () => {
+    console.log("[EditTransaction] Save initiated");
     if (!draft) return;
 
     const requiredFields: (keyof typeof draft)[] = [
@@ -35,6 +49,7 @@ const EditTransaction = () => {
 
     const hasMissing = requiredFields.some(field => !draft[field]?.value);
     if (hasMissing) {
+      console.log("[EditTransaction] Validation failed, missing required fields");
       toast({
         title: 'Missing Fields',
         description: 'Please fill in all required fields before saving.',
@@ -61,19 +76,39 @@ const EditTransaction = () => {
       updatedAt: new Date().toISOString()
     };
 
+    console.log("[EditTransaction] Saving transaction:", { 
+      id: confirmed.id,
+      type: confirmed.type,
+      amount: confirmed.amount,
+      category: confirmed.category
+    });
+    
     addTransaction(confirmed);
+    console.log("[EditTransaction] Transaction saved successfully");
+    
     toast({
       title: 'Transaction saved',
       description: 'Your transaction was successfully added.'
     });
 
+    if (saveForLearning) {
+      console.log("[EditTransaction] Saving pattern for learning");
+      // Here would be code to save the pattern for learning
+    }
+
     clearDraft();
     navigate('/dashboard');
   };
 
+  /**
+   * Renders a form field with appropriate styling based on its data source.
+   * Different background colors indicate different data sources.
+   */
   const renderField = (label: string, field: keyof typeof draft, editable = true) => {
-    const source = draft?.[field]?.source;
-    const confidence = draft?.[field]?.confidence;
+    if (!draft) return null;
+    
+    const source = draft[field]?.source;
+    const confidence = draft[field]?.confidence;
     const colorMap = {
       template: 'bg-blue-50 border-blue-300',
       regex: 'bg-green-50 border-green-300',
@@ -82,14 +117,21 @@ const EditTransaction = () => {
       manual: 'bg-white'
     };
 
+    console.log(`[EditTransaction] Rendering field ${field}:`, { 
+      value: draft[field]?.value, 
+      source, 
+      confidence 
+    });
+
     return (
       <div className={`mb-4 p-2 border rounded ${colorMap[source] || 'bg-white'}`}>
         <label className="block text-sm font-semibold mb-1">{label}</label>
         <input
           className="w-full p-2 border rounded"
-          value={draft?.[field]?.value || ''}
+          value={draft[field]?.value || ''}
           onChange={(e) => {
             if (draft) {
+              console.log(`[EditTransaction] Field ${field} changed:`, e.target.value);
               draft[field] = { value: e.target.value, source: 'manual' };
             }
           }}
@@ -130,7 +172,10 @@ const EditTransaction = () => {
           <Switch
             id="save-for-learning"
             checked={saveForLearning}
-            onCheckedChange={setSaveForLearning}
+            onCheckedChange={(checked) => {
+              console.log("[EditTransaction] Save for learning changed:", checked);
+              setSaveForLearning(checked);
+            }}
           />
           <Label htmlFor="save-for-learning" className="flex items-center">
             <Brain className="h-4 w-4 mr-2" />
@@ -140,7 +185,17 @@ const EditTransaction = () => {
 
         <div className="flex gap-2 mt-6">
           <Button className="flex-1" onClick={handleSave}>Save</Button>
-          <Button className="flex-1" variant="secondary" onClick={() => { clearDraft(); navigate(-1); }}>Cancel</Button>
+          <Button 
+            className="flex-1" 
+            variant="secondary" 
+            onClick={() => { 
+              console.log("[EditTransaction] Transaction cancelled");
+              clearDraft(); 
+              navigate(-1); 
+            }}
+          >
+            Cancel
+          </Button>
         </div>
       </motion.div>
     </Layout>
