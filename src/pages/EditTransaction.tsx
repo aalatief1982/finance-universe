@@ -1,4 +1,4 @@
-// 📁 Path: src/pages/EditTransaction.tsx (✳️ Updated to reflect full integration with SmartPaste transaction builder)
+// 📁 Path: src/pages/EditTransaction.tsx (✳️ Updated with validation, source-based coloring, and field confidence display)
 
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -9,22 +9,12 @@ import { ArrowLeft, Brain } from 'lucide-react';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import TransactionEditForm from '@/components/TransactionEditForm';
-import { v4 as uuidv4 } from 'uuid';
-import { storeTransaction } from '@/utils/storage-utils';
-import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LearnedEntry } from '@/types/learning';
-import SmartPasteSummary from '@/components/SmartPasteSummary';
-import { learningEngineService } from '@/services/LearningEngineService';
 import { useTransactionBuilder } from '@/context/transaction-builder';
 
 const EditTransaction = () => {
   const { draft, clearDraft } = useTransactionBuilder();
-  const location = useLocation();
   const navigate = useNavigate();
   const { addTransaction } = useTransactions();
   const { toast } = useToast();
@@ -37,8 +27,23 @@ const EditTransaction = () => {
 
   const handleSave = () => {
     if (!draft) return;
+
+    const requiredFields: (keyof typeof draft)[] = [
+      'type', 'amount', 'currency', 'date', 'fromAccount', 'vendor', 'category'
+    ];
+
+    const hasMissing = requiredFields.some(field => !draft[field]?.value);
+    if (hasMissing) {
+      toast({
+        title: 'Missing Fields',
+        description: 'Please fill in all required fields before saving.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const confirmed = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       source: 'smart-paste',
       type: draft.type.value,
       amount: draft.amount.value,
@@ -56,8 +61,6 @@ const EditTransaction = () => {
     };
 
     addTransaction(confirmed);
-    storeTransaction(confirmed);
-
     toast({
       title: 'Transaction saved',
       description: 'Your transaction was successfully added.'
@@ -67,22 +70,36 @@ const EditTransaction = () => {
     navigate('/dashboard');
   };
 
-  const renderField = (label: string, field: keyof typeof draft, editable = true) => (
-    <div className="mb-4">
-      <label className="block text-sm font-semibold mb-1">{label}</label>
-      <input
-        className="w-full p-2 border rounded"
-        value={draft?.[field]?.value || ''}
-        onChange={(e) => {
-          if (draft) {
-            draft[field] = { value: e.target.value, source: 'manual' };
-          }
-        }}
-        disabled={!editable}
-      />
-      <small className="text-gray-500">Source: {draft?.[field]?.source}</small>
-    </div>
-  );
+  const renderField = (label: string, field: keyof typeof draft, editable = true) => {
+    const source = draft?.[field]?.source;
+    const confidence = draft?.[field]?.confidence;
+    const colorMap = {
+      template: 'bg-blue-50 border-blue-300',
+      regex: 'bg-green-50 border-green-300',
+      suggestion: 'bg-yellow-50 border-yellow-300',
+      ml: 'bg-purple-50 border-purple-300',
+      manual: 'bg-white'
+    };
+
+    return (
+      <div className={`mb-4 p-2 border rounded ${colorMap[source] || 'bg-white'}`}>
+        <label className="block text-sm font-semibold mb-1">{label}</label>
+        <input
+          className="w-full p-2 border rounded"
+          value={draft?.[field]?.value || ''}
+          onChange={(e) => {
+            if (draft) {
+              draft[field] = { value: e.target.value, source: 'manual' };
+            }
+          }}
+          disabled={!editable}
+        />
+        <div className="text-xs text-gray-600 mt-1">
+          Source: {source} {confidence !== undefined ? `(Confidence: ${Math.round(confidence * 100)}%)` : ''}
+        </div>
+      </div>
+    );
+  };
 
   if (!draft) return null;
 
