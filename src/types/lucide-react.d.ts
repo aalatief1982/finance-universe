@@ -113,3 +113,4 @@ declare module 'lucide-react' {
   export const BarChart: LucideIcon;
   export const Calendar2: LucideIcon;
   export const CircleUser: LucideIcon;
+}
