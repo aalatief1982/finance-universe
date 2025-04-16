@@ -7,6 +7,7 @@ declare module '@/components/CategoryPill' {
     onClick?: () => void;
     active?: boolean;
     className?: string;
+    key?: string | number;
   }
 
   export const CategoryPill: React.FC<CategoryPillProps>;
