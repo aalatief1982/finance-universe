@@ -113,4 +113,26 @@ declare module 'lucide-react' {
   export const BarChart: LucideIcon;
   export const Calendar2: LucideIcon;
   export const CircleUser: LucideIcon;
+  
+  // Add missing icons
+  export const ArrowUpCircle: LucideIcon;
+  export const ArrowDownCircle: LucideIcon;
+  export const TrendingUp: LucideIcon;
+  export const TrendingDown: LucideIcon;
+  export const PieChart: LucideIcon;
+  export const List: LucideIcon;
+  export const MessageSquare: LucideIcon;
+  export const BarChart3: LucideIcon;
+  export const BrainCircuit: LucideIcon;
+  export const School: LucideIcon;
+  export const Loader2: LucideIcon;
+  export const ZapIcon: LucideIcon;
+  export const Zap: LucideIcon;
+  export const Shield: LucideIcon;
+  export const Loader: LucideIcon;
+  export const Globe: LucideIcon;
+  export const Building: LucideIcon;
+  export const ArrowRightLeft: LucideIcon;
+  export const Brain: LucideIcon;
+  export const PiggyBank: LucideIcon;
 }
