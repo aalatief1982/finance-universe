@@ -30,7 +30,7 @@ declare module 'zod' {
   
   export function infer<T extends ZodType>(schema: T): T['_output'];
   
-  export function coerce(): {
+  export const coerce: {
     number(): ZodType<number>;
     string(): ZodType<string>;
     boolean(): ZodType<boolean>;
