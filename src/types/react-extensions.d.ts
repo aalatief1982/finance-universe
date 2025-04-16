@@ -18,8 +18,13 @@ declare module 'react' {
     toString?(): string;
   }
 
-  export interface HTMLAttributes<T> {
+  export interface HTMLAttributes<T> extends React.DOMAttributes<T> {
     children?: ReactNode;
+    className?: string;
+    style?: React.CSSProperties;
+    // Add other common HTML attributes
+    id?: string;
+    role?: string;
   }
 
   export interface FormEvent<T = Element> extends React.SyntheticEvent<T> {
@@ -29,6 +34,17 @@ declare module 'react' {
     stopPropagation(): void;
   }
 
+  export type FormEventHandler<T = Element> = (event: FormEvent<T>) => void;
+
+  export interface DOMAttributes<T> {
+    children?: ReactNode;
+    dangerouslySetInnerHTML?: { __html: string };
+    onSubmit?: FormEventHandler<T>;
+    onChange?: (event: React.SyntheticEvent<T>) => void;
+    onClick?: (event: React.MouseEvent<T>) => void;
+    // Add other event handlers as needed
+  }
+
   // Update ReactElement to be more permissive
   export interface ReactElement<P = any, T extends string | React.JSXElementConstructor<any> = string | React.JSXElementConstructor<any>> {
     type: T;
@@ -36,7 +52,8 @@ declare module 'react' {
     key: React.Key | null;
     toString?(): string;
   }
+
+  export type ReactNodeArray = ReactNode[];
 }
 
 export {};
-
