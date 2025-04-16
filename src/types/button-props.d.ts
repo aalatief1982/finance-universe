@@ -11,6 +11,10 @@ declare module '@/components/ui/button' {
     onClick?: React.MouseEventHandler<HTMLButtonElement>;
     type?: 'button' | 'submit' | 'reset';
     disabled?: boolean;
+    'aria-label'?: string;
+    'aria-busy'?: boolean;
+    'aria-describedby'?: string;
+    'aria-disabled'?: boolean;
   }
 
   export const Button: React.ForwardRefExoticComponent<

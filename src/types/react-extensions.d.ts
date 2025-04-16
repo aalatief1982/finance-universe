@@ -31,6 +31,13 @@ declare module 'react' {
   }
   
   // Explicitly define ReactNode to include React.Element
-  export type ReactNode = React.ReactElement | string | number | boolean | null | undefined | React.ReactNodeArray;
+  export type ReactNode = React.ReactElement | string | number | boolean | null | undefined | React.ReactNodeArray | React.ReactPortal;
   export type ReactNodeArray = Array<ReactNode>;
+  
+  // Add missing Element type to fix "Type 'Element' is not assignable to type 'string'" errors
+  export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
+    type: T;
+    props: P;
+    key: Key | null;
+  }
 }
