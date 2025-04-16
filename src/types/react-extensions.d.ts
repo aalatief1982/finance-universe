@@ -30,14 +30,27 @@ declare module 'react' {
     'aria-busy'?: boolean;
   }
   
-  // Explicitly define ReactNode to include React.Element
-  export type ReactNode = React.ReactElement | string | number | boolean | null | undefined | React.ReactNodeArray | React.ReactPortal;
+  // Make ReactNode accept Elements properly
+  export type ReactNode = 
+    | React.ReactElement
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | React.ReactNodeArray
+    | React.ReactPortal
+    | Iterable<React.ReactNode>;
+    
   export type ReactNodeArray = Array<ReactNode>;
   
-  // Add missing Element type to fix "Type 'Element' is not assignable to type 'string'" errors
+  // Fix "Element is not assignable to type 'string'" errors
   export interface ReactElement<P = any, T extends string | JSXElementConstructor<any> = string | JSXElementConstructor<any>> {
     type: T;
     props: P;
     key: Key | null;
   }
+
+  // Add JSX.Element to be compatible with ReactNode
+  export interface Element extends React.ReactElement<any, any> {}
 }
