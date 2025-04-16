@@ -15,6 +15,8 @@ import LearningTester from './pages/dev/LearningTester';
 import MasterMind from '@/pages/MasterMind';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from './pages/BuildTemplate';
+import SuggestionsAdmin from './pages/SuggestionsAdmin';
+
 
 function App() {
   return (
@@ -34,6 +36,7 @@ function App() {
               <Route path="/mastermind" element={<MasterMind />} />
               <Route path="/train-model" element={<TrainModel />} />
               <Route path="/build-template" element={<BuildTemplate />} />
+              <Route path="/admin/suggestions" element={<SuggestionsAdmin />} />
               {/* Learning Tester route - now always available */}
               <Route path="/dev/learning-tester" element={<LearningTester />} />
             </Routes>
