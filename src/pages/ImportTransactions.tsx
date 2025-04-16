@@ -1,135 +1,104 @@
+// 📁 Path: src/pages/ImportTransactions.tsx (✳️ Updated to integrate SmartPaste parsing flow)
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import TelegramBotSetup from '@/components/TelegramBotSetup';
-import SmartPaste from '@/components/SmartPaste';
-import { Transaction } from '@/types/transaction';
-import { useTransactions } from '@/context/TransactionContext';
-import { useToast } from '@/components/ui/use-toast';
+import { useTransactionBuilder } from '@/context/transaction-builder';
+import { useNavigate } from 'react-router-dom';
+import { extractStructure } from '@/lib/structure-extractor';
+import { getTemplateByHash, saveNewTemplate } from '@/lib/template-manager';
+import { fallbackMLInference } from '@/services/transformers';
+import { inferTypeByKeywords } from '@/lib/type-inference';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { learningEngineService } from '@/services/LearningEngineService';
 
-/**
- * ImportTransactions page component for handling different import methods.
- * Provides UI for smart paste and Telegram bot setup methods.
- * Manages the transaction detection flow and forwards to edit page.
- */
-const ImportTransactions = () => {
-  const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
-  const { addTransactions } = useTransactions();
-  const { toast } = useToast();
+const ImportTransactions: React.FC = () => {
+  const [rawMessages, setRawMessages] = useState<string>('');
+  const [processing, setProcessing] = useState(false);
   const navigate = useNavigate();
+  const { setDraft } = useTransactionBuilder();
 
-  console.log("[ImportTransactions] Page initialized");
+  const handleImport = async () => {
+    const messages = rawMessages.split(/\n\n+/).map(msg => msg.trim()).filter(Boolean);
+    if (messages.length === 0) return;
 
-  /**
-   * Handles detected transactions from the SmartPaste component.
-   * Calculates matching statistics and navigates to the edit page.
-   */
-  const handleTransactionsDetected = (
-    transactions: Transaction[], 
-    rawMessage?: string, 
-    senderHint?: string, 
-    confidence?: number, 
-    shouldTrain?: boolean,
-    matchOrigin?: "template" | "structure" | "ml" | "fallback"
-  ) => {
-    console.log("[ImportTransactions] Transactions detected", { 
-      count: transactions.length, 
-      rawMessageLength: rawMessage?.length, 
-      senderHint, 
-      confidence, 
-      shouldTrain,
-      matchOrigin 
-    });
-    
-    const entries = learningEngineService.getLearnedEntries();
-    console.log("[ImportTransactions] Retrieved learned entries", { count: entries.length });
-  
-    // Calculate matchedCount manually
-    const matchedCount = entries.filter(entry => {
-      return (
-        Math.abs(entry.confirmedFields.amount - (transactions[0]?.amount || 0)) < 0.01 &&
-        entry.confirmedFields.category === transactions[0]?.category &&
-        entry.confirmedFields.type === transactions[0]?.type
-      );
-    }).length;
+    setProcessing(true);
 
-    console.log("[ImportTransactions] Match statistics", { 
-      matchedCount, 
-      totalTemplates: entries.length 
-    });
-  
-    console.log("[ImportTransactions] Navigate to edit with parameters:", { 
-      shouldTrain, 
-      matchOrigin,
-      transaction: transactions[0]
-    });
-    
-    // Navigate to edit with all info
-    navigate('/edit-transaction', {
-      state: {
-        transaction: transactions[0],
+    for (const rawMessage of messages) {
+      const { structure, hash, detectedFields } = extractStructure(rawMessage);
+      let transactionDraft: any = {
         rawMessage,
-        senderHint,
-        confidence,
-        matchedCount,
-        totalTemplates: entries.length,
-        isSuggested: true,
-        shouldTrain,
-        matchOrigin
+        structureHash: hash,
+        createdAt: new Date().toISOString(),
+        person: { value: '', source: 'manual' },
+        description: { value: '', source: 'manual' }
+      };
+
+      Object.assign(transactionDraft, detectedFields);
+
+      const template = getTemplateByHash(hash);
+      if (template) {
+        template.fields.forEach(field => {
+          if (!transactionDraft[field]) {
+            transactionDraft[field] = {
+              value: template.defaultValues?.[field] || '',
+              source: 'template'
+            };
+          }
+        });
+      } else {
+        saveNewTemplate({
+          hash,
+          structure,
+          fields: Object.keys(detectedFields) as any,
+          createdAt: new Date().toISOString()
+        });
       }
-    });
+
+      if (!transactionDraft.type) {
+        const inferredType = inferTypeByKeywords(rawMessage);
+        if (inferredType) {
+          transactionDraft.type = {
+            value: inferredType,
+            source: 'suggestion'
+          };
+        }
+      }
+
+      const missingKeys = ["type", "category", "subcategory", "vendor"] as const;
+      const needML = missingKeys.some(k => !transactionDraft[k]);
+      if (needML) {
+        const mlResult = await fallbackMLInference(rawMessage);
+        missingKeys.forEach(key => {
+          if (mlResult[key] && !transactionDraft[key]) {
+            transactionDraft[key] = {
+              value: mlResult[key],
+              source: 'ml',
+              confidence: mlResult.confidence || 0.7
+            };
+          }
+        });
+      }
+
+      setDraft(transactionDraft);
+      navigate('/edit-transaction');
+      break; // Process one at a time with review
+    }
   };
-  
+
   return (
     <Layout>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full px-4 sm:px-6 md:px-8 max-w-full space-y-6 mt-4 py-6"
-      >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => {
-              console.log("[ImportTransactions] Navigating back");
-              navigate(-1);
-            }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Import Transactions</h1>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Import Transactions</CardTitle>
-            <CardDescription>
-              Import your transactions from SMS, Telegram, or by pasting bank messages
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="border-b pb-4">
-                <h3 className="text-lg font-medium mb-3">Smart Paste</h3>
-                <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-3">Telegram Bot</h3>
-                <TelegramBotSetup />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      <div className="max-w-xl mx-auto py-8 px-4">
+        <h1 className="text-xl font-bold mb-4">Import Transactions</h1>
+        <textarea
+          value={rawMessages}
+          onChange={(e) => setRawMessages(e.target.value)}
+          rows={12}
+          className="w-full border border-gray-300 rounded p-3 mb-4"
+          placeholder="Paste multiple SMS messages separated by blank lines..."
+        />
+        <Button onClick={handleImport} disabled={processing || !rawMessages.trim()}>
+          {processing ? 'Processing...' : 'Parse & Review'}
+        </Button>
+      </div>
     </Layout>
   );
 };
