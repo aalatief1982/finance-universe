@@ -9,13 +9,13 @@ export const transactionSchema = z.object({
   amount: z.number().refine(n => !isNaN(n), "Amount must be a valid number"),
   category: z.string().min(1, "Category is required"),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date format"),
-  type: z.enum(["income", "expense", "transfer"]),
+  type: z.enum_(["income", "expense", "transfer"]),
   fromAccount: z.string().optional(), // Make fromAccount optional here
   toAccount: z.string().optional().nullable(),
   notes: z.string().optional(),
   description: z.string().optional(),
-  person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional().nullable(),
-  source: z.enum(["manual", "sms"]).optional(),
+  person: z.enum_(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional().nullable(),
+  source: z.enum_(["manual", "sms"]).optional(),
   originalCurrency: z.string().optional(),
   currency: z.string().optional().default("SAR"),
   smsDetails: z
@@ -91,12 +91,12 @@ export const categoryRuleSchema = z.object({
 
 // Enhanced User preferences validation schema with more detailed options
 export const userPreferencesSchema = z.object({
-  currency: z.enum(["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CNY", "INR"]),
+  currency: z.enum_(["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CNY", "INR"]),
   language: z.string(),
-  theme: z.enum(["light", "dark", "system"]),
+  theme: z.enum_(["light", "dark", "system"]),
   notifications: z.object({
     enabled: z.boolean(),
-    types: z.array(z.enum(["sms", "budget", "insights", "security", "marketing"])),
+    types: z.array(z.enum_(["sms", "budget", "insights", "security", "marketing"])),
     emailNotifications: z.boolean().optional(),
     pushNotifications: z.boolean().optional(),
     quietHours: z.object({
@@ -107,8 +107,8 @@ export const userPreferencesSchema = z.object({
   }),
   displayOptions: z.object({
     showCents: z.boolean(),
-    weekStartsOn: z.enum(["sunday", "monday"]),
-    defaultView: z.enum(["list", "stats", "calendar"]),
+    weekStartsOn: z.enum_(["sunday", "monday"]),
+    defaultView: z.enum_(["list", "stats", "calendar"]),
     compactMode: z.boolean().optional(),
     showCategories: z.boolean().optional(),
     showTags: z.boolean().optional()
@@ -116,12 +116,12 @@ export const userPreferencesSchema = z.object({
   privacy: z.object({
     maskAmounts: z.boolean().optional(),
     requireAuthForSensitiveActions: z.boolean().optional(),
-    dataSharing: z.enum(["none", "anonymous", "full"]).optional()
+    dataSharing: z.enum_(["none", "anonymous", "full"]).optional()
   }).optional(),
   dataManagement: z.object({
     autoBackup: z.boolean().optional(),
-    backupFrequency: z.enum(["daily", "weekly", "monthly"]).optional(),
-    dataRetention: z.enum(["3months", "6months", "1year", "forever"]).optional()
+    backupFrequency: z.enum_(["daily", "weekly", "monthly"]).optional(),
+    dataRetention: z.enum_(["3months", "6months", "1year", "forever"]).optional()
   }).optional(),
   updatedAt: z.string().datetime()
 });
@@ -131,7 +131,7 @@ export const budgetSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1, "Budget name is required"),
   amount: z.number().positive("Budget amount must be positive"),
-  period: z.enum(["daily", "weekly", "monthly", "quarterly", "yearly"]),
+  period: z.enum_(["daily", "weekly", "monthly", "quarterly", "yearly"]),
   categoryId: z.string().uuid().optional(),
   startDate: z.string().datetime(),
   endDate: z.string().datetime().optional(),
@@ -211,13 +211,13 @@ export function validateNewTransaction(transaction: Omit<ValidatedTransaction, '
       amount: z.number().refine(n => !isNaN(n), "Amount must be a valid number"),
       category: z.string().min(1, "Category is required"),
       date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date format"),
-      type: z.enum(["income", "expense", "transfer"]),
+      type: z.enum_(["income", "expense", "transfer"]),
       fromAccount: z.string().optional(),
       toAccount: z.string().optional().nullable(),
       notes: z.string().optional(),
       description: z.string().optional(),
-      person: z.enum(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional().nullable(),
-      source: z.enum(["manual", "sms"]).optional(),
+      person: z.enum_(["Ahmed", "Marwa", "Youssef", "Salma", "Mazen", "none"]).optional().nullable(),
+      source: z.enum_(["manual", "sms"]).optional(),
       originalCurrency: z.string().optional(),
       currency: z.string().optional().default("SAR"),
       smsDetails: z
