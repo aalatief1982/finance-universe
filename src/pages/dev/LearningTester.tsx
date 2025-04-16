@@ -178,5 +178,27 @@ const handleCaptureMessage = async (rawMessage: string) => {
   setDraft(transactionDraft);
   navigate("/edit-transaction");
 };
+export function initTypeKeywordDefaults(): void {
+  const key = 'xpensia_type_keywords';
+  const exists = localStorage.getItem(key);
+  if (!exists) {
+    localStorage.setItem(key, JSON.stringify(DEFAULT_TYPE_KEYWORDS));
+    console.log('[Init] Type keyword mapping loaded into localStorage');
+  }
+}
 
+export function getTypeKeywordMap(): Record<string, string[]> {
+  const data = localStorage.getItem('xpensia_type_keywords');
+  return data ? JSON.parse(data) : DEFAULT_TYPE_KEYWORDS;
+}
+
+// 📌 Ensure initialization is triggered on module load
+declare global {
+  interface Window { __xpensia_keyword_init?: boolean; }
+}
+
+if (typeof window !== 'undefined' && !window.__xpensia_keyword_init) {
+  initTypeKeywordDefaults();
+  window.__xpensia_keyword_init = true;
+}
 export default LearningTester;
