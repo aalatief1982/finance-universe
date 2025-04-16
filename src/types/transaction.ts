@@ -4,6 +4,44 @@ export type TransactionType = 'income' | 'expense' | 'transfer';
 // Source type used throughout the app
 export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smart-paste' | 'sms-import';
 
+export type FieldSource = 'template' | 'regex' | 'suggestion' | 'ml' | 'manual';
+
+export type TransactionType = 'expense' | 'income' | 'transfer';
+
+export type Currency = 'SAR' | 'EGP' | 'USD' | 'BHD' | 'AED';
+
+export type Category =
+  | 'Salary'
+  | 'Shopping'
+  | 'Car'
+  | 'Health'
+  | 'Education'
+  | 'Others'
+  | 'Investment'
+  | 'Transfer';
+
+export type Subcategory =
+  | 'Main Salary'
+  | 'Benefit'
+  | 'Bonus'
+  | 'Loan Return'
+  | 'Sukuk'
+  | 'Stocks'
+  | 'Grocery'
+  | 'Clothing'
+  | 'Appliances'
+  | 'Misc'
+  | 'Gas'
+  | 'Maintencance'
+  | 'Hospital'
+  | 'Pharmacy'
+  | 'Gym'
+  | 'Tennis'
+  | 'Swimming'
+  | 'School'
+  | 'Course'
+  | '';
+
 export interface Transaction {
   id: string;
   title: string;
@@ -95,3 +133,32 @@ export interface TimePeriodData {
   income: number;
   expense: number;
 }
+
+
+export type Person = 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | '';
+
+export interface TransactionField<T> {
+  value: T;
+  source: FieldSource;
+  confidence?: number;
+}
+
+export interface TransactionDraft {
+  id?: string;
+  rawMessage: string;
+  structureHash?: string;
+
+  type: TransactionField<TransactionType>;
+  amount: TransactionField<number>;
+  currency: TransactionField<Currency>;
+  date: TransactionField<string>; // ISO string
+  fromAccount: TransactionField<string>;
+  toAccount?: TransactionField<string>; // Only for transfers
+  vendor: TransactionField<string>;
+  category: TransactionField<Category>;
+  subcategory: TransactionField<Subcategory>;
+  person: TransactionField<Person>;
+  description: TransactionField<string>;
+
+  createdAt: string;
+  updatedAt?: string;
