@@ -1,140 +1,40 @@
 
 declare module 'lucide-react' {
-  import { SVGAttributes, ForwardRefExoticComponent, RefAttributes } from 'react';
-  
-  export interface LucideProps extends SVGAttributes<SVGElement> {
+  import * as React from 'react';
+
+  export interface IconProps extends React.SVGAttributes<SVGElement> {
+    color?: string;
     size?: string | number;
     strokeWidth?: string | number;
     absoluteStrokeWidth?: boolean;
-    color?: string;
   }
-  
-  export type LucideIcon = ForwardRefExoticComponent<LucideProps & RefAttributes<SVGSVGElement>>;
-  
-  // Define common icons
-  export const Home: LucideIcon;
-  export const User: LucideIcon;
-  export const Settings: LucideIcon;
-  export const Menu: LucideIcon;
-  export const Bell: LucideIcon;
-  export const Search: LucideIcon;
-  export const ArrowRight: LucideIcon;
-  export const ArrowLeft: LucideIcon;
-  export const ArrowUp: LucideIcon;
-  export const ArrowDown: LucideIcon;
-  export const Check: LucideIcon;
-  export const X: LucideIcon;
-  export const Plus: LucideIcon;
-  export const Minus: LucideIcon;
-  export const Calendar: LucideIcon;
-  export const Clock: LucideIcon;
-  export const ChevronRight: LucideIcon;
-  export const ChevronLeft: LucideIcon;
-  export const ChevronUp: LucideIcon;
-  export const ChevronDown: LucideIcon;
-  export const Sun: LucideIcon;
-  export const Moon: LucideIcon;
-  export const Star: LucideIcon;
-  export const Heart: LucideIcon;
-  export const Info: LucideIcon;
-  export const AlertTriangle: LucideIcon;
-  export const AlertCircle: LucideIcon;
-  export const MoreVertical: LucideIcon;
-  export const MoreHorizontal: LucideIcon;
-  export const Edit: LucideIcon;
-  export const Trash: LucideIcon;
-  export const Copy: LucideIcon;
-  export const Download: LucideIcon;
-  export const Upload: LucideIcon;
-  export const File: LucideIcon;
-  export const Folder: LucideIcon;
-  export const Image: LucideIcon;
-  export const Video: LucideIcon;
-  export const Music: LucideIcon;
-  export const Mail: LucideIcon;
-  export const Phone: LucideIcon;
-  export const Send: LucideIcon;
-  export const Share: LucideIcon;
-  export const Bookmark: LucideIcon;
-  export const Link: LucideIcon;
-  export const Eye: LucideIcon;
-  export const EyeOff: LucideIcon;
-  export const Lock: LucideIcon;
-  export const Unlock: LucideIcon;
-  export const Key: LucideIcon;
-  export const Filter: LucideIcon;
-  export const LogOut: LucideIcon;
-  export const LogIn: LucideIcon;
-  export const Save: LucideIcon;
-  export const Printer: LucideIcon;
-  export const Camera: LucideIcon;
-  export const Mic: LucideIcon;
-  export const MicOff: LucideIcon;
-  export const Play: LucideIcon;
-  export const Pause: LucideIcon;
-  export const Stop: LucideIcon;
-  export const SkipForward: LucideIcon;
-  export const SkipBack: LucideIcon;
-  export const Repeat: LucideIcon;
-  export const Shuffle: LucideIcon;
-  export const Volume: LucideIcon;
-  export const VolumeX: LucideIcon;
-  export const Volume1: LucideIcon;
-  export const Volume2: LucideIcon;
-  export const Maximize: LucideIcon;
-  export const Minimize: LucideIcon;
-  export const FilePlus2: LucideIcon;
-  export const FileMinus2: LucideIcon;
-  export const FilePen: LucideIcon;
-  export const FileCheck2: LucideIcon;
-  export const Compass: LucideIcon;
-  export const DollarSign: LucideIcon;
-  export const CreditCard: LucideIcon;
-  export const ShoppingCart: LucideIcon;
-  export const Tag: LucideIcon;
-  export const Tags: LucideIcon;
-  export const Award: LucideIcon;
-  export const Gift: LucideIcon;
-  export const Smartphone: LucideIcon;
-  export const Tablet: LucideIcon;
-  export const Monitor: LucideIcon;
-  export const Tv: LucideIcon;
-  export const Wifi: LucideIcon;
-  export const WifiOff: LucideIcon;
-  export const Bluetooth: LucideIcon;
-  export const BluetoothOff: LucideIcon;
-  export const PenTool: LucideIcon;
-  export const Move: LucideIcon;
-  export const HelpCircle: LucideIcon;
-  export const FileQuestion: LucideIcon;
-  export const HandCoins: LucideIcon;
-  export const Wallet: LucideIcon;
-  export const LineChart: LucideIcon;
-  export const BarChart: LucideIcon;
-  export const Calendar2: LucideIcon;
-  export const CircleUser: LucideIcon;
-  
-  // Added missing icons
-  export const ArrowUpCircle: LucideIcon;
-  export const ArrowDownCircle: LucideIcon;
-  export const TrendingUp: LucideIcon;
-  export const TrendingDown: LucideIcon;
-  export const PieChart: LucideIcon;
-  export const List: LucideIcon;
-  export const MessageSquare: LucideIcon;
-  export const BarChart3: LucideIcon;
-  export const BrainCircuit: LucideIcon;
-  export const School: LucideIcon;
-  export const Loader2: LucideIcon;
-  export const ZapIcon: LucideIcon;
-  export const Zap: LucideIcon;
-  export const Shield: LucideIcon;
-  export const Loader: LucideIcon;
-  export const Globe: LucideIcon;
-  export const Building: LucideIcon;
-  export const ArrowRightLeft: LucideIcon;
-  export const Brain: LucideIcon;
-  export const PiggyBank: LucideIcon;
-  export const CheckCircle2: LucideIcon;
-  export const FolderOpen: LucideIcon;
+
+  export type Icon = React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
+
+  // Common icons used in the project
+  export const ArrowUpCircle: Icon;
+  export const ArrowDownCircle: Icon;
+  export const TrendingUp: Icon;
+  export const TrendingDown: Icon;
+  export const PieChart: Icon;
+  export const List: Icon;
+  export const MessageSquare: Icon;
+  export const BarChart3: Icon;
+  export const BarChart: Icon;
+  export const BrainCircuit: Icon;
+  export const School: Icon;
+  export const Loader2: Icon;
+  export const ZapIcon: Icon;
+  export const Globe: Icon;
+  export const Building: Icon;
+  export const ArrowRightLeft: Icon;
+  export const Shield: Icon;
+  export const Loader: Icon;
+  export const Brain: Icon;
+  export const PiggyBank: Icon;
+  export const CheckCircle2: Icon;
+  export const FolderOpen: Icon;
+  export const ChevronDown: Icon;
+  export const ChevronUp: Icon;
+  export const AlertTriangle: Icon;
 }

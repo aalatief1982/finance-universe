@@ -19,12 +19,18 @@ declare module '@/components/ui/sheet' {
     children?: React.ReactNode;
   }
 
-  export const Sheet: React.FC<React.HTMLAttributes<HTMLDivElement>>;
+  export const Sheet: React.FC<React.HTMLAttributes<HTMLDivElement> & {
+    children?: React.ReactNode;
+  }>;
   export const SheetContent: React.ForwardRefExoticComponent<
     SheetContentProps & React.RefAttributes<React.ElementRef<any>>
   >;
-  export const SheetHeader: React.FC<React.HTMLAttributes<HTMLDivElement>>;
-  export const SheetTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>>;
+  export const SheetHeader: React.FC<React.HTMLAttributes<HTMLDivElement> & {
+    children?: React.ReactNode;
+  }>;
+  export const SheetTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement> & {
+    children?: React.ReactNode;
+  }>;
   export const SheetTrigger: React.FC<SheetTriggerProps>;
   export const SheetClose: React.FC<SheetCloseProps>;
 }

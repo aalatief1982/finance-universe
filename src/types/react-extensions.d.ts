@@ -29,4 +29,8 @@ declare module 'react' {
     'aria-disabled'?: boolean;
     'aria-busy'?: boolean;
   }
+  
+  // Explicitly define ReactNode to include React.Element
+  export type ReactNode = React.ReactElement | string | number | boolean | null | undefined | React.ReactNodeArray;
+  export type ReactNodeArray = Array<ReactNode>;
 }
