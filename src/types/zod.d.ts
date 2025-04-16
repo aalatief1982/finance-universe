@@ -25,7 +25,7 @@ declare module 'zod' {
   export function object(shape: ZodRawShape): ZodObject<ZodRawShape>;
   export function array(schema: ZodType): ZodType<any[]>;
   
-  export function enum(values: readonly [string, ...string[]]): ZodType<string>;
+  export function enum<T extends readonly [string, ...string[]]>(values: T): ZodType<T[number]>;
   
   export function infer<T extends ZodType>(schema: T): T['_output'];
   

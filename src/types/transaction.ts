@@ -6,8 +6,6 @@ export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smar
 
 export type FieldSource = 'template' | 'regex' | 'suggestion' | 'ml' | 'manual';
 
-export type TransactionType = 'expense' | 'income' | 'transfer';
-
 export type Currency = 'SAR' | 'EGP' | 'USD' | 'BHD' | 'AED';
 
 export type Category =
@@ -162,3 +160,20 @@ export interface TransactionDraft {
 
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface SuggestionEntry {
+  pattern: string;
+  matchCount: number;
+  lastMatched: string;
+}
+
+// Create a global vendorSuggestions variable to be used in EditTransaction
+declare global {
+  var vendorSuggestions: Record<string, SuggestionEntry>;
+}
+
+// Initialize if it doesn't exist
+if (typeof window !== 'undefined' && !window.vendorSuggestions) {
+  window.vendorSuggestions = {};
+}

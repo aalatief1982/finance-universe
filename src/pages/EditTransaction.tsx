@@ -1,3 +1,4 @@
+
 // 📁 Path: src/pages/EditTransaction.tsx (✳️ Updated with validation, source-based coloring, and field confidence display)
 
 import React, { useEffect, useState } from 'react';
@@ -69,15 +70,7 @@ const EditTransaction = () => {
     clearDraft();
     navigate('/dashboard');
   };
-}
 
-export function listSuggestions(): Record<string, SuggestionEntry> {
-  return vendorSuggestions;
-}
-
-export function clearSuggestions(): void {
-  Object.keys(vendorSuggestions).forEach(k => delete vendorSuggestions[k]);
-}
   const renderField = (label: string, field: keyof typeof draft, editable = true) => {
     const source = draft?.[field]?.source;
     const confidence = draft?.[field]?.confidence;
@@ -153,5 +146,13 @@ export function clearSuggestions(): void {
     </Layout>
   );
 };
+
+export function listSuggestions(): Record<string, SuggestionEntry> {
+  return vendorSuggestions;
+}
+
+export function clearSuggestions(): void {
+  Object.keys(vendorSuggestions).forEach(k => delete vendorSuggestions[k]);
+}
 
 export default EditTransaction;
