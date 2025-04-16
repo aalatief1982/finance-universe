@@ -28,4 +28,13 @@ export const DEFAULT_TYPE_KEYWORDS = {
     const data = localStorage.getItem('xpensia_type_keywords');
     return data ? JSON.parse(data) : DEFAULT_TYPE_KEYWORDS;
   }
+  // 📌 Ensure initialization is triggered on module load
+declare global {
+    interface Window { __xpensia_keyword_init?: boolean; }
+  }
+  
+  if (typeof window !== 'undefined' && !window.__xpensia_keyword_init) {
+    initTypeKeywordDefaults();
+    window.__xpensia_keyword_init = true;
+  }
   
