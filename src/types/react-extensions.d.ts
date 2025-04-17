@@ -27,7 +27,7 @@ declare module 'react' {
 
   export const Suspense: React.ExoticComponent<SuspenseProps>;
 
-  // Make ReactElement properly compatible with string
+  // Make ReactElement properly compatible with JSX
   export interface ReactElement<P = any, T extends string | React.JSXElementConstructor<any> = string | React.JSXElementConstructor<any>> {
     type: T;
     props: P;
@@ -36,7 +36,7 @@ declare module 'react' {
 
   // Update HTMLAttributes to properly accept ReactNode for children
   export interface HTMLAttributes<T> extends React.DOMAttributes<T> {
-    children?: ReactNode;
+    children?: React.ReactNode;
     className?: string;
     style?: React.CSSProperties;
     id?: string;
@@ -55,7 +55,7 @@ declare module 'react' {
 
   // Update DOMAttributes to accept ReactNode for children
   export interface DOMAttributes<T> {
-    children?: ReactNode;
+    children?: React.ReactNode;
     dangerouslySetInnerHTML?: { __html: string };
     onSubmit?: FormEventHandler<T>;
     onChange?: (event: React.SyntheticEvent<T>) => void;
@@ -63,5 +63,5 @@ declare module 'react' {
   }
 
   // Define ReactNodeArray to fix array compatibility issues
-  export interface ReactNodeArray extends Array<ReactNode> {}
+  export interface ReactNodeArray extends Array<React.ReactNode> {}
 }

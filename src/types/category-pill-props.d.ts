@@ -9,7 +9,8 @@ declare module '@/components/CategoryPill' {
     className?: string;
     key?: string | number;
   }
-
-  const CategoryPill: React.FC<CategoryPillProps>;
-  export default CategoryPill;
 }
+
+// Define without export default to avoid duplicate identifier
+declare const CategoryPill: React.FC<import('@/components/CategoryPill').CategoryPillProps>;
+export default CategoryPill;
