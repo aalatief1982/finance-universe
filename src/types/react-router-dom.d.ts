@@ -31,5 +31,4 @@ declare module 'react-router-dom' {
   export function BrowserRouter(props: { children: React.ReactNode }): JSX.Element;
   export function Route(props: { path: string; element: React.ReactNode }): JSX.Element;
   export function Routes(props: { children: React.ReactNode }): JSX.Element;
-  export function Navigate(props: { to: string; replace?: boolean; state?: any }): JSX.Element;
 }

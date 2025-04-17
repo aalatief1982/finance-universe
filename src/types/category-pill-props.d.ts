@@ -1,7 +1,7 @@
 
-import * as React from 'react';
-
 declare module '@/components/CategoryPill' {
+  import * as React from 'react';
+
   export interface CategoryPillProps {
     category: string;
     onClick?: () => void;
@@ -9,8 +9,6 @@ declare module '@/components/CategoryPill' {
     className?: string;
     key?: string | number;
   }
-}
 
-// Define without export default to avoid duplicate identifier
-declare const CategoryPill: React.FC<import('@/components/CategoryPill').CategoryPillProps>;
-export default CategoryPill;
+  export const CategoryPill: React.FC<CategoryPillProps>;
+}

@@ -1,5 +1,4 @@
-
-// 📁 Path: src/pages/SuggestionsAdmin.tsx
+// 📁 Path: src/pages/SuggestionsAdmin.tsx (🆕 New)
 
 import React from 'react';
 import { listSuggestions, clearSuggestions } from '@/components/data/suggestions';
