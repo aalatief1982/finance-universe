@@ -48,4 +48,16 @@ declare module 'react' {
     onChange?: (event: React.SyntheticEvent<T>) => void;
     onClick?: (event: React.MouseEvent<T>) => void;
   }
+
+  // Add React.lazy and Suspense definitions to prevent TypeScript errors
+  export function lazy<T extends React.ComponentType<any>>(
+    factory: () => Promise<{ default: T }>
+  ): T;
+
+  export interface SuspenseProps {
+    fallback?: ReactNode;
+    children?: ReactNode;
+  }
+
+  export const Suspense: React.ComponentType<SuspenseProps>;
 }

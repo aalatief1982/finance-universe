@@ -17,4 +17,7 @@ declare global {
       [elemName: string]: any;
     }
   }
+
+  // Add support for ReactNode to allow use in various components
+  type ReactNode = React.ReactNode;
 }

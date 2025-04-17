@@ -17,6 +17,7 @@ import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from './pages/BuildTemplate';
 import SuggestionsAdmin from './pages/SuggestionsAdmin';
 import TypeKeywordAdmin from './pages/TypeKeywordAdmin';
+import { TransactionBuilderProvider } from './context/transaction-builder';
 
 function App() {
   return (
@@ -24,24 +25,27 @@ function App() {
       <ThemeProvider defaultTheme="light" attribute="class">
         <UserProvider>
           <TransactionProvider>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/import-transactions" element={<ImportTransactions />} />
-              <Route path="/edit-transaction" element={<EditTransaction />} />
-              <Route path="/edit-transaction/:id" element={<EditTransaction />} />
-              <Route path="/mastermind" element={<MasterMind />} />
-              <Route path="/train-model" element={<TrainModel />} />
-              <Route path="/build-template" element={<BuildTemplate />} />
-              <Route path="/admin/suggestions" element={<SuggestionsAdmin />} />
-              <Route path="/admin/type-keywords" element={<TypeKeywordAdmin />} />
-              {/* Learning Tester route - now always available */}
-              <Route path="/dev/learning-tester" element={<LearningTester />} />
-            </Routes>
-            <Toaster />
+            <TransactionBuilderProvider>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/transactions" element={<Transactions />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/import-transactions" element={<ImportTransactions />} />
+                <Route path="/import" element={<ImportTransactions />} />
+                <Route path="/edit-transaction" element={<EditTransaction />} />
+                <Route path="/edit-transaction/:id" element={<EditTransaction />} />
+                <Route path="/mastermind" element={<MasterMind />} />
+                <Route path="/train-model" element={<TrainModel />} />
+                <Route path="/build-template" element={<BuildTemplate />} />
+                <Route path="/admin/suggestions" element={<SuggestionsAdmin />} />
+                <Route path="/admin/type-keywords" element={<TypeKeywordAdmin />} />
+                {/* Learning Tester route - now always available */}
+                <Route path="/dev/learning-tester" element={<LearningTester />} />
+              </Routes>
+              <Toaster />
+            </TransactionBuilderProvider>
           </TransactionProvider>
         </UserProvider>
       </ThemeProvider>
