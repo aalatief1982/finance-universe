@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { DndProvider } from 'react-dnd/dist/core';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -7,12 +7,12 @@ import { Link } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Trash2, BrainCircuit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { useTransactionBuilder } from '@/context/transaction-builder';
-import { extractStructure } from '@/lib/structure-extractor';
-import { getTemplateByHash, saveNewTemplate } from '@/lib/template-manager';
-import { fallbackMLInference } from '@/services/transformers';
+import { MatchResult, LearnedEntry } from '@/types/learning';
+import { Transaction, TransactionType } from '@/types/transaction';
+import { SupportedCurrency } from '@/types/locale';
+import { useLearningEngine } from '@/hooks/useLearningEngine';
 
 // Import our components
 import MessageInput from './components/MessageInput';
@@ -103,67 +103,6 @@ const LearningTester: React.FC = () => {
       </motion.div>
     </Layout>
   );
-};
-
-const handleCaptureMessage = async (rawMessage: string) => {
-  const { structure, hash, detectedFields } = extractStructure(rawMessage);
-  const { setDraft } = useTransactionBuilder();
-  const navigate = useNavigate();
-
-  let transactionDraft: any = {
-    rawMessage,
-    structureHash: hash,
-    createdAt: new Date().toISOString(),
-    type: { value: "expense", source: "manual" }, // default fallback
-    person: { value: "", source: "manual" },
-    description: { value: "", source: "manual" }
-  };
-
-  // Pull detected fields from regex
-  Object.assign(transactionDraft, detectedFields);
-
-  const existingTemplate = getTemplateByHash(hash);
-
-  if (existingTemplate) {
-    // Use template fields as known fields
-    existingTemplate.fields.forEach(field => {
-      if (!transactionDraft[field]) {
-        transactionDraft[field] = {
-          value: existingTemplate.defaultValues?.[field] || "",
-          source: "template"
-        };
-      }
-    });
-  } else {
-    // If structure new, save it for learning
-    saveNewTemplate({
-      hash,
-      structure,
-      fields: Object.keys(detectedFields) as any,
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  // Fallback ML for missing important fields
-  const missingKeys = ["type", "category", "subcategory", "vendor"] as const;
-  const needML = missingKeys.some(k => !transactionDraft[k]);
-
-  if (needML) {
-    const mlResult = await fallbackMLInference(rawMessage);
-    missingKeys.forEach(key => {
-      if (mlResult[key]) {
-        transactionDraft[key] = {
-          value: mlResult[key],
-          source: "ml",
-          confidence: mlResult.confidence || 0.7
-        };
-      }
-    });
-  }
-
-  // Push to context and navigate to edit page
-  setDraft(transactionDraft);
-  navigate("/edit-transaction");
 };
 
 export default LearningTester;

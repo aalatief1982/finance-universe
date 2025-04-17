@@ -26,7 +26,6 @@ interface SmartPasteProps {
  * Manages text input, processing state, and detected transactions.
  */
 const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {
-  // Controls whether to use high accuracy mode which is slower but more accurate
   const [useHighAccuracy, setUseHighAccuracy] = useState(false);
   
   const {

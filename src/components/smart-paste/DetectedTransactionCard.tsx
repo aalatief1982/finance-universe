@@ -6,12 +6,11 @@ import { Plus, Check } from 'lucide-react';
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/utils/format-utils';
 
-export interface DetectedTransactionCardProps {
+interface DetectedTransactionCardProps {
   transaction: Transaction;
   isSmartMatch: boolean;
   onAddTransaction: (transaction: Transaction) => void;
   origin?: "template" | "structure" | "ml" | "fallback";
-  // Do not include key here as it's a special React prop that's added automatically
 }
 
 const DetectedTransactionCard = ({

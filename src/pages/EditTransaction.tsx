@@ -1,6 +1,4 @@
 
-// 📁 Path: src/pages/EditTransaction.tsx (✳️ Updated with validation, source-based coloring, and field confidence display)
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -10,204 +8,307 @@ import { ArrowLeft, Brain } from 'lucide-react';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import TransactionEditForm from '@/components/TransactionEditForm';
+import { v4 as uuidv4 } from 'uuid';
+import { storeTransaction } from '@/utils/storage-utils';
+import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { useTransactionBuilder } from '@/context/transaction-builder';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { LearnedEntry } from '@/types/learning';
+import SmartPasteSummary from '@/components/SmartPasteSummary';
+import { learningEngineService } from '@/services/LearningEngineService';
 
-/**
- * EditTransaction component provides a form to review and edit transaction details.
- * Handles validation, source-based field styling, and saving to the transaction store.
- */
 const EditTransaction = () => {
-  const { draft, clearDraft } = useTransactionBuilder();
+  const location = useLocation();
   const navigate = useNavigate();
-  const { addTransaction } = useTransactions();
+  const params = useParams();
+  const { addTransaction, updateTransaction, transactions } = useTransactions();
   const { toast } = useToast();
-
-  const [saveForLearning, setSaveForLearning] = useState(true);
-
-  console.log("[EditTransaction] Component initialized, draft:", draft?.type?.value, draft?.amount?.value);
-
-  useEffect(() => {
-    if (!draft) {
-      console.log("[EditTransaction] No draft available, redirecting to home");
-      navigate('/');
-    }
-  }, [draft, navigate]);
-
-  /**
-   * Validates and saves the completed transaction from draft data.
-   * Performs field validation and transforms draft fields into a permanent transaction.
-   */
-  const handleSave = () => {
-    console.log("[EditTransaction] Save initiated");
-    if (!draft) return;
-
-    const requiredFields: (keyof typeof draft)[] = [
-      'type', 'amount', 'currency', 'date', 'fromAccount', 'vendor', 'category'
-    ];
-
-    const hasMissing = requiredFields.some(field => !draft[field]?.value);
-    if (hasMissing) {
-      console.log("[EditTransaction] Validation failed, missing required fields");
-      toast({
-        title: 'Missing Fields',
-        description: 'Please fill in all required fields before saving.',
-        variant: 'destructive'
+  const { learnFromTransaction, config, getLearnedEntries } = useLearningEngine();
+  const [saveForLearning, setSaveForLearning] = React.useState(config.saveAutomatically);
+  const [matchDetails, setMatchDetails] = useState<{
+    entry: LearnedEntry | null;
+    confidence: number;
+  } | null>(null);
+  
+  // Try to get transaction from location state first, then from URL params if available
+  let transaction = location.state?.transaction as Transaction | undefined;
+  
+  // Get the raw message if available (from smart paste)
+  const rawMessage = location.state?.rawMessage as string | undefined;
+  const senderHint = location.state?.senderHint as string | undefined;
+  const isSuggested = location.state?.isSuggested as boolean | undefined;
+  const confidenceScore = location.state?.confidence as number | undefined;
+  const shouldTrain = location.state?.shouldTrain as boolean | undefined;
+  
+  console.log("EditTransaction state:", { 
+    rawMessage: !!rawMessage, 
+    senderHint, 
+    isSuggested, 
+    confidenceScore,
+    shouldTrain 
+  });
+  
+  // If we have an ID in the URL params, try to find the transaction by ID
+  if (!transaction && params.id) {
+    transaction = transactions.find(t => t.id === params.id);
+  }
+  
+  const isNewTransaction = !transaction;
+  
+  // Handle navigating to training page
+  const handleGoToTraining = () => {
+    if (rawMessage) {
+      navigate('/train-model', { 
+        state: { 
+          rawMessage,
+          senderHint
+        }
       });
-      return;
     }
-
-    const confirmed = {
-      id: crypto.randomUUID(),
-      source: 'smart-paste',
-      type: draft.type.value,
-      amount: draft.amount.value,
-      currency: draft.currency.value,
-      date: draft.date.value,
-      fromAccount: draft.fromAccount.value,
-      toAccount: draft.toAccount?.value || '',
-      vendor: draft.vendor.value,
-      category: draft.category.value,
-      subcategory: draft.subcategory.value,
-      person: draft.person.value,
-      description: draft.description.value,
-      createdAt: draft.createdAt,
-      updatedAt: new Date().toISOString()
-    };
-
-    console.log("[EditTransaction] Saving transaction:", { 
-      id: confirmed.id,
-      type: confirmed.type,
-      amount: confirmed.amount,
-      category: confirmed.category
-    });
-    
-    addTransaction(confirmed);
-    console.log("[EditTransaction] Transaction saved successfully");
-    
-    toast({
-      title: 'Transaction saved',
-      description: 'Your transaction was successfully added.'
-    });
-
-    if (saveForLearning) {
-      console.log("[EditTransaction] Saving pattern for learning");
-      // Here would be code to save the pattern for learning
+  };
+  
+  // Find the matching entry when we have a raw message
+  useEffect(() => {
+    if (rawMessage && transaction && transaction.source === 'smart-paste') {
+      const entries = getLearnedEntries();
+      if (entries.length > 0) {
+        console.log("Looking for matching entry for smart-paste transaction");
+        // Find the entry that might have been used for this match
+        const entry = entries.find(e => {
+          // Look for an entry where the field values match our transaction
+          const typeMatch = e.confirmedFields.type === transaction?.type;
+          const categoryMatch = e.confirmedFields.category === transaction?.category;
+          const amountMatch = Math.abs(e.confirmedFields.amount - (transaction?.amount || 0)) < 0.01;
+          
+          const result = typeMatch && categoryMatch && amountMatch;
+          console.log("Matching entry?", {
+            entry: e.id, 
+            typeMatch, 
+            categoryMatch, 
+            amountMatch, 
+            result
+          });
+          return result;
+        });
+        
+        if (entry) {
+          console.log("Found matching entry:", entry.id);
+          setMatchDetails({
+            entry,
+            confidence: confidenceScore || 0.8,
+          });
+        } else {
+          console.log("No matching entry found among", entries.length, "entries");
+        }
+      }
     }
-
-    clearDraft();
-    navigate('/dashboard');
-  };
-
-  /**
-   * Renders a form field with appropriate styling based on its data source.
-   * Different background colors indicate different data sources.
-   */
-  const renderField = (label: string, field: keyof typeof draft, editable = true) => {
-    if (!draft) return null;
+  }, [rawMessage, transaction, getLearnedEntries, confidenceScore]);
+  
+  // If we're editing a transaction but couldn't find it, redirect to dashboard
+  useEffect(() => {
+    if (params.id && !transaction) {
+      toast({
+        title: "Transaction not found",
+        description: "The transaction you're trying to edit doesn't exist",
+        variant: "destructive"
+      });
+      navigate('/dashboard');
+    }
+  }, [params.id, transaction, navigate, toast]);
+  
+  const handleSave = (editedTransaction: Transaction) => {
+    // Ensure we have an id for new transactions
+    if (isNewTransaction) {
+      const newTransaction = {
+        ...editedTransaction,
+        id: editedTransaction.id || uuidv4(), // Use the existing ID or generate a new one
+        source: editedTransaction.source || 'manual' // Set source to manual if not specified
+      };
+      
+      // Add to context
+      addTransaction(newTransaction);
+      
+      // Save to local storage
+      storeTransaction(newTransaction);
+      
+      // Learn from this transaction explicitly only if user enabled learning
+      // This is the ONLY place where learning should happen - after user confirmation
+      if (rawMessage && saveForLearning) {
+        learnFromTransaction(rawMessage, newTransaction, senderHint || '');
+        
+        toast({
+          title: "Pattern saved for learning",
+          description: "Future similar messages will be recognized automatically",
+        });
+      }
+      
+      toast({
+        title: "Transaction created",
+        description: "Your transaction has been successfully created",
+      });
+    } else {
+      // Update in context
+      updateTransaction(editedTransaction);
+      
+      // Update in local storage
+      storeTransaction(editedTransaction);
+      
+      // Learn from this transaction only if it's from smart paste and user confirmed
+      if (rawMessage && saveForLearning) {
+        learnFromTransaction(rawMessage, editedTransaction, senderHint || '');
+        
+        toast({
+          title: "Pattern saved for learning",
+          description: "Future similar messages will be recognized automatically",
+        });
+      }
+      
+      toast({
+        title: "Transaction updated",
+        description: "Your transaction has been successfully updated",
+      });
+    }
     
-    const source = draft[field]?.source;
-    const confidence = draft[field]?.confidence;
-    const colorMap = {
-      template: 'bg-blue-50 border-blue-300',
-      regex: 'bg-green-50 border-green-300',
-      suggestion: 'bg-yellow-50 border-yellow-300',
-      ml: 'bg-purple-50 border-purple-300',
-      manual: 'bg-white'
-    };
-
-    console.log(`[EditTransaction] Rendering field ${field}:`, { 
-      value: draft[field]?.value, 
-      source, 
-      confidence 
-    });
-
-    return (
-      <div className={`mb-4 p-2 border rounded ${colorMap[source] || 'bg-white'}`}>
-        <label className="block text-sm font-semibold mb-1">{label}</label>
-        <input
-          className="w-full p-2 border rounded"
-          value={draft[field]?.value || ''}
-          onChange={(e) => {
-            if (draft) {
-              console.log(`[EditTransaction] Field ${field} changed:`, e.target.value);
-              draft[field] = { value: e.target.value, source: 'manual' };
-            }
-          }}
-          disabled={!editable}
-        />
-        <div className="text-xs text-gray-600 mt-1">
-          Source: {source} {confidence !== undefined ? `(Confidence: ${Math.round(confidence * 100)}%)` : ''}
-        </div>
-      </div>
-    );
+    // Navigate back to previous screen
+    navigate(-1);
   };
-
-  if (!draft) return null;
 
   return (
     <Layout>
-      <motion.div className="max-w-md mx-auto p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <div className="flex items-center space-x-4 mb-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6"
+      >
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate(-1)}
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-bold">Review & Confirm Transaction</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">
+            {isNewTransaction ? "Add Transaction" : "Edit Transaction"}
+          </h1>
         </div>
-
-        {renderField('Type', 'type')}
-        {renderField('Amount', 'amount')}
-        {renderField('Currency', 'currency')}
-        {renderField('Date', 'date')}
-        {renderField('From Account', 'fromAccount')}
-        {renderField('To Account', 'toAccount')}
-        {renderField('Vendor', 'vendor')}
-        {renderField('Category', 'category')}
-        {renderField('Subcategory', 'subcategory')}
-        {renderField('Main Person', 'person')}
-        {renderField('Description', 'description')}
-
-        <div className="flex items-center space-x-2 pt-4 border-t mt-4">
-          <Switch
-            id="save-for-learning"
-            checked={saveForLearning}
-            onCheckedChange={(checked) => {
-              console.log("[EditTransaction] Save for learning changed:", checked);
-              setSaveForLearning(checked);
-            }}
+        
+        {isSuggested && (
+          <Alert>
+            <AlertDescription className="text-sm">
+              This transaction was automatically suggested based on previous patterns.
+              You can edit any field before saving.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {shouldTrain && rawMessage && (
+          <Alert className="bg-yellow-50 border-yellow-500 text-yellow-800">
+            <div className="flex justify-between items-center">
+              <AlertDescription className="text-sm flex-1">
+                <span className="font-semibold">Low confidence match.</span> Would you like to train the system to better recognize messages like this in the future?
+              </AlertDescription>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 bg-yellow-100 border-yellow-300 hover:bg-yellow-200"
+                onClick={handleGoToTraining}
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Train Model
+              </Button>
+            </div>
+          </Alert>
+        )}
+        
+        {rawMessage && (
+          <div className="bg-muted p-3 rounded-md">
+            <p className="text-xs font-mono break-words">
+              <span className="font-semibold">Source message:</span> {rawMessage}
+            </p>
+          </div>
+        )}
+        
+        {confidenceScore !== undefined && location.state?.matchedCount !== undefined && location.state?.totalTemplates !== undefined && (
+          <SmartPasteSummary
+            confidence={confidenceScore}
+            matchedCount={location.state.matchedCount}
+            totalTemplates={location.state.totalTemplates}
           />
-          <Label htmlFor="save-for-learning" className="flex items-center">
-            <Brain className="h-4 w-4 mr-2" />
-            Save this pattern for future suggestions
-          </Label>
-        </div>
+        )}
 
-        <div className="flex gap-2 mt-6">
-          <Button className="flex-1" onClick={handleSave}>Save</Button>
-          <Button 
-            className="flex-1" 
-            variant="secondary" 
-            onClick={() => { 
-              console.log("[EditTransaction] Transaction cancelled");
-              clearDraft(); 
-              navigate(-1); 
-            }}
-          >
-            Cancel
-          </Button>
-        </div>
+        {matchDetails?.confidence === 0.4 && (
+          <Alert className="bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-300 border-purple-300">
+            <AlertDescription className="text-sm">
+              This transaction was matched using a saved <strong>template structure</strong> with partial confidence (40%).<br />
+              You can review and adjust the fields before saving to improve future detection.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {matchDetails && matchDetails.entry && (
+          <div className="border border-red-300 bg-red-50 dark:bg-red-950/20 p-4 rounded-md">
+            <h3 className="text-red-600 dark:text-red-400 font-medium mb-2">Smart Matching Details</h3>
+            <div className="text-sm text-red-600 dark:text-red-400 space-y-2">
+              <p><strong>Match Confidence:</strong> {Math.round(matchDetails.confidence * 100)}%</p>
+              <p><strong>Matched Template:</strong> {matchDetails.entry.rawMessage.substring(0, 50)}...</p>
+              <div>
+                <p className="font-semibold mb-1">Matched Fields:</p>
+                <ul className="list-disc list-inside pl-2 space-y-1">
+                  <li>Transaction Type: {matchDetails.entry.confirmedFields.type}</li>
+                  <li>Amount: {matchDetails.entry.confirmedFields.amount} {matchDetails.entry.confirmedFields.currency}</li>
+                  <li>Category: {matchDetails.entry.confirmedFields.category}</li>
+                  <li>Account: {matchDetails.entry.confirmedFields.account}</li>
+                  {matchDetails.entry.confirmedFields.person && (
+                    <li>Person: {matchDetails.entry.confirmedFields.person}</li>
+                  )}
+                  {matchDetails.entry.confirmedFields.vendor && (
+                    <li>Vendor: {matchDetails.entry.confirmedFields.vendor}</li>
+                  )}
+                </ul>
+              </div>
+              <p className="italic text-xs mt-2">
+                The transaction details were auto-filled based on this previously learned pattern.
+                You can still edit any field before saving.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        <Card className="w-full">
+          <CardHeader className="pb-2">
+            <CardTitle>
+              {isNewTransaction ? "Create a new transaction" : "Edit transaction details"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <TransactionEditForm 
+              transaction={transaction} 
+              onSave={handleSave} 
+            />
+            
+            {config.enabled && rawMessage && (
+              <div className="flex items-center space-x-2 pt-4 border-t mt-4">
+                <Switch
+                  id="save-for-learning"
+                  checked={saveForLearning}
+                  onCheckedChange={setSaveForLearning}
+                />
+                <Label htmlFor="save-for-learning" className="flex items-center">
+                  <Brain className="h-4 w-4 mr-2" />
+                  Save this pattern for future suggestions
+                </Label>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </motion.div>
     </Layout>
   );
 };
-
-export function listSuggestions(): Record<string, SuggestionEntry> {
-  return vendorSuggestions;
-}
-
-export function clearSuggestions(): void {
-  Object.keys(vendorSuggestions).forEach(k => delete vendorSuggestions[k]);
-}
 
 export default EditTransaction;

@@ -7,13 +7,7 @@ interface ErrorAlertProps {
   error: string | null;
 }
 
-/**
- * Displays error messages related to transaction detection.
- * Only renders when an error message is provided.
- */
 const ErrorAlert: React.FC<ErrorAlertProps> = ({ error }) => {
-  console.log("[ErrorAlert] Rendering with error:", error);
-  
   if (!error) return null;
   
   return (
