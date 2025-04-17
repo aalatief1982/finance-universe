@@ -14,9 +14,11 @@ declare module 'react' {
     | React.ReactPortal
     | Iterable<React.ReactNode>;
 
-  // Make Element properly extend ReactElement
-  export interface Element extends React.ReactElement<any, any> {
-    toString?(): string;
+  // Make ReactElement properly compatible with string
+  export interface ReactElement<P = any, T extends string | React.JSXElementConstructor<any> = string | React.JSXElementConstructor<any>> {
+    type: T;
+    props: P;
+    key: React.Key | null;
   }
 
   // Update HTMLAttributes to properly accept ReactNode for children
@@ -32,17 +34,11 @@ declare module 'react' {
   export interface FormEvent<T = Element> extends React.SyntheticEvent<T> {
     currentTarget: EventTarget & T;
     target: EventTarget & T;
-    preventDefault(): void;
-    stopPropagation(): void;
   }
 
-  export interface HTMLFormElement extends HTMLElement {
-    reportValidity(): boolean;
-    reset(): void;
-    submit(): void;
+  export interface FormEventHandler<T = Element> {
+    (event: FormEvent<T>): void;
   }
-
-  export type FormEventHandler<T = Element> = (event: FormEvent<T>) => void;
 
   // Update DOMAttributes to accept ReactNode for children
   export interface DOMAttributes<T> {
@@ -52,38 +48,4 @@ declare module 'react' {
     onChange?: (event: React.SyntheticEvent<T>) => void;
     onClick?: (event: React.MouseEvent<T>) => void;
   }
-
-  // Make ReactElement definition properly inclusive
-  export interface ReactElement<P = any, T extends string | React.JSXElementConstructor<any> = string | React.JSXElementConstructor<any>> {
-    type: T;
-    props: P;
-    key: React.Key | null;
-    toString?(): string;
-  }
-
-  // Update ReactNodeArray to use ReactNode
-  export type ReactNodeArray = Array<ReactNode>;
-
-  // Add SyntheticEvent types
-  export interface SyntheticEvent<T = Element, E = Event> extends BaseSyntheticEvent<E, EventTarget & T, EventTarget> {}
-
-  export interface BaseSyntheticEvent<E = object, C = any, T = any> {
-    nativeEvent: E;
-    currentTarget: C;
-    target: T;
-    bubbles: boolean;
-    cancelable: boolean;
-    defaultPrevented: boolean;
-    eventPhase: number;
-    isTrusted: boolean;
-    preventDefault(): void;
-    isDefaultPrevented(): boolean;
-    stopPropagation(): void;
-    isPropagationStopped(): boolean;
-    persist(): void;
-    timeStamp: number;
-    type: string;
-  }
 }
-
-export {};
