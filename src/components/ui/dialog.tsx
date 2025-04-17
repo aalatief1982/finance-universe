@@ -3,14 +3,41 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { DialogTriggerProps, DialogCloseProps } from "@/types/radix-ui"
 
 const Dialog = DialogPrimitive.Root
 
-const DialogTrigger = DialogPrimitive.Trigger
+const DialogTrigger = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Trigger>,
+  DialogTriggerProps
+>(({ className, children, asChild, ...props }, ref) => (
+  <DialogPrimitive.Trigger
+    ref={ref}
+    className={cn(className)}
+    asChild={asChild}
+    {...props}
+  >
+    {children}
+  </DialogPrimitive.Trigger>
+))
+DialogTrigger.displayName = DialogPrimitive.Trigger.displayName
 
 const DialogPortal = DialogPrimitive.Portal
 
-const DialogClose = DialogPrimitive.Close
+const DialogClose = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Close>,
+  DialogCloseProps
+>(({ className, children, asChild, ...props }, ref) => (
+  <DialogPrimitive.Close
+    ref={ref}
+    className={cn(className)}
+    asChild={asChild}
+    {...props}
+  >
+    {children}
+  </DialogPrimitive.Close>
+))
+DialogClose.displayName = DialogPrimitive.Close.displayName
 
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
