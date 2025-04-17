@@ -27,11 +27,14 @@ const TransactionActions = ({
   const { deleteTransaction } = useTransactions();
   const { toast } = useToast();
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(`/edit-transaction/${transaction.id}`, { state: { transaction } });
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     // Delete from context
     deleteTransaction(transaction.id);
     

@@ -1,5 +1,5 @@
 
-import { TransactionType, CategoryType } from '@/types/transaction.d';
+import { TransactionType } from '@/types/transaction';
 
 // List of categories by transaction type
 export const CATEGORY_HIERARCHY = [

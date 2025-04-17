@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -10,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { 
   Category, CategoryMetadata, CategoryIcon 
-} from '@/types/transaction.d';
+} from '@/types/transaction';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

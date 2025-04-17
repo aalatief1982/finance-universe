@@ -4,7 +4,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from './transaction-form-schema';
-import { TransactionType } from '@/types/transaction.d';
+import { TransactionType } from '@/types/transaction';
 import { getCategoriesForType } from '@/lib/categories-data';
 
 interface CategorySelectorProps {
@@ -31,7 +31,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
             onValueChange={(value) => {
               field.onChange(value);
               // Reset subcategory when category changes
-              form.setValue("subcategory", "none");
+              form.setValue("subcategory", "none", { shouldValidate: true });
             }}
           >
             <FormControl>
