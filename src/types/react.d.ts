@@ -1,4 +1,3 @@
-
 declare module 'react' {
   import * as CSS from 'csstype';
 
