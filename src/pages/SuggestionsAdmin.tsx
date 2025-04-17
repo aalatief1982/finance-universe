@@ -1,7 +1,7 @@
 // 📁 Path: src/pages/SuggestionsAdmin.tsx (🆕 New)
 
 import React from 'react';
-import { listSuggestions, clearSuggestions } from '@/data/suggestions';
+import { listSuggestions, clearSuggestions } from '@/components/data/suggestions';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 

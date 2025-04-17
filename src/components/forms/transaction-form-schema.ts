@@ -8,7 +8,7 @@ export const transactionFormSchema = z.object({
   amount: z.coerce.number().min(0.01, {
     message: "Amount must be greater than 0.",
   }),
-  type: z.enum_(['expense', 'income', 'transfer']),
+  type: z.enum(['expense', 'income', 'transfer']),
   fromAccount: z.string().min(1, {
     message: "From Account is required.",
   }),
