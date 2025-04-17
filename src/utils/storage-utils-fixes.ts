@@ -1,5 +1,5 @@
 
-import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
+import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction.d';
 
 // These are wrapper functions to fix issues with type compatibility
 // They ensure that required properties are added before calling the original storage functions

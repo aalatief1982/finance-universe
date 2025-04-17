@@ -1,6 +1,6 @@
 
 export type TransactionType = 'income' | 'expense' | 'transfer';
-export type TransactionSource = 'manual' | 'import' | 'sms';
+export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smart-paste' | 'sms-import';
 
 export interface Transaction {
   id: string;
@@ -28,6 +28,11 @@ export interface Transaction {
     merchant?: string;
     paymentMethod?: string;
     status?: 'pending' | 'completed' | 'cancelled';
+    sms?: {
+      sender: string;
+      message: string;
+      timestamp: string;
+    }
   };
 }
 
@@ -93,6 +98,64 @@ export interface CategoryRule {
 export interface TransactionCategoryChange {
   timestamp: string;
   transactionId: string;
-  oldCategoryId: string;
+  oldCategoryId?: string;
   newCategoryId: string;
+}
+
+export type FieldSource = 'template' | 'regex' | 'suggestion' | 'ml' | 'manual';
+
+export type Currency = 'SAR' | 'EGP' | 'USD' | 'BHD' | 'AED';
+
+// Fixed the duplicate naming issue by using a different name
+export type CategoryType = 'Salary' | 'Shopping' | 'Car' | 'Health' | 'Education' | 'Others' | 'Investment' | 'Transfer';
+
+export type Subcategory =
+  | 'Main Salary'
+  | 'Benefit'
+  | 'Bonus'
+  | 'Loan Return'
+  | 'Sukuk'
+  | 'Stocks'
+  | 'Grocery'
+  | 'Clothing'
+  | 'Appliances'
+  | 'Misc'
+  | 'Gas'
+  | 'Maintencance'
+  | 'Hospital'
+  | 'Pharmacy'
+  | 'Gym'
+  | 'Tennis'
+  | 'Swimming'
+  | 'School'
+  | 'Course'
+  | '';
+
+export type Person = 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | '';
+
+export interface TransactionField<T> {
+  value: T;
+  source: FieldSource;
+  confidence?: number;
+}
+
+export interface TransactionDraft {
+  id?: string;
+  rawMessage: string;
+  structureHash?: string;
+
+  type: TransactionField<TransactionType>;
+  amount: TransactionField<number>;
+  currency: TransactionField<Currency>;
+  date: TransactionField<string>; // ISO string
+  fromAccount: TransactionField<string>;
+  toAccount?: TransactionField<string>; // Only for transfers
+  vendor: TransactionField<string>;
+  category: TransactionField<CategoryType>;
+  subcategory: TransactionField<Subcategory>;
+  person: TransactionField<Person>;
+  description: TransactionField<string>;
+
+  createdAt: string;
+  updatedAt?: string;
 }

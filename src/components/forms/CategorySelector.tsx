@@ -31,7 +31,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
             onValueChange={(value) => {
               field.onChange(value);
               // Reset subcategory when category changes
-              form.setValue("subcategory", "none", { shouldValidate: true });
+              form.setValue("subcategory", "none");
             }}
           >
             <FormControl>
