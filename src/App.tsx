@@ -5,6 +5,7 @@ import './App.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TransactionBuilderProvider } from './context/transaction-builder';
+import { TransactionProvider } from './context/TransactionContext';
 
 // Import pages
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -25,22 +26,24 @@ const Loading = () => (
 function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="xpensia-theme">
-      <TransactionBuilderProvider>
-        <BrowserRouter>
-          <Suspense fallback={<Loading />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/import" element={<ImportTransactions />} />
-              <Route path="/edit-transaction" element={<EditTransaction />} />
-              <Route path="/suggestions-admin" element={<SuggestionsAdmin />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-        <Toaster />
-      </TransactionBuilderProvider>
+      <TransactionProvider>
+        <TransactionBuilderProvider>
+          <BrowserRouter>
+            <Suspense fallback={<Loading />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/import" element={<ImportTransactions />} />
+                <Route path="/edit-transaction" element={<EditTransaction />} />
+                <Route path="/suggestions-admin" element={<SuggestionsAdmin />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+          <Toaster />
+        </TransactionBuilderProvider>
+      </TransactionProvider>
     </ThemeProvider>
   );
 }
