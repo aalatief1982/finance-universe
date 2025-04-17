@@ -10,5 +10,6 @@ declare module '@/components/CategoryPill' {
     key?: string | number;
   }
 
-  export const CategoryPill: React.FC<CategoryPillProps>;
+  const CategoryPill: React.FC<CategoryPillProps>;
+  export default CategoryPill;
 }

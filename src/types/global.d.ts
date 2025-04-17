@@ -1,8 +1,9 @@
 
 import * as React from 'react';
 
+// Fix JSX namespace to properly support React components
 declare global {
-  export namespace JSX {
+  namespace JSX {
     interface Element extends React.ReactElement<any, any> {}
     interface ElementClass extends React.Component<any> {
       render(): React.ReactNode;

@@ -4,7 +4,7 @@ import * as React from 'react';
 declare module 'react' {
   // Comprehensive ReactNode definition
   export type ReactNode = 
-    | React.ReactElement
+    | React.ReactElement<any, any>
     | string
     | number
     | boolean
@@ -12,6 +12,7 @@ declare module 'react' {
     | undefined
     | React.ReactNodeArray
     | React.ReactPortal
+    | React.PromiseLikeOfReactNode
     | Iterable<React.ReactNode>;
 
   // Make ReactElement properly compatible with string
