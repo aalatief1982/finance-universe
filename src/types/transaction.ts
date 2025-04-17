@@ -6,8 +6,7 @@ export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smar
 
 export type FieldSource = 'template' | 'regex' | 'suggestion' | 'ml' | 'manual';
 
-export type TransactionType = 'expense' | 'income' | 'transfer';
-
+// Removed duplicate TransactionType definition
 export type Currency = 'SAR' | 'EGP' | 'USD' | 'BHD' | 'AED';
 
 export type Category =
@@ -134,7 +133,6 @@ export interface TimePeriodData {
   expense: number;
 }
 
-
 export type Person = 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen' | '';
 
 export interface TransactionField<T> {
@@ -162,3 +160,5 @@ export interface TransactionDraft {
 
   createdAt: string;
   updatedAt?: string;
+}
+// Closed the file properly
