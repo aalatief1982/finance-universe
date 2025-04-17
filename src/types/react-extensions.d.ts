@@ -15,6 +15,18 @@ declare module 'react' {
     | React.PromiseLikeOfReactNode
     | Iterable<React.ReactNode>;
 
+  // Support for lazy and Suspense
+  export function lazy<T extends React.ComponentType<any>>(
+    factory: () => Promise<{ default: T }>
+  ): T;
+
+  export interface SuspenseProps {
+    children?: React.ReactNode;
+    fallback: React.ReactNode;
+  }
+
+  export const Suspense: React.ExoticComponent<SuspenseProps>;
+
   // Make ReactElement properly compatible with string
   export interface ReactElement<P = any, T extends string | React.JSXElementConstructor<any> = string | React.JSXElementConstructor<any>> {
     type: T;
@@ -49,4 +61,7 @@ declare module 'react' {
     onChange?: (event: React.SyntheticEvent<T>) => void;
     onClick?: (event: React.MouseEvent<T>) => void;
   }
+
+  // Define ReactNodeArray to fix array compatibility issues
+  export interface ReactNodeArray extends Array<ReactNode> {}
 }

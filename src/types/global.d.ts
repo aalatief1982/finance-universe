@@ -18,4 +18,11 @@ declare global {
       [elemName: string]: any;
     }
   }
+
+  interface Window {
+    $RefreshReg$: any;
+    $RefreshSig$: any;
+  }
 }
+
+export {};
