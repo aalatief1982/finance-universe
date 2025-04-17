@@ -1,7 +1,7 @@
 
-declare module '@/components/CategoryPill' {
-  import * as React from 'react';
+import * as React from 'react';
 
+declare module '@/components/CategoryPill' {
   export interface CategoryPillProps {
     category: string;
     onClick?: () => void;

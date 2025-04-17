@@ -1,51 +1,47 @@
 
-import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { ThemeProvider } from "@/components/theme-provider";
-import Dashboard from './pages/Dashboard';
-import Transactions from './pages/Transactions';
-import Profile from './pages/Profile';
-import Onboarding from './pages/Onboarding';
-import { UserProvider } from './context/UserContext';
-import { TransactionProvider } from './context/TransactionContext';
-import { Toaster } from "@/components/ui/toaster";
-import ImportTransactions from './pages/ImportTransactions';
-import EditTransaction from './pages/EditTransaction';
-import LearningTester from './pages/dev/LearningTester';
-import MasterMind from '@/pages/MasterMind';
-import TrainModel from '@/pages/TrainModel';
-import BuildTemplate from './pages/BuildTemplate';
-import SuggestionsAdmin from './pages/SuggestionsAdmin';
-import TypeKeywordAdmin from './pages/TypeKeywordAdmin';
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import './App.css';
+import { Toaster } from '@/components/ui/toaster';
+import { ThemeProvider } from '@/components/theme-provider';
+import { TransactionBuilderProvider } from './context/transaction-builder';
+
+// Import pages
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const ImportTransactions = lazy(() => import('./pages/ImportTransactions'));
+const EditTransaction = lazy(() => import('./pages/EditTransaction'));
+const SuggestionsAdmin = lazy(() => import('./pages/SuggestionsAdmin'));
+const Index = lazy(() => import('./pages/Index'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+// Loading component for Suspense
+const Loading = () => (
+  <div className="h-screen w-full flex items-center justify-center">
+    <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+  </div>
+);
 
 function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider defaultTheme="light" attribute="class">
-        <UserProvider>
-          <TransactionProvider>
+    <ThemeProvider defaultTheme="light" storageKey="xpensia-theme">
+      <TransactionBuilderProvider>
+        <BrowserRouter>
+          <Suspense fallback={<Loading />}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/import-transactions" element={<ImportTransactions />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/import" element={<ImportTransactions />} />
               <Route path="/edit-transaction" element={<EditTransaction />} />
-              <Route path="/edit-transaction/:id" element={<EditTransaction />} />
-              <Route path="/mastermind" element={<MasterMind />} />
-              <Route path="/train-model" element={<TrainModel />} />
-              <Route path="/build-template" element={<BuildTemplate />} />
-              <Route path="/admin/suggestions" element={<SuggestionsAdmin />} />
-              <Route path="/admin/type-keywords" element={<TypeKeywordAdmin />} />
-              {/* Learning Tester route - now always available */}
-              <Route path="/dev/learning-tester" element={<LearningTester />} />
+              <Route path="/suggestions-admin" element={<SuggestionsAdmin />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
-            <Toaster />
-          </TransactionProvider>
-        </UserProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+          </Suspense>
+        </BrowserRouter>
+        <Toaster />
+      </TransactionBuilderProvider>
+    </ThemeProvider>
   );
 }
 
