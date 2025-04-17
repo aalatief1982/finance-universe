@@ -12,10 +12,7 @@ export interface WithChildren {
 }
 
 // Extended component props
-export interface RadixComponentProps extends React.HTMLAttributes<HTMLElement> {
-  children?: React.ReactNode;
-  asChild?: boolean;
-}
+export interface RadixComponentProps extends React.HTMLAttributes<HTMLElement>, WithChildren, AsChildProp {}
 
 // Dialog component props
 export interface DialogTriggerProps extends RadixComponentProps {}
@@ -47,6 +44,19 @@ export interface PopoverTriggerProps extends RadixComponentProps {}
 
 // AlertDialog props
 export interface AlertDialogTriggerProps extends RadixComponentProps {}
+export interface AlertDialogActionProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  onClick?: () => void;
+}
+
+// Tooltip props
+export interface TooltipTriggerProps extends RadixComponentProps {}
+
+// Switch props
+export interface SwitchProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  checked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  disabled?: boolean;
+}
 
 // Progress props
 export interface ProgressProps extends RadixComponentProps {
@@ -57,9 +67,16 @@ export interface ProgressProps extends RadixComponentProps {
   "aria-valuemax"?: number;
   "aria-valuenow"?: number;
   "aria-label"?: string;
+  className?: string;
 }
 
 // Select props
 export interface SelectTriggerProps extends RadixComponentProps {
   id?: string;
 }
+
+// Collapsible props
+export interface CollapsibleProps extends RadixComponentProps {
+  open?: boolean;
+}
+export interface CollapsibleContentProps extends RadixComponentProps {}
