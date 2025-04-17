@@ -1,6 +1,6 @@
 // 📁 Path: src/data/suggestions.ts (🆕 New)
 
-interface SuggestionEntry {
+interface SuggestionEntry { 
     type: string;
     category: string;
     updatedAt: string;
