@@ -12,6 +12,7 @@ declare module 'react' {
   export type FormEventHandler<T = Element> = (event: FormEvent<T>) => void;
 
   export interface HTMLFormElement extends HTMLElement {
+    // Add missing properties for form elements
     reportValidity(): boolean;
     reset(): void;
     submit(): void;
