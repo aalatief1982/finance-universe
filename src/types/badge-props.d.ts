@@ -5,7 +5,7 @@ declare module '@/components/ui/badge' {
   export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
     variant?: 'default' | 'secondary' | 'destructive' | 'outline';
     className?: string;
-    children?: React.ReactNode; // Updated to use ReactNode instead of string
+    children?: React.ReactNode;
   }
 
   export const Badge: React.FC<BadgeProps>;

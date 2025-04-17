@@ -2,7 +2,7 @@
 import * as React from 'react';
 
 declare module 'react' {
-  // Update ReactNode definition to properly include ReactElement
+  // Comprehensive ReactNode definition
   export type ReactNode = 
     | React.ReactElement
     | string
@@ -14,12 +14,12 @@ declare module 'react' {
     | React.ReactPortal
     | Iterable<React.ReactNode>;
 
-  // Update Element interface to extend ReactElement correctly
+  // Make Element properly extend ReactElement
   export interface Element extends React.ReactElement<any, any> {
     toString?(): string;
   }
 
-  // Ensure HTMLAttributes accepts ReactNode for children
+  // Update HTMLAttributes to properly accept ReactNode for children
   export interface HTMLAttributes<T> extends React.DOMAttributes<T> {
     children?: ReactNode;
     className?: string;
@@ -28,7 +28,7 @@ declare module 'react' {
     role?: string;
   }
 
-  // Update FormEvent to properly extend SyntheticEvent
+  // Form event handlers need proper typing
   export interface FormEvent<T = Element> extends React.SyntheticEvent<T> {
     currentTarget: EventTarget & T;
     target: EventTarget & T;
@@ -36,7 +36,12 @@ declare module 'react' {
     stopPropagation(): void;
   }
 
-  // Ensure FormEventHandler has correct typing
+  export interface HTMLFormElement extends HTMLElement {
+    reportValidity(): boolean;
+    reset(): void;
+    submit(): void;
+  }
+
   export type FormEventHandler<T = Element> = (event: FormEvent<T>) => void;
 
   // Update DOMAttributes to accept ReactNode for children
@@ -48,7 +53,7 @@ declare module 'react' {
     onClick?: (event: React.MouseEvent<T>) => void;
   }
 
-  // Make sure ReactElement definition is properly inclusive
+  // Make ReactElement definition properly inclusive
   export interface ReactElement<P = any, T extends string | React.JSXElementConstructor<any> = string | React.JSXElementConstructor<any>> {
     type: T;
     props: P;
@@ -56,13 +61,12 @@ declare module 'react' {
     toString?(): string;
   }
 
-  // Update ReactNodeArray to use the ReactNode type
+  // Update ReactNodeArray to use ReactNode
   export type ReactNodeArray = Array<ReactNode>;
 
-  // Add missing SyntheticEvent type
+  // Add SyntheticEvent types
   export interface SyntheticEvent<T = Element, E = Event> extends BaseSyntheticEvent<E, EventTarget & T, EventTarget> {}
 
-  // Add missing BaseSyntheticEvent type
   export interface BaseSyntheticEvent<E = object, C = any, T = any> {
     nativeEvent: E;
     currentTarget: C;
