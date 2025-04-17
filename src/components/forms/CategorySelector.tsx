@@ -4,7 +4,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from './transaction-form-schema';
-import { TransactionType } from '@/types/transaction';
+import { TransactionType } from '@/types/transaction.d';
 import { getCategoriesForType } from '@/lib/categories-data';
 
 interface CategorySelectorProps {

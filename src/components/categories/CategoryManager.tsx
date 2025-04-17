@@ -9,8 +9,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
 
 import { 
-  Category as CategoryType, CategoryMetadata, CategoryIcon 
-} from '@/types/transaction';
+  Category, CategoryMetadata, CategoryIcon 
+} from '@/types/transaction.d';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,8 +67,8 @@ const iconOptions = [
 ];
 
 interface CategoryManagerProps {
-  categories: CategoryType[];
-  onCategoriesChange: (categories: CategoryType[]) => void;
+  categories: Category[];
+  onCategoriesChange: (categories: Category[]) => void;
 }
 
 const CategoryManager: React.FC<CategoryManagerProps> = ({ 
@@ -77,7 +77,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 }) => {
   const { toast } = useToast();
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
-  const [editingCategory, setEditingCategory] = useState<CategoryType | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [parentIdForNewCategory, setParentIdForNewCategory] = useState<string | undefined>(undefined);
 
@@ -126,7 +126,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   };
 
   // Start editing a category
-  const startEditing = (category: CategoryType) => {
+  const startEditing = (category: Category) => {
     setEditingCategory(category);
     setIsAddingCategory(false);
   };
@@ -171,7 +171,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       });
     } else if (isAddingCategory) {
       // Add new category
-      const newCategory: CategoryType = {
+      const newCategory: Category = {
         id: uuidv4(),
         name: values.name,
         parentId: values.parentId,
@@ -232,7 +232,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   };
 
   // Helper function to update a category in the tree
-  const updateCategoryInTree = (categories: CategoryType[], updatedCategory: CategoryType): CategoryType[] => {
+  const updateCategoryInTree = (categories: Category[], updatedCategory: Category): Category[] => {
     return categories.map(category => {
       if (category.id === updatedCategory.id) {
         return updatedCategory;
@@ -242,7 +242,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   };
 
   // Build category tree from flat list
-  const buildCategoryTree = (categories: CategoryType[], parentId?: string): CategoryType[] => {
+  const buildCategoryTree = (categories: Category[], parentId?: string): Category[] => {
     return categories
       .filter(category => category.parentId === parentId)
       .map(category => ({
@@ -252,7 +252,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   };
 
   // Render a category item with its subcategories
-  const renderCategoryItem = (category: CategoryType, level = 0) => {
+  const renderCategoryItem = (category: Category, level = 0) => {
     const isExpanded = expandedCategories[category.id] || false;
     const hasSubcategories = categories.some(c => c.parentId === category.id);
     

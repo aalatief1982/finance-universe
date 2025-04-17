@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react';
-import { Category as CategoryType, CategoryWithSubcategories } from '@/types/transaction';
+import { Category, CategoryWithSubcategories } from '@/types/transaction.d';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,7 +14,7 @@ import {
 import CategoryPill from '@/components/CategoryPill';
 
 interface CategoryHierarchyProps {
-  categories: CategoryType[];
+  categories: Category[];
   selectedCategoryId?: string;
   onSelectCategory?: (categoryId: string) => void;
   showBudgets?: boolean;
@@ -52,7 +52,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
   };
 
   // Build the hierarchy structure (categories with their subcategories)
-  const buildCategoryHierarchy = (categories: CategoryType[], parentId?: string): CategoryWithSubcategories[] => {
+  const buildCategoryHierarchy = (categories: Category[], parentId?: string): CategoryWithSubcategories[] => {
     return categories
       .filter(category => category.parentId === parentId)
       .sort((a, b) => a.name.localeCompare(b.name))
