@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react';
-import { Category } from '@/types/transaction';
+import { Category as CategoryType, CategoryWithSubcategories } from '@/types/transaction';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,7 +14,7 @@ import {
 import CategoryPill from '@/components/CategoryPill';
 
 interface CategoryHierarchyProps {
-  categories: Category[];
+  categories: CategoryType[];
   selectedCategoryId?: string;
   onSelectCategory?: (categoryId: string) => void;
   showBudgets?: boolean;
@@ -51,7 +52,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
   };
 
   // Build the hierarchy structure (categories with their subcategories)
-  const buildCategoryHierarchy = (categories: Category[], parentId?: string): Category[] => {
+  const buildCategoryHierarchy = (categories: CategoryType[], parentId?: string): CategoryWithSubcategories[] => {
     return categories
       .filter(category => category.parentId === parentId)
       .sort((a, b) => a.name.localeCompare(b.name))
@@ -65,7 +66,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
   const categoryHierarchy = buildCategoryHierarchy(categories);
 
   // Render each category item recursively
-  const renderCategoryItem = (category: Category, depth = 0) => {
+  const renderCategoryItem = (category: CategoryWithSubcategories, depth = 0) => {
     const hasSubcategories = category.subcategories && category.subcategories.length > 0;
     const isExpanded = expandedCategories[category.id] || false;
     const isSelected = category.id === selectedCategoryId;
@@ -138,7 +139,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
 
   // Alternative accordion view for mobile/responsive design
   const renderAccordionView = () => {
-    const renderAccordionCategory = (category: Category) => {
+    const renderAccordionCategory = (category: CategoryWithSubcategories) => {
       const hasSubcategories = category.subcategories && category.subcategories.length > 0;
       
       return (

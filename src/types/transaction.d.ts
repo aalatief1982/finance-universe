@@ -61,13 +61,8 @@ export interface Category {
   parentId?: string;
 }
 
-export interface CategoryWithSubcategories {
-  id: string;
-  name: string;
-  subcategories: string[];
-  icon?: string;
-  color?: string;
-  metadata?: CategoryMetadata;
+export interface CategoryWithSubcategories extends Category {
+  subcategories: CategoryWithSubcategories[];
 }
 
 export interface CategoryMetadata {
