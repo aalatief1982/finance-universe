@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 
 declare global {
@@ -16,5 +17,4 @@ declare global {
       [elemName: string]: any;
     }
   }
-}
 }
