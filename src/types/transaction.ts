@@ -21,6 +21,7 @@ export interface Transaction {
       message: string;
       timestamp: string;
     }
+    rawMessage?: string;
   };
   currency?: string;
   person?: string | 'none' | 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen';
@@ -29,6 +30,8 @@ export interface Transaction {
   country?: string;
   description?: string;
   originalCurrency?: string;
+  vendor?: string;
+  account?: string;
 }
 
 // Category related types

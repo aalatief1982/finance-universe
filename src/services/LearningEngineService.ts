@@ -1,347 +1,124 @@
-// Import the Template type correctly
-import { Template, StructureTemplateEntry } from '@/types/template';
-import { LearnedEntry, MatchResult, PositionedToken, LearningEngineConfig } from '@/types/learning';
-import { TemplateStructureService } from './TemplateStructureService';
+import { TokenLabels } from '@/components/TrainModel';
 import { Transaction } from '@/types/transaction';
 
-export const learningEngineService = {
-  /**
-   * Mock function to simulate finding the best match for a given text.
-   *
-   * @param text - The text to match against existing templates.
-   * @returns A MatchResult object indicating whether a match was found and the confidence level.
-   */
-  /*findBestMatch(text: string, senderHint?: string): MatchResult {
-    // Mock implementation: Always return a non-match with low confidence.
-    return {
-      entry: null,
-      confidence: 0,
-      matched: false,
-    };
-  }*/
+/**
+ * LearningEngineService.ts
+ *
+ * This service is responsible for analyzing text and suggesting transaction details.
+ * It uses a combination of token analysis and rule-based logic to infer transaction properties.
+ */
 
-  matchUsingTemplateStructure(rawText: string): any {
-    // This is a mock implementation
-    // In a real implementation, this would analyze the structure of the text
-    // and try to match it against known templates
-    
-    // For common bank SMS patterns, we could look for:
-    // - Currency symbols or codes followed by numbers (for amounts)
-    // - Words like "debited", "credited", "purchase", "payment"
-    // - Dates in various formats
-    // - Account numbers or masked card numbers
-    
-    if (!rawText) return null;
-    
-    // Example implementation - detecting simple patterns
-    const amountRegex = /(?:RS\.?|SAR|USD|AED|\$|€|£)?(\s*)(\d+(?:[.,]\d+)?)/i;
-    const dateRegex = /(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4})/i;
-    const vendorRegex = /(?:at|to|from|@)\s+([A-Za-z0-9\s&.,\-_]+?)(?:\s+on|\s+for|\s+\d|\s+with|$)/i;
-    
-    // Try to extract data
-    const amountMatch = rawText.match(amountRegex);
-    const dateMatch = rawText.match(dateRegex);
-    const vendorMatch = rawText.match(vendorRegex);
-    
-    // If we have enough data, consider it a match
-    if (amountMatch || dateMatch || vendorMatch) {
-      const inferredTransaction: Partial<Transaction> = {};
-      
-      if (amountMatch) {
-        inferredTransaction.amount = parseFloat(amountMatch[2].replace(/[,]/g, ''));
-      }
-      
-      if (dateMatch) {
-        try {
-          const dateStr = dateMatch[1];
-          // Attempt to parse the date (this is simplified)
-          inferredTransaction.date = new Date(dateStr).toISOString();
-        } catch (e) {
-          console.log("Failed to parse date:", e);
-        }
-      }
-      
-      if (vendorMatch) {
-        inferredTransaction.description = vendorMatch[1].trim();
-        inferredTransaction.title = vendorMatch[1].trim();
-      }
-      
-      // Determine transaction type based on keywords
-      if (/debit|purchase|payment|paid|withdraw|sent/i.test(rawText)) {
-        inferredTransaction.type = 'expense';
-      } else if (/credit|received|deposit|added|refund/i.test(rawText)) {
-        inferredTransaction.type = 'income';
-      }
-      
-      return {
-        templateHash: "simple-pattern-matching",
-        confidence: 0.7,
-        inferredTransaction
-      };
+/**
+ * Determines the transaction type (income/expense) based on token analysis.
+ * @param tokens - TokenLabels object containing labeled tokens from the text.
+ * @returns 'income' or 'expense' based on the presence of relevant keywords.
+ */
+export function determineType(tokens: TokenLabels): 'income' | 'expense' {
+  const incomeKeywords = ['received', 'deposited', 'credit'];
+  const expenseKeywords = ['paid', 'spent', 'debit', 'withdrawal'];
+
+  for (const token in tokens) {
+    const label = tokens[token];
+    if (label === 'keyword') {
+      const lowerToken = token.toLowerCase();
+      if (incomeKeywords.includes(lowerToken)) return 'income';
+      if (expenseKeywords.includes(lowerToken)) return 'expense';
     }
-    
-    return null;
-  },
-
-  
-
-  getLearnedEntries(): LearnedEntry[] {
-    return [];
-  },
-
-  /**
-   * Get the learning engine configuration
-   */
-  getConfig(): LearningEngineConfig {
-    return {
-      enabled: true,
-      maxEntries: 100,
-      minConfidenceThreshold: 0.6,
-      saveAutomatically: true
-    };
-  },
-
-  /**
-   * Learn from a transaction to improve future matches
-   */
-  learnFromTransaction(
-    rawMessage: string, 
-    transaction: Transaction, 
-    senderHint?: string, 
-    customFieldTokenMap?: Partial<any>
-  ): void {
-    // Mock implementation
-    console.log('Learning from transaction', { rawMessage, transaction, senderHint });
-  },
-
-  /**
-   * Save learning engine configuration
-   */
-  saveConfig(config: Partial<LearningEngineConfig>): void {
-    // Mock implementation
-    console.log('Saving config', config);
-  },
-
-  /**
-   * Infer transaction fields from text
-   */
-  inferFieldsFromText(message: string): Partial<Transaction> | null {
-    // Mock implementation
-    if (!message) return null;
-    
-    // Example implementation for inferring fields
-    const amountMatch = message.match(/(?:RS\.?|SAR|USD|AED|\$|€|£)?(\s*)(\d+(?:[.,]\d+)?)/i);
-    const amount = amountMatch ? parseFloat(amountMatch[2].replace(/[,]/g, '')) : 0;
-    
-    // Try to extract description/vendor
-    const vendorMatch = message.match(/(?:at|to|from|@)\s+([A-Za-z0-9\s&.,\-_]+?)(?:\s+on|\s+for|\s+\d|\s+with|$)/i);
-    const description = vendorMatch ? vendorMatch[1].trim() : '';
-    
-    // Determine transaction type based on keywords
-    let type: 'expense' | 'income' | 'transfer' = 'expense';
-    if (/credit|received|deposit|added|refund/i.test(message)) {
-      type = 'income';
-    } else if (/transfer|moved|sent to/i.test(message)) {
-      type = 'transfer';
-    }
-    
-    return { amount, description, type };
-  },
-
-  findBestMatch(text: string, senderHint = ''): MatchResult {
-    const templatesRaw = localStorage.getItem('xpensia_structure_templates');
-    if (!templatesRaw) {
-      return { entry: null, confidence: 0, matched: false };
-    }
-
-    const templates = JSON.parse(templatesRaw);
-
-    // Generate a simplified structure hash from input text
-    const normalizedText = text.toLowerCase().replace(/\s+/g, ' ').trim();
-
-    let bestMatch = null;
-    let bestConfidence = 0;
-
-    for (const template of templates) {
-      const normalizedTemplate = template.template.toLowerCase().replace(/\s+/g, ' ').trim();
-
-      const similarity = this.computeStructuralSimilarity(normalizedText, normalizedTemplate);
-
-      if (similarity > bestConfidence) {
-        bestConfidence = similarity;
-        bestMatch = template;
-      }
-    }
-
-    if (bestMatch && bestConfidence >= 0.4) {
-      // Apply fallback transaction logic
-      const inferredTransaction: Partial<Transaction> = {
-        amount: 0,
-        category: 'Uncategorized',
-        currency: bestMatch.defaultValues?.currency || 'SAR',
-        fromAccount: bestMatch.defaultValues?.fromAccount || 'Unknown',
-        type: bestMatch.defaultValues?.type?.toLowerCase() === 'income' ? 'income' : 'expense',
-        description: bestMatch.rawExample || '',
-        source: 'smart-paste',
-      };
-
-      return {
-        matched: true,
-        confidence: bestConfidence,
-        entry: {
-          id: bestMatch.id,
-          rawMessage: bestMatch.rawExample,
-          senderHint: bestMatch.defaultValues?.sender || '',
-          confirmedFields: inferredTransaction,
-          fieldTokenMap: {},
-          tokens: [],
-          timestamp: bestMatch.createdAt,
-          userConfirmed: true,
-          confirmationHistory: [],
-          confidence: bestConfidence,
-        },
-      };
-    }
-
-    return { entry: null, confidence: bestConfidence, matched: false };
-  },
-
-  computeStructuralSimilarity(text: string, template: string): number {
-    // Count total words in template (excluding placeholders)
-    const templateTokens = template.split(/\s+/);
-    const staticTokens = templateTokens.filter(t => !t.includes('{'));
-
-    const matchCount = staticTokens.filter(token =>
-      text.includes(token)
-    ).length;
-
-    const confidence = matchCount / staticTokens.length;
-    return Number(confidence.toFixed(2)); // e.g., 0.75
-  },
-
-  /**
-   * Clear all learned entries
-   */
-  clearLearnedEntries(): void {
-    // Mock implementation
-    console.log('Clearing learned entries');
-  },
-
-  /**
-   * Save user training data
-   */
-  saveUserTraining(
-    message: string, 
-    transaction: Partial<Transaction>, 
-    senderHint?: string, 
-    fieldTokenMap?: Record<string, string[]>
-  ): void {
-    // Mock implementation
-    console.log('Saving user training', { message, transaction, senderHint, fieldTokenMap });
-  },
-
-  /**
-   * Tokenize a message into individual tokens
-   */
-  tokenize(msg: string): string[] {
-    return msg.split(/\s+/).filter(Boolean);
-  },
-
-  /**
-   * Extract amount tokens with position information
-   */
-  extractAmountTokensWithPosition(msg: string): PositionedToken[] {
-    // Simple implementation to detect amounts in text
-    const amountRegex = /(?:RS\.?|SAR|USD|AED|\$|€|£)?(\s*)(\d+(?:[.,]\d+)?)/gi;
-    const results: PositionedToken[] = [];
-    
-    let match;
-    while ((match = amountRegex.exec(msg)) !== null) {
-      results.push({
-        token: match[0],
-        position: match.index,
-        context: {
-          before: msg.substring(Math.max(0, match.index - 50), match.index).split(/\s+/).filter(Boolean),
-          after: msg.substring(match.index + match[0].length, Math.min(msg.length, match.index + match[0].length + 50)).split(/\s+/).filter(Boolean)
-        }
-      });
-    }
-    
-    return results;
-  },
-
-  /**
-   * Extract currency tokens with position information
-   */
-  extractCurrencyTokensWithPosition(msg: string): PositionedToken[] {
-    // Simple implementation to detect currency symbols and codes
-    const currencyRegex = /(?:RS\.?|SAR|USD|AED|\$|€|£)/gi;
-    const results: PositionedToken[] = [];
-    
-    let match;
-    while ((match = currencyRegex.exec(msg)) !== null) {
-      results.push({
-        token: match[0],
-        position: match.index,
-        context: {
-          before: msg.substring(Math.max(0, match.index - 50), match.index).split(/\s+/).filter(Boolean),
-          after: msg.substring(match.index + match[0].length, Math.min(msg.length, match.index + match[0].length + 50)).split(/\s+/).filter(Boolean)
-        }
-      });
-    }
-    
-    return results;
-  },
-
-  /**
-   * Extract vendor tokens with position information
-   */
-  extractVendorTokensWithPosition(msg: string): PositionedToken[] {
-    // Try to extract vendor names from text
-    const vendorRegex = /(?:at|to|from|@)\s+([A-Za-z0-9\s&.,\-_]+?)(?:\s+on|\s+for|\s+\d|\s+with|$)/gi;
-    const results: PositionedToken[] = [];
-    
-    let match;
-    while ((match = vendorRegex.exec(msg)) !== null) {
-      if (match[1]) {
-        const vendorName = match[1].trim();
-        results.push({
-          token: vendorName,
-          position: match.index + match[0].indexOf(vendorName),
-          context: {
-            before: msg.substring(Math.max(0, match.index - 50), match.index).split(/\s+/).filter(Boolean),
-            after: msg.substring(match.index + match[0].length, Math.min(msg.length, match.index + match[0].length + 50)).split(/\s+/).filter(Boolean)
-          }
-        });
-      }
-    }
-    
-    return results;
-  },
-
-  /**
-   * Extract account tokens with position information
-   */
-  extractAccountTokensWithPosition(msg: string): PositionedToken[] {
-    // Try to extract account numbers and card references
-    const accountRegex = /(?:acct|account|card|a\/c)[:\s]*([A-Z0-9*\s]{4,}|ending in \d{4})/gi;
-    const results: PositionedToken[] = [];
-    
-    let match;
-    while ((match = accountRegex.exec(msg)) !== null) {
-      if (match[1]) {
-        const accountRef = match[1].trim();
-        results.push({
-          token: accountRef,
-          position: match.index + match[0].indexOf(accountRef),
-          context: {
-            before: msg.substring(Math.max(0, match.index - 50), match.index).split(/\s+/).filter(Boolean),
-            after: msg.substring(match.index + match[0].length, Math.min(msg.length, match.index + match[0].length + 50)).split(/\s+/).filter(Boolean)
-          }
-        });
-      }
-    }
-    
-    return results;
   }
+
+  // Default to expense if no clear indicator is found
+  return 'expense';
+}
+
+/**
+ * Extracts the transaction amount from the labeled tokens.
+ * @param tokens - TokenLabels object containing labeled tokens from the text.
+ * @returns The numerical amount found in the tokens, or null if not found.
+ */
+export function determineAmount(tokens: TokenLabels): number | null {
+  for (const token in tokens) {
+    if (tokens[token] === 'amount') {
+      const num = parseFloat(token.replace(/,/g, ''));
+      if (!isNaN(num)) return num;
+    }
+  }
+  return null;
+}
+
+/**
+ * Determines the currency from the labeled tokens.
+ * @param tokens - TokenLabels object containing labeled tokens from the text.
+ * @returns The currency symbol or code found in the tokens, or null if not found.
+ */
+export function determineCurrency(tokens: TokenLabels): string | null {
+  for (const token in tokens) {
+    if (tokens[token] === 'currency') {
+      return token;
+    }
+  }
+  return null;
+}
+
+/**
+ * Infers transaction details from the labeled tokens.
+ * @param tokens - TokenLabels object containing labeled tokens from the text.
+ * @returns A partial Transaction object with inferred details.
+ */
+export function determineTransaction(tokens: TokenLabels): Partial<Transaction> {
+  const result: Partial<Transaction> = {
+    type: determineType(tokens),
+    amount: determineAmount(tokens),
+    category: 'Uncategorized',
+    account: 'Cash', // Add default account
+	fromAccount: 'Cash',
+    currency: determineCurrency(tokens) || 'USD',
+  };
+
+  // Extract other relevant information based on labels
+  for (const token in tokens) {
+    if (tokens[token] === 'vendor' && !result.title) {
+      result.title = token;
+    }
+    if (tokens[token] === 'account' && !result.account) {
+      result.account = token;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Analyzes a raw text message and suggests transaction details.
+ * @param rawMessage - The raw text message to analyze.
+ * @returns A partial Transaction object with suggested details.
+ */
+export function suggestTransactionDetails(rawMessage: string): Partial<Transaction> {
+  // 1. Tokenize the message
+  const tokens = rawMessage.split(/\s+/);
+
+  // 2. Label tokens (This is a placeholder; replace with actual ML/rule-based labeling)
+  const tokenLabels: TokenLabels = {};
+  tokens.forEach(token => {
+    // Very basic labeling for demonstration
+    if (token.match(/^\d+(\.\d{2})?$/)) {
+      tokenLabels[token] = 'amount';
+    } else if (['USD', 'EUR', 'SAR'].includes(token)) {
+      tokenLabels[token] = 'currency';
+    } else {
+      tokenLabels[token] = 'keyword';
+    }
+  });
+
+  // 3. Determine transaction details
+  const suggestedDetails = determineTransaction(tokenLabels);
+
+  return suggestedDetails;
+}
+
+export const learningEngineService = {
+  determineType,
+  determineAmount,
+  determineCurrency,
+  determineTransaction,
+  suggestTransactionDetails,
 };

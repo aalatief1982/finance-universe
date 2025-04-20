@@ -18,6 +18,8 @@ declare module 'react-router-dom' {
 
   export function useNavigate(): NavigateFunction;
   export function useLocation(): Location;
+  export function useParams(): Record<string, string>;
+  export function useSearchParams(): [URLSearchParams, (nextInit: URLSearchParams) => void];
 
   export function Link(props: {
     to: string;
