@@ -15,6 +15,7 @@ import LearningTester from './pages/dev/LearningTester';
 import MasterMind from '@/pages/MasterMind';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from './pages/BuildTemplate';
+import KeywordBankManager from '@/pages/KeywordBankManager';
 
 function App() {
   return (
@@ -34,8 +35,9 @@ function App() {
               <Route path="/mastermind" element={<MasterMind />} />
               <Route path="/train-model" element={<TrainModel />} />
               <Route path="/build-template" element={<BuildTemplate />} />
-              {/* Learning Tester route - now always available */}
               <Route path="/dev/learning-tester" element={<LearningTester />} />
+			  <Route path="/keyword-bank" element={<KeywordBankManager />} />
+
             </Routes>
             <Toaster />
           </TransactionProvider>

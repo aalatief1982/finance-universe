@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -10,8 +9,18 @@ import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/components/ui/card';
 import { learningEngineService } from '@/services/LearningEngineService';
+import {
+  loadKeywordBank,
+  saveKeywordBank,
+} from '@/lib/smart-paste-engine/keywordBankUtils';
 
 /**
  * ImportTransactions page component for handling different import methods.
@@ -24,56 +33,79 @@ const ImportTransactions = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  console.log("[ImportTransactions] Page initialized");
+  console.log('[ImportTransactions] Page initialized');
 
   /**
    * Handles detected transactions from the SmartPaste component.
    * Calculates matching statistics and navigates to the edit page.
    */
   const handleTransactionsDetected = (
-    transactions: Transaction[], 
-    rawMessage?: string, 
-    senderHint?: string, 
-    confidence?: number, 
+    transactions: Transaction[],
+    rawMessage?: string,
+    senderHint?: string,
+    confidence?: number,
     shouldTrain?: boolean,
-    matchOrigin?: "template" | "structure" | "ml" | "fallback"
+    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback'
   ) => {
-    console.log("[ImportTransactions] Transactions detected", { 
-      count: transactions.length, 
-      rawMessageLength: rawMessage?.length, 
-      senderHint, 
-      confidence, 
+    console.log('[ImportTransactions] Transactions detected', {
+      count: transactions.length,
+	  transaction: transactions[0],
+      rawMessageLength: rawMessage?.length,
+      senderHint,
+      confidence,
       shouldTrain,
-      matchOrigin 
+      matchOrigin,
     });
-    
+
+    const transaction = transactions[0];
     const entries = learningEngineService.getLearnedEntries();
-    console.log("[ImportTransactions] Retrieved learned entries", { count: entries.length });
-  
-    // Calculate matchedCount manually
-    const matchedCount = entries.filter(entry => {
+
+    const matchedCount = entries.filter((entry) => {
       return (
-        Math.abs(entry.confirmedFields.amount - (transactions[0]?.amount || 0)) < 0.01 &&
-        entry.confirmedFields.category === transactions[0]?.category &&
-        entry.confirmedFields.type === transactions[0]?.type
+        Math.abs(entry.confirmedFields.amount - (transaction?.amount || 0)) < 0.01 &&
+        entry.confirmedFields.category === transaction?.category &&
+        entry.confirmedFields.type === transaction?.type
       );
     }).length;
 
-    console.log("[ImportTransactions] Match statistics", { 
-      matchedCount, 
-      totalTemplates: entries.length 
+    console.log('[ImportTransactions] Match statistics', {
+      matchedCount,
+      totalTemplates: entries.length,
     });
-  
-    console.log("[ImportTransactions] Navigate to edit with parameters:", { 
-      shouldTrain, 
+
+    // ✅ Auto-learn logic from transaction vendor
+    if (shouldTrain && transaction.vendor) {
+      const keyword = transaction.vendor.toLowerCase().split(' ')[0];
+      const existing = loadKeywordBank();
+      const exists = existing.find((k) => k.keyword === keyword);
+
+      const inferredMappings = [
+        { field: 'type', value: transaction.type },
+        { field: 'category', value: transaction.category },
+        { field: 'subcategory', value: transaction.subcategory },
+        { field: 'fromAccount', value: transaction.fromAccount },
+        { field: 'vendor', value: transaction.vendor },
+      ].filter((entry) => entry.value && entry.value !== '');
+
+      if (!exists && inferredMappings.length > 0) {
+        const newEntry = {
+          keyword,
+          mappings: inferredMappings,
+        };
+        console.log('[AutoLearn] Adding keyword:', newEntry);
+        saveKeywordBank([...existing, newEntry]);
+      }
+    }
+
+    console.log('[ImportTransactions] Navigate to edit with parameters:', {
+      shouldTrain,
       matchOrigin,
-      transaction: transactions[0]
+      transaction,
     });
-    
-    // Navigate to edit with all info
+
     navigate('/edit-transaction', {
       state: {
-        transaction: transactions[0],
+        transaction,
         rawMessage,
         senderHint,
         confidence,
@@ -81,11 +113,11 @@ const ImportTransactions = () => {
         totalTemplates: entries.length,
         isSuggested: true,
         shouldTrain,
-        matchOrigin
-      }
+        matchOrigin,
+      },
     });
   };
-  
+
   return (
     <Layout>
       <motion.div
@@ -95,11 +127,11 @@ const ImportTransactions = () => {
         className="w-full px-4 sm:px-6 md:px-8 max-w-full space-y-6 mt-4 py-6"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="icon"
             onClick={() => {
-              console.log("[ImportTransactions] Navigating back");
+              console.log('[ImportTransactions] Navigating back');
               navigate(-1);
             }}
           >
@@ -107,7 +139,7 @@ const ImportTransactions = () => {
           </Button>
           <h1 className="text-2xl font-bold">Import Transactions</h1>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Import Transactions</CardTitle>
@@ -121,7 +153,7 @@ const ImportTransactions = () => {
                 <h3 className="text-lg font-medium mb-3">Smart Paste</h3>
                 <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
               </div>
-              
+
               <div>
                 <h3 className="text-lg font-medium mb-3">Telegram Bot</h3>
                 <TelegramBotSetup />

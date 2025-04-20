@@ -88,7 +88,7 @@ export const useSmartPaste = (
         const txn: Transaction = {
           id: `template-${Math.random().toString(36).substring(2, 9)}`,
           title: `Template: ${categoryInfo.category} | ${confirmedFields.amount}`,
-          amount: confirmedFields.amount,
+          amount: confirmedFields.amount.toFixed(2),
           currency: confirmedFields.currency,
           type: confirmedFields.type,
           fromAccount: confirmedFields.account || 'Unknown',
@@ -130,7 +130,7 @@ export const useSmartPaste = (
         const txn: Transaction = {
           id: `structure-${Math.random().toString(36).substring(2, 9)}`,
           title: `Structure: ${categoryInfo.category} | ${structureMatch.inferredTransaction.amount}`,
-          amount: structureMatch.inferredTransaction.amount || 0,
+          amount: structureMatch.inferredTransaction.amount.toFixed(2),
           currency: structureMatch.inferredTransaction.currency || 'SAR',
           type: structureMatch.inferredTransaction.type || 'expense',
           fromAccount: structureMatch.inferredTransaction.fromAccount || 'Unknown',
@@ -167,7 +167,7 @@ export const useSmartPaste = (
         const txn: Transaction = {
           id: `ml-${Math.random().toString(36).substring(2, 9)}`,
           title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
-          amount: parseFloat(parsed.amount),
+          amount: parseFloat(parsed.amount).toFixed(2),
           currency: parsed.currency || 'SAR',
           type: (parsed.type as TransactionType) || 'expense',
           fromAccount: parsed.account || 'Unknown',

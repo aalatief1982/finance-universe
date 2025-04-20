@@ -13,20 +13,48 @@ interface TransactionEditFormProps {
   onSave: (transaction: Transaction) => void;
 }
 
+function remapVendor(vendor?: string): string {
+  if (!vendor) return '';
+  const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+  return map[vendor] || vendor;
+}
+
 const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ 
   transaction, 
   onSave 
 }) => {
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
-      return { ...transaction };
+		console.log('[TransactionEditForm] Initializing with transaction:', transaction);
+		 // ✅ Override vendor using mapping if any
+	const mappedVendor = remapVendor(transaction.vendor);
+	console.log('[Form Fields]', {
+	  title: transaction?.title,
+	  amount: transaction?.amount,
+	  type: transaction?.type,
+	  currency: transaction?.currency,
+	  vendor: transaction?.vendor
+	});
+		
+      return { ...transaction , vendor: mappedVendor // ✅ override vendor with remapped one
+	  };
     }
     
     // Default new transaction
+	console.log('[TransactionEditForm] Initializing with transaction:', transaction);
+	console.log('[Form Fields]', {
+	  title: transaction?.title,
+	  amount: transaction?.amount,
+	  type: transaction?.type,
+	  currency: transaction?.currency,
+	  vendor: transaction?.vendor
+	});
+
+
     return {
       id: uuidv4(),
       title: '',
-      amount: 0,
+      amount: '',
       type: 'expense' as TransactionType,
       category: 'Uncategorized', // Default category
       date: new Date().toISOString().split('T')[0],
@@ -40,6 +68,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
+  
 
   // Update categories when transaction type changes
   useEffect(() => {
@@ -135,7 +164,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <Input 
             type="number" 
             step="0.01"
-            value={Math.abs(editedTransaction.amount || 0)}
+            value={parseFloat(String(editedTransaction.amount || 0)).toFixed(2)}
             onChange={(e) => handleChange('amount', 
               editedTransaction.type === 'expense' 
                 ? -Math.abs(parseFloat(e.target.value) || 0) 
@@ -188,7 +217,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           />
         </div>
       )}
-      
+      {/* Vendor (optional or inferred) */}
+		<div className="space-y-2">
+		  <label className="text-sm font-medium">Vendor</label>
+		  <Input
+			value={editedTransaction.vendor || ''}
+			onChange={(e) => handleChange('vendor', e.target.value)}
+			placeholder="e.g., Netflix"
+		  />
+		</div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Category */}
         <div className="space-y-2">

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -19,6 +18,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LearnedEntry } from '@/types/learning';
 import SmartPasteSummary from '@/components/SmartPasteSummary';
 import { learningEngineService } from '@/services/LearningEngineService';
+import { loadKeywordBank, saveKeywordBank } from '@/lib/smart-paste-engine/keywordBankUtils';
+import { loadTemplateBank, saveTemplateBank } from '@/lib/smart-paste-engine/templateUtils';
+
+import { saveNewTemplate } from '@/lib/smart-paste-engine/templateUtils';
+import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
+import { getAllTemplates } from '@/lib/smart-paste-engine/templateUtils';
+
+
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -32,148 +39,133 @@ const EditTransaction = () => {
     entry: LearnedEntry | null;
     confidence: number;
   } | null>(null);
-  
-  // Try to get transaction from location state first, then from URL params if available
+
   let transaction = location.state?.transaction as Transaction | undefined;
-  
-  // Get the raw message if available (from smart paste)
+
   const rawMessage = location.state?.rawMessage as string | undefined;
   const senderHint = location.state?.senderHint as string | undefined;
   const isSuggested = location.state?.isSuggested as boolean | undefined;
   const confidenceScore = location.state?.confidence as number | undefined;
   const shouldTrain = location.state?.shouldTrain as boolean | undefined;
-  
-  console.log("EditTransaction state:", { 
-    rawMessage: !!rawMessage, 
-    senderHint, 
-    isSuggested, 
-    confidenceScore,
-    shouldTrain 
-  });
-  
-  // If we have an ID in the URL params, try to find the transaction by ID
-  if (!transaction && params.id) {
-    transaction = transactions.find(t => t.id === params.id);
-  }
-  
+  const templateHash = location.state?.templateHash as string | undefined;
+
   const isNewTransaction = !transaction;
-  
-  // Handle navigating to training page
+
   const handleGoToTraining = () => {
     if (rawMessage) {
-      navigate('/train-model', { 
-        state: { 
+      navigate('/train-model', {
+        state: {
           rawMessage,
-          senderHint
-        }
+          senderHint,
+        },
       });
     }
   };
-  
-  // Find the matching entry when we have a raw message
-  useEffect(() => {
-    if (rawMessage && transaction && transaction.source === 'smart-paste') {
-      const entries = getLearnedEntries();
-      if (entries.length > 0) {
-        console.log("Looking for matching entry for smart-paste transaction");
-        // Find the entry that might have been used for this match
-        const entry = entries.find(e => {
-          // Look for an entry where the field values match our transaction
-          const typeMatch = e.confirmedFields.type === transaction?.type;
-          const categoryMatch = e.confirmedFields.category === transaction?.category;
-          const amountMatch = Math.abs(e.confirmedFields.amount - (transaction?.amount || 0)) < 0.01;
-          
-          const result = typeMatch && categoryMatch && amountMatch;
-          console.log("Matching entry?", {
-            entry: e.id, 
-            typeMatch, 
-            categoryMatch, 
-            amountMatch, 
-            result
-          });
-          return result;
-        });
-        
-        if (entry) {
-          console.log("Found matching entry:", entry.id);
-          setMatchDetails({
-            entry,
-            confidence: confidenceScore || 0.8,
+
+  const handleSave = (editedTransaction: Transaction) => {
+	  
+	  let directFields: Record<string, string> = {};
+	if (rawMessage) {
+	  const { placeholders } = extractTemplateStructure(rawMessage);
+	  directFields = placeholders;
+	}
+
+    const newTransaction = {
+      ...editedTransaction,
+      id: editedTransaction.id || uuidv4(),
+      source: editedTransaction.source || 'manual'
+    };
+
+    if (isNewTransaction) {
+      addTransaction(newTransaction);
+    } else {
+      updateTransaction(newTransaction);
+    }
+
+    storeTransaction(newTransaction);
+
+    if (rawMessage && saveForLearning) {
+      learnFromTransaction(rawMessage, newTransaction, senderHint || '');
+	  
+	      // ✅ Save structure template now if it's not already saved
+			const { template, placeholders } = extractTemplateStructure(rawMessage);
+			const fields = Object.keys(placeholders);
+			const templateHash = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
+
+			const existingTemplates = getAllTemplates();
+			const alreadyExists = existingTemplates.some(t => t.id === templateHash);
+			if (!alreadyExists) {
+			  saveNewTemplate(template, fields, rawMessage);
+			}
+
+			toast({
+			  title: "Pattern saved for learning",
+			  description: "Future similar messages will be recognized automatically",
+			});
+
+      // --- Vendor → Category/Subcategory Mapping ---
+      if (newTransaction.vendor && newTransaction.category) {
+        const keyword = newTransaction.vendor.toLowerCase().split(' ')[0];
+        const bank = loadKeywordBank();
+        const existing = bank.find(k => k.keyword === keyword);
+
+        const newMappings = [
+          { field: 'category', value: newTransaction.category },
+          { field: 'subcategory', value: newTransaction.subcategory || 'none' }
+        ];
+
+        if (existing) {
+          newMappings.forEach(mapping => {
+            const alreadyMapped = existing.mappings.some(m => m.field === mapping.field);
+            if (!alreadyMapped) {
+              existing.mappings.push(mapping);
+            }
           });
         } else {
-          console.log("No matching entry found among", entries.length, "entries");
+          bank.push({ keyword, mappings: newMappings });
+        }
+
+        saveKeywordBank(bank);
+      }
+	  
+	  if (
+		  rawMessage &&
+		  saveForLearning &&
+		  editedTransaction.vendor &&
+		  directFields?.vendor &&
+		  editedTransaction.vendor !== directFields.vendor
+		) {
+		  const vendorMap = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+		  vendorMap[directFields.vendor] = editedTransaction.vendor;
+		  localStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
+		}
+
+      // --- FromAccount → TemplateHash Mapping ---
+      if (templateHash && newTransaction.fromAccount) {
+        const templates = loadTemplateBank();
+        const template = templates.find(t => t.id === templateHash);
+        if (template && !template.defaultValues?.fromAccount) {
+          template.defaultValues = {
+            ...template.defaultValues,
+            fromAccount: newTransaction.fromAccount
+          };
+          saveTemplateBank(templates);
         }
       }
-    }
-  }, [rawMessage, transaction, getLearnedEntries, confidenceScore]);
-  
-  // If we're editing a transaction but couldn't find it, redirect to dashboard
-  useEffect(() => {
-    if (params.id && !transaction) {
+
       toast({
-        title: "Transaction not found",
-        description: "The transaction you're trying to edit doesn't exist",
-        variant: "destructive"
-      });
-      navigate('/dashboard');
-    }
-  }, [params.id, transaction, navigate, toast]);
-  
-  const handleSave = (editedTransaction: Transaction) => {
-    // Ensure we have an id for new transactions
-    if (isNewTransaction) {
-      const newTransaction = {
-        ...editedTransaction,
-        id: editedTransaction.id || uuidv4(), // Use the existing ID or generate a new one
-        source: editedTransaction.source || 'manual' // Set source to manual if not specified
-      };
-      
-      // Add to context
-      addTransaction(newTransaction);
-      
-      // Save to local storage
-      storeTransaction(newTransaction);
-      
-      // Learn from this transaction explicitly only if user enabled learning
-      // This is the ONLY place where learning should happen - after user confirmation
-      if (rawMessage && saveForLearning) {
-        learnFromTransaction(rawMessage, newTransaction, senderHint || '');
-        
-        toast({
-          title: "Pattern saved for learning",
-          description: "Future similar messages will be recognized automatically",
-        });
-      }
-      
-      toast({
-        title: "Transaction created",
-        description: "Your transaction has been successfully created",
-      });
-    } else {
-      // Update in context
-      updateTransaction(editedTransaction);
-      
-      // Update in local storage
-      storeTransaction(editedTransaction);
-      
-      // Learn from this transaction only if it's from smart paste and user confirmed
-      if (rawMessage && saveForLearning) {
-        learnFromTransaction(rawMessage, editedTransaction, senderHint || '');
-        
-        toast({
-          title: "Pattern saved for learning",
-          description: "Future similar messages will be recognized automatically",
-        });
-      }
-      
-      toast({
-        title: "Transaction updated",
-        description: "Your transaction has been successfully updated",
+        title: "Pattern saved for learning",
+        description: "Future similar messages will be recognized automatically",
       });
     }
-    
-    // Navigate back to previous screen
+
+    toast({
+      title: isNewTransaction ? "Transaction created" : "Transaction updated",
+      description: `Your transaction has been successfully ${isNewTransaction ? 'created' : 'updated'}`,
+    });
+
     navigate(-1);
+
   };
 
   return (
