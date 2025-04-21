@@ -121,4 +121,9 @@ export const learningEngineService = {
   determineCurrency,
   determineTransaction,
   suggestTransactionDetails,
+    // ✅ Add this:
+  getConfig: () => ({
+    enabled: true,
+    saveAutomatically: true,
+  }),
 };

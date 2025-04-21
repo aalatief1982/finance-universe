@@ -45,58 +45,78 @@ export function saveNewTemplate(template: string, fields: string[], rawMessage?:
 export function getAllTemplates(): SmartPasteTemplate[] {
   return loadTemplateBank();
 }
-
 export function extractTemplateStructure(
   message: string
 ): { template: string; placeholders: Record<string, string> } {
   const patterns = [
-    // Amount patterns
-    { regex: /\b(\d{1,3}(,\d{3})*(\.\d{1,2})?)\b/g, fieldName: 'amount' },
-    { regex: /[\$\€\£\¥](\d{1,3}(,\d{3})*(\.\d{1,2})?)/g, fieldName: 'amount' },
-    
-    // Date patterns
-    { regex: /\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})\b/g, fieldName: 'date' },
-    { regex: /\b(\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2})\b/g, fieldName: 'date' },
-    
-    // Currency patterns
-    { regex: /\b(USD|SAR|EUR|GBP|AED|JPY|CNY|INR|CAD|AUD)\b/g, fieldName: 'currency' },
-    
-    // Account patterns
-    { regex: /(?:account|acct|acc)[:\s]*([A-Za-z0-9*\s]{4,})/gi, fieldName: 'account' },
-    { regex: /([A-Za-z]+ (?:account|card))/gi, fieldName: 'account' },
-    
-    // Vendor patterns (common business names)
-    { regex: /(?:at|from|to)\s+([A-Za-z0-9\s&]{2,20})\b/gi, fieldName: 'vendor' },
-    { regex: /\b(?:purchase|payment|transaction|paid)\s+(?:at|from|to)\s+([A-Za-z0-9\s&]{2,20})\b/gi, fieldName: 'vendor' },
-    
-    // Card number patterns
-    { regex: /(?:card\s+x+|card\s+ending\s+in\s+|card\s+\*+)([0-9]{4})/gi, fieldName: 'cardEnding' },
+    // Amount + currency like SAR 45.00
+    {
+      regex: /\b(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD)\s?(\d{1,4}(?:[.,]\d{2})?)\b/gi,
+      fieldName: 'amount+currency'
+    },
+
+    // Date formats (YYYY-MM-DD or DD-MM-YYYY)
+    {
+      regex: /\b(\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}|\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})\b/g,
+      fieldName: 'date'
+    },
+
+    // Vendor after "لدى:"
+    {
+      regex: /لدى:?\s*([^\n]+)/gi,
+      fieldName: 'vendor'
+    },
+
+    // Account/card pattern (optional)
+    {
+      regex: /\*{2,4}\d{3,4}/g,
+      fieldName: 'account'
+    },
   ];
-  
+
   let templateText = message;
   const placeholders: Record<string, string> = {};
-  
-  // Process each pattern
-  patterns.forEach(({ regex, fieldName }) => {
-    regex.lastIndex = 0; // Reset regex state
+  const replacements: { start: number; end: number; replacement: string }[] = [];
+
+  for (const { regex, fieldName } of patterns) {
+    regex.lastIndex = 0;
     let match;
     while ((match = regex.exec(message)) !== null) {
       const fullMatch = match[0];
-      const valueGroup = match[1] || fullMatch;
-      
-      // Skip if this exact value was already captured for this field
-      if (placeholders[fieldName] === valueGroup) continue;
-      
-      // Store the captured value
-      placeholders[fieldName] = valueGroup;
-      
-      // Replace the matched text with a placeholder in the template
-      templateText = templateText.replace(fullMatch, `{{${fieldName}}}`);
-      
-      // Reset regex after replacement as the string has changed
-      regex.lastIndex = 0;
+
+      if (fieldName === 'amount+currency') {
+        const [currency, amount] = [match[1], match[2]];
+        if (!placeholders.amount && !placeholders.currency) {
+          placeholders.amount = amount;
+          placeholders.currency = currency;
+          replacements.push({
+            start: match.index,
+            end: match.index + fullMatch.length,
+            replacement: `{{currency}} {{amount}}`
+          });
+        }
+      } else {
+        const valueGroup = match[1] || fullMatch;
+        if (!placeholders[fieldName]) {
+          placeholders[fieldName] = valueGroup;
+          replacements.push({
+            start: match.index,
+            end: match.index + fullMatch.length,
+            replacement: `{{${fieldName}}}`
+          });
+        }
+      }
+
+      break; // only one match per field
     }
-  });
-  
-  return { template: templateText, placeholders };
+  }
+
+  // Safely replace in reverse order to prevent shifting
+  replacements.sort((a, b) => b.start - a.start);
+  for (const { start, end, replacement } of replacements) {
+    templateText = templateText.slice(0, start) + replacement + templateText.slice(end);
+  }
+
+  return { template: templateText.trim(), placeholders };
 }
+

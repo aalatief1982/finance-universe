@@ -13,39 +13,59 @@ const simpleHash = (text: string) => btoa(unescape(encodeURIComponent(text))).sl
 
 export function parseSmsMessage(rawMessage: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
+	if (!rawMessage) {
+    throw new Error('Empty message passed to extractTemplateStructure');
+  }
+  let template = '';
+  let placeholders = {};
+  try {
+    const result = extractTemplateStructure(rawMessage);
+    template = result.template;
+    placeholders = result.placeholders;
+	
+	if (!template) throw new Error('Extracted template is empty');
+	if (!placeholders) throw new Error('Extracted placeholders are missing');
+	
+  } catch (err) {
+    console.error('[SmartPaste] ❌ extractTemplateStructure failed:', err);
+    throw err; // Let upstream handler deal with it
+  }
 
-  // Extract template and placeholder format
-  const { template, placeholders } = extractTemplateStructure(rawMessage);
   const templateHash = simpleHash(template);
-
   console.log('[SmartPaste] Step 2: Extracted Template:', template);
   console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
 
   const matchedTemplate = getTemplateByHash(templateHash);
-  const directFields = {};
-  
-  
-if (matchedTemplate) {
-  // Extract values from message
-  matchedTemplate.fields.forEach(field => {
-    directFields[field] = placeholders[field];
-  });
+  const directFields: Record<string, string> = {};
 
-  // Then fill in default values not found in the message
-  if (matchedTemplate.defaultValues) {
-    Object.entries(matchedTemplate.defaultValues).forEach(([key, value]) => {
-      if (!directFields[key]) {
-        directFields[key] = value;
-      }
-    });
+  if (matchedTemplate) {
+    matchedTemplate.fields.forEach(field => {
+	  const value = placeholders[field];
+	  if (value) {
+		directFields[field] = value;
+	  } else {
+		console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
+	  }
+	});
+
+    if (matchedTemplate.defaultValues) {
+      Object.entries(matchedTemplate.defaultValues).forEach(([key, value]) => {
+        if (!directFields[key]) {
+          directFields[key] = value;
+        }
+      });
+    }
   }
+  else {
+  // ✅ FIRST-TIME message – use raw extracted values
+  Object.entries(placeholders).forEach(([key, value]) => {
+    directFields[key] = value;
+  });
 }
 
-
-
-  // Infer type, category, fromAccount, subcategory from text
   const inferred = inferIndirectFields(rawMessage, directFields);
   console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
+  console.log('[SmartPaste] Final directFields:', directFields);
 
   return {
     rawMessage,
@@ -54,8 +74,10 @@ if (matchedTemplate) {
     matched: !!matchedTemplate,
     directFields,
     inferredFields: inferred,
+    defaultValues: matchedTemplate?.defaultValues || {}
   };
 }
+
 
 
 function applyVendorMapping(vendor: string): string {

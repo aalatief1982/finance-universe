@@ -16,7 +16,7 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
-import { learningEngineService } from '@/services/LearningEngineService';
+//import { learningEngineService } from '@/services/LearningEngineService';
 import {
   loadKeywordBank,
   saveKeywordBank,
@@ -58,9 +58,9 @@ const ImportTransactions = () => {
     });
 
     const transaction = transactions[0];
-    const entries = learningEngineService.getLearnedEntries();
+    //const entries = learningEngineService.getLearnedEntries();
 
-    const matchedCount = entries.filter((entry) => {
+/*    const matchedCount = entries.filter((entry) => {
       return (
         Math.abs(entry.confirmedFields.amount - (transaction?.amount || 0)) < 0.01 &&
         entry.confirmedFields.category === transaction?.category &&
@@ -72,10 +72,12 @@ const ImportTransactions = () => {
       matchedCount,
       totalTemplates: entries.length,
     });
+*/
+
 
     // ✅ Auto-learn logic from transaction vendor
     if (shouldTrain && transaction.vendor) {
-      const keyword = transaction.vendor.toLowerCase().split(' ')[0];
+      /*const keyword = transaction.vendor.toLowerCase().split(' ')[0];
       const existing = loadKeywordBank();
       const exists = existing.find((k) => k.keyword === keyword);
 
@@ -93,8 +95,8 @@ const ImportTransactions = () => {
           mappings: inferredMappings,
         };
         console.log('[AutoLearn] Adding keyword:', newEntry);
-        saveKeywordBank([...existing, newEntry]);
-      }
+        //saveKeywordBank([...existing, newEntry]);
+      }*/
     }
 
     console.log('[ImportTransactions] Navigate to edit with parameters:', {
@@ -109,8 +111,8 @@ const ImportTransactions = () => {
         rawMessage,
         senderHint,
         confidence,
-        matchedCount,
-        totalTemplates: entries.length,
+         matchedCount: 0, // fallback default
+		totalTemplates: 0, // fallback default
         isSuggested: true,
         shouldTrain,
         matchOrigin,

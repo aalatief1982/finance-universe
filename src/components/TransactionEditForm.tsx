@@ -19,63 +19,36 @@ function remapVendor(vendor?: string): string {
   return map[vendor] || vendor;
 }
 
-const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ 
-  transaction, 
-  onSave 
-}) => {
+const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, onSave }) => {
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
-		console.log('[TransactionEditForm] Initializing with transaction:', transaction);
-		 // ✅ Override vendor using mapping if any
-	const mappedVendor = remapVendor(transaction.vendor);
-	console.log('[Form Fields]', {
-	  title: transaction?.title,
-	  amount: transaction?.amount,
-	  type: transaction?.type,
-	  currency: transaction?.currency,
-	  vendor: transaction?.vendor
-	});
-		
-      return { ...transaction , vendor: mappedVendor // ✅ override vendor with remapped one
-	  };
+      console.log('[TransactionEditForm] Initializing with transaction:', transaction);
+      const mappedVendor = remapVendor(transaction.vendor);
+      return { ...transaction, vendor: mappedVendor };
     }
-    
-    // Default new transaction
-	console.log('[TransactionEditForm] Initializing with transaction:', transaction);
-	console.log('[Form Fields]', {
-	  title: transaction?.title,
-	  amount: transaction?.amount,
-	  type: transaction?.type,
-	  currency: transaction?.currency,
-	  vendor: transaction?.vendor
-	});
-
 
     return {
       id: uuidv4(),
       title: '',
       amount: '',
       type: 'expense' as TransactionType,
-      category: 'Uncategorized', // Default category
+      category: 'Uncategorized',
       date: new Date().toISOString().split('T')[0],
       fromAccount: 'Cash',
       currency: 'USD',
       description: '',
       notes: '',
-      source: 'manual' // Add the required source field
+      source: 'manual',
     };
   });
 
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
-  
 
-  // Update categories when transaction type changes
   useEffect(() => {
-    const categories = getCategoriesForType(editedTransaction.type as TransactionType) || [];
+    const categories = getCategoriesForType(editedTransaction.type) || [];
     setAvailableCategories(categories);
-    
-    // If category is already set, update subcategories as well
+
     if (editedTransaction.category) {
       const subcategories = getSubcategoriesForCategory(editedTransaction.category) || [];
       setAvailableSubcategories(subcategories);
@@ -84,60 +57,45 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     }
   }, [editedTransaction.type]);
 
-  // Handle field changes
   const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
     setEditedTransaction(prev => {
-      const updated = {...prev, [field]: value};
-      
-      // Special case for transaction type
+      const updated = { ...prev, [field]: value };
+
       if (field === 'type') {
-        const transactionType = value as TransactionType;
-        
-        // Reset category when type changes
         updated.category = 'Uncategorized';
         updated.subcategory = 'none';
       }
-      
-      // Special case for category
+
       if (field === 'category') {
         const subcategories = getSubcategoriesForCategory(value as string) || [];
         setAvailableSubcategories(subcategories);
-        
-        // Reset subcategory when category changes
         updated.subcategory = 'none';
       }
-      
+
       return updated;
     });
   };
 
-  // Form submission handler
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Ensure the amount is negative for expenses
-    const finalTransaction = {...editedTransaction};
-    if (finalTransaction.type === 'expense' && finalTransaction.amount > 0) {
-      finalTransaction.amount = -Math.abs(finalTransaction.amount);
-    } else if (finalTransaction.type !== 'expense' && finalTransaction.amount < 0) {
-      finalTransaction.amount = Math.abs(finalTransaction.amount);
+    const finalTransaction = { ...editedTransaction };
+    const rawAmount = parseFloat(finalTransaction.amount as any);
+
+    if (finalTransaction.type === 'expense') {
+      finalTransaction.amount = -Math.abs(rawAmount);
+    } else {
+      finalTransaction.amount = Math.abs(rawAmount);
     }
-    
+
     onSave(finalTransaction);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 py-2">
-      {/* Transaction Type */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Transaction Type*</label>
-        <Select 
-          value={editedTransaction.type}
-          onValueChange={(value) => handleChange('type', value as TransactionType)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
+        <Select value={editedTransaction.type} onValueChange={(value) => handleChange('type', value as TransactionType)}>
+          <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="expense">Expense</SelectItem>
             <SelectItem value="income">Income</SelectItem>
@@ -145,191 +103,110 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </SelectContent>
         </Select>
       </div>
-      
-      {/* Title */}
+
       <div className="space-y-2">
         <label className="text-sm font-medium">Title*</label>
-        <Input 
-          value={editedTransaction.title || ''}
-          onChange={(e) => handleChange('title', e.target.value)}
-          placeholder="Transaction title"
-          required
-        />
+        <Input value={editedTransaction.title || ''} onChange={(e) => handleChange('title', e.target.value)} placeholder="Transaction title" required />
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Amount */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Amount*</label>
-          <Input 
-            type="number" 
+          <Input
+            type="number"
             step="0.01"
-            value={parseFloat(String(editedTransaction.amount || 0)).toFixed(2)}
-            onChange={(e) => handleChange('amount', 
-              editedTransaction.type === 'expense' 
-                ? -Math.abs(parseFloat(e.target.value) || 0) 
-                : Math.abs(parseFloat(e.target.value) || 0)
-            )}
+            value={editedTransaction.amount}
+            onChange={(e) => handleChange('amount', e.target.value)}
             placeholder="0.00"
             required
           />
         </div>
-        
-        {/* Currency */}
+
         <div className="space-y-2">
           <label className="text-sm font-medium">Currency*</label>
-          <Select 
-            value={editedTransaction.currency || 'USD'}
-            onValueChange={(value) => handleChange('currency', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
+          <Select value={editedTransaction.currency || 'USD'} onValueChange={(value) => handleChange('currency', value)}>
+            <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
             <SelectContent>
-              {CURRENCIES.map(currency => (
-                <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-              ))}
+              {CURRENCIES.map(currency => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
-      
-      {/* From Account */}
+
       <div className="space-y-2">
         <label className="text-sm font-medium">From Account*</label>
-        <Input 
-          value={editedTransaction.fromAccount || ''}
-          onChange={(e) => handleChange('fromAccount', e.target.value)}
-          placeholder="Source account"
-          required
-        />
+        <Input value={editedTransaction.fromAccount || ''} onChange={(e) => handleChange('fromAccount', e.target.value)} placeholder="Source account" required />
       </div>
-      
-      {/* To Account - Only shown for Transfer */}
+
       {editedTransaction.type === 'transfer' && (
         <div className="space-y-2">
           <label className="text-sm font-medium">To Account*</label>
-          <Input 
-            value={editedTransaction.toAccount || ''}
-            onChange={(e) => handleChange('toAccount', e.target.value)}
-            placeholder="Destination account"
-            required
-          />
+          <Input value={editedTransaction.toAccount || ''} onChange={(e) => handleChange('toAccount', e.target.value)} placeholder="Destination account" required />
         </div>
       )}
-      {/* Vendor (optional or inferred) */}
-		<div className="space-y-2">
-		  <label className="text-sm font-medium">Vendor</label>
-		  <Input
-			value={editedTransaction.vendor || ''}
-			onChange={(e) => handleChange('vendor', e.target.value)}
-			placeholder="e.g., Netflix"
-		  />
-		</div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Vendor</label>
+        <Input value={editedTransaction.vendor || ''} onChange={(e) => handleChange('vendor', e.target.value)} placeholder="e.g., Netflix" />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Category */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Category*</label>
-          <Select 
-            value={editedTransaction.category || 'Uncategorized'}
-            onValueChange={(value) => handleChange('category', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
+          <Select value={editedTransaction.category || 'Uncategorized'} onValueChange={(value) => handleChange('category', value)}>
+            <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
             <SelectContent>
               {availableCategories.length > 0 ? (
-                availableCategories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))
+                availableCategories.map(category => <SelectItem key={category} value={category}>{category}</SelectItem>)
               ) : (
                 <SelectItem value="Uncategorized">Uncategorized</SelectItem>
               )}
             </SelectContent>
           </Select>
         </div>
-        
-        {/* Subcategory */}
+
         {availableSubcategories.length > 0 && (
           <div className="space-y-2">
             <label className="text-sm font-medium">Subcategory</label>
-            <Select 
-              value={editedTransaction.subcategory || 'none'}
-              onValueChange={(value) => handleChange('subcategory', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select subcategory" />
-              </SelectTrigger>
+            <Select value={editedTransaction.subcategory || 'none'} onValueChange={(value) => handleChange('subcategory', value)}>
+              <SelectTrigger><SelectValue placeholder="Select subcategory" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
-                {availableSubcategories.map(subcategory => (
-                  <SelectItem key={subcategory} value={subcategory}>{subcategory}</SelectItem>
-                ))}
+                {availableSubcategories.map(subcategory => <SelectItem key={subcategory} value={subcategory}>{subcategory}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         )}
       </div>
-      
-      {/* Date */}
+
       <div className="space-y-2">
         <label className="text-sm font-medium">Date*</label>
-        <Input 
-          type="date"
-          value={editedTransaction.date}
-          onChange={(e) => handleChange('date', e.target.value)}
-          required
-        />
+        <Input type="date" value={editedTransaction.date} onChange={(e) => handleChange('date', e.target.value)} required />
       </div>
-      
-      {/* Person */}
+
       <div className="space-y-2">
         <label className="text-sm font-medium">Person (Optional)</label>
-        <Select 
-          value={editedTransaction.person || 'none'}
-          onValueChange={(value) => handleChange('person', value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select person" />
-          </SelectTrigger>
+        <Select value={editedTransaction.person || 'none'} onValueChange={(value) => handleChange('person', value)}>
+          <SelectTrigger><SelectValue placeholder="Select person" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>
-            {PEOPLE.map(person => (
-              <SelectItem key={person} value={person}>{person}</SelectItem>
-            ))}
+            {PEOPLE.map(person => <SelectItem key={person} value={person}>{person}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
-      
-      {/* Description */}
+
       <div className="space-y-2">
         <label className="text-sm font-medium">Description (Optional)</label>
-        <Textarea 
-          value={editedTransaction.description || ''}
-          onChange={(e) => handleChange('description', e.target.value)}
-          placeholder="Enter a detailed description..."
-          className="min-h-[100px]"
-        />
+        <Textarea value={editedTransaction.description || ''} onChange={(e) => handleChange('description', e.target.value)} placeholder="Enter a detailed description..." className="min-h-[100px]" />
       </div>
-      
-      {/* Notes */}
+
       <div className="space-y-2">
         <label className="text-sm font-medium">Notes (Optional)</label>
-        <Textarea 
-          value={editedTransaction.notes || ''}
-          onChange={(e) => handleChange('notes', e.target.value)}
-          placeholder="Additional notes..."
-          className="min-h-[80px]"
-        />
+        <Textarea value={editedTransaction.notes || ''} onChange={(e) => handleChange('notes', e.target.value)} placeholder="Additional notes..." className="min-h-[80px]" />
       </div>
-      
-      {/* Action Buttons */}
+
       <div className="flex justify-end space-x-2 pt-4">
-        <Button 
-          type="submit"
-          className="flex items-center gap-1"
-        >
+        <Button type="submit" className="flex items-center gap-1">
           <Check className="h-4 w-4" />
           {transaction ? 'Update Transaction' : 'Create Transaction'}
         </Button>

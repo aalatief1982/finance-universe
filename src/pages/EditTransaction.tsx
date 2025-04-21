@@ -105,7 +105,9 @@ const EditTransaction = () => {
 
       // --- Vendor → Category/Subcategory Mapping ---
       if (newTransaction.vendor && newTransaction.category) {
-        const keyword = newTransaction.vendor.toLowerCase().split(' ')[0];
+        //const keyword = newTransaction.vendor.toLowerCase().split(' ')[0];
+		const keyword = directFields?.vendor?.toLowerCase() || newTransaction.vendor.toLowerCase();
+
         const bank = loadKeywordBank();
         const existing = bank.find(k => k.keyword === keyword);
 

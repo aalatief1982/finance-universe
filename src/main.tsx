@@ -3,6 +3,10 @@ import App from './App.tsx'
 import './index.css'
 import { handleError } from './utils/error-utils'
 import { ErrorType, ErrorSeverity } from './types/error'
+import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults';
+
+initializeXpensiaStorageDefaults();
+
 
 // Setup global error handlers
 const setupGlobalErrorHandlers = () => {
@@ -87,6 +91,10 @@ setupGlobalErrorHandlers();
 // Create root and render app
 try {
   const root = createRoot(document.getElementById("root")!);
+  
+
+
+  
   root.render(<App />);
 } catch (error) {
   // Handle fatal initialization errors

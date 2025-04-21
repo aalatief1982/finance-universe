@@ -83,6 +83,11 @@ console.log('[SmartPaste] Final fromAccount resolution', {
 		  source: 'smart-paste',
 		  createdAt: new Date().toISOString(),
 		};
+		console.log('[SmartPaste] Final Transaction Fields:', {
+		  amount: parsed.directFields.amount,
+		  vendor: parsed.directFields.vendor,
+		  date: parsed.directFields.date
+		});
 
 
       setDetectedTransactions([transaction]);
