@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LearnedEntry } from '@/types/learning';
 import SmartPasteSummary from '@/components/SmartPasteSummary';
-import { learningEngineService } from '@/services/LearningEngineService';
+//import { learningEngineService } from '@/services/LearningEngineService';
 import { loadKeywordBank, saveKeywordBank } from '@/lib/smart-paste-engine/keywordBankUtils';
 import { loadTemplateBank, saveTemplateBank } from '@/lib/smart-paste-engine/templateUtils';
 
@@ -26,6 +26,20 @@ import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils
 import { getAllTemplates } from '@/lib/smart-paste-engine/templateUtils';
 
 
+function generateDefaultTitle(tx: Transaction): string {
+  const { category, subcategory, amount, date } = tx;
+  const valid = category && subcategory && amount && date;
+  if (!valid) return '';
+
+  const dateObj = new Date(date);
+  const formattedDate = dateObj.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).replace(/ /g, '');
+
+  return `${category}|${subcategory}|${amount}|${formattedDate}`;
+}
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -34,7 +48,7 @@ const EditTransaction = () => {
   const { addTransaction, updateTransaction, transactions } = useTransactions();
   const { toast } = useToast();
   const { learnFromTransaction, config, getLearnedEntries } = useLearningEngine();
-  const [saveForLearning, setSaveForLearning] = React.useState(config.saveAutomatically);
+  //const [saveForLearning, setSaveForLearning] = React.useState(config.saveAutomatically);
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
     confidence: number;
@@ -46,12 +60,12 @@ const EditTransaction = () => {
   const senderHint = location.state?.senderHint as string | undefined;
   const isSuggested = location.state?.isSuggested as boolean | undefined;
   const confidenceScore = location.state?.confidence as number | undefined;
-  const shouldTrain = location.state?.shouldTrain as boolean | undefined;
+  //const shouldTrain = location.state?.shouldTrain as boolean | undefined;
   const templateHash = location.state?.templateHash as string | undefined;
 
   const isNewTransaction = !transaction;
 
-  const handleGoToTraining = () => {
+  /*const handleGoToTraining = () => {
     if (rawMessage) {
       navigate('/train-model', {
         state: {
@@ -60,7 +74,7 @@ const EditTransaction = () => {
         },
       });
     }
-  };
+  };*/
 
   const handleSave = (editedTransaction: Transaction) => {
 	  
@@ -200,25 +214,6 @@ const EditTransaction = () => {
           </Alert>
         )}
         
-        {shouldTrain && rawMessage && (
-          <Alert className="bg-yellow-50 border-yellow-500 text-yellow-800">
-            <div className="flex justify-between items-center">
-              <AlertDescription className="text-sm flex-1">
-                <span className="font-semibold">Low confidence match.</span> Would you like to train the system to better recognize messages like this in the future?
-              </AlertDescription>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-2 bg-yellow-100 border-yellow-300 hover:bg-yellow-200"
-                onClick={handleGoToTraining}
-              >
-                <Brain className="h-4 w-4 mr-2" />
-                Train Model
-              </Button>
-            </div>
-          </Alert>
-        )}
-        
         {rawMessage && (
           <div className="bg-muted p-3 rounded-md">
             <p className="text-xs font-mono break-words">
@@ -285,19 +280,7 @@ const EditTransaction = () => {
               onSave={handleSave} 
             />
             
-            {config.enabled && rawMessage && (
-              <div className="flex items-center space-x-2 pt-4 border-t mt-4">
-                <Switch
-                  id="save-for-learning"
-                  checked={saveForLearning}
-                  onCheckedChange={setSaveForLearning}
-                />
-                <Label htmlFor="save-for-learning" className="flex items-center">
-                  <Brain className="h-4 w-4 mr-2" />
-                  Save this pattern for future suggestions
-                </Label>
-              </div>
-            )}
+  
           </CardContent>
         </Card>
       </motion.div>

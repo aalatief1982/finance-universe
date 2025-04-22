@@ -13,6 +13,18 @@ interface TransactionEditFormProps {
   onSave: (transaction: Transaction) => void;
 }
 
+
+function toISOFormat(ddmmyyyy: string): string {
+  const [dd, mm, yyyy] = ddmmyyyy.split('-');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function toDisplayFormat(yyyymmdd: string): string {
+  const [yyyy, mm, dd] = yyyymmdd.split('-');
+  return `${dd}-${mm}-${yyyy}`;
+}
+
+
 function remapVendor(vendor?: string): string {
   if (!vendor) return '';
   const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
@@ -24,8 +36,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
     if (transaction) {
       console.log('[TransactionEditForm] Initializing with transaction:', transaction);
       const mappedVendor = remapVendor(transaction.vendor);
-      return { ...transaction, vendor: mappedVendor };
+     return {
+      ...transaction,
+      vendor: mappedVendor,
+      date: transaction.date,
+    };
     }
+
 
     return {
       id: uuidv4(),
@@ -33,7 +50,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       amount: '',
       type: 'expense' as TransactionType,
       category: 'Uncategorized',
-      date: new Date().toISOString().split('T')[0],
+      //date: new Date().toISOString().split('T')[0],
+	  date: toDisplayFormat(new Date().toISOString().split('T')[0]),
       fromAccount: 'Cash',
       currency: 'USD',
       description: '',
@@ -76,19 +94,25 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const finalTransaction = { ...editedTransaction };
-    const rawAmount = parseFloat(finalTransaction.amount as any);
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  const finalTransaction = { ...editedTransaction };
 
-    if (finalTransaction.type === 'expense') {
-      finalTransaction.amount = -Math.abs(rawAmount);
-    } else {
-      finalTransaction.amount = Math.abs(rawAmount);
-    }
+  // Default the title if empty
+  if (!finalTransaction.title?.trim()) {
+    finalTransaction.title = generateDefaultTitle(finalTransaction);
+  }
 
-    onSave(finalTransaction);
-  };
+  const rawAmount = parseFloat(finalTransaction.amount as any);
+  if (finalTransaction.type === 'expense') {
+    finalTransaction.amount = -Math.abs(rawAmount);
+  } else {
+    finalTransaction.amount = Math.abs(rawAmount);
+  }
+
+  onSave(finalTransaction);
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 py-2">
@@ -181,7 +205,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Date*</label>
-        <Input type="date" value={editedTransaction.date} onChange={(e) => handleChange('date', e.target.value)} required />
+        <Input
+		  type="date"
+		  value={toISOFormat(editedTransaction.date)}
+		  onChange={(e) => handleChange('date', toDisplayFormat(e.target.value))}
+		  required
+		/>
       </div>
 
       <div className="space-y-2">

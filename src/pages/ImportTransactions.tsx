@@ -16,17 +16,11 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
-//import { learningEngineService } from '@/services/LearningEngineService';
 import {
   loadKeywordBank,
   saveKeywordBank,
 } from '@/lib/smart-paste-engine/keywordBankUtils';
 
-/**
- * ImportTransactions page component for handling different import methods.
- * Provides UI for smart paste and Telegram bot setup methods.
- * Manages the transaction detection flow and forwards to edit page.
- */
 const ImportTransactions = () => {
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const { addTransactions } = useTransactions();
@@ -35,132 +29,94 @@ const ImportTransactions = () => {
 
   console.log('[ImportTransactions] Page initialized');
 
-  /**
-   * Handles detected transactions from the SmartPaste component.
-   * Calculates matching statistics and navigates to the edit page.
-   */
   const handleTransactionsDetected = (
     transactions: Transaction[],
-    rawMessage?: string,
-    senderHint?: string,
-    confidence?: number,
-    shouldTrain?: boolean,
-    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback'
+	  rawMessage?: string,
+	  senderHint?: string,
+	  confidence?: number,
+	  matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+	  matchedCount?: number,
+	  totalTemplates?: number,
+	  fieldScore?: number,
+	  keywordScore?: number
   ) => {
     console.log('[ImportTransactions] Transactions detected', {
       count: transactions.length,
-	  transaction: transactions[0],
+      transaction: transactions[0],
       rawMessageLength: rawMessage?.length,
       senderHint,
       confidence,
-      shouldTrain,
+      //shouldTrain,
       matchOrigin,
     });
 
     const transaction = transactions[0];
-    //const entries = learningEngineService.getLearnedEntries();
 
-/*    const matchedCount = entries.filter((entry) => {
-      return (
-        Math.abs(entry.confirmedFields.amount - (transaction?.amount || 0)) < 0.01 &&
-        entry.confirmedFields.category === transaction?.category &&
-        entry.confirmedFields.type === transaction?.type
-      );
-    }).length;
-
-    console.log('[ImportTransactions] Match statistics', {
-      matchedCount,
-      totalTemplates: entries.length,
-    });
-*/
-
-
-    // ✅ Auto-learn logic from transaction vendor
-    if (shouldTrain && transaction.vendor) {
-      /*const keyword = transaction.vendor.toLowerCase().split(' ')[0];
-      const existing = loadKeywordBank();
-      const exists = existing.find((k) => k.keyword === keyword);
-
-      const inferredMappings = [
-        { field: 'type', value: transaction.type },
-        { field: 'category', value: transaction.category },
-        { field: 'subcategory', value: transaction.subcategory },
-        { field: 'fromAccount', value: transaction.fromAccount },
-        { field: 'vendor', value: transaction.vendor },
-      ].filter((entry) => entry.value && entry.value !== '');
-
-      if (!exists && inferredMappings.length > 0) {
-        const newEntry = {
-          keyword,
-          mappings: inferredMappings,
-        };
-        console.log('[AutoLearn] Adding keyword:', newEntry);
-        //saveKeywordBank([...existing, newEntry]);
-      }*/
+    if (!transaction.id?.trim()) {
+      console.warn('⚠️ Empty or invalid transaction.id:', transaction);
     }
 
     console.log('[ImportTransactions] Navigate to edit with parameters:', {
-      shouldTrain,
+      //shouldTrain,
       matchOrigin,
       transaction,
     });
 
     navigate('/edit-transaction', {
-      state: {
-        transaction,
-        rawMessage,
-        senderHint,
-        confidence,
-         matchedCount: 0, // fallback default
-		totalTemplates: 0, // fallback default
-        isSuggested: true,
-        shouldTrain,
-        matchOrigin,
-      },
-    });
+  state: {
+    transaction: {
+      ...transaction,
+      date: transaction.date?.split('-').reverse().join('-'),
+    },
+    rawMessage,
+    senderHint,
+    confidence,
+    matchedCount,
+    totalTemplates,
+    fieldScore,
+    keywordScore,
+    isSuggested: true,
+    matchOrigin,
+  },
+});
   };
 
   return (
-    <Layout>
+    <Layout withPadding={false}>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full px-4 sm:px-6 md:px-8 max-w-full space-y-6 mt-4 py-6"
+        className="px-4 sm:px-6 lg:px-8 py-6 mt-2"
       >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              console.log('[ImportTransactions] Navigating back');
-              navigate(-1);
-            }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Import Transactions</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-2xl font-bold">Import Transactions</h1>
+          </div>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Import Transactions</CardTitle>
-            <CardDescription>
-              Import your transactions from SMS, Telegram, or by pasting bank messages
+          <CardContent className="pt-4">
+            <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold">Telegram Bot</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">
+              Connect your Telegram account to forward messages directly for transaction extraction.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="border-b pb-4">
-                <h3 className="text-lg font-medium mb-3">Smart Paste</h3>
-                <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium mb-3">Telegram Bot</h3>
-                <TelegramBotSetup />
-              </div>
-            </div>
+          <CardContent className="pt-0">
+            <TelegramBotSetup />
           </CardContent>
         </Card>
       </motion.div>

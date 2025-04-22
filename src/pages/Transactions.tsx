@@ -132,12 +132,12 @@ const Transactions = () => {
           {filteredTransactions.length > 0 ? (
             isMobile && viewMode === 'swipeable' ? (
               <div className="space-y-2">
-                {filteredTransactions.map(transaction => (
-                  <SwipeableTransactionCard 
-                    key={transaction.id}
-                    transaction={transaction}
-                  />
-                ))}
+                {filteredTransactions.map((transaction, index) => (
+				  <SwipeableTransactionCard 
+					key={transaction.id || `txn-${index}`} // ensure uniqueness
+					transaction={transaction}
+				  />
+				))}
               </div>
             ) : (
               <TransactionsByDate

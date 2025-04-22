@@ -48,27 +48,34 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
           </h3>
           
           <div className="space-y-2">
-            {groupedTransactions[date].map(transaction => (
-              <Card key={transaction.id} className="p-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex-1">
-                    <h4 className="font-medium">{transaction.title}</h4>
-                    <p className="text-sm text-muted-foreground">{transaction.category}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                      {formatCurrency(transaction.amount)}
-                    </span>
-                    
-                    <TransactionActions 
-                      transaction={transaction} 
-                      variant="dropdown" 
-                    />
-                  </div>
-                </div>
-              </Card>
-            ))}
+           {groupedTransactions[date].map((transaction, index) => {
+  if (!transaction.id?.trim()) {
+    console.warn('⚠️ Empty or invalid transaction.id:', transaction);
+  }
+
+  return (
+    <Card key={transaction.id?.trim() || `txn-${date}-${index}`} className="p-4">
+      <div className="flex justify-between items-center">
+        <div className="flex-1">
+          <h4 className="font-medium">{transaction.title}</h4>
+          <p className="text-sm text-muted-foreground">{transaction.category}</p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+            {formatCurrency(transaction.amount)}
+          </span>
+
+          <TransactionActions 
+            transaction={transaction} 
+            variant="dropdown" 
+          />
+        </div>
+      </div>
+    </Card>
+  );
+})}
+
           </div>
         </div>
       ))}

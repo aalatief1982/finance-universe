@@ -12,6 +12,14 @@ import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { Switch } from './ui/switch';
 import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { nanoid } from 'nanoid';
+import {
+  getFieldConfidence,
+  getTemplateConfidence,
+  getKeywordConfidence,
+  computeOverallConfidence,
+} from '@/lib/smart-paste-engine/confidenceScoring';
+import { loadKeywordBank } from '@/lib/smart-paste-engine/keywordBankUtils';
+import { getAllTemplates } from '@/lib/smart-paste-engine/templateUtils';
 
 interface SmartPasteProps {
   senderHint?: string;
@@ -35,80 +43,87 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [useHighAccuracy, setUseHighAccuracy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
+  
+  
 
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim()) {
-      toast({
-        title: "Error",
-        description: "Please paste or enter a message first",
-        variant: "destructive",
-      });
-      return;
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!text.trim()) {
+    toast({
+      title: "Error",
+      description: "Please paste or enter a message first",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  console.log("[SmartPaste] Submitting message:", text);
+  setIsProcessing(true);
+  setError(null);
+
+  try {
+    const parsed = parseSmsMessage(text);
+    console.log("[SmartPaste] Parsed result:", parsed);
+
+    const transaction: Transaction = {
+      id: nanoid(),
+      amount: parseFloat(parsed.directFields.amount || '0').toFixed(2),
+      currency: parsed.directFields.currency || 'SAR',
+      date: parsed.directFields.date || '',
+      type: parsed.inferredFields.type || 'expense',
+      category: parsed.inferredFields.category || 'Uncategorized',
+      subcategory: parsed.inferredFields.subcategory || 'none',
+      vendor: parsed.inferredFields.vendor || parsed.directFields.vendor || '',
+      fromAccount:
+        parsed.directFields.fromAccount ||
+        parsed.inferredFields.fromAccount ||
+        parsed.defaultValues?.fromAccount || '',
+      source: 'smart-paste',
+      createdAt: new Date().toISOString(),
+    };
+
+    // ✅ Confidence Scoring Logic
+    const keywordBank = loadKeywordBank();
+    const templates = getAllTemplates();
+    const matchedTemplates = templates.filter(t => t.template.includes(transaction.vendor)).length;
+
+    const fieldScore = getFieldConfidence(parsed);
+    const templateScore = getTemplateConfidence(matchedTemplates, templates.length);
+    const keywordScore = getKeywordConfidence(transaction, keywordBank);
+    const finalConfidence = computeOverallConfidence(fieldScore, templateScore, keywordScore);
+
+    console.log('[SmartPaste] Confidence Breakdown:', {
+      fieldScore,
+      templateScore,
+      keywordScore,
+      finalConfidence,
+    });
+
+    setDetectedTransactions([transaction]);
+
+    if (onTransactionsDetected) {
+      onTransactionsDetected(
+        [transaction],
+		  text,
+		  transaction.fromAccount,
+		  finalConfidence,
+		  parsed.matched ? 'template' : 'structure',
+		  matchedTemplates,
+		  templates.length,
+		  fieldScore,
+		  keywordScore
+      );
     }
+  } catch (err: any) {
+    console.error("[SmartPaste] Error in structure parsing:", err);
+    setError("Could not parse the message. Try again or report.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
-    console.log("[SmartPaste] Submitting message:", text);
-    setIsProcessing(true);
-    setError(null);
-
-    try {
-      const parsed = parseSmsMessage(text);
-      console.log("[SmartPaste] Parsed result:", parsed);
-	  const fromAccount = 
-	  parsed.directFields.fromAccount || 
-	  parsed.inferredFields.fromAccount || 
-	  parsed.defaultValues?.fromAccount || ''; // ✅ use template default if available
-
-console.log('[SmartPaste] Final fromAccount resolution', {
-  direct: parsed.directFields.fromAccount,
-  inferred: parsed.inferredFields.fromAccount,
- default: parsed.defaultValues?.fromAccount
-});
-
-		const transaction: Transaction = {
-		  id: nanoid(),
-		  amount: parseFloat(parsed.directFields.amount || '0').toFixed(2),
-		  currency: parsed.directFields.currency || 'SAR',
-		  date: parsed.directFields.date || '',
-		  type: parsed.inferredFields.type || 'expense',
-		  category: parsed.inferredFields.category || 'Uncategorized',
-		  subcategory: parsed.inferredFields.subcategory || 'none',
-		  vendor: parsed.inferredFields.vendor || parsed.directFields.vendor || '',
-		  fromAccount:
-			parsed.directFields.fromAccount ||
-			parsed.inferredFields.fromAccount ||
-			(parsed.defaultValues?.fromAccount ?? ''),
-		  source: 'smart-paste',
-		  createdAt: new Date().toISOString(),
-		};
-		console.log('[SmartPaste] Final Transaction Fields:', {
-		  amount: parsed.directFields.amount,
-		  vendor: parsed.directFields.vendor,
-		  date: parsed.directFields.date
-		});
-
-
-      setDetectedTransactions([transaction]);
-
-      if (onTransactionsDetected) {
-        onTransactionsDetected(
-          [transaction],
-          text,
-          parsed.directFields.fromAccount || parsed.inferredFields.fromAccount || parsed.defaultValues?.fromAccount || '',
-          0.95,
-          true,
-          parsed.matched ? 'template' : 'structure'
-        );
-      }
-    } catch (err: any) {
-      console.error("[SmartPaste] Error in structure parsing:", err);
-      setError("Could not parse the message. Try again or report.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const handlePaste = async () => {
     try {
@@ -157,7 +172,7 @@ console.log('[SmartPaste] Final fromAccount resolution', {
           Paste a message from your bank or SMS app to automatically extract transaction details.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
+      <CardContent className="pt-4 space-y-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-2">
             <Label htmlFor="message">Message</Label>
@@ -171,18 +186,9 @@ console.log('[SmartPaste] Final fromAccount resolution', {
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={useHighAccuracy}
-              onCheckedChange={setUseHighAccuracy}
-            />
-            <Label className="flex items-center text-sm">
-              <ZapIcon className="w-4 h-4 mr-1" />
-              High accuracy mode (coming soon)
-            </Label>
-          </div>
+  
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
             <Button type="submit" disabled={isProcessing || !text.trim()}>
               {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Capture Message
