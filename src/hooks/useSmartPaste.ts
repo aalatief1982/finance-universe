@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
@@ -14,7 +13,14 @@ import { useNavigate } from 'react-router-dom';
  * Supports multiple detection methods: template matching, structure matching, ML, and fallback.
  */
 export const useSmartPaste = (
-  onTransactionsDetected?: (transactions: Transaction[], rawMessage?: string, senderHint?: string, confidence?: number, shouldTrain?: boolean, matchOrigin?: "template" | "structure" | "ml" | "fallback") => void,
+  onTransactionsDetected?: (
+    transactions: Transaction[], 
+    rawMessage?: string, 
+    senderHint?: string, 
+    confidence?: number, 
+    shouldTrain?: boolean, 
+    matchOrigin?: "template" | "structure" | "ml" | "fallback"
+  ) => void,
   useHighAccuracy: boolean = false
 ) => {
   const [text, setText] = useState('');
@@ -111,7 +117,7 @@ export const useSmartPaste = (
 
       // 2. Structure-based fallback
       console.log("[useSmartPaste] Step 2: Attempting structure match");
-      const structureMatch = learningEngineService.matchUsingTemplateStructure?.(rawText);
+      const structureMatch = learningEngineService.matchUsingTemplateStructure(rawText);
       console.log("[useSmartPaste] Structure match result:", { 
         success: !!structureMatch, 
         confidence: structureMatch?.confidence 
@@ -167,7 +173,7 @@ export const useSmartPaste = (
         const txn: Transaction = {
           id: `ml-${Math.random().toString(36).substring(2, 9)}`,
           title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
-          amount: parseFloat(parsed.amount).toFixed(2),
+          amount: parseFloat(String(parsed.amount)),  // Convert to number if it's a string
           currency: parsed.currency || 'SAR',
           type: (parsed.type as TransactionType) || 'expense',
           fromAccount: parsed.account || 'Unknown',

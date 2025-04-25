@@ -7,3 +7,12 @@ export interface SmartPasteTemplate {
   created: string;
   rawSample?: string;
 }
+
+export interface StructureTemplateEntry {
+  id: string;
+  structure: string;
+  fields: string[];
+  createdAt: string;
+  updatedAt?: string;
+  confidence?: number;
+}

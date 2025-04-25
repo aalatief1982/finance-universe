@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
@@ -40,7 +39,9 @@ const FormField = <
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller 
-        {...props}
+        control={props.control}
+        name={props.name}
+        render={props.render}
       />
     </FormFieldContext.Provider>
   )
@@ -49,7 +50,7 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
-  const { getFieldState, formState } = useFormContext()
+  const { formState } = useFormContext()
 
   const fieldState = formState.errors[fieldContext.name]
 

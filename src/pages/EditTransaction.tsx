@@ -25,6 +25,18 @@ import { saveNewTemplate } from '@/lib/smart-paste-engine/templateUtils';
 import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
 import { getAllTemplates } from '@/lib/smart-paste-engine/templateUtils';
 
+/**
+ * Define allowed field types for mappings to ensure type safety
+ */
+type AllowedField = "type" | "category" | "fromAccount" | "subcategory" | "vendor";
+
+/**
+ * Type for field mappings
+ */
+interface FieldMapping {
+  field: AllowedField;
+  value: string;
+}
 
 function generateDefaultTitle(tx: Transaction): string {
   const { category, subcategory, amount, date } = tx;
@@ -125,16 +137,18 @@ const EditTransaction = () => {
         const bank = loadKeywordBank();
         const existing = bank.find(k => k.keyword === keyword);
 
-        const newMappings = [
-          { field: 'category', value: newTransaction.category },
-          { field: 'subcategory', value: newTransaction.subcategory || 'none' }
+        const newMappings: FieldMapping[] = [
+          { field: "category", value: newTransaction.category },
+          { field: "subcategory", value: newTransaction.subcategory || 'none' }
         ];
 
         if (existing) {
           newMappings.forEach(mapping => {
-            const alreadyMapped = existing.mappings.some(m => m.field === mapping.field);
+            // Cast existing mappings to the proper type to avoid errors
+            const typedMappings = existing.mappings as FieldMapping[];
+            const alreadyMapped = typedMappings.some(m => m.field === mapping.field);
             if (!alreadyMapped) {
-              existing.mappings.push(mapping);
+              typedMappings.push(mapping);
             }
           });
         } else {
