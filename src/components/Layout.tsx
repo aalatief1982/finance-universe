@@ -2,46 +2,56 @@
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
-import MobileNav from './MobileNav';
+import Header from './header/Header';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: React.ReactNode;
   hideNavigation?: boolean;
   className?: string;
   withPadding?: boolean;
+  showHeader?: boolean;
+  fullWidth?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ 
-  children, 
+const Layout = ({
+  children,
   hideNavigation = false,
   className = '',
-  withPadding = true
-}) => {
+  withPadding = true,
+  showHeader = true,
+  fullWidth = false,
+}: LayoutProps) => {
   const isMobile = useIsMobile();
   
   return (
-    <div className={`min-h-screen flex flex-col ${className}`}>
-      {!hideNavigation && (
-        <>
-          {!isMobile && <Sidebar />}
-          {isMobile && <MobileNav />}
-        </>
-      )}
+    <div className={cn("min-h-screen flex flex-col", className)}>
+      {showHeader && <Header showNavigation={!hideNavigation} />}
       
-      <main
-        className={`flex-1 w-full ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}
-      >
-        <div 
-          className={`max-w-[var(--content-max-width)] mx-auto ${
-            withPadding ? 'px-[var(--page-padding-x)] py-[var(--page-padding-y)]' : 'p-0'
-          }`}
+      <div className="flex flex-1">
+        {!hideNavigation && !isMobile && <Sidebar />}
+        
+        <main 
+          className={cn(
+            "flex-1 w-full",
+            !hideNavigation && !isMobile && "lg:ml-[var(--sidebar-width)]",
+            !fullWidth && "container"
+          )}
         >
-          <AnimatePresence mode="wait">
-            {children}
-          </AnimatePresence>
-        </div>
-      </main>
+          <div 
+            className={cn(
+              "h-full",
+              withPadding && "px-[var(--page-padding-x)] py-[var(--page-padding-y)]",
+              !fullWidth && "max-w-[var(--content-max-width)] mx-auto"
+            )}
+          >
+            <AnimatePresence mode="wait">
+              {children}
+            </AnimatePresence>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
