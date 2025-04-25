@@ -29,16 +29,19 @@ const Layout: React.FC<LayoutProps> = ({
         </>
       )}
       
-		<main
-		  className={`flex-1 w-full ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}
-		>
-		  <div className={`max-w-screen-md mx-auto ${withPadding ? 'px-4 sm:px-6 lg:px-8 pt-6 pb-10' : 'p-0'}`}>
-			<AnimatePresence mode="wait">
-			  {children}
-			</AnimatePresence>
-		  </div>
-		</main>
-
+      <main
+        className={`flex-1 w-full ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}
+      >
+        <div 
+          className={`max-w-[var(--content-max-width)] mx-auto ${
+            withPadding ? 'px-[var(--page-padding-x)] py-[var(--page-padding-y)]' : 'p-0'
+          }`}
+        >
+          <AnimatePresence mode="wait">
+            {children}
+          </AnimatePresence>
+        </div>
+      </main>
     </div>
   );
 };
