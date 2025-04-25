@@ -1,8 +1,6 @@
 
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
-import { Check, ChevronRight, Circle } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
@@ -77,9 +75,9 @@ const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
-    onClick?: (e: React.MouseEvent) => void
+    onClick?: (event: React.MouseEvent) => void
   }
->(({ className, inset, onClick, ...props }, ref) => (
+>(({ className, inset, children, onClick, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
@@ -87,9 +85,14 @@ const DropdownMenuItem = React.forwardRef<
       inset && "pl-8",
       className
     )}
+    onSelect={(event) => {
+      event.preventDefault()
+      onClick?.(event as unknown as React.MouseEvent)
+    }}
     {...props}
-    onClick={onClick}
-  />
+  >
+    {children}
+  </DropdownMenuPrimitive.Item>
 ))
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
