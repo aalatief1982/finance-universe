@@ -59,9 +59,13 @@ const TransactionHeader: React.FC<TransactionHeaderProps> = ({
               </TooltipTrigger>
               <TooltipContent>Export options</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Export as CSV</DropdownMenuItem>
-              <DropdownMenuItem>Export as PDF</DropdownMenuItem>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <div>Export as CSV</div>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <div>Export as PDF</div>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           

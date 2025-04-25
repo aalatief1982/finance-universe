@@ -20,7 +20,7 @@ export interface Transaction {
       sender: string;
       message: string;
       timestamp: string;
-    }
+    },
     rawMessage?: string;
   };
   currency?: string;
@@ -32,6 +32,7 @@ export interface Transaction {
   originalCurrency?: string;
   vendor?: string;
   account?: string;
+  createdAt?: string;
 }
 
 // Category related types

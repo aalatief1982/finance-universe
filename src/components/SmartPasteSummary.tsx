@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from './ui/card';
 
@@ -9,7 +10,13 @@ interface Props {
   keywordScore?: number;
 }
 
-const SmartPasteSummary: React.FC<Props> = ({ confidence, matchedCount, totalTemplates }) => {
+const SmartPasteSummary: React.FC<Props> = ({ 
+  confidence, 
+  matchedCount, 
+  totalTemplates, 
+  fieldScore,
+  keywordScore 
+}) => {
   return (
     <Card className="bg-purple-50 border-l-4 border-purple-600 text-purple-900 p-4 text-sm rounded-md">
       <h2 className="font-semibold mb-2 text-purple-800">
@@ -27,7 +34,6 @@ const SmartPasteSummary: React.FC<Props> = ({ confidence, matchedCount, totalTem
 		  )}
 		  <li>📐 Final Confidence Score: <strong>{(confidence * 100).toFixed(1)}%</strong></li>
 		</ul>
-
     </Card>
   );
 };

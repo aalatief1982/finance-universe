@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { 
-  AreaChart, 
-  Area, 
+  LineChart, 
+  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -31,7 +31,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
         </div>
       ) : (
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
+          <LineChart
             data={data}
             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
           >
@@ -51,25 +51,23 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
               labelFormatter={formatDate}
             />
             <Legend />
-            <Area 
+            <Line 
               type="monotone" 
               dataKey="income" 
               name="Income"
-              stackId="1"
               stroke="#4CAF50" 
               fill="#4CAF50" 
-              fillOpacity={0.5}
+              strokeWidth={2}
             />
-            <Area 
+            <Line 
               type="monotone" 
               dataKey="expense" 
               name="Expenses"
-              stackId="2"
               stroke="#F44336" 
               fill="#F44336"
-              fillOpacity={0.5}
+              strokeWidth={2}
             />
-          </AreaChart>
+          </LineChart>
         </ResponsiveContainer>
       )}
     </div>

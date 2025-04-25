@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
@@ -45,7 +46,6 @@ export const XpensiaLogo = () => (
     <span className="text-xl font-semibold tracking-tight">Xpensia</span>
   </div>
 );
-
 
 // Map routes to their corresponding titles - similar to WireframeHeader
 const routeTitleMap: Record<string, string> = {
@@ -158,7 +158,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user?.fullName || 'User'}</p>
@@ -182,11 +182,13 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-red-500 focus:text-red-500 cursor-pointer"
-                  onClick={logOut}
+                  className="text-red-500 focus:text-red-500 cursor-pointer" 
+                  asChild
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <div onClick={logOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

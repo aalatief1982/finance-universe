@@ -18,16 +18,18 @@ export interface Transaction {
   currency?: string;
   country?: string;
   description?: string;
-  smsDetails?: {
-    sender: string;
-    message: string;
-    timestamp: string;
-  };
+  vendor?: string;
   details?: {
     location?: string;
     merchant?: string;
     paymentMethod?: string;
     status?: 'pending' | 'completed' | 'cancelled';
+    rawMessage?: string; // Added this field
+    sms?: {
+      sender: string;
+      message: string;
+      timestamp: string;
+    }
   };
 }
 

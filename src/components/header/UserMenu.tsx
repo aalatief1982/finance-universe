@@ -81,7 +81,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ isLandingPage }) => {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent className="w-56">
                     <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user?.fullName || 'User'}</p>
@@ -106,10 +106,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({ isLandingPage }) => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-red-500 focus:text-red-500 cursor-pointer"
-                      onClick={logOut}
+                      asChild
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
+                      <div onClick={logOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </div>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { Transaction } from '@/types/transaction';
+import { Transaction, TransactionType } from '@/types/transaction';
 import { Loader2, ZapIcon } from 'lucide-react';
 import { Label } from './ui/label';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
@@ -23,8 +24,6 @@ import { getAllTemplates } from '@/lib/smart-paste-engine/templateUtils';
 
 interface SmartPasteProps {
   senderHint?: string;
-  
-
   onTransactionsDetected?: (
     transactions: Transaction[],
     rawMessage?: string,
@@ -36,94 +35,87 @@ interface SmartPasteProps {
 }
 
 const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {
-	
-	 
   const [text, setText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [useHighAccuracy, setUseHighAccuracy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   
-  
-
   const { toast } = useToast();
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!text.trim()) {
-    toast({
-      title: "Error",
-      description: "Please paste or enter a message first",
-      variant: "destructive",
-    });
-    return;
-  }
-
-  console.log("[SmartPaste] Submitting message:", text);
-  setIsProcessing(true);
-  setError(null);
-
-  try {
-    const parsed = parseSmsMessage(text);
-    console.log("[SmartPaste] Parsed result:", parsed);
-
-    const transaction: Transaction = {
-      id: nanoid(),
-      amount: parseFloat(parsed.directFields.amount || '0').toFixed(2),
-      currency: parsed.directFields.currency || 'SAR',
-      date: parsed.directFields.date || '',
-      type: parsed.inferredFields.type || 'expense',
-      category: parsed.inferredFields.category || 'Uncategorized',
-      subcategory: parsed.inferredFields.subcategory || 'none',
-      vendor: parsed.inferredFields.vendor || parsed.directFields.vendor || '',
-      fromAccount:
-        parsed.directFields.fromAccount ||
-        parsed.inferredFields.fromAccount ||
-        parsed.defaultValues?.fromAccount || '',
-      source: 'smart-paste',
-      createdAt: new Date().toISOString(),
-    };
-
-    // ✅ Confidence Scoring Logic
-    const keywordBank = loadKeywordBank();
-    const templates = getAllTemplates();
-    const matchedTemplates = templates.filter(t => t.template.includes(transaction.vendor)).length;
-
-    const fieldScore = getFieldConfidence(parsed);
-    const templateScore = getTemplateConfidence(matchedTemplates, templates.length);
-    const keywordScore = getKeywordConfidence(transaction, keywordBank);
-    const finalConfidence = computeOverallConfidence(fieldScore, templateScore, keywordScore);
-
-    console.log('[SmartPaste] Confidence Breakdown:', {
-      fieldScore,
-      templateScore,
-      keywordScore,
-      finalConfidence,
-    });
-
-    setDetectedTransactions([transaction]);
-
-    if (onTransactionsDetected) {
-      onTransactionsDetected(
-        [transaction],
-		  text,
-		  transaction.fromAccount,
-		  finalConfidence,
-		  parsed.matched ? 'template' : 'structure',
-		  matchedTemplates,
-		  templates.length,
-		  fieldScore,
-		  keywordScore
-      );
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please paste or enter a message first",
+        variant: "destructive",
+      });
+      return;
     }
-  } catch (err: any) {
-    console.error("[SmartPaste] Error in structure parsing:", err);
-    setError("Could not parse the message. Try again or report.");
-  } finally {
-    setIsProcessing(false);
-  }
-};
 
+    console.log("[SmartPaste] Submitting message:", text);
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const parsed = parseSmsMessage(text);
+      console.log("[SmartPaste] Parsed result:", parsed);
+
+      const transaction: Transaction = {
+        id: nanoid(),
+        amount: parseFloat(parsed.directFields.amount || '0'),
+        currency: parsed.directFields.currency || 'SAR',
+        date: parsed.directFields.date || '',
+        type: (parsed.inferredFields.type as TransactionType) || 'expense',
+        category: parsed.inferredFields.category || 'Uncategorized',
+        subcategory: parsed.inferredFields.subcategory || 'none',
+        vendor: parsed.inferredFields.vendor || parsed.directFields.vendor || '',
+        fromAccount:
+          parsed.directFields.fromAccount ||
+          parsed.inferredFields.fromAccount ||
+          parsed.defaultValues?.fromAccount || '',
+        source: 'smart-paste',
+        createdAt: new Date().toISOString(),
+        title: '',  // Will be set by the form later
+      };
+
+      // Confidence Scoring Logic
+      const keywordBank = loadKeywordBank();
+      const templates = getAllTemplates();
+      const matchedTemplates = templates.filter(t => t.template.includes(transaction.vendor)).length;
+
+      const fieldScore = getFieldConfidence(parsed);
+      const templateScore = getTemplateConfidence(matchedTemplates, templates.length);
+      const keywordScore = getKeywordConfidence(transaction, keywordBank);
+      const finalConfidence = computeOverallConfidence(fieldScore, templateScore, keywordScore);
+
+      console.log('[SmartPaste] Confidence Breakdown:', {
+        fieldScore,
+        templateScore,
+        keywordScore,
+        finalConfidence,
+      });
+
+      setDetectedTransactions([transaction]);
+
+      if (onTransactionsDetected) {
+        onTransactionsDetected(
+          [transaction],
+          text,
+          transaction.fromAccount,
+          finalConfidence,
+          parsed.matched ? true : false,
+          parsed.matched ? 'template' : 'structure'
+        );
+      }
+    } catch (err: any) {
+      console.error("[SmartPaste] Error in structure parsing:", err);
+      setError("Could not parse the message. Try again or report.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handlePaste = async () => {
     try {
@@ -140,19 +132,19 @@ const handleSubmit = (e: React.FormEvent) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-	 console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
-  transaction,
-  parsedFields: {
-    amount: transaction.amount,
-    currency: transaction.currency,
-    date: transaction.date,
-    type: transaction.type,
-    category: transaction.category,
-    vendor: transaction.vendor,
-    fromAccount: transaction.fromAccount,
-  }
-});  
-	  
+    console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
+      transaction,
+      parsedFields: {
+        amount: transaction.amount,
+        currency: transaction.currency,
+        date: transaction.date,
+        type: transaction.type,
+        category: transaction.category,
+        vendor: transaction.vendor,
+        fromAccount: transaction.fromAccount,
+      }
+    });  
+    
     console.log("[SmartPaste] Transaction added:", transaction);
     if (onTransactionsDetected) {
       onTransactionsDetected([transaction], text, senderHint, 0.95, true, 'structure');
@@ -185,8 +177,6 @@ const handleSubmit = (e: React.FormEvent) => {
               dir="auto"
             />
           </div>
-
-  
 
           <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
             <Button type="submit" disabled={isProcessing || !text.trim()}>

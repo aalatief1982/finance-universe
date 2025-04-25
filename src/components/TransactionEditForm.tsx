@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check } from 'lucide-react';
-import styles from './TransactionEditForm.module.css';
+import styles from '../TransactionEditForm.module.css';
+
 interface TransactionEditFormProps {
   transaction?: Transaction;
   onSave: (transaction: Transaction) => void;
 }
-
 
 function getDrivenFieldStyle(field: keyof Transaction, drivenFields: Partial<Record<keyof Transaction, boolean>>) {
   return drivenFields[field]
@@ -20,15 +20,12 @@ function getDrivenFieldStyle(field: keyof Transaction, drivenFields: Partial<Rec
     : {};
 }
 
-function isDriven(field: keyof Transaction): boolean {
-  return drivenFields.has(field);
-}
 function generateAutoTitle(txn: Transaction): string {
   if (!txn.category || txn.category === 'Uncategorized') return '';
   if (!txn.subcategory || txn.subcategory === 'none') return '';
   if (!txn.amount || !txn.date) return '';
 
-  const formattedDate = txn.date.replace(/-/g, ''); // format as ddMMyyyy
+  const formattedDate = typeof txn.date === 'string' ? txn.date.replace(/-/g, '') : ''; // format as ddMMyyyy
   return [txn.category, txn.subcategory, txn.amount, formattedDate].join('|');
 }
 
@@ -36,12 +33,11 @@ function generateDefaultTitle(txn: Transaction): string {
   const category = txn.category || '';
   const subcategory = txn.subcategory || '';
   const amount = txn.amount || '';
-  const date = txn.date?.replace(/-/g, '').slice(0, 10) || '';
+  const date = typeof txn.date === 'string' ? txn.date.replace(/-/g, '').slice(0, 10) : '';
   return [category, subcategory, amount, date]
     .filter(Boolean)
     .join('|');
 }
-
 
 function toISOFormat(ddmmyyyy: string): string {
   if (!ddmmyyyy || ddmmyyyy.includes('undefined')) return '';
@@ -49,11 +45,11 @@ function toISOFormat(ddmmyyyy: string): string {
   if (yyyy?.length === 4) return `${yyyy}-${mm}-${dd}`;
   return '';
 }
+
 function toDisplayFormat(yyyymmdd: string): string {
   const [yyyy, mm, dd] = yyyymmdd.split('-');
   return `${dd}-${mm}-${yyyy}`;
 }
-
 
 function remapVendor(vendor?: string): string {
   if (!vendor) return '';
@@ -62,37 +58,37 @@ function remapVendor(vendor?: string): string {
 }
 
 const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, onSave }) => {
-	const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
-	const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
-	const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
+  const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
+  const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
+  const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
+  
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
       console.log('[TransactionEditForm] Initializing with transaction:', transaction);
       const mappedVendor = remapVendor(transaction.vendor);
-	  const displayDate = transaction.date ? toDisplayFormat(transaction.date) : ''; // ✅ Now defined
-
-	  const rawMessage = transaction?.rawMessage || ''; // add this
+	  const displayDate = transaction.date ? toDisplayFormat(transaction.date) : ''; 
 	  
-	  console.log('[useState] transaction.rawMessage:', transaction?.rawMessage);
-	console.log('[useState] transaction.description:', transaction?.description);
-     return {
-      ...transaction,
-      vendor: mappedVendor,
-	  title: transaction.title?.trim() || generateDefaultTitle(transaction),
-      date: transaction.date || '', // ✅ Don't format here
-	  description: transaction.description?.trim() || rawMessage,
-    };
+	  const transactionRawMessage = transaction.details?.rawMessage || '';
+	  
+	  console.log('[useState] transaction details:', transaction.details);
+	  console.log('[useState] transaction.description:', transaction?.description);
+     
+      return {
+        ...transaction,
+        vendor: mappedVendor,
+        title: transaction.title?.trim() || generateDefaultTitle(transaction),
+        date: transaction.date || '', 
+        description: transaction.description?.trim() || transactionRawMessage,
+      };
     }
-
 
     return {
       id: uuidv4(),
       title: '',
-      amount: '',
+      amount: 0,
       type: 'expense' as TransactionType,
       category: 'Uncategorized',
       date: new Date().toISOString().split('T')[0],
-	  //date: toDisplayFormat(new Date().toISOString().split('T')[0]),
       fromAccount: 'Cash',
       currency: 'SAR',
       description: '',
@@ -105,36 +101,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
   console.log('[useState result] editedTransaction.description:', editedTransaction.description);
 
-
-/*
-useEffect(() => {
-  if (
-    transaction?.rawMessage &&
-    !descriptionManuallyEdited &&
-    !editedTransaction.description
-  ) {
-    setEditedTransaction(prev => ({
-      ...prev,
-      description: transaction.rawMessage!
-    }));
-  }
-}, [transaction, descriptionManuallyEdited, editedTransaction.description]);*/
-
-
-useEffect(() => {
-  if (transaction) {
-    const driven: Partial<Record<keyof Transaction, boolean>> = {};
-    if (transaction.rawMessage) {
-      ['type','title','amount', 'currency', 'vendor', 'fromAccount', 'date', 'category', 'subcategory'].forEach((field) => {
-        const value = transaction[field as keyof Transaction];
-        if (value && typeof value === 'string' && value.trim()) {
-          driven[field as keyof Transaction] = true;
-        }
-      });
+  useEffect(() => {
+    if (transaction) {
+      const driven: Partial<Record<keyof Transaction, boolean>> = {};
+      if (transaction.details?.rawMessage) {
+        ['type','title','amount', 'currency', 'vendor', 'fromAccount', 'date', 'category', 'subcategory'].forEach((field) => {
+          const value = transaction[field as keyof Transaction];
+          if (value && typeof value === 'string' && value.trim()) {
+            driven[field as keyof Transaction] = true;
+          }
+        });
+      }
+      setDrivenFields(driven);
     }
-    setDrivenFields(driven);
-  }
-}, [transaction]);
+  }, [transaction]);
 
   useEffect(() => {
     const categories = getCategoriesForType(editedTransaction.type) || [];
@@ -152,9 +132,9 @@ useEffect(() => {
     setEditedTransaction(prev => {
       const updated = { ...prev, [field]: value };
 
-if (drivenFields[field]) {
-  setDrivenFields(prev => ({ ...prev, [field]: false }));
-}
+      if (drivenFields[field]) {
+        setDrivenFields(prev => ({ ...prev, [field]: false }));
+      }
 
       if (field === 'type') {
         updated.category = 'Uncategorized';
@@ -167,38 +147,40 @@ if (drivenFields[field]) {
         updated.subcategory = 'none';
       }
 	  
-	  // Trigger auto-title update if not manually overridden
-		if (!titleManuallyEdited) {
-		  const newTitle = generateAutoTitle({ ...updated });
-		  updated.title = newTitle;
-		}
+      // Trigger auto-title update if not manually overridden
+      if (!titleManuallyEdited) {
+        const newTitle = generateAutoTitle({ ...updated });
+        updated.title = newTitle;
+      }
 
       return updated;
     });
   };
 
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  const finalTransaction = { ...editedTransaction };
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalTransaction = { ...editedTransaction };
 
-  // Default the title if empty
-  if (!finalTransaction.title?.trim()) {
-    finalTransaction.title = generateDefaultTitle(finalTransaction);
-  }
+    // Default the title if empty
+    if (!finalTransaction.title?.trim()) {
+      finalTransaction.title = generateDefaultTitle(finalTransaction);
+    }
 
-  const rawAmount = parseFloat(finalTransaction.amount as any);
-  if (finalTransaction.type === 'expense') {
-    finalTransaction.amount = -Math.abs(rawAmount);
-  } else {
-    finalTransaction.amount = Math.abs(rawAmount);
-  }
-  // Ensure date is in ISO format
-  finalTransaction.date = toISOFormat(finalTransaction.date);
-  console.log('[drivenFields]', drivenFields);
-
-  onSave(finalTransaction);
-};
-
+    const rawAmount = parseFloat(String(finalTransaction.amount));
+    if (finalTransaction.type === 'expense') {
+      finalTransaction.amount = -Math.abs(rawAmount);
+    } else {
+      finalTransaction.amount = Math.abs(rawAmount);
+    }
+    
+    // Ensure date is in ISO format
+    if (typeof finalTransaction.date === 'string') {
+      finalTransaction.date = toISOFormat(finalTransaction.date);
+    }
+    
+    console.log('[drivenFields]', drivenFields);
+    onSave(finalTransaction);
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 py-2">
@@ -240,7 +222,7 @@ const handleSubmit = (e: React.FormEvent) => {
             step="0.01"
             value={editedTransaction.amount}
 			style={getDrivenFieldStyle('amount', drivenFields)}
-            onChange={(e) => handleChange('amount', e.target.value)}
+            onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
             placeholder="0.00"
             required
           />
@@ -313,7 +295,7 @@ const handleSubmit = (e: React.FormEvent) => {
         <label className="text-sm font-medium">Date*</label>
         <Input
 		  type="date"
-		  value={toISOFormat(editedTransaction.date || '') || ''}
+		  value={typeof editedTransaction.date === 'string' ? toISOFormat(editedTransaction.date || '') || '' : ''}
 		  onChange={(e) => handleChange('date', e.target.value)}
 		  style={getDrivenFieldStyle('date', drivenFields)}
 		  required

@@ -70,17 +70,21 @@ const TransactionActions = ({
             </svg>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleEdit}>
-            <Pen className="mr-2 h-4 w-4" />
-            <span>Edit</span>
+        <DropdownMenuContent>
+          <DropdownMenuItem asChild>
+            <div onClick={handleEdit}>
+              <Pen className="mr-2 h-4 w-4" />
+              <span>Edit</span>
+            </div>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={handleDelete}
-            className="text-red-600 focus:text-red-600"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            <span>Delete</span>
+          <DropdownMenuItem asChild>
+            <div 
+              onClick={handleDelete}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>Delete</span>
+            </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
