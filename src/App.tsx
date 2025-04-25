@@ -16,6 +16,8 @@ import MasterMind from '@/pages/MasterMind';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from './pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
+//import './app.css';
+
 
 function App() {
   return (

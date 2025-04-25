@@ -5,6 +5,16 @@
   text-align: center;
 }
 
+.input-auto-filled {
+  border: 2px solid #4caf50; /* Green border for auto-filled fields */
+  background-color: #e8f5e9; /* Light green background */
+}
+
+.input-manual {
+  border: 1px solid #ccc; /* Default styling for manual input */
+  background-color: #fff;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

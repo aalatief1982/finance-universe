@@ -4,6 +4,7 @@ import './index.css'
 import { handleError } from './utils/error-utils'
 import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults';
+import './styles/app.css';
 
 initializeXpensiaStorageDefaults();
 

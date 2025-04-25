@@ -7,18 +7,48 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check } from 'lucide-react';
-
+import styles from './TransactionEditForm.module.css';
 interface TransactionEditFormProps {
   transaction?: Transaction;
   onSave: (transaction: Transaction) => void;
 }
 
 
-function toISOFormat(ddmmyyyy: string): string {
-  const [dd, mm, yyyy] = ddmmyyyy.split('-');
-  return `${yyyy}-${mm}-${dd}`;
+function getDrivenFieldStyle(field: keyof Transaction, drivenFields: Partial<Record<keyof Transaction, boolean>>) {
+  return drivenFields[field]
+    ? { border: '2px solid #4caf50', backgroundColor: '#f0fff4' }
+    : {};
 }
 
+function isDriven(field: keyof Transaction): boolean {
+  return drivenFields.has(field);
+}
+function generateAutoTitle(txn: Transaction): string {
+  if (!txn.category || txn.category === 'Uncategorized') return '';
+  if (!txn.subcategory || txn.subcategory === 'none') return '';
+  if (!txn.amount || !txn.date) return '';
+
+  const formattedDate = txn.date.replace(/-/g, ''); // format as ddMMyyyy
+  return [txn.category, txn.subcategory, txn.amount, formattedDate].join('|');
+}
+
+function generateDefaultTitle(txn: Transaction): string {
+  const category = txn.category || '';
+  const subcategory = txn.subcategory || '';
+  const amount = txn.amount || '';
+  const date = txn.date?.replace(/-/g, '').slice(0, 10) || '';
+  return [category, subcategory, amount, date]
+    .filter(Boolean)
+    .join('|');
+}
+
+
+function toISOFormat(ddmmyyyy: string): string {
+  if (!ddmmyyyy || ddmmyyyy.includes('undefined')) return '';
+  const [dd, mm, yyyy] = ddmmyyyy.split('-');
+  if (yyyy?.length === 4) return `${yyyy}-${mm}-${dd}`;
+  return '';
+}
 function toDisplayFormat(yyyymmdd: string): string {
   const [yyyy, mm, dd] = yyyymmdd.split('-');
   return `${dd}-${mm}-${yyyy}`;
@@ -32,14 +62,25 @@ function remapVendor(vendor?: string): string {
 }
 
 const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, onSave }) => {
+	const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
+	const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
+	const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
       console.log('[TransactionEditForm] Initializing with transaction:', transaction);
       const mappedVendor = remapVendor(transaction.vendor);
+	  const displayDate = transaction.date ? toDisplayFormat(transaction.date) : ''; // ✅ Now defined
+
+	  const rawMessage = transaction?.rawMessage || ''; // add this
+	  
+	  console.log('[useState] transaction.rawMessage:', transaction?.rawMessage);
+	console.log('[useState] transaction.description:', transaction?.description);
      return {
       ...transaction,
       vendor: mappedVendor,
-      date: transaction.date,
+	  title: transaction.title?.trim() || generateDefaultTitle(transaction),
+      date: transaction.date || '', // ✅ Don't format here
+	  description: transaction.description?.trim() || rawMessage,
     };
     }
 
@@ -50,10 +91,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       amount: '',
       type: 'expense' as TransactionType,
       category: 'Uncategorized',
-      //date: new Date().toISOString().split('T')[0],
-	  date: toDisplayFormat(new Date().toISOString().split('T')[0]),
+      date: new Date().toISOString().split('T')[0],
+	  //date: toDisplayFormat(new Date().toISOString().split('T')[0]),
       fromAccount: 'Cash',
-      currency: 'USD',
+      currency: 'SAR',
       description: '',
       notes: '',
       source: 'manual',
@@ -62,6 +103,38 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
 
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
+  console.log('[useState result] editedTransaction.description:', editedTransaction.description);
+
+
+/*
+useEffect(() => {
+  if (
+    transaction?.rawMessage &&
+    !descriptionManuallyEdited &&
+    !editedTransaction.description
+  ) {
+    setEditedTransaction(prev => ({
+      ...prev,
+      description: transaction.rawMessage!
+    }));
+  }
+}, [transaction, descriptionManuallyEdited, editedTransaction.description]);*/
+
+
+useEffect(() => {
+  if (transaction) {
+    const driven: Partial<Record<keyof Transaction, boolean>> = {};
+    if (transaction.rawMessage) {
+      ['type','title','amount', 'currency', 'vendor', 'fromAccount', 'date', 'category', 'subcategory'].forEach((field) => {
+        const value = transaction[field as keyof Transaction];
+        if (value && typeof value === 'string' && value.trim()) {
+          driven[field as keyof Transaction] = true;
+        }
+      });
+    }
+    setDrivenFields(driven);
+  }
+}, [transaction]);
 
   useEffect(() => {
     const categories = getCategoriesForType(editedTransaction.type) || [];
@@ -79,6 +152,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
     setEditedTransaction(prev => {
       const updated = { ...prev, [field]: value };
 
+if (drivenFields[field]) {
+  setDrivenFields(prev => ({ ...prev, [field]: false }));
+}
+
       if (field === 'type') {
         updated.category = 'Uncategorized';
         updated.subcategory = 'none';
@@ -89,6 +166,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         setAvailableSubcategories(subcategories);
         updated.subcategory = 'none';
       }
+	  
+	  // Trigger auto-title update if not manually overridden
+		if (!titleManuallyEdited) {
+		  const newTitle = generateAutoTitle({ ...updated });
+		  updated.title = newTitle;
+		}
 
       return updated;
     });
@@ -109,6 +192,9 @@ const handleSubmit = (e: React.FormEvent) => {
   } else {
     finalTransaction.amount = Math.abs(rawAmount);
   }
+  // Ensure date is in ISO format
+  finalTransaction.date = toISOFormat(finalTransaction.date);
+  console.log('[drivenFields]', drivenFields);
 
   onSave(finalTransaction);
 };
@@ -119,7 +205,11 @@ const handleSubmit = (e: React.FormEvent) => {
       <div className="space-y-2">
         <label className="text-sm font-medium">Transaction Type*</label>
         <Select value={editedTransaction.type} onValueChange={(value) => handleChange('type', value as TransactionType)}>
-          <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+          
+		  
+		     <SelectTrigger style={getDrivenFieldStyle('type', drivenFields)}>
+			  <SelectValue placeholder="Select type" />
+			</SelectTrigger>
           <SelectContent>
             <SelectItem value="expense">Expense</SelectItem>
             <SelectItem value="income">Income</SelectItem>
@@ -130,7 +220,16 @@ const handleSubmit = (e: React.FormEvent) => {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Title*</label>
-        <Input value={editedTransaction.title || ''} onChange={(e) => handleChange('title', e.target.value)} placeholder="Transaction title" required />
+        <Input
+			  value={editedTransaction.title || ''}
+			  onChange={(e) => {
+				setTitleManuallyEdited(true);
+				handleChange('title', e.target.value);
+			  }}
+			  style={getDrivenFieldStyle('title', drivenFields)}
+			  placeholder="Transaction title"
+			  required
+			/>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -140,6 +239,7 @@ const handleSubmit = (e: React.FormEvent) => {
             type="number"
             step="0.01"
             value={editedTransaction.amount}
+			style={getDrivenFieldStyle('amount', drivenFields)}
             onChange={(e) => handleChange('amount', e.target.value)}
             placeholder="0.00"
             required
@@ -149,7 +249,9 @@ const handleSubmit = (e: React.FormEvent) => {
         <div className="space-y-2">
           <label className="text-sm font-medium">Currency*</label>
           <Select value={editedTransaction.currency || 'USD'} onValueChange={(value) => handleChange('currency', value)}>
-            <SelectTrigger><SelectValue placeholder="Select currency" /></SelectTrigger>
+            <SelectTrigger style={getDrivenFieldStyle('currency', drivenFields)}>
+			  <SelectValue placeholder="Select currency" />
+			</SelectTrigger>
             <SelectContent>
               {CURRENCIES.map(currency => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}
             </SelectContent>
@@ -159,7 +261,7 @@ const handleSubmit = (e: React.FormEvent) => {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">From Account*</label>
-        <Input value={editedTransaction.fromAccount || ''} onChange={(e) => handleChange('fromAccount', e.target.value)} placeholder="Source account" required />
+        <Input value={editedTransaction.fromAccount || ''} onChange={(e) => handleChange('fromAccount', e.target.value)} style={getDrivenFieldStyle('fromAccount', drivenFields)} placeholder="Source account" required />
       </div>
 
       {editedTransaction.type === 'transfer' && (
@@ -171,14 +273,16 @@ const handleSubmit = (e: React.FormEvent) => {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Vendor</label>
-        <Input value={editedTransaction.vendor || ''} onChange={(e) => handleChange('vendor', e.target.value)} placeholder="e.g., Netflix" />
+        <Input value={editedTransaction.vendor || ''} style={getDrivenFieldStyle('vendor', drivenFields)} onChange={(e) => handleChange('vendor', e.target.value)} placeholder="e.g., Netflix" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Category*</label>
-          <Select value={editedTransaction.category || 'Uncategorized'} onValueChange={(value) => handleChange('category', value)}>
-            <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+          <Select value={editedTransaction.category || ''} onValueChange={(value) => handleChange('category', value)}>
+            <SelectTrigger style={getDrivenFieldStyle('category', drivenFields)}>
+				  <SelectValue placeholder="Select category" />
+				</SelectTrigger>
             <SelectContent>
               {availableCategories.length > 0 ? (
                 availableCategories.map(category => <SelectItem key={category} value={category}>{category}</SelectItem>)
@@ -193,7 +297,9 @@ const handleSubmit = (e: React.FormEvent) => {
           <div className="space-y-2">
             <label className="text-sm font-medium">Subcategory</label>
             <Select value={editedTransaction.subcategory || 'none'} onValueChange={(value) => handleChange('subcategory', value)}>
-              <SelectTrigger><SelectValue placeholder="Select subcategory" /></SelectTrigger>
+              <SelectTrigger style={getDrivenFieldStyle('subcategory', drivenFields)}>
+				  <SelectValue placeholder="Select subcategory" />
+				</SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">None</SelectItem>
                 {availableSubcategories.map(subcategory => <SelectItem key={subcategory} value={subcategory}>{subcategory}</SelectItem>)}
@@ -207,10 +313,12 @@ const handleSubmit = (e: React.FormEvent) => {
         <label className="text-sm font-medium">Date*</label>
         <Input
 		  type="date"
-		  value={toISOFormat(editedTransaction.date)}
-		  onChange={(e) => handleChange('date', toDisplayFormat(e.target.value))}
+		  value={toISOFormat(editedTransaction.date || '') || ''}
+		  onChange={(e) => handleChange('date', e.target.value)}
+		  style={getDrivenFieldStyle('date', drivenFields)}
 		  required
 		/>
+
       </div>
 
       <div className="space-y-2">
@@ -225,8 +333,18 @@ const handleSubmit = (e: React.FormEvent) => {
       </div>
 
       <div className="space-y-2">
+	 
         <label className="text-sm font-medium">Description (Optional)</label>
-        <Textarea value={editedTransaction.description || ''} onChange={(e) => handleChange('description', e.target.value)} placeholder="Enter a detailed description..." className="min-h-[100px]" />
+        <Textarea
+			  value={editedTransaction.description || ''}
+			  onChange={(e) => {
+				setDescriptionManuallyEdited(true);
+				console.log('[onChange] User manually edited description:', e.target.value);
+				handleChange('description', e.target.value);
+			  }}
+			  placeholder="Enter a detailed description..."
+			  className="min-h-[100px]"
+			/>
       </div>
 
       <div className="space-y-2">

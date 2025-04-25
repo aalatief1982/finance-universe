@@ -55,11 +55,12 @@ export function extractTemplateStructure(
       fieldName: 'amount+currency'
     },
 
-    // Date formats (YYYY-MM-DD or DD-MM-YYYY)
-    {
-      regex: /\b(\d{4}[\/\-\.]\d{2}[\/\-\.]\d{2}|\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4})\b/g,
-      fieldName: 'date'
-    },
+    // Extended date formats (25-04-23, 25/4/23, etc.)
+   {
+	  regex: /\b(?:on\s*)?((\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})|(\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})|(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})|((Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}))(\s*\d{1,2}:\d{2})?/gi,
+	  fieldName: 'date'
+	}
+,
 
     // Vendor after "لدى:"
     {
@@ -98,7 +99,7 @@ export function extractTemplateStructure(
       } else {
         const valueGroup = match[1] || fullMatch;
         if (!placeholders[fieldName]) {
-          placeholders[fieldName] = valueGroup;
+          placeholders[fieldName] = valueGroup.trim();
           replacements.push({
             start: match.index,
             end: match.index + fullMatch.length,
@@ -107,11 +108,11 @@ export function extractTemplateStructure(
         }
       }
 
-      break; // only one match per field
+      break; // one match per field
     }
   }
 
-  // Safely replace in reverse order to prevent shifting
+  // Replace from end to start to avoid shifting indexes
   replacements.sort((a, b) => b.start - a.start);
   for (const { start, end, replacement } of replacements) {
     templateText = templateText.slice(0, start) + replacement + templateText.slice(end);
@@ -119,4 +120,5 @@ export function extractTemplateStructure(
 
   return { template: templateText.trim(), placeholders };
 }
+
 

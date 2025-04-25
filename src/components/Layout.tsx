@@ -29,15 +29,16 @@ const Layout: React.FC<LayoutProps> = ({
         </>
       )}
       
-      <main
-        className={`flex-1 w-full max-w-screen-lg mx-auto ${
-          withPadding ? 'px-4 sm:px-6 md:px-8 pt-16 pb-20' : 'p-0'
-        } ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}
-      >
-        <AnimatePresence mode="wait">
-          {children}
-        </AnimatePresence>
-      </main>
+		<main
+		  className={`flex-1 w-full ${!hideNavigation && !isMobile ? 'md:ml-64' : ''}`}
+		>
+		  <div className={`max-w-screen-md mx-auto ${withPadding ? 'px-4 sm:px-6 lg:px-8 pt-6 pb-10' : 'p-0'}`}>
+			<AnimatePresence mode="wait">
+			  {children}
+			</AnimatePresence>
+		  </div>
+		</main>
+
     </div>
   );
 };

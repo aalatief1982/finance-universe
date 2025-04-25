@@ -98,7 +98,7 @@ const EditTransaction = () => {
 
     storeTransaction(newTransaction);
 
-    if (rawMessage && saveForLearning) {
+    if (rawMessage /*&& saveForLearning*/) {
       learnFromTransaction(rawMessage, newTransaction, senderHint || '');
 	  
 	      // ✅ Save structure template now if it's not already saved
@@ -146,7 +146,7 @@ const EditTransaction = () => {
 	  
 	  if (
 		  rawMessage &&
-		  saveForLearning &&
+		  /*saveForLearning &&*/
 		  editedTransaction.vendor &&
 		  directFields?.vendor &&
 		  editedTransaction.vendor !== directFields.vendor

@@ -67,6 +67,7 @@ const ImportTransactions = () => {
     transaction: {
       ...transaction,
       date: transaction.date?.split('-').reverse().join('-'),
+	    rawMessage: rawMessage ?? '', // ✅ this is the fix
     },
     rawMessage,
     senderHint,

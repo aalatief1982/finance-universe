@@ -7,6 +7,7 @@
 
 import { extractTemplateStructure, getTemplateByHash, saveNewTemplate } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
+import { normalizeDate } from './dateUtils';
 
 // Hashing util (replace with real hash lib if needed)
 const simpleHash = (text: string) => btoa(unescape(encodeURIComponent(text))).slice(0, 24);
@@ -61,6 +62,14 @@ export function parseSmsMessage(rawMessage: string) {
   Object.entries(placeholders).forEach(([key, value]) => {
     directFields[key] = value;
   });
+}
+// Normalize known field names like 'date'
+if (directFields['date']) {
+  const normalized = normalizeDate(directFields['date']);
+  if (normalized) {
+    directFields['date'] = normalized;
+    console.log('[SmartPaste] Normalized date:', directFields['date']);
+  }
 }
 
   const inferred = inferIndirectFields(rawMessage, directFields);
