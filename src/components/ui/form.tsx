@@ -7,7 +7,6 @@ import {
   type Control,
   type FieldPath,
   type FieldValues,
-  type ControllerProps as RHFControllerProps,
   FormProvider,
   useFormContext,
 } from "react-hook-form"
@@ -24,14 +23,6 @@ type FormFieldContextValue<
   name: TName
 }
 
-type ControllerProps<
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
-> = {
-  name: TName
-  control?: Control<TFieldValues>
-} & Omit<RHFControllerProps<TFieldValues, TName>, 'name' | 'control'>
-
 const FormFieldContext = React.createContext<FormFieldContextValue>(
   {} as FormFieldContextValue
 )
@@ -41,10 +32,18 @@ const FormField = <
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 >({
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
+}: {
+  name: TName
+  control?: Control<TFieldValues>
+}) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
+      <Controller 
+        {...props}
+        render={({ field, fieldState }) => (
+          <Slot>{props.children}</Slot>
+        )}
+      />
     </FormFieldContext.Provider>
   )
 }
@@ -52,9 +51,9 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
-  const { getFieldState, formState } = useFormContext()
+  const { formState } = useFormContext()
 
-  const fieldState = getFieldState(fieldContext.name, formState)
+  const fieldState = formState.errors[fieldContext.name]
 
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>")

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { MoreHorizontal, ChevronDown, ChevronUp, Edit, Trash, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { MoreHorizontal, ChevronDown, ChevronUp, Edit, Trash, ArrowUpRight, ArrowDownRight, List, Grid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -210,7 +211,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent>
                     {onEdit && (
                       <DropdownMenuItem onClick={() => onEdit(transaction)}>
                         <Edit className="mr-2 h-4 w-4" />

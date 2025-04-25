@@ -8,9 +8,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
+import { v4 as uuidv4 } from 'uuid';
+import { Transaction } from '@/types/transaction';
+import { useUser } from '@/context/UserContext';
 
 const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
+  const { user } = useUser();
   const navigate = useNavigate();
 
   const handleAddTransaction = () => {

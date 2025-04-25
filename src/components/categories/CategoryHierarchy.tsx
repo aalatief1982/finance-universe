@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Folder, FolderOpen } from 'lucide-react';
 import { Category } from '@/types/transaction';
@@ -238,7 +239,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
   );
 
   return maxHeight ? (
-    <ScrollArea className="w-full" style={{ maxHeight }}>
+    <ScrollArea className="w-full" style={{ height: maxHeight }}>
       {content}
     </ScrollArea>
   ) : content;
