@@ -240,7 +240,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
 
   return maxHeight ? (
     <ScrollArea className="w-full" style={{ height: maxHeight }}>
-      {content}
+      <div className="pr-4">{content}</div>
     </ScrollArea>
   ) : content;
 };

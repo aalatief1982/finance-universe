@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import {
   Sheet,
@@ -66,7 +67,7 @@ const SidebarContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
-  const { side } = useSidebarContext()
+  const { side, isMobile } = useSidebarContext()
 
   return (
     <Sheet>

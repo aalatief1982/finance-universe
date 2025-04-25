@@ -34,15 +34,13 @@ const FormField = <
   ...props
 }: {
   name: TName
-  control?: Control<TFieldValues>
+  control: Control<TFieldValues>
+  render: ({ field, fieldState }: { field: any; fieldState: any }) => React.ReactElement
 }) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller 
         {...props}
-        render={({ field, fieldState }) => (
-          <Slot>{props.children}</Slot>
-        )}
       />
     </FormFieldContext.Provider>
   )
@@ -51,7 +49,7 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
-  const { formState } = useFormContext()
+  const { getFieldState, formState } = useFormContext()
 
   const fieldState = formState.errors[fieldContext.name]
 
