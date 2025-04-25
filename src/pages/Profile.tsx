@@ -193,10 +193,10 @@ const Profile = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md mx-auto space-y-6"
+        className="max-w-md mx-auto space-y-[var(--section-spacing)]"
       >
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -222,7 +222,7 @@ const Profile = () => {
           </AlertDialog>
         </div>
         
-        <div className="bg-card rounded-lg border p-6 flex flex-col items-center text-center space-y-4">
+        <div className="bg-card rounded-lg border p-[var(--card-padding)] flex flex-col items-center text-center space-y-4">
           <div className="relative">
             <Avatar className="h-24 w-24">
               <AvatarImage src={user?.avatar || '/placeholder.svg'} alt={user?.fullName || 'User'} />
@@ -261,7 +261,7 @@ const Profile = () => {
           </Button>
         </div>
         
-        <div className="bg-card rounded-lg border p-4">
+        <div className="bg-card rounded-lg border p-[var(--card-padding)]">
           <h3 className="font-medium mb-2">Personal Information</h3>
           <div className="space-y-3">
             <div className="flex items-center text-sm">
@@ -296,7 +296,7 @@ const Profile = () => {
           </div>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-[var(--card-spacing)]">
           {menuItems.map((item, index) => (
             <motion.div
               key={index}
@@ -306,7 +306,7 @@ const Profile = () => {
             >
               <Link 
                 to={item.link}
-                className="flex items-center justify-between p-4 bg-card hover:bg-secondary rounded-lg border transition-colors"
+                className="flex items-center justify-between p-[var(--card-padding)] bg-card hover:bg-secondary rounded-lg border transition-colors"
               >
                 <div className="flex items-center">
                   <div className="bg-primary/10 p-2 rounded-full mr-4">

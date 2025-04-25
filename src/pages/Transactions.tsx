@@ -1,25 +1,19 @@
-
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { CATEGORIES } from '@/lib/mock-data';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Filter, List, Grid } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
-
-// Import components
+import { motion } from 'framer-motion';
 import TransactionHeader from '@/components/transactions/TransactionHeader';
 import TransactionsByDate from '@/components/transactions/TransactionsByDate';
 import EditTransactionDialog from '@/components/transactions/EditTransactionDialog';
 import MobileActions from '@/components/transactions/MobileActions';
 import SwipeableTransactionCard from '@/components/transactions/SwipeableTransactionCard';
-
-// Import hook
 import { useTransactionsState } from '@/hooks/useTransactionsState';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { Search, Filter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CATEGORIES } from '@/lib/mock-data';
+import { useNavigate } from 'react-router-dom';
 
 const Transactions = () => {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
@@ -64,11 +58,11 @@ const Transactions = () => {
     
     return true;
   });
-
+  
   return (
-    <>
-      <Layout withPadding={false}>
-        <div className="sticky top-16 z-10 bg-background pt-6 pb-4 px-4 sm:px-6 lg:px-8 border-b">
+    <Layout withPadding={false}>
+      <div className="sticky top-[var(--header-height)] z-10 bg-background/80 backdrop-blur-xl border-b">
+        <div className="px-[var(--page-padding-x)] py-[var(--page-padding-y)]">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Transactions</h1>
             <div className="flex items-center space-x-2">
@@ -122,39 +116,37 @@ const Transactions = () => {
             </Button>
           </div>
         </div>
-        
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="px-4 sm:px-6 lg:px-8 py-6 mt-2"
-        >
-          {filteredTransactions.length > 0 ? (
-            isMobile && viewMode === 'swipeable' ? (
-              <div className="space-y-2">
-                {filteredTransactions.map((transaction, index) => (
+      </div>
+      
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="px-[var(--page-padding-x)] py-[var(--page-padding-y)] mt-2"
+      >
+        {filteredTransactions.length > 0 ? (
+          isMobile && viewMode === 'swipeable' ? (
+            <div className="space-y-[var(--card-spacing)]">
+              {filteredTransactions.map((transaction, index) => (
 				  <SwipeableTransactionCard 
 					key={transaction.id || `txn-${index}`} // ensure uniqueness
 					transaction={transaction}
 				  />
 				))}
-              </div>
-            ) : (
-              <TransactionsByDate
-                transactions={filteredTransactions}
-              />
-            )
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-muted-foreground mb-4">No transactions found</p>
-              <Button onClick={() => navigate('/edit-transaction')}>
-                Add Transaction
-              </Button>
             </div>
-          )}
-        </motion.div>
-      </Layout>
-
+          ) : (
+            <TransactionsByDate transactions={filteredTransactions} />
+          )
+        ) : (
+          <div className="flex flex-col items-center justify-center py-[var(--section-spacing)] text-center">
+            <p className="text-muted-foreground mb-4">No transactions found</p>
+            <Button onClick={() => navigate('/edit-transaction')}>
+              Add Transaction
+            </Button>
+          </div>
+        )}
+      </motion.div>
+      
       <EditTransactionDialog
         isOpen={isEditingExpense}
         onOpenChange={setIsEditingExpense}
@@ -172,7 +164,7 @@ const Transactions = () => {
         onToggleFilters={() => {}}
         filtersVisible={false}
       />
-    </>
+    </Layout>
   );
 };
 

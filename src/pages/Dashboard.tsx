@@ -4,11 +4,10 @@ import Layout from '@/components/Layout';
 import DashboardStats from '@/components/DashboardStats';
 import ExpenseChart from '@/components/ExpenseChart';
 import { useTransactions } from '@/context/TransactionContext';
-import { Transaction } from '@/types/transaction';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+import PageHeader from '@/components/layout/PageHeader';
 
 const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
@@ -82,25 +81,25 @@ const Dashboard = () => {
   
   return (
     <Layout>
-      <div className="space-y-6 p-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <Button 
-            onClick={handleAddTransaction}
-            className="flex items-center gap-2"
-          >
+      <PageHeader 
+        title={user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'} 
+        description="Here's an overview of your finances"
+        actions={
+          <Button onClick={handleAddTransaction} className="flex items-center gap-2">
             <Plus className="h-4 w-4" /> Add Transaction
           </Button>
-        </div>
-        
+        }
+      />
+      
+      <div className="space-y-[var(--section-spacing)]">
         <DashboardStats 
           income={summary.income} 
           expenses={summary.expenses} 
           balance={summary.balance} 
         />
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-card p-6 rounded-lg shadow">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-spacing)]">
+          <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-4">Expense Breakdown</h2>
             <ExpenseChart 
               expensesByCategory={expensesByCategory}
@@ -108,7 +107,7 @@ const Dashboard = () => {
             />
           </div>
           
-          <div className="bg-card p-6 rounded-lg shadow">
+          <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Recent Transactions</h2>
               <Button 
@@ -129,9 +128,11 @@ const Dashboard = () => {
                   >
                     <div>
                       <p className="font-medium">{transaction.title}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.category} • {transaction.date}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {transaction.category} • {transaction.date}
+                      </p>
                     </div>
-                    <p className={transaction.amount < 0 ? "text-red-500" : "text-green-500"}>
+                    <p className={transaction.amount < 0 ? "text-destructive" : "text-[hsl(var(--income))]"}>
                       {transaction.amount < 0 ? "-" : "+"}${Math.abs(transaction.amount).toFixed(2)}
                     </p>
                   </div>
