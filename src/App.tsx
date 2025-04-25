@@ -16,6 +16,7 @@ import MasterMind from '@/pages/MasterMind';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from './pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
+import ProcessSmsMessages from './pages/ProcessSmsMessages'; // Add this import
 //import './app.css';
 
 
@@ -39,6 +40,7 @@ function App() {
               <Route path="/build-template" element={<BuildTemplate />} />
               <Route path="/dev/learning-tester" element={<LearningTester />} />
 			  <Route path="/keyword-bank" element={<KeywordBankManager />} />
+			  <Route path="/process-sms" element={<ProcessSmsMessages />} />
 
             </Routes>
             <Toaster />

@@ -1,0 +1,12 @@
+<plugin id="sms-reader-plugin" version="0.0.1">
+  <name>SmsReaderPlugin</name>
+  <js-module src="dist/plugin.js" name="SmsReaderPlugin">
+    <clobbers target="SmsReaderPlugin"/>
+  </js-module>
+  <platform name="android">
+    <config-file parent="/*" target="AndroidManifest.xml">
+      <uses-permission android:name="android.permission.READ_SMS" />
+    </config-file>
+    <source-file src="android/src/main/java/com/xpensia/plugins/smsreader/SmsReaderPlugin.java" target-dir="src/com/xpensia/plugins/smsreader" />
+  </platform>
+</plugin>

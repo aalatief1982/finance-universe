@@ -1,0 +1,8 @@
+{
+  "name": "capacitor-sms-reader",
+  "version": "0.0.1",
+  "main": "dist/plugin.js",
+  "capacitor": {
+    "platforms": ["android"]
+  }
+}
