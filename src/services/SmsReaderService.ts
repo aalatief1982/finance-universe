@@ -1,6 +1,8 @@
-import { Capacitor } from '@capacitor/core';
-import { SmsReader } from '@/plugins/SmsReaderPlugin'; // ✅
+import { Capacitor } from "@capacitor/core";
+import { registerPlugin } from "@capacitor/core";
 
+// Register plugin properly
+const SmsReader = registerPlugin<any>("SmsReaderPlugin");
 
 export interface SmsReadOptions {
   startDate?: Date;
@@ -12,58 +14,79 @@ export interface SmsReadOptions {
 export interface SmsEntry {
   sender: string;
   message: string;
-  date: string; // ISO format
+  date: string; // ISO string
 }
 
 export class SmsReaderService {
-async hasPermission(): Promise<boolean> {
-  console.log("hasPermission() called");
-  if (!Capacitor.isNativePlatform()) return false;
-  const result = await (window as any).SmsReaderPlugin?.checkPermission?.();
-  console.log("hasPermission() result:", result);
-  return result?.granted ?? false;
-}
+  static async hasPermission(): Promise<boolean> {
+    console.log("[SmsReaderService] hasPermission() called");
 
-async requestPermission(): Promise<boolean> {
-  console.log("requestPermission() called");
-  
-  if (!Capacitor.isNativePlatform()) return false;
-  //const result = await (window as any).SmsReaderPlugin?.requestPermission?.();
-   const result = await SmsReader.requestPermission();
-  console.log("requestPermission() result:", result);
-  return result?.granted ?? false;
-}
-
-async readMessages(options: SmsReadOptions): Promise<SmsEntry[]> {
-  console.log("readMessages() called");
-
-  if (!Capacitor.isNativePlatform()) {
-    console.log("Not a native platform. Skipping SMS reading.");
-    return [];
-  }
-
-  const hasPerm = await this.hasPermission();
-  console.log("Initial hasPermission check:", hasPerm);
-
-  if (!hasPerm) {
-    console.log("Permission missing, requesting permission...");
-    const granted = await this.requestPermission();
-    console.log("Result after requestPermission:", granted);
-
-    if (!granted) {
-      console.log("User denied SMS permission.");
-      throw new Error('SMS permission not granted');
+    if (!Capacitor.isNativePlatform()) {
+      console.warn("[SmsReaderService] Not a native platform");
+      return false;
     }
-  } else {
-    console.log("Permission already granted, proceeding to read messages...");
+
+    try {
+      const result = await SmsReader.checkPermission();
+      console.log("[SmsReaderService] hasPermission result:", result);
+      return result?.granted ?? false;
+    } catch (error) {
+      console.error("[SmsReaderService] Error checking permission:", error);
+      return false;
+    }
   }
 
-  console.log("Calling native plugin to read SMS messages...");
-  const result = await (window as any).SmsReaderPlugin?.readSmsMessages?.(options);
-  console.log("Result from native plugin read:", result);
+  static async requestPermission(): Promise<boolean> {
+    console.log("[SmsReaderService] requestPermission() called");
 
-  return result?.messages ?? [];
-}
+    if (!Capacitor.isNativePlatform()) {
+      console.warn("[SmsReaderService] Not a native platform");
+      return false;
+    }
 
+    try {
+      const result = await SmsReader.requestPermission();
+      console.log("[SmsReaderService] requestPermission result:", result);
+      return result?.granted ?? false;
+    } catch (error) {
+      console.error("[SmsReaderService] Error requesting permission:", error);
+      return false;
+    }
+  }
 
+  static async readMessages(options: SmsReadOptions): Promise<SmsEntry[]> {
+    console.log("[SmsReaderService] readMessages() called", options);
+
+    if (!Capacitor.isNativePlatform()) {
+      console.warn("[SmsReaderService] Not a native platform. Skipping SMS reading.");
+      return [];
+    }
+
+    const hasPerm = await this.hasPermission();
+    if (!hasPerm) {
+      console.log("[SmsReaderService] No permission, requesting...");
+      const granted = await this.requestPermission();
+      if (!granted) {
+        console.warn("[SmsReaderService] SMS permission was denied by user");
+        throw new Error("SMS permission not granted");
+      }
+    }
+
+    console.log("[SmsReaderService] Reading messages from native plugin...");
+
+    try {
+      const result = await SmsReader.readSmsMessages({
+        startDate: options.startDate?.toISOString(),
+        endDate: options.endDate?.toISOString(),
+        senders: options.senders,
+        limit: options.limit,
+      });
+
+      console.log("[SmsReaderService] readSmsMessages result:", result);
+      return result?.messages ?? [];
+    } catch (error) {
+      console.error("[SmsReaderService] Error reading SMS messages:", error);
+      throw new Error("Failed to read SMS messages");
+    }
+  }
 }
