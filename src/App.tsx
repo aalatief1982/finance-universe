@@ -17,6 +17,8 @@ import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from './pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
 import ProcessSmsMessages from './pages/ProcessSmsMessages'; // Add this import
+import Signup from './pages/SignUp';
+import Signin from './pages/SignIn';
 //import './app.css';
 
 
@@ -41,7 +43,7 @@ function App() {
               <Route path="/dev/learning-tester" element={<LearningTester />} />
 			  <Route path="/keyword-bank" element={<KeywordBankManager />} />
 			  <Route path="/process-sms" element={<ProcessSmsMessages />} />
-
+			   <Route path="/Signup" element={<Signup />} />
             </Routes>
             <Toaster />
           </TransactionProvider>

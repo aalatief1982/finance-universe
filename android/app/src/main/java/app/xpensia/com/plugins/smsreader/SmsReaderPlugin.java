@@ -1,14 +1,21 @@
-package com.xpensia.plugins.smsreader;
+package app.xpensia.com.plugins.smsreader;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
-import com.getcapacitor.*;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
+import com.getcapacitor.PluginMethod; // ✅ HERE, WITHOUT .annotation
+import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -17,7 +24,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-@CapacitorPlugin(name = "SmsReaderPlugin" permissions = { Manifest.permission.READ_SMS })
+
+@CapacitorPlugin(name = "SmsReaderPlugin")
 public class SmsReaderPlugin extends Plugin {
 
     @PluginMethod
@@ -26,10 +34,13 @@ public class SmsReaderPlugin extends Plugin {
         JSObject ret = new JSObject();
         ret.put("granted", granted);
         call.resolve(ret);
+		
+		 Log.d("SmsReaderPlugin", "checkPermission called. Granted: " + granted);
     }
 
     @PluginMethod
     public void requestPermission(PluginCall call) {
+		Log.d("SmsReaderPlugin", "requestPermission called");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissionForAlias("sms", call, "smsPermsCallback");
         } else {
@@ -45,6 +56,7 @@ public class SmsReaderPlugin extends Plugin {
         JSObject ret = new JSObject();
         ret.put("granted", granted);
         call.resolve(ret);
+		Log.d("SmsReaderPlugin", "smsPermsCallback called. Permission granted: " + granted);
     }
 
     @PluginMethod
