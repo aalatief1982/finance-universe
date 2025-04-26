@@ -1,8 +1,6 @@
 
 import { Capacitor } from "@capacitor/core";
-import { registerPlugin } from "@capacitor/core";
-
-const SmsReader = registerPlugin<any>("SmsReaderPlugin");
+import { SmsReader } from "../plugins/SmsReaderPlugin";
 
 export interface SmsReadOptions {
   startDate?: Date;
@@ -73,9 +71,8 @@ export class SmsReaderService {
     }
 
     try {
+      // Only pass the parameters that are actually supported by the Java plugin
       const result = await SmsReader.readSmsMessages({
-        startDate: options.startDate?.toISOString(),
-        endDate: options.endDate?.toISOString(),
         senders: options.senders,
         limit: options.limit,
       });

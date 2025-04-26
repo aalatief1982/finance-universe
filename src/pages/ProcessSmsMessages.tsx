@@ -4,6 +4,7 @@ import { SmsReaderService, SmsEntry } from '../services/SmsReaderService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
+import { Capacitor } from '@capacitor/core';
 
 const ProcessSmsMessages: React.FC = () => {
   const [messages, setMessages] = useState<SmsEntry[]>([]);
@@ -12,6 +13,18 @@ const ProcessSmsMessages: React.FC = () => {
 
   const handleReadSms = async () => {
     setLoading(true);
+    
+    // Skip native checks if not on a mobile device
+    if (!Capacitor.isNativePlatform()) {
+      toast({
+        variant: "destructive",
+        title: "Mobile only feature",
+        description: "SMS reading is only available on Android devices"
+      });
+      setLoading(false);
+      return;
+    }
+    
     try {
       const granted = await SmsReaderService.requestPermission();
       if (!granted) {
@@ -20,11 +33,12 @@ const ProcessSmsMessages: React.FC = () => {
           title: "Permission denied",
           description: "SMS Permission was not granted"
         });
+        setLoading(false);
         return;
       }
 
       const smsMessages = await SmsReaderService.readMessages({
-        startDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // Last 30 days
+        senders: ["Bank", "Card", "Credit"], // Filter for financial institutions
         limit: 100,
       });
 

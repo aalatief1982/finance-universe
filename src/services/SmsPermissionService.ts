@@ -1,36 +1,62 @@
 
+import { Capacitor } from "@capacitor/core";
+import { SmsReader } from "../plugins/SmsReaderPlugin";
+
 /**
  * Service for handling SMS permission-related functionality
- * This is a simplified version since we're removing SMS functionality
  */
 class SmsPermissionService {
   // Check if we're in a native mobile environment
   isNativeEnvironment(): boolean {
-    return false;
+    return Capacitor.isNativePlatform();
   }
 
   // Check if SMS permissions are granted
-  hasPermission(): boolean {
-    return localStorage.getItem('sms_permission') === 'granted';
+  async hasPermission(): Promise<boolean> {
+    if (!this.isNativeEnvironment()) {
+      return false;
+    }
+
+    try {
+      const result = await SmsReader.checkPermission();
+      return result?.granted ?? false;
+    } catch (error) {
+      console.error("Error checking SMS permission:", error);
+      return false;
+    }
   }
 
-  // Save permission status
+  // Save permission status to local storage (for web environments)
   savePermissionStatus(granted: boolean): void {
     localStorage.setItem('sms_permission', granted ? 'granted' : 'denied');
   }
 
-  // Request SMS permissions (simplified version)
+  // Request SMS permissions
   async requestPermission(): Promise<boolean> {
-    // In a real implementation, this would use Capacitor or another
-    // native API to request permissions
-    
-    // For our simplified version, we'll just return true
-    this.savePermissionStatus(true);
-    return true;
+    if (!this.isNativeEnvironment()) {
+      // For web testing, simulate granting permission
+      this.savePermissionStatus(true);
+      return true;
+    }
+
+    try {
+      const result = await SmsReader.requestPermission();
+      const granted = result?.granted ?? false;
+      this.savePermissionStatus(granted);
+      return granted;
+    } catch (error) {
+      console.error("Error requesting SMS permission:", error);
+      this.savePermissionStatus(false);
+      return false;
+    }
   }
 
   // Check if app can read SMS messages
   canReadSms(): boolean {
+    if (!this.isNativeEnvironment()) {
+      return localStorage.getItem('sms_permission') === 'granted';
+    }
+    
     return this.hasPermission();
   }
 }
