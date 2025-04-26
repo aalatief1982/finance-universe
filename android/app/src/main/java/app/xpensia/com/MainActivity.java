@@ -2,7 +2,7 @@
 package app.xpensia.com;
 
 import com.getcapacitor.BridgeActivity;
-import app.xpensia.com.plugins.smsreader.SmsReaderPlugin;
+import com.xpensia.plugins.smsreader.SmsReaderPlugin;
 
 public class MainActivity extends BridgeActivity {
   @Override

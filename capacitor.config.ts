@@ -9,9 +9,9 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 0
     },
-	SmsReaderPlugin: {
-    android: true
-  }
+    SmsReaderPlugin: {
+      android: true
+    }
   },
   android: {
     appendUserAgent: 'Xpensia Android App'

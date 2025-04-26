@@ -1,4 +1,4 @@
-package app.xpensia.com.plugins.smsreader;
+package com.xpensia.plugins.smsreader;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -6,32 +6,29 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
-
 import androidx.core.app.ActivityCompat;
-
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.PermissionState;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 @CapacitorPlugin(
-  name = "SmsReaderPlugin",
-  permissions = {
-    @com.getcapacitor.annotation.Permission(
-      alias = "sms",
-      strings = { Manifest.permission.READ_SMS }
-    )
-  }
+    name = "SmsReaderPlugin",
+    permissions = {
+        @Permission(
+            alias = "sms",
+            strings = { Manifest.permission.READ_SMS }
+        )
+    }
 )
 public class SmsReaderPlugin extends Plugin {
 
