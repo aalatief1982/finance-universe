@@ -1,7 +1,7 @@
+
 import { Capacitor } from "@capacitor/core";
 import { registerPlugin } from "@capacitor/core";
 
-// Register plugin properly
 const SmsReader = registerPlugin<any>("SmsReaderPlugin");
 
 export interface SmsReadOptions {
@@ -55,10 +55,10 @@ export class SmsReaderService {
   }
 
   static async readMessages(options: SmsReadOptions): Promise<SmsEntry[]> {
-    console.log("[SmsReaderService] readMessages() called", options);
+    console.log("[SmsReaderService] readMessages() called with options:", options);
 
     if (!Capacitor.isNativePlatform()) {
-      console.warn("[SmsReaderService] Not a native platform. Skipping SMS reading.");
+      console.warn("[SmsReaderService] Not a native platform");
       return [];
     }
 
@@ -67,12 +67,10 @@ export class SmsReaderService {
       console.log("[SmsReaderService] No permission, requesting...");
       const granted = await this.requestPermission();
       if (!granted) {
-        console.warn("[SmsReaderService] SMS permission was denied by user");
+        console.warn("[SmsReaderService] Permission denied");
         throw new Error("SMS permission not granted");
       }
     }
-
-    console.log("[SmsReaderService] Reading messages from native plugin...");
 
     try {
       const result = await SmsReader.readSmsMessages({
@@ -82,10 +80,10 @@ export class SmsReaderService {
         limit: options.limit,
       });
 
-      console.log("[SmsReaderService] readSmsMessages result:", result);
+      console.log("[SmsReaderService] Read messages result:", result);
       return result?.messages ?? [];
     } catch (error) {
-      console.error("[SmsReaderService] Error reading SMS messages:", error);
+      console.error("[SmsReaderService] Error reading messages:", error);
       throw new Error("Failed to read SMS messages");
     }
   }
