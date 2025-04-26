@@ -1,8 +1,45 @@
 {
   "name": "capacitor-sms-reader",
   "version": "0.0.1",
+  "description": "Capacitor plugin for reading SMS messages",
   "main": "dist/plugin.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/types/index.d.ts",
+  "unpkg": "dist/plugin.js",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "dist/"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": {
+    "url": ""
+  },
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "native"
+  ],
+  "scripts": {
+    "verify": "npm run verify:android && npm run verify:web",
+    "verify:android": "cd android && ./gradlew clean build test && cd ..",
+    "verify:web": "npm run build"
+  },
   "capacitor": {
-    "platforms": ["android"]
+    "android": {
+      "src": "android"
+    }
+  },
+  "devDependencies": {
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/core": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^5.0.0"
   }
 }
