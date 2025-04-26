@@ -1,3 +1,4 @@
+
 <plugin id="sms-reader-plugin" version="0.0.1">
   <name>SmsReaderPlugin</name>
   <js-module src="dist/plugin.js" name="SmsReaderPlugin">
