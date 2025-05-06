@@ -1,10 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    
     repositories {
         google()
         mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.9.1'
@@ -21,12 +21,15 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven { url "https://dl.cloudsmith.io/public/capacitor-community/plugins/maven/" } // ✅ Capacitor plugins
     }
 }
 
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty("android")) {

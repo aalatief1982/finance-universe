@@ -1,6 +1,7 @@
 
 import { Capacitor } from "@capacitor/core";
 import { SmsReader } from "../plugins/SmsReaderPlugin";
+import { subMonths, startOfToday } from 'date-fns';
 
 export interface SmsReadOptions {
   startDate?: Date;
@@ -52,36 +53,37 @@ export class SmsReaderService {
     }
   }
 
-  static async readMessages(options: SmsReadOptions): Promise<SmsEntry[]> {
-    console.log("[SmsReaderService] readMessages() called with options:", options);
+static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
+  console.log("[SmsReaderService] readSmsMessages() called");
 
-    if (!Capacitor.isNativePlatform()) {
-      console.warn("[SmsReaderService] Not a native platform");
-      return [];
-    }
-
-    const hasPerm = await this.hasPermission();
-    if (!hasPerm) {
-      console.log("[SmsReaderService] No permission, requesting...");
-      const granted = await this.requestPermission();
-      if (!granted) {
-        console.warn("[SmsReaderService] Permission denied");
-        throw new Error("SMS permission not granted");
-      }
-    }
-
-    try {
-      // Only pass the parameters that are actually supported by the Java plugin
-      const result = await SmsReader.readSmsMessages({
-        senders: options.senders,
-        limit: options.limit,
-      });
-
-      console.log("[SmsReaderService] Read messages result:", result);
-      return result?.messages ?? [];
-    } catch (error) {
-      console.error("[SmsReaderService] Error reading messages:", error);
-      throw new Error("Failed to read SMS messages");
-    }
+  if (!Capacitor.isNativePlatform()) {
+    console.warn("[SmsReaderService] Not a native platform, returning empty list.");
+    return [];
   }
+
+  const hasPerm = await SmsReaderService.hasPermission();
+  if (!hasPerm) {
+    throw new Error('SMS permission not granted');
+  }
+
+  const monthsBack = parseInt(localStorage.getItem('xpensia_sms_period_months') || '6');
+  const startDate = subMonths(startOfToday(), monthsBack).getTime();
+  //const endDate = startOfToday().getTime();
+  const endDate = Date.now();
+  console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
+  console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
+
+  const result = await SmsReader.readSmsMessages({
+    ...options,
+    startDate: String(startDate),
+    endDate: String(endDate),
+  });
+  
+  if (!result || !Array.isArray(result.messages)) {
+  console.warn("[SmsReaderService] Invalid SMS read result:", result);
+  return [];
+}
+
+  return result?.messages ?? [];
+}
 }

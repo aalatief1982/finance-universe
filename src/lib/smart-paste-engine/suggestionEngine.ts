@@ -54,3 +54,9 @@ if (!inferred['type']) {
   console.log('[SmartPaste] Inferred indirect fields from keyword bank:', inferred);
   return inferred;
 }
+
+export function extractVendorName(message: string): string {
+  // Heuristic: look after 'at', 'لدى', or '@'
+  const match = message.match(/(?:at|لدى|@)\s*([^\n\r]+)/i);
+  return match ? match[1].trim() : '';
+}

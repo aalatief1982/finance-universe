@@ -1,14 +1,14 @@
-
-import { registerPlugin } from '@capacitor/core';
+import { registerPlugin } from "@capacitor/core";
 
 export interface SmsReaderPlugin {
   checkPermission(): Promise<{ granted: boolean }>;
   requestPermission(): Promise<{ granted: boolean }>;
   readSmsMessages(options: {
+    startDate?: string;
+    endDate?: string;
     senders?: string[];
     limit?: number;
-  }): Promise<{ messages: any[] }>;
+  }): Promise<{ messages: { sender: string; message: string; date: string }[] }>;
 }
 
-// Register the plugin using the exact same name as in the Java class annotation
-export const SmsReader = registerPlugin<SmsReaderPlugin>('SmsReaderPlugin');
+export const SmsReader = registerPlugin<SmsReaderPlugin>("SmsReaderPlugin");

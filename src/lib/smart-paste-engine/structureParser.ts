@@ -7,10 +7,29 @@
 
 import { extractTemplateStructure, getTemplateByHash, saveNewTemplate } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
-import { normalizeDate } from './dateUtils';
+//import { normalizeDate } from './dateUtils';
 
 // Hashing util (replace with real hash lib if needed)
 const simpleHash = (text: string) => btoa(unescape(encodeURIComponent(text))).slice(0, 24);
+
+
+export function normalizeDate(dateStr: string): string | undefined {
+  if (!dateStr) return undefined;
+
+  // Match short yy-mm-dd or y-m-d formats like 25-3-26
+  const match = dateStr.match(/^(\d{2})-(\d{1,2})-(\d{1,2})$/);
+  if (match) {
+    const [_, yy, mm, dd] = match;
+    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
+    const iso = new Date(`${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`).toISOString();
+    return iso.split('T')[0]; // Only return yyyy-MM-dd
+  }
+
+  // Fallback to native parsing
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? undefined : parsed.toISOString().split('T')[0];
+}
+
 
 export function parseSmsMessage(rawMessage: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);

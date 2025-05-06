@@ -19,6 +19,10 @@ import KeywordBankManager from '@/pages/KeywordBankManager';
 import ProcessSmsMessages from './pages/ProcessSmsMessages'; // Add this import
 import Signup from './pages/SignUp';
 import Signin from './pages/SignIn';
+import ProcessVendors from '@/pages/sms/ProcessVendors';
+import VendorCategorization from '@/pages/sms/VendorCategorization';
+import VendorMapping from '@/pages/VendorMapping';
+import ReviewDraftTransactions from '@/pages/ReviewDraftTransactions';
 //import './app.css';
 
 
@@ -44,6 +48,10 @@ function App() {
 			  <Route path="/keyword-bank" element={<KeywordBankManager />} />
 			  <Route path="/process-sms" element={<ProcessSmsMessages />} />
 			   <Route path="/Signup" element={<Signup />} />
+			   <Route path="/sms/process-vendors" element={<ProcessVendors />} />	
+			  <Route path="/sms/vendors" element={<VendorCategorization />} />
+			  <Route path="/vendor-mapping" element={<VendorMapping />} />
+			  <Route path="/review-draft-transactions" element={<ReviewDraftTransactions />} />
             </Routes>
             <Toaster />
           </TransactionProvider>

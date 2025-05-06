@@ -39,12 +39,41 @@ function generateDefaultTitle(txn: Transaction): string {
     .join('|');
 }
 
-function toISOFormat(ddmmyyyy: string): string {
-  if (!ddmmyyyy || ddmmyyyy.includes('undefined')) return '';
-  const [dd, mm, yyyy] = ddmmyyyy.split('-');
-  if (yyyy?.length === 4) return `${yyyy}-${mm}-${dd}`;
-  return '';
+//function toISOFormat(ddmmyyyy: string): string {
+ // if (!ddmmyyyy || ddmmyyyy.includes('undefined')) return '';
+ // const [dd, mm, yyyy] = ddmmyyyy.split('-');
+ // if (yyyy?.length === 4) return `${yyyy}-${mm}-${dd}`;
+//  return '';
+//}
+
+function toISOFormat(input: string): string {
+  if (!input || input.includes('undefined')) return '';
+
+  const normalized = input.trim().replace(/\s+/g, ' ').replace(/[.\/]/g, '-');
+
+  const dmy = normalized.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/);
+  if (dmy) {
+    let [_, dd, mm, yyyy] = dmy;
+    dd = dd.padStart(2, '0');
+    mm = mm.padStart(2, '0');
+    if (yyyy.length === 2) yyyy = parseInt(yyyy) < 50 ? `20${yyyy}` : `19${yyyy}`;
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  const ymd = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (ymd) {
+    let [_, yyyy, mm, dd] = ymd;
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  }
+
+  // Fallback must also be trimmed!
+  const fallback = new Date(input);
+  return isNaN(fallback.getTime()) ? '' : fallback.toISOString().split('T')[0];
 }
+
+
+
+
 
 function toDisplayFormat(yyyymmdd: string): string {
   const [yyyy, mm, dd] = yyyymmdd.split('-');
@@ -77,7 +106,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         ...transaction,
         vendor: mappedVendor,
         title: transaction.title?.trim() || generateDefaultTitle(transaction),
-        date: transaction.date || '', 
+        date: transaction.date ? toISOFormat(transaction.date) : '',
         description: transaction.description?.trim() || transactionRawMessage,
       };
     }
@@ -293,9 +322,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Date*</label>
-        <Input
+			<Input
 		  type="date"
-		  value={typeof editedTransaction.date === 'string' ? toISOFormat(editedTransaction.date || '') || '' : ''}
+		  value={editedTransaction.date || ''}
 		  onChange={(e) => handleChange('date', e.target.value)}
 		  style={getDrivenFieldStyle('date', drivenFields)}
 		  required

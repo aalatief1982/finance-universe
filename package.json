@@ -11,12 +11,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-  
     "@capacitor/android": "^7.2.0",
     "@capacitor/camera": "^7.0.1",
     "@capacitor/cli": "^7.1.0",
     "@capacitor/core": "^7.1.0",
     "@capacitor/device": "^7.0.1",
+    "@capacitor/filesystem": "^7.0.1",
     "@capacitor/ios": "^7.1.0",
     "@hookform/resolvers": "^3.9.0",
     "@huggingface/transformers": "^3.4.2",
@@ -52,10 +52,11 @@
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.4.0",
     "@xenova/transformers": "^2.17.2",
+    "capacitor-sms-reader": "file:./capacitor-sms-reader",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "date-fns": "^4.1.0",
+    "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "framer-motion": "^12.5.0",
     "input-otp": "^1.2.4",
@@ -75,8 +76,7 @@
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",
     "vaul": "^0.9.3",
-    "zod": "^3.23.8",
-	 "capacitor-sms-reader": "file:./capacitor-sms-reader"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
@@ -91,7 +91,6 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
-    "lovable-tagger": "^1.1.8",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",

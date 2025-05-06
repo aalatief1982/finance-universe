@@ -49,30 +49,36 @@ export function extractTemplateStructure(
   message: string
 ): { template: string; placeholders: Record<string, string> } {
   const patterns = [
-    // Amount + currency like SAR 45.00
     {
-      regex: /\b(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD)\s?(\d{1,4}(?:[.,]\d{2})?)\b/gi,
+      // Support formats: SAR 55,100.00 | 35 SAR | SAR 35
+      regex: /(?:مبلغ[:\s]*)?(?:(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD)[\s:]?((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)|((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)[\s:]?(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD))/gi,
       fieldName: 'amount+currency'
     },
-
-    // Extended date formats (25-04-23, 25/4/23, etc.)
-   {
-	  regex: /\b(?:on\s*)?((\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})|(\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})|(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})|((Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}))(\s*\d{1,2}:\d{2})?/gi,
-	  fieldName: 'date'
-	}
-,
-
-    // Vendor after "لدى:"
     {
-      regex: /لدى:?\s*([^\n]+)/gi,
+      regex: new RegExp(
+        String.raw`(?:في[:\s]*)?(?:on\s*)?(` +
+        [
+          String.raw`\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{1,4}`, // Updated: allow short year like 25-5-3
+          String.raw`\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}`,
+          String.raw`\d{1,2}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2,4}`,
+          String.raw`\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}`,
+          String.raw`(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}`,
+          String.raw`\d{2}[01]\d{3}`,
+          String.raw`\d{8}`
+        ].join('|') +
+        String.raw`)(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?`,
+        'gi'
+      ),
+      fieldName: 'date'
+    },
+    {
+      regex: /(?:لدى|من)[:\s]*([^\n]+)/gi,
       fieldName: 'vendor'
     },
-
-    // Account/card pattern (optional)
     {
       regex: /\*{2,4}\d{3,4}/g,
       fieldName: 'account'
-    },
+    }
   ];
 
   let templateText = message;
@@ -86,9 +92,20 @@ export function extractTemplateStructure(
       const fullMatch = match[0];
 
       if (fieldName === 'amount+currency') {
-        const [currency, amount] = [match[1], match[2]];
-        if (!placeholders.amount && !placeholders.currency) {
-          placeholders.amount = amount;
+        let amount = '';
+        let currency = '';
+
+        if (match[1] && match[2]) {
+          currency = match[1];
+          amount = match[2];
+        } else if (match[3] && match[4]) {
+          amount = match[3];
+          currency = match[4];
+        }
+
+        if (!placeholders.amount && !placeholders.currency && amount && currency) {
+          const numericAmount = amount.replace(/,/g, '');
+          placeholders.amount = numericAmount;
           placeholders.currency = currency;
           replacements.push({
             start: match.index,
@@ -108,11 +125,10 @@ export function extractTemplateStructure(
         }
       }
 
-      break; // one match per field
+      break; // Only take the first match for each field
     }
   }
 
-  // Replace from end to start to avoid shifting indexes
   replacements.sort((a, b) => b.start - a.start);
   for (const { start, end, replacement } of replacements) {
     templateText = templateText.slice(0, start) + replacement + templateText.slice(end);
@@ -120,5 +136,3 @@ export function extractTemplateStructure(
 
   return { template: templateText.trim(), placeholders };
 }
-
-

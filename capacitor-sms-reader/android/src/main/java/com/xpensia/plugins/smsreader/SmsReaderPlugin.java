@@ -64,50 +64,40 @@ public class SmsReaderPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void readSmsMessages(PluginCall call) {
-        try {
-            JSONArray messages = new JSONArray();
-            Uri uri = Uri.parse("content://sms/inbox");
+	public void readSmsMessages(PluginCall call) {
+    try {
+        JSONArray messages = new JSONArray();
+        Uri uri = Uri.parse("content://sms/inbox");
 
-            // Options parsing (optional if you want to enhance)
-            JSONArray senders = call.getArray("senders");
-            Integer limit = call.getInt("limit");
+        String startDateStr = call.getString("startDate");
+        String endDateStr = call.getString("endDate");
 
-            Cursor cursor = getContext().getContentResolver().query(uri, null, null, null, "date DESC");
+        long startDate = startDateStr != null ? Long.parseLong(startDateStr) : 0;
+        long endDate = endDateStr != null ? Long.parseLong(endDateStr) : Long.MAX_VALUE;
 
-            if (cursor != null) {
-                int count = 0;
-                while (cursor.moveToNext()) {
-                    if (limit != null && count >= limit) break;
-                    String sender = cursor.getString(cursor.getColumnIndexOrThrow("address"));
+        String selection = "date >= ? AND date <= ?";
+        String[] selectionArgs = { String.valueOf(startDate), String.valueOf(endDate) };
 
-                    if (senders != null) {
-                        boolean matched = false;
-                        for (int i = 0; i < senders.length(); i++) {
-                            if (sender != null && sender.contains(senders.getString(i))) {
-                                matched = true;
-                                break;
-                            }
-                        }
-                        if (!matched) continue;
-                    }
+        Cursor cursor = getContext().getContentResolver().query(uri, null, selection, selectionArgs, "date DESC");
 
-                    JSObject msg = new JSObject();
-                    msg.put("sender", sender);
-                    msg.put("message", cursor.getString(cursor.getColumnIndexOrThrow("body")));
-                    msg.put("date", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-                            .format(new Date(cursor.getLong(cursor.getColumnIndexOrThrow("date")))));
-                    messages.put(msg);
-                    count++;
-                }
-                cursor.close();
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                JSObject msg = new JSObject();
+                msg.put("sender", cursor.getString(cursor.getColumnIndexOrThrow("address")));
+                msg.put("message", cursor.getString(cursor.getColumnIndexOrThrow("body")));
+                msg.put("date", new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                        .format(new Date(cursor.getLong(cursor.getColumnIndexOrThrow("date")))));
+                messages.put(msg);
             }
-
-            JSObject result = new JSObject();
-            result.put("messages", messages);
-            call.resolve(result);
-        } catch (Exception e) {
-            call.reject("Failed to read SMS", e);
+            cursor.close();
         }
+
+        JSObject result = new JSObject();
+        result.put("messages", messages);
+        call.resolve(result);
+    } catch (Exception e) {
+        call.reject("Failed to read SMS", e);
     }
+}
+
 }
