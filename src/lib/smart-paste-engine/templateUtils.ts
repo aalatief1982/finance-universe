@@ -71,10 +71,10 @@ export function extractTemplateStructure(
       ),
       fieldName: 'date'
     },
-    {
-      regex: /(?:لدى|من)[:\s]*([^\n]+)/gi,
-      fieldName: 'vendor'
-    },
+		  {
+		  regex: /(?:لدى|من|في|عند|من عند|تم الدفع لـ|تم الشراء من|at|from|paid to|purchased from)[:\s]*([^\n,؛;:\-]+)/gi,
+		  fieldName: 'vendor'
+		},
     {
       regex: /\*{2,4}\d{3,4}/g,
       fieldName: 'account'

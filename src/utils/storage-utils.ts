@@ -4,7 +4,11 @@ import { validateTransactionForStorage, validateCategoryForStorage, validateCate
 import { UserPreferences } from '@/types/user';
 import { SupportedCurrency, LocaleSettings } from '@/types/locale';
 import { StructureTemplateEntry } from '@/types/template';
-
+import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
+import { getAllTemplates } from '@/lib/smart-paste-engine/templateUtils';
+import { saveNewTemplate } from '@/lib/smart-paste-engine/templateUtils';
+import { loadKeywordBank,saveKeywordBank } from '@/lib/smart-paste-engine/keywordBankUtils';
+import { loadTemplateBank, saveTemplateBank } from '@/lib/smart-paste-engine/templateUtils';
 // Storage keys for local storage
 const TRANSACTIONS_STORAGE_KEY = 'xpensia_transactions';
 const CATEGORIES_STORAGE_KEY = 'xpensia_categories';
@@ -83,6 +87,100 @@ export const storeTransaction = (transaction: any): void => {
     throw error;
   }
 };
+
+
+export function updateTransaction(txn: Transaction) {
+  const existing = JSON.parse(localStorage.getItem('xpensia_transactions') || '[]');
+  const updated = existing.map((t: Transaction) => t.id === txn.id ? txn : t);
+  localStorage.setItem('xpensia_transactions', JSON.stringify(updated));
+}
+
+export function learnFromTransaction(
+  rawMessage: string,
+  txn: Transaction,
+  senderHint: string = ''
+) {
+  const { template, placeholders } = extractTemplateStructure(rawMessage);
+  const fields = Object.keys(placeholders);
+  const templateHash = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
+
+  const existingTemplates = getAllTemplates();
+  const alreadyExists = existingTemplates.some(t => t.id === templateHash);
+  if (!alreadyExists) {
+    saveNewTemplate(template, fields, rawMessage);
+  }
+
+  // Save Keyword Mapping (Vendor → Category/Subcategory)
+  if (txn.vendor && txn.category) {
+    const keyword = placeholders?.vendor?.toLowerCase() || txn.vendor.toLowerCase();
+    const bank = loadKeywordBank();
+    const existing = bank.find(k => k.keyword === keyword);
+
+    const newMappings = [
+      { field: 'category', value: txn.category },
+      { field: 'subcategory', value: txn.subcategory || 'none' }
+    ];
+
+    if (existing) {
+      newMappings.forEach(mapping => {
+        const exists = existing.mappings.some((m: any) => m.field === mapping.field && m.value === mapping.value);
+        if (!exists) existing.mappings.push(mapping);
+      });
+    } else {
+      bank.push({ keyword, mappings: newMappings });
+    }
+
+    saveKeywordBank(bank);
+  }
+
+  // Save Vendor Map if mismatch detected
+  if (
+    placeholders?.vendor &&
+    txn.vendor &&
+    placeholders.vendor !== txn.vendor
+  ) {
+    const vendorMap = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+    vendorMap[placeholders.vendor] = txn.vendor;
+    localStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
+  }
+
+  // Save Template Hash → From Account mapping
+  if (templateHash && txn.fromAccount) {
+    const templates = loadTemplateBank();
+    const t = templates.find(t => t.id === templateHash);
+    if (t && !t.defaultValues?.fromAccount) {
+      t.defaultValues = {
+        ...t.defaultValues,
+        fromAccount: txn.fromAccount
+      };
+      saveTemplateBank(templates);
+    }
+  }
+
+  console.log('[Learned]', {
+    templateHash,
+    vendor: txn.vendor,
+    category: txn.category,
+    subcategory: txn.subcategory,
+    fromAccount: txn.fromAccount,
+    rawMessage
+  });
+}
+
+
+export function addTransaction(txn: Transaction): void {
+  try {
+    const transactions = getStoredTransactions();
+
+    const exists = transactions.some(t => t.id === txn.id);
+    if (!exists) {
+      transactions.unshift(txn); // insert at the beginning
+      storeTransactions(transactions);
+    }
+  } catch (error) {
+    console.error('[StorageUtils] Failed to add transaction:', error);
+  }
+}
 
 export const removeTransaction = (id: string): void => {
   const transactions = getStoredTransactions();

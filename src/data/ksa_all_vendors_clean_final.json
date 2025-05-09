@@ -1,0 +1,2957 @@
+{
+  "national": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "hertz": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "enterprise": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "sixt": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "saptco": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Public Transport"
+  },
+  "nwbus": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Public Transport"
+  },
+  "ziyarahtaxi": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+  "alfatehtransport": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+  "saudiataxi": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+  "taxicaller": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+  "coursera": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "Course"
+  },
+  "aldanah": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alhekma": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alrowadriyadh": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "yara": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "iisriyadh": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alafaq": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "aldurajeddah": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "aisj": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "bisj": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "iisjeddah": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "kingsauduniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "pnu": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "imamu": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "psu": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "arabopenuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "alyamamahuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "daraluloomuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "alfaisaluniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "almaarefauniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "princesattambinabdulazizuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "majmaahuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "shaqrauniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "saudielectronicuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "kingabdulazizuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "ummalqurauniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "effatuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "universityofbusinessandtechnology": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "taifuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "kaust": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "universityofjeddah": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "islamicuniversityofmedina": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "taibahuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "princemugrinuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "kfupm": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "imamabdulrahmanbinfaisaluniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "kingfaisaluniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "universityofhafralbatin": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "princemohammaduniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "voxcinemas": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "amccinemas": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "muvicinemas": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "reelcinemas": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "empirecinemas": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "stctv": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+  "yangoplay": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+  "thecapitallounge": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "chorisialounge": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "cafebateel": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "barns": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "urthcaffe": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "obayalounge": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "porterhouse": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "amasyramadan": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "oasisrestaurant": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "naya": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "mamanoura": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "hamburgini": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "altazaj": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "albaik": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "herfy": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "kudu": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "mcdonalds": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "kfc": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "subway": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "burgerking": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "alazharhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "drsiddiqahospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "obeidspecialisthospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "saudigermanhospitalriyadh": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "drsamirabbasmedicalcenter": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "kingdomhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "abdullatifjameelhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "adamahclinics": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "alnokhba": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "healthhouse": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "lemonpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "senatpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "taafiglobal": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "aljwaheralmotamyza": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "extra": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "noon": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "carrefour": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "redsea": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "jarir": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "amazon": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "luluhypermarket": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "virginmegastore": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "microless": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "nextsa": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "namshi": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "hm": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "fashionsa": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "cosstores": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "americaneagle": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "rubaiyat": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "redtagfashion": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "centrepointstores": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "alothaim": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "panda": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "bindawood": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "tamimimarkets": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "danube": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "potterybarn": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Home Goods"
+  },
+  "homecentre": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "nice": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Home Goods"
+  },
+  "homeboxstores": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Home Goods"
+  },
+  "crateandbarrel": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Home Goods"
+  },
+  "tanagra": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Home Goods"
+  },
+  "westelmsa": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Home Goods"
+  },
+  "mallofarabia": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "redseamall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "serafimegamall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "haifamall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "azizmall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "alsalaammall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "granadacentre": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "kingdomcentre": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "riyadhgallery": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "riyadhpark": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "saharamall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "centriamall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "theviewmall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Malls"
+  },
+  "saudinationalbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "saudiawwalbank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "thesaudiinvestmentbank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "alinmabank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "banquesaudifransi": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "riyadbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "alrajhibank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "arabnationalbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "bankalbilad": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "bankaljazira": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "gulfinternationalbank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "d360bank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "stcbank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "visionbank": {
+    "type": "Expense",
+    "category": "Transfer", 
+    "subcategory": "Local Bank"
+  },
+  "stc": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "salam": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Telecom"
+  },
+  "go": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Telecom"
+  },
+  "zain": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "mobily": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "virginmobile": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Telecom"
+  },
+  "saudiwera": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Utilities"
+  },
+  "saudiwaterpartnership": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Utilities"
+  },
+  "marafiq": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Electricity"
+  },
+  "acwapower": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Utilities"
+  },
+  "saudielectricitycompany": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Utilities"
+  },
+  "rakaasaudipowerandwater": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Utilities"
+  },
+  "aljomaihenergyandwater": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Utilities"
+  },
+  "nationalwatercompany": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Utilities"
+  },
+  "mygovsa": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Government"
+  },
+  "dga": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Government"
+  },
+  "mofagovsa": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Government"
+  },
+  "hrsdgovsa": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Government"
+  },
+  "sdaiagovsa": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Government"
+  },
+  "mofgovsa": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Government"
+  },
+  "moigovsa": {
+    "type": "Expense",
+    "category": "Bills", 
+    "subcategory": "Government"
+  },
+  "mohgovsa": {
+    "type": "Expense",
+    "category": "Bills", 	
+    "subcategory": "Government"
+  },
+  "saudia": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "flynas": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "nesmaairlines": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "flyadeal": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "riyadhair": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "rafflesmakkahpalace": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "makkahclockroyaltower": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "pullmanzamzam": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "intercontinentaljeddah": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "hyatthousejeddah": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "ibisjeddahmalikroad": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "radissonbluhotelriyadh": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "aljomaih": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "budgetsa": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "keycars": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "alwefaq": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "aljazirahvehicles": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "alsaghyir": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "quickrent": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "kayancars": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "carwah": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "dubaimetro": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Public Transport"
+  },
+  "riyadhmetro": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Public Transport"
+  },
+  "cairometro": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Public Transport"
+  },
+  "transitapp": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Public Transport"
+  },
+  "careem": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+  "uber": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+  "swvl": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+  "udemy": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "Course"
+  },
+  "edraak": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "Course"
+  },
+  "tamkeen": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "Course"
+  },
+  "futureacademy": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "Course"
+  },
+  "almualim": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "ajyal": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "riyadhschools": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "rowadschools": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "almanar": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "smartschools": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alduraacademy": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "manaralsaudia": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alnajdschools": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "madinatalkobra": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "cairouniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "americanuniversitycairo": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "zayeduniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "abuadhabiuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "taybahuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "najranuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "qassimuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "shahedu": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "tabukuni": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "alhokair": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "muvi": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "cinemacity": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Cinema"
+  },
+  "netflix": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+  "shahid": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+  "spotify": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+  "anghami": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+  "simitcafe": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "baskinrobbins": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "cinnabon": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "coffeechill": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "barnscafe": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "mado": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "golavita": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "elixirbunn": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "barnespresso": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "cupandcino": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "pizzahut": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "dominos": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "hardees": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "jollibeesaudi": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "fuddruckers": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "kuduapp": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "shawarmahouse": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "jareeshhouse": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "abuzaid": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "shawarmer": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "shawarmarepublic": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+  "elborglab": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "alfarabi": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "alborg": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "greenclinics": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "tabiib": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "cairomedical": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "fmp": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "magrabioptical": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "elaj": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "nahdiclinic": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "riyadhcare": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "cleopatrahospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "drsulaimanalhabib": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "kingfaisalhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "asalamhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "alahlihospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "magrabihospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "dallah": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "drghassan": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "alhammadi": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "seifpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "elazharypharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "alnahdi": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "asterpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "nahapharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "yacars": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "almajal": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "tayarrent": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "almodarrent": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "yallaren": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Rental"
+  },
+  "daralfikr": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alsalamacademy": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alameenschools": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "baityschool": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "alhukma": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "gulfschool": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "jessdubai": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "gemseducation": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "School"
+  },
+  "almareefah": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "bishauniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "hailuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "majmahuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "sattamuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "imamuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "almarefa": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "ainshamsuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "guc": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "elixirbunncoffee": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "mochaandmore": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "bunzcoffee": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "cofix": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "najdivillage": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "almashrabya": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "safartas": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "alsultan": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "gadro": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "elshabrawy": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "moemen": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "ghazalarest": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "maharat": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "tawuniya": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "bupa": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "medgulf": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "almadar": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "elborg": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "cairoscan": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "egymedical": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "lulusalon": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "medcity": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "aseerhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "khamishhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "shatby": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "eastjeddahhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "hospitals": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "riyadhspecialist": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "ghurairhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "alkhadra": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "ensanhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "nilehospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "nahdionline": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "unitedpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "whitepharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "riyadhpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "salampharma": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "wataniapharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "tajpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "saudipharmaceutical": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "misrpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "elazaby": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "ikea": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "danubehome": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "binhomran": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "nicehome": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "almutlaqfurniture": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "ikeasaudi": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "alsorayai": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "almutlaq": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "firstfix": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "emaar": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Real Estate"
+  },
+  "damac": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Real Estate"
+  },
+  "aldar": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Real Estate"
+  },
+  "nakheel": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Real Estate"
+  },
+  "azizidevelopments": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Real Estate"
+  },
+  "doharesidency": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Real Estate"
+  },
+  "alreemgroup": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Real Estate"
+  },
+  "sivvi": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "centrepoint": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "maxfashion": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "redtag": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "splash": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "alshaya": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "arabianoud": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "landmarkarabia": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "abdulkareem": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "jumia": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "abdulwahed": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "alkhorayef": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "zamilairconditioners": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "auc": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "alazhar": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "americanuniversitysharjah": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "alainuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "manipaluniversitydubai": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "aue": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "murdochdubai": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "ahliauniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "gulfuniversity": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "zulekha": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "burjeel": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "qic": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "cairoclinic": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "hamadmedical": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "alrahmahospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "ibnalnafees": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "nmc": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "medcare": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "aster": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "muscatpharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "wafi": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "almawaddah": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "albarakafurniture": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "homecentreeg": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "homesrus": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "panhome": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "pavilionfurniture": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "alkadi": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "quantum": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "gazzaz": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "mikyajy": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "faces": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "wojooh": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "beautybay": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "lcwaikikieg": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "defactoeg": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "maxfashions": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "saco": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "alhusseini": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "alessa": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "balubaid": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "balsharaf": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "albabtain": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "shaker": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "swaidan": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "abdullahfouad": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "btech": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "shoemart": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Footwear"
+  },
+  "alfozan": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Furniture"
+  },
+  "makken": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Furniture"
+  },
+  "daiso": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Furniture"
+  },
+  "binDawood": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "othaim": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "hyperpanda": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "nesto": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "spinneys": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "almaya": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "abk": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "emiratesnbd": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "hsbc": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "hsbcmasr": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "markaz": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "alrajhi": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "cib": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "qnb": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "faisalbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "ahlibank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "alexbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "arabbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "bankmisr": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "altayarsecurities": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "saib": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "alansariexchange": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Money Transfer"
+  },
+  "westernunion": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Money Transfer"
+  },
+  "moneygram": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Money Transfer"
+  },
+  "tahweelalrajhi": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Money Transfer"
+  },
+  "emiratespost": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Money Transfer"
+  },
+  "emirates": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "booking": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "agoda": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "expedia": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "musafir": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "boudl": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "durhospitality": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "altayyar": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "almosafer": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "wego": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "tajawal": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "royahtours": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "almadinahtours": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "nasrtravel": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "dnata": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "lifestylegulf": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "babyshop": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "splashgulf": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "centrepointgulf": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "dohaqmall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "mallofemirates": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "dubaimall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "abu-dhabimall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "muscatcitycentre": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "unionaire": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "elarashelectronics": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "dream2000": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "almuftah": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "electronicplanet": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "eureka": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "bestaljazeera": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "x-cite": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "alfanarmall": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "arabianbookshop": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "zahratalsafa": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "tamimi": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "abdullahalmazrou": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "taifmarkets": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "tamimiweb": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "grocera": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "tanmiah": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "azizimarkets": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "sary": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "jumlaty": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "anb": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "bankalahli": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "samba": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "alahlibank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "aljazirahbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "saudifrenchbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "banquemisr": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "flyin": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "riyadhairports": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "jedairports": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "damairports": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "egyair": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "flydubai": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "airarabia": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "gulfair": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "movenpick": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "sharqvillage": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "etisalat": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "ooredoo": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "saudibell": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "mobileysa": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "sawa": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "vodafoneeg": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "alamana": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Water"
+  },
+  "taniawater": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Water"
+  },
+  "elekspot": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "hadaramarket": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "qassimmarkets": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "alwatanmarkets": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "khairatgrocery": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "ghandour": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "alnahdafresh": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "fathallahmarket": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "kazyon": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "ragabsons": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "awladragab": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "nbe": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "qnbalaa": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "adcb": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "rakbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "nbq": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "alizzbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "bankmuscat": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "ritzcarltondoha": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "etisalatmasr": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "we": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "du": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "batelco": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "choithrams": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "alaincoop": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "geant": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "megaMart": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "almeera": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "familyfoodcentre": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "bahrawygroup": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "safwamarket": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "hyperone": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "oscarhypermarket": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "university": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "squ": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "polytechnic": {
+    "type": "Expense",
+    "category": "Education",
+    "subcategory": "University"
+  },
+  "cinnabonegypt": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "costacoffee": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "timhortons": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "starbucks": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+  "alromansiah": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "kazanegypt": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "pizzaexpressegypt": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Dining"
+  },
+  "vlcc": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "insurance": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "clinic": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "bupaegypt": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "axaegypt": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Clinic"
+  },
+  "hospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "royalhospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "specialisthospital": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+  "qatarpharma": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "pharmacy": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Pharmacy"
+  },
+  "homecenter": {
+    "type": "Expense",
+    "category": "Housing",
+    "subcategory": "Furniture"
+  },
+  "tsegypt": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "max": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "lcwaikiki": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "defacto": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "citycentre": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+  "jumiaegypt": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "techmart": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+  "smileyshypermarket": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "carrefouregypt": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "lulu": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "waitrose": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+  "commercialbank": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "abcegypt": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "International Bank"
+  },
+  "nationalbankegypt": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "banqueegypt": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "cibegypt": {
+    "type": "Expense",
+    "category": "Transfer",
+    "subcategory": "Local Bank"
+  },
+  "egyptair": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "qatarairways": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "goegypt": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "kuwaitairways": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Flights"
+  },
+  "hilton": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "marriott": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+  "wegoegypt": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Travel Agencies"
+  },
+  "vodafoneegypt": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  },
+  "orangeegypt": {
+    "type": "Expense",
+    "category": "Utilities",
+    "subcategory": "Telecom"
+  }
+}

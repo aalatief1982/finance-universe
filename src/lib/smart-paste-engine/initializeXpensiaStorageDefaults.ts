@@ -2,134 +2,191 @@ import { TransactionType } from '@/types/transaction';
 
 
 
-  export const CATEGORY_HIERARCHY = [
-  // Income
+	  export const CATEGORY_HIERARCHY = [
   {
-    id: 'salary', name: 'Salary', type: 'income' as TransactionType,
+    id: 'bills', name: 'Bills', type: 'expense' as TransactionType,
     subcategories: [
-      { id: 'main', name: 'Main Salary' },
-      { id: 'overtime', name: 'Overtime' },
-      { id: 'bonus', name: 'Bonus' },
-      { id: 'allowance', name: 'Allowance' },
-      { id: 'benefit', name: 'Benefit' },
-    ]
-  },
-  {
-    id: 'investment', name: 'Investment', type: 'income' as TransactionType,
-    subcategories: [
-      { id: 'stocks', name: 'Stocks' },
-      { id: 'sukuk', name: 'Sukuk' },
-      { id: 'dividends', name: 'Dividends' },
-      { id: 'realestate', name: 'Real Estate' }
-    ]
-  },
-  {
-    id: 'freelance', name: 'Freelance & Side Jobs', type: 'income' as TransactionType,
-    subcategories: [
-      { id: 'consulting', name: 'Consulting' },
-      { id: 'design', name: 'Design Projects' },
-      { id: 'gig', name: 'Gig Work' }
-    ]
-  },
-  {
-    id: 'transfers', name: 'Transfers & Refunds', type: 'income' as TransactionType,
-    subcategories: [
-      { id: 'loan-return', name: 'Loan Return' },
-      { id: 'wallet-topup', name: 'Wallet Top-Up' },
-      { id: 'reimbursement', name: 'Reimbursement' }
-    ]
-  },
-
-  // Expense
-  {
-    id: 'shopping', name: 'Shopping', type: 'expense' as TransactionType,
-    subcategories: [
-      { id: 'grocery', name: 'Grocery' },
-      { id: 'clothing', name: 'Clothing' },
-      { id: 'appliances', name: 'Appliances' },
-      { id: 'electronics', name: 'Electronics' },
-      { id: 'online', name: 'Online Orders' },
-      { id: 'misc', name: 'Misc' }
-    ]
-  },
-  {
-    id: 'car', name: 'Car & Transport', type: 'expense' as TransactionType,
-    subcategories: [
-      { id: 'fuel', name: 'Fuel' },
-      { id: 'maintenance', name: 'Maintenance' },
-      { id: 'insurance', name: 'Insurance' },
-      { id: 'parking', name: 'Parking' },
-      { id: 'ride', name: 'Ride-Hailing (Uber)' }
-    ]
-  },
-  {
-    id: 'health', name: 'Health & Wellness', type: 'expense' as TransactionType,
-    subcategories: [
-      { id: 'hospital', name: 'Hospital' },
-      { id: 'pharmacy', name: 'Pharmacy' },
-      { id: 'gym', name: 'Gym' },
-      { id: 'therapy', name: 'Therapy' },
-      { id: 'sports', name: 'Sports Fees' }
+      { id: 'electricity', name: 'Electricity' },
+      { id: 'gas', name: 'Gas' },
+      { id: 'internet', name: 'Internet' },
+      { id: 'mobile', name: 'Mobile' },
+      { id: 'tv-subscription', name: 'TV Subscription' },
+      { id: 'telecom', name: 'Telecom' },
+      { id: 'utilities', name: 'Utilities' },
+      { id: 'waste-management', name: 'Waste Management' },
+      { id: 'government', name: 'Government' },
+      { id: 'water', name: 'Water' },
     ]
   },
   {
     id: 'education', name: 'Education', type: 'expense' as TransactionType,
     subcategories: [
+      { id: 'books-and-materials', name: 'Books & Materials' },
+      { id: 'course', name: 'Course' },
+      { id: 'online-courses', name: 'Online Courses' },
       { id: 'school', name: 'School' },
-      { id: 'course', name: 'Online Course' },
-      { id: 'books', name: 'Books & Materials' }
-    ]
-  },
-  {
-    id: 'bills', name: 'Bills & Utilities', type: 'expense' as TransactionType,
-    subcategories: [
-      { id: 'electricity', name: 'Electricity' },
-      { id: 'water', name: 'Water' },
-      { id: 'internet', name: 'Internet' },
-      { id: 'mobile', name: 'Mobile Plan' }
+      { id: 'university', name: 'University' },
+      { id: 'workshops', name: 'Workshops' },
     ]
   },
   {
     id: 'entertainment', name: 'Entertainment', type: 'expense' as TransactionType,
     subcategories: [
       { id: 'cinema', name: 'Cinema' },
-      { id: 'subscriptions', name: 'Subscriptions (Netflix, etc.)' },
-      { id: 'games', name: 'Games' }
+      { id: 'events-and-activities', name: 'Events & Activities' },
+      { id: 'gaming', name: 'Gaming' },
+      { id: 'music-and-podcasts', name: 'Music & Podcasts' },
+      { id: 'streaming-services', name: 'Streaming Services' },
+      { id: 'subscription', name: 'Subscription' },
     ]
   },
   {
-    id: 'donation', name: 'Donations & Zakat', type: 'expense' as TransactionType,
+    id: 'food', name: 'Food', type: 'expense' as TransactionType,
     subcategories: [
+      { id: 'bakery', name: 'Bakery' },
+      { id: 'café', name: 'Café' },
+      { id: 'catering', name: 'Catering' },
+      { id: 'dining', name: 'Dining' },
+      { id: 'dining-out', name: 'Dining Out' },
+      { id: 'fast-food', name: 'Fast Food' },
+      { id: 'groceries', name: 'Groceries' },
+      { id: 'meal-subscription', name: 'Meal Subscription' },
+      { id: 'snacks-and-beverages', name: 'Snacks & Beverages' },
+    ]
+  },
+  {
+    id: 'gifts-&-donations', name: 'Gifts & Donations', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'charity', name: 'Charity' },
+      { id: 'gifts', name: 'Gifts' },
+      { id: 'tips', name: 'Tips' },
+      { id: 'sadakah', name: 'Sadakah' },
       { id: 'zakat', name: 'Zakat' },
-      { id: 'sadaqah', name: 'Sadaqah' },
-      { id: 'charity', name: 'Charity Org.' }
-    ] 
-  },
-  {
-    id: 'other', name: 'Other', type: 'expense' as TransactionType,
-    subcategories: [
-      { id: 'misc', name: 'Miscellaneous' },
-      { id: 'gift', name: 'Gifts' },
-      { id: 'travel', name: 'Travel & Hotels' }
-    ]
-  },
-
-  // Transfer
-  {
-    id: 'bank-transfer', name: 'Bank Transfers', type: 'transfer' as TransactionType,
-    subcategories: [
-      { id: 'local', name: 'Local Bank' },
-      { id: 'international', name: 'International Bank' }
     ]
   },
   {
-    id: 'wallets', name: 'E-Wallets', type: 'transfer' as TransactionType,
+    id: 'health', name: 'Health', type: 'expense' as TransactionType,
     subcategories: [
-      { id: 'stcpay', name: 'STC Pay' },
-      { id: 'applepay', name: 'Apple Pay' },
-      { id: 'mada', name: 'Mada Pay' }
+      { id: 'clinic', name: 'Clinic' },
+      { id: 'dental', name: 'Dental' },
+      { id: 'doctor-visits', name: 'Doctor Visits' },
+      { id: 'health-insurance', name: 'Health Insurance' },
+      { id: 'hospital', name: 'Hospital' },
+      { id: 'optical', name: 'Optical' },
+      { id: 'pharmacy', name: 'Pharmacy' },
     ]
-  }
+  },
+  {
+    id: 'housing', name: 'Housing', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'furniture', name: 'Furniture' },
+      { id: 'home-insurance', name: 'Home Insurance' },
+      { id: 'maintenance', name: 'Maintenance' },
+      { id: 'property-tax', name: 'Property Tax' },
+      { id: 'real-estate', name: 'Real Estate' },
+      { id: 'rent', name: 'Rent' },
+      { id: 'installment', name: 'Installment' },
+      { id: 'utilities', name: 'Utilities' },
+    ]
+  },
+  {
+    id: 'kids', name: 'Kids', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'babysitting', name: 'Babysitting' },
+      { id: 'clothes', name: 'Clothes' },
+      { id: 'school-supplies', name: 'School Supplies' },
+      { id: 'toys', name: 'Toys' },
+    ]
+  },
+  {
+    id: 'personal-care', name: 'Personal Care', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'cosmetics', name: 'Cosmetics' },
+      { id: 'fitness-and-gym', name: 'Fitness & Gym' },
+      { id: 'salon-and-spa', name: 'Salon & Spa' },
+      { id: 'skincare', name: 'Skincare' },
+    ]
+  },
+  {
+    id: 'shopping', name: 'Shopping', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'books-and-stationery', name: 'Books & Stationery' },
+      { id: 'clothing', name: 'Clothing' },
+      { id: 'electronics', name: 'Electronics' },
+      { id: 'footwear', name: 'Footwear' },
+      { id: 'furniture', name: 'Furniture' },
+      { id: 'grocery', name: 'Grocery' },
+      { id: 'home-goods', name: 'Home Goods' },
+      { id: 'malls', name: 'Malls' },
+      { id: 'pet-supplies', name: 'Pet Supplies' },
+    ]
+  },
+  {
+    id: 'transportation', name: 'Transportation', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'car-loan', name: 'Car Loan' },
+      { id: 'car-maintenance', name: 'Car Maintenance' },
+      { id: 'fuel', name: 'Fuel' },
+      { id: 'parking-fees', name: 'Parking Fees' },
+      { id: 'public-transport', name: 'Public Transport' },
+      { id: 'apps', name: 'Apps' },
+      { id: 'taxi', name: 'Taxi' },
+      { id: 'car-rental', name: 'Car Rental' },
+    ]
+  },
+  {
+      id: 'other', name: 'Other', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'misc', name: 'Miscellaneous' }
+    ]
+  },
+  {
+    id: 'travel', name: 'Travel', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'car-rental', name: 'Car Rental' },
+      { id: 'flights', name: 'Flights' },
+      { id: 'hotels', name: 'Hotels' },
+      { id: 'local-travel', name: 'Local Travel' },
+      { id: 'travel-agencies', name: 'Travel Agencies' },
+      { id: 'travel-insurance', name: 'Travel Insurance' },
+      { id: 'visa-fees', name: 'Visa Fees' },
+    ]
+  },
+  {
+    id: 'utilities', name: 'Utilities', type: 'expense' as TransactionType,
+    subcategories: [
+      { id: 'electricity', name: 'Electricity' },
+      { id: 'telecom', name: 'Telecom' },
+      { id: 'water', name: 'Water' },
+    ]
+  },
+  {
+    id: 'income', name: 'Income', type: 'income' as TransactionType,
+    subcategories: [
+      { id: 'bonus', name: 'Bonus' },
+      { id: 'dividends', name: 'Dividends' },
+      { id: 'freelance', name: 'Freelance' },
+      { id: 'investment', name: 'Investment' },
+      { id: 'pension', name: 'Pension' },
+      { id: 'refunds', name: 'Refunds' },
+      { id: 'rental-income', name: 'Rental Income' },
+      { id: 'salary', name: 'Salary' },
+      { id: 'scholarship', name: 'Scholarship' },
+    ]
+  },
+  {
+    id: 'transfer', name: 'Transfer', type: 'transfer' as TransactionType,
+    subcategories: [
+      { id: 'bank-transfer', name: 'Bank Transfer' },
+      { id: 'credit-card-payment', name: 'Credit Card Payment' },
+      { id: 'family-support', name: 'Family Support' },
+      { id: 'from-savings', name: 'From Savings' },
+      { id: 'international-bank', name: 'International Bank' },
+      { id: 'local-bank', name: 'Local Bank' },
+      { id: 'money-transfer', name: 'Money Transfer' },
+      { id: 'to-savings', name: 'To Savings' },
+    ]
+  },
 ];
   
 
@@ -163,6 +220,7 @@ export function initializeXpensiaStorageDefaults() {
       { "keyword": "خصم", "type": "expense" },
       { "keyword": "بطاقة", "type": "expense" },
 	  { "keyword": "سداد", "type": "expense" },
+	  { "keyword": "حوالة صادرة", "type": "income" },
 
       { "keyword": "salary", "type": "income" },
       { "keyword": "deposit", "type": "income" },
@@ -173,7 +231,6 @@ export function initializeXpensiaStorageDefaults() {
       { "keyword": "incentive", "type": "income" },
       { "keyword": "حوالة واردة", "type": "income" },
       { "keyword": "دفعة", "type": "income" },
-	  { "keyword": "حوالة", "type": "income" },
 	  { "keyword": "راتب", "type": "income" },
 
       { "keyword": "transfer", "type": "transfer" },

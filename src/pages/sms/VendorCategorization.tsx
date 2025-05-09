@@ -25,7 +25,7 @@ const VendorCategorization: React.FC = () => {
       // Extract vendor name (similar to SmartPaste fallback logic)
       const vendorMatch = msg.message.match(/(?:at|@|في|لدى)\s+([^\n,;]+)/i);
       if (vendorMatch) {
-        vendorSet.add(vendorMatch[1].trim());
+        vendorSet.add(vendorMatch[1].trim()||'');
       }
     });
 

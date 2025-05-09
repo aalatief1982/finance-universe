@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { getCategoryHierarchy } from "@/lib/category-utils";
 import { useToast } from '@/components/ui/use-toast';
-import { parseSmsMessage } from '@/lib/smart-paste-engine/smsParser';
-import { useNavigate } from 'react-router-dom'; // At the top
+import { findClosestFallbackMatch } from '@/lib/smart-paste-engine/suggestionEngine';
+import { useLocation, useNavigate } from 'react-router-dom';
+import Layout from '@/components/Layout';
+import { ArrowLeft } from 'lucide-react';
 
 interface VendorMappingEntry {
   vendor: string;
@@ -14,23 +16,42 @@ interface VendorMappingEntry {
 }
 
 const VendorMapping: React.FC = () => {
-	
-	console.log('[Debug] Loaded vendor map:', localStorage.getItem('xpensia_vendor_map'));
-	console.log('[Debug] Loaded keyword bank:', localStorage.getItem('xpensia_keyword_bank'));
   const [vendors, setVendors] = useState<VendorMappingEntry[]>([]);
+  const location = useLocation();
   const { toast } = useToast();
-  
-  const navigate = useNavigate(); // After toast hook
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const vendorMap = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
-    const uniqueVendors = Object.keys(vendorMap);
-    const initialMappings = uniqueVendors.map(vendor => ({
-      vendor,
-      updatedVendor: vendorMap[vendor],
-      category: 'Other',
-      subcategory: 'Miscellaneous',
-    }));
+    const incomingVendorMap = location.state?.vendorMap || {};
+    const incomingKeywordBank = location.state?.keywordMap || [];
+    const messages = location.state?.messages || [];
+
+    if (Object.keys(incomingVendorMap).length === 0 || messages.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing vendor data',
+        description: 'No vendor data passed. Please reprocess SMS messages.',
+      });
+      navigate('/');
+      return;
+    }
+
+    const uniqueVendors = Object.keys(incomingVendorMap);
+
+    const initialMappings = uniqueVendors.map(vendor => {
+      const kbEntry = incomingKeywordBank.find((entry: any) => entry.keyword === vendor);
+      const categoryFromKB = kbEntry?.mappings.find((m: any) => m.field === 'category')?.value;
+      const subcategoryFromKB = kbEntry?.mappings.find((m: any) => m.field === 'subcategory')?.value;
+      const fallbackMatch = findClosestFallbackMatch(vendor);
+
+      return {
+        vendor,
+        updatedVendor: incomingVendorMap[vendor],
+        category: categoryFromKB || fallbackMatch?.category || 'Other',
+        subcategory: subcategoryFromKB || fallbackMatch?.subcategory || 'Miscellaneous',
+      };
+    });
+
     setVendors(initialMappings);
   }, []);
 
@@ -42,57 +63,43 @@ const VendorMapping: React.FC = () => {
     });
   };
 
-const handleConfirm = () => {
-  const vendorMap: Record<string, string> = {};
-  const keywordBank: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
+  const handleConfirm = () => {
+    const vendorMap: Record<string, string> = {};
+    const keywordBank: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
 
-  vendors.forEach(v => {
-    vendorMap[v.vendor] = v.updatedVendor;
+    vendors.forEach(v => {
+      vendorMap[v.vendor] = v.updatedVendor;
 
-    keywordBank.push({
-      keyword: v.vendor,
-      mappings: [
-        { field: 'category', value: v.category },
-        { field: 'subcategory', value: v.subcategory },
-      ],
+      keywordBank.push({
+        keyword: v.vendor,
+        mappings: [
+          { field: 'category', value: v.category },
+          { field: 'subcategory', value: v.subcategory },
+        ],
+      });
     });
-  });
 
-  // Save mappings
-  localStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
-  localStorage.setItem('xpensia_keyword_bank', JSON.stringify(keywordBank));
+    const messages = location.state?.messages || [];
 
-  // Parse messages and generate draft transactions
-  const rawMessages = JSON.parse(localStorage.getItem('xpensia_selected_messages') || '[]');
-
-  const draftTransactions = rawMessages.map((msg: any) => {
-    const parsed = parseSmsMessage(msg.message);
-    const rawVendor = parsed.vendor || msg.sender;
-    const updatedVendor = vendorMap[rawVendor] || rawVendor;
-    const kbMatch = keywordBank.find(kb => kb.keyword === rawVendor);
-
-    return {
-      ...parsed,
-      vendor: updatedVendor,
-      category: kbMatch?.mappings.find(m => m.field === 'category')?.value || parsed.category || 'Other',
-      subcategory: kbMatch?.mappings.find(m => m.field === 'subcategory')?.value || parsed.subcategory || 'Miscellaneous',
-      rawMessage: msg.message
-    };
-  });
-
-  localStorage.setItem('xpensia_sms_draft_transactions', JSON.stringify(draftTransactions));
-
-  toast({
-    title: 'Success',
-    description: 'Vendor mappings and parsed SMS transactions saved!',
-  });
-
-  navigate('/review-draft-transactions');
-};
+    navigate('/review-draft-transactions', {
+      state: {
+        messages,
+        vendorMap,
+        keywordMap: keywordBank
+      }
+    });
+  };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Vendor Mapping</h1>
+    <Layout>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl sm:text-2xl font-bold">Vendor Mapping</h1>
+        </div>
+      </div>
 
       <div className="space-y-4">
         {vendors.map((vendor, index) => (
@@ -115,9 +122,7 @@ const handleConfirm = () => {
                 className="w-full border rounded p-2"
               >
                 {getCategoryHierarchy().filter(c => c.type === 'expense').map(c => (
-                  <option key={c.id} value={c.name}>
-                    {c.name}
-                  </option>
+                  <option key={c.id} value={c.name}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -130,9 +135,7 @@ const handleConfirm = () => {
                 className="w-full border rounded p-2"
               >
                 {getCategoryHierarchy().find(c => c.name === vendor.category)?.subcategories.map(sub => (
-                  <option key={sub.id} value={sub.name}>
-                    {sub.name}
-                  </option>
+                  <option key={sub.id} value={sub.name}>{sub.name}</option>
                 ))}
               </select>
             </div>
@@ -143,7 +146,7 @@ const handleConfirm = () => {
       <Button className="mt-6 w-full" onClick={handleConfirm}>
         Confirm
       </Button>
-    </div>
+    </Layout>
   );
 };
 

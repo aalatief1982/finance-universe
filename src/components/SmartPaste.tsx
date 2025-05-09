@@ -13,6 +13,8 @@ import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { Switch } from './ui/switch';
 import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { nanoid } from 'nanoid';
+import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+
 import {
   getFieldConfidence,
   getTemplateConfidence,
@@ -43,7 +45,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+/*   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim()) {
       toast({
@@ -59,7 +61,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     setError(null);
 
     try {
-      const parsed = parseSmsMessage(text);
+      //const parsed = parseSmsMessage(text);
       console.log("[SmartPaste] Parsed result:", parsed);
 
       const transaction: Transaction = {
@@ -100,6 +102,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
       setDetectedTransactions([transaction]);
 
       if (onTransactionsDetected) {
+		  console.log("[SmartPaste] Final transaction inference:", transaction);
         onTransactionsDetected(
           [transaction],
           text,
@@ -115,7 +118,57 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     } finally {
       setIsProcessing(false);
     }
-  };
+  }; */
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!text.trim()) {
+    toast({
+      title: "Error",
+      description: "Please paste or enter a message first",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  console.log("[SmartPaste] Submitting message:", text);
+  setIsProcessing(true);
+  setError(null);
+
+  try {
+    const {
+      transaction,
+      confidence,
+      origin,
+      parsed
+    } = parseAndInferTransaction(text, senderHint);
+
+    console.log("[SmartPaste] Parsed result:", parsed);
+    console.log("[SmartPaste] Confidence Breakdown:", {
+      confidence,
+      origin
+    });
+
+    setDetectedTransactions([transaction]);
+
+    if (onTransactionsDetected) {
+      console.log("[SmartPaste] Final transaction inference:", transaction);
+      onTransactionsDetected(
+        [transaction],
+        text,
+        transaction.fromAccount,
+        confidence,
+        origin === 'template' || origin === 'ml',
+        origin
+      );
+    }
+  } catch (err: any) {
+    console.error("[SmartPaste] Error in structure parsing:", err);
+    setError("Could not parse the message. Try again or report.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   const handlePaste = async () => {
     try {

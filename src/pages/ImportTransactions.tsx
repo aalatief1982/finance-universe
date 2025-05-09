@@ -64,11 +64,10 @@ const ImportTransactions = () => {
 
     navigate('/edit-transaction', {
   state: {
-    transaction: {
-      ...transaction,
-      date: transaction.date?.split('-').reverse().join('-'),
-	    rawMessage: rawMessage ?? '', // ✅ this is the fix
-    },
+	transaction: {
+	  ...transaction,
+	  rawMessage: rawMessage ?? '',
+	},
     rawMessage,
     senderHint,
     confidence,
