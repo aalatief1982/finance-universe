@@ -84,19 +84,19 @@ const DashboardContent = ({
   // Placeholder skeleton for loading state
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-6 bg-muted rounded w-1/3 mb-2"></div>
-        <div className="h-4 bg-muted rounded w-2/3 mb-6"></div>
+      <div className="space-y-4 animate-pulse">
+        <div className="h-5 bg-muted rounded w-1/3 mb-2"></div>
+        <div className="h-4 bg-muted rounded w-2/3 mb-4"></div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-32 bg-muted rounded-lg"></div>
+            <div key={i} className="h-28 bg-muted rounded-lg"></div>
           ))}
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-80 bg-muted rounded-lg"></div>
-          <div className="h-80 bg-muted rounded-lg"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="h-72 bg-muted rounded-lg"></div>
+          <div className="h-72 bg-muted rounded-lg"></div>
         </div>
       </div>
     );
@@ -107,13 +107,13 @@ const DashboardContent = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="space-y-6"
+      className="space-y-4"
     >
       <div className="pb-2">
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-xl font-bold">
           {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Welcome to your Dashboard'}
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Here's an overview of your finances
         </p>
       </div>
@@ -125,7 +125,7 @@ const DashboardContent = ({
         previousBalance={previousBalance}
       />
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}

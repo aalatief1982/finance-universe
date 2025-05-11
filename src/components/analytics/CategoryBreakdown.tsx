@@ -14,30 +14,30 @@ interface CategoryBreakdownProps {
 const CategoryBreakdown = ({ categories, categoryData, totalExpenses }: CategoryBreakdownProps) => {
   return (
     <Card className="border border-border shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-xl font-medium">Expense Categories</CardTitle>
+      <CardHeader className="p-3">
+        <CardTitle className="text-lg font-medium">Expense Categories</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2 mb-6">
+      <CardContent className="p-3 pt-0">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {categories.map(category => (
             <CategoryPill key={category} category={category} />
           ))}
         </div>
         
         {categoryData.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {categoryData.map((category) => (
-              <div key={category.name} className="bg-card rounded-lg p-4 border border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
+              <div key={category.name} className="bg-card rounded-lg p-2.5 border border-border">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
                     <CategoryPill category={category.name} />
-                    <span className="font-medium">{category.name}</span>
+                    <span className="font-medium text-sm">{category.name}</span>
                   </div>
-                  <span className="font-semibold">{formatCurrency(category.value)}</span>
+                  <span className="font-semibold text-sm">{formatCurrency(category.value)}</span>
                 </div>
-                <div className="w-full bg-secondary rounded-full h-2 mt-2">
+                <div className="w-full bg-secondary rounded-full h-1.5 mt-1.5">
                   <div 
-                    className="bg-primary h-2 rounded-full" 
+                    className="bg-primary h-1.5 rounded-full" 
                     style={{ 
                       width: `${(category.value / totalExpenses) * 100}%` 
                     }}
@@ -50,7 +50,7 @@ const CategoryBreakdown = ({ categories, categoryData, totalExpenses }: Category
             ))}
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-12">No expense data available</p>
+          <p className="text-center text-muted-foreground py-8 text-sm">No expense data available</p>
         )}
       </CardContent>
     </Card>

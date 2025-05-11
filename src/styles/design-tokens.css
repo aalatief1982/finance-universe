@@ -1,94 +1,92 @@
 
 :root {
-  /* Base colors using HSL values */
-  --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --primary: 175 100% 30%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 175 100% 30%;
-  --accent-foreground: 222 47% 11%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 175 100% 30%;
-  --radius: 0.75rem;
-
-  /* Spacing System */
-  --space-1: 0.25rem;   /* 4px */
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.5rem;    /* 24px */
-  --space-6: 2rem;      /* 32px */
-  --space-8: 3rem;      /* 48px */
-
-  /* Layout */
-  --header-height: 4rem;
-  --sidebar-width: 16rem;
-  --content-max-width: 1280px;
-  --page-padding-x: var(--space-4);
-  --page-padding-y: var(--space-4);
-
+  /* Color System */
+  --color-primary: #0097a0;
+  --color-primary-hover: #008792;
+  --color-primary-active: #00777e;
+  
+  --color-secondary: #FF6B3C;
+  --color-secondary-hover: #f05a2a;
+  --color-secondary-active: #e04a1a;
+  
+  --color-dark: #1A2A34;
+  --color-light: #F9FAFB;
+  
+  --color-success: #27AE60;
+  --color-danger: #DC3545;
+  --color-warning: #FFC107;
+  --color-info: #17A2B8;
+  
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  
+  --color-gray-50: #F5F8FA;
+  --color-gray-100: #EDF2F7;
+  --color-gray-200: #E2E8F0;
+  --color-gray-300: #CBD5E0;
+  --color-gray-400: #A0AEC0;
+  --color-gray-500: #718096;
+  --color-gray-600: #4A5568;
+  --color-gray-700: #2D3748;
+  --color-gray-800: #1A202C;
+  --color-gray-900: #171923;
+  
+  /* Spacing System (more compact) */
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-2: 0.5rem;  /* 8px */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-4: 1rem;    /* 16px */
+  --spacing-5: 1.25rem; /* 20px */
+  --spacing-6: 1.5rem;  /* 24px */
+  
   /* Component Spacing */
-  --section-spacing: var(--space-6);
-  --card-padding: var(--space-4);
-  --card-spacing: var(--space-4);
-
-  /* Dark mode overrides */
-  .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 175 100% 30%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 18%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 18%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 18%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 212 27% 84%;
-  }
+  --card-padding: var(--spacing-3);
+  --card-spacing: var(--spacing-2);
+  --button-padding: var(--spacing-2) var(--spacing-4);
+  --section-spacing: var(--spacing-4);
+  --list-item-padding: var(--spacing-2);
+  
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+  
+  /* Typography */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;    /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Transitions */
+  --transition-all: all 0.2s ease;
+  --transition-colors: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
 }
 
-/* Responsive adjustments */
-@media (min-width: 640px) {
-  :root {
-    --page-padding-x: var(--space-6);
-  }
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --page-padding-x: var(--space-8);
-  }
-}
-
-/* Utility classes */
-.glass {
-  @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl;
-}
-
-.section-padding {
-  @apply py-[var(--section-spacing)] px-[var(--page-padding-x)];
-}
-
-.card-gradient {
-  @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm;
+/* Dark mode overrides */
+.dark {
+  --color-gray-50: #1F2937;
+  --color-gray-100: #1A1D23;
+  --color-gray-200: #2D3748;
+  --color-gray-300: #4A5568;
+  --color-gray-400: #718096;
+  --color-gray-500: #A0AEC0;
+  --color-gray-600: #CBD5E0;
+  --color-gray-700: #E2E8F0;
+  --color-gray-800: #EDF2F7;
+  --color-gray-900: #F7FAFC;
 }

@@ -25,24 +25,28 @@ const MonthlyTrendsChart = ({ monthlyData }: MonthlyTrendsChartProps) => {
 
   return (
     <Card className="border border-border shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-xl font-medium">Monthly Spending Trends</CardTitle>
+      <CardHeader className="p-3">
+        <CardTitle className="text-lg font-medium">Monthly Spending Trends</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0">
         {monthlyData.length > 0 ? (
-          <div className="h-[350px]">
+          <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value: number) => formatCurrency(value).replace(/[^0-9.]/g, '')} />
+              <BarChart data={monthlyData} margin={{ top: 15, right: 10, left: 10, bottom: 30 }}>
+                <XAxis dataKey="month" fontSize={12} />
+                <YAxis 
+                  tickFormatter={(value: number) => formatCurrency(value).replace(/[^0-9.]/g, '')}
+                  fontSize={12}
+                  width={40}
+                />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
+                <Legend wrapperStyle={{fontSize: '12px'}} />
                 <Bar dataKey="total" name="Spending" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-12">No expense data available</p>
+          <p className="text-center text-muted-foreground py-8 text-sm">No expense data available</p>
         )}
       </CardContent>
     </Card>

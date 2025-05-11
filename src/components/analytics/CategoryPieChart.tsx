@@ -26,20 +26,20 @@ const CategoryPieChart = ({ categoryData, colors }: CategoryPieChartProps) => {
 
   return (
     <Card className="border border-border shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-xl font-medium">Spending by Category</CardTitle>
+      <CardHeader className="p-3">
+        <CardTitle className="text-lg font-medium">Spending by Category</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3 pt-0">
         {categoryData.length > 0 ? (
-          <div className="h-[250px]">
+          <div className="h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={categoryData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={70}
                   fill="#8884d8"
                   dataKey="value"
                   labelLine={false}
@@ -54,7 +54,7 @@ const CategoryPieChart = ({ categoryData, colors }: CategoryPieChartProps) => {
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-12">No expense data available</p>
+          <p className="text-center text-muted-foreground py-8 text-sm">No expense data available</p>
         )}
       </CardContent>
     </Card>

@@ -14,23 +14,25 @@ interface DashboardHeaderProps {
 const DashboardHeader = ({ user, setIsAddingExpense }: DashboardHeaderProps) => {
   return (
     <div className="flex items-center justify-between">
-      <h1 className="text-3xl font-bold tracking-tight">
+      <h1 className="text-2xl font-bold tracking-tight">
         {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
       </h1>
       <div className="flex space-x-2">
         <Button 
           variant="outline" 
-          className="gap-1 hidden sm:flex"
+          className="gap-1 hidden sm:flex text-sm"
+          size="sm"
           asChild
         >
           <Link to="/process-sms">
-            <MessageSquare size={18} />
+            <MessageSquare size={16} />
             Import SMS
           </Link>
         </Button>
         
         <Button 
-          className="gap-1" 
+          className="gap-1 text-sm" 
+          size="sm"
           onClick={() => setIsAddingExpense(true)}
         >
           Add Transaction

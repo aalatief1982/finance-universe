@@ -54,40 +54,40 @@ const RecentTransactions = ({
 
   return (
     <Card className="border shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Recent Transactions</h2>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Recent Transactions</h2>
           <div className="flex items-center gap-2">
             <Tabs value={filter} onValueChange={handleTabChange}>
-              <TabsList className="h-8 bg-muted/50">
+              <TabsList className="h-7 bg-muted/50">
                 <TabsTrigger 
                   value="all" 
-                  className="text-xs px-3 h-7"
+                  className="text-xs px-2.5 h-6"
                 >
                   All
                 </TabsTrigger>
                 <TabsTrigger 
                   value="income" 
-                  className="text-xs px-3 h-7"
+                  className="text-xs px-2.5 h-6"
                 >
                   Income
                 </TabsTrigger>
                 <TabsTrigger 
                   value="expense" 
-                  className="text-xs px-3 h-7"
+                  className="text-xs px-2.5 h-6"
                 >
                   Expenses
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button variant="ghost" size="icon" className="h-8 w-8" title="Refresh transactions">
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Refresh transactions">
               <RefreshCw size={14} />
             </Button>
           </div>
         </div>
         
         <motion.div 
-          className="space-y-3"
+          className="space-y-2"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -102,13 +102,13 @@ const RecentTransactions = ({
               </motion.div>
             ))
           ) : (
-            <div className="text-center py-8 border rounded-lg flex flex-col items-center">
-              <p className="text-muted-foreground mb-3">No transactions found</p>
+            <div className="text-center py-6 border rounded-lg flex flex-col items-center">
+              <p className="text-muted-foreground mb-2 text-sm">No transactions found</p>
               <div className="flex space-x-2">
                 <Button size="sm" asChild>
                   <Link to="/process-sms">
-                    <MessageSquare className="mr-1" size={16} />
-                    Import from SMS
+                    <MessageSquare className="mr-1" size={14} />
+                    Import SMS
                   </Link>
                 </Button>
                 <Button 
@@ -116,18 +116,18 @@ const RecentTransactions = ({
                   variant="outline" 
                   onClick={() => setIsAddingExpense(true)}
                 >
-                  <Plus className="mr-1" size={16} />
+                  <Plus className="mr-1" size={14} />
                   Add Manually
                 </Button>
               </div>
             </div>
           )}
           {filteredTransactions.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-3">
               <Button variant="outline" size="sm" className="w-full group" asChild>
                 <Link to="/transactions" className="flex items-center justify-center">
                   View All Transactions
-                  <ArrowRight size={14} className="ml-2 transition-transform duration-200 group-hover:translate-x-1" />
+                  <ArrowRight size={14} className="ml-1 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>

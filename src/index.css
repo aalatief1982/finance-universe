@@ -1,148 +1,103 @@
-@import './styles/design-tokens.css';
-@import url('https://rsms.me/inter/inter.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@import './styles/design-tokens.css';
+
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 175 100% 30%; /* Updated to match the teal color in the images #0097a0 */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 175 100% 30%; /* Updated to match primary */
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 175 100% 30%; /* Updated to match primary */
-
-    --radius: 0.75rem;
+    --background: 210 20% 98%;
+    --foreground: 215 25% 27%;
     
-    --expense: 0 78% 54%;
-    --income: 138 57% 43%;
+    --muted: 217.9 10.6% 92%;
+    --muted-foreground: 215 20% 45.1%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 27%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 27%;
+    
+    --border: 214.3 32% 91%;
+    --input: 214.3 32% 91%;
+    
+    --primary: 183 100% 32%;
+    --primary-foreground: 210 20% 98%;
+    
+    --secondary: 18 100% 62%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --accent: 18 100% 62%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --ring: 183 100% 32%;
+    
+    --radius: 0.5rem;
   }
-
+ 
   .dark {
-    --background: 222 47% 11%;
+    --background: 222.2 47.4% 11.2%;
     --foreground: 210 40% 98%;
-
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 11%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --popover: 222.2 47.4% 11.2%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 175 100% 30%; /* Updated to match the teal color */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217 33% 18%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 18%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 217 33% 18%;
+    
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    
+    --primary: 183 70% 40%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 18 90% 55%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --accent: 18 90% 55%;
     --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
+    
+    --destructive: 0 62.8% 40.6%;
     --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 212 27% 84%;
+    
+    --ring: 183 70% 40%;
   }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1 {
+    @apply text-2xl font-bold;
+  }
+  h2 {
+    @apply text-xl font-semibold;
+  }
+  h3 {
+    @apply text-lg font-medium;
   }
 }
 
-@layer utilities {
-  .glass-effect {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg;
-  }
-  
-  .text-balance {
-    text-wrap: balance;
-  }
-  
-  .income-text {
-    @apply text-[#34A853];
-  }
-  
-  .expense-text {
-    @apply text-[#DD3933];
-  }
-  
-  .income-bg {
-    @apply bg-[#34A853]/20;
-  }
-  
-  .expense-bg {
-    @apply bg-[#DD3933]/20;
+@layer components {
+  .card {
+    @apply bg-card border border-border rounded-lg shadow-sm p-3;
   }
 }
 
-/* Add Inter font */
-
-html { font-family: 'Inter', sans-serif; }
-@supports (font-variation-settings: normal) {
-  html { font-family: 'Inter var', sans-serif; }
-}
-
-/* Custom animations */
-.animate-in {
-  animation: fade-in 0.5s ease forwards;
-}
-
-.hover-scale {
-  transition: transform 0.2s ease;
-}
-
-.hover-scale:hover {
-  transform: scale(1.02);
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.5);
+/* Mobile-specific optimizations */
+@media (max-width: 640px) {
+  .card {
+    @apply p-2;
+  }
 }
