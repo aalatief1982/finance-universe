@@ -1,4 +1,4 @@
-
+import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate } from '@/types/template';
 
 export function loadTemplateBank(): SmartPasteTemplate[] {
@@ -45,15 +45,16 @@ export function saveNewTemplate(template: string, fields: string[], rawMessage?:
 export function getAllTemplates(): SmartPasteTemplate[] {
   return loadTemplateBank();
 }
+
 export function extractTemplateStructure(
   message: string
 ): { template: string; placeholders: Record<string, string> } {
   const patterns = [
-    {
-      // Support formats: SAR 55,100.00 | 35 SAR | SAR 35
-      regex: /(?:مبلغ[:\s]*)?(?:(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD)[\s:]?((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)|((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)[\s:]?(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD))/gi,
-      fieldName: 'amount+currency'
-    },
+   {
+	  // Support formats like: SAR 55,100.00 | 35 SAR | 200.00 ر.س | ٣٥٠ جنيه مصري
+	  regex: /(?:مبلغ[:\s]*)?(?:(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD|ر\.?\s?س|ريال|جنيه\s?مصري|جنيه)[\s:]?((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)|((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)[\s:]?(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD|ر\.?\s?س|ريال|جنيه\s?مصري|جنيه))/gi,
+	  fieldName: 'amount+currency'
+	},
     {
       regex: new RegExp(
         String.raw`(?:في[:\s]*)?(?:on\s*)?(` +
@@ -71,10 +72,6 @@ export function extractTemplateStructure(
       ),
       fieldName: 'date'
     },
-		  {
-		  regex: /(?:لدى|من|في|عند|من عند|تم الدفع لـ|تم الشراء من|at|from|paid to|purchased from)[:\s]*([^\n,؛;:\-]+)/gi,
-		  fieldName: 'vendor'
-		},
     {
       regex: /\*{2,4}\d{3,4}/g,
       fieldName: 'account'
@@ -84,6 +81,20 @@ export function extractTemplateStructure(
   let templateText = message;
   const placeholders: Record<string, string> = {};
   const replacements: { start: number; end: number; replacement: string }[] = [];
+
+  // Extract vendor using extractVendorName from suggestionEngine.ts
+  const vendor = extractVendorName(message);
+  if (vendor) {
+    placeholders['vendor'] = vendor;
+    const vendorIndex = message.indexOf(vendor);
+    if (vendorIndex !== -1) {
+      replacements.push({
+        start: vendorIndex,
+        end: vendorIndex + vendor.length,
+        replacement: `{{vendor}}`
+      });
+    }
+  }
 
   for (const { regex, fieldName } of patterns) {
     regex.lastIndex = 0;

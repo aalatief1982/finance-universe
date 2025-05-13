@@ -80,8 +80,20 @@ export function parseSmsMessage(message: string): TransactionDraft | null {
     const inferred = inferIndirectFields(message, { vendor });
 
     const type = inferred.type || 'expense';
-    const category = inferred.category || 'Other';
-    const subcategory = inferred.subcategory || 'Miscellaneous';
+
+    let category = inferred.category || '';
+    let subcategory = inferred.subcategory || '';
+    
+    if (!category && !subcategory && type === 'income') {
+      category = 'Earnings';
+      subcategory = 'Benefits';
+      console.info('[SmsParser] Applied default category for income: Earnings > Benefits');
+    } else {
+      // safe fallback for other types
+      category = category || 'Other';
+      subcategory = subcategory || 'Miscellaneous';
+    }
+    
 
     const transaction: TransactionDraft = {
       amount,

@@ -14,6 +14,8 @@ import { Switch } from './ui/switch';
 import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { nanoid } from 'nanoid';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
+
 
 import {
   getFieldConfidence,
@@ -127,6 +129,16 @@ const handleSubmit = (e: React.FormEvent) => {
       title: "Error",
       description: "Please paste or enter a message first",
       variant: "destructive",
+    });
+    return;
+  }
+ console.log('[SmartPaste] Checking message:', text);
+  // 🚫 Check if message contains financial transaction pattern
+  if (!isFinancialTransactionMessage(text)) {
+    toast({
+      title: "Non-transactional message",
+      description: "This message does not appear to contain any transaction data.",
+      variant: "default",
     });
     return;
   }

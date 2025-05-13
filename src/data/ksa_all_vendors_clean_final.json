@@ -429,7 +429,7 @@
     "category": "Health",
     "subcategory": "Pharmacy"
   },
-  "lemonpharmacy": {
+  "lemon": {
     "type": "Expense",
     "category": "Health",
     "subcategory": "Pharmacy"
@@ -736,7 +736,7 @@
   },
   "stc": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "salam": {
@@ -751,12 +751,12 @@
   },
   "zain": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "mobily": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "virginmobile": {
@@ -2521,42 +2521,42 @@
   },
   "etisalat": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "ooredoo": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "saudibell": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "mobileysa": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "sawa": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "vodafoneeg": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "alamana": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Water"
   },
-  "taniawater": {
+  "tania": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Water"
   },
   "elekspot": {
@@ -2656,22 +2656,22 @@
   },
   "etisalatmasr": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "we": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "du": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "batelco": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "choithrams": {
@@ -2944,14 +2944,304 @@
     "category": "Travel",
     "subcategory": "Travel Agencies"
   },
-  "vodafoneegypt": {
+  "vodafone": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
   },
   "orangeegypt": {
     "type": "Expense",
-    "category": "Utilities",
+    "category": "Services",
     "subcategory": "Telecom"
+  },
+  "bolt": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Taxi"
+  },
+"hugerstation": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Delivery Apps"
+  },
+"lebardi": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+"alnamas": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+"aldrees": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Fuel"
+  },
+"bahibeirut": {
+    "type": "Expense",
+    "category": "Personal Care",
+    "subcategory": "Barber"
+  },
+"google": {
+    "type": "Expense",
+    "category": "Bills",
+    "subcategory": "Cloud"
+  },
+"baladidukkan": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+"openai": {
+    "type": "Expense",
+    "category": "Bills",
+    "subcategory": "Cloud"
+  },
+"riyadhme": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Metro"
+  },
+"nwadr": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Home Goods"
+  },
+"drcafe": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+"bernorth": {
+    "type": "Expense",
+    "category": "Gifts & Donations",
+    "subcategory": "Sadakah"
+  },
+"calo": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Meal Subscription"
+  },
+"deltariyadh": {
+    "type": "Expense",
+    "category": "Health",
+    "subcategory": "Hospital"
+  },
+"playstation": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+"jahez": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Delivery Apps"
+  },
+"centrepoint": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"shein": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"alhusian": {
+    "type": "Expense",
+    "category": "Kids",
+    "subcategory": "Toys"
+  },
+"lulu": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+"bindawood": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+"market": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+"brands": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"alharam": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"restaurant": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+"faleh": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"parking": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Parking Fees"
+  },
+"apparel": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"crepe": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+"woodenbakey": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Bakery"
+  },
+"taiba": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+"pastry": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Sweet"
+  },
+"sama": {
+    "type": "Expense",
+    "category": "Personal Care",
+    "subcategory": "Swimming"
+  },
+"sheraton": {
+    "type": "Expense",
+    "category": "Travel",
+    "subcategory": "Hotels"
+  },
+"remarkable": {
+    "type": "Expense",
+    "category": "Entertainment",
+    "subcategory": "Subscription"
+  },
+"aljabr": {
+    "type": "Expense",
+    "category": "Services",
+    "subcategory": "Laundry"
+  },
+"danube": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Grocery"
+  },
+"blueage": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"terranova": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"nichi": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"semir": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"calliope": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"paitto": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+"nands": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+"hajihussein": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Car Maintenance"
+  },
+"java": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Café"
+  },
+"pertroly": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Fuel"
+  },
+"naft": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Fuel"
+  },
+"shawaf": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Books & Stationery"
+  },
+"sahel": {
+    "type": "Expense",
+    "category": "Transportation",
+    "subcategory": "Fuel"
+  },
+"hasham": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
+  },
+"polo": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Clothing"
+  },
+"lovable": {
+    "type": "Expense",
+    "category": "Services",
+    "subcategory": "Subscription"
+  },
+"tomor": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Sweet"
+  },
+"cinnzeo": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Sweet"
+  },
+"aliexpress": {
+    "type": "Expense",
+    "category": "Shopping",
+    "subcategory": "Electronics"
+  },
+"beetalhamam": {
+    "type": "Expense",
+    "category": "Food",
+    "subcategory": "Fast Food"
   }
 }

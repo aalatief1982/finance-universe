@@ -16,6 +16,7 @@ import { TransactionType } from '@/types/transaction';
       { id: 'waste-management', name: 'Waste Management' },
       { id: 'government', name: 'Government' },
       { id: 'water', name: 'Water' },
+      { id: 'cloud', name: 'Cloud' },
     ]
   },
   {
@@ -52,6 +53,8 @@ import { TransactionType } from '@/types/transaction';
       { id: 'groceries', name: 'Groceries' },
       { id: 'meal-subscription', name: 'Meal Subscription' },
       { id: 'snacks-and-beverages', name: 'Snacks & Beverages' },
+      { id: 'sweet', name: 'Sweet' },
+	    { id: 'delivery-apps', name: 'Delivery Apps' },
     ]
   },
   {
@@ -105,6 +108,9 @@ import { TransactionType } from '@/types/transaction';
       { id: 'fitness-and-gym', name: 'Fitness & Gym' },
       { id: 'salon-and-spa', name: 'Salon & Spa' },
       { id: 'skincare', name: 'Skincare' },
+      { id: 'barber', name: 'Barber' },
+      { id: 'swimming', name: 'Swimming' },
+      { id: 'tennis', name: 'Tennis' },
     ]
   },
   {
@@ -132,6 +138,7 @@ import { TransactionType } from '@/types/transaction';
       { id: 'apps', name: 'Apps' },
       { id: 'taxi', name: 'Taxi' },
       { id: 'car-rental', name: 'Car Rental' },
+      { id: 'metro', name: 'Metro' },
     ]
   },
   {
@@ -153,17 +160,20 @@ import { TransactionType } from '@/types/transaction';
     ]
   },
   {
-    id: 'utilities', name: 'Utilities', type: 'expense' as TransactionType,
+    id: 'services', name: 'Services', type: 'expense' as TransactionType,
     subcategories: [
       { id: 'electricity', name: 'Electricity' },
       { id: 'telecom', name: 'Telecom' },
       { id: 'water', name: 'Water' },
+      { id: 'laundry', name: 'Laundry' },
+      { id: 'subscription', name: 'Subscription' },
     ]
   },
   {
-    id: 'income', name: 'Income', type: 'income' as TransactionType,
+    id: 'earnings', name: 'Earnings', type: 'income' as TransactionType,
     subcategories: [
       { id: 'bonus', name: 'Bonus' },
+      { id: 'benefits', name: 'Benefits' },
       { id: 'dividends', name: 'Dividends' },
       { id: 'freelance', name: 'Freelance' },
       { id: 'investment', name: 'Investment' },

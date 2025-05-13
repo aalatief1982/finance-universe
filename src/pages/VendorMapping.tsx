@@ -20,6 +20,7 @@ const VendorMapping: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
   const navigate = useNavigate();
+ 
 
   useEffect(() => {
     const incomingVendorMap = location.state?.vendorMap || {};
@@ -44,11 +45,21 @@ const VendorMapping: React.FC = () => {
       const subcategoryFromKB = kbEntry?.mappings.find((m: any) => m.field === 'subcategory')?.value;
       const fallbackMatch = findClosestFallbackMatch(vendor);
 
+
+	const inferredType = fallbackMatch?.type || 'expense';
+	let category = categoryFromKB || fallbackMatch?.category;
+	let subcategory = subcategoryFromKB || fallbackMatch?.subcategory;
+
+	if (!category && !subcategory && inferredType === 'income') {
+	  category = 'Earnings';
+	  subcategory = 'Benefits';
+	}
+
       return {
-        vendor,
-        updatedVendor: incomingVendorMap[vendor],
-        category: categoryFromKB || fallbackMatch?.category || 'Other',
-        subcategory: subcategoryFromKB || fallbackMatch?.subcategory || 'Miscellaneous',
+         vendor,
+		  updatedVendor: incomingVendorMap[vendor],
+		  category: category || 'Other',
+		  subcategory: subcategory || 'Miscellaneous',
       };
     });
 

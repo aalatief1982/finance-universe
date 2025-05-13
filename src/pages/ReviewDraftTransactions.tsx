@@ -10,6 +10,7 @@ import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { ArrowLeft } from 'lucide-react';
+import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 
 interface DraftTransaction {
   id?: string;
@@ -58,9 +59,9 @@ const ReviewDraftTransactions: React.FC = () => {
     });
 
     setTransactions(parsed);
-  }, []);
+  }, []	);
 
-  const handleFieldChange = (index: number, field: keyof DraftTransaction, value: string) => {
+/*   const handleFieldChange = (index: number, field: keyof DraftTransaction, value: string) => {
     const updated = [...transactions];
     updated[index][field] = value;
 
@@ -69,7 +70,38 @@ const ReviewDraftTransactions: React.FC = () => {
     }
 
     setTransactions(updated);
-  };
+  }; */
+const handleFieldChange = (index: number, field: keyof DraftTransaction, value: string) => {
+  const updated = [...transactions];
+  const txn = { ...updated[index], [field]: value };
+
+		if (field === 'type') {
+		  const validCategories = getCategoriesForType(value as TransactionType);  // ⬅️ Already names!
+		  console.log('[TYPE CHANGE] Valid Categories:', validCategories);
+
+		  txn.category = validCategories[0] || 'Uncategorized';
+		  console.log('[TYPE CHANGE] Selected Category:', txn.category);
+
+		  const validSubcategories = getSubcategoriesForCategory(txn.category).map(sc => sc.name);
+		  console.log('[TYPE CHANGE] Valid Subcategories for Category:', txn.category, validSubcategories);
+
+		  txn.subcategory = validSubcategories[0] || 'none';
+		  console.log('[TYPE CHANGE] Selected Subcategory:', txn.subcategory);
+		}
+
+
+  if (field === 'category') {
+    const validSubcategories = getSubcategoriesForCategory(value as string).map(sc => sc.name);
+    txn.subcategory = validSubcategories[0] || 'none';
+  }
+
+  if (['amount', 'currency', 'subcategory', 'category'].includes(field)) {
+    txn.title = generateDefaultTitle(txn);
+  }
+
+  updated[index] = txn;
+  setTransactions(updated);
+};
 
   const handleSave = () => {
     const validTransactions: DraftTransaction[] = [];
@@ -144,14 +176,18 @@ const ReviewDraftTransactions: React.FC = () => {
             <input value={txn.currency || ''} onChange={e => handleFieldChange(index, 'currency', e.target.value)} className="border rounded p-2" />
             <input type="date" value={txn.date?.split('T')[0] || ''} onChange={e => handleFieldChange(index, 'date', e.target.value)} className="border rounded p-2" />
             <select value={txn.category} onChange={e => handleFieldChange(index, 'category', e.target.value)} className="border rounded p-2">
-              {getCategoryHierarchy().filter(c => c.type === 'expense').map(c => (
+              {getCategoryHierarchy().filter(c => c.type === txn.type).map(c => (
                 <option key={c.id} value={c.name}>{c.name}</option>
               ))}
             </select>
             <select value={txn.subcategory} onChange={e => handleFieldChange(index, 'subcategory', e.target.value)} className="border rounded p-2">
-              {getCategoryHierarchy().find(c => c.name === txn.category)?.subcategories.map(sub => (
-                <option key={sub.id} value={sub.name}>{sub.name}</option>
-              ))}
+              {(getCategoryHierarchy().find(
+					c => c.name === txn.category && c.type === txn.type
+				  )?.subcategories || []).map(sub => (
+					<option key={sub.id} value={sub.name}>
+					  {sub.name}
+					</option>
+				  ))}
             </select>
             <input value={txn.fromAccount || ''} onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)} className="border rounded p-2" />
             <select value={txn.type} onChange={e => handleFieldChange(index, 'type', e.target.value)} className="border rounded p-2">
