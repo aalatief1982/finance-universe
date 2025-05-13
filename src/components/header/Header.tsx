@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -28,12 +29,12 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
   }
 
   return (
-			<header
-			  className={cn(
-				"sticky top-0 z-10 pt-[var(--safe-area-top)] bg-background/80 backdrop-blur-xl border-b border-border",
-				className
-			  )}
-			>
+    <header
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 pt-[var(--safe-area-top)] bg-background/95 backdrop-blur-xl border-b border-border",
+        className
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Layout from '@/components/Layout';
 import DashboardStats from '@/components/DashboardStats';
@@ -79,7 +80,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="pt-[calc(var(--safe-area-top)+56px)] px-4">
+      <div className="px-4">
         <PageHeader
           title={user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
           description="Here's an overview of your finances"

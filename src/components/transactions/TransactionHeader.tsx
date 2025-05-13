@@ -60,10 +60,10 @@ const TransactionHeader: React.FC<TransactionHeaderProps> = ({
               <TooltipContent>Export options</TooltipContent>
             </Tooltip>
             <DropdownMenuContent>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem>
                 <div>Export as CSV</div>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem>
                 <div>Export as PDF</div>
               </DropdownMenuItem>
             </DropdownMenuContent>

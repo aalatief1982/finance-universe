@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
@@ -34,7 +35,7 @@ const Layout = ({
     >
       {showHeader && <Header showNavigation={!hideNavigation} />}
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 mt-[var(--header-height)]">
         {!hideNavigation && !isMobile && <Sidebar />}
 
         <main

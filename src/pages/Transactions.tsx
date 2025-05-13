@@ -62,7 +62,7 @@ const Transactions = () => {
   
   return (
     <Layout withPadding={false}>
-      <div className="sticky top-[var(--header-height)] z-10 bg-background/80 backdrop-blur-xl border-b">
+      <div className="sticky top-[var(--header-height)] z-10 bg-background/95 backdrop-blur-xl border-b">
         <div className="px-[var(--page-padding-x)] py-2">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-xl font-bold">Transactions</h1>
