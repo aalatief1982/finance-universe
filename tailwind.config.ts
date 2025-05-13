@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			padding: {
+				safe: 'env(safe-area-inset-top)',
+			  },
 			fontFamily: {
 				sans: ['Inter var', 'sans-serif'],
 			},

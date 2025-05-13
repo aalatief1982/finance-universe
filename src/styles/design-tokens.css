@@ -1,5 +1,6 @@
 
 :root {
+	  --safe-area-top: env(safe-area-inset-top, 0px);
   /* Color System */
   --color-primary: #0097a0;
   --color-primary-hover: #008792;

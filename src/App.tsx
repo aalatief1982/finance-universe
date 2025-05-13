@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import Dashboard from './pages/Dashboard';
@@ -16,17 +15,26 @@ import MasterMind from '@/pages/MasterMind';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from './pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
-import ProcessSmsMessages from './pages/ProcessSmsMessages'; // Add this import
+import ProcessSmsMessages from './pages/ProcessSmsMessages';
 import Signup from './pages/SignUp';
 import Signin from './pages/SignIn';
 import ProcessVendors from '@/pages/sms/ProcessVendors';
 import VendorCategorization from '@/pages/sms/VendorCategorization';
 import VendorMapping from '@/pages/VendorMapping';
 import ReviewDraftTransactions from '@/pages/ReviewDraftTransactions';
-//import './app.css';
 
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 
 function App() {
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setOverlaysWebView({ overlay: true });
+      StatusBar.setBackgroundColor({ color: '#00000000' });
+      StatusBar.setStyle({ style: Style.Light }); // optional: adjust based on theme
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" attribute="class">
@@ -45,13 +53,14 @@ function App() {
               <Route path="/train-model" element={<TrainModel />} />
               <Route path="/build-template" element={<BuildTemplate />} />
               <Route path="/dev/learning-tester" element={<LearningTester />} />
-			  <Route path="/keyword-bank" element={<KeywordBankManager />} />
-			  <Route path="/process-sms" element={<ProcessSmsMessages />} />
-			   <Route path="/Signup" element={<Signup />} />
-			   <Route path="/sms/process-vendors" element={<ProcessVendors />} />	
-			  <Route path="/sms/vendors" element={<VendorCategorization />} />
-			  <Route path="/vendor-mapping" element={<VendorMapping />} />
-			  <Route path="/review-draft-transactions" element={<ReviewDraftTransactions />} />
+              <Route path="/keyword-bank" element={<KeywordBankManager />} />
+              <Route path="/process-sms" element={<ProcessSmsMessages />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/signin" element={<Signin />} />
+              <Route path="/sms/process-vendors" element={<ProcessVendors />} />
+              <Route path="/sms/vendors" element={<VendorCategorization />} />
+              <Route path="/vendor-mapping" element={<VendorMapping />} />
+              <Route path="/review-draft-transactions" element={<ReviewDraftTransactions />} />
             </Routes>
             <Toaster />
           </TransactionProvider>

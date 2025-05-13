@@ -11,5 +11,8 @@ project(':capacitor-device').projectDir = new File('../node_modules/@capacitor/d
 include ':capacitor-filesystem'
 project(':capacitor-filesystem').projectDir = new File('../node_modules/@capacitor/filesystem/android')
 
+include ':capacitor-status-bar'
+project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
+
 include ':capacitor-sms-reader'
 project(':capacitor-sms-reader').projectDir = new File('../capacitor-sms-reader/android')

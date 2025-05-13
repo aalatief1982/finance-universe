@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
@@ -26,20 +25,26 @@ const Layout = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className={cn("min-h-screen flex flex-col", className)}>
+    <div
+      className={cn(
+        "min-h-screen flex flex-col",
+        "pt-[var(--safe-area-top)]", // Safe area for status bar
+        className
+      )}
+    >
       {showHeader && <Header showNavigation={!hideNavigation} />}
-      
+
       <div className="flex flex-1">
         {!hideNavigation && !isMobile && <Sidebar />}
-        
-        <main 
+
+        <main
           className={cn(
             "flex-1 w-full",
             !hideNavigation && !isMobile && "lg:ml-[var(--sidebar-width)]",
             !fullWidth && "container"
           )}
         >
-          <div 
+          <div
             className={cn(
               "h-full",
               withPadding && "px-[var(--page-padding-x)] py-[var(--page-padding-y)]",
