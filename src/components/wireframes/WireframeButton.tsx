@@ -33,18 +33,18 @@ const WireframeButton: React.FC<WireframeButtonProps> = ({
   const getSizeClasses = () => {
     switch (size) {
       case 'small':
-        return 'py-1 px-2 text-sm';
+        return 'py-0.5 px-1.5 text-xs';
       case 'large':
-        return 'py-3 px-6 text-lg';
-      default:
         return 'py-2 px-4 text-base';
+      default:
+        return 'py-1 px-3 text-sm';
     }
   };
 
   return (
     <button
       type={type}
-      className={`rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${getVariantClasses()} ${getSizeClasses()} ${className}`}
+      className={`rounded-md font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed ${getVariantClasses()} ${getSizeClasses()} ${className}`}
       {...props}
     >
       {children}

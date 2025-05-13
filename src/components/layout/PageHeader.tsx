@@ -24,9 +24,9 @@ const PageHeader = ({
 
   return (
     <div className="sticky top-[var(--header-height)] z-10 bg-background/80 backdrop-blur-xl border-b">
-      <div className="px-[var(--page-padding-x)] py-4">
-        <div className={cn("flex items-center justify-between gap-4", className)}>
-          <div className="flex items-center gap-3">
+      <div className="px-[var(--page-padding-x)] py-2.5">
+        <div className={cn("flex items-center justify-between gap-2", className)}>
+          <div className="flex items-center gap-2">
             {showBack && (
               <Button
                 variant="ghost"
@@ -34,18 +34,18 @@ const PageHeader = ({
                 onClick={() => navigate(-1)}
                 className="flex lg:hidden"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+              <h1 className="text-xl font-bold tracking-tight">{title}</h1>
               {description && (
-                <p className="text-sm text-muted-foreground mt-1">{description}</p>
+                <p className="text-xs text-muted-foreground">{description}</p>
               )}
             </div>
           </div>
           {actions && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {actions}
             </div>
           )}

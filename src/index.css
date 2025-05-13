@@ -1,11 +1,8 @@
 
-
 @import './styles/design-tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-
 
 @layer base {
   :root {
@@ -39,6 +36,16 @@
     --ring: 183 100% 32%;
     
     --radius: 0.5rem;
+    
+    /* Added spacing variables for layout */
+    --page-padding-x: 0.5rem;
+    --page-padding-y: 0.5rem;
+    --content-max-width: 1200px;
+    --header-height: 3.5rem;
+    --sidebar-width: 14rem;
+    --card-gap: 0.5rem;
+    --section-gap: 0.75rem;
+    --form-gap: 0.5rem;
   }
  
   .dark {
@@ -93,13 +100,20 @@
 
 @layer components {
   .card {
-    @apply bg-card border border-border rounded-lg shadow-sm p-3;
+    @apply bg-card border border-border rounded-lg shadow-sm p-2;
   }
 }
 
 /* Mobile-specific optimizations */
 @media (max-width: 640px) {
   .card {
-    @apply p-2;
+    @apply p-1.5;
+  }
+  
+  :root {
+    --page-padding-x: 0.375rem;
+    --page-padding-y: 0.375rem;
+    --card-gap: 0.375rem;
+    --section-gap: 0.5rem;
   }
 }

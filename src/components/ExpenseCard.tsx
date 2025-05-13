@@ -29,24 +29,24 @@ const ExpenseCard = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -2 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "p-4 rounded-lg bg-card border border-border shadow-sm hover:shadow-md transition-all cursor-pointer hover-scale",
+        "p-2 rounded-lg bg-card border border-border shadow-sm hover:shadow-md transition-all cursor-pointer",
         className
       )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <h3 className="font-medium text-base text-card-foreground">{title}</h3>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Calendar size={12} />
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-0.5">
+              <Calendar size={10} />
               {date}
             </span>
-            <span className="flex items-center gap-1">
-              <Tag size={12} />
+            <span className="flex items-center gap-0.5">
+              <Tag size={10} />
               {category}
             </span>
           </div>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
@@ -62,27 +63,27 @@ const Transactions = () => {
   return (
     <Layout withPadding={false}>
       <div className="sticky top-[var(--header-height)] z-10 bg-background/80 backdrop-blur-xl border-b">
-        <div className="px-[var(--page-padding-x)] py-[var(--page-padding-y)]">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Transactions</h1>
-            <div className="flex items-center space-x-2">
+        <div className="px-[var(--page-padding-x)] py-2">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl font-bold">Transactions</h1>
+            <div className="flex items-center space-x-1.5">
               {isMobile && (
-                <div className="border rounded-md p-1">
+                <div className="border rounded-md p-0.5">
                   <Button
                     variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => setViewMode('list')}
                   >
-                    <List className="h-4 w-4" />
+                    <List className="h-3.5 w-3.5" />
                   </Button>
                   <Button
                     variant={viewMode === 'swipeable' ? 'secondary' : 'ghost'}
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => setViewMode('swipeable')}
                   >
-                    <Grid className="h-4 w-4" />
+                    <Grid className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               )}
@@ -93,25 +94,25 @@ const Transactions = () => {
           </div>
           
           {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="flex flex-col sm:flex-row gap-2 items-center">
             <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
               <Input
                 placeholder="Search transactions..."
-                className="pl-10"
+                className="pl-8 h-8 text-sm"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
             <Tabs value={filter} onValueChange={value => setFilter(value as 'all' | 'income' | 'expense')}>
-              <TabsList className="h-10">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="income">Income</TabsTrigger>
-                <TabsTrigger value="expense">Expense</TabsTrigger>
+              <TabsList className="h-8">
+                <TabsTrigger value="all" className="text-xs px-2.5">All</TabsTrigger>
+                <TabsTrigger value="income" className="text-xs px-2.5">Income</TabsTrigger>
+                <TabsTrigger value="expense" className="text-xs px-2.5">Expense</TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button variant="outline" className="min-w-[90px] flex gap-2" size="sm">
-              <Filter size={16} />
+            <Button variant="outline" className="min-w-[80px] flex gap-1.5 h-8" size="sm">
+              <Filter size={14} />
               Filter
             </Button>
           </div>
@@ -122,11 +123,11 @@ const Transactions = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="px-[var(--page-padding-x)] py-[var(--page-padding-y)] mt-2"
+        className="px-[var(--page-padding-x)] py-2 mt-1"
       >
         {filteredTransactions.length > 0 ? (
           isMobile && viewMode === 'swipeable' ? (
-            <div className="space-y-[var(--card-spacing)]">
+            <div className="space-y-[var(--card-gap)]">
               {filteredTransactions.map((transaction, index) => (
 				  <SwipeableTransactionCard 
 					key={transaction.id || `txn-${index}`} // ensure uniqueness
@@ -138,8 +139,8 @@ const Transactions = () => {
             <TransactionsByDate transactions={filteredTransactions} />
           )
         ) : (
-          <div className="flex flex-col items-center justify-center py-[var(--section-spacing)] text-center">
-            <p className="text-muted-foreground mb-4">No transactions found</p>
+          <div className="flex flex-col items-center justify-center py-[var(--section-gap)] text-center">
+            <p className="text-muted-foreground mb-3">No transactions found</p>
             <Button onClick={() => navigate('/edit-transaction')}>
               Add Transaction
             </Button>

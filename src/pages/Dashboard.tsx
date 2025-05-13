@@ -89,31 +89,31 @@ const Dashboard = () => {
         title={user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'} 
         description="Here's an overview of your finances"
         actions={
-          <Button onClick={handleAddTransaction} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" /> Add Transaction
+          <Button onClick={handleAddTransaction} className="flex items-center gap-1.5">
+            <Plus className="h-3.5 w-3.5" /> Add Transaction
           </Button>
         }
       />
       
-      <div className="space-y-[var(--section-spacing)]">
+      <div className="space-y-[var(--section-gap)]">
         <DashboardStats 
           income={summary.income} 
           expenses={summary.expenses} 
           balance={summary.balance} 
         />
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-spacing)]">
-          <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Expense Breakdown</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
+          <div className="bg-card p-2 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-2">Expense Breakdown</h2>
             <ExpenseChart 
               expensesByCategory={expensesByCategory}
               expensesByDate={expensesByDate}
             />
           </div>
           
-          <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Recent Transactions</h2>
+          <div className="bg-card p-2 rounded-lg shadow">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-lg font-semibold">Recent Transactions</h2>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -124,15 +124,15 @@ const Dashboard = () => {
             </div>
             
             {transactions.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {transactions.slice(0, 5).map((transaction) => (
                   <div 
                     key={transaction.id}
-                    className="flex justify-between items-center p-3 bg-secondary/50 rounded-md"
+                    className="flex justify-between items-center p-2 bg-secondary/50 rounded-md"
                   >
                     <div>
                       <p className="font-medium">{transaction.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {transaction.category} • {transaction.date}
                       </p>
                     </div>
@@ -143,8 +143,8 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6">
-                <p className="text-muted-foreground mb-4">No transactions yet</p>
+              <div className="text-center py-4">
+                <p className="text-muted-foreground mb-3">No transactions yet</p>
                 <Button onClick={handleAddSampleTransaction}>Add Sample Transactions</Button>
               </div>
             )}
