@@ -61,10 +61,10 @@ function AppWrapper() {
         
         // Directly use the imported plugin
         BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
-          console.log('[SMS] Received:', sender, body);
+          console.log('[Xpensia SMS] Received:', sender, body);
 
           if (!isFinancialTransactionMessage(body)) {
-            console.log('[SMS] Not a financial message. Skipped.');
+            console.log('[Xpensia SMS] Not a financial message. Skipped.');
             return;
           }
 
