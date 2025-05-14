@@ -12,6 +12,9 @@ export default defineConfig({
     },
     conditions: ['web', 'browser', 'default']
   },
+  server: {
+    port: 8080
+  },
   build: {
     rollupOptions: {
       external: ['capacitor-background-sms-listener']
