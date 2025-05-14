@@ -32,7 +32,7 @@ import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
+import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -54,12 +54,37 @@ function AppWrapper() {
       try {
         console.log('[SMS] Setting up listener...');
         
-        console.log('[INIT] Native platform detected. Setting up status bar...');
-        await StatusBar.setOverlaysWebView({ overlay: true });
-        await StatusBar.setBackgroundColor({ color: '#00000000' });
-        await StatusBar.setStyle({ style: Style.Light });
+        if (platform === 'android') {
+          console.log('[INIT] Native platform detected. Setting up status bar...');
+          await StatusBar.setOverlaysWebView({ overlay: true });
+          await StatusBar.setBackgroundColor({ color: '#00000000' });
+          await StatusBar.setStyle({ style: Style.Light });
+        }
         
-        // Directly use the imported plugin
+        // Load the SMS listener plugin
+        const BackgroundSmsListener = await loadSmsListener();
+        
+        if (!BackgroundSmsListener) {
+          console.log('[SMS] Plugin not available or failed to load. Skipping.');
+          return;
+        }
+        
+        // Check permission
+        const permResult = await BackgroundSmsListener.checkPermission();
+        if (!permResult.granted) {
+          console.log('[SMS] Permission not granted. Requesting permission...');
+          const requestResult = await BackgroundSmsListener.requestPermission();
+          if (!requestResult.granted) {
+            console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
+            return;
+          }
+        }
+        
+        // Start listening
+        await BackgroundSmsListener.startListening();
+        console.log('[SMS] Started listening for SMS messages');
+        
+        // Add listener for SMS events
         BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
           console.log('[Xpensia SMS] Received:', sender, body);
 
