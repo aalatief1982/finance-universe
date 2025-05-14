@@ -14,12 +14,15 @@ class SmsPermissionService {
   // Check if SMS permissions are granted
   async hasPermission(): Promise<boolean> {
     if (!this.isNativeEnvironment()) {
-      return false;
+      // For web environments, check local storage
+      return localStorage.getItem('sms_permission') === 'granted';
     }
 
     try {
       const result = await SmsReader.checkPermission();
-      return result?.granted ?? false;
+      const granted = result?.granted ?? false;
+      this.savePermissionStatus(granted);
+      return granted;
     } catch (error) {
       console.error("Error checking SMS permission:", error);
       return false;
@@ -57,7 +60,9 @@ class SmsPermissionService {
       return localStorage.getItem('sms_permission') === 'granted';
     }
     
-    return this.hasPermission();
+    // For native environments, we'd need to make an async check
+    // but since this method is sync, we'll use the cached value
+    return localStorage.getItem('sms_permission') === 'granted';
   }
 }
 

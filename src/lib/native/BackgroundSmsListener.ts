@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core';
 
 export async function loadSmsListener() {
@@ -9,19 +10,18 @@ export async function loadSmsListener() {
   }
 
   try {
-    const mod = await import(/* @vite-ignore */ 'capacitor-background-sms-listener');
-
-    const plugin = mod?.BackgroundSmsListener || mod?.default;
-
-    if (!plugin) {
+    // Import the plugin directly to avoid dynamic import issues
+    const { BackgroundSmsListener } = await import('@/plugins/BackgroundSmsListenerPlugin');
+    
+    if (!BackgroundSmsListener) {
       console.warn('[Native Load Warning] Plugin loaded but no export found.');
       return null;
     }
 
-    console.log('[SMS] Native plugin loaded:', plugin);
-    return plugin;
+    console.log('[SMS] Native plugin loaded:', BackgroundSmsListener);
+    return BackgroundSmsListener;
   } catch (err) {
-    console.warn('[Native Load Warning] SMS plugin failed to load:', err);
+    console.error('[Native Load Warning] SMS plugin failed to load:', err);
     return null;
   }
 }

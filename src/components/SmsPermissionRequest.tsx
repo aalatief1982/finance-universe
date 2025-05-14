@@ -1,149 +1,102 @@
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { AlertTriangle, MessageSquare, Shield, Loader } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { Button } from './ui/button';
+import { MessageSquare, Check, AlertTriangle } from 'lucide-react';
 import { smsPermissionService } from '@/services/SmsPermissionService';
-import { Capacitor } from '@capacitor/core';
 
 interface SmsPermissionRequestProps {
-  onGranted: () => void;
-  onDenied: () => void;
+  onPermissionGranted?: () => void;
+  className?: string;
 }
 
 const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({ 
-  onGranted, 
-  onDenied 
+  onPermissionGranted,
+  className 
 }) => {
-  const [isRequesting, setIsRequesting] = useState(false);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [isNative, setIsNative] = useState(false);
-  const { toast } = useToast();
+  const [permissionGranted, setPermissionGranted] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if running on a native platform
-    setIsNative(Capacitor.isNativePlatform());
-    
-    // Check if permission is already granted
-    const checkExistingPermission = async () => {
-      const permissionGranted = smsPermissionService.hasPermission();
-      setHasPermission(permissionGranted);
+    const checkPermission = async () => {
+      const hasPermission = await smsPermissionService.hasPermission();
+      setPermissionGranted(hasPermission);
       
-      if (permissionGranted) {
-        console.log('SMS permission already granted');
-        onGranted();
-      } else if (Capacitor.isNativePlatform()) {
-        // On native platforms, automatically request permission without showing UI first
-        handleRequestPermission();
+      if (hasPermission && onPermissionGranted) {
+        onPermissionGranted();
       }
     };
     
-    checkExistingPermission();
-  }, [onGranted]);
+    checkPermission();
+  }, [onPermissionGranted]);
 
   const handleRequestPermission = async () => {
-    if (isRequesting) return;
-    setIsRequesting(true);
-    
+    setLoading(true);
     try {
-      // Request permission using native dialog on Android/iOS
       const granted = await smsPermissionService.requestPermission();
+      setPermissionGranted(granted);
       
-      setHasPermission(granted);
-      
-      if (granted) {
-        toast({
-          title: "Permission granted",
-          description: "You've successfully granted SMS reading permission",
-        });
-        onGranted();
-      } else {
-        toast({
-          title: "Permission denied",
-          description: "SMS reading permission is required for automatic tracking",
-          variant: "destructive",
-        });
-        onDenied();
+      if (granted && onPermissionGranted) {
+        onPermissionGranted();
       }
     } catch (error) {
-      console.error("Error requesting SMS permission:", error);
-      toast({
-        title: "Error requesting permission",
-        description: "There was a problem requesting SMS permission",
-        variant: "destructive",
-      });
-      onDenied();
+      console.error('Error requesting SMS permission:', error);
     } finally {
-      setIsRequesting(false);
+      setLoading(false);
     }
   };
 
-  // If permission is already granted, don't show the permission UI
-  if (hasPermission) {
-    return null;
+  // If not in a native environment, show a web fallback message
+  if (!smsPermissionService.isNativeEnvironment()) {
+    return (
+      <div className={`bg-yellow-50 border border-yellow-100 rounded-lg p-4 ${className}`}>
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="text-yellow-500 flex-shrink-0" size={20} />
+          <div>
+            <h3 className="font-medium">SMS Reading Not Available</h3>
+            <p className="text-sm text-muted-foreground">
+              This feature is only available on mobile devices. SMS reading is simulated in this web environment.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (permissionGranted) {
+    return (
+      <div className={`bg-green-50 border border-green-100 rounded-lg p-4 ${className}`}>
+        <div className="flex items-start gap-3">
+          <Check className="text-green-600 flex-shrink-0" size={20} />
+          <div>
+            <h3 className="font-medium">SMS Permission Granted</h3>
+            <p className="text-sm text-muted-foreground">
+              You've successfully granted permission for SMS reading. The app can now read your transaction SMS messages.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6 text-center"
-    >
-      <div className="mx-auto bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center">
-        <MessageSquare className="text-primary h-10 w-10" />
-      </div>
-      
-      <div>
-        <h2 className="text-2xl font-bold mb-2">SMS Permission Required</h2>
-        <p className="text-muted-foreground">
-          To automatically track your expenses, we need permission to read SMS messages from your financial institutions.
+    <div className={`border rounded-lg p-4 ${className}`}>
+      <div className="flex flex-col items-center text-center">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          <MessageSquare className="h-6 w-6 text-primary" />
+        </div>
+        <h3 className="text-lg font-medium">SMS Permission Required</h3>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">
+          To automatically track your transactions, we need permission to read SMS messages.
         </p>
-      </div>
-      
-      <div className="flex items-start bg-secondary p-4 rounded-lg text-left">
-        <AlertTriangle className="text-amber-500 mr-3 mt-1 shrink-0" size={20} />
-        <div className="space-y-1">
-          <p className="font-medium">Privacy Focused</p>
-          <p className="text-sm text-muted-foreground">
-            We only read messages from the financial institutions you select. Your personal messages remain private.
-          </p>
-        </div>
-      </div>
-      
-      <div className="flex items-start bg-secondary p-4 rounded-lg text-left">
-        <Shield className="text-green-500 mr-3 mt-1 shrink-0" size={20} />
-        <div className="space-y-1">
-          <p className="font-medium">Data Security</p>
-          <p className="text-sm text-muted-foreground">
-            Your financial data is stored securely on your device and never shared without your permission.
-          </p>
-        </div>
-      </div>
-      
-      <div className="pt-2">
         <Button 
-          className="w-full mb-2" 
-          onClick={handleRequestPermission}
-          disabled={isRequesting}
+          onClick={handleRequestPermission} 
+          disabled={loading}
+          className="w-full"
         >
-          {isRequesting ? (
-            <span className="flex items-center">
-              <Loader className="animate-spin mr-2" size={16} />
-              Requesting Permission...
-            </span>
-          ) : "Grant SMS Permission"}
-        </Button>
-        <Button 
-          variant="outline" 
-          className="w-full" 
-          onClick={onDenied}
-        >
-          Skip (Manual Entry Only)
+          {loading ? "Requesting..." : "Grant SMS Permission"}
         </Button>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

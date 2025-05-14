@@ -26,7 +26,7 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       setIsLoading(true);
       
       // Check if SMS permission is already granted
-      const hasPermission = smsPermissionService.hasPermission();
+      const hasPermission = await smsPermissionService.hasPermission();
       setPermissionGranted(hasPermission);
       
       try {
@@ -90,37 +90,38 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       description: `Messages from ${dateString} will be analyzed`,
     });
   };
-  
+
   const requestSmsPermission = async () => {
     if (smsPermissionService.isNativeEnvironment()) {
-      const granted = await smsPermissionService.requestPermission();
-      setPermissionGranted(granted);
-      
-      if (granted) {
-        toast({
-          title: "Permission granted",
-          description: "You've successfully granted SMS reading permission",
-        });
+      setIsLoading(true);
+      try {
+        const granted = await smsPermissionService.requestPermission();
+        setPermissionGranted(granted);
         
-        // Try to detect providers now that we have permission
-        setIsLoading(true);
-        try {
-          // In a real implementation, we would read SMS messages here
-          // For now, just simulate detection
-          const detectedProviders = smsProviderSelectionService.simulateProviderDetection();
-          setProviders(detectedProviders);
-          setHasDetectedProviders(detectedProviders.some(p => p.isSelected && p.isDetected));
-        } catch (error) {
-          console.error('Error detecting providers:', error);
-        } finally {
-          setIsLoading(false);
+        if (granted) {
+          toast({
+            title: "Permission granted",
+            description: "You've successfully granted SMS reading permission",
+          });
+          
+          // Try to detect providers now that we have permission
+          try {
+            // In a real implementation, we would read SMS messages here
+            // For now, just simulate detection
+            const detectedProviders = smsProviderSelectionService.simulateProviderDetection();
+            setProviders(detectedProviders);
+            setHasDetectedProviders(detectedProviders.some(p => p.isSelected && p.isDetected));
+          } catch (error) {
+            console.error('Error detecting providers:', error);
+          }
+        } else {
+          toast({
+            title: "Permission denied",
+            description: "SMS reading permission is required for automatic tracking",
+          });
         }
-      } else {
-        toast({
-          title: "Permission denied",
-          description: "SMS reading permission is required for automatic tracking",
-          variant: "destructive"
-        });
+      } finally {
+        setIsLoading(false);
       }
     } else {
       // In web environment, simulate permission granted

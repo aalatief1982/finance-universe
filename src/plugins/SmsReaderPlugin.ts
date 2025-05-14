@@ -1,14 +1,15 @@
-import { registerPlugin } from "@capacitor/core";
+
+import { registerPlugin } from '@capacitor/core';
 
 export interface SmsReaderPlugin {
   checkPermission(): Promise<{ granted: boolean }>;
   requestPermission(): Promise<{ granted: boolean }>;
-  readSmsMessages(options: {
+  readSmsMessages(options?: { 
     startDate?: string;
     endDate?: string;
-    senders?: string[];
     limit?: number;
-  }): Promise<{ messages: { sender: string; message: string; date: string }[] }>;
+    senders?: string[];
+  }): Promise<{ messages: Array<{ sender: string; message: string; date: string }> }>;
 }
 
-export const SmsReader = registerPlugin<SmsReaderPlugin>("SmsReaderPlugin");
+export const SmsReader = registerPlugin<SmsReaderPlugin>('SmsReaderPlugin');

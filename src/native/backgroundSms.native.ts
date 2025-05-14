@@ -1,2 +1,3 @@
-import { BackgroundSmsListener } from 'capacitor-background-sms-listener';
+
+import { BackgroundSmsListener } from '../plugins/BackgroundSmsListenerPlugin';
 export default BackgroundSmsListener;
