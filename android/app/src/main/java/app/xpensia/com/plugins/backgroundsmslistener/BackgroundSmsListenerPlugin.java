@@ -15,7 +15,6 @@ import android.util.Log;
 import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSObject;
-import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -45,28 +44,42 @@ public class BackgroundSmsListenerPlugin extends Plugin {
 
     @Override
     public void load() {
+        Log.d(TAG, "Plugin loading");
         smsReceiver = new SmsReceiver();
     }
 
     @PluginMethod
+    public void checkPermission(PluginCall call) {
+        Log.d(TAG, "Checking SMS permissions");
+        JSObject result = new JSObject();
+        result.put("granted", hasRequiredPermissions());
+        call.resolve(result);
+    }
+
+    @PluginMethod
     public void startListening(PluginCall call) {
+        Log.d(TAG, "startListening called");
         if (isListening) {
+            Log.d(TAG, "Already listening for SMS messages");
             call.resolve();
             return;
         }
 
         // Check if we already have the permission
         if (hasRequiredPermissions()) {
+            Log.d(TAG, "We have permissions, registering receiver");
             registerSmsReceiver();
             isListening = true;
             call.resolve();
         } else {
+            Log.d(TAG, "Requesting permissions");
             requestPermissionForAlias("sms", call, "permissionCallback");
         }
     }
 
     @PluginMethod
     public void stopListening(PluginCall call) {
+        Log.d(TAG, "stopListening called");
         if (isListening) {
             unregisterSmsReceiver();
             isListening = false;
@@ -75,14 +88,8 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     }
 
     @PluginMethod
-    public void checkPermission(PluginCall call) {
-        JSObject result = new JSObject();
-        result.put("granted", hasRequiredPermissions());
-        call.resolve(result);
-    }
-
-    @PluginMethod
     public void requestPermission(PluginCall call) {
+        Log.d(TAG, "requestPermission called");
         if (hasRequiredPermissions()) {
             JSObject result = new JSObject();
             result.put("granted", true);
@@ -95,12 +102,14 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     @PermissionCallback
     private void permissionCallback(PluginCall call) {
         JSObject result = new JSObject();
+        Log.d(TAG, "Permission callback received");
         
         if (hasRequiredPermissions()) {
             result.put("granted", true);
             
             // If this was called from startListening, register the receiver
-            if (call.getMethodName().equals("startListening")) {
+            if ("startListening".equals(call.getMethodName())) {
+                Log.d(TAG, "Permission granted, registering receiver from callback");
                 registerSmsReceiver();
                 isListening = true;
             }
@@ -113,21 +122,31 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     }
 
     @Override
-public boolean hasRequiredPermissions() {
-        return getPermissionState("sms") == PermissionState.GRANTED;
+    public boolean hasRequiredPermissions() {
+        boolean hasReadSms = getPermissionState(Manifest.permission.READ_SMS).getState().equals("granted");
+        boolean hasReceiveSms = getPermissionState(Manifest.permission.RECEIVE_SMS).getState().equals("granted");
+        Log.d(TAG, "Read SMS permission: " + hasReadSms + ", Receive SMS permission: " + hasReceiveSms);
+        return hasReadSms && hasReceiveSms;
     }
 
     private void registerSmsReceiver() {
         Log.d(TAG, "Registering SMS receiver");
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
-        getActivity().registerReceiver(smsReceiver, filter);
+        try {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
+            filter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+            getContext().registerReceiver(smsReceiver, filter);
+            Log.d(TAG, "SMS receiver registered successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error registering SMS receiver", e);
+        }
     }
 
     private void unregisterSmsReceiver() {
         Log.d(TAG, "Unregistering SMS receiver");
         try {
-            getActivity().unregisterReceiver(smsReceiver);
+            getContext().unregisterReceiver(smsReceiver);
+            Log.d(TAG, "SMS receiver unregistered successfully");
         } catch (Exception e) {
             Log.e(TAG, "Error unregistering SMS receiver", e);
         }
@@ -137,7 +156,7 @@ public boolean hasRequiredPermissions() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION.equals(intent.getAction())) {
-                Log.d(TAG, "SMS received");
+                Log.d(TAG, "SMS received in broadcast receiver");
                 
                 Bundle bundle = intent.getExtras();
                 if (bundle != null) {
@@ -159,6 +178,7 @@ public boolean hasRequiredPermissions() {
                             fullMessage.append(message.getMessageBody());
                         }
                         
+                        Log.d(TAG, "SMS from " + sender + ": " + fullMessage.toString());
                         notifySmsReceived(sender, fullMessage.toString());
                     }
                 }

@@ -1,3 +1,4 @@
+
 <plugins>
   <!-- Standard Capacitor plugins -->
   <plugin name="App" value="com.capacitorjs.plugins.app.AppPlugin"/>
