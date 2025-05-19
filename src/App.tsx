@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
@@ -45,12 +44,6 @@ function AppWrapper() {
     }
 
     const setupSmsListener = async () => {
-      // Check if we're on native platform
-      if (!Capacitor.isNativePlatform()) {
-        console.log('[SMS] Not a native platform. Skipping listener setup.');
-        return;
-      }
-      
       try {
         console.log('[SMS] Setting up listener...');
         
@@ -62,18 +55,18 @@ function AppWrapper() {
         }
         
         // Load the SMS listener plugin
-        const BackgroundSmsListener = await loadSmsListener();
+        const plugin = await loadSmsListener();
         
-        if (!BackgroundSmsListener) {
-          console.log('[SMS] Plugin not available or failed to load. Skipping.');
+        if (!plugin) {
+          console.warn('[SMS] Plugin not available or failed to load. Skipping.');
           return;
         }
         
         // Check permission
-        const permResult = await BackgroundSmsListener.checkPermission();
+        const permResult = await plugin.checkPermission();
         if (!permResult.granted) {
           console.log('[SMS] Permission not granted. Requesting permission...');
-          const requestResult = await BackgroundSmsListener.requestPermission();
+          const requestResult = await plugin.requestPermission();
           if (!requestResult.granted) {
             console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
             return;
@@ -81,11 +74,11 @@ function AppWrapper() {
         }
         
         // Start listening
-        await BackgroundSmsListener.startListening();
+        await plugin.startListening();
         console.log('[SMS] Started listening for SMS messages');
         
         // Add listener for SMS events
-        BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
+        const listener = await plugin.addListener('smsReceived', async ({ sender, body }) => {
           console.log('[Xpensia SMS] Received:', sender, body);
 
           if (!isFinancialTransactionMessage(body)) {
@@ -96,33 +89,29 @@ function AppWrapper() {
           const { template, placeholders } = extractTemplateStructure(body);
           const txn: Transaction = {
             id: uuidv4(),
-            title: '',
-            amount: parseFloat(placeholders.amount?.replace(/[^\d.]/g, '') || '0'),
-            currency: placeholders.currency || 'SAR',
-            date: placeholders.date || new Date().toISOString().split('T')[0],
-            type: 'expense',
+            title: `SMS from ${sender}`,
+            amount: 0, // Will be extracted by the transaction processor
             category: 'Uncategorized',
-            subcategory: 'none',
-            fromAccount: placeholders.fromAccount || '',
-            description: body,
+            type: 'expense', // Default, will be determined by processor
+            date: new Date().toISOString().split('T')[0],
             source: 'sms',
-            vendor: sender,
+            fromAccount: sender,
+            details: {
+              sms: {
+                sender,
+                message: body,
+                timestamp: new Date().toISOString()
+              },
+              rawMessage: body
+            },
+            currency: 'SAR' // Default currency, can be overridden by processor
           };
 
-          const statePayload = {
-            transaction: txn,
-            rawMessage: body,
-            senderHint: sender,
-            isSuggested: true,
-            confidence: 0.4,
-            matchedCount: 1,
-            totalTemplates: 1
-          };
-
+          // Handle background state
           const appState = await CapacitorApp.getState();
           if (appState.isActive) {
-            console.log('[NAVIGATE] App active. Navigating to transaction edit.');
-            navigate('/edit-transaction', { state: statePayload });
+            console.log('[NOTIFY] App active. Navigating to transaction.');
+            navigate('/edit-transaction', { state: { transaction: txn } });
           } else {
             console.log('[NOTIFY] App backgrounded. Showing notification.');
             await LocalNotifications.schedule({
@@ -132,13 +121,14 @@ function AppWrapper() {
                   title: 'New Transaction Detected',
                   body: 'Tap to review and confirm',
                   schedule: { at: new Date(Date.now() + 1000) },
-                  extra: statePayload
+                  extra: { transaction: txn }
                 }
               ]
             });
           }
         });
 
+        // Handle notification taps
         LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
           const statePayload = event.notification.extra;
           if (statePayload?.transaction) {
@@ -146,6 +136,14 @@ function AppWrapper() {
             navigate('/edit-transaction', { state: statePayload });
           }
         });
+        
+        // Cleanup on component unmount
+        return () => {
+          if (plugin) {
+            listener.remove().catch(console.error);
+            plugin.stopListening().catch(console.error);
+          }
+        };
         
       } catch (error) {
         console.error('[SMS] Error setting up listener:', error);

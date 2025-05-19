@@ -3,7 +3,6 @@ package app.xpensia.com;
 
 import com.getcapacitor.BridgeActivity;
 import com.xpensia.plugins.smsreader.SmsReaderPlugin;
-import app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin;
 
 public class MainActivity extends BridgeActivity {
   @Override
@@ -11,6 +10,5 @@ public class MainActivity extends BridgeActivity {
     super.onCreate(savedInstanceState);
     // Register our plugins
     registerPlugin(SmsReaderPlugin.class);
-    registerPlugin(BackgroundSmsListenerPlugin.class);
   }
 }

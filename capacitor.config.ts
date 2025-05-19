@@ -1,4 +1,3 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -10,6 +9,9 @@ const config: CapacitorConfig = {
       launchShowDuration: 0
     },
     SmsReaderPlugin: {
+      android: true
+    },
+    BackgroundSmsListener: {
       android: true
     }
   },
