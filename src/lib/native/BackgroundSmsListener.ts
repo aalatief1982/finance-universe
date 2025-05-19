@@ -1,3 +1,4 @@
+
 import { Capacitor } from '@capacitor/core'; 
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
 

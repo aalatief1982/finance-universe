@@ -1,37 +1,28 @@
-import { registerPlugin } from '@capacitor/core';
-import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
-import { SmsReader } from '@/plugins/SmsReaderPlugin';
 
-// Create a wrapper around SmsReader that implements BackgroundSmsListenerPlugin
-const BackgroundSmsListener: BackgroundSmsListenerPlugin = {
+import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
+import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
+
+// Create a wrapper around the actual plugin
+const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   addListener: async (eventName, listenerFunc) => {
-    // Return a dummy listener that can be removed
-    return {
-      remove: async () => {
-        // Cleanup
-      }
-    };
+    return BackgroundSmsListener.addListener(eventName, listenerFunc);
   },
   
   checkPermission: async () => {
-    return SmsReader.checkPermission();
+    return BackgroundSmsListener.checkPermission();
   },
   
   requestPermission: async () => {
-    return SmsReader.requestPermission();
+    return BackgroundSmsListener.requestPermission();
   },
   
   startListening: async () => {
-    // Initial permission check
-    const permission = await SmsReader.checkPermission();
-    if (!permission.granted) {
-      throw new Error('SMS permission not granted');
-    }
+    return BackgroundSmsListener.startListening();
   },
   
   stopListening: async () => {
-    // No cleanup needed
+    return BackgroundSmsListener.stopListening();
   }
 };
 
-export default BackgroundSmsListener;
+export default BackgroundSmsListenerWrapper;
