@@ -1,46 +1,38 @@
 
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
-import { PluginListenerHandle } from '@capacitor/core';
 
-// Mock implementation for web testing
+// Mock implementation for web environment
 const BackgroundSmsListenerWeb: BackgroundSmsListenerPlugin = {
   addListener: async (eventName, listenerFunc) => {
-    console.log(`[SMS Web Mock] Added listener for event: ${eventName}`);
+    console.log(`[SMS-Web] Adding listener for event: ${eventName} (web mock)`);
     
-    // Return a dummy listener handle
+    // Return a mock handle with a remove method
     return {
       remove: async () => {
-        console.log(`[SMS Web Mock] Removed listener for event: ${eventName}`);
+        console.log('[SMS-Web] Removing listener (web mock)');
+        return Promise.resolve();
       }
-    } as PluginListenerHandle;
+    };
   },
   
   checkPermission: async () => {
-    console.log('[SMS Web Mock] Check permission called');
-    return { granted: true }; // Always return granted for web testing
+    console.log('[SMS-Web] Checking permission (web mock)');
+    return { granted: false };
   },
   
   requestPermission: async () => {
-    console.log('[SMS Web Mock] Request permission called');
-    return { granted: true }; // Always return granted for web testing
+    console.log('[SMS-Web] Requesting permission (web mock)');
+    return { granted: false };
   },
   
   startListening: async () => {
-    console.log('[SMS Web Mock] Start listening called');
-    
-    // Simulate receiving an SMS after 5 seconds
-    setTimeout(() => {
-      const mockEvent = {
-        sender: '+123456789',
-        body: 'This is a test SMS message. Your account was charged $25.50 at ACME Store on May 19.'
-      };
-      console.log('[SMS Web Mock] Simulating SMS received:', mockEvent);
-      document.dispatchEvent(new CustomEvent('smsReceived', { detail: mockEvent }));
-    }, 5000);
+    console.log('[SMS-Web] Starting to listen for SMS (web mock)');
+    return;
   },
   
   stopListening: async () => {
-    console.log('[SMS Web Mock] Stop listening called');
+    console.log('[SMS-Web] Stopping listening for SMS (web mock)');
+    return;
   }
 };
 

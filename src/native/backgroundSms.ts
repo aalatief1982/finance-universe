@@ -6,11 +6,27 @@ export default async function getBackgroundSmsListener(): Promise<BackgroundSmsL
   try {
     console.log(`[SMS] Loading listener for platform: ${Capacitor.getPlatform()}`);
     
-    const module = Capacitor.getPlatform() === 'web'
-      ? await import('./backgroundSms.web')
-      : await import('./backgroundSms.native');
+    let module;
+    if (Capacitor.getPlatform() === 'web') {
+      console.log('[SMS] Web platform detected, using web implementation');
+      module = await import('./backgroundSms.web').catch(err => {
+        console.error('[SMS] Failed to load web implementation:', err);
+        return { default: null };
+      });
+    } else {
+      console.log('[SMS] Native platform detected, using native implementation');
+      module = await import('./backgroundSms.native').catch(err => {
+        console.error('[SMS] Failed to load native implementation:', err);
+        return { default: null };
+      });
+    }
     
-    console.log('[SMS] Module loaded successfully');
+    if (!module.default) {
+      console.error('[SMS] Module loaded successfully but no default export found');
+      return null;
+    }
+    
+    console.log('[SMS] Module loaded successfully:', module.default);
     return module.default;
   } catch (err) {
     console.error('[SMS] Failed to load background SMS listener:', err);

@@ -13,9 +13,23 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
   try {
     if (!backgroundSmsListener) {
       console.log('[SMS] Loading native SMS listener plugin');
-      const { default: listener } = await import('@/native/backgroundSms');
-      backgroundSmsListener = listener;
-      console.log('[SMS] SMS listener plugin loaded successfully');
+      try {
+        const { default: listener } = await import('@/native/backgroundSms');
+        backgroundSmsListener = listener;
+        
+        // Verify that the required methods exist
+        if (typeof backgroundSmsListener?.checkPermission !== 'function') {
+          console.warn('[SMS] Plugin loaded but checkPermission method is missing');
+        }
+        if (typeof backgroundSmsListener?.startListening !== 'function') {
+          console.warn('[SMS] Plugin loaded but startListening method is missing');
+        }
+        
+        console.log('[SMS] SMS listener plugin loaded successfully');
+      } catch (err) {
+        console.error('[SMS] Error loading SMS listener module:', err);
+        return null;
+      }
     }
     return backgroundSmsListener;
   } catch (err) {

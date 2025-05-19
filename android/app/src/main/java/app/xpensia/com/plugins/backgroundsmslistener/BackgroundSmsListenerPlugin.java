@@ -121,17 +121,18 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
-   @Override
-	public boolean hasRequiredPermissions() {
-		PermissionState readSmsState = getPermissionState(Manifest.permission.READ_SMS);
-		PermissionState receiveSmsState = getPermissionState(Manifest.permission.RECEIVE_SMS);
+    @Override
+    public boolean hasRequiredPermissions() {
+        PermissionState readSmsState = getPermissionState(Manifest.permission.READ_SMS);
+        PermissionState receiveSmsState = getPermissionState(Manifest.permission.RECEIVE_SMS);
 
-		boolean hasReadSms = PermissionState.GRANTED.equals(readSmsState);
-		boolean hasReceiveSms = PermissionState.GRANTED.equals(receiveSmsState);
+        boolean hasReadSms = PermissionState.GRANTED.equals(readSmsState);
+        boolean hasReceiveSms = PermissionState.GRANTED.equals(receiveSmsState);
 
-		Log.d(TAG, "Read SMS permission: " + hasReadSms + ", Receive SMS permission: " + hasReceiveSms);
-		return hasReadSms && hasReceiveSms;
-	}
+        Log.d(TAG, "Read SMS permission: " + hasReadSms + ", Receive SMS permission: " + hasReceiveSms);
+        return hasReadSms && hasReceiveSms;
+    }
+    
     private void registerSmsReceiver() {
         Log.d(TAG, "Registering SMS receiver");
         try {

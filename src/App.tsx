@@ -49,9 +49,13 @@ function AppWrapper() {
         
         if (platform === 'android') {
           console.log('[INIT] Native platform detected. Setting up status bar...');
-          await StatusBar.setOverlaysWebView({ overlay: true });
-          await StatusBar.setBackgroundColor({ color: '#00000000' });
-          await StatusBar.setStyle({ style: Style.Light });
+          try {
+            await StatusBar.setOverlaysWebView({ overlay: true });
+            await StatusBar.setBackgroundColor({ color: '#00000000' });
+            await StatusBar.setStyle({ style: Style.Light });
+          } catch (err) {
+            console.error('[STATUS] Error setting up status bar:', err);
+          }
         }
         
         // Load the SMS listener plugin
@@ -62,88 +66,116 @@ function AppWrapper() {
           return;
         }
         
-        // Check permission
-        const permResult = await plugin.checkPermission();
-        if (!permResult.granted) {
-          console.log('[SMS] Permission not granted. Requesting permission...');
-          const requestResult = await plugin.requestPermission();
-          if (!requestResult.granted) {
-            console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
-            return;
+        // Check permission with error handling
+        try {
+          console.log('[SMS] Checking permission using plugin...');
+          const permResult = await plugin.checkPermission();
+          console.log('[SMS] Permission result:', permResult);
+          
+          // Check if we need to request permissions
+          if (!permResult.granted) {
+            console.log('[SMS] Permission not granted. Requesting permission...');
+            try {
+              const requestResult = await plugin.requestPermission();
+              console.log('[SMS] Permission request result:', requestResult);
+              if (!requestResult.granted) {
+                console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
+                return;
+              }
+            } catch (err) {
+              console.error('[SMS] Error requesting permission:', err);
+              return;
+            }
           }
+        } catch (err) {
+          console.error('[SMS] Error checking permission:', err);
+          return;
         }
         
-        // Start listening
-        await plugin.startListening();
-        console.log('[SMS] Started listening for SMS messages');
+        // Start listening with error handling
+        try {
+          console.log('[SMS] Starting to listen for SMS...');
+          await plugin.startListening();
+          console.log('[SMS] Started listening for SMS messages');
+        } catch (err) {
+          console.error('[SMS] Error starting SMS listener:', err);
+          return;
+        }
         
-        // Add listener for SMS events
-        const listener = await plugin.addListener('smsReceived', async ({ sender, body }) => {
-          console.log('[Xpensia SMS] Received:', sender, body);
+        // Add listener for SMS events with error handling
+        try {
+          console.log('[SMS] Adding listener for SMS events...');
+          const listener = await plugin.addListener('smsReceived', async ({ sender, body }) => {
+            console.log('[Xpensia SMS] Received:', sender, body);
 
-          if (!isFinancialTransactionMessage(body)) {
-            console.log('[Xpensia SMS] Not a financial message. Skipped.');
-            return;
-          }
+            if (!isFinancialTransactionMessage(body)) {
+              console.log('[Xpensia SMS] Not a financial message. Skipped.');
+              return;
+            }
 
-          const { template, placeholders } = extractTemplateStructure(body);
-          const txn: Transaction = {
-            id: uuidv4(),
-            title: `SMS from ${sender}`,
-            amount: 0, // Will be extracted by the transaction processor
-            category: 'Uncategorized',
-            type: 'expense', // Default, will be determined by processor
-            date: new Date().toISOString().split('T')[0],
-            source: 'sms',
-            fromAccount: sender,
-            details: {
-              sms: {
-                sender,
-                message: body,
-                timestamp: new Date().toISOString()
+            const { template, placeholders } = extractTemplateStructure(body);
+            const txn: Transaction = {
+              id: uuidv4(),
+              title: `SMS from ${sender}`,
+              amount: 0, // Will be extracted by the transaction processor
+              category: 'Uncategorized',
+              type: 'expense', // Default, will be determined by processor
+              date: new Date().toISOString().split('T')[0],
+              source: 'sms',
+              fromAccount: sender,
+              details: {
+                sms: {
+                  sender,
+                  message: body,
+                  timestamp: new Date().toISOString()
+                },
+                rawMessage: body
               },
-              rawMessage: body
-            },
-            currency: 'SAR' // Default currency, can be overridden by processor
+              currency: 'SAR' // Default currency, can be overridden by processor
+            };
+
+            // Handle background state
+            const appState = await CapacitorApp.getState();
+            if (appState.isActive) {
+              console.log('[NOTIFY] App active. Navigating to transaction.');
+              navigate('/edit-transaction', { state: { transaction: txn } });
+            } else {
+              console.log('[NOTIFY] App backgrounded. Showing notification.');
+              await LocalNotifications.schedule({
+                notifications: [
+                  {
+                    id: 777,
+                    title: 'New Transaction Detected',
+                    body: 'Tap to review and confirm',
+                    schedule: { at: new Date(Date.now() + 1000) },
+                    extra: { transaction: txn }
+                  }
+                ]
+              });
+            }
+          });
+          
+          console.log('[SMS] Added listener for SMS events successfully');
+
+          // Handle notification taps
+          LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+            const statePayload = event.notification.extra;
+            if (statePayload?.transaction) {
+              console.log('[NOTIFICATION] Tapped. Redirecting to edit.');
+              navigate('/edit-transaction', { state: statePayload });
+            }
+          });
+          
+          // Cleanup on component unmount
+          return () => {
+            if (plugin) {
+              listener.remove().catch(console.error);
+              plugin.stopListening().catch(console.error);
+            }
           };
-
-          // Handle background state
-          const appState = await CapacitorApp.getState();
-          if (appState.isActive) {
-            console.log('[NOTIFY] App active. Navigating to transaction.');
-            navigate('/edit-transaction', { state: { transaction: txn } });
-          } else {
-            console.log('[NOTIFY] App backgrounded. Showing notification.');
-            await LocalNotifications.schedule({
-              notifications: [
-                {
-                  id: 777,
-                  title: 'New Transaction Detected',
-                  body: 'Tap to review and confirm',
-                  schedule: { at: new Date(Date.now() + 1000) },
-                  extra: { transaction: txn }
-                }
-              ]
-            });
-          }
-        });
-
-        // Handle notification taps
-        LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
-          const statePayload = event.notification.extra;
-          if (statePayload?.transaction) {
-            console.log('[NOTIFICATION] Tapped. Redirecting to edit.');
-            navigate('/edit-transaction', { state: statePayload });
-          }
-        });
-        
-        // Cleanup on component unmount
-        return () => {
-          if (plugin) {
-            listener.remove().catch(console.error);
-            plugin.stopListening().catch(console.error);
-          }
-        };
+        } catch (err) {
+          console.error('[SMS] Error setting up SMS listener:', err);
+        }
         
       } catch (error) {
         console.error('[SMS] Error setting up listener:', error);

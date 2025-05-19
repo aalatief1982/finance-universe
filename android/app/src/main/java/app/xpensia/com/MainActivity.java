@@ -13,15 +13,28 @@ public class MainActivity extends BridgeActivity {
   
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    Log.d(TAG, "MainActivity.onCreate() - START");
     super.onCreate(savedInstanceState);
     
     // Log for debugging
     Log.d(TAG, "MainActivity onCreate - Registering plugins");
     
     // Register our plugins
-    registerPlugin(SmsReaderPlugin.class);
-    registerPlugin(BackgroundSmsListenerPlugin.class);
+    try {
+      registerPlugin(SmsReaderPlugin.class);
+      Log.d(TAG, "SmsReaderPlugin registered");
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering SmsReaderPlugin", e);
+    }
+    
+    try {
+      registerPlugin(BackgroundSmsListenerPlugin.class);
+      Log.d(TAG, "BackgroundSmsListenerPlugin registered");
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering BackgroundSmsListenerPlugin", e);
+    }
     
     Log.d(TAG, "MainActivity onCreate - Plugins registered");
+    Log.d(TAG, "MainActivity.onCreate() - END");
   }
 }
