@@ -112,7 +112,8 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
-    private boolean hasRequiredPermissions() {
+    @Override
+public boolean hasRequiredPermissions() {
         return getPermissionState("sms") == PermissionState.GRANTED;
     }
 
