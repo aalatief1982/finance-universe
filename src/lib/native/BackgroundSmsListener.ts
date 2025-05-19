@@ -1,4 +1,4 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core'; 
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
 
 let backgroundSmsListener: BackgroundSmsListenerPlugin | null = null;
