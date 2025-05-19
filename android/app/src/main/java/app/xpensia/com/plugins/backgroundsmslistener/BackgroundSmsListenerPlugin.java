@@ -1,6 +1,6 @@
 
 package app.xpensia.com.plugins.backgroundsmslistener;
-
+import com.getcapacitor.PermissionState;
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -121,14 +121,17 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
-    @Override
-    public boolean hasRequiredPermissions() {
-        boolean hasReadSms = getPermissionState(Manifest.permission.READ_SMS).getState().equals("granted");
-        boolean hasReceiveSms = getPermissionState(Manifest.permission.RECEIVE_SMS).getState().equals("granted");
-        Log.d(TAG, "Read SMS permission: " + hasReadSms + ", Receive SMS permission: " + hasReceiveSms);
-        return hasReadSms && hasReceiveSms;
-    }
+   @Override
+	public boolean hasRequiredPermissions() {
+		PermissionState readSmsState = getPermissionState(Manifest.permission.READ_SMS);
+		PermissionState receiveSmsState = getPermissionState(Manifest.permission.RECEIVE_SMS);
 
+		boolean hasReadSms = PermissionState.GRANTED.equals(readSmsState);
+		boolean hasReceiveSms = PermissionState.GRANTED.equals(receiveSmsState);
+
+		Log.d(TAG, "Read SMS permission: " + hasReadSms + ", Receive SMS permission: " + hasReceiveSms);
+		return hasReadSms && hasReceiveSms;
+	}
     private void registerSmsReceiver() {
         Log.d(TAG, "Registering SMS receiver");
         try {
