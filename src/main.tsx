@@ -1,3 +1,4 @@
+
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
@@ -5,6 +6,14 @@ import { handleError } from './utils/error-utils'
 import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults';
 import './styles/app.css';
+import { initializeCapacitor } from './lib/capacitor-init';
+
+// Initialize Capacitor
+try {
+  initializeCapacitor();
+} catch (err) {
+  console.error('[Capacitor] Initialization error:', err);
+}
 
 initializeXpensiaStorageDefaults();
 
@@ -92,10 +101,6 @@ setupGlobalErrorHandlers();
 // Create root and render app
 try {
   const root = createRoot(document.getElementById("root")!);
-  
-
-
-  
   root.render(<App />);
 } catch (error) {
   // Handle fatal initialization errors

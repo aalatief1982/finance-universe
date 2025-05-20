@@ -14,13 +14,20 @@ export default defineConfig({
   server: {
     port: 8080
   },
-  build: {
-    rollupOptions: {
-      // Don't try to bundle these Capacitor plugins
-      external: ['@capacitor/core', '@capacitor/app', '@capacitor/local-notifications', '@capacitor/status-bar']
-    }
-  },
   optimizeDeps: {
     exclude: ['@capacitor/core', '@capacitor/app', '@capacitor/local-notifications', '@capacitor/status-bar']
+  },
+  build: {
+    rollupOptions: {
+      external: ['@capacitor/core', '@capacitor/app', '@capacitor/local-notifications', '@capacitor/status-bar'],
+      output: {
+        globals: {
+          '@capacitor/core': 'capacitorExports',
+          '@capacitor/app': 'capacitorApp',
+          '@capacitor/local-notifications': 'capacitorLocalNotifications',
+          '@capacitor/status-bar': 'capacitorStatusBar'
+        }
+      }
+    }
   }
 });
