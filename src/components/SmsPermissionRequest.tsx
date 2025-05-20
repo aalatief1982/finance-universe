@@ -15,14 +15,20 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
 }) => {
   const [permissionGranted, setPermissionGranted] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkPermission = async () => {
-      const hasPermission = await smsPermissionService.hasPermission();
-      setPermissionGranted(hasPermission);
-      
-      if (hasPermission && onPermissionGranted) {
-        onPermissionGranted();
+      try {
+        const hasPermission = await smsPermissionService.hasPermission();
+        setPermissionGranted(hasPermission);
+        
+        if (hasPermission && onPermissionGranted) {
+          onPermissionGranted();
+        }
+      } catch (err) {
+        console.error('[SMS] Error checking permissions:', err);
+        setError('Failed to check SMS permission status. Please try again.');
       }
     };
     
@@ -31,15 +37,20 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
 
   const handleRequestPermission = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
       const granted = await smsPermissionService.requestPermission();
       setPermissionGranted(granted);
       
       if (granted && onPermissionGranted) {
         onPermissionGranted();
+      } else if (!granted) {
+        setError('Permission was denied. SMS features will not work without permission.');
       }
     } catch (error) {
       console.error('Error requesting SMS permission:', error);
+      setError('Failed to request permission. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -88,6 +99,14 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
         <p className="text-sm text-muted-foreground mt-1 mb-4">
           To automatically track your transactions, we need permission to read SMS messages.
         </p>
+        
+        {error && (
+          <div className="mb-4 text-sm p-2 bg-red-50 text-red-600 rounded-md w-full">
+            <AlertTriangle className="inline-block mr-1 h-4 w-4" />
+            {error}
+          </div>
+        )}
+        
         <Button 
           onClick={handleRequestPermission} 
           disabled={loading}

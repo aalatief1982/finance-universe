@@ -15,7 +15,7 @@ class SmsPermissionService {
   async hasPermission(): Promise<boolean> {
     if (!this.isNativeEnvironment()) {
       // For web environments, check local storage
-      return localStorage.getItem('sms_permission') === 'granted';
+      return localStorage.getItem('sms_permission_simulation') === 'granted';
     }
 
     try {
@@ -25,7 +25,11 @@ class SmsPermissionService {
         return false;
       }
       
-      const result = await smsListener.checkPermission();
+      const result = await smsListener.checkPermission().catch(err => {
+        console.warn('[SMS] Error during permission check:', err);
+        return { granted: false };
+      });
+      
       const granted = result?.granted ?? false;
       this.savePermissionStatus(granted);
       return granted;
@@ -35,9 +39,13 @@ class SmsPermissionService {
     }
   }
 
-  // Save permission status to local storage (for web environments)
+  // Save permission status to local storage
   savePermissionStatus(granted: boolean): void {
-    localStorage.setItem('sms_permission', granted ? 'granted' : 'denied');
+    if (this.isNativeEnvironment()) {
+      localStorage.setItem('sms_permission', granted ? 'granted' : 'denied');
+    } else {
+      localStorage.setItem('sms_permission_simulation', granted ? 'granted' : 'denied');
+    }
   }
 
   // Request SMS permissions
@@ -55,7 +63,11 @@ class SmsPermissionService {
         return false;
       }
       
-      const result = await smsListener.requestPermission();
+      const result = await smsListener.requestPermission().catch(err => {
+        console.warn('[SMS] Error during permission request:', err);
+        return { granted: false };
+      });
+      
       const granted = result?.granted ?? false;
       this.savePermissionStatus(granted);
       return granted;
@@ -69,11 +81,10 @@ class SmsPermissionService {
   // Check if app can read SMS messages
   canReadSms(): boolean {
     if (!this.isNativeEnvironment()) {
-      return localStorage.getItem('sms_permission') === 'granted';
+      return localStorage.getItem('sms_permission_simulation') === 'granted';
     }
     
-    // For native environments, we'd need to make an async check
-    // but since this method is sync, we'll use the cached value
+    // For native environments, we'll use the cached value
     return localStorage.getItem('sms_permission') === 'granted';
   }
 }

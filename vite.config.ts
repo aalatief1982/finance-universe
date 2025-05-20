@@ -8,10 +8,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     },
+    // Keep these conditions to properly resolve Capacitor plugins
     conditions: ['web', 'browser', 'default']
   },
   server: {
     port: 8080
-  },
-  // ❌ Remove optimizeDeps.exclude and build.rollupOptions.external completely
+  }
 });

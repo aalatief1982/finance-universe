@@ -2,9 +2,15 @@
 import { Capacitor } from '@capacitor/core'; 
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
 
+// Cache the listener to avoid multiple instantiations
 let backgroundSmsListener: BackgroundSmsListenerPlugin | null = null;
 
+/**
+ * Loads the appropriate SMS listener implementation based on platform.
+ * Uses error handling to gracefully degrade functionality if issues occur.
+ */
 export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | null> {
+  // Web platform gets a simulated implementation
   if (Capacitor.getPlatform() === 'web') {
     console.log('[SMS] Web platform — Using web implementation');
     try {
@@ -16,6 +22,7 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
     }
   }
 
+  // Native platform
   try {
     if (!backgroundSmsListener) {
       console.log('[SMS] Loading native SMS listener plugin');
@@ -23,17 +30,9 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
         const { default: getListener } = await import('@/native/backgroundSms');
         backgroundSmsListener = await getListener();
         
-        // Verify that the required methods exist
         if (!backgroundSmsListener) {
           console.error('[SMS] Failed to load native SMS listener');
           return null;
-        }
-        
-        if (typeof backgroundSmsListener.checkPermission !== 'function') {
-          console.warn('[SMS] Plugin loaded but checkPermission method is missing');
-        }
-        if (typeof backgroundSmsListener.startListening !== 'function') {
-          console.warn('[SMS] Plugin loaded but startListening method is missing');
         }
         
         console.log('[SMS] SMS listener plugin loaded successfully');

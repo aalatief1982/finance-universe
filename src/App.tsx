@@ -58,7 +58,7 @@ function AppWrapper() {
           }
         }
         
-        // Load the SMS listener plugin
+        // Load the SMS listener plugin with better error handling
         const plugin = await loadSmsListener();
         
         if (!plugin) {
@@ -66,45 +66,14 @@ function AppWrapper() {
           return;
         }
         
-        // Check permission with error handling
         try {
-          console.log('[SMS] Checking permission using plugin...');
-          const permResult = await plugin.checkPermission();
-          console.log('[SMS] Permission result:', permResult);
-          
-          // Check if we need to request permissions
-          if (!permResult.granted) {
-            console.log('[SMS] Permission not granted. Requesting permission...');
-            try {
-              const requestResult = await plugin.requestPermission();
-              console.log('[SMS] Permission request result:', requestResult);
-              if (!requestResult.granted) {
-                console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
-                return;
-              }
-            } catch (err) {
-              console.error('[SMS] Error requesting permission:', err);
-              return;
-            }
-          }
-        } catch (err) {
-          console.error('[SMS] Error checking permission:', err);
-          return;
-        }
-        
-        // Start listening with error handling
-        try {
+          // Start listening - don't worry about permissions yet
           console.log('[SMS] Starting to listen for SMS...');
-          await plugin.startListening();
-          console.log('[SMS] Started listening for SMS messages');
-        } catch (err) {
-          console.error('[SMS] Error starting SMS listener:', err);
-          return;
-        }
-        
-        // Add listener for SMS events with error handling
-        try {
-          console.log('[SMS] Adding listener for SMS events...');
+          await plugin.startListening().catch(err => {
+            console.warn('[SMS] Could not start listening, will try after permission check:', err);
+          });
+          
+          // Add listener for SMS events with error handling
           const listener = await plugin.addListener('smsReceived', async ({ sender, body }) => {
             console.log('[Xpensia SMS] Received:', sender, body);
 
@@ -153,10 +122,10 @@ function AppWrapper() {
                 ]
               });
             }
+          }).catch(err => {
+            console.error('[SMS] Error setting up SMS listener:', err);
           });
           
-          console.log('[SMS] Added listener for SMS events successfully');
-
           // Handle notification taps
           LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
             const statePayload = event.notification.extra;
@@ -169,12 +138,12 @@ function AppWrapper() {
           // Cleanup on component unmount
           return () => {
             if (plugin) {
-              listener.remove().catch(console.error);
+              listener?.remove().catch(console.error);
               plugin.stopListening().catch(console.error);
             }
           };
         } catch (err) {
-          console.error('[SMS] Error setting up SMS listener:', err);
+          console.error('[SMS] Error in SMS listener setup:', err);
         }
         
       } catch (error) {
