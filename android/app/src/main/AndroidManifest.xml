@@ -42,9 +42,6 @@
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     
-    <!-- Optional: for sending SMS -->
-    <uses-permission android:name="android.permission.SEND_SMS" />
-    
     <!-- Network state monitoring -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>

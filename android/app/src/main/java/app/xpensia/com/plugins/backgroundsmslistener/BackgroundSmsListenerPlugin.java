@@ -32,6 +32,9 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     private boolean isListening = false;
     private BroadcastReceiver smsReceiver;
 
+    /**
+     * Check if the SMS permission is granted
+     */
     @PluginMethod
     public void checkPermission(PluginCall call) {
         Log.d(TAG, "checkPermission called");
@@ -47,6 +50,9 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
+    /**
+     * Request SMS permission
+     */
     @PluginMethod
     public void requestPermission(PluginCall call) {
         Log.d(TAG, "requestPermission called");
@@ -68,6 +74,9 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
+    /**
+     * Start listening for SMS messages
+     */
     @PluginMethod
     public void startListening(PluginCall call) {
         Log.d(TAG, "startListening called");
@@ -93,6 +102,9 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
+    /**
+     * Stop listening for SMS messages
+     */
     @PluginMethod
     public void stopListening(PluginCall call) {
         Log.d(TAG, "stopListening called");
@@ -112,6 +124,9 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
+    /**
+     * Register the SMS receiver to listen for incoming SMS messages
+     */
     private void registerSmsReceiver() {
         Log.d(TAG, "Registering SMS receiver");
         if (smsReceiver != null) {
@@ -167,6 +182,9 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         Log.d(TAG, "SMS receiver registered successfully");
     }
 
+    /**
+     * Unregister the SMS receiver
+     */
     private void unregisterSmsReceiver() {
         Log.d(TAG, "Unregistering SMS receiver");
         if (smsReceiver != null) {
