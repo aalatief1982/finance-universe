@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
@@ -67,10 +68,34 @@ function AppWrapper() {
         }
         
         try {
-          // Start listening - don't worry about permissions yet
+          // Check permission first
+          const permResult = await plugin.checkPermission().catch(err => {
+            console.warn('[SMS] Error checking permission:', err);
+            return { granted: false };
+          });
+          
+          console.log('[SMS] Permission result:', permResult);
+          
+          // Request permission if not granted
+          if (!permResult.granted) {
+            console.log('[SMS] Permission not granted. Requesting permission...');
+            const requestResult = await plugin.requestPermission().catch(err => {
+              console.warn('[SMS] Error requesting permission:', err);
+              return { granted: false };
+            });
+            
+            console.log('[SMS] Permission request result:', requestResult);
+            
+            if (!requestResult.granted) {
+              console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
+              return;
+            }
+          }
+          
+          // Start listening - permissions should be granted by now
           console.log('[SMS] Starting to listen for SMS...');
           await plugin.startListening().catch(err => {
-            console.warn('[SMS] Could not start listening, will try after permission check:', err);
+            console.warn('[SMS] Could not start listening:', err);
           });
           
           // Add listener for SMS events with error handling
@@ -137,8 +162,8 @@ function AppWrapper() {
           
           // Cleanup on component unmount
           return () => {
-            if (plugin) {
-              listener?.remove().catch(console.error);
+            if (plugin && listener) {
+              listener.remove?.().catch(console.error);
               plugin.stopListening().catch(console.error);
             }
           };

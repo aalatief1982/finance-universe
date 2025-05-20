@@ -46,6 +46,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       console.log('[SMS] Starting to listen for SMS');
       await BackgroundSmsListener.startListening();
       console.log('[SMS] Now listening for SMS');
+      return; // Return void as expected
     } catch (err) {
       console.warn('[SMS] Error starting to listen for SMS:', err);
       // Don't rethrow to avoid app crashing
@@ -57,6 +58,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       console.log('[SMS] Stopping listening for SMS');
       await BackgroundSmsListener.stopListening();
       console.log('[SMS] Stopped listening for SMS');
+      return; // Return void as expected
     } catch (err) {
       console.warn('[SMS] Error stopping SMS listener:', err);
       // Don't rethrow to avoid app crashing

@@ -32,11 +32,13 @@ const BackgroundSmsListenerWebMock: BackgroundSmsListenerPlugin = {
   startListening: async () => {
     console.log('[SMS-Web] Starting to listen for SMS (simulation)');
     // Nothing to do in web environment
+    return;
   },
   
   stopListening: async () => {
     console.log('[SMS-Web] Stopping listening for SMS (simulation)');
     // Nothing to do in web environment
+    return;
   }
 };
 
