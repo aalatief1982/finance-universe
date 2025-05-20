@@ -1,6 +1,6 @@
 
 import { Capacitor } from "@capacitor/core";
-import { SmsReader } from "../plugins/SmsReaderPlugin";
+import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
 
 /**
  * Service for handling SMS permission-related functionality
@@ -19,12 +19,18 @@ class SmsPermissionService {
     }
 
     try {
-      const result = await SmsReader.checkPermission();
+      const smsListener = await loadSmsListener();
+      if (!smsListener) {
+        console.warn('[SMS] Failed to load SMS listener when checking permissions');
+        return false;
+      }
+      
+      const result = await smsListener.checkPermission();
       const granted = result?.granted ?? false;
       this.savePermissionStatus(granted);
       return granted;
     } catch (error) {
-      console.error("Error checking SMS permission:", error);
+      console.error("[SMS] Error checking SMS permission:", error);
       return false;
     }
   }
@@ -43,12 +49,18 @@ class SmsPermissionService {
     }
 
     try {
-      const result = await SmsReader.requestPermission();
+      const smsListener = await loadSmsListener();
+      if (!smsListener) {
+        console.warn('[SMS] Failed to load SMS listener when requesting permissions');
+        return false;
+      }
+      
+      const result = await smsListener.requestPermission();
       const granted = result?.granted ?? false;
       this.savePermissionStatus(granted);
       return granted;
     } catch (error) {
-      console.error("Error requesting SMS permission:", error);
+      console.error("[SMS] Error requesting SMS permission:", error);
       this.savePermissionStatus(false);
       return false;
     }

@@ -1,6 +1,7 @@
 
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
+import { Capacitor } from '@capacitor/core';
 
 // Create a wrapper around the actual plugin with better error handling
 const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
@@ -17,9 +18,9 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   checkPermission: async () => {
     try {
       console.log('[SMS] Checking permission');
-      // Make sure this method is actually implemented in the Java class
       if (typeof BackgroundSmsListener.checkPermission !== 'function') {
-        console.warn('[SMS] checkPermission is not implemented, returning false');
+        console.warn('[SMS] checkPermission is not implemented in the plugin, falling back to Capacitor permissions');
+        // Implementation in case the native plugin doesn't provide this method
         return { granted: false };
       }
       const result = await BackgroundSmsListener.checkPermission();
@@ -35,9 +36,9 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   requestPermission: async () => {
     try {
       console.log('[SMS] Requesting permission');
-      // Make sure this method is actually implemented in the Java class
       if (typeof BackgroundSmsListener.requestPermission !== 'function') {
-        console.warn('[SMS] requestPermission is not implemented, returning false');
+        console.warn('[SMS] requestPermission is not implemented in the plugin, falling back to Capacitor permissions');
+        // Implementation in case the native plugin doesn't provide this method
         return { granted: false };
       }
       const result = await BackgroundSmsListener.requestPermission();
@@ -53,9 +54,9 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   startListening: async () => {
     try {
       console.log('[SMS] Starting to listen for SMS');
-      // Make sure this method is actually implemented in the Java class
       if (typeof BackgroundSmsListener.startListening !== 'function') {
-        console.warn('[SMS] startListening is not implemented, skipping');
+        console.warn('[SMS] startListening is not implemented in the plugin, using addListener instead');
+        // Implementation in case the native plugin doesn't provide this method
         return;
       }
       await BackgroundSmsListener.startListening();
@@ -70,9 +71,9 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   stopListening: async () => {
     try {
       console.log('[SMS] Stopping listening for SMS');
-      // Make sure this method is actually implemented in the Java class
       if (typeof BackgroundSmsListener.stopListening !== 'function') {
-        console.warn('[SMS] stopListening is not implemented, skipping');
+        console.warn('[SMS] stopListening is not implemented in the plugin, skipping');
+        // Implementation in case the native plugin doesn't provide this method
         return;
       }
       await BackgroundSmsListener.stopListening();

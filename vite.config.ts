@@ -2,7 +2,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-// import { componentTagger } from "lovable-tagger";
 
 export default defineConfig({
   plugins: [react()],
@@ -17,10 +16,11 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['capacitor-background-sms-listener']
+      // Don't try to bundle these Capacitor plugins
+      external: ['@capacitor/core', '@capacitor/app', '@capacitor/local-notifications', '@capacitor/status-bar']
     }
   },
   optimizeDeps: {
-    exclude: ['capacitor-background-sms-listener']
+    exclude: ['@capacitor/core', '@capacitor/app', '@capacitor/local-notifications', '@capacitor/status-bar']
   }
 });

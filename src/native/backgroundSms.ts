@@ -21,13 +21,15 @@ export default async function getBackgroundSmsListener(): Promise<BackgroundSmsL
       });
     }
     
-    if (!module.default) {
+    const listener = module?.default;
+    
+    if (!listener) {
       console.error('[SMS] Module loaded successfully but no default export found');
       return null;
     }
     
-    console.log('[SMS] Module loaded successfully:', module.default);
-    return module.default;
+    console.log('[SMS] Module loaded successfully:', listener);
+    return listener;
   } catch (err) {
     console.error('[SMS] Failed to load background SMS listener:', err);
     return null;
