@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { MessageSquare, Check, AlertTriangle } from 'lucide-react';
 import { smsPermissionService } from '@/services/SmsPermissionService';
+import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
 
 interface SmsPermissionRequestProps {
   onPermissionGranted?: () => void;
@@ -23,8 +24,13 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
         const hasPermission = await smsPermissionService.hasPermission();
         setPermissionGranted(hasPermission);
         
-        if (hasPermission && onPermissionGranted) {
-          onPermissionGranted();
+        if (hasPermission) {
+          // Initialize SMS listener when permission is granted
+          initializeListener();
+          
+          if (onPermissionGranted) {
+            onPermissionGranted();
+          }
         }
       } catch (err) {
         console.error('[SMS] Error checking permissions:', err);
@@ -35,6 +41,20 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
     checkPermission();
   }, [onPermissionGranted]);
 
+  const initializeListener = async () => {
+    try {
+      const smsListener = await loadSmsListener();
+      if (smsListener) {
+        await smsListener.startListening().catch(err => {
+          console.warn('[SMS] Error starting SMS listener:', err);
+        });
+        console.log('[SMS] SMS listener initialized');
+      }
+    } catch (err) {
+      console.error('[SMS] Error initializing SMS listener:', err);
+    }
+  };
+
   const handleRequestPermission = async () => {
     setLoading(true);
     setError(null);
@@ -43,9 +63,14 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
       const granted = await smsPermissionService.requestPermission();
       setPermissionGranted(granted);
       
-      if (granted && onPermissionGranted) {
-        onPermissionGranted();
-      } else if (!granted) {
+      if (granted) {
+        // Initialize SMS listener when permission is granted
+        initializeListener();
+        
+        if (onPermissionGranted) {
+          onPermissionGranted();
+        }
+      } else {
         setError('Permission was denied. SMS features will not work without permission.');
       }
     } catch (error) {

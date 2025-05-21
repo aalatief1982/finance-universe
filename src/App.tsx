@@ -33,6 +33,7 @@ import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageF
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
+import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -59,23 +60,17 @@ function AppWrapper() {
           }
         }
         
-        // Load the SMS listener plugin with better error handling
-        const plugin = await loadSmsListener();
-        
-        if (!plugin) {
-          console.warn('[SMS] Plugin not available or failed to load. Skipping.');
-          return;
-        }
-        
         try {
-          // Start listening without checking permissions first
-          console.log('[SMS] Starting to listen for SMS...');
-          await plugin.startListening().catch(err => {
-            console.warn('[SMS] Could not start listening:', err);
-          });
+          // Direct interaction with the plugin is more reliable
+          try {
+            await BackgroundSmsListener.startListening();
+            console.log('[SMS] Successfully started listening for SMS messages');
+          } catch (err) {
+            console.warn('[SMS] Error starting SMS listener directly:', err);
+          }
           
           // Add listener for SMS events with error handling
-          const listener = await plugin.addListener('smsReceived', async ({ sender, body }) => {
+          const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
             console.log('[Xpensia SMS] Received:', sender, body);
 
             if (!isFinancialTransactionMessage(body)) {
@@ -123,8 +118,6 @@ function AppWrapper() {
                 ]
               });
             }
-          }).catch(err => {
-            console.error('[SMS] Error setting up SMS listener:', err);
           });
           
           // Handle notification taps
@@ -136,13 +129,6 @@ function AppWrapper() {
             }
           });
           
-          // Cleanup on component unmount
-          return () => {
-            if (plugin && listener) {
-              listener.remove?.().catch(console.error);
-              plugin.stopListening().catch(console.error);
-            }
-          };
         } catch (err) {
           console.error('[SMS] Error in SMS listener setup:', err);
         }

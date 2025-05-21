@@ -27,8 +27,8 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
     if (!backgroundSmsListener) {
       console.log('[SMS] Loading native SMS listener plugin');
       try {
-        const { default: getListener } = await import('@/native/backgroundSms');
-        backgroundSmsListener = await getListener();
+        const { default: nativeListener } = await import('@/native/backgroundSms.native');
+        backgroundSmsListener = nativeListener;
         
         if (!backgroundSmsListener) {
           console.error('[SMS] Failed to load native SMS listener');

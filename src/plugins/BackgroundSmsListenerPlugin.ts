@@ -14,6 +14,8 @@ export interface BackgroundSmsListenerPlugin {
   stopListening(): Promise<void>;
 }
 
-const BackgroundSmsListener = registerPlugin<BackgroundSmsListenerPlugin>('BackgroundSmsListener');
+const BackgroundSmsListener = registerPlugin<BackgroundSmsListenerPlugin>('BackgroundSmsListener', {
+  web: () => import('@/native/backgroundSms.web').then(m => m.default)
+});
 
 export { BackgroundSmsListener };
