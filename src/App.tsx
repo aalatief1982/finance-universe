@@ -33,6 +33,8 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 
+import { handleNotificationSmartPaste } from '@/lib/smart-paste-engine/notificationHandler';
+
 function AppWrapper() {
   const navigate = useNavigate();
 
@@ -121,7 +123,38 @@ function AppWrapper() {
                 navigate('/edit-transaction', { state: { transaction: txn } });
               } else {
                 console.log('[NOTIFY] App backgrounded. Showing notification.');
-                await LocalNotifications.schedule({
+                
+                async function ensureNotificationPermission() {
+                const perm = await LocalNotifications.checkPermissions();
+                if (perm.display !== 'granted') {
+                  const req = await LocalNotifications.requestPermissions();
+                  if (req.display !== 'granted') {
+                    console.warn('[NOTIFY] Notification permission not granted');
+                    return false;
+                  }
+                }
+                return true;
+              }
+
+                  if (await ensureNotificationPermission()) {
+                    await LocalNotifications.schedule({
+                      notifications: [
+                        {
+                          title: 'New Transaction Detected',
+                          body: 'Tap to review your latest expense',
+                          id: parseInt(Date.now().toString().slice(-6)),
+                          schedule: { at: new Date(Date.now() + 1000) },
+                          sound: null,
+                          attachments: null,
+                          actionTypeId: "",
+                           extra: { rawMessage: body }  // 👈 Add this line
+                        },
+                      ]
+                    });
+                  }
+
+
+                /* await LocalNotifications.schedule({
                   notifications: [
                     {
                       id: 777,
@@ -131,7 +164,8 @@ function AppWrapper() {
                       extra: { transaction: txn }
                     }
                   ]
-                });
+                }); */
+
               }
             });
             console.log('[SMS] Successfully added SMS listener');
@@ -140,13 +174,21 @@ function AppWrapper() {
           }
           
           // Handle notification taps
-          LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+      /*     LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
             const statePayload = event.notification.extra;
             if (statePayload?.transaction) {
               console.log('[NOTIFICATION] Tapped. Redirecting to edit.');
               navigate('/edit-transaction', { state: statePayload });
             }
-          });
+          }); */
+          LocalNotifications.addListener('localNotificationActionPerformed', async (event) => {
+          const message = event.notification?.extra?.rawMessage || '';
+          if (message) {
+            console.log('[NOTIFICATION] Tap event:', event.notification);
+            await handleNotificationSmartPaste(message,navigate);
+          }
+        });
+
           
         } catch (err) {
           console.error('[SMS] Error in SMS listener setup:', err);

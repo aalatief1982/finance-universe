@@ -16,7 +16,7 @@ public class MainActivity extends BridgeActivity {
     Log.d(TAG, "MainActivity.onCreate() - START");
     super.onCreate(savedInstanceState);
     
-    // Log for debugging
+    // Log for debugging  
     Log.d(TAG, "MainActivity onCreate - Registering plugins");
     
     // Register our plugins
