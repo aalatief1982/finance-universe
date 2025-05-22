@@ -63,12 +63,14 @@ export class SmsReaderService {
 
     const hasPerm = await SmsReaderService.hasPermission();
     if (!hasPerm) {
+      console.error("[SmsReaderService] Permission not granted");
       throw new Error('SMS permission not granted');
     }
 
     const monthsBack = parseInt(localStorage.getItem('xpensia_sms_period_months') || '6');
     const startDate = subMonths(startOfToday(), monthsBack).getTime();
     const endDate = Date.now();
+    console.log(`[SmsReaderService] Looking back ${monthsBack} months`);
     console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
     console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
 
@@ -84,6 +86,7 @@ export class SmsReaderService {
         return [];
       }
 
+      console.log(`[SmsReaderService] Successfully read ${result.messages.length} SMS messages`);
       return result.messages;
     } catch (error) {
       console.error("[SmsReaderService] Error reading SMS messages:", error);

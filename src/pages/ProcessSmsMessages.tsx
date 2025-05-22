@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine
 import Layout from '@/components/Layout';
 import { ArrowLeft } from 'lucide-react';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
+import { subMonths, startOfToday } from 'date-fns';
 
 interface ProcessedSmsEntry extends SmsEntry {
   matchedKeyword?: string;
@@ -65,10 +67,12 @@ const handleReadSms = async () => {
     const keywordObjects = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
     const keywords = keywordObjects.map(obj => obj.keyword.toLowerCase());
 
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
-    const smsMessages = await SmsReaderService.readSmsMessages({ startDate: sixMonthsAgo });
+    // Use the configurable period from localStorage instead of hardcoding
+    const monthsBack = parseInt(localStorage.getItem('xpensia_sms_period_months') || '6');
+    console.log(`[SmsReader] Reading messages from ${monthsBack} months back`);
+    
+    // Use the SmsReaderService directly which already uses this configuration
+    const smsMessages = await SmsReaderService.readSmsMessages();
 
     const validMessages: { msg: string }[] = [];
     const invalidMessages: { msg: string }[] = [];
@@ -105,6 +109,7 @@ const handleReadSms = async () => {
     localStorage.setItem('uat_valid_sms', JSON.stringify(validMessages));
     localStorage.setItem('uat_invalid_sms', JSON.stringify(invalidMessages));
 
+    console.log(`[SmsReader] Total messages: ${smsMessages.length}, Filtered: ${filtered.length}`);
     setMessages(filtered);
 
     toast({ title: 'Success', description: `Fetched and filtered ${filtered.length} SMS messages` });
@@ -207,3 +212,4 @@ const handleReadSms = async () => {
 };
 
 export default ProcessSmsMessages;
+
