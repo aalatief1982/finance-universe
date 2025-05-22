@@ -8,7 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import Layout from '@/components/Layout';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Trash2 } from 'lucide-react';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { subMonths, startOfToday } from 'date-fns';
 
@@ -39,88 +39,103 @@ const ProcessSmsMessages: React.FC = () => {
     }
   }, [selectedSenders, messages]);
 
-const handleReadSms = async () => {
-  setLoading(true);
+  const handleReadSms = async () => {
+    setLoading(true);
 
-  if (!Capacitor.isNativePlatform()) {
-    toast({
-      variant: 'destructive',
-      title: 'Mobile only feature',
-      description: 'SMS reading is only available on Android devices',
-    });
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const granted = await SmsReaderService.requestPermission();
-    if (!granted) {
+    if (!Capacitor.isNativePlatform()) {
       toast({
         variant: 'destructive',
-        title: 'Permission denied',
-        description: 'SMS Permission was not granted',
+        title: 'Mobile only feature',
+        description: 'SMS reading is only available on Android devices',
       });
       setLoading(false);
       return;
     }
 
-    const keywordObjects = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
-    const keywords = keywordObjects.map(obj => obj.keyword.toLowerCase());
+    try {
+      const granted = await SmsReaderService.requestPermission();
+      if (!granted) {
+        toast({
+          variant: 'destructive',
+          title: 'Permission denied',
+          description: 'SMS Permission was not granted',
+        });
+        setLoading(false);
+        return;
+      }
 
-    // Use the configurable period from localStorage instead of hardcoding
-    const monthsBack = parseInt(localStorage.getItem('xpensia_sms_period_months') || '6');
-    console.log(`[SmsReader] Reading messages from ${monthsBack} months back`);
-    
-    // Use the SmsReaderService directly which already uses this configuration
-    const smsMessages = await SmsReaderService.readSmsMessages();
+      const keywordObjects = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
+      const keywords = keywordObjects.map(obj => obj.keyword.toLowerCase());
+      
+      // Use SmsReaderService with no options to get only new messages based on the tracker
+      const smsMessages = await SmsReaderService.readSmsMessages();
 
-    const validMessages: { msg: string }[] = [];
-    const invalidMessages: { msg: string }[] = [];
+      const validMessages: { msg: string }[] = [];
+      const invalidMessages: { msg: string }[] = [];
 
-    const filtered: ProcessedSmsEntry[] = smsMessages
-      .map((msg) => {
-        if (!msg || !msg.message) return null;
+      const filtered: ProcessedSmsEntry[] = smsMessages
+        .map((msg) => {
+          if (!msg || !msg.message) return null;
 
-        const lower = msg.message.toLowerCase();
+          const lower = msg.message.toLowerCase();
 
-        const isRelevant = isFinancialTransactionMessage(msg.message);
-        const otpKeywords = [
-          'otp', 'code', 'password', 'passcode', 'one time', 'verification', 'auth', 'login code',
-          'do not share', 'use this code', 'security code',
-          'رمز', 'رمز الدخول', 'رمز التحقق', 'رمز الأمان',
-          'كلمة مرور', 'رمز لمرة واحدة', 'لا تشارك', 'لا تستخدم', 'سرية', 'توثيق', 'حمايتك'
-        ];
+          const isRelevant = isFinancialTransactionMessage(msg.message);
+          const otpKeywords = [
+            'otp', 'code', 'password', 'passcode', 'one time', 'verification', 'auth', 'login code',
+            'do not share', 'use this code', 'security code',
+            'رمز', 'رمز الدخول', 'رمز التحقق', 'رمز الأمان',
+            'كلمة مرور', 'رمز لمرة واحدة', 'لا تشارك', 'لا تستخدم', 'سرية', 'توثيق', 'حمايتك'
+          ];
 
-        const containsOtp = otpKeywords.some((kw) => lower.includes(kw));
+          const containsOtp = otpKeywords.some((kw) => lower.includes(kw));
 
-        if (isRelevant && !containsOtp) {
-          validMessages.push({ msg: msg.message });
-          const matchedKeyword = keywords.find((kw) => lower.includes(kw));
-          return { ...msg, matchedKeyword };
-        } else {
-          invalidMessages.push({ msg: msg.message });
-          console.warn("[SmartPaste] Skipped message:", msg.message);
-          return null;
-        }
-      })
-      .filter((msg): msg is ProcessedSmsEntry => msg !== null);
+          if (isRelevant && !containsOtp) {
+            validMessages.push({ msg: msg.message });
+            const matchedKeyword = keywords.find((kw) => lower.includes(kw));
+            return { ...msg, matchedKeyword };
+          } else {
+            invalidMessages.push({ msg: msg.message });
+            console.warn("[SmartPaste] Skipped message:", msg.message);
+            return null;
+          }
+        })
+        .filter((msg): msg is ProcessedSmsEntry => msg !== null);
 
-    // Save both valid and invalid messages to localStorage
-    localStorage.setItem('uat_valid_sms', JSON.stringify(validMessages));
-    localStorage.setItem('uat_invalid_sms', JSON.stringify(invalidMessages));
+      // Save both valid and invalid messages to localStorage
+      localStorage.setItem('uat_valid_sms', JSON.stringify(validMessages));
+      localStorage.setItem('uat_invalid_sms', JSON.stringify(invalidMessages));
 
-    console.log(`[SmsReader] Total messages: ${smsMessages.length}, Filtered: ${filtered.length}`);
-    setMessages(filtered);
+      console.log(`[SmsReader] Total messages: ${smsMessages.length}, Filtered: ${filtered.length}`);
+      setMessages(filtered);
 
-    toast({ title: 'Success', description: `Fetched and filtered ${filtered.length} SMS messages` });
-  } catch (error) {
-    console.error('Error reading SMS:', error);
-    toast({ variant: 'destructive', title: 'Error', description: 'Failed to read SMS messages' });
-  } finally {
-    setLoading(false);
-  }
-};
+      toast({ 
+        title: 'Success', 
+        description: `Fetched and filtered ${filtered.length} SMS messages${smsMessages.length > 0 ? '' : ' (no new messages found)'}` 
+      });
+    } catch (error) {
+      console.error('Error reading SMS:', error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to read SMS messages' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleResetTracker = () => {
+    try {
+      SmsReaderService.clearProcessedMessagesTracker();
+      toast({
+        title: 'Tracker Reset',
+        description: 'SMS message tracker has been reset. All messages will be retrieved next time.',
+      });
+    } catch (error) {
+      console.error('Error resetting tracker:', error);
+      toast({ 
+        variant: 'destructive', 
+        title: 'Error', 
+        description: 'Failed to reset SMS message tracker' 
+      });
+    }
+  };
 
   const toggleSenderSelect = (sender: string) => {
     if (selectedSenders.includes(sender)) {
@@ -171,9 +186,20 @@ const handleReadSms = async () => {
         </div>
       </div>
 
-      <Button className="w-full mb-4" onClick={handleReadSms} disabled={loading}>
-        {loading ? 'Reading...' : 'Read SMS'}
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <Button className="flex-1" onClick={handleReadSms} disabled={loading}>
+          {loading ? 'Reading...' : 'Read SMS'} 
+        </Button>
+        <Button 
+          variant="outline"
+          className="flex items-center gap-2" 
+          onClick={handleResetTracker}
+          disabled={loading}
+        >
+          <Trash2 className="h-4 w-4" />
+          Reset Tracker
+        </Button>
+      </div>
 
       {senders.length > 0 && (
         <div className="mb-6">
@@ -212,4 +238,3 @@ const handleReadSms = async () => {
 };
 
 export default ProcessSmsMessages;
-
