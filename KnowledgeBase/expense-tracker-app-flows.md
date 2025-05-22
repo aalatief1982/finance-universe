@@ -1,7 +1,7 @@
 
 # Expense Tracker Mobile App - App Flows Document
 
-## 1. Authentication Flow
+## 1. Authentication Flow 
 
 ### 1.1 Initial App Launch
 ```mermaid
