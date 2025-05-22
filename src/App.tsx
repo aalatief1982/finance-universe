@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
@@ -32,7 +31,6 @@ import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 
 function AppWrapper() {
@@ -40,6 +38,7 @@ function AppWrapper() {
 
   useEffect(() => {
     const platform = Capacitor.getPlatform();
+    
     if (platform === 'web') {
       console.log('[SMS] Web platform — skipping setupSmsListener entirely.');
       return;
@@ -61,64 +60,84 @@ function AppWrapper() {
         }
         
         try {
-          // Direct interaction with the plugin is more reliable
+          // Check permission first
+          const permissionResult = await BackgroundSmsListener.checkPermission();
+          console.log('[SMS] Permission check result:', permissionResult);
+          
+          if (!permissionResult.granted) {
+            console.log('[SMS] Permission not granted. Requesting permission...');
+            const requestResult = await BackgroundSmsListener.requestPermission();
+            console.log('[SMS] Permission request result:', requestResult);
+            
+            if (!requestResult.granted) {
+              console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
+              return;
+            }
+          }
+          
+          console.log('[SMS] Starting to listen for SMS...');
           try {
             await BackgroundSmsListener.startListening();
             console.log('[SMS] Successfully started listening for SMS messages');
           } catch (err) {
-            console.warn('[SMS] Error starting SMS listener directly:', err);
+            console.warn('[SMS] Error starting SMS listener:', err);
           }
           
           // Add listener for SMS events with error handling
-          const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
-            console.log('[Xpensia SMS] Received:', sender, body);
+          try {
+            const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
+              console.log('[Xpensia SMS] Received:', sender, body);
 
-            if (!isFinancialTransactionMessage(body)) {
-              console.log('[Xpensia SMS] Not a financial message. Skipped.');
-              return;
-            }
+              if (!isFinancialTransactionMessage(body)) {
+                console.log('[Xpensia SMS] Not a financial message. Skipped.');
+                return;
+              }
 
-            const { template, placeholders } = extractTemplateStructure(body);
-            const txn: Transaction = {
-              id: uuidv4(),
-              title: `SMS from ${sender}`,
-              amount: 0, // Will be extracted by the transaction processor
-              category: 'Uncategorized',
-              type: 'expense', // Default, will be determined by processor
-              date: new Date().toISOString().split('T')[0],
-              source: 'sms',
-              fromAccount: sender,
-              details: {
-                sms: {
-                  sender,
-                  message: body,
-                  timestamp: new Date().toISOString()
+              const { template, placeholders } = extractTemplateStructure(body);
+              const txn: Transaction = {
+                id: uuidv4(),
+                title: `SMS from ${sender}`,
+                amount: 0, // Will be extracted by the transaction processor
+                category: 'Uncategorized',
+                type: 'expense', // Default, will be determined by processor
+                date: new Date().toISOString().split('T')[0],
+                source: 'sms',
+                fromAccount: sender,
+                details: {
+                  sms: {
+                    sender,
+                    message: body,
+                    timestamp: new Date().toISOString()
+                  },
+                  rawMessage: body
                 },
-                rawMessage: body
-              },
-              currency: 'SAR' // Default currency, can be overridden by processor
-            };
+                currency: 'SAR' // Default currency, can be overridden by processor
+              };
 
-            // Handle background state
-            const appState = await CapacitorApp.getState();
-            if (appState.isActive) {
-              console.log('[NOTIFY] App active. Navigating to transaction.');
-              navigate('/edit-transaction', { state: { transaction: txn } });
-            } else {
-              console.log('[NOTIFY] App backgrounded. Showing notification.');
-              await LocalNotifications.schedule({
-                notifications: [
-                  {
-                    id: 777,
-                    title: 'New Transaction Detected',
-                    body: 'Tap to review and confirm',
-                    schedule: { at: new Date(Date.now() + 1000) },
-                    extra: { transaction: txn }
-                  }
-                ]
-              });
-            }
-          });
+              // Handle background state
+              const appState = await CapacitorApp.getState();
+              if (appState.isActive) {
+                console.log('[NOTIFY] App active. Navigating to transaction.');
+                navigate('/edit-transaction', { state: { transaction: txn } });
+              } else {
+                console.log('[NOTIFY] App backgrounded. Showing notification.');
+                await LocalNotifications.schedule({
+                  notifications: [
+                    {
+                      id: 777,
+                      title: 'New Transaction Detected',
+                      body: 'Tap to review and confirm',
+                      schedule: { at: new Date(Date.now() + 1000) },
+                      extra: { transaction: txn }
+                    }
+                  ]
+                });
+              }
+            });
+            console.log('[SMS] Successfully added SMS listener');
+          } catch (err) {
+            console.error('[SMS] Error adding SMS listener:', err);
+          }
           
           // Handle notification taps
           LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
