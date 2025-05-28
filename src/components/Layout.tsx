@@ -44,11 +44,10 @@ const Layout = ({
             !hideNavigation && !isMobile && "lg:ml-[var(--sidebar-width)]",
             !fullWidth && "container"
           )}
-        >
-          <div
+        >          <div
             className={cn(
               "h-full",
-              withPadding && "px-[var(--page-padding-x)] py-[var(--page-padding-y)]",
+              withPadding && "px-[var(--component-padding-x)] py-[var(--component-padding-y)]",
               !fullWidth && "max-w-[var(--content-max-width)] mx-auto"
             )}
           >

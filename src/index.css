@@ -17,9 +17,10 @@
     
     --card: 0 0% 100%;
     --card-foreground: 215 25% 27%;
-    
-    --border: 214.3 32% 91%;
+      --border: 214.3 32% 91%;
     --input: 214.3 32% 91%;
+    --border-color: hsl(214.3 32% 91%);
+    --input-color: hsl(214.3 32% 91%);
     
     --primary: 183 100% 32%;
     --primary-foreground: 210 20% 98%;
@@ -36,17 +37,21 @@
     --ring: 183 100% 32%;
     
     --radius: 0.5rem;
-    
-    /* Added spacing variables for layout */
-    --page-padding-x: 0.5rem;
-    --page-padding-y: 0.5rem;
+      /* Layout spacing system */
+    --page-padding-x: 1rem;
+    --page-padding-y: 1rem;
     --content-max-width: 1200px;
-    --header-height: 4rem; /* Adjusted header height */
-    --safe-area-top: env(safe-area-inset-top, 0px); /* For mobile notches and status bars */
+    --header-height: 4rem;
+    --safe-area-top: env(safe-area-inset-top, 0px);
     --sidebar-width: 14rem;
-    --card-gap: 0.5rem;
-    --section-gap: 0.75rem;
-    --form-gap: 0.5rem;
+    --card-gap: 1rem;
+    --section-gap: 1.5rem;
+    --form-gap: 1rem;
+    
+    /* Component spacing */
+    --component-padding-x: 1rem;
+    --component-padding-y: 0.75rem;
+    --component-spacing: 0.75rem;
   }
  
   .dark {
@@ -104,19 +109,22 @@
   .card {
     @apply bg-card border border-border rounded-lg shadow-sm p-2;
   }
+
+  .page-container {
+    @apply px-0 w-full max-w-screen-lg mx-auto;
+  }
 }
 
 /* Mobile-specific optimizations */
 @media (max-width: 640px) {
-  .card {
-    @apply p-1.5;
-  }
-  
   :root {
-    --page-padding-x: 0.375rem;
-    --page-padding-y: 0.375rem;
-    --card-gap: 0.375rem;
-    --section-gap: 0.5rem;
-    --safe-area-top: env(safe-area-inset-top, 0px); /* For mobile notches */
+    --page-padding-x: 0.5rem;
+    --page-padding-y: 0.5rem;
+    --card-gap: 0.5rem;
+    --section-gap: 1rem;
+    --component-padding-x: 0.75rem;
+    --component-padding-y: 0.5rem;
+    --component-spacing: 0.5rem;
+    --safe-area-top: env(safe-area-inset-top, 0px);
   }
 }

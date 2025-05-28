@@ -203,15 +203,11 @@ import { TransactionType } from '@/types/transaction';
 
 export function initializeXpensiaStorageDefaults() {
   // Ensure structure templates store exists
-  if (!localStorage.getItem('xpensia_structure_templates')) {
-    localStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
-    console.log('[Init] xpensia_structure_templates initialized');
+  if (!localStorage.getItem('xpensia_structure_templates')) {    localStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
   }
 
   // Ensure vendor map store exists
-  if (!localStorage.getItem('xpensia_vendor_map')) {
-    localStorage.setItem('xpensia_vendor_map', JSON.stringify({}));
-    console.log('[Init] xpensia_vendor_map initialized');
+  if (!localStorage.getItem('xpensia_vendor_map')) {    localStorage.setItem('xpensia_vendor_map', JSON.stringify({}));
   }
 
   // Ensure type keyword bank exists

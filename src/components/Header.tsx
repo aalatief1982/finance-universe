@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  Home, PieChart, List, Settings, User, Menu, LogOut, MessageSquare,
+  Home, PieChart, List, Settings, User, Menu, LogOut, MessageSquare, ArrowLeft,
 } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
-  SheetTrigger, SheetClose,
+  SheetTrigger,
 } from '@/components/ui/sheet';
 
 interface HeaderProps {
@@ -39,81 +39,60 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
   const currentPageTitle = routeTitleMap[location.pathname] || 'Xpensia';
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/signin' || location.pathname === '/signup';
-
   const shouldShowNavigation = showNavigation && !isAuthPage;
 
   const navItems = [
-    { title: 'Dashboard', path: '/dashboard', icon: Home, description: 'Overview of your finances' },
-    { title: 'Analytics', path: '/analytics', icon: PieChart, description: 'Detailed reports and charts' },
-    { title: 'Transactions', path: '/transactions', icon: List, description: 'View and manage your transactions' },
-    { title: 'Process SMS', path: '/process-sms', icon: MessageSquare, description: 'Import transactions from SMS' },
-    { title: 'Settings', path: '/settings', icon: Settings, description: 'Configure app preferences' },
-    { title: 'Profile', path: '/profile', icon: User, description: 'Manage your profile' },
+    { title: 'Dashboard', path: '/dashboard', icon: Home },
+    { title: 'Analytics', path: '/analytics', icon: PieChart },
+    { title: 'Transactions', path: '/transactions', icon: List },
+    { title: 'Process SMS', path: '/process-sms', icon: MessageSquare },
+    { title: 'Settings', path: '/settings', icon: Settings },
+    { title: 'Profile', path: '/profile', icon: User },
   ];
 
-  return (
-    <header className={cn(
+  return (    <header className={cn(
       'sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border',
-      className
-    )}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      className    )}>      <div className="max-w-7xl mx-auto px-[var(--page-padding-x)] py-[var(--component-padding-y)]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                  <span className="text-white font-semibold text-lg">X</span>
-                </div>
-                <span className="text-xl font-semibold tracking-tight">{isLandingPage ? 'Xpensia' : currentPageTitle}</span>
-              </Link>
-            </motion.div>
-
-            {shouldShowNavigation && (
-              <motion.nav
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="hidden md:block ml-8"
+          {/* Logo and Page Title */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}            className="flex items-center space-x-2"
+          >
+            {location.pathname !== '/dashboard' && !isLandingPage && !isAuthPage && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => window.history.back()}
               >
-                <ul className="flex items-center space-x-1">
-                  {navItems.map((item) => (
-                    <li key={item.title}>
-                      <Link
-                        to={item.path}
-                        className={cn(
-                          'flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                          location.pathname === item.path
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                        )}
-                        title={item.title}
-                        aria-current={location.pathname === item.path ? 'page' : undefined}
-                      >
-                        <item.icon size={18} className="mr-2" />
-                        {item.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </motion.nav>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
             )}
-          </div>
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-white font-semibold text-lg">X</span>
+              </div>
+            </Link>
+            <span className="text-xl font-semibold tracking-tight">
+              {currentPageTitle}
+            </span>
+          </motion.div>
 
+          {/* Right Side Actions */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
-            className="flex items-center"
+            className="flex items-center space-x-2"
           >
+            {/* User Menu - Only show on desktop */}
             {auth.isAuthenticated && (
               <nav className="hidden md:block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User profile and options">
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                       <Avatar>
                         <AvatarImage src="/placeholder.svg" alt={user?.fullName || 'User'} />
                         <AvatarFallback>{user?.fullName?.charAt(0) || 'U'}</AvatarFallback>
@@ -155,79 +134,60 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
               </nav>
             )}
 
-            {/* Mobile Nav */}
+            {/* Hamburger Menu */}
             {shouldShowNavigation && (
-              <div className="md:hidden ml-3">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Open navigation menu">
-                      <Menu size={20} />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-                    <SheetHeader className="border-b pb-4 mb-4">
-                      <SheetTitle className="flex items-center">
-                        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mr-2">
-                          <span className="text-white font-semibold text-lg">X</span>
-                        </div>
-                        <span>{currentPageTitle}</span>
-                      </SheetTitle>
-                    </SheetHeader>
+              <Sheet>                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 md:hidden">
+                    <Menu className="h-8 w-8" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                  <SheetHeader className="border-b pb-4 mb-4">
+                    <SheetTitle className="flex items-center">
+                      <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mr-2">
+                        <span className="text-white font-semibold text-lg">X</span>
+                      </div>
+                      <span>{currentPageTitle}</span>
+                    </SheetTitle>
+                  </SheetHeader>
 
-                    <div className="py-2">
-                      {user && (
-                        <div className="flex items-center space-x-3 p-4 mb-4 bg-muted/50 rounded-lg">
-                          <Avatar>
-                            <AvatarImage src="/placeholder.svg" alt={user.fullName || 'User'} />
-                            <AvatarFallback>
-                              {user.fullName ? user.fullName.charAt(0) : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-sm font-medium">{user.fullName || 'User'}</p>
-                            <p className="text-xs text-muted-foreground">{user.email || user.phone || 'No contact info'}</p>
-                          </div>
-                        </div>
-                      )}
+                  <nav className="space-y-1">
+                    {/*
+                      { title: 'Dashboard', path: '/dashboard', icon: Home },
+                      { title: 'Analytics', path: '/analytics', icon: PieChart },
+                      { title: 'Transactions', path: '/transactions', icon: List },
+                      { title: 'Process SMS', path: '/process-sms', icon: MessageSquare },
+                      { title: 'Settings', path: '/settings', icon: Settings },
+                      { title: 'Profile', path: '/profile', icon: User },
+                    */}
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}                        className={cn(
+                          'flex items-center px-[var(--component-padding-x)] py-[var(--component-padding-y)] rounded-md hover:bg-accent transition-colors',
+                          location.pathname === item.path ? 'bg-primary/10 text-primary' : 'text-foreground'
+                        )}
+                      >
+                        <item.icon size={20} className="mr-3" />
+                        <span>{item.title}</span>
+                      </Link>
+                    ))}
+                  </nav>
 
-                      <nav className="space-y-1">
-                        {navItems.map((item) => (
-                          <SheetClose asChild key={item.title}>
-                            <Link
-                              to={item.path}
-                              className={cn(
-                                'flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors',
-                                location.pathname === item.path
-                                  ? 'bg-primary/10 text-primary'
-                                  : 'text-foreground'
-                              )}
-                            >
-                              <item.icon size={20} className="mr-3" />
-                              <div>
-                                <p className="font-medium">{item.title}</p>
-                                <p className="text-xs text-muted-foreground">{item.description}</p>
-                              </div>
-                            </Link>
-                          </SheetClose>
-                        ))}
-                      </nav>
-
-                      {auth.isAuthenticated && (
-                        <div className="mt-8 pt-4 border-t">
-                          <Button
-                            variant="destructive"
-                            className="w-full justify-start"
-                            onClick={logOut}
-                          >
-                            <LogOut size={18} className="mr-2" />
-                            Log out
-                          </Button>
-                        </div>
-                      )}
+                  {auth.isAuthenticated && (
+                    <div className="mt-8 pt-4 border-t">
+                      <Button
+                        variant="destructive"
+                        className="w-full justify-start"
+                        onClick={logOut}
+                      >
+                        <LogOut size={18} className="mr-2" />
+                        Log out
+                      </Button>
                     </div>
-                  </SheetContent>
-                </Sheet>
-              </div>
+                  )}
+                </SheetContent>
+              </Sheet>
             )}
           </motion.div>
         </div>

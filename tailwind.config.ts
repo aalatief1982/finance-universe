@@ -1,39 +1,44 @@
 
 import type { Config } from "tailwindcss";
 
-export default {
-	darkMode: ["class"],
-	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
-		"./src/**/*.{ts,tsx}",
-	],
-	prefix: "",
-	theme: {
-		container: {
-			center: true,
-			padding: '2rem',
-			screens: {
-				'2xl': '1400px'
-			}
-		},
-		extend: {
+const config: Config = {
+  darkMode: ["class"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
 			padding: {
 				safe: 'env(safe-area-inset-top)',
 			  },
 			fontFamily: {
 				sans: ['Inter var', 'sans-serif'],
-			},
-			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+			},			colors: {
+				border: {
+					DEFAULT: "hsl(var(--border))",
+				},
+				input: {
+					DEFAULT: "hsl(var(--input))",
+				},
+				ring: {
+					DEFAULT: "hsl(var(--ring))",
+				},
+				background: "hsl(var(--background))",
+				foreground: "hsl(var(--foreground))",
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: "hsl(var(--primary))",
+					foreground: "hsl(var(--primary-foreground))"
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -103,7 +108,9 @@ export default {
 				'none': 'none',
 				'blur': 'blur(20px)'
 			},
-		}
+		}	}
 	},
-	plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+	plugins: []
+};
+
+export default config;

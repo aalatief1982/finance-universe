@@ -83,12 +83,7 @@ const ImportTransactions = () => {
 
   return (
     <Layout withPadding={false}>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="pt-[calc(var(--safe-area-top)+56px)] px-4"
-      >
+     
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Button
@@ -102,13 +97,13 @@ const ImportTransactions = () => {
           </div>
         </div>
 
-        <Card>
+       
           <CardContent className="pt-4">
             <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
           </CardContent>
-        </Card>
+       
 
-        <Card>
+{/*         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">Telegram Bot</CardTitle>
             <CardDescription className="text-sm text-muted-foreground">
@@ -118,8 +113,8 @@ const ImportTransactions = () => {
           <CardContent className="pt-0">
             <TelegramBotSetup />
           </CardContent>
-        </Card>
-      </motion.div>
+        </Card> */}
+      
     </Layout>
   );
 };

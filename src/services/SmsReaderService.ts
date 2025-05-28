@@ -128,7 +128,7 @@ export class SmsReaderService {
       console.log("[SmsReaderService] Using last processed date as start date:", new Date(startDate).toLocaleString());
     } else {
       // If no tracker date or user explicitly specified a start date, use the configured months back
-      const monthsBack = parseInt(localStorage.getItem('xpensia_sms_period_months') || '6');
+      const monthsBack = parseInt(localStorage.getItem('xpensia_sms_period_months') || '12');
       startDate = options.startDate ? options.startDate.getTime() : subMonths(startOfToday(), monthsBack).getTime();
       console.log(`[SmsReaderService] Looking back ${monthsBack} months`);
     }

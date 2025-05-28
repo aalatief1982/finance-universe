@@ -41,10 +41,10 @@
   --spacing-6: 1.25rem;  /* 20px - reduced from 24px */
   
   /* Component Spacing */
-  --card-padding: var(--spacing-2);
-  --card-spacing: var(--spacing-2);
-  --button-padding: var(--spacing-1) var(--spacing-3);
-  --section-spacing: var(--spacing-3);
+  --card-padding: var(--spacing-1);
+  --card-spacing: var(--spacing-1);
+  --button-padding: var(--spacing-1) var(--spacing-1);
+  --section-spacing: var(--spacing-1);
   --list-item-padding: var(--spacing-1);
   
   /* Border Radius */
