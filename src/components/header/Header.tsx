@@ -29,22 +29,18 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
   }
 
   return (
-    <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 pt-[var(--safe-area-top)] bg-background/95 backdrop-blur-xl border-b border-border",
-        className
-      )}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <LogoLink isLandingPage={isLandingPage} currentPageTitle={currentPageTitle} />
-            {shouldShowNavigation && <MainNavigation />}
-          </div>
-          <div className="flex items-center">
-            <UserMenu isLandingPage={isLandingPage} />
-            {shouldShowNavigation && <MobileNavigation currentPageTitle={currentPageTitle} />}
-          </div>
+    <header className={cn(
+      "fixed top-0 left-0 right-0 z-50 h-16 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border",
+      className
+    )}>
+      <div className="container flex h-16 items-center justify-between px-4">
+        <div className="flex items-center">
+          <LogoLink isLandingPage={isLandingPage} currentPageTitle={currentPageTitle} />
+          {shouldShowNavigation && <MainNavigation />}
+        </div>
+        <div className="flex items-center">
+          <UserMenu isLandingPage={isLandingPage} />
+          {shouldShowNavigation && <MobileNavigation currentPageTitle={currentPageTitle} />}
         </div>
       </div>
     </header>
