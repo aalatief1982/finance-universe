@@ -35,8 +35,8 @@ const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
             className="cursor-pointer"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
+          <Cell key={entry.id ?? `cell-${index}`} fill={COLORS[index % COLORS.length]} />
+        ))}
           </Pie>
           <Tooltip
             formatter={(value: number) => `$${Math.abs(value).toFixed(2)}`}

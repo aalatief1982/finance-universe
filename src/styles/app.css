@@ -1,14 +1,43 @@
-
 /* =================== */
 /* Global Design Tokens */
 /* =================== */
-
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 :root {
   --space-xs: 2px;
   --space-sm: 4px;
   --space-md: 8px;
   --space-lg: 12px;
   --space-xl: 16px;
+
+  /* Tailwind-compatible color tokens */
+  --border: 210 16% 82%;
+  --input: 210 20% 96%;
+  --ring: 210 100% 50%;
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+
+  --primary: 222 89% 53%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 216 15% 57%;
+  --secondary-foreground: 0 0% 100%;
+
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --muted: 215 20% 80%;
+  --muted-foreground: 215 15% 35%;
+
+  --accent: 200 70% 50%;
+  --accent-foreground: 0 0% 100%;
+
+  --popover: 0 0% 98%;
+  --popover-foreground: 222 47% 11%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
 }
 
 /* Typography */

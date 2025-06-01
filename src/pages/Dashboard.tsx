@@ -141,13 +141,21 @@ const Dashboard = () => {
     ...values
   })).sort((a, b) => a.date.localeCompare(b.date));
 
-  const topCategories = expensesByCategory
-    .sort((a, b) => b.value - a.value)
-    .map(item => ({ category: item.name, amount: item.value }));
+const topCategories = expensesByCategory
+  .sort((a, b) => b.value - a.value)
+  .map((item, index) => ({
+    id: `${item.name}-${index}`,        // 🔑 unique ID
+    category: item.name,
+    amount: item.value
+  }));
 
-  const topSubcategories = expensesByDate
-    .sort((a, b) => b.amount - a.amount)
-    .map(item => ({ subcategory: item.date, amount: item.amount }));
+const topSubcategories = expensesByDate
+  .sort((a, b) => b.amount - a.amount)
+  .map((item, index) => ({
+    id: `${item.date}-${index}`,        // 🔑 unique ID
+    subcategory: item.date,
+    amount: item.amount
+  }));
 
   return (
     <Layout withPadding={false}>

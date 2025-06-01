@@ -88,30 +88,35 @@
  
 @layer base {
   * {
-    @apply border-border;
+    border: 1px solid hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "rlig" 1, "calt" 1;
     padding-top: var(--safe-area-top); /* Add padding for mobile notches */
   }
-  h1 {
-    @apply text-2xl font-bold;
-  }
-  h2 {
-    @apply text-xl font-semibold;
-  }
-  h3 {
-    @apply text-lg font-medium;
-  }
+  
 }
 
 @layer components {
   .card {
-    @apply bg-card border border-border rounded-lg shadow-sm p-2;
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    padding: 0.5rem;
   }
 
   .page-container {
-    @apply px-0 w-full max-w-screen-lg mx-auto;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+    max-width: 1024px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 

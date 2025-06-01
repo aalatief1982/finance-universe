@@ -1,9 +1,9 @@
-/** @type {import('postcss').Config} */
+import tailwindcss from '@tailwindcss/postcss';
+import autoprefixer from 'autoprefixer';
+
 export default {
-  plugins: {
-    'postcss-import': {},
-    'postcss-nesting': {},
-    'tailwindcss': {},
-    'autoprefixer': {}
-  }
-}
+  plugins: [
+    tailwindcss(),
+    autoprefixer()
+  ],
+};
