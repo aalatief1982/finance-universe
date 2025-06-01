@@ -1,175 +1,129 @@
+import { Transaction, TimePeriodData } from '@/types/transaction';
 
-import { Transaction, CategorySummary, TimePeriodData } from '@/types/transaction';
-import { v4 as uuidv4 } from 'uuid';
-
-// Initial mock transactions
-export const INITIAL_TRANSACTIONS: Transaction[] = [
+export const mockTransactions: Transaction[] = [
   {
-    id: uuidv4(),
-    title: 'Salary',
-    amount: 5000,
+    id: '1',
+    title: 'Grocery Shopping',
+    amount: -50.25,
+    category: 'Food',
+    date: '2024-01-20',
+    type: 'expense',
+    source: 'manual',
+    fromAccount: 'Credit Card'
+  },
+  {
+    id: '2',
+    title: 'Salary Deposit',
+    amount: 3000,
     category: 'Income',
-    date: '2023-04-01',
+    date: '2024-01-15',
     type: 'income',
-    fromAccount: 'Employer',
-    toAccount: 'Bank Account',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
+    source: 'manual',
+    toAccount: 'Checking Account'
   },
   {
-    id: uuidv4(),
-    title: 'Rent',
-    amount: -1500,
-    category: 'Housing',
-    date: '2023-04-02',
-    type: 'expense',
-    fromAccount: 'Bank Account',
-    toAccount: 'Landlord',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
-  },
-  {
-    id: uuidv4(),
-    title: 'Groceries',
-    amount: -250,
-    category: 'Food',
-    date: '2023-04-05',
-    type: 'expense',
-    fromAccount: 'Bank Account',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
-  },
-  {
-    id: uuidv4(),
-    title: 'Gas',
-    amount: -45,
-    category: 'Transportation',
-    date: '2023-04-07',
-    type: 'expense',
-    fromAccount: 'Credit Card',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
-  },
-  {
-    id: uuidv4(),
-    title: 'Restaurant',
-    amount: -85,
-    category: 'Food',
-    date: '2023-04-10',
-    type: 'expense',
-    fromAccount: 'Credit Card',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
-  },
-  {
-    id: uuidv4(),
-    title: 'Movie tickets',
-    amount: -35,
+    id: '3',
+    title: 'Movie Night',
+    amount: -20,
     category: 'Entertainment',
-    date: '2023-04-15',
+    date: '2024-01-10',
     type: 'expense',
-    fromAccount: 'Cash',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
+    source: 'manual',
+    fromAccount: 'Cash'
   },
   {
-    id: uuidv4(),
-    title: 'Freelance work',
-    amount: 750,
-    category: 'Income',
-    date: '2023-04-20',
-    type: 'income',
-    fromAccount: 'Client',
-    toAccount: 'Bank Account',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
+    id: '4',
+    title: 'Online Purchase',
+    amount: -75.50,
+    category: 'Shopping',
+    date: '2024-01-05',
+    type: 'expense',
+    source: 'manual',
+    fromAccount: 'Credit Card'
   },
   {
-    id: uuidv4(),
-    title: 'Utility bills',
-    amount: -120,
+    id: '5',
+    title: 'Rent Payment',
+    amount: -1200,
     category: 'Housing',
-    date: '2023-04-25',
+    date: '2024-01-01',
     type: 'expense',
-    fromAccount: 'Bank Account',
-    person: 'none',
-    currency: 'USD',
-    source: 'manual'
+    source: 'manual',
+    fromAccount: 'Checking Account'
+  },
+  {
+    id: '6',
+    title: 'Dividends',
+    amount: 150,
+    category: 'Investment',
+    date: '2024-02-03',
+    type: 'income',
+    source: 'manual',
+    toAccount: 'Investment Account'
+  },
+  {
+    id: '7',
+    title: 'Coffee with Friend',
+    amount: -5.50,
+    category: 'Food',
+    date: '2024-02-08',
+    type: 'expense',
+    source: 'manual',
+    fromAccount: 'Cash'
+  },
+  {
+    id: '8',
+    title: 'Electronics Purchase',
+    amount: -300,
+    category: 'Shopping',
+    date: '2024-02-12',
+    type: 'expense',
+    source: 'manual',
+    fromAccount: 'Credit Card'
+  },
+  {
+    id: '9',
+    title: 'Utility Bill',
+    amount: -80,
+    category: 'Utilities',
+    date: '2024-02-18',
+    type: 'expense',
+    source: 'manual',
+    fromAccount: 'Checking Account'
+  },
+  {
+    id: '10',
+    title: 'Bonus Payment',
+    amount: 500,
+    category: 'Income',
+    date: '2024-02-22',
+    type: 'income',
+    source: 'manual',
+    toAccount: 'Checking Account'
   }
 ];
 
-export const PERSON_OPTIONS = [
-  'none',
-  'Ahmed',
-  'Marwa',
-  'Youssef',
-  'Salma',
-  'Mazen'
+export const mockTimePeriodData: TimePeriodData[] = [
+  { date: '2024-01', income: 5000, expenses: 3200 },
+  { date: '2024-02', income: 5200, expenses: 2800 },
+  { date: '2024-03', income: 4800, expenses: 3500 },
+  { date: '2024-04', income: 5100, expenses: 2900 },
+  { date: '2024-05', income: 5300, expenses: 3100 },
+  { date: '2024-06', income: 5000, expenses: 3300 }
 ];
 
-// Generate chart data based on transactions
-export const generateChartData = (transactions: Transaction[]) => {
-  // Calculate spending by category
-  const expensesByCategory: Record<string, number> = {};
-  transactions
-    .filter(tx => tx.type === 'expense')
-    .forEach(tx => {
-      const category = tx.category;
-      expensesByCategory[category] = (expensesByCategory[category] || 0) + Math.abs(tx.amount);
-    });
+export const mockExpensesByCategory = [
+  { name: 'Food', value: 1200 },
+  { name: 'Shopping', value: 800 },
+  { name: 'Entertainment', value: 500 },
+  { name: 'Utilities', value: 300 },
+  { name: 'Other', value: 200 }
+];
 
-  // Convert to array and sort by value
-  const categoryData: CategorySummary[] = Object.entries(expensesByCategory)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
-
-  // Calculate income and expenses by month
-  const timeData: Record<string, { income: number; expense: number }> = {};
-  transactions.forEach(tx => {
-    const monthYear = tx.date.substring(0, 7); // Format: YYYY-MM
-    if (!timeData[monthYear]) {
-      timeData[monthYear] = { income: 0, expense: 0 };
-    }
-    
-    if (tx.type === 'income') {
-      timeData[monthYear].income += Math.abs(tx.amount);
-    } else if (tx.type === 'expense') {
-      timeData[monthYear].expense += Math.abs(tx.amount);
-    }
-  });
-
-  // Convert to array and sort by date
-  const timelineData: TimePeriodData[] = Object.entries(timeData)
-    .map(([date, data]) => ({ date, ...data }))
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  return { categoryData, timelineData };
-};
-
-// Default categories
-export const CATEGORIES = [
-  'Food',
-  'Housing',
-  'Transportation',
-  'Entertainment',
-  'Shopping',
-  'Utilities',
-  'Healthcare',
-  'Personal',
-  'Education',
-  'Travel',
-  'Income',
-  'Gifts',
-  'Investments',
-  'Debt',
-  'Insurance',
-  'Taxes',
-  'Miscellaneous'
+export const mockExpensesByDate = [
+  { date: '2024-01-01', amount: 150 },
+  { date: '2024-01-08', amount: 80 },
+  { date: '2024-01-15', amount: 200 },
+  { date: '2024-01-22', amount: 120 },
+  { date: '2024-01-29', amount: 180 }
 ];

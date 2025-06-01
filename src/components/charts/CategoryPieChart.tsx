@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 
 export interface CategoryPieChartProps {
   data: Array<{
+    id?: string;
     category: string;
     amount: number;
   }>;
@@ -35,8 +37,8 @@ const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
             className="cursor-pointer"
           >
             {data.map((entry, index) => (
-          <Cell key={entry.id ?? `cell-${index}`} fill={COLORS[index % COLORS.length]} />
-        ))}
+              <Cell key={entry.id ?? `cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
           </Pie>
           <Tooltip
             formatter={(value: number) => `$${Math.abs(value).toFixed(2)}`}

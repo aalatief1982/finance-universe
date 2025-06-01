@@ -1,114 +1,70 @@
-// structureParser.ts
 
-/**
- * Parses a raw SMS using structure-template-first approach.
- * Matches existing templates or builds new ones; returns structured transaction data.
- */
+import { Transaction } from '@/types/transaction';
+import { v4 as uuidv4 } from 'uuid';
 
-import { extractTemplateStructure, getTemplateByHash, saveNewTemplate } from './templateUtils';
-import { inferIndirectFields } from './suggestionEngine';
-//import { normalizeDate } from './dateUtils';
-
-// Hashing util (replace with real hash lib if needed)
-const simpleHash = (text: string) => btoa(unescape(encodeURIComponent(text))).slice(0, 24);
-
-
-export function normalizeDate(dateStr: string): string | undefined {
-  if (!dateStr) return undefined;
-
-  // Match short yy-mm-dd or y-m-d formats like 25-3-26
-  const match = dateStr.match(/^(\d{2})-(\d{1,2})-(\d{1,2})$/);
-  if (match) {
-    const [_, yy, mm, dd] = match;
-    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
-    const iso = new Date(`${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`).toISOString();
-    return iso.split('T')[0]; // Only return yyyy-MM-dd
-  }
-
-  // Fallback to native parsing
-  const parsed = new Date(dateStr);
-  return isNaN(parsed.getTime()) ? undefined : parsed.toISOString().split('T')[0];
+interface ParsedField {
+  key: string;
+  value: string;
+  confidence: number;
 }
 
+export const parseTransactionStructure = (message: string): { transaction: Transaction; confidence: number } => {
+  const cleanMessage = message.trim().toLowerCase();
+  
+  // Initialize transaction with defaults
+  const transaction: Transaction = {
+    id: uuidv4(),
+    title: 'Unknown Transaction',
+    amount: 0,
+    category: 'Other',
+    date: new Date().toISOString().split('T')[0],
+    type: 'expense',
+    source: 'smart-paste'
+  };
 
-export function parseSmsMessage(rawMessage: string) {
-  console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
-	if (!rawMessage) {
-    throw new Error('Empty message passed to extractTemplateStructure');
+  let totalConfidence = 0;
+  const fields: ParsedField[] = [];
+
+  // Parse amount
+  const amountMatch = cleanMessage.match(/(?:sar|aed|usd|eur)?\s*(\d+(?:\.\d{2})?)/i);
+  if (amountMatch) {
+    const amount = parseFloat(amountMatch[1]);
+    transaction.amount = -Math.abs(amount); // Default to expense
+    fields.push({ key: 'amount', value: amount.toString(), confidence: 0.9 });
   }
-  let template = '';
-  let placeholders = {};
-  try {
-    const result = extractTemplateStructure(rawMessage);
-    template = result.template;
-    placeholders = result.placeholders;
-	
-	if (!template) throw new Error('Extracted template is empty');
-	if (!placeholders) throw new Error('Extracted placeholders are missing');
-	
-  } catch (err) {
-    console.error('[SmartPaste] ❌ extractTemplateStructure failed:', err);
-    throw err; // Let upstream handler deal with it
-  }
 
-  const templateHash = simpleHash(template);
-  console.log('[SmartPaste] Step 2: Extracted Template:', template);
-  console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
-
-  const matchedTemplate = getTemplateByHash(templateHash);
-  const directFields: Record<string, string> = {};
-
-  if (matchedTemplate) {
-    matchedTemplate.fields.forEach(field => {
-	  const value = placeholders[field];
-	  if (value) {
-		directFields[field] = value;
-	  } else {
-		console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
-	  }
-	});
-
-    if (matchedTemplate.defaultValues) {
-      Object.entries(matchedTemplate.defaultValues).forEach(([key, value]) => {
-        if (!directFields[key]) {
-          directFields[key] = value;
-        }
-      });
+  // Parse vendor/merchant
+  const vendorPatterns = [
+    /(?:at|from|to)\s+([a-z\s]{2,20})/i,
+    /([a-z\s]{2,20})\s+(?:store|shop|market|restaurant)/i
+  ];
+  
+  for (const pattern of vendorPatterns) {
+    const match = cleanMessage.match(pattern);
+    if (match) {
+      const vendor = match[1].trim();
+      transaction.title = vendor;
+      transaction.vendor = vendor;
+      fields.push({ key: 'vendor', value: vendor, confidence: 0.8 });
+      break;
     }
   }
-  else {
-  // ✅ FIRST-TIME message – use raw extracted values
-  Object.entries(placeholders).forEach(([key, value]) => {
-    directFields[key] = value;
-  });
-}
-// Normalize known field names like 'date'
-if (directFields['date']) {
-  const normalized = normalizeDate(directFields['date']);
-  if (normalized) {
-    directFields['date'] = normalized;
-    console.log('[SmartPaste] Normalized date:', directFields['date']);
-  }
-}
 
-  const inferred = inferIndirectFields(rawMessage, directFields);
-  console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
-  console.log('[SmartPaste] Final directFields:', directFields);
+  // Parse date
+  const dateMatch = cleanMessage.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (dateMatch) {
+    const [, day, month, year] = dateMatch;
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    const dateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    transaction.date = dateStr;
+    fields.push({ key: 'date', value: dateStr, confidence: 0.9 });
+  }
+
+  // Calculate overall confidence
+  totalConfidence = fields.reduce((sum, field) => sum + field.confidence, 0) / Math.max(fields.length, 1);
 
   return {
-    rawMessage,
-    template,
-    templateHash,
-    matched: !!matchedTemplate,
-    directFields,
-    inferredFields: inferred,
-    defaultValues: matchedTemplate?.defaultValues || {}
+    transaction,
+    confidence: Math.min(totalConfidence, 1.0)
   };
-}
-
-
-
-function applyVendorMapping(vendor: string): string {
-  const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
-  return map[vendor] || vendor;
-}
+};

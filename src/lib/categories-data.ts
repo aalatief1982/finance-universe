@@ -1,43 +1,87 @@
 
-import { TransactionType } from '@/types/transaction';
+import { Category } from '@/types/transaction';
 
-
-// Fallback in case localStorage isn't ready (optional dev/testing mode)
-const fallbackHierarchy: typeof CATEGORY_HIERARCHY = [
+// Define the category hierarchy
+const CATEGORY_HIERARCHY: Category[] = [
   {
-    id: 'other',
-    name: 'Other',
-    type: 'expense' as TransactionType,
-    subcategories: [{ id: 'misc', name: 'Misc' }]
+    id: 'food',
+    name: 'Food & Dining',
+    subcategories: [
+      { id: 'restaurant', name: 'Restaurant' },
+      { id: 'groceries', name: 'Groceries' },
+      { id: 'coffee', name: 'Coffee & Tea' }
+    ]
+  },
+  {
+    id: 'transportation',
+    name: 'Transportation',
+    subcategories: [
+      { id: 'gas', name: 'Gas & Fuel' },
+      { id: 'uber', name: 'Ride Share' },
+      { id: 'parking', name: 'Parking' }
+    ]
+  },
+  {
+    id: 'shopping',
+    name: 'Shopping',
+    subcategories: [
+      { id: 'clothing', name: 'Clothing' },
+      { id: 'electronics', name: 'Electronics' },
+      { id: 'home', name: 'Home & Garden' }
+    ]
+  },
+  {
+    id: 'entertainment',
+    name: 'Entertainment',
+    subcategories: [
+      { id: 'movies', name: 'Movies' },
+      { id: 'music', name: 'Music' },
+      { id: 'games', name: 'Games' }
+    ]
+  },
+  {
+    id: 'utilities',
+    name: 'Bills & Utilities',
+    subcategories: [
+      { id: 'electricity', name: 'Electricity' },
+      { id: 'water', name: 'Water' },
+      { id: 'internet', name: 'Internet' }
+    ]
   }
 ];
 
+export const getCategoryHierarchy = (): Category[] => {
+  return CATEGORY_HIERARCHY;
+};
 
-// Dynamically load from localStorage
-export const getCategoryHierarchy = (): typeof fallbackHierarchy => {
-  try {
-    const raw = localStorage.getItem('xpensia_category_hierarchy');
-    return raw ? JSON.parse(raw) : fallbackHierarchy;
-  } catch {
-    return fallbackHierarchy;
+export const getAllCategories = (): string[] => {
+  const categories: string[] = [];
+  
+  CATEGORY_HIERARCHY.forEach(category => {
+    categories.push(category.name);
+    if (category.subcategories) {
+      category.subcategories.forEach(sub => {
+        categories.push(sub.name);
+      });
+    }
+  });
+  
+  return categories;
+};
+
+export const getCategoryByName = (name: string): Category | undefined => {
+  for (const category of CATEGORY_HIERARCHY) {
+    if (category.name === name) {
+      return category;
+    }
+    if (category.subcategories) {
+      const subcategory = category.subcategories.find(sub => sub.name === name);
+      if (subcategory) {
+        return subcategory;
+      }
+    }
   }
+  return undefined;
 };
 
-// Get categories by transaction type
-export const getCategoriesForType = (type: TransactionType): string[] => {
-  return getCategoryHierarchy()
-    .filter(category => category.type === type)
-    .map(category => category.name);
-};
-
-// Get subcategories for a given category
-export const getSubcategoriesForCategory = (categoryName: string): string[] => {
-  const category = getCategoryHierarchy().find(cat => cat.name === categoryName);
-  return category ? category.subcategories.map(sub => sub.name) : [];
-};
-export const PEOPLE = ['Ahmed', 'Marwa', 'Youssef', 'Salma', 'Mazen'];
-
-export const CURRENCIES = ['SAR', 'EGP', 'USD', 'BHD', 'AED'];
-
-
-
+export { CATEGORY_HIERARCHY };

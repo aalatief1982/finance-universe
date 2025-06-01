@@ -1,15 +1,42 @@
-import { parseAndInferTransaction } from './parseAndInferTransaction';
+
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Transaction } from '@/types/transaction';
-import { navigateToSmartPasteFlow } from '@/utils/navigation'; // helper to navigate if not already
 
-export const handleNotificationSmartPaste = async (message: string, navigate: ReturnType<typeof useNavigate>) => { 
+export const showTransactionNotification = async (transaction: Transaction) => {
   try {
-    const { transaction } = parseAndInferTransaction(message, undefined);
-    console.log('[NOTIFICATION] Navigating to edit with transaction:', transaction);
-
-    navigate('/edit-transaction', { state: { transaction } });
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          title: 'New Transaction Detected',
+          body: `${transaction.title}: $${Math.abs(transaction.amount)}`,
+          id: Date.now(),
+          schedule: { at: new Date(Date.now() + 1000) },
+          sound: undefined,
+          attachments: undefined,
+          actionTypeId: '',
+          extra: {
+            transactionId: transaction.id
+          }
+        }
+      ]
+    });
   } catch (error) {
-    console.error('[NOTIFICATION] Failed to parse SMS message:', error);
+    console.error('Failed to show notification:', error);
   }
 };
 
+export const requestNotificationPermissions = async (): Promise<boolean> => {
+  try {
+    const { display } = await LocalNotifications.checkPermissions();
+    
+    if (display === 'granted') {
+      return true;
+    }
+    
+    const { display: newPermission } = await LocalNotifications.requestPermissions();
+    return newPermission === 'granted';
+  } catch (error) {
+    console.error('Failed to request notification permissions:', error);
+    return false;
+  }
+};
