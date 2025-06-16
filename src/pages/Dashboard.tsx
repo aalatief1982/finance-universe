@@ -132,9 +132,8 @@ const Dashboard = () => {
           <ToggleGroup
             type="single"
             value={range}
-
             onValueChange={(val) => setRange(val as Range)}
-            className="w-full justify-between gap-2"
+            className="w-full bg-muted p-1 text-muted-foreground rounded-md"
           >
             <ToggleGroupItem
               value="day"
