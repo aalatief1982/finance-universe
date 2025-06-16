@@ -17,7 +17,10 @@ const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
-  const [range, setRange] = React.useState<'day' | 'week' | 'month' | 'year'>('month');
+
+  type Range = '' | 'day' | 'week' | 'month' | 'year';
+  const [range, setRange] = React.useState<Range>('');
+
 
   const handleAddTransaction = () => {
     navigate('/edit-transaction');
@@ -39,8 +42,15 @@ const Dashboard = () => {
   };
 
   const filteredTransactions = React.useMemo(() => {
+
+    if (!range) {
+      return transactions;
+    }
+
     const now = new Date();
     let start = new Date(now);
+
+
     switch (range) {
       case 'day':
         start.setHours(0, 0, 0, 0);
@@ -56,6 +66,7 @@ const Dashboard = () => {
         start = new Date(now.getFullYear(), 0, 1);
         break;
     }
+
     return transactions.filter(t => {
       const d = new Date(t.date);
       return d >= start && d <= now;
@@ -121,14 +132,35 @@ const Dashboard = () => {
           <ToggleGroup
             type="single"
             value={range}
-            onValueChange={(val) => val && setRange(val as any)}
-            className="justify-start"
-            aria-label="Date range filter"
+
+            onValueChange={(val) => setRange(val as Range)}
+            className="w-full justify-between gap-2"
           >
-            <ToggleGroupItem value="day">Day</ToggleGroupItem>
-            <ToggleGroupItem value="week">Week</ToggleGroupItem>
-            <ToggleGroupItem value="month">Month</ToggleGroupItem>
-            <ToggleGroupItem value="year">Year</ToggleGroupItem>
+            <ToggleGroupItem
+              value="day"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Day
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="week"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Week
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="month"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Month
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="year"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Year
+            </ToggleGroupItem>
+
           </ToggleGroup>
         </div>
 
