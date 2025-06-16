@@ -1,5 +1,5 @@
 
-import { Transaction, TransactionType } from '@/types/transaction';
+import { Transaction } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 
 // Generate chart data for different periods
@@ -50,29 +50,27 @@ export const mockTransactions: Transaction[] = [
     title: 'Grocery Shopping',
     amount: 125.50,
     currency: 'SAR' as SupportedCurrency,
-    type: TransactionType.EXPENSE,
+    type: 'expense',
     category: 'Food & Dining',
     subcategory: 'Groceries',
     date: new Date().toISOString(),
     vendor: 'Panda',
     fromAccount: 'Main Account',
     source: 'manual',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt: new Date().toISOString()
   },
   {
     id: '2',
     title: 'Salary',
     amount: 5000,
     currency: 'SAR' as SupportedCurrency,
-    type: TransactionType.INCOME,
+    type: 'income',
     category: 'Income',
     subcategory: 'Salary',
     date: new Date().toISOString(),
     vendor: 'Company',
     fromAccount: 'Main Account',
     source: 'manual',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    createdAt: new Date().toISOString()
   }
 ];
