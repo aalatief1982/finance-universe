@@ -30,32 +30,9 @@ interface UserMenuProps {
 export const UserMenu: React.FC<UserMenuProps> = ({ isLandingPage }) => {
   const { user, logOut, auth } = useUser();
   
-  // Auth links - only show on landing page
+  // No auth links on the landing page
   if (isLandingPage) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
-        <div className="flex items-center space-x-4">
-          <Link 
-            to="/signin" 
-            className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
-            aria-label="Sign in to your account"
-          >
-            Sign In
-          </Link>
-          <Link 
-            to="/signup"
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-            aria-label="Create a new account"
-          >
-            Sign Up
-          </Link>
-        </div>
-      </motion.div>
-    );
+    return null;
   }
 
   // If authenticated, show user menu

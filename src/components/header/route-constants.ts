@@ -9,8 +9,6 @@ export const routeTitleMap: Record<string, string> = {
   '/settings': 'Settings',
   '/profile': 'Profile',
   '/sms-providers': 'SMS Providers',
-  '/signin': 'Sign In',
-  '/signup': 'Sign Up',
   '/wireframes': 'Wireframes',
   '/wireframes/dashboard': 'Dashboard',
   '/wireframes/onboarding': 'Onboarding',
