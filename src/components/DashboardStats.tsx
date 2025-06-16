@@ -25,7 +25,7 @@ const DashboardStats = ({
   const isPositiveChange = balanceChange >= 0;
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-3 gap-4 mb-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
