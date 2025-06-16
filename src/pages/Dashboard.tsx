@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 import { useUser } from '@/context/UserContext';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { AnalyticsService } from '@/services/AnalyticsService';
 
 const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
@@ -97,23 +98,10 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, number>);
 
-  const timelineData = filteredTransactions
-    .filter(t => t.amount < 0)
-    .reduce((acc, transaction) => {
-      const date = transaction.date.slice(0, 10);
-      if (!acc[date]) {
-        acc[date] = 0;
-      }
-      acc[date] += Math.abs(transaction.amount);
-      return acc;
-    }, {} as Record<string, number>);
+  const expensesBySubcategory = AnalyticsService.getSubcategoryData(filteredTransactions).slice(0, 10);
 
   const expensesByCategory = Object.entries(categoryData)
     .map(([name, value]) => ({ name, value }));
-
-  const expensesByDate = Object.entries(timelineData)
-    .map(([date, amount]) => ({ date, amount }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <Layout>
@@ -175,7 +163,7 @@ const Dashboard = () => {
               <h2 className="text-lg font-semibold mb-2">Expense Breakdown</h2>
               <ExpenseChart
                 expensesByCategory={expensesByCategory}
-                expensesByDate={expensesByDate}
+                expensesBySubcategory={expensesBySubcategory}
               />
             </div>
 
