@@ -43,6 +43,24 @@ export const generateChartData = (period: 'week' | 'month' | 'year' = 'month') =
   return data;
 };
 
+// Categories for transactions
+export const CATEGORIES = [
+  'Food & Dining',
+  'Transportation',
+  'Shopping',
+  'Entertainment',
+  'Bills & Utilities',
+  'Healthcare',
+  'Travel',
+  'Education',
+  'Business',
+  'Personal Care',
+  'Gifts & Donations',
+  'Investments',
+  'Income',
+  'Other'
+];
+
 // Mock transactions for testing
 export const mockTransactions: Transaction[] = [
   {
