@@ -11,11 +11,14 @@ import PageHeader from '@/components/layout/PageHeader';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 import { useUser } from '@/context/UserContext';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
+  type Range = '' | 'day' | 'week' | 'month' | 'year';
+  const [range, setRange] = React.useState<Range>('');
 
   const handleAddTransaction = () => {
     navigate('/edit-transaction');
@@ -36,7 +39,37 @@ const Dashboard = () => {
     addTransaction(sampleTransaction);
   };
 
-  const summary = transactions.reduce(
+  const filteredTransactions = React.useMemo(() => {
+    if (!range) {
+      return transactions;
+    }
+
+    const now = new Date();
+    let start = new Date(now);
+
+    switch (range) {
+      case 'day':
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        start.setDate(now.getDate() - 6);
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'month':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'year':
+        start = new Date(now.getFullYear(), 0, 1);
+        break;
+    }
+
+    return transactions.filter(t => {
+      const d = new Date(t.date);
+      return d >= start && d <= now;
+    });
+  }, [transactions, range]);
+
+  const summary = filteredTransactions.reduce(
     (acc, transaction) => {
       if (transaction.amount > 0) {
         acc.income += transaction.amount;
@@ -49,7 +82,7 @@ const Dashboard = () => {
     { income: 0, expenses: 0, balance: 0 }
   );
 
-  const categoryData = transactions
+  const categoryData = filteredTransactions
     .filter(t => t.amount < 0)
     .reduce((acc, transaction) => {
       const { category, amount } = transaction;
@@ -60,7 +93,7 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, number>);
 
-  const timelineData = transactions
+  const timelineData = filteredTransactions
     .filter(t => t.amount < 0)
     .reduce((acc, transaction) => {
       const date = transaction.date.slice(0, 10);
@@ -91,6 +124,40 @@ const Dashboard = () => {
           }
         />
 
+        <div className="my-4">
+          <ToggleGroup
+            type="single"
+            value={range}
+            onValueChange={(val) => setRange(val as Range)}
+            className="w-full justify-between gap-2"
+          >
+            <ToggleGroupItem
+              value="day"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Day
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="week"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Week
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="month"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Month
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="year"
+              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+            >
+              Year
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
         <div className="space-y-[var(--section-gap)]">
           <DashboardStats
             income={summary.income}
@@ -119,9 +186,9 @@ const Dashboard = () => {
                 </Button>
               </div>
 
-              {transactions.length > 0 ? (
+              {filteredTransactions.length > 0 ? (
                 <div className="space-y-2">
-                  {transactions.slice(0, 5).map((transaction) => (
+                  {filteredTransactions.slice(0, 5).map((transaction) => (
                     <div
                       key={transaction.id}
                       className="flex justify-between items-center p-2 bg-secondary/50 rounded-md"
