@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { INITIAL_TRANSACTIONS } from '@/lib/mock-data';
+import { mockTransactions } from '@/lib/mock-data';
 import { Transaction } from '@/types/transaction';
 import { AnalyticsService } from '@/services/AnalyticsService';
 import { CHART_COLORS } from '@/constants/analytics';
@@ -25,7 +25,7 @@ const Analytics = () => {
     if (storedTransactions) {
       setTransactions(JSON.parse(storedTransactions));
     } else {
-      setTransactions(INITIAL_TRANSACTIONS as Transaction[]);
+      setTransactions(mockTransactions as Transaction[]);
     }
   }, []);
 
