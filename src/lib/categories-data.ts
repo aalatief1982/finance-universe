@@ -85,3 +85,11 @@ export const getCategoryByName = (name: string): Category | undefined => {
 };
 
 export { CATEGORY_HIERARCHY };
+
+// Re-export commonly used helpers and constants from category-utils
+export {
+  getCategoriesForType,
+  getSubcategoriesForCategory,
+  PEOPLE,
+  CURRENCIES
+} from './category-utils';
