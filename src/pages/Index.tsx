@@ -35,7 +35,7 @@ const Index = () => {
           </p>
           <div className="flex justify-center">
             <Button size="lg" asChild>
-              <Link to="/signup">Register</Link>
+              <Link to="/onboarding">Register</Link>
             </Button>
           </div>
           

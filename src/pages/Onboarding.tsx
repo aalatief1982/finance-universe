@@ -20,17 +20,6 @@ const Onboarding = () => {
     }
   }, [user, navigate]);
   
-  // Redirect to signup if no user exists or user hasn't started registration
-  useEffect(() => {
-    if (!auth.isAuthenticated && !user && !auth.isVerifying) {
-      toast({
-        title: "Please register first",
-        description: "You need to register before completing onboarding.",
-        variant: "destructive"
-      });
-      navigate('/signup');
-    }
-  }, [auth.isAuthenticated, auth.isVerifying, user, navigate, toast]);
 
   // Check SMS permission status when component mounts
   useEffect(() => {

@@ -16,8 +16,6 @@ import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
-import Signup from './pages/SignUp';
-import Signin from './pages/SignIn';
 import ProcessVendors from '@/pages/sms/ProcessVendors';
 import VendorCategorization from '@/pages/sms/VendorCategorization';
 import VendorMapping from '@/pages/VendorMapping';
@@ -176,8 +174,6 @@ function AppWrapper() {
       <Route path="/dev/learning-tester" element={<LearningTester />} />
       <Route path="/keyword-bank" element={<KeywordBankManager />} />
       <Route path="/process-sms" element={<ProcessSmsMessages />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/signin" element={<Signin />} />
       <Route path="/sms/process-vendors" element={<ProcessVendors />} />
       <Route path="/sms/vendors" element={<VendorCategorization />} />
       <Route path="/vendor-mapping" element={<VendorMapping />} />
