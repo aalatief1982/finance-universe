@@ -7,6 +7,7 @@ import { Transaction } from '@/types/transaction';
 import { generateChartData } from '@/lib/mock-data';
 import { motion } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
+import { AnalyticsService } from '@/services/AnalyticsService';
 
 interface DashboardContentProps {
   transactions: Transaction[];
@@ -68,17 +69,17 @@ const DashboardContent = ({
 
   // Generate chart data with error handling
   let categoryData = [];
-  let timelineData = [];
+  let subcategoryData = [];
   
   try {
     const chartData = generateChartData(safeTransactions);
     categoryData = chartData.categoryData || [];
-    timelineData = chartData.timelineData || [];
+    subcategoryData = AnalyticsService.getSubcategoryData(safeTransactions).slice(0, 10);
   } catch (error) {
     console.error('Error generating chart data:', error);
     // Provide empty arrays as fallback
     categoryData = [];
-    timelineData = [];
+    subcategoryData = [];
   }
 
   // Placeholder skeleton for loading state
@@ -131,9 +132,9 @@ const DashboardContent = ({
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <ExpenseChart 
+          <ExpenseChart
             expensesByCategory={categoryData}
-            expensesByDate={timelineData}
+            expensesBySubcategory={subcategoryData}
           />
         </motion.div>
         

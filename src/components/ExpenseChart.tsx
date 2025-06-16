@@ -11,14 +11,14 @@ interface ExpenseByCategory {
   value: number;
 }
 
-interface ExpenseByDate {
-  date: string;
-  amount: number;
+interface ExpenseBySubcategory {
+  name: string;
+  value: number;
 }
 
 interface ExpenseChartProps {
   expensesByCategory: ExpenseByCategory[];
-  expensesByDate: ExpenseByDate[];
+  expensesBySubcategory: ExpenseBySubcategory[];
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A259FF', '#4BC0C0', '#F87171', '#FB7185'];
@@ -37,12 +37,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const ExpenseChart = ({ expensesByCategory = [], expensesByDate = [] }: ExpenseChartProps) => {
+const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: ExpenseChartProps) => {
   const [activeTab, setActiveTab] = useState('category');
 
+  const limitedCategoryData = expensesByCategory.slice(0, 5);
+
   // Safe check for empty data
-  const hasExpensesByCategory = Array.isArray(expensesByCategory) && expensesByCategory.length > 0;
-  const hasExpensesByDate = Array.isArray(expensesByDate) && expensesByDate.length > 0;
+  const hasExpensesByCategory = Array.isArray(limitedCategoryData) && limitedCategoryData.length > 0;
+  const hasExpensesBySubcategory = Array.isArray(expensesBySubcategory) && expensesBySubcategory.length > 0;
 
   return (
     <motion.div
@@ -58,7 +60,7 @@ const ExpenseChart = ({ expensesByCategory = [], expensesByDate = [] }: ExpenseC
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="mb-4">
               <TabsTrigger value="category">By Category</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
+              <TabsTrigger value="subcategory">Subcategories</TabsTrigger>
             </TabsList>
             
             <TabsContent value="category" className="pt-2">
@@ -67,7 +69,7 @@ const ExpenseChart = ({ expensesByCategory = [], expensesByDate = [] }: ExpenseC
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart margin={CHART_MARGIN}>
                       <Pie
-                        data={expensesByCategory}
+                        data={limitedCategoryData}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -77,7 +79,7 @@ const ExpenseChart = ({ expensesByCategory = [], expensesByDate = [] }: ExpenseC
                         dataKey="value"
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
-                        {expensesByCategory.map((entry, index) => (
+                        {limitedCategoryData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -91,22 +93,20 @@ const ExpenseChart = ({ expensesByCategory = [], expensesByDate = [] }: ExpenseC
               )}
             </TabsContent>
             
-            <TabsContent value="timeline" className="pt-2">
-              {hasExpensesByDate ? (
+            <TabsContent value="subcategory" className="pt-2">
+              {hasExpensesBySubcategory ? (
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={expensesByDate} margin={CHART_MARGIN}>
-                      <XAxis dataKey="date" />
-                      <YAxis 
-                        tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')}
-                      />
+                    <BarChart data={expensesBySubcategory} layout="vertical" margin={CHART_MARGIN}>
+                      <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
+                      <YAxis type="category" dataKey="name" width={100} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 4, 4]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-12">No timeline data available</p>
+                <p className="text-center text-muted-foreground py-12">No subcategory data available</p>
               )}
             </TabsContent>
           </Tabs>
