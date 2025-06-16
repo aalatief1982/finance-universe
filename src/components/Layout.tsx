@@ -26,10 +26,10 @@ const Layout = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className={cn("min-h-screen bg-background", className)}>
+    <div className={cn("min-h-screen bg-background flex flex-col", className)}>
       {showHeader && <Header showNavigation={!hideNavigation} />}
 
-      <div className="flex">
+      <div className="flex flex-1 min-h-0">
         {!hideNavigation && !isMobile && (
           <div className="w-64 flex-shrink-0">
             <Sidebar />
@@ -37,8 +37,8 @@ const Layout = ({
         )}
 
         <main className={cn(
-          "flex-1 min-h-screen",
-          showHeader && "pt-16",
+          "flex-1 min-h-0 overflow-auto",
+          showHeader && "pt-0",
           !fullWidth && "max-w-none"
         )}>
           <div className={cn(

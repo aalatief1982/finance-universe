@@ -19,7 +19,7 @@ const Index = () => {
 
   return (
     <Layout hideNavigation>
-      <div className="min-h-[90vh] flex items-center justify-center px-4">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -27,7 +27,7 @@ const Index = () => {
           className="max-w-lg text-center"
         >
           <div className="flex flex-col items-center mb-6">
-            <XpensiaLogo className="h-16 w-16 mb-2" />
+            <XpensiaLogo className="h-16 w-16 mb-4" />
             <h1 className="text-4xl font-bold">Xpensia</h1>
           </div>
           <p className="text-xl text-muted-foreground mb-8">
