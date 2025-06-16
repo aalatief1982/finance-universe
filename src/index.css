@@ -34,16 +34,6 @@
     --ring: 183 100% 32%;
     
     --radius: 0.5rem;
-    
-    /* Layout variables */
-    --header-height: 4rem;
-    --sidebar-width: 16rem;
-    --safe-area-top: env(safe-area-inset-top, 0px);
-    --page-padding-x: 1rem;
-    --page-padding-y: 1rem;
-    --content-max-width: 1200px;
-    --component-padding-x: 1rem;
-    --component-padding-y: 0.75rem;
   }
  
   .dark {
@@ -89,19 +79,16 @@
   }
 }
 
-@layer components {
-  .page-container {
-    max-width: var(--content-max-width);
-    margin: 0 auto;
-    padding: 0 var(--page-padding-x);
-  }
+/* Remove any conflicting layout styles */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
-/* Mobile optimizations */
+/* Ensure proper spacing for mobile */
 @media (max-width: 640px) {
-  :root {
-    --page-padding-x: 0.75rem;
-    --component-padding-x: 0.75rem;
-    --component-padding-y: 0.5rem;
+  .page-container {
+    padding: 0 0.75rem;
   }
 }

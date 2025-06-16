@@ -38,13 +38,13 @@ const Layout = ({
 
         <main className={cn(
           "flex-1 min-h-screen",
-          showHeader && "pt-16", // Account for fixed header
+          showHeader && "pt-16",
           !fullWidth && "max-w-none"
         )}>
           <div className={cn(
             "w-full h-full",
             withPadding && "p-4",
-            !fullWidth && "page-container"
+            !fullWidth && "container mx-auto"
           )}>
             <AnimatePresence mode="wait">
               {children}
