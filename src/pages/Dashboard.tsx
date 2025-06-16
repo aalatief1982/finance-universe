@@ -123,6 +123,7 @@ const Dashboard = () => {
             value={range}
             onValueChange={(val) => val && setRange(val as any)}
             className="justify-start"
+            aria-label="Date range filter"
           >
             <ToggleGroupItem value="day">Day</ToggleGroupItem>
             <ToggleGroupItem value="week">Week</ToggleGroupItem>
