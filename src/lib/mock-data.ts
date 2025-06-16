@@ -127,3 +127,18 @@ export const mockExpensesByDate = [
   { date: '2024-01-22', amount: 120 },
   { date: '2024-01-29', amount: 180 }
 ];
+
+export const CATEGORIES = [
+  'Food',
+  'Transportation',
+  'Housing',
+  'Entertainment',
+  'Shopping',
+  'Utilities',
+  'Income',
+  'Investment',
+  'Travel',
+  'Other'
+];
+
+export const INITIAL_TRANSACTIONS = mockTransactions;
