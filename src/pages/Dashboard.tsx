@@ -17,8 +17,10 @@ const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
+
   type Range = '' | 'day' | 'week' | 'month' | 'year';
   const [range, setRange] = React.useState<Range>('');
+
 
   const handleAddTransaction = () => {
     navigate('/edit-transaction');
@@ -40,12 +42,14 @@ const Dashboard = () => {
   };
 
   const filteredTransactions = React.useMemo(() => {
+
     if (!range) {
       return transactions;
     }
 
     const now = new Date();
     let start = new Date(now);
+
 
     switch (range) {
       case 'day':
@@ -128,6 +132,7 @@ const Dashboard = () => {
           <ToggleGroup
             type="single"
             value={range}
+
             onValueChange={(val) => setRange(val as Range)}
             className="w-full justify-between gap-2"
           >
@@ -155,6 +160,7 @@ const Dashboard = () => {
             >
               Year
             </ToggleGroupItem>
+
           </ToggleGroup>
         </div>
 
