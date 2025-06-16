@@ -29,7 +29,6 @@ import NotFound from '@/pages/NotFound';
 
 // Import services
 import { initializeCapacitor } from '@/lib/capacitor-init';
-import { LocalNotifications } from '@capacitor/local-notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,8 +44,10 @@ const initializeApp = async () => {
   try {
     await initializeCapacitor();
     
-    // Check and request notification permissions
+    // Check and request notification permissions if available
     try {
+      // Try to import LocalNotifications, but handle gracefully if not available
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
       const permissions = await LocalNotifications.checkPermissions();
       if (permissions.display !== 'granted') {
         await LocalNotifications.requestPermissions();
