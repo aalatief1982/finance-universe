@@ -1,1 +1,0 @@
-app.xpensia.com.plugins.smsreader

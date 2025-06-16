@@ -1,7 +1,5 @@
-
 import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { Transaction } from '@/types/transaction';
-import { SmsReaderService } from './SmsReaderService';
 
 interface SmsEntry {
   sender: string;
@@ -23,16 +21,9 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
       // Extract relevant information from the parsed result
       const { directFields, inferredFields } = parsedResult;
 
-      // Generate a more deterministic ID based on message content
-      const messageId = SmsReaderService.generateMessageId({
-        sender: entry.sender,
-        message: entry.message,
-        date: entry.timestamp
-      });
-
       // Combine direct and inferred fields to create a transaction object
       const transaction: Transaction = {
-        id: `sms-${messageId}`, // Use the deterministic message ID
+        id: 'sms-' + Math.random().toString(36).substring(2, 15), // Generate a random ID
         title: directFields.vendor || inferredFields.vendor || 'SMS Transaction',
         amount: parseFloat(directFields.amount || inferredFields.amount || '0'),
         category: inferredFields.category || 'Uncategorized',
@@ -51,8 +42,7 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
             message: entry.message,
             timestamp: entry.timestamp
           },
-          rawMessage: entry.message,
-          messageId // Store the message ID for future reference
+          rawMessage: entry.message
         }
       };
 

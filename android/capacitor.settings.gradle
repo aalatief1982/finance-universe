@@ -20,8 +20,8 @@ project(':capacitor-local-notifications').projectDir = new File('../node_modules
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacitor/status-bar/android')
 
-include ':capacitor-background-sms-listener'
-project(':capacitor-background-sms-listener').projectDir = new File('../capacitor-background-sms-listener/android')
-
 include ':capacitor-sms-reader'
 project(':capacitor-sms-reader').projectDir = new File('../capacitor-sms-reader/android')
+
+include ':capacitor-background-sms-listener'
+project(':capacitor-background-sms-listener').projectDir = new File('../capacitor-background-sms-listener/android')

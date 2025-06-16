@@ -378,19 +378,3 @@ export const updateCurrency = (currency: SupportedCurrency): void => {
     currency
   });
 };
-
-// New function to check if a transaction from SMS already exists
-export function checkSmsTransactionExists(messageId: string): boolean {
-  try {
-    const transactions = getStoredTransactions();
-    
-    // Check if any transaction has this message ID in its details
-    return transactions.some(txn => 
-      txn.source === 'sms-import' && 
-      txn.details?.messageId === messageId
-    );
-  } catch (error) {
-    console.error('[StorageUtils] Failed to check SMS transaction existence:', error);
-    return false;
-  }
-}
