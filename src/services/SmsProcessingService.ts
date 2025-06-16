@@ -1,5 +1,5 @@
 
-import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
+import { parseSmsMessage } from '@/lib/smart-paste-engine/smsParser';
 import { Transaction } from '@/types/transaction';
 import { SmsReaderService } from './SmsReaderService';
 

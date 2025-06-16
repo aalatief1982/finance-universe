@@ -11,7 +11,7 @@ import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import ErrorAlert from './smart-paste/ErrorAlert';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { Switch } from './ui/switch';
-import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
+import { parseSmsMessage } from '@/lib/smart-paste-engine/smsParser';
 import { nanoid } from 'nanoid';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
