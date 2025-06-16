@@ -1,6 +1,6 @@
 import { Transaction, TransactionType } from '@/types/transaction';
 import { nanoid } from 'nanoid';
-import { parseSmsMessage } from '@/lib/smart-paste-engine/smsParser';
+import { parseSmsMessage } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates } from './templateUtils';
 import {

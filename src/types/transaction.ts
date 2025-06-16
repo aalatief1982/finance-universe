@@ -1,3 +1,4 @@
+
 export type TransactionType = 'income' | 'expense' | 'transfer';
 
 // Source type used throughout the app
@@ -96,5 +97,5 @@ export type TimePeriod = 'week' | 'month' | 'year' | 'all';
 export interface TimePeriodData {
   date: string;
   income: number;
-  expenses: number;
+  expense: number;
 }

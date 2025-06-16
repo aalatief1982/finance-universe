@@ -26,26 +26,32 @@ const Layout = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className={cn("min-h-screen bg-background flex flex-col", className)}>
+    <div
+      className={cn(
+        "min-h-screen flex flex-col",
+        "pt-[var(--safe-area-top)]", // Safe area for status bar
+        className
+      )}
+    >
       {showHeader && <Header showNavigation={!hideNavigation} />}
 
-      <div className="flex flex-1 min-h-0">
-        {!hideNavigation && !isMobile && (
-          <div className="w-64 flex-shrink-0">
-            <Sidebar />
-          </div>
-        )}
+      <div className="flex flex-1 mt-[var(--header-height)]">
+        {!hideNavigation && !isMobile && <Sidebar />}
 
-        <main className={cn(
-          "flex-1 min-h-0 overflow-auto",
-          showHeader && "pt-0",
-          !fullWidth && "max-w-none"
-        )}>
-          <div className={cn(
-            "w-full h-full",
-            withPadding && "p-4",
-            !fullWidth && "container mx-auto"
-          )}>
+        <main
+          className={cn(
+            "flex-1 w-full",
+            !hideNavigation && !isMobile && "lg:ml-[var(--sidebar-width)]",
+            !fullWidth && "container"
+          )}
+        >
+          <div
+            className={cn(
+              "h-full",
+              withPadding && "px-[var(--page-padding-x)] py-[var(--page-padding-y)]",
+              !fullWidth && "max-w-[var(--content-max-width)] mx-auto"
+            )}
+          >
             <AnimatePresence mode="wait">
               {children}
             </AnimatePresence>

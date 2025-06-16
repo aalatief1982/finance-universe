@@ -394,5 +394,3 @@ export function checkSmsTransactionExists(messageId: string): boolean {
     return false;
   }
 }
-
-export { getFromStorage, setInStorage as saveToStorage };

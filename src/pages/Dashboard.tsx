@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Layout from '@/components/Layout';
 import DashboardStats from '@/components/DashboardStats';
@@ -10,16 +11,11 @@ import PageHeader from '@/components/layout/PageHeader';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 import { useUser } from '@/context/UserContext';
-import TimelineChart from '@/components/charts/TimelineChart';
-import CategoryPieChart from '@/components/charts/CategoryPieChart';
-import SubcategoryBarChart from '@/components/charts/SubcategoryBarChart';
-import { cn } from '@/lib/utils';
 
 const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
-  const [timePeriod, setTimePeriod] = React.useState<'all' | 'day' | 'week' | 'month' | 'year'>('month');
 
   const handleAddTransaction = () => {
     navigate('/edit-transaction');
@@ -40,47 +36,7 @@ const Dashboard = () => {
     addTransaction(sampleTransaction);
   };
 
-  const timePeriodOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'day', label: 'Day' },
-    { value: 'week', label: 'Week' },
-    { value: 'month', label: 'Month' },
-    { value: 'year', label: 'Year' },
-  ];
-
-  // Filter transactions based on selected time period
-  const getFilteredTransactions = () => {
-    const now = new Date();
-    const startDate = new Date();
-
-    switch (timePeriod) {
-      case 'day':
-        startDate.setHours(0, 0, 0, 0);
-        break;
-      case 'week':
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        startDate.setMonth(now.getMonth(), 1);
-        break;
-      case 'year':
-        startDate.setFullYear(now.getFullYear(), 0, 1);
-        break;
-      default:
-        return transactions; // 'all' case - return all transactions
-    }
-
-    return transactions.filter(transaction => {
-      const txDate = new Date(transaction.date);
-      return txDate >= startDate && txDate <= now;
-    });
-  };
-
-  // Get filtered transactions
-  const filteredTransactions = getFilteredTransactions();
-
-  // Calculate summary from filtered transactions
-  const summary = filteredTransactions.reduce(
+  const summary = transactions.reduce(
     (acc, transaction) => {
       if (transaction.amount > 0) {
         acc.income += transaction.amount;
@@ -93,8 +49,7 @@ const Dashboard = () => {
     { income: 0, expenses: 0, balance: 0 }
   );
 
-  // Calculate category data from filtered transactions
-  const categoryData = filteredTransactions
+  const categoryData = transactions
     .filter(t => t.amount < 0)
     .reduce((acc, transaction) => {
       const { category, amount } = transaction;
@@ -105,7 +60,7 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, number>);
 
-  const timelineData = filteredTransactions
+  const timelineData = transactions
     .filter(t => t.amount < 0)
     .reduce((acc, transaction) => {
       const date = transaction.date.slice(0, 10);
@@ -122,150 +77,76 @@ const Dashboard = () => {
   const expensesByDate = Object.entries(timelineData)
     .map(([date, amount]) => ({ date, amount }))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  // Prepare data for new charts
-  const trendsData = Object.entries(
-    filteredTransactions.reduce((acc, transaction) => {
-      const date = transaction.date.slice(0, 7); // Year-Month
-      if (!acc[date]) {
-        acc[date] = { income: 0, expenses: 0 };
-      }
-      if (transaction.amount > 0) {
-        acc[date].income += transaction.amount;
-      } else {
-        acc[date].expenses += Math.abs(transaction.amount);
-      }
-      return acc;
-    }, {} as Record<string, { income: number, expenses: number }>)
-  ).map(([date, values]) => ({
-    date,
-    ...values
-  })).sort((a, b) => a.date.localeCompare(b.date));
-
-const topCategories = expensesByCategory
-  .sort((a, b) => b.value - a.value)
-  .map((item, index) => ({
-    id: `${item.name}-${index}`,        // 🔑 unique ID
-    category: item.name,
-    amount: item.value
-  }));
-
-const topSubcategories = expensesByDate
-  .sort((a, b) => b.amount - a.amount)
-  .map((item, index) => ({
-    id: `${item.date}-${index}`,        // 🔑 unique ID
-    subcategory: item.date,
-    amount: item.amount
-  }));
 
   return (
-    <Layout withPadding={false}>
-      <div className="px-1 space-y-3">
-        {/* Greeting */}
-        <div className="pt-2">
-          <h1 className="text-lg font-semibold">
-            {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Welcome'}
-          </h1>
-          <p className="text-sm text-muted-foreground">Here's your financial summary</p>
-        </div>
-
-        {/* Time Period Selection */}
-        <div className="flex gap-1">
-          {timePeriodOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={timePeriod === option.value ? "default" : "outline"}
-              size="sm"
-              className="flex-1"
-              onClick={() => setTimePeriod(option.value as 'all' | 'day' | 'week' | 'month' | 'year')}
-            >
-              {option.label}
+    <Layout>
+      <div className="px-4">
+        <PageHeader
+          title={user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
+          description="Here's an overview of your finances"
+          actions={
+            <Button onClick={handleAddTransaction} className="flex items-center gap-1.5">
+              <Plus className="h-3.5 w-3.5" /> Add Transaction
             </Button>
-          ))}
-        </div>
+          }
+        />
 
-        {/* Financial Summary Cards */}
-        <div className="grid grid-cols-1 gap-2">
+        <div className="space-y-[var(--section-gap)]">
           <DashboardStats
             income={summary.income}
             expenses={summary.expenses}
             balance={summary.balance}
           />
-        </div>
 
-        {/* Charts Section */}
-        <div className="space-y-3">
-          {/* Trends Chart */}
-          <div className="bg-background">
-            <h2 className="text-sm font-medium mb-2">Expense & Income Trends</h2>
-            <TimelineChart data={trendsData} />
-          </div>
-
-          {/* Analytics Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {/* Top Categories */}
-            <div className="bg-background">
-              <h2 className="text-sm font-medium mb-2">Top Categories</h2>
-              <CategoryPieChart 
-                data={topCategories} 
-                onCategoryClick={(category) => navigate(`/transactions?category=${category}`)}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
+            <div className="bg-card p-2 rounded-lg shadow">
+              <h2 className="text-lg font-semibold mb-2">Expense Breakdown</h2>
+              <ExpenseChart
+                expensesByCategory={expensesByCategory}
+                expensesByDate={expensesByDate}
               />
             </div>
 
-            {/* Top Subcategories */}
-            <div className="bg-background">
-              <h2 className="text-sm font-medium mb-2">Top Subcategories</h2>
-              <SubcategoryBarChart 
-                data={topSubcategories} 
-                onSubcategoryClick={(subcategory) => navigate(`/transactions?subcategory=${subcategory}`)}
-              />
-            </div>
-          </div>
-
-          {/* Recent Transactions */}
-          <div className="bg-background">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-sm font-medium">Recent Transactions</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/transactions')}
-                className="text-xs"
-              >
-                View All
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {filteredTransactions.slice(0, 5).map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex justify-between items-center p-2 hover:bg-accent rounded-md transition-colors cursor-pointer"
-                  onClick={() => navigate(`/transactions/${transaction.id}`)}
+            <div className="bg-card p-2 rounded-lg shadow">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-semibold">Recent Transactions</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/transactions')}
                 >
-                  <div>
-                    <p className="font-medium text-sm">{transaction.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {transaction.category} • {transaction.date}
-                    </p>
-                  </div>
-                  <p className={cn(
-                    "text-sm font-medium",
-                    transaction.amount < 0 ? "text-red-500" : "text-green-500"
-                  )}>
-                    {transaction.amount < 0 ? "-" : "+"}${Math.abs(transaction.amount).toFixed(2)}
-                  </p>
+                  View All
+                </Button>
+              </div>
+
+              {transactions.length > 0 ? (
+                <div className="space-y-2">
+                  {transactions.slice(0, 5).map((transaction) => (
+                    <div
+                      key={transaction.id}
+                      className="flex justify-between items-center p-2 bg-secondary/50 rounded-md"
+                    >
+                      <div>
+                        <p className="font-medium">{transaction.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {transaction.category} • {transaction.date}
+                        </p>
+                      </div>
+                      <p className={transaction.amount < 0 ? "text-destructive" : "text-[hsl(var(--income))]"}>
+                        {transaction.amount < 0 ? "-" : "+"}${Math.abs(transaction.amount).toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground mb-3">No transactions yet</p>
+                  <Button onClick={handleAddSampleTransaction}>Add Sample Transactions</Button>
+                </div>
+              )}
             </div>
           </div>
-        </div>        {/* Floating Action Button */}
-        <Button
-          size="icon"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 hover:scale-105 z-50"
-          onClick={handleAddTransaction}
-        >
-          <Plus className="h-6 w-6" />
-          <span className="sr-only">Add Transaction</span>
-        </Button>
+        </div>
       </div>
     </Layout>
   );

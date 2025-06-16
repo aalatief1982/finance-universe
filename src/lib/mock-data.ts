@@ -1,94 +1,175 @@
 
-import { Transaction } from '@/types/transaction';
-import { SupportedCurrency } from '@/types/locale';
+import { Transaction, CategorySummary, TimePeriodData } from '@/types/transaction';
+import { v4 as uuidv4 } from 'uuid';
 
-// Generate chart data for different periods
-export const generateChartData = (period: 'week' | 'month' | 'year' = 'month') => {
-  const data = [];
-  const now = new Date();
-  
-  if (period === 'week') {
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      data.push({
-        name: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        income: Math.floor(Math.random() * 1000) + 500,
-        expenses: Math.floor(Math.random() * 800) + 300,
-      });
-    }
-  } else if (period === 'month') {
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      data.push({
-        name: date.getDate().toString(),
-        income: Math.floor(Math.random() * 1000) + 500,
-        expenses: Math.floor(Math.random() * 800) + 300,
-      });
-    }
-  } else {
-    // year
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now);
-      date.setMonth(date.getMonth() - i);
-      data.push({
-        name: date.toLocaleDateString('en-US', { month: 'short' }),
-        income: Math.floor(Math.random() * 10000) + 5000,
-        expenses: Math.floor(Math.random() * 8000) + 3000,
-      });
-    }
-  }
-  
-  return data;
-};
-
-// Categories for transactions
-export const CATEGORIES = [
-  'Food & Dining',
-  'Transportation',
-  'Shopping',
-  'Entertainment',
-  'Bills & Utilities',
-  'Healthcare',
-  'Travel',
-  'Education',
-  'Business',
-  'Personal Care',
-  'Gifts & Donations',
-  'Investments',
-  'Income',
-  'Other'
-];
-
-// Mock transactions for testing
-export const mockTransactions: Transaction[] = [
+// Initial mock transactions
+export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
-    id: '1',
-    title: 'Grocery Shopping',
-    amount: 125.50,
-    currency: 'SAR' as SupportedCurrency,
-    type: 'expense',
-    category: 'Food & Dining',
-    subcategory: 'Groceries',
-    date: new Date().toISOString(),
-    vendor: 'Panda',
-    fromAccount: 'Main Account',
-    source: 'manual',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
+    id: uuidv4(),
     title: 'Salary',
     amount: 5000,
-    currency: 'SAR' as SupportedCurrency,
-    type: 'income',
     category: 'Income',
-    subcategory: 'Salary',
-    date: new Date().toISOString(),
-    vendor: 'Company',
-    fromAccount: 'Main Account',
-    source: 'manual',
-    createdAt: new Date().toISOString()
+    date: '2023-04-01',
+    type: 'income',
+    fromAccount: 'Employer',
+    toAccount: 'Bank Account',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Rent',
+    amount: -1500,
+    category: 'Housing',
+    date: '2023-04-02',
+    type: 'expense',
+    fromAccount: 'Bank Account',
+    toAccount: 'Landlord',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Groceries',
+    amount: -250,
+    category: 'Food',
+    date: '2023-04-05',
+    type: 'expense',
+    fromAccount: 'Bank Account',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Gas',
+    amount: -45,
+    category: 'Transportation',
+    date: '2023-04-07',
+    type: 'expense',
+    fromAccount: 'Credit Card',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Restaurant',
+    amount: -85,
+    category: 'Food',
+    date: '2023-04-10',
+    type: 'expense',
+    fromAccount: 'Credit Card',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Movie tickets',
+    amount: -35,
+    category: 'Entertainment',
+    date: '2023-04-15',
+    type: 'expense',
+    fromAccount: 'Cash',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Freelance work',
+    amount: 750,
+    category: 'Income',
+    date: '2023-04-20',
+    type: 'income',
+    fromAccount: 'Client',
+    toAccount: 'Bank Account',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
+  },
+  {
+    id: uuidv4(),
+    title: 'Utility bills',
+    amount: -120,
+    category: 'Housing',
+    date: '2023-04-25',
+    type: 'expense',
+    fromAccount: 'Bank Account',
+    person: 'none',
+    currency: 'USD',
+    source: 'manual'
   }
+];
+
+export const PERSON_OPTIONS = [
+  'none',
+  'Ahmed',
+  'Marwa',
+  'Youssef',
+  'Salma',
+  'Mazen'
+];
+
+// Generate chart data based on transactions
+export const generateChartData = (transactions: Transaction[]) => {
+  // Calculate spending by category
+  const expensesByCategory: Record<string, number> = {};
+  transactions
+    .filter(tx => tx.type === 'expense')
+    .forEach(tx => {
+      const category = tx.category;
+      expensesByCategory[category] = (expensesByCategory[category] || 0) + Math.abs(tx.amount);
+    });
+
+  // Convert to array and sort by value
+  const categoryData: CategorySummary[] = Object.entries(expensesByCategory)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
+  // Calculate income and expenses by month
+  const timeData: Record<string, { income: number; expense: number }> = {};
+  transactions.forEach(tx => {
+    const monthYear = tx.date.substring(0, 7); // Format: YYYY-MM
+    if (!timeData[monthYear]) {
+      timeData[monthYear] = { income: 0, expense: 0 };
+    }
+    
+    if (tx.type === 'income') {
+      timeData[monthYear].income += Math.abs(tx.amount);
+    } else if (tx.type === 'expense') {
+      timeData[monthYear].expense += Math.abs(tx.amount);
+    }
+  });
+
+  // Convert to array and sort by date
+  const timelineData: TimePeriodData[] = Object.entries(timeData)
+    .map(([date, data]) => ({ date, ...data }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return { categoryData, timelineData };
+};
+
+// Default categories
+export const CATEGORIES = [
+  'Food',
+  'Housing',
+  'Transportation',
+  'Entertainment',
+  'Shopping',
+  'Utilities',
+  'Healthcare',
+  'Personal',
+  'Education',
+  'Travel',
+  'Income',
+  'Gifts',
+  'Investments',
+  'Debt',
+  'Insurance',
+  'Taxes',
+  'Miscellaneous'
 ];

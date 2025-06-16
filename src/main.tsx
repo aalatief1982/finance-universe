@@ -1,9 +1,11 @@
+
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { handleError } from './utils/error-utils'
 import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults';
+import './styles/app.css';
 import { initializeCapacitor } from './lib/capacitor-init';
 
 // Initialize Capacitor

@@ -177,7 +177,6 @@ const ProcessSmsMessages: React.FC = () => {
 
   return (
     <Layout>
-      
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
