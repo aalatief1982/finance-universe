@@ -44,13 +44,15 @@ const initializeApp = async () => {
   try {
     await initializeCapacitor();
     
-    // Check and request notification permissions if available
+    // Check and request notification permissions if available on native platforms
     try {
-      // Try to import LocalNotifications, but handle gracefully if not available
-      const { LocalNotifications } = await import('@capacitor/local-notifications');
-      const permissions = await LocalNotifications.checkPermissions();
-      if (permissions.display !== 'granted') {
-        await LocalNotifications.requestPermissions();
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { LocalNotifications } = await import('@capacitor/local-notifications');
+        const permissions = await LocalNotifications.checkPermissions();
+        if (permissions.display !== 'granted') {
+          await LocalNotifications.requestPermissions();
+        }
       }
     } catch (error) {
       console.warn('Notification permissions not available:', error);
