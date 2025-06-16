@@ -33,15 +33,11 @@ const DashboardStats = ({
       >
         <Card className="overflow-hidden border border-border">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Income</p>
-                <h3 className="text-2xl font-semibold text-green-500">{formatCurrency(income)}</h3>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                <ArrowUpCircle size={24} />
-              </div>
+            <div className="flex justify-between items-start">
+              <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
+              <ArrowUpCircle className="text-green-600" size={20} />
             </div>
+            <h3 className="mt-1 text-left text-lg font-semibold text-green-500">{formatCurrency(income)}</h3>
           </CardContent>
         </Card>
       </motion.div>
@@ -53,15 +49,11 @@ const DashboardStats = ({
       >
         <Card className="overflow-hidden border border-border">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Expenses</p>
-                <h3 className="text-2xl font-semibold text-red-500">{formatCurrency(Math.abs(expenses))}</h3>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                <ArrowDownCircle size={24} />
-              </div>
+            <div className="flex justify-between items-start">
+              <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
+              <ArrowDownCircle className="text-red-600" size={20} />
             </div>
+            <h3 className="mt-1 text-left text-lg font-semibold text-red-500">{formatCurrency(Math.abs(expenses))}</h3>
           </CardContent>
         </Card>
       </motion.div>
@@ -73,27 +65,23 @@ const DashboardStats = ({
       >
         <Card className="overflow-hidden border border-border">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-1">Balance</p>
-                <h3 className={`text-2xl font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>
-                  {formatCurrency(balance)}
-                </h3>
-                {previousBalance !== undefined && (
-                  <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
-                    {isPositiveChange ? (
-                      <TrendingUp size={14} className="mr-1" />
-                    ) : (
-                      <TrendingDown size={14} className="mr-1" />
-                    )}
-                    {Math.abs(balanceChange).toFixed(1)}% from last month
-                  </p>
-                )}
-              </div>
-              <div className={`h-12 w-12 rounded-full ${balance >= 0 ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'} flex items-center justify-center`}>
-                {balance >= 0 ? <TrendingUp size={24} /> : <TrendingDown size={24} />}
+            <div className="flex justify-between items-start">
+              <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance</p>
+              <div className={`${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}> 
+                {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
               </div>
             </div>
+            <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatCurrency(balance)}</h3>
+            {previousBalance !== undefined && (
+              <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}> 
+                {isPositiveChange ? (
+                  <TrendingUp size={14} className="mr-1" />
+                ) : (
+                  <TrendingDown size={14} className="mr-1" />
+                )}
+                {Math.abs(balanceChange).toFixed(1)}% from last month
+              </p>
+            )}
           </CardContent>
         </Card>
       </motion.div>
