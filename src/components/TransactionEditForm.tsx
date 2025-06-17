@@ -160,11 +160,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 py-2">
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Transaction Type*</label>
-        <Select value={editedTransaction.type} onValueChange={(value) => handleChange('type', value as TransactionType)}>
-          <SelectTrigger style={getDrivenFieldStyle('type', drivenFields)}>
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white p-4 rounded-md shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 gap-y-2"
+    >
+      <div className="col-span-2 space-y-2">
+        <label className="text-sm font-medium text-gray-700">Transaction Type*</label>
+        <Select
+          value={editedTransaction.type}
+          onValueChange={(value) => handleChange('type', value as TransactionType)}
+        >
+          <SelectTrigger
+            className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+            style={getDrivenFieldStyle('type', drivenFields)}
+          >
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
@@ -176,7 +185,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Title*</label>
+        <label className="text-sm font-medium text-gray-700">Title*</label>
         <Input
           value={editedTransaction.title || ''}
           onChange={(e) => {
@@ -186,114 +195,150 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           style={getDrivenFieldStyle('title', drivenFields)}
           placeholder="Transaction title"
           required
+          className="h-11 rounded-lg border-gray-300"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Amount*</label>
-          <Input
-            type="number"
-            step="0.01"
-            value={editedTransaction.amount}
-            style={getDrivenFieldStyle('amount', drivenFields)}
-            onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
-            placeholder="0.00"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Currency*</label>
-          <Select value={editedTransaction.currency || 'SAR'} onValueChange={(value) => handleChange('currency', value)}>
-            <SelectTrigger style={getDrivenFieldStyle('currency', drivenFields)}>
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map(currency => <SelectItem key={currency} value={currency}>{currency}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Currency*</label>
+        <Select
+          value={editedTransaction.currency || 'SAR'}
+          onValueChange={(value) => handleChange('currency', value)}
+        >
+          <SelectTrigger
+            className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+            style={getDrivenFieldStyle('currency', drivenFields)}
+          >
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent>
+            {CURRENCIES.map((currency) => (
+              <SelectItem key={currency} value={currency}>
+                {currency}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">From Account*</label>
+        <label className="text-sm font-medium text-gray-700">Amount*</label>
+        <Input
+          type="number"
+          step="0.01"
+          value={editedTransaction.amount}
+          style={getDrivenFieldStyle('amount', drivenFields)}
+          onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
+          placeholder="0.00"
+          required
+          className="h-11 rounded-lg border-gray-300"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">From Account*</label>
         <Input
           value={editedTransaction.fromAccount || ''}
           onChange={(e) => handleChange('fromAccount', e.target.value)}
           style={getDrivenFieldStyle('fromAccount', drivenFields)}
           placeholder="Source account"
           required
+          className="h-11 rounded-lg border-gray-300"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Vendor</label>
+        <label className="text-sm font-medium text-gray-700">Vendor</label>
         <Input
           value={editedTransaction.vendor || ''}
           style={getDrivenFieldStyle('vendor', drivenFields)}
           onChange={(e) => handleChange('vendor', e.target.value)}
           placeholder="e.g., Netflix"
+          className="h-11 rounded-lg border-gray-300"
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-gray-700">Category*</label>
+        <Select
+          value={editedTransaction.category || ''}
+          onValueChange={(value) => handleChange('category', value)}
+        >
+          <SelectTrigger
+            className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+            style={getDrivenFieldStyle('category', drivenFields)}
+          >
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableCategories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {availableSubcategories.length > 0 && (
         <div className="space-y-2">
-          <label className="text-sm font-medium">Category*</label>
-          <Select value={editedTransaction.category || ''} onValueChange={(value) => handleChange('category', value)}>
-            <SelectTrigger style={getDrivenFieldStyle('category', drivenFields)}>
-              <SelectValue placeholder="Select category" />
+          <label className="text-sm font-medium text-gray-700">Subcategory</label>
+          <Select
+            value={editedTransaction.subcategory || 'none'}
+            onValueChange={(value) => handleChange('subcategory', value)}
+          >
+            <SelectTrigger
+              className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+              style={getDrivenFieldStyle('subcategory', drivenFields)}
+            >
+              <SelectValue placeholder="Select subcategory" />
             </SelectTrigger>
             <SelectContent>
-              {availableCategories.map(category => (
-                <SelectItem key={category} value={category}>{category}</SelectItem>
+              <SelectItem value="none">None</SelectItem>
+              {availableSubcategories.map((subcategory) => (
+                <SelectItem key={subcategory} value={subcategory}>
+                  {subcategory}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-
-        {availableSubcategories.length > 0 && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Subcategory</label>
-            <Select value={editedTransaction.subcategory || 'none'} onValueChange={(value) => handleChange('subcategory', value)}>
-              <SelectTrigger style={getDrivenFieldStyle('subcategory', drivenFields)}>
-                <SelectValue placeholder="Select subcategory" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {availableSubcategories.map(subcategory => (
-                  <SelectItem key={subcategory} value={subcategory}>{subcategory}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Date*</label>
+        <label className="text-sm font-medium text-gray-700">Date*</label>
         <Input
           type="date"
           value={editedTransaction.date || ''}
           onChange={(e) => handleChange('date', e.target.value)}
           style={getDrivenFieldStyle('date', drivenFields)}
           required
+          className="h-11 rounded-lg border-gray-300"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Person (Optional)</label>
-        <Select value={editedTransaction.person || 'none'} onValueChange={(value) => handleChange('person', value)}>
-          <SelectTrigger><SelectValue placeholder="Select person" /></SelectTrigger>
+        <label className="text-sm font-medium text-gray-700">Person (Optional)</label>
+        <Select
+          value={editedTransaction.person || 'none'}
+          onValueChange={(value) => handleChange('person', value)}
+        >
+          <SelectTrigger className="h-11 rounded-lg border-gray-300 focus:ring-primary">
+            <SelectValue placeholder="Select person" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">None</SelectItem>
-            {PEOPLE.map(person => <SelectItem key={person} value={person}>{person}</SelectItem>)}
+            {PEOPLE.map((person) => (
+              <SelectItem key={person} value={person}>
+                {person}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Description (Optional)</label>
+      <div className="col-span-2 space-y-2">
+        <label className="text-sm font-medium text-gray-700">Description (Optional)</label>
         <Textarea
           value={editedTransaction.description || ''}
           onChange={(e) => {
@@ -301,21 +346,23 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
             handleChange('description', e.target.value);
           }}
           placeholder="Enter a detailed description..."
-          className="min-h-[100px]"
+          rows={2}
+          className="rounded-lg"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Notes (Optional)</label>
+      <div className="col-span-2 space-y-2">
+        <label className="text-sm font-medium text-gray-700">Notes (Optional)</label>
         <Textarea
           value={editedTransaction.notes || ''}
           onChange={(e) => handleChange('notes', e.target.value)}
           placeholder="Additional notes..."
-          className="min-h-[80px]"
+          rows={2}
+          className="rounded-lg"
         />
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4">
+      <div className="col-span-2 flex justify-end pt-4">
         <Button type="submit" className="flex items-center gap-1">
           <Check className="h-4 w-4" />
           {transaction ? 'Update Transaction' : 'Create Transaction'}
