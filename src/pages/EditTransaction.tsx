@@ -57,11 +57,8 @@ const EditTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full py-4 sm:py-[var(--page-padding-y)] space-y-4 sm:space-y-6 px-[var(--page-padding-x)] sm:px-[var(--page-padding-x)]"
+        className="w-full px-[var(--page-padding-x)] space-y-4"
       >
-        <h1 className="text-xl sm:text-2xl font-bold">
-          {isNewTransaction ? 'Add Transaction' : 'Edit Transaction'}
-        </h1>
 
         {isSuggested && (
           <Alert>

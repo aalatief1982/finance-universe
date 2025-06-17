@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { useTransactions } from '@/context/TransactionContext';
 import TransactionEditForm from '@/components/TransactionEditForm';
@@ -35,10 +34,8 @@ const AddTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full py-[var(--page-padding-y)] space-y-4 sm:space-y-6 px-[var(--page-padding-x)]"
+        className="w-full px-[var(--page-padding-x)]"
       >
-
-        <h1 className="text-xl sm:text-2xl font-bold">Add Transaction</h1>
 
         <Card className="w-full">
           <CardHeader className="pb-2">
