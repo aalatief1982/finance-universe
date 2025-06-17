@@ -170,9 +170,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-4 rounded-md shadow-sm space-y-2 mb-24"
+
+      className="bg-white p-4 rounded-md shadow-sm grid grid-cols-1 md:grid-cols-2 gap-3 mb-28"
+
     >
-      <div className="space-y-2">
+      <div className="space-y-2 md:col-span-2">
         <label className="text-sm font-medium text-gray-700">Transaction Type*</label>
         <Select
           value={editedTransaction.type}
@@ -324,7 +326,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       </div>
 
       {availableSubcategories.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2 md:col-span-2">
           <label className="text-sm font-medium text-gray-700">Subcategory</label>
           <Select
             value={editedTransaction.subcategory || 'none'}
@@ -348,7 +350,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2 md:col-span-2">
         <label className="text-sm font-medium text-gray-700">Description (Optional)</label>
         <Textarea
           value={editedTransaction.description || ''}
@@ -362,7 +364,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 md:col-span-2">
         <label className="text-sm font-medium text-gray-700">Notes (Optional)</label>
         <Textarea
           value={editedTransaction.notes || ''}
@@ -373,7 +375,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <div className="flex justify-end pt-4">
+      <div className="flex justify-end pt-4 md:col-span-2">
         <Button type="submit" className="flex items-center gap-1">
           <Check className="h-4 w-4" />
           {transaction ? 'Update Transaction' : 'Create Transaction'}

@@ -38,9 +38,7 @@ const AddTransaction = () => {
       >
 
         <Card className="w-full">
-          <CardHeader className="pb-2">
-            {/* <CardTitle>Create a new transaction</CardTitle> */}
-          </CardHeader>
+          <CardHeader className="pb-2" />
           <CardContent className="pt-0">
             <TransactionEditForm onSave={handleSave} />
           </CardContent>
