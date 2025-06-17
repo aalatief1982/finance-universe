@@ -3,6 +3,7 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { getCategoriesForType, getSubcategoriesForCategory, PEOPLE, CURRENCIES } from '@/lib/categories-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Check } from 'lucide-react';
@@ -159,6 +160,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
     onSave(finalTransaction);
   };
 
+  const amountDigits =
+    editedTransaction.amount !== undefined && editedTransaction.amount !== null
+      ? editedTransaction.amount.toString().split('.')[0].replace('-', '').length
+      : 0;
+  const amountFontClass =
+    amountDigits > 5 ? 'text-lg md:text-xl' : 'text-xl md:text-2xl';
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -231,7 +239,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
           placeholder="0.00"
           required
-          className="h-11 rounded-lg border-gray-300"
+          className={cn(
+            'h-11 rounded-lg border-gray-300 pl-4 text-center truncate',
+            amountFontClass
+          )}
         />
       </div>
 
