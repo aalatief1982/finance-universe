@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Check } from 'lucide-react';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -170,18 +169,17 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   return (
     <form
       onSubmit={handleSubmit}
-
-      className="bg-white p-4 rounded-md shadow-sm grid grid-cols-1 md:grid-cols-2 gap-3 mb-28"
-
+      className="bg-white p-4 rounded-md shadow-sm space-y-2 mb-28"
     >
-      <div className="space-y-2 md:col-span-2">
-        <label className="text-sm font-medium text-gray-700">Transaction Type*</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Transaction Type*</label>
         <Select
           value={editedTransaction.type}
           onValueChange={(value) => handleChange('type', value as TransactionType)}
         >
           <SelectTrigger
-            className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+            className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
             style={getDrivenFieldStyle('type', drivenFields)}
           >
             <SelectValue placeholder="Select type" />
@@ -194,8 +192,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Title*</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Title*</label>
         <Input
           value={editedTransaction.title || ''}
           onChange={(e) => {
@@ -205,18 +203,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           style={getDrivenFieldStyle('title', drivenFields)}
           placeholder="Transaction title"
           required
-          className="h-11 rounded-lg border-gray-300"
+          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Currency*</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Currency*</label>
         <Select
           value={editedTransaction.currency || 'SAR'}
           onValueChange={(value) => handleChange('currency', value)}
         >
           <SelectTrigger
-            className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+            className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
             style={getDrivenFieldStyle('currency', drivenFields)}
           >
             <SelectValue placeholder="Select currency" />
@@ -231,8 +229,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Amount*</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Amount*</label>
         <Input
           type="number"
           step="0.01"
@@ -242,43 +240,32 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           placeholder="0.00"
           required
           className={cn(
-            'h-11 rounded-lg border-gray-300 pl-4 text-center truncate',
+            'w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary text-center truncate',
             amountFontClass
           )}
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">From Account*</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">From Account*</label>
         <Input
           value={editedTransaction.fromAccount || ''}
           onChange={(e) => handleChange('fromAccount', e.target.value)}
           style={getDrivenFieldStyle('fromAccount', drivenFields)}
           placeholder="Source account"
           required
-          className="h-11 rounded-lg border-gray-300"
+          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Vendor</label>
-        <Input
-          value={editedTransaction.vendor || ''}
-          style={getDrivenFieldStyle('vendor', drivenFields)}
-          onChange={(e) => handleChange('vendor', e.target.value)}
-          placeholder="e.g., Netflix"
-          className="h-11 rounded-lg border-gray-300"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Category*</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Category*</label>
         <Select
           value={editedTransaction.category || ''}
           onValueChange={(value) => handleChange('category', value)}
         >
           <SelectTrigger
-            className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+            className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
             style={getDrivenFieldStyle('category', drivenFields)}
           >
             <SelectValue placeholder="Select category" />
@@ -293,47 +280,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Date*</label>
-        <Input
-          type="date"
-          value={editedTransaction.date || ''}
-          onChange={(e) => handleChange('date', e.target.value)}
-          style={getDrivenFieldStyle('date', drivenFields)}
-          required
-          className="h-11 rounded-lg border-gray-300"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Person (Optional)</label>
-        <Select
-          value={editedTransaction.person || 'none'}
-          onValueChange={(value) => handleChange('person', value)}
-        >
-          <SelectTrigger className="h-11 rounded-lg border-gray-300 focus:ring-primary">
-            <SelectValue placeholder="Select person" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            {PEOPLE.map((person) => (
-              <SelectItem key={person} value={person}>
-                {person}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {availableSubcategories.length > 0 && (
-        <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-medium text-gray-700">Subcategory</label>
+        <div className="flex items-center gap-2">
+          <label className="w-32 text-sm font-semibold text-gray-700">Subcategory</label>
           <Select
             value={editedTransaction.subcategory || 'none'}
             onValueChange={(value) => handleChange('subcategory', value)}
           >
             <SelectTrigger
-              className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+              className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
               style={getDrivenFieldStyle('subcategory', drivenFields)}
             >
               <SelectValue placeholder="Select subcategory" />
@@ -350,8 +305,51 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </div>
       )}
 
-      <div className="space-y-2 md:col-span-2">
-        <label className="text-sm font-medium text-gray-700">Description (Optional)</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Person (Optional)</label>
+        <Select
+          value={editedTransaction.person || 'none'}
+          onValueChange={(value) => handleChange('person', value)}
+        >
+          <SelectTrigger className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary">
+            <SelectValue placeholder="Select person" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {PEOPLE.map((person) => (
+              <SelectItem key={person} value={person}>
+                {person}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Vendor</label>
+        <Input
+          value={editedTransaction.vendor || ''}
+          style={getDrivenFieldStyle('vendor', drivenFields)}
+          onChange={(e) => handleChange('vendor', e.target.value)}
+          placeholder="e.g., Netflix"
+          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Date*</label>
+        <Input
+          type="date"
+          value={editedTransaction.date || ''}
+          onChange={(e) => handleChange('date', e.target.value)}
+          style={getDrivenFieldStyle('date', drivenFields)}
+          required
+          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Description (Optional)</label>
         <Textarea
           value={editedTransaction.description || ''}
           onChange={(e) => {
@@ -360,24 +358,23 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           }}
           placeholder="Enter a detailed description..."
           rows={2}
-          className="rounded-lg"
+          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
         />
       </div>
 
-      <div className="space-y-2 md:col-span-2">
-        <label className="text-sm font-medium text-gray-700">Notes (Optional)</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Notes (Optional)</label>
         <Textarea
           value={editedTransaction.notes || ''}
           onChange={(e) => handleChange('notes', e.target.value)}
           placeholder="Additional notes..."
           rows={2}
-          className="rounded-lg"
+          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
         />
       </div>
 
-      <div className="flex justify-end pt-4 md:col-span-2">
-        <Button type="submit" className="flex items-center gap-1">
-          <Check className="h-4 w-4" />
+      <div className="pt-2">
+        <Button type="submit" className="bg-primary text-white w-full py-3 rounded-md">
           {transaction ? 'Update Transaction' : 'Create Transaction'}
         </Button>
       </div>
