@@ -39,11 +39,44 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const BarTooltip = (total: number) => ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const { name, value } = payload[0].payload;
+    const percent = total ? ((value / total) * 100).toFixed(1) : null;
+    return (
+      <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
+        <p className="font-medium">{name}</p>
+        <p className="text-primary">
+          {formatCurrency(Math.abs(value))}
+          {percent ? ` • ${percent}%` : ''}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const YAxisTick = ({ x, y, payload }: any) => {
+  const text = String(payload.value);
+  const truncated = text.length > 10 ? `${text.slice(0, 10)}…` : text;
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <title>{text}</title>
+      <text x={-4} y={0} dy={4} textAnchor="end" className="text-xs fill-foreground">
+        {truncated}
+      </text>
+    </g>
+  );
+};
+
 const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: ExpenseChartProps) => {
   const [activeTab, setActiveTab] = useState('category');
 
   const limitedCategoryData = expensesByCategory.slice(0, 5);
   const totalExpense = limitedCategoryData.reduce((sum, c) => sum + c.value, 0);
+
+  const totalSubcategory = expensesBySubcategory.reduce((sum, c) => sum + c.value, 0);
+
 
   // Safe check for empty data
   const hasExpensesByCategory = Array.isArray(limitedCategoryData) && limitedCategoryData.length > 0;
@@ -86,7 +119,8 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
             <TabsContent value="category" className="pt-2">
               {hasExpensesByCategory ? (
                 limitedCategoryData.length > 1 ? (
-                  <div className="h-[300px] w-full">
+                  <div className="h-[300px] w-full" role="img" aria-label="Expenses by category donut chart">
+
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart margin={CHART_MARGIN}>
                         <Pie
@@ -120,27 +154,28 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-12">Not enough data for breakdown</p>
+                  <p className="text-center text-muted-foreground py-12">Not enough data to show a meaningful breakdown</p>
+
                 )
               ) : (
-                <p className="text-center text-muted-foreground py-12">No category data available</p>
+                <p className="text-center text-muted-foreground py-12">No data available yet. Try adding a few transactions first.</p>
               )}
             </TabsContent>
             
             <TabsContent value="subcategory" className="pt-2">
               {hasExpensesBySubcategory ? (
-                <div className="h-[300px] w-full">
+                <div className="h-[300px] w-full" role="img" aria-label="Expenses by subcategory bar chart">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={expensesBySubcategory} layout="vertical" margin={CHART_MARGIN}>
                       <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
-                      <YAxis type="category" dataKey="name" width={100} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 4, 4]} />
+                      <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
+                      <Tooltip content={BarTooltip(totalSubcategory)} />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 4, 4]} isAnimationActive />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-12">No subcategory data available</p>
+                <p className="text-center text-muted-foreground py-12">No data available yet. Try adding a few transactions first.</p>
               )}
             </TabsContent>
           </Tabs>

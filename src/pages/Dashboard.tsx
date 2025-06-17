@@ -6,7 +6,9 @@ import ExpenseChart from '@/components/ExpenseChart';
 import { useTransactions } from '@/context/TransactionContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowRight, ShoppingCart, Home, Car, Utensils, CircleDollarSign } from 'lucide-react';
+import { format } from 'date-fns';
+
 import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
 import AvatarGreeting from '@/components/dashboard/AvatarGreeting';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -113,6 +115,34 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, number>);
 
+  const iconMap: Record<string, JSX.Element> = {
+    Food: <Utensils className="w-4 h-4" />,
+    Housing: <Home className="w-4 h-4" />,
+    Transport: <Car className="w-4 h-4" />,
+    Shopping: <ShoppingCart className="w-4 h-4" />,
+    Income: <CircleDollarSign className="w-4 h-4" />,
+  };
+
+  const formatTitle = (title: string) => {
+    const parts = title.split('|');
+    if (parts.length >= 4) {
+      const [cat, sub, amt] = parts;
+      const amountNum = parseFloat(amt);
+      if (!isNaN(amountNum)) {
+        return `${sub.trim()} (${cat.trim()}) - $${amountNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+    }
+    return title;
+  };
+
+  const formatTxnDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), 'MMM dd, yyyy');
+    } catch {
+      return dateStr;
+    }
+  };
+
   const expensesBySubcategory = AnalyticsService.getSubcategoryData(filteredTransactions).slice(0, 10);
 
   const expensesByCategory = Object.entries(categoryData)
@@ -176,7 +206,7 @@ const Dashboard = () => {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
-            <div className="bg-card p-2 rounded-lg shadow">
+            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
               <h2 className="text-lg font-semibold mb-2">Expense Breakdown</h2>
               <ExpenseChart
                 expensesByCategory={expensesByCategory}
@@ -184,43 +214,48 @@ const Dashboard = () => {
               />
             </div>
 
-            <div className="bg-card p-2 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold">Recent Transactions</h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/transactions')}
-                >
-                  View All
-                </Button>
-              </div>
+            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow flex flex-col justify-between">
+              <h2 className="text-lg font-semibold mb-2">Recent Transactions</h2>
 
               {filteredTransactions.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1">
                   {filteredTransactions.slice(0, 5).map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex justify-between items-center p-2 bg-secondary/50 rounded-md"
+                      className="flex justify-between items-center bg-secondary/50 rounded-md p-[var(--card-padding)] hover:shadow-lg transition cursor-pointer"
+                      onClick={() => navigate(`/edit-transaction/${transaction.id}`)}
+                      aria-label="Edit transaction"
                     >
-                      <div>
-                        <p className="font-medium">{transaction.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {transaction.category} • {transaction.date}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        {iconMap[transaction.category] || <ShoppingCart className="w-4 h-4" />}
+                        <div>
+                          <p className="font-medium">{formatTitle(transaction.title)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {transaction.category} • {formatTxnDate(transaction.date)}
+                          </p>
+                        </div>
                       </div>
-                      <p className={transaction.amount < 0 ? "text-destructive" : "text-[hsl(var(--income))]"}>
-                        {transaction.amount < 0 ? "-" : "+"}${Math.abs(transaction.amount).toFixed(2)}
+                      <p className={transaction.amount < 0 ? "text-destructive font-medium" : "text-green-600 font-medium"}>
+                        {transaction.amount < 0 ? '−' : '+'}{Math.abs(transaction.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground mb-3">No transactions yet</p>
-                  <Button onClick={handleAddSampleTransaction}>Add Sample Transactions</Button>
-                </div>
+                <p className="text-center text-muted-foreground py-6">No transactions found for this period.</p>
               )}
+
+              <div className="flex justify-end mt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/transactions')}
+                  aria-label="View full transaction history"
+                  className="group"
+                >
+                  View All <ArrowRight className="w-3 h-3 ml-1 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
