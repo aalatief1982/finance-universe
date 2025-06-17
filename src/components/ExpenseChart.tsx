@@ -23,7 +23,7 @@ interface ExpenseChartProps {
   expensesBySubcategory: ExpenseBySubcategory[];
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A259FF', '#4BC0C0', '#F87171', '#FB7185'];
+const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
