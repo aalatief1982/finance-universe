@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/context/UserContext';
 import { AuthHeader } from './AuthHeader';
@@ -9,15 +9,18 @@ import { MainNavigation } from './MainNavigation';
 import { UserMenu } from './UserMenu';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
-import { Settings } from 'lucide-react';
+import { Settings, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   className?: string;
   showNavigation?: boolean;
+  showBack?: boolean;
 }
 
-const Header = ({ className, showNavigation = true }: HeaderProps) => {
+const Header = ({ className, showNavigation = true, showBack = false }: HeaderProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { auth } = useUser();
   
   const currentPageTitle = routeTitleMap[location.pathname] || 'Xpensia';
@@ -39,6 +42,16 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
+            {showBack && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="mr-2"
+              >
+                <ArrowLeft size={20} />
+              </Button>
+            )}
             <LogoLink isLandingPage={isLandingPage} currentPageTitle={currentPageTitle} />
             {shouldShowNavigation && <MainNavigation />}
           </div>
