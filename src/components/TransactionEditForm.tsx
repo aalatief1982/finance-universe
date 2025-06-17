@@ -174,7 +174,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
     >
 
       <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Transaction Type*</label>
+        <label className="w-32 text-sm font-semibold text-gray-700">Type*</label>
 
         <Select
           value={editedTransaction.type}

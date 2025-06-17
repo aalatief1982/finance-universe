@@ -171,13 +171,13 @@ const Dashboard = () => {
     .map(([name, value]) => ({ name, value }));
 
   return (
-    <Layout>
-      <div className="px-[var(--page-padding-x)]">
+    <Layout withPadding={false} fullWidth>
+      <div className="px-1">
         <PageHeader
           title={<AvatarGreeting user={user} tip={tip} />}
         />
 
-        <div className="my-4">
+        <div className="my-2">
           <ToggleGroup
             type="single"
             value={range}

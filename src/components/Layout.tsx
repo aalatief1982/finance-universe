@@ -32,7 +32,8 @@ const Layout = ({
     <div
       className={cn(
         "min-h-screen flex flex-col",
-        "pt-[var(--safe-area-top)]", // Safe area for status bar
+        // Only apply safe area padding when no header is shown
+        !showHeader && "pt-[var(--safe-area-top)]",
         className
       )}
     >
