@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -72,8 +73,9 @@ const VendorCategorization: React.FC = () => {
   };
 
   return (
-    <div className="p-[var(--card-padding)]">
-      <h1 className="text-2xl font-bold mb-4">Vendor Categorization</h1>
+    <Layout>
+      <div className="p-[var(--card-padding)]">
+        <h1 className="text-2xl font-bold mb-4">Vendor Categorization</h1>
 
       <div className="space-y-4">
         {vendors.map((vendor, index) => (
@@ -116,7 +118,8 @@ const VendorCategorization: React.FC = () => {
           Save Categorization
         </Button>
       )}
-    </div>
+      </div>
+    </Layout>
   );
 };
 

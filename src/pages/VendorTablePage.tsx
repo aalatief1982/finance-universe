@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,8 +44,9 @@ const VendorTablePage: React.FC = () => {
   };
 
   return (
-    <div className="p-[var(--card-padding)]">
-      <h1 className="text-2xl font-bold mb-6">Review Vendors</h1>
+    <Layout>
+      <div className="p-[var(--card-padding)]">
+        <h1 className="text-2xl font-bold mb-6">Review Vendors</h1>
 
       {vendors.map((vendorEntry, index) => (
         <Card key={index} className="p-[var(--card-padding)] mb-4 flex flex-col gap-2">
@@ -94,7 +96,8 @@ const VendorTablePage: React.FC = () => {
           Save Mappings
         </Button>
       )}
-    </div>
+      </div>
+    </Layout>
   );
 };
 

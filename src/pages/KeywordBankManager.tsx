@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Layout from '@/components/Layout';
 import {
   KeywordMapping,
   loadKeywordBank,
@@ -75,10 +76,11 @@ const KeywordBankManager = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-6 space-y-6 px-[var(--page-padding-x)]">
-      <Card>
-        <CardHeader>
-          <CardTitle>Keyword Bank Manager</CardTitle>
+    <Layout>
+      <div className="max-w-2xl mx-auto mt-6 space-y-6 px-[var(--page-padding-x)]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Keyword Bank Manager</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">
@@ -182,7 +184,8 @@ const KeywordBankManager = () => {
           </Card>
         ))}
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 };
 
