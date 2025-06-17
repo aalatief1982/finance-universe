@@ -15,16 +15,16 @@ export const AvatarGreeting: React.FC<AvatarGreetingProps> = ({ user, tip }) => 
   const initials = firstName.charAt(0).toUpperCase();
 
   return (
-    <div className="flex items-center gap-3" aria-label="User greeting">
-      <Avatar>
+    <span className="inline-flex items-center gap-2 align-middle" aria-label="User greeting">
+      <Avatar className="h-8 w-8">
         {avatar && <AvatarImage src={avatar} alt={firstName} />}
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
-      <div>
-        <h1 className="text-xl font-bold tracking-tight">{`${greeting}, ${firstName}`}</h1>
-        {tip && <p className="text-xs text-muted-foreground">{tip}</p>}
-      </div>
-    </div>
+      <span className="flex flex-col leading-tight">
+        <span>{`${greeting}, ${firstName}`}</span>
+        {tip && <span className="text-xs text-muted-foreground">{tip}</span>}
+      </span>
+    </span>
   );
 };
 
