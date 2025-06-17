@@ -208,7 +208,7 @@ const Dashboard = () => {
           )}
         </div>
 
-        <div className="space-y-[var(--section-gap)]">
+        <div className="space-y-[calc(var(--section-gap)/2)]">
           <DashboardStats
             income={summary.income}
             expenses={summary.expenses}
@@ -217,7 +217,6 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
             <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
-              <h2 className="text-lg font-semibold mb-2">Expense Breakdown</h2>
               <ExpenseChart
                 expensesByCategory={expensesByCategory}
                 expensesBySubcategory={expensesBySubcategory}
