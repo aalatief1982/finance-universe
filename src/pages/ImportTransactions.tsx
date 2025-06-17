@@ -87,7 +87,7 @@ const ImportTransactions = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="pt-[calc(var(--safe-area-top)+56px)] px-4"
+        className="pt-[calc(var(--safe-area-top)+56px)] px-[var(--page-padding-x)]"
       >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

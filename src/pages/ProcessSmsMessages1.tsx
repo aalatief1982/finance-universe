@@ -228,7 +228,7 @@ const ProcessSmsMessages = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-[var(--page-padding-y)]">
         <Card>
           <CardHeader>
             <CardTitle>Process SMS Messages</CardTitle>

@@ -75,7 +75,7 @@ const KeywordBankManager = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-6 space-y-6 px-4">
+    <div className="max-w-2xl mx-auto mt-6 space-y-6 px-[var(--page-padding-x)]">
       <Card>
         <CardHeader>
           <CardTitle>Keyword Bank Manager</CardTitle>

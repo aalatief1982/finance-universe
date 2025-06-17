@@ -71,7 +71,7 @@ const MasterMind: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                      <td colSpan={6} className="px-3 py-[var(--page-padding-y)] text-center text-muted-foreground">
                         No token mappings yet. Use the Learning Tester to train tokens.
                       </td>
                     </tr>

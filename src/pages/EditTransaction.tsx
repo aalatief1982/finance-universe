@@ -59,7 +59,7 @@ const EditTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full py-4 sm:py-6 space-y-4 sm:space-y-6 px-4 sm:px-6"
+        className="w-full py-4 sm:py-[var(--page-padding-y)] space-y-4 sm:space-y-6 px-[var(--page-padding-x)] sm:px-[var(--page-padding-x)]"
       >
         <div className="flex items-center space-x-4">
           <Button variant="outline" size="icon" onClick={() => navigate(-1)}>

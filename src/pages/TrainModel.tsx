@@ -414,7 +414,7 @@ const TrainModel = () => {
 
   return (
     <Layout>
-      <div className="container max-w-5xl py-6">
+      <div className="container max-w-5xl py-[var(--page-padding-y)]">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Train Model</h1>
           <div className="flex space-x-2">
