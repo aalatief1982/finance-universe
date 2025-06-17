@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './header/Header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import BottomNav from './BottomNav';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,6 +59,7 @@ const Layout = ({
           </div>
         </main>
       </div>
+      {!hideNavigation && isMobile && <BottomNav />}
     </div>
   );
 };
