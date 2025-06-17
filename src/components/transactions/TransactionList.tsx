@@ -434,7 +434,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       
       {/* Desktop pagination */}
       {showPagination && totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-2 border-t">
+        <div className="flex items-center justify-between p-[var(--card-padding)] border-t">
           <div className="text-sm text-muted-foreground">
             Showing page {currentPage} of {totalPages}
           </div>
