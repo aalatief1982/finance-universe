@@ -14,6 +14,7 @@ interface LayoutProps {
   withPadding?: boolean;
   showHeader?: boolean;
   fullWidth?: boolean;
+  showBack?: boolean;
 }
 
 const Layout = ({
@@ -23,6 +24,7 @@ const Layout = ({
   withPadding = true,
   showHeader = true,
   fullWidth = false,
+  showBack = false,
 }: LayoutProps) => {
   const isMobile = useIsMobile();
   
@@ -34,7 +36,7 @@ const Layout = ({
         className
       )}
     >
-      {showHeader && <Header showNavigation={!hideNavigation} />}
+      {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} />}
 
       <div className="flex flex-1 mt-[var(--header-height)]">
         {!hideNavigation && !isMobile && <Sidebar />}

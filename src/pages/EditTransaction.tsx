@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -54,21 +52,16 @@ const EditTransaction = () => {
   };
 
   return (
-    <Layout>
+    <Layout showBack>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="w-full py-4 sm:py-[var(--page-padding-y)] space-y-4 sm:space-y-6 px-[var(--page-padding-x)] sm:px-[var(--page-padding-x)]"
       >
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">
-            {isNewTransaction ? 'Add Transaction' : 'Edit Transaction'}
-          </h1>
-        </div>
+        <h1 className="text-xl sm:text-2xl font-bold">
+          {isNewTransaction ? 'Add Transaction' : 'Edit Transaction'}
+        </h1>
 
         {isSuggested && (
           <Alert>

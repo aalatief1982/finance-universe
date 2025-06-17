@@ -2,8 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -32,19 +30,15 @@ const AddTransaction = () => {
   };
 
   return (
-    <Layout>
+    <Layout showBack>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="w-full py-[var(--page-padding-y)] space-y-4 sm:space-y-6 px-[var(--page-padding-x)]"
       >
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Add Transaction</h1>
-        </div>
+
+        <h1 className="text-xl sm:text-2xl font-bold">Add Transaction</h1>
 
         <Card className="w-full">
           <CardHeader className="pb-2">
