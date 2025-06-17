@@ -84,7 +84,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
   // If not in a native environment, show a web fallback message
   if (!smsPermissionService.isNativeEnvironment()) {
     return (
-      <div className={`bg-yellow-50 border border-yellow-100 rounded-lg p-4 ${className}`}>
+      <div className={`bg-yellow-50 border border-yellow-100 rounded-lg p-[var(--card-padding)] ${className}`}>
         <div className="flex items-start gap-3">
           <AlertTriangle className="text-yellow-500 flex-shrink-0" size={20} />
           <div>
@@ -100,7 +100,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
 
   if (permissionGranted) {
     return (
-      <div className={`bg-green-50 border border-green-100 rounded-lg p-4 ${className}`}>
+      <div className={`bg-green-50 border border-green-100 rounded-lg p-[var(--card-padding)] ${className}`}>
         <div className="flex items-start gap-3">
           <Check className="text-green-600 flex-shrink-0" size={20} />
           <div>
@@ -115,7 +115,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
   }
 
   return (
-    <div className={`border rounded-lg p-4 ${className}`}>
+    <div className={`border rounded-lg p-[var(--card-padding)] ${className}`}>
       <div className="flex flex-col items-center text-center">
         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
           <MessageSquare className="h-6 w-6 text-primary" />

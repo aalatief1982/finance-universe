@@ -167,7 +167,7 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
       </div>
 
       {transactions.map((txn, index) => (
-        <Card key={index} className="p-4 mb-4">
+        <Card key={index} className="p-[var(--card-padding)] mb-4">
           <p className="mb-2 text-sm text-gray-500">{txn.rawMessage}</p>
           <div className="grid grid-cols-2 gap-2">
             <input value={txn.vendor} onChange={e => handleFieldChange(index, 'vendor', e.target.value)} className="border rounded p-2" />

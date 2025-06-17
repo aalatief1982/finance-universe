@@ -114,7 +114,7 @@ const VendorMapping: React.FC = () => {
 
       <div className="space-y-4">
         {vendors.map((vendor, index) => (
-          <Card key={vendor.vendor} className="p-4">
+          <Card key={vendor.vendor} className="p-[var(--card-padding)]">
             <div className="mb-2">
               <label className="block mb-1 font-semibold">Vendor:</label>
               <input

@@ -134,7 +134,7 @@ const SmsProviderSelection = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3"
+            className="bg-green-50 border border-green-200 rounded-lg p-[var(--card-padding)] flex items-start gap-3"
           >
             <Check className="text-green-500 mt-0.5" size={18} />
             <div>
@@ -159,7 +159,7 @@ const SmsProviderSelection = () => {
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="p-4 border rounded-lg animate-pulse">
+              <div key={index} className="p-[var(--card-padding)] border rounded-lg animate-pulse">
                 <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
                 <div className="h-4 bg-gray-100 rounded w-full"></div>
               </div>
@@ -174,7 +174,7 @@ const SmsProviderSelection = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className={`p-4 border rounded-lg flex items-center justify-between cursor-pointer ${
+                  className={`p-[var(--card-padding)] border rounded-lg flex items-center justify-between cursor-pointer ${
                     provider.isSelected 
                       ? 'bg-primary/5 border-primary' 
                       : 'hover:bg-secondary'

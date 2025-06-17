@@ -72,12 +72,12 @@ const VendorCategorization: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-[var(--card-padding)]">
       <h1 className="text-2xl font-bold mb-4">Vendor Categorization</h1>
 
       <div className="space-y-4">
         {vendors.map((vendor, index) => (
-          <Card key={index} className="p-4">
+          <Card key={index} className="p-[var(--card-padding)]">
             <p className="font-semibold mb-2">{vendor.vendor}</p>
 
             <div className="flex gap-4 mb-2">

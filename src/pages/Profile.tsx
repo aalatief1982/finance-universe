@@ -333,7 +333,7 @@ const Profile = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.5 }}
-            className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-center space-y-3"
+            className="bg-primary/5 border border-primary/20 rounded-lg p-[var(--card-padding)] text-center space-y-3"
           >
             <h3 className="font-semibold">Complete Your Setup</h3>
             <p className="text-sm text-muted-foreground">

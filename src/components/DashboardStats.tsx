@@ -32,7 +32,7 @@ const DashboardStats = ({
         transition={{ duration: 0.3, delay: 0.1 }}
       >
         <Card className="overflow-hidden border border-border">
-          <CardContent className="p-6">
+          <CardContent className="p-[var(--card-padding)]">
             <div className="flex justify-between items-start">
               <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
               <ArrowUpCircle className="text-green-600" size={20} />
@@ -48,7 +48,7 @@ const DashboardStats = ({
         transition={{ duration: 0.3, delay: 0.2 }}
       >
         <Card className="overflow-hidden border border-border">
-          <CardContent className="p-6">
+          <CardContent className="p-[var(--card-padding)]">
             <div className="flex justify-between items-start">
               <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
               <ArrowDownCircle className="text-red-600" size={20} />
@@ -64,7 +64,7 @@ const DashboardStats = ({
         transition={{ duration: 0.3, delay: 0.3 }}
       >
         <Card className="overflow-hidden border border-border">
-          <CardContent className="p-6">
+          <CardContent className="p-[var(--card-padding)]">
             <div className="flex justify-between items-start">
               <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance</p>
               <div className={`${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}> 

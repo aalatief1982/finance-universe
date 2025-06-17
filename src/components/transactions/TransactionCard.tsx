@@ -77,8 +77,8 @@
 			  transition={{ duration: 0.2 }}
 			  className={className}
 			>
-			  <Card className="overflow-hidden border hover:shadow-md transition-all duration-200">
-				<CardContent className="p-4">
+                          <Card className="overflow-hidden border hover:shadow-md transition-all duration-200">
+                                <CardContent className="p-[var(--card-padding)]">
 				  <div className="flex items-center justify-between">
 					<div className="flex items-center space-x-3">
 					  <div className={cn(
