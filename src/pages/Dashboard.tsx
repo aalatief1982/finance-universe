@@ -5,7 +5,26 @@ import DashboardStats from '@/components/DashboardStats';
 import ExpenseChart from '@/components/ExpenseChart';
 import { useTransactions } from '@/context/TransactionContext';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ShoppingCart, Home, Car, Utensils, CircleDollarSign } from 'lucide-react';
+import {
+  ChevronRight,
+  ShoppingBag,
+  Home,
+  Car,
+  Utensils,
+  CircleDollarSign,
+  Receipt,
+  GraduationCap,
+  Gamepad2,
+  Lightbulb,
+  Package,
+  Gift,
+  Baby,
+  Bath,
+  ConciergeBell,
+  ArrowLeftRight,
+  Plane,
+  HeartPulse,
+} from 'lucide-react';
 import { format } from 'date-fns';
 
 import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
@@ -114,11 +133,23 @@ const Dashboard = () => {
     }, {} as Record<string, number>);
 
   const iconMap: Record<string, JSX.Element> = {
-    Food: <Utensils className="w-4 h-4" />,
-    Housing: <Home className="w-4 h-4" />,
-    Transport: <Car className="w-4 h-4" />,
-    Shopping: <ShoppingCart className="w-4 h-4" />,
-    Income: <CircleDollarSign className="w-4 h-4" />,
+    Bills: <Receipt className="w-5 h-5" />,
+    Education: <GraduationCap className="w-5 h-5" />,
+    Entertainment: <Gamepad2 className="w-5 h-5" />,
+    Food: <Utensils className="w-5 h-5" />,
+    'Gifts & Donations': <Gift className="w-5 h-5" />,
+    Health: <HeartPulse className="w-5 h-5" />,
+    Housing: <Home className="w-5 h-5" />,
+    Kids: <Baby className="w-5 h-5" />,
+    'Personal Care': <Bath className="w-5 h-5" />,
+    Services: <ConciergeBell className="w-5 h-5" />,
+    Shopping: <ShoppingBag className="w-5 h-5" />,
+    Transfer: <ArrowLeftRight className="w-5 h-5" />,
+    Transportation: <Car className="w-5 h-5" />,
+    Travel: <Plane className="w-5 h-5" />,
+    Utilities: <Lightbulb className="w-5 h-5" />,
+    Income: <CircleDollarSign className="w-5 h-5" />,
+    Other: <Package className="w-5 h-5" />,
   };
 
   const formatDisplayTitle = (txn: Transaction) => {
@@ -206,7 +237,7 @@ const Dashboard = () => {
                       className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-between gap-3"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {iconMap[transaction.category] || <ShoppingCart className="w-4 h-4" />}
+                        {iconMap[transaction.category] || iconMap['Other']}
                         <span className="font-medium line-clamp-1">{formatDisplayTitle(transaction)}</span>
                       </div>
                       <div className="text-xs text-muted-foreground flex-1 text-center whitespace-nowrap">
