@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import Layout from "@/components/Layout";
 import { FileQuestion } from "lucide-react";
 
 const NotFound = () => {
@@ -17,12 +18,13 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-[var(--page-padding-x)]">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center max-w-md"
+    <Layout>
+      <div className="min-h-screen flex items-center justify-center px-[var(--page-padding-x)]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center max-w-md"
       >
         <div className="mx-auto h-24 w-24 rounded-full bg-muted flex items-center justify-center mb-6">
           <FileQuestion className="h-12 w-12 text-muted-foreground" />
@@ -35,7 +37,8 @@ const NotFound = () => {
           <Link to="/">Return to Dashboard</Link>
         </Button>
       </motion.div>
-    </div>
+      </div>
+    </Layout>
   );
 };
 

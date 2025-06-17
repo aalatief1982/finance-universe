@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectItem } from '@/components/ui/select';
@@ -50,8 +51,9 @@ const ProcessVendors: React.FC = () => {
   };
 
   return (
-    <div className="p-[var(--card-padding)]">
-      <h1 className="text-2xl font-bold mb-4">Vendor Categorization</h1>
+    <Layout>
+      <div className="p-[var(--card-padding)]">
+        <h1 className="text-2xl font-bold mb-4">Vendor Categorization</h1>
 
       <div className="space-y-4">
         {vendors.map((vendor, index) => (
@@ -88,7 +90,8 @@ const ProcessVendors: React.FC = () => {
           Save Vendors
         </Button>
       )}
-    </div>
+      </div>
+    </Layout>
   );
 };
 
