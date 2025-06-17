@@ -37,7 +37,7 @@ const AddTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full py-4 sm:py-[var(--page-padding-y)] space-y-4 sm:space-y-6 px-[var(--page-padding-x)]"
+        className="w-full py-[var(--page-padding-y)] space-y-4 sm:space-y-6 px-[var(--page-padding-x)]"
       >
         <div className="flex items-center space-x-4">
           <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
