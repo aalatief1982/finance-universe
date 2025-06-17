@@ -58,7 +58,7 @@ const LearningTester: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full px-4 sm:px-6 md:px-8 max-w-full space-y-6 py-8"
+        className="w-full px-[var(--page-padding-x)] sm:px-[var(--page-padding-x)] md:px-8 max-w-full space-y-6 py-8"
       >
         <PageHeader 
           clearLearningEntriesHandler={clearLearningEntriesHandler} 

@@ -38,8 +38,8 @@
     --radius: 0.5rem;
     
     /* Added spacing variables for layout */
-    --page-padding-x: 0.5rem;
-    --page-padding-y: 0.5rem;
+    --page-padding-x: 0.375rem;
+    --page-padding-y: 0.375rem;
     --content-max-width: 1200px;
     --header-height: 4rem; /* Adjusted header height */
     --safe-area-top: env(safe-area-inset-top, 0px); /* For mobile notches and status bars */
@@ -113,8 +113,8 @@
   }
   
   :root {
-    --page-padding-x: 0.375rem;
-    --page-padding-y: 0.375rem;
+    --page-padding-x: 0.25rem;
+    --page-padding-y: 0.25rem;
     --card-gap: 0.375rem;
     --section-gap: 0.5rem;
     --safe-area-top: env(safe-area-inset-top, 0px); /* For mobile notches */

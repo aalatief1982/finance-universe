@@ -105,7 +105,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="px-4">
+      <div className="px-[var(--page-padding-x)]">
         <PageHeader
           title={user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
           description="Here's an overview of your finances"

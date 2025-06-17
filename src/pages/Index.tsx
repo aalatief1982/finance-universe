@@ -19,7 +19,7 @@ const Index = () => {
 
   return (
     <Layout hideNavigation>
-      <div className="min-h-[90vh] flex items-center justify-center px-4">
+      <div className="min-h-[90vh] flex items-center justify-center px-[var(--page-padding-x)]">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
