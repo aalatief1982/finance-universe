@@ -6,21 +6,30 @@ import ExpenseChart from '@/components/ExpenseChart';
 import { useTransactions } from '@/context/TransactionContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ArrowRight, ShoppingCart, Home, Car, Utensils, CircleDollarSign } from 'lucide-react';
+import { format } from 'date-fns';
+import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
+import AvatarGreeting from '@/components/dashboard/AvatarGreeting';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import PageHeader from '@/components/layout/PageHeader';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
 import { useUser } from '@/context/UserContext';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { AnalyticsService } from '@/services/AnalyticsService';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const Dashboard = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
 
-  type Range = '' | 'day' | 'week' | 'month' | 'year';
+  const tip = 'Remember to log your expenses today';
+
+  type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';
   const [range, setRange] = React.useState<Range>('');
+  const [customStart, setCustomStart] = React.useState<Date | null>(null);
+  const [customEnd, setCustomEnd] = React.useState<Date | null>(null);
 
 
   const handleAddTransaction = () => {
@@ -50,6 +59,7 @@ const Dashboard = () => {
 
     const now = new Date();
     let start = new Date(now);
+    let end = new Date(now);
 
 
     switch (range) {
@@ -66,13 +76,19 @@ const Dashboard = () => {
       case 'year':
         start = new Date(now.getFullYear(), 0, 1);
         break;
+      case 'custom':
+        if (customStart) start = new Date(customStart);
+        if (customEnd) end = new Date(customEnd);
+        break;
     }
+
+    const toDate = range === 'custom' ? end : now;
 
     return transactions.filter(t => {
       const d = new Date(t.date);
-      return d >= start && d <= now;
+      return d >= start && d <= toDate;
     });
-  }, [transactions, range]);
+  }, [transactions, range, customStart, customEnd]);
 
   const summary = filteredTransactions.reduce(
     (acc, transaction) => {
@@ -98,6 +114,34 @@ const Dashboard = () => {
       return acc;
     }, {} as Record<string, number>);
 
+  const iconMap: Record<string, JSX.Element> = {
+    Food: <Utensils className="w-4 h-4" />,
+    Housing: <Home className="w-4 h-4" />,
+    Transport: <Car className="w-4 h-4" />,
+    Shopping: <ShoppingCart className="w-4 h-4" />,
+    Income: <CircleDollarSign className="w-4 h-4" />,
+  };
+
+  const formatTitle = (title: string) => {
+    const parts = title.split('|');
+    if (parts.length >= 4) {
+      const [cat, sub, amt] = parts;
+      const amountNum = parseFloat(amt);
+      if (!isNaN(amountNum)) {
+        return `${sub.trim()} (${cat.trim()}) - $${amountNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+    }
+    return title;
+  };
+
+  const formatTxnDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), 'MMM dd, yyyy');
+    } catch {
+      return dateStr;
+    }
+  };
+
   const expensesBySubcategory = AnalyticsService.getSubcategoryData(filteredTransactions).slice(0, 10);
 
   const expensesByCategory = Object.entries(categoryData)
@@ -107,12 +151,18 @@ const Dashboard = () => {
     <Layout>
       <div className="px-[var(--page-padding-x)]">
         <PageHeader
-          title={user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Dashboard'}
-          description="Here's an overview of your finances"
+          title={<AvatarGreeting user={user} tip={tip} />}
           actions={
-            <Button onClick={handleAddTransaction} className="flex items-center gap-1.5">
-              <Plus className="h-3.5 w-3.5" /> Add Transaction
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleAddTransaction} className="flex items-center gap-1.5 bg-primary text-primary-foreground">
+                    <Plus className="h-3.5 w-3.5" /> Add Transaction
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Log a new expense or income</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           }
         />
 
@@ -123,32 +173,28 @@ const Dashboard = () => {
             onValueChange={(val) => setRange(val as Range)}
             className="w-full bg-muted p-1 text-muted-foreground rounded-md"
           >
+            {['day','week','month','year'].map((r) => (
+              <ToggleGroupItem
+                key={r}
+                value={r}
+                className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              >
+                {r.charAt(0).toUpperCase() + r.slice(1)}
+              </ToggleGroupItem>
+            ))}
             <ToggleGroupItem
-              value="day"
-              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
+              value="custom"
+              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
             >
-              Day
+              Custom
             </ToggleGroupItem>
-            <ToggleGroupItem
-              value="week"
-              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
-            >
-              Week
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="month"
-              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
-            >
-              Month
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="year"
-              className="flex-1 data-[state=on]:bg-[#0097a0] data-[state=on]:text-white"
-            >
-              Year
-            </ToggleGroupItem>
-
           </ToggleGroup>
+          {range === 'custom' && (
+            <div className="mt-2 flex items-center gap-2 animate-in fade-in">
+              <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
+              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
+            </div>
+          )}
         </div>
 
         <div className="space-y-[var(--section-gap)]">
@@ -159,7 +205,7 @@ const Dashboard = () => {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
-            <div className="bg-card p-2 rounded-lg shadow">
+            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
               <h2 className="text-lg font-semibold mb-2">Expense Breakdown</h2>
               <ExpenseChart
                 expensesByCategory={expensesByCategory}
@@ -167,47 +213,53 @@ const Dashboard = () => {
               />
             </div>
 
-            <div className="bg-card p-2 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-semibold">Recent Transactions</h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/transactions')}
-                >
-                  View All
-                </Button>
-              </div>
+            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow flex flex-col justify-between">
+              <h2 className="text-lg font-semibold mb-2">Recent Transactions</h2>
 
               {filteredTransactions.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1">
                   {filteredTransactions.slice(0, 5).map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex justify-between items-center p-2 bg-secondary/50 rounded-md"
+                      className="flex justify-between items-center bg-secondary/50 rounded-md p-[var(--card-padding)] hover:shadow-lg transition cursor-pointer"
+                      onClick={() => navigate(`/edit-transaction/${transaction.id}`)}
+                      aria-label="Edit transaction"
                     >
-                      <div>
-                        <p className="font-medium">{transaction.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {transaction.category} • {transaction.date}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        {iconMap[transaction.category] || <ShoppingCart className="w-4 h-4" />}
+                        <div>
+                          <p className="font-medium">{formatTitle(transaction.title)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {transaction.category} • {formatTxnDate(transaction.date)}
+                          </p>
+                        </div>
                       </div>
-                      <p className={transaction.amount < 0 ? "text-destructive" : "text-[hsl(var(--income))]"}>
-                        {transaction.amount < 0 ? "-" : "+"}${Math.abs(transaction.amount).toFixed(2)}
+                      <p className={transaction.amount < 0 ? "text-destructive font-medium" : "text-green-600 font-medium"}>
+                        {transaction.amount < 0 ? '−' : '+'}{Math.abs(transaction.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground mb-3">No transactions yet</p>
-                  <Button onClick={handleAddSampleTransaction}>Add Sample Transactions</Button>
-                </div>
+                <p className="text-center text-muted-foreground py-6">No transactions found for this period.</p>
               )}
+
+              <div className="flex justify-end mt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/transactions')}
+                  aria-label="View full transaction history"
+                  className="group"
+                >
+                  View All <ArrowRight className="w-3 h-3 ml-1 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <ResponsiveFAB onClick={handleAddTransaction} />
     </Layout>
   );
 };

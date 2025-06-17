@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
-  title: string;
+  title: React.ReactNode;
   showBack?: boolean;
   actions?: React.ReactNode;
   className?: string;
