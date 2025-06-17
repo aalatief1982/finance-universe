@@ -169,12 +169,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-4 rounded-md shadow-sm space-y-3 mb-28"
-    >
-      <h2 className="text-sm font-semibold text-gray-600 mt-4 mb-1">Transaction Info</h2>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Transaction Type*</label>
+      className="bg-white p-4 rounded-md shadow-sm space-y-2 mb-28"
+    >
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Transaction Type*</label>
+
         <Select
           value={editedTransaction.type}
           onValueChange={(value) => handleChange('type', value as TransactionType)}
@@ -193,8 +194,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </Select>
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Title*</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Title*</label>
+
         <Input
           value={editedTransaction.title || ''}
           onChange={(e) => {
@@ -208,8 +211,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Currency*</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Currency*</label>
+
         <Select
           value={editedTransaction.currency || 'SAR'}
           onValueChange={(value) => handleChange('currency', value)}
@@ -230,8 +235,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </Select>
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Amount*</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Amount*</label>
+
         <Input
           type="number"
           step="0.01"
@@ -247,10 +254,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <h2 className="text-sm font-semibold text-gray-600 mt-4 mb-1">Account & Classification</h2>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">From Account*</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">From Account*</label>
+
         <Input
           value={editedTransaction.fromAccount || ''}
           onChange={(e) => handleChange('fromAccount', e.target.value)}
@@ -261,8 +268,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Category*</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Category*</label>
+
         <Select
           value={editedTransaction.category || ''}
           onValueChange={(value) => handleChange('category', value)}
@@ -284,8 +293,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       </div>
 
       {availableSubcategories.length > 0 && (
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-gray-700">Subcategory</label>
+
+        <div className="flex items-center gap-2">
+          <label className="w-32 text-sm font-semibold text-gray-700">Subcategory</label>
+
           <Select
             value={editedTransaction.subcategory || 'none'}
             onValueChange={(value) => handleChange('subcategory', value)}
@@ -308,8 +319,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </div>
       )}
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Person (Optional)</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Person (Optional)</label>
+
         <Select
           value={editedTransaction.person || 'none'}
           onValueChange={(value) => handleChange('person', value)}
@@ -328,10 +341,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </Select>
       </div>
 
-      <h2 className="text-sm font-semibold text-gray-600 mt-4 mb-1">Details</h2>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Vendor</label>
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Vendor</label>
+
         <Input
           value={editedTransaction.vendor || ''}
           style={getDrivenFieldStyle('vendor', drivenFields)}
@@ -341,8 +354,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Date*</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Date*</label>
+
         <Input
           type="date"
           value={editedTransaction.date || ''}
@@ -353,8 +368,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Description (Optional)</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Description (Optional)</label>
+
         <Textarea
           value={editedTransaction.description || ''}
           onChange={(e) => {
@@ -367,8 +384,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">Notes (Optional)</label>
+
+      <div className="flex items-center gap-2">
+        <label className="w-32 text-sm font-semibold text-gray-700">Notes (Optional)</label>
+
         <Textarea
           value={editedTransaction.notes || ''}
           onChange={(e) => handleChange('notes', e.target.value)}
