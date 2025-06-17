@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowRight, ShoppingCart, Home, Car, Utensils, CircleDollarSign } from 'lucide-react';
 import { format } from 'date-fns';
+
 import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
 import AvatarGreeting from '@/components/dashboard/AvatarGreeting';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';

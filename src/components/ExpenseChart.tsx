@@ -74,7 +74,9 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
 
   const limitedCategoryData = expensesByCategory.slice(0, 5);
   const totalExpense = limitedCategoryData.reduce((sum, c) => sum + c.value, 0);
+
   const totalSubcategory = expensesBySubcategory.reduce((sum, c) => sum + c.value, 0);
+
 
   // Safe check for empty data
   const hasExpensesByCategory = Array.isArray(limitedCategoryData) && limitedCategoryData.length > 0;
@@ -118,6 +120,7 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
               {hasExpensesByCategory ? (
                 limitedCategoryData.length > 1 ? (
                   <div className="h-[300px] w-full" role="img" aria-label="Expenses by category donut chart">
+
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart margin={CHART_MARGIN}>
                         <Pie
@@ -152,6 +155,7 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-12">Not enough data to show a meaningful breakdown</p>
+
                 )
               ) : (
                 <p className="text-center text-muted-foreground py-12">No data available yet. Try adding a few transactions first.</p>
