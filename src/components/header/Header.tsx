@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/context/UserContext';
 import { AuthHeader } from './AuthHeader';
@@ -9,6 +9,7 @@ import { MainNavigation } from './MainNavigation';
 import { UserMenu } from './UserMenu';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
+import { Settings } from 'lucide-react';
 
 interface HeaderProps {
   className?: string;
@@ -43,7 +44,19 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
           </div>
           <div className="flex items-center">
             <UserMenu isLandingPage={isLandingPage} />
-            {shouldShowNavigation && <MobileNavigation currentPageTitle={currentPageTitle} />}
+            {shouldShowNavigation && (
+              <>
+                <MobileNavigation currentPageTitle={currentPageTitle} />
+                <Link
+                  to="/settings"
+                  className="ml-2 md:hidden"
+                  title="App Settings"
+                  aria-label="App Settings"
+                >
+                  <Settings size={20} />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

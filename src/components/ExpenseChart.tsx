@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
+import { Info } from 'lucide-react';
+import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface ExpenseByCategory {
   name: string;
@@ -41,6 +43,7 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
   const [activeTab, setActiveTab] = useState('category');
 
   const limitedCategoryData = expensesByCategory.slice(0, 5);
+  const totalExpense = limitedCategoryData.reduce((sum, c) => sum + c.value, 0);
 
   // Safe check for empty data
   const hasExpensesByCategory = Array.isArray(limitedCategoryData) && limitedCategoryData.length > 0;
@@ -53,41 +56,72 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
       transition={{ duration: 0.3 }}
     >
       <Card className="border border-border shadow-sm overflow-hidden">
-        <CardHeader className="pb-0">
-          <CardTitle className="text-xl font-medium">Expense Analysis</CardTitle>
+        <CardHeader className="pb-0 flex items-center justify-between">
+          <CardTitle className="text-xl font-medium flex items-center gap-1">
+            Expense Analysis
+            <TooltipProvider>
+              <UiTooltip>
+                <TooltipTrigger asChild>
+                  <Info className="w-4 h-4" />
+                </TooltipTrigger>
+                <TooltipContent>Categorized view of your spending</TooltipContent>
+              </UiTooltip>
+            </TooltipProvider>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="category">By Category</TabsTrigger>
-              <TabsTrigger value="subcategory">Subcategories</TabsTrigger>
+            <TabsList className="mb-4 border-b">
+              <TabsTrigger value="category" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">By Category</TabsTrigger>
+              <TabsTrigger
+                value="subcategory"
+                disabled={!hasExpensesBySubcategory}
+                className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
+                title={hasExpensesBySubcategory ? undefined : 'No data to show yet'}
+              >
+                Subcategories
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="category" className="pt-2">
               {hasExpensesByCategory ? (
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart margin={CHART_MARGIN}>
-                      <Pie
-                        data={limitedCategoryData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        outerRadius={80}
-                        innerRadius={40}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {limitedCategoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => formatCurrency(Math.abs(Number(value)))} />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
+                limitedCategoryData.length > 1 ? (
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart margin={CHART_MARGIN}>
+                        <Pie
+                          data={limitedCategoryData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          innerRadius={40}
+                          fill="#8884d8"
+                          dataKey="value"
+                          isAnimationActive={true}
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {limitedCategoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <text
+                          x="50%"
+                          y="50%"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className="text-sm fill-foreground"
+                        >
+                          {formatCurrency(totalExpense)}
+                        </text>
+                        <Tooltip formatter={(value) => formatCurrency(Math.abs(Number(value)))} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-12">Not enough data for breakdown</p>
+                )
               ) : (
                 <p className="text-center text-muted-foreground py-12">No category data available</p>
               )}
