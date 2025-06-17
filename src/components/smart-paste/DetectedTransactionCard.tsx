@@ -38,7 +38,7 @@ const DetectedTransactionCard = ({
 
   return (
     <Card className="overflow-hidden">
-      <CardContent className="p-4">
+      <CardContent className="p-[var(--card-padding)]">
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2">

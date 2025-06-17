@@ -19,7 +19,7 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="border border-border shadow-sm hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
+        <CardContent className="p-[var(--card-padding)]">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-muted-foreground">Total Income</p>
             <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
@@ -36,7 +36,7 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
       </Card>
       
       <Card className="border border-border shadow-sm hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
+        <CardContent className="p-[var(--card-padding)]">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-muted-foreground">Total Expenses</p>
             <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
@@ -53,7 +53,7 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
       </Card>
       
       <Card className="border border-border shadow-sm hover:shadow-md transition-shadow">
-        <CardContent className="p-6">
+        <CardContent className="p-[var(--card-padding)]">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-muted-foreground">Savings Rate</p>
             <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">

@@ -50,12 +50,12 @@ const ProcessVendors: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-[var(--card-padding)]">
       <h1 className="text-2xl font-bold mb-4">Vendor Categorization</h1>
 
       <div className="space-y-4">
         {vendors.map((vendor, index) => (
-          <Card key={index} className="p-4 flex flex-col space-y-2">
+          <Card key={index} className="p-[var(--card-padding)] flex flex-col space-y-2">
             <p><strong>Vendor:</strong> {vendor.vendor}</p>
 
             <Select

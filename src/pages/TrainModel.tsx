@@ -445,7 +445,7 @@ const TrainModel = () => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
           <div className="md:col-span-8">
             <Card className="mb-6">
-              <CardContent className="p-4">
+              <CardContent className="p-[var(--card-padding)]">
                 <p className="text-sm font-medium mb-2">Message</p>
                 <Textarea
                   ref={textareaRef}
@@ -468,7 +468,7 @@ const TrainModel = () => {
             
             {selections.length > 0 && (
               <Card className="mb-6">
-                <CardContent className="p-4">
+                <CardContent className="p-[var(--card-padding)]">
                   <h3 className="text-sm font-medium mb-2">Tagged Selections</h3>
                   <div className="space-y-2">
                     {selections.map((selection) => (

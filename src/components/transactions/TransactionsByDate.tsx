@@ -54,7 +54,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
   }
 
   return (
-    <Card key={transaction.id?.trim() || `txn-${date}-${index}`} className="p-4">
+    <Card key={transaction.id?.trim() || `txn-${date}-${index}`} className="p-[var(--card-padding)]">
       <div className="flex justify-between items-center">
         <div className="flex-1">
           <h4 className="font-medium">{transaction.title}</h4>

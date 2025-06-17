@@ -52,7 +52,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
   // Don't use swipe on desktop
   if (!isMobile) {
     return (
-      <Card className="p-4">
+      <Card className="p-[var(--card-padding)]">
         <div className="flex justify-between items-center">
           <div>
             <h4 className="font-medium">{transaction.title}</h4>
@@ -105,7 +105,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
         animate={controls}
         className="relative bg-card rounded-lg shadow z-10"
       >
-        <Card className="p-4 cursor-grab active:cursor-grabbing">
+        <Card className="p-[var(--card-padding)] cursor-grab active:cursor-grabbing">
           <div className="flex justify-between items-center">
             <div>
               <h4 className="font-medium">{transaction.title}</h4>

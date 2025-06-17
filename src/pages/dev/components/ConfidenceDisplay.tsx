@@ -27,7 +27,7 @@ const ConfidenceDisplay: React.FC<ConfidenceBreakdownProps> = ({
         {isLabelingMode ? "Label Analysis" : "Confidence Breakdown"}
       </h3>
       <Card className="bg-muted/30">
-        <CardContent className="p-4 space-y-2">
+        <CardContent className="p-[var(--card-padding)] space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <div className="text-sm">
               <span className="text-muted-foreground">Matched Fields:</span>

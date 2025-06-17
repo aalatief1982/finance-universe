@@ -152,7 +152,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   if (isLoading) {
     return (
       <Card>
-        <div className="p-4">
+        <div className="p-[var(--card-padding)]">
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center justify-between">
@@ -173,7 +173,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   if (transactions.length === 0) {
     return (
       <Card>
-        <div className="p-6 text-center">
+        <div className="p-[var(--card-padding)] text-center">
           <p className="text-muted-foreground">{emptyMessage}</p>
         </div>
       </Card>
@@ -186,7 +186,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       <div className="space-y-3">
         {transactions.map(transaction => (
           <Card key={transaction.id} className="overflow-hidden">
-            <div className="p-4">
+            <div className="p-[var(--card-padding)]">
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="font-medium">{transaction.title}</h3>

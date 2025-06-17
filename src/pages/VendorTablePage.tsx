@@ -43,11 +43,11 @@ const VendorTablePage: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-[var(--card-padding)]">
       <h1 className="text-2xl font-bold mb-6">Review Vendors</h1>
 
       {vendors.map((vendorEntry, index) => (
-        <Card key={index} className="p-4 mb-4 flex flex-col gap-2">
+        <Card key={index} className="p-[var(--card-padding)] mb-4 flex flex-col gap-2">
           <p><strong>Vendor:</strong> {vendorEntry.vendor}</p>
 
           <div className="flex gap-4">

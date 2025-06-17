@@ -180,7 +180,7 @@ const CategorySettings = () => {
                 <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-4">
                     {categoryRules.map((rule) => (
-                      <Card key={rule.id} className="p-4">
+                      <Card key={rule.id} className="p-[var(--card-padding)]">
                         <div className="flex flex-col space-y-2">
                           <div className="flex justify-between items-start">
                             <div>
@@ -253,7 +253,7 @@ const CategorySettings = () => {
                 <ScrollArea className="h-[500px] pr-4">
                   <div className="space-y-4">
                     {ruleSuggestions.map((suggestion, index) => (
-                      <Card key={index} className="p-4">
+                      <Card key={index} className="p-[var(--card-padding)]">
                         <div className="flex flex-col space-y-2">
                           <div className="flex justify-between items-start">
                             <div>

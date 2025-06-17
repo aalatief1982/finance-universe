@@ -101,9 +101,10 @@
 }
 
 @layer components {
-  .card {
-    @apply bg-card border border-border rounded-lg shadow-sm p-2;
-  }
+.card {
+  @apply bg-card border border-border rounded-lg shadow-sm;
+  padding: var(--card-padding);
+}
 }
 
 /* Mobile-specific optimizations */

@@ -195,7 +195,7 @@ const handleReadSms = async () => {
         {filteredMessages
           .filter((msg): msg is ProcessedSmsEntry => !!msg && typeof msg.sender === 'string')
           .map((msg, index) => (
-            <Card key={index} className="p-4">
+            <Card key={index} className="p-[var(--card-padding)]">
               <p><strong>From:</strong> {msg.sender}</p>
               <p><strong>Date:</strong> {new Date(msg.date).toLocaleString()}</p>
               <p><strong>Message:</strong> {msg.message}</p>
