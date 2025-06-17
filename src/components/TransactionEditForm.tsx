@@ -170,7 +170,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-4 rounded-md shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 gap-y-2"
+      className="bg-white p-4 rounded-md shadow-sm grid grid-cols-1 md:grid-cols-2 gap-3"
     >
       <div className="col-span-2 space-y-2">
         <label className="text-sm font-medium text-gray-700">Transaction Type*</label>
@@ -291,31 +291,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
         </Select>
       </div>
 
-      {availableSubcategories.length > 0 && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Subcategory</label>
-          <Select
-            value={editedTransaction.subcategory || 'none'}
-            onValueChange={(value) => handleChange('subcategory', value)}
-          >
-            <SelectTrigger
-              className="h-11 rounded-lg border-gray-300 focus:ring-primary"
-              style={getDrivenFieldStyle('subcategory', drivenFields)}
-            >
-              <SelectValue placeholder="Select subcategory" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {availableSubcategories.map((subcategory) => (
-                <SelectItem key={subcategory} value={subcategory}>
-                  {subcategory}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-700">Date*</label>
         <Input
@@ -347,6 +322,31 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           </SelectContent>
         </Select>
       </div>
+
+      {availableSubcategories.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700">Subcategory</label>
+          <Select
+            value={editedTransaction.subcategory || 'none'}
+            onValueChange={(value) => handleChange('subcategory', value)}
+          >
+            <SelectTrigger
+              className="h-11 rounded-lg border-gray-300 focus:ring-primary"
+              style={getDrivenFieldStyle('subcategory', drivenFields)}
+            >
+              <SelectValue placeholder="Select subcategory" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {availableSubcategories.map((subcategory) => (
+                <SelectItem key={subcategory} value={subcategory}>
+                  {subcategory}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="col-span-2 space-y-2">
         <label className="text-sm font-medium text-gray-700">Description (Optional)</label>
