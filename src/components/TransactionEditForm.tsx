@@ -170,7 +170,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   return (
     <form
       onSubmit={handleSubmit}
+
       className="bg-white p-4 rounded-md shadow-sm grid grid-cols-1 md:grid-cols-2 gap-3 mb-28"
+
     >
       <div className="space-y-2 md:col-span-2">
         <label className="text-sm font-medium text-gray-700">Transaction Type*</label>
