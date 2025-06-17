@@ -197,7 +197,7 @@ const Dashboard = () => {
               <h2 className="text-lg font-semibold mb-2">Recent Transactions</h2>
 
               {filteredTransactions.length > 0 ? (
-                <div className="space-y-2 flex-1">
+                <div className="space-y-1 flex-1">
                   {filteredTransactions.slice(0, 5).map((transaction, idx) => (
                     <div
                       key={transaction.id || idx}
