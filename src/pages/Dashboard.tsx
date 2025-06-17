@@ -259,7 +259,7 @@ const Dashboard = () => {
                 <p className="text-center text-muted-foreground py-6">No transactions found for this period.</p>
               )}
 
-              <div className="flex justify-end mt-3">
+              <div className="flex justify-end mt-3 mb-16">
                 <button
                   onClick={() => navigate('/transactions')}
                   aria-label="View full transaction history"
