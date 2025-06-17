@@ -123,7 +123,8 @@ const Dashboard = () => {
     Income: <CircleDollarSign className="w-4 h-4" />,
   };
 
-  const formatTitle = (title: string) => {
+  const formatTitle = (title?: string) => {
+    if (!title) return 'Untitled';
     const parts = title.split('|');
     if (parts.length >= 4) {
       const [cat, sub, amt] = parts;
@@ -219,9 +220,9 @@ const Dashboard = () => {
 
               {filteredTransactions.length > 0 ? (
                 <div className="space-y-2 flex-1">
-                  {filteredTransactions.slice(0, 5).map((transaction) => (
+                  {filteredTransactions.slice(0, 5).map((transaction, idx) => (
                     <div
-                      key={transaction.id}
+                      key={transaction.id || idx}
                       className="flex justify-between items-center bg-secondary/50 rounded-md p-[var(--card-padding)] hover:shadow-lg transition cursor-pointer"
                       onClick={() => navigate(`/edit-transaction/${transaction.id}`)}
                       aria-label="Edit transaction"
