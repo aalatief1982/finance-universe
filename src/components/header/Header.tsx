@@ -26,7 +26,12 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
   const currentPageTitle = routeTitleMap[location.pathname] || 'Xpensia';
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/onboarding';
-  const shouldShowNavigation = showNavigation && !isAuthPage && !isLandingPage && auth.isAuthenticated;
+  // Show navigation when authenticated or while auth state is loading
+  const shouldShowNavigation =
+    showNavigation &&
+    !isAuthPage &&
+    !isLandingPage &&
+    (auth.isAuthenticated || auth.isLoading);
 
   if (isAuthPage) {
     return <AuthHeader className={className} />;
