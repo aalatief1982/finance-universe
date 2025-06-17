@@ -22,6 +22,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
+import java.util.ArrayList;
 
 @CapacitorPlugin(
     name = "BackgroundSmsListener",
@@ -32,6 +33,7 @@ import com.getcapacitor.annotation.Permission;
 public class BackgroundSmsListenerPlugin extends Plugin {
     private static final String TAG = "BackgroundSmsListener";
     private static BackgroundSmsListenerPlugin instance;
+    private static final ArrayList<JSObject> pendingMessages = new ArrayList<>();
     private boolean isListening = false;
     private BroadcastReceiver smsReceiver;
 
@@ -39,14 +41,25 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     public void load() {
         super.load();
         instance = this;
+        if (!pendingMessages.isEmpty()) {
+            Log.d(TAG, "Delivering " + pendingMessages.size() + " queued SMS messages");
+            for (JSObject msg : pendingMessages) {
+                notifyListeners("smsReceived", msg);
+            }
+            pendingMessages.clear();
+        }
     }
 
     public static void notifySmsReceived(String sender, String body) {
+        JSObject data = new JSObject();
+        data.put("sender", sender);
+        data.put("body", body);
+
         if (instance != null) {
-            JSObject data = new JSObject();
-            data.put("sender", sender);
-            data.put("body", body);
             instance.notifyListeners("smsReceived", data);
+        } else {
+            Log.d(TAG, "Instance null, queuing SMS message");
+            pendingMessages.add(data);
         }
     }
 
