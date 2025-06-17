@@ -56,7 +56,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
       'sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border',
       className
     )}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-[var(--page-padding-x)] py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <motion.div
