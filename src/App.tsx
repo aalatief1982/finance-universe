@@ -25,7 +25,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
-import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
+import { parseSmsMessage } from '@/lib/sms-parser';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -91,16 +91,20 @@ function AppWrapper() {
                 return;
               }
 
-              const { template, placeholders } = extractTemplateStructure(body);
+              const parsed = parseSmsMessage(body, sender);
+
               const txn: Transaction = {
                 id: uuidv4(),
-                title: `SMS from ${sender}`,
-                amount: 0, // Will be extracted by the transaction processor
-                category: 'Uncategorized',
-                type: 'expense', // Default, will be determined by processor
-                date: new Date().toISOString().split('T')[0],
+                title: parsed?.description || `SMS from ${sender}`,
+                amount: parsed?.amount ?? 0,
+                category: parsed?.category || 'Uncategorized',
+                type: parsed?.amount && parsed.amount < 0 ? 'expense' : 'income',
+                date: parsed?.date
+                  ? parsed.date.toISOString().split('T')[0]
+                  : new Date().toISOString().split('T')[0],
                 source: 'sms',
-                fromAccount: sender,
+                fromAccount: parsed?.fromAccount || sender,
+                toAccount: parsed?.toAccount,
                 details: {
                   sms: {
                     sender,
@@ -109,7 +113,9 @@ function AppWrapper() {
                   },
                   rawMessage: body
                 },
-                currency: 'SAR' // Default currency, can be overridden by processor
+                currency: parsed?.currency || 'SAR',
+                country: parsed?.country,
+                description: parsed?.description
               };
 
               // Handle background state
