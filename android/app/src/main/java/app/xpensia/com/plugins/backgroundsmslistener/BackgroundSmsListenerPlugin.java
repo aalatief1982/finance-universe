@@ -14,6 +14,8 @@ import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
+import app.xpensia.com.plugins.backgroundsmslistener.SmsProcessingService;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -29,8 +31,24 @@ import com.getcapacitor.annotation.Permission;
 )
 public class BackgroundSmsListenerPlugin extends Plugin {
     private static final String TAG = "BackgroundSmsListener";
+    private static BackgroundSmsListenerPlugin instance;
     private boolean isListening = false;
     private BroadcastReceiver smsReceiver;
+
+    @Override
+    public void load() {
+        super.load();
+        instance = this;
+    }
+
+    public static void notifySmsReceived(String sender, String body) {
+        if (instance != null) {
+            JSObject data = new JSObject();
+            data.put("sender", sender);
+            data.put("body", body);
+            instance.notifyListeners("smsReceived", data);
+        }
+    }
 
     /**
      * Check if the SMS permission is granted
@@ -94,6 +112,11 @@ public class BackgroundSmsListenerPlugin extends Plugin {
             }
 
             registerSmsReceiver();
+
+            Context context = getContext();
+            Intent serviceIntent = new Intent(context, SmsProcessingService.class);
+            ContextCompat.startForegroundService(context, serviceIntent);
+
             call.resolve();
             Log.d(TAG, "Now listening for SMS messages");
         } catch (Exception e) {
@@ -116,6 +139,10 @@ public class BackgroundSmsListenerPlugin extends Plugin {
             }
 
             unregisterSmsReceiver();
+
+            Context context = getContext();
+            context.stopService(new Intent(context, SmsProcessingService.class));
+
             call.resolve();
             Log.d(TAG, "Stopped listening for SMS messages");
         } catch (Exception e) {
@@ -230,6 +257,8 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     protected void handleOnDestroy() {
         Log.d(TAG, "Plugin is being destroyed, cleaning up");
         unregisterSmsReceiver();
+        getContext().stopService(new Intent(getContext(), SmsProcessingService.class));
+        instance = null;
         super.handleOnDestroy();
     }
 }
