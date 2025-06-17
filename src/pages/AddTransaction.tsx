@@ -29,12 +29,12 @@ const AddTransaction = () => {
   };
 
   return (
-    <Layout showBack>
+    <Layout showBack withPadding={false} fullWidth>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full px-[var(--page-padding-x)]"
+        className="w-full px-1"
       >
 
         <Card className="w-full">
