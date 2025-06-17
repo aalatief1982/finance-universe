@@ -36,7 +36,7 @@ const Sidebar: React.FC = () => {
   return (
     <div className="fixed top-0 left-0 h-full w-64 bg-background border-r border-border z-10 shadow-sm">
       <div className="flex flex-col h-full">
-        <div className="px-6 py-6">
+        <div className="px-[var(--page-padding-x)] py-[var(--page-padding-y)]">
           <h2 className="text-xl font-bold">Xpensia</h2>
         </div>
         
