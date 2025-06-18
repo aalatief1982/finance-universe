@@ -3,7 +3,6 @@ import React from 'react';
 import { format, parseISO } from 'date-fns';
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/lib/formatters';
-import { Card } from '@/components/ui/card';
 import TransactionActions from './TransactionActions';
 
 interface TransactionsByDateProps {
@@ -54,7 +53,10 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
   }
 
   return (
-    <Card key={transaction.id?.trim() || `txn-${date}-${index}`} className="p-[var(--card-padding)]">
+    <div
+      key={transaction.id?.trim() || `txn-${date}-${index}`}
+      className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3"
+    >
       <div className="flex justify-between items-center">
         <div className="flex-1">
           <h4 className="font-medium">{transaction.title}</h4>
@@ -62,17 +64,18 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
         </div>
 
         <div className="flex items-center gap-4">
-          <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+          <span
+            className={`font-semibold ${
+              transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
+            }`}
+          >
             {formatCurrency(transaction.amount)}
           </span>
 
-          <TransactionActions 
-            transaction={transaction} 
-            variant="dropdown" 
-          />
+          <TransactionActions transaction={transaction} variant="dropdown" />
         </div>
       </div>
-    </Card>
+    </div>
   );
 })}
 
