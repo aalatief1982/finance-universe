@@ -18,7 +18,7 @@ Changes made via Lovable will be committed automatically to this repo.
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Install Node.js (version 18 or later; this project is tested with Node.js v22) and npm. We recommend using [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) for installation.
 
 Follow these steps:
 
@@ -34,6 +34,12 @@ npm i
 
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
+
+# Step 5: Run the linter to check code quality.
+npm run lint
+
+# Step 6: Build the production bundle.
+npm run build
 ```
 
 **Edit a file directly in GitHub**
