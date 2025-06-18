@@ -2,7 +2,11 @@
 import React from 'react';
 import Layout from '@/components/Layout';
 import DashboardStats from '@/components/DashboardStats';
-import ExpenseChart from '@/components/ExpenseChart';
+import TimelineChart from '@/components/charts/TimelineChart';
+import NetBalanceChart from '@/components/charts/NetBalanceChart';
+import CategoryChart from '@/components/charts/CategoryChart';
+import SubcategoryChart from '@/components/charts/SubcategoryChart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTransactions } from '@/context/TransactionContext';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -48,6 +52,7 @@ const Dashboard = () => {
   const [range, setRange] = React.useState<Range>('');
   const [customStart, setCustomStart] = React.useState<Date | null>(null);
   const [customEnd, setCustomEnd] = React.useState<Date | null>(null);
+  const [activeTab, setActiveTab] = React.useState('trends');
 
 
   const handleAddTransaction = () => {
@@ -170,6 +175,30 @@ const Dashboard = () => {
   const expensesByCategory = Object.entries(categoryData)
     .map(([name, value]) => ({ name, value }));
 
+  const timelineData = React.useMemo(() => {
+    const grouped = new Map<number, { income: number; expense: number }>();
+    filteredTransactions.forEach(tx => {
+      const d = new Date(tx.date);
+      const bucket = range === 'year' ? new Date(d.getFullYear(), d.getMonth(), 1) : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const key = bucket.getTime();
+      const existing = grouped.get(key) || { income: 0, expense: 0 };
+      if (tx.amount > 0) {
+        existing.income += tx.amount;
+      } else {
+        existing.expense += Math.abs(tx.amount);
+      }
+      grouped.set(key, existing);
+    });
+    return Array.from(grouped.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([ts, val]) => ({
+        date: new Date(ts).toISOString(),
+        income: val.income,
+        expense: val.expense,
+        balance: val.income - val.expense,
+      }));
+  }, [filteredTransactions, range]);
+
   return (
     <Layout withPadding={false} fullWidth>
       <div className="px-1">
@@ -217,10 +246,32 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
             <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
-              <ExpenseChart
-                expensesByCategory={expensesByCategory}
-                expensesBySubcategory={expensesBySubcategory}
-              />
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="mb-4 border-b">
+                  <TabsTrigger value="trends" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Trends</TabsTrigger>
+                  <TabsTrigger value="net" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Net Balance</TabsTrigger>
+                  <TabsTrigger value="category" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">By Category</TabsTrigger>
+                  <TabsTrigger value="subcategory" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Subcategories</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="trends" className="space-y-2">
+                  <h2 className="text-lg font-semibold">Spending Trends</h2>
+                  <TimelineChart data={timelineData} />
+                </TabsContent>
+
+                <TabsContent value="net" className="space-y-2">
+                  <h2 className="text-lg font-semibold">Net Growth Summary</h2>
+                  <NetBalanceChart data={timelineData} />
+                </TabsContent>
+
+                <TabsContent value="category" className="pt-2">
+                  <CategoryChart data={expensesByCategory} />
+                </TabsContent>
+
+                <TabsContent value="subcategory" className="pt-2">
+                  <SubcategoryChart data={expensesBySubcategory} />
+                </TabsContent>
+              </Tabs>
             </div>
 
             <div className="bg-card p-[var(--card-padding)] rounded-lg shadow flex flex-col justify-between">
