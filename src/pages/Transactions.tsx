@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
-import { motion } from 'framer-motion';
 import PageHeader from '@/components/layout/PageHeader';
 import TransactionsByDate from '@/components/transactions/TransactionsByDate';
 import EditTransactionDialog from '@/components/transactions/EditTransactionDialog';
@@ -132,7 +131,7 @@ const Transactions = () => {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button variant="outline" className="min-w-[80px] flex gap-1.5 h-8" size="sm">
+            <Button variant="outline" className="min-w-[80px] flex gap-1.5 h-8"  size="sm">
               <Filter size={14} />
               Filter
             </Button>
@@ -140,12 +139,7 @@ const Transactions = () => {
         </div>
       </div>
       
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="px-[var(--page-padding-x)] pt-2 pb-24 mt-1"
-      >
+      <div className="px-[var(--page-padding-x)] pt-2 pb-24 mt-1">
         {filteredTransactions.length > 0 ? (
           isMobile && viewMode === 'swipeable' ? (
             <div className="space-y-[var(--card-gap)]">
@@ -167,7 +161,7 @@ const Transactions = () => {
             </Button>
           </div>
         )}
-      </motion.div>
+      </div>
       
       <EditTransactionDialog
         isOpen={isEditingExpense}
