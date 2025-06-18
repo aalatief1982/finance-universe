@@ -87,9 +87,6 @@ const Transactions = () => {
                 </Button>
               </div>
             )}
-            <Button size="sm" onClick={() => navigate('/edit-transaction')}>
-              Add Transaction
-            </Button>
           </>
         )}
       />
