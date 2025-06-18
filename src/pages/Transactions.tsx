@@ -143,7 +143,7 @@ const Transactions = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="px-[var(--page-padding-x)] py-2 mt-1"
+        className="px-[var(--page-padding-x)] pt-2 pb-24 mt-1"
       >
         {filteredTransactions.length > 0 ? (
           isMobile && viewMode === 'swipeable' ? (
