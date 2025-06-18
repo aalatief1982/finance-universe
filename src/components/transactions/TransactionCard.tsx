@@ -1,9 +1,29 @@
 
 		import React from 'react';
 		import { motion } from 'framer-motion';
-		import { ArrowDownLeft, ArrowUpRight, Calendar, Tag, Edit, Trash2 } from 'lucide-react';
+import {
+  Edit,
+  Trash2,
+  Receipt,
+  GraduationCap,
+  Gamepad2,
+  Utensils,
+  Gift,
+  HeartPulse,
+  Home,
+  Baby,
+  Bath,
+  ConciergeBell,
+  ShoppingBag,
+  ArrowLeftRight,
+  Car,
+  Plane,
+  Lightbulb,
+  CircleDollarSign,
+  Package,
+} from 'lucide-react';
+import { CHART_COLORS } from '@/constants/analytics';
 		import { formatCurrency } from '@/lib/formatters';
-		import { formatDate } from '@/lib/formatters';
 		import { Transaction } from '@/types/transaction';
 		import { Card, CardContent } from '@/components/ui/card';
 		import { Button } from '@/components/ui/button';
@@ -18,14 +38,34 @@
 		  className?: string;
 		}
 
-		const TransactionCard: React.FC<TransactionCardProps> = ({
-		  transaction,
-		  onEdit,
-		  onDelete,
-		  showActions = true,
-		  className,
-		}) => {
-		  const isIncome = transaction.amount > 0;
+  const TransactionCard: React.FC<TransactionCardProps> = ({
+    transaction,
+    onEdit,
+    onDelete,
+    showActions = true,
+    className,
+  }) => {
+    const isIncome = transaction.amount > 0;
+
+    const iconMap: Record<string, JSX.Element> = {
+      Bills: <Receipt className="w-4 h-4" style={{ color: CHART_COLORS[0] }} />,
+      Education: <GraduationCap className="w-4 h-4" style={{ color: CHART_COLORS[1] }} />,
+      Entertainment: <Gamepad2 className="w-4 h-4" style={{ color: CHART_COLORS[2] }} />,
+      Food: <Utensils className="w-4 h-4" style={{ color: CHART_COLORS[3] }} />,
+      'Gifts & Donations': <Gift className="w-4 h-4" style={{ color: CHART_COLORS[4] }} />,
+      Health: <HeartPulse className="w-4 h-4" style={{ color: CHART_COLORS[5] }} />,
+      Housing: <Home className="w-4 h-4" style={{ color: CHART_COLORS[0] }} />,
+      Kids: <Baby className="w-4 h-4" style={{ color: CHART_COLORS[1] }} />,
+      'Personal Care': <Bath className="w-4 h-4" style={{ color: CHART_COLORS[2] }} />,
+      Services: <ConciergeBell className="w-4 h-4" style={{ color: CHART_COLORS[3] }} />,
+      Shopping: <ShoppingBag className="w-4 h-4" style={{ color: CHART_COLORS[4] }} />,
+      Transfer: <ArrowLeftRight className="w-4 h-4" style={{ color: CHART_COLORS[5] }} />,
+      Transportation: <Car className="w-4 h-4" style={{ color: CHART_COLORS[0] }} />,
+      Travel: <Plane className="w-4 h-4" style={{ color: CHART_COLORS[1] }} />,
+      Utilities: <Lightbulb className="w-4 h-4" style={{ color: CHART_COLORS[2] }} />,
+      Income: <CircleDollarSign className="w-4 h-4" style={{ color: CHART_COLORS[3] }} />,
+      Other: <Package className="w-4 h-4" style={{ color: CHART_COLORS[4] }} />,
+    };
 		  
 		  // Get emoji based on category
 		  const getEmojiForCategory = (category: string) => {
@@ -92,11 +132,14 @@
 					  
 					  <div className="space-y-1">
 						<h3 className="font-medium text-sm line-clamp-1">{transaction.title}</h3>
-						<div className="flex items-center text-xs text-muted-foreground">
-						  <span>{transaction.category}</span>
-						  <span className="mx-1">•</span>
-						  <span>{formatTime(transaction.date)}</span>
-						</div>
+                                                <div className="flex items-center text-xs text-muted-foreground">
+                                                  <span className="flex items-center gap-1">
+                                                    {iconMap[transaction.category] || iconMap['Other']}
+                                                    {transaction.category}
+                                                  </span>
+                                                  <span className="mx-1">•</span>
+                                                  <span>{formatTime(transaction.date)}</span>
+                                                </div>
 					  </div>
 					</div>
 					
