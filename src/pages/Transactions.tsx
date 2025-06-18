@@ -65,7 +65,7 @@ const Transactions = () => {
       <PageHeader
         title="Transactions"
         className="pt-2"
-        actions={(
+        actions={
           <>
             {isMobile && (
               <div className="border rounded-md p-0.5">
@@ -94,7 +94,7 @@ const Transactions = () => {
               </div>
             )}
           </>
-        )}
+        }
       />
 
       <div className="px-[var(--page-padding-x)] pt-2">
