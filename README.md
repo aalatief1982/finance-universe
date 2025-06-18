@@ -67,3 +67,26 @@ Simply open [Lovable](https://lovable.dev/projects/44f11ecc-0e77-4a7d-a302-6102d
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+
+## Transaction Edit Form Options
+
+The `TransactionEditForm` component supports two optional props for tailoring the form UI:
+
+- `compact`: Displays the form with tighter spacing and smaller inputs.
+  Useful on small screens or when space is limited.
+- `showNotes`: Controls visibility of the notes field. It is `true` by default.
+
+### Usage examples
+
+Hide the notes field:
+
+```tsx
+<TransactionEditForm onSave={handleSave} showNotes={false} />
+```
+
+Enable compact mode and hide notes at the same time:
+
+```tsx
+<TransactionEditForm onSave={handleSave} compact showNotes={false} />
+```
+
