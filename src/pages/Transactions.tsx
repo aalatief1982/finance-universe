@@ -9,11 +9,12 @@ import MobileActions from '@/components/transactions/MobileActions';
 import SwipeableTransactionCard from '@/components/transactions/SwipeableTransactionCard';
 import { useTransactionsState } from '@/hooks/useTransactionsState';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { Search, Filter, List, Grid  } from 'lucide-react';
+import { Search, Filter, List, Grid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CATEGORIES } from '@/lib/mock-data';
+import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 const Transactions = () => {
@@ -149,11 +150,11 @@ const Transactions = () => {
           isMobile && viewMode === 'swipeable' ? (
             <div className="space-y-[var(--card-gap)]">
               {filteredTransactions.map((transaction, index) => (
-				  <SwipeableTransactionCard 
-					key={transaction.id || `txn-${index}`} // ensure uniqueness
-					transaction={transaction}
-				  />
-				))}
+                <SwipeableTransactionCard
+                  key={transaction.id || `txn-${index}`}
+                  transaction={transaction}
+                />
+              ))}
             </div>
           ) : (
             <TransactionsByDate transactions={filteredTransactions} />
