@@ -33,6 +33,9 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
     !isLandingPage &&
     (auth.isAuthenticated || auth.isLoading);
 
+  // Always show mobile menu and settings on the dashboard page
+  const showMobileIcons = shouldShowNavigation || location.pathname === '/dashboard';
+
   if (isAuthPage) {
     return <AuthHeader className={className} />;
   }
@@ -62,7 +65,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
           </div>
           <div className="flex items-center">
             <UserMenu isLandingPage={isLandingPage} />
-            {shouldShowNavigation && (
+            {showMobileIcons && (
               <>
                 <MobileNavigation currentPageTitle={currentPageTitle} />
                 <Link
