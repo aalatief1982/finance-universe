@@ -165,9 +165,7 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
       }));
     
     // Process messages to extract transactions
-    if (processTransactionsFromSMS) {
-      processTransactionsFromSMS(messagesToProcess);
-    }
+    processTransactionsFromSMS(messagesToProcess);
     
     // Complete the flow
     onComplete();

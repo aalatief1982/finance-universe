@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
 import { getStoredTransactions, storeTransactions, getStoredCategories, storeCategories, getStoredCategoryRules, storeCategoryRules, getStoredCategoryChanges, storeCategoryChanges } from '@/utils/storage-utils';
 import { transactionAnalyticsService } from './TransactionAnalyticsService';
-import { smsProcessingService } from './SmsProcessingService';
+import { processSmsEntries } from './SmsProcessingService';
 
 class TransactionService {
   // Basic Transaction CRUD Operations
@@ -71,7 +71,12 @@ class TransactionService {
 
   // Process SMS messages to extract transactions (delegated to SmsProcessingService)
   processTransactionsFromSMS(messages: { sender: string; message: string; date: Date }[]): Transaction[] {
-    return smsProcessingService.processTransactionsFromSMS(messages);
+    const entries = messages.map(msg => ({
+      sender: msg.sender,
+      message: msg.message,
+      timestamp: msg.date.toISOString()
+    }));
+    return processSmsEntries(entries);
   }
 
   // Analytics Methods (delegated to TransactionAnalyticsService)
