@@ -31,7 +31,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
 
   const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), 'EEEE, MMMM d, yyyy');
+      return format(parseISO(dateString), 'EEE, MMM d');
     } catch (e) {
       // Fallback for any date parsing issues
       return dateString;
@@ -42,7 +42,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
     <div className="space-y-6">
       {sortedDates.map(date => (
         <div key={date} className="space-y-2">
-          <h3 className="font-medium text-muted-foreground">
+          <h3 className="font-semibold text-gray-600 text-sm">
             {formatDate(date)}
           </h3>
           
