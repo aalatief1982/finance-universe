@@ -10,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface TransactionEditFormProps {
   transaction?: Transaction;
   onSave: (transaction: Transaction) => void;
+  /** Display form in a compact layout with reduced spacing */
+  compact?: boolean;
+  /** Whether to display the notes field */
+  showNotes?: boolean;
 }
 
 function getDrivenFieldStyle(field: keyof Transaction, drivenFields: Partial<Record<keyof Transaction, boolean>>) {
@@ -51,7 +55,12 @@ function remapVendor(vendor?: string): string {
   return map[vendor] && map[vendor].trim() !== '' ? map[vendor] : vendor;
 }
 
-const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, onSave }) => {
+const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
+  transaction,
+  onSave,
+  compact = false,
+  showNotes = true,
+}) => {
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
   const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
@@ -166,22 +175,33 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
   const amountFontClass =
     amountDigits > 5 ? 'text-lg md:text-xl' : 'text-xl md:text-2xl';
 
+  const rowClass = cn('flex items-center', compact ? 'gap-1' : 'gap-2');
+  const labelClass = cn(
+    compact ? 'w-24 md:w-28' : 'w-32',
+    'text-sm font-semibold text-gray-700'
+  );
+  const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
+  const formClass = cn(
+    'bg-white p-4 rounded-md shadow-sm',
+    compact ? 'space-y-1 mb-16' : 'space-y-2 mb-28'
+  );
+
   return (
-    <form
-      onSubmit={handleSubmit}
+    <form onSubmit={handleSubmit} className={formClass}>
 
-      className="bg-white p-4 rounded-md shadow-sm space-y-2 mb-28"
-    >
-
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Type*</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Type*</label>
 
         <Select
           value={editedTransaction.type}
           onValueChange={(value) => handleChange('type', value as TransactionType)}
         >
           <SelectTrigger
-            className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+            className={cn(
+              'w-full text-sm',
+              inputPadding,
+              'rounded-md border-gray-300 focus:ring-primary'
+            )}
             style={getDrivenFieldStyle('type', drivenFields)}
           >
             <SelectValue placeholder="Select type" />
@@ -195,8 +215,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Title*</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Title*</label>
 
         <Input
           value={editedTransaction.title || ''}
@@ -207,20 +227,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           style={getDrivenFieldStyle('title', drivenFields)}
           placeholder="Transaction title"
           required
-          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
         />
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Currency*</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Currency*</label>
 
         <Select
           value={editedTransaction.currency || 'SAR'}
           onValueChange={(value) => handleChange('currency', value)}
         >
           <SelectTrigger
-            className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
             style={getDrivenFieldStyle('currency', drivenFields)}
           >
             <SelectValue placeholder="Select currency" />
@@ -236,8 +256,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Amount*</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Amount*</label>
 
         <Input
           type="number"
@@ -248,15 +268,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           placeholder="0.00"
           required
           className={cn(
-            'w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary text-center truncate',
+            'w-full text-sm text-center truncate rounded-md border-gray-300 focus:ring-primary',
+            inputPadding,
             amountFontClass
           )}
         />
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">From Account*</label>
+      <div className={rowClass}>
+        <label className={labelClass}>From Account*</label>
 
         <Input
           value={editedTransaction.fromAccount || ''}
@@ -264,20 +285,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           style={getDrivenFieldStyle('fromAccount', drivenFields)}
           placeholder="Source account"
           required
-          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
         />
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Category*</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Category*</label>
 
         <Select
           value={editedTransaction.category || ''}
           onValueChange={(value) => handleChange('category', value)}
         >
           <SelectTrigger
-            className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
             style={getDrivenFieldStyle('category', drivenFields)}
           >
             <SelectValue placeholder="Select category" />
@@ -294,15 +315,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
 
       {availableSubcategories.length > 0 && (
 
-        <div className="flex items-center gap-2">
-          <label className="w-32 text-sm font-semibold text-gray-700">Subcategory</label>
+        <div className={rowClass}>
+          <label className={labelClass}>Subcategory</label>
 
           <Select
             value={editedTransaction.subcategory || 'none'}
             onValueChange={(value) => handleChange('subcategory', value)}
           >
             <SelectTrigger
-              className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
               style={getDrivenFieldStyle('subcategory', drivenFields)}
             >
               <SelectValue placeholder="Select subcategory" />
@@ -320,14 +341,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       )}
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Person (Optional)</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Person (Optional)</label>
 
         <Select
           value={editedTransaction.person || 'none'}
           onValueChange={(value) => handleChange('person', value)}
         >
-          <SelectTrigger className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary">
+          <SelectTrigger className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}>
             <SelectValue placeholder="Select person" />
           </SelectTrigger>
           <SelectContent>
@@ -342,21 +363,21 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Vendor</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Vendor</label>
 
         <Input
           value={editedTransaction.vendor || ''}
           style={getDrivenFieldStyle('vendor', drivenFields)}
           onChange={(e) => handleChange('vendor', e.target.value)}
           placeholder="e.g., Netflix"
-          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
         />
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Date*</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Date*</label>
 
         <Input
           type="date"
@@ -364,13 +385,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           onChange={(e) => handleChange('date', e.target.value)}
           style={getDrivenFieldStyle('date', drivenFields)}
           required
-          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
         />
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Description (Optional)</label>
+      <div className={rowClass}>
+        <label className={labelClass}>Description (Optional)</label>
 
         <Textarea
           value={editedTransaction.description || ''}
@@ -380,25 +401,33 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({ transaction, 
           }}
           placeholder="Enter a detailed description..."
           rows={2}
-          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
+          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
         />
       </div>
 
 
-      <div className="flex items-center gap-2">
-        <label className="w-32 text-sm font-semibold text-gray-700">Notes (Optional)</label>
+      {showNotes && (
+        <div className={rowClass}>
+          <label className={labelClass}>Notes (Optional)</label>
 
-        <Textarea
-          value={editedTransaction.notes || ''}
-          onChange={(e) => handleChange('notes', e.target.value)}
-          placeholder="Additional notes..."
-          rows={2}
-          className="w-full text-sm py-2 px-3 rounded-md border-gray-300 focus:ring-primary"
-        />
-      </div>
+          <Textarea
+            value={editedTransaction.notes || ''}
+            onChange={(e) => handleChange('notes', e.target.value)}
+            placeholder="Additional notes..."
+            rows={2}
+            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+          />
+        </div>
+      )}
 
       <div className="pt-2">
-        <Button type="submit" className="bg-primary text-white w-full py-3 rounded-md">
+        <Button
+          type="submit"
+          className={cn(
+            'bg-primary text-white w-full rounded-md',
+            compact ? 'py-2' : 'py-3'
+          )}
+        >
           {transaction ? 'Update Transaction' : 'Create Transaction'}
         </Button>
       </div>

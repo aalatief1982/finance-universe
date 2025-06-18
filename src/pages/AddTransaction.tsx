@@ -40,7 +40,7 @@ const AddTransaction = () => {
         <Card className="w-full">
           <CardHeader className="pb-2" />
           <CardContent className="pt-0">
-            <TransactionEditForm onSave={handleSave} />
+            <TransactionEditForm onSave={handleSave} compact showNotes={false} />
           </CardContent>
         </Card>
       </motion.div>
