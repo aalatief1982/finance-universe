@@ -104,16 +104,31 @@ const Transactions = () => {
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
                 placeholder="Search transactions..."
-                className="pl-8 h-8 text-sm"
+                className="pl-8 h-8 text-sm rounded-md w-full px-3 py-1.5"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
             </div>
             <Tabs value={filter} onValueChange={value => setFilter(value as 'all' | 'income' | 'expense')}>
-              <TabsList className="h-8">
-                <TabsTrigger value="all" className="text-xs px-2.5">All</TabsTrigger>
-                <TabsTrigger value="income" className="text-xs px-2.5">Income</TabsTrigger>
-                <TabsTrigger value="expense" className="text-xs px-2.5">Expense</TabsTrigger>
+              <TabsList className="h-8 bg-gray-100 rounded-md p-0.5">
+                <TabsTrigger
+                  value="all"
+                  className="text-xs px-2.5 bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:rounded-md"
+                >
+                  All
+                </TabsTrigger>
+                <TabsTrigger
+                  value="income"
+                  className="text-xs px-2.5 bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:rounded-md"
+                >
+                  Income
+                </TabsTrigger>
+                <TabsTrigger
+                  value="expense"
+                  className="text-xs px-2.5 bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:rounded-md"
+                >
+                  Expense
+                </TabsTrigger>
               </TabsList>
             </Tabs>
             <Button variant="outline" className="min-w-[80px] flex gap-1.5 h-8" size="sm">
