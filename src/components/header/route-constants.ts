@@ -18,8 +18,6 @@ export const routeTitleMap: Record<string, string> = {
   '/wireframes/sms-provider': 'SMS Provider',
   '/wireframes/sms-transaction': 'SMS Transaction',
   '/import-transactions': 'Import Transactions',
-  '/dev/learning-tester': 'Learning Tester',
-  '/mastermind': 'MasterMind',
 };
 
 // Navigation items that appear in the header
@@ -54,23 +52,11 @@ export const getNavItems = () => [
     icon: 'MessageSquare', 
     description: 'Import transactions from SMS' 
   },
-  { 
-    title: 'MasterMind', 
-    path: '/mastermind', 
-    icon: 'BrainCircuit', 
-    description: 'View token mapping knowledge' 
-  },
-  { 
-    title: 'Learning Tester', 
-    path: '/dev/learning-tester', 
-    icon: 'BrainCircuit', 
-    description: 'Test and improve transaction parsing' 
-  },
-  { 
-    title: 'Settings', 
-    path: '/settings', 
-    icon: 'Settings', 
-    description: 'Configure app preferences' 
+  {
+    title: 'Settings',
+    path: '/settings',
+    icon: 'Settings',
+    description: 'Configure app preferences'
   },
   { 
     title: 'Profile', 
