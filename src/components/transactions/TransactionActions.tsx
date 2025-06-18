@@ -51,7 +51,7 @@ const TransactionActions = ({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="h-10 w-10">
             <span className="sr-only">Open menu</span>
             <svg
               width="15"
