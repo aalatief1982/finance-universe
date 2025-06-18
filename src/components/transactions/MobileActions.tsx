@@ -3,6 +3,12 @@ import React from 'react';
 import { Plus, Filter, FileDown, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 import { Link } from 'react-router-dom';
 
 interface MobileActionsProps {
@@ -19,11 +25,22 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   return (
     <div className="fixed bottom-4 right-4 flex flex-col gap-2 sm:hidden">
       <Sheet>
-        <SheetTrigger asChild>
-          <Button size="icon" className="rounded-full h-12 w-12 shadow-lg">
-            <Plus size={24} />
-          </Button>
-        </SheetTrigger>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SheetTrigger asChild>
+                <Button
+                  size="icon"
+                  className="rounded-full h-12 w-12 shadow-lg"
+                  aria-label="Add new transaction"
+                >
+                  <Plus size={24} />
+                </Button>
+              </SheetTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Add new transaction</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <SheetContent side="bottom" className="rounded-t-xl">
           <div className="py-4 px-2">
             <h3 className="text-lg font-medium mb-4">Transaction Actions</h3>
