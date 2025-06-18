@@ -10,8 +10,6 @@ import { TransactionProvider } from './context/TransactionContext';
 import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
 import EditTransaction from './pages/EditTransaction';
-import LearningTester from './pages/dev/LearningTester';
-import MasterMind from '@/pages/MasterMind';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
@@ -174,10 +172,8 @@ function AppWrapper() {
       <Route path="/import-transactions" element={<ImportTransactions />} />
       <Route path="/edit-transaction" element={<EditTransaction />} />
       <Route path="/edit-transaction/:id" element={<EditTransaction />} />
-      <Route path="/mastermind" element={<MasterMind />} />
       <Route path="/train-model" element={<TrainModel />} />
       <Route path="/build-template" element={<BuildTemplate />} />
-      <Route path="/dev/learning-tester" element={<LearningTester />} />
       <Route path="/keyword-bank" element={<KeywordBankManager />} />
       <Route path="/process-sms" element={<ProcessSmsMessages />} />
       <Route path="/sms/process-vendors" element={<ProcessVendors />} />

@@ -23,8 +23,6 @@ const Sidebar: React.FC = () => {
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
 	{ name: 'Keyword Bank', path: '/keyword-bank', icon: <Tag size={20} /> },
-    { name: 'Master Mind', path: '/mastermind', icon: <BrainCircuit size={20} /> },
-    { name: 'Learning Tester', path: '/dev/learning-tester', icon: <BrainCircuit size={20} /> },
     { name: 'Build Template', path: '/build-template', icon: <BrainCircuit size={20} /> }
 	
   ];
