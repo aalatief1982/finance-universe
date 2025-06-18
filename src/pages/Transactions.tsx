@@ -70,17 +70,23 @@ const Transactions = () => {
             {isMobile && (
               <div className="border rounded-md p-0.5">
                 <Button
-                  variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className={cn(
+                    'h-7 w-7 rounded-md bg-transparent text-muted-foreground',
+                    viewMode === 'list' && 'bg-primary text-white'
+                  )}
                   onClick={() => setViewMode('list')}
                 >
                   <List className="h-3.5 w-3.5" />
                 </Button>
                 <Button
-                  variant={viewMode === 'swipeable' ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className={cn(
+                    'h-7 w-7 rounded-md bg-transparent text-muted-foreground',
+                    viewMode === 'swipeable' && 'bg-primary text-white'
+                  )}
                   onClick={() => setViewMode('swipeable')}
                 >
                   <Grid className="h-3.5 w-3.5" />
