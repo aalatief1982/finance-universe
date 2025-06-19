@@ -188,7 +188,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
   const formClass = cn(
     'bg-white p-4 rounded-md shadow-sm',
-    compact ? 'space-y-1 mb-16' : 'space-y-2 mb-28'
+    compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28'
   );
 
   return (

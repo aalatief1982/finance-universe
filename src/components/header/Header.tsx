@@ -23,7 +23,9 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
   const navigate = useNavigate();
   const { auth } = useUser();
   
-  const currentPageTitle = routeTitleMap[location.pathname] || 'Xpensia';
+  const currentPageTitle =
+    routeTitleMap[location.pathname] ||
+    (location.pathname.startsWith('/edit-transaction') ? 'Transaction' : 'Xpensia');
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/onboarding';
   // Show navigation on all pages except landing and onboarding
