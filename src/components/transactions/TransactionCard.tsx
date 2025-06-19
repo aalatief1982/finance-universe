@@ -21,8 +21,9 @@ import {
   Lightbulb,
   CircleDollarSign,
   Package,
+  LucideIcon,
 } from 'lucide-react';
-import { CHART_COLORS } from '@/constants/analytics';
+import { CATEGORY_COLOR_MAP } from '@/constants/categoryColors';
 		import { formatCurrency } from '@/lib/formatters';
 		import { Transaction } from '@/types/transaction';
 		import { Card, CardContent } from '@/components/ui/card';
@@ -47,24 +48,24 @@ import { CHART_COLORS } from '@/constants/analytics';
   }) => {
     const isIncome = transaction.amount > 0;
 
-    const iconMap: Record<string, JSX.Element> = {
-      Bills: <Receipt className="w-4 h-4" style={{ color: CHART_COLORS[0] }} />,
-      Education: <GraduationCap className="w-4 h-4" style={{ color: CHART_COLORS[1] }} />,
-      Entertainment: <Gamepad2 className="w-4 h-4" style={{ color: CHART_COLORS[2] }} />,
-      Food: <Utensils className="w-4 h-4" style={{ color: CHART_COLORS[3] }} />,
-      'Gifts & Donations': <Gift className="w-4 h-4" style={{ color: CHART_COLORS[4] }} />,
-      Health: <HeartPulse className="w-4 h-4" style={{ color: CHART_COLORS[5] }} />,
-      Housing: <Home className="w-4 h-4" style={{ color: CHART_COLORS[0] }} />,
-      Kids: <Baby className="w-4 h-4" style={{ color: CHART_COLORS[1] }} />,
-      'Personal Care': <Bath className="w-4 h-4" style={{ color: CHART_COLORS[2] }} />,
-      Services: <ConciergeBell className="w-4 h-4" style={{ color: CHART_COLORS[3] }} />,
-      Shopping: <ShoppingBag className="w-4 h-4" style={{ color: CHART_COLORS[4] }} />,
-      Transfer: <ArrowLeftRight className="w-4 h-4" style={{ color: CHART_COLORS[5] }} />,
-      Transportation: <Car className="w-4 h-4" style={{ color: CHART_COLORS[0] }} />,
-      Travel: <Plane className="w-4 h-4" style={{ color: CHART_COLORS[1] }} />,
-      Utilities: <Lightbulb className="w-4 h-4" style={{ color: CHART_COLORS[2] }} />,
-      Income: <CircleDollarSign className="w-4 h-4" style={{ color: CHART_COLORS[3] }} />,
-      Other: <Package className="w-4 h-4" style={{ color: CHART_COLORS[4] }} />,
+    const iconMap: Record<string, LucideIcon> = {
+      Bills: Receipt,
+      Education: GraduationCap,
+      Entertainment: Gamepad2,
+      Food: Utensils,
+      'Gifts & Donations': Gift,
+      Health: HeartPulse,
+      Housing: Home,
+      Kids: Baby,
+      'Personal Care': Bath,
+      Services: ConciergeBell,
+      Shopping: ShoppingBag,
+      Transfer: ArrowLeftRight,
+      Transportation: Car,
+      Travel: Plane,
+      Utilities: Lightbulb,
+      Income: CircleDollarSign,
+      Other: Package,
     };
 		  
 		  // Get emoji based on category
@@ -134,7 +135,11 @@ import { CHART_COLORS } from '@/constants/analytics';
 						<h3 className="font-medium text-sm line-clamp-1">{transaction.title}</h3>
                                                 <div className="flex items-center text-xs text-muted-foreground">
                                                   <span className="flex items-center gap-1">
-                                                    {iconMap[transaction.category] || iconMap['Other']}
+                                                    {(() => {
+                                                      const Icon = iconMap[transaction.category] || iconMap['Other'];
+                                                      const color = CATEGORY_COLOR_MAP[transaction.category] || CATEGORY_COLOR_MAP['Other'];
+                                                      return <Icon className={cn('w-6 h-6', color)} />;
+                                                    })()}
                                                     {transaction.category}
                                                   </span>
                                                   <span className="mx-1">•</span>
