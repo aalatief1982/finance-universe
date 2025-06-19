@@ -2,8 +2,8 @@
 import { CapacitorConfig } from '@capacitor/cli'; 
 
 const config: CapacitorConfig = {
-  appId: 'app.xpensia.com',
-  appName: 'Xpensia',
+  appId: 'app.expensia.com',
+  appName: 'Expensia',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {
@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
     }
   },
   android: {
-    appendUserAgent: 'Xpensia Android App'
+    appendUserAgent: 'Expensia Android App'
   }
 };
 
