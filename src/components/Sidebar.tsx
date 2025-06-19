@@ -15,7 +15,7 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
+    { name: 'Home', path: '/home', icon: <Home size={20} /> },
     { name: 'Transactions', path: '/transactions', icon: <BarChart3 size={20} /> },
     { name: 'Analytics', path: '/analytics', icon: <LineChart size={20} /> },
     { name: 'Import Transactions', path: '/import-transactions', icon: <Upload size={20} /> },
