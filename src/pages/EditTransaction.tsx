@@ -128,11 +128,16 @@ const EditTransaction = () => {
         <Card className="w-full">
           <CardHeader className="pb-2">
             <CardTitle>
-              {isNewTransaction ? 'Create a new transaction' : 'Edit transaction details'}
+              {isNewTransaction ? 'Add Transaction' : 'Edit Transaction'}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <TransactionEditForm transaction={transaction} onSave={handleSave} />
+            <TransactionEditForm
+              transaction={transaction}
+              onSave={handleSave}
+              compact
+              showNotes={false}
+            />
           </CardContent>
         </Card>
       </motion.div>
