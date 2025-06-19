@@ -13,7 +13,7 @@ interface CategoryChartProps {
 }
 
 const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
-const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
+const CHART_MARGIN = { top: 20, right: 120, left: 20, bottom: 20 };
 
 const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
   const limited = data.slice(0, 5);
@@ -28,7 +28,11 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
       <CardContent>
         {hasData ? (
           limited.length > 1 ? (
-            <div className="h-[300px] w-full" role="img" aria-label="Expenses by category donut chart">
+            <div
+              className="h-[300px] w-full flex items-center"
+              role="img"
+              aria-label="Expenses by category donut chart"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart margin={CHART_MARGIN}>
                   <Pie
@@ -51,7 +55,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
                     {formatCurrency(total)}
                   </text>
                   <Tooltip formatter={(value) => formatCurrency(Math.abs(Number(value)))} />
-                  <Legend />
+                  <Legend layout="vertical" align="right" verticalAlign="middle" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
