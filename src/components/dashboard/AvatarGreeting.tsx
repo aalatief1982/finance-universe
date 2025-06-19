@@ -4,10 +4,9 @@ import { User } from '@/types/user';
 
 interface AvatarGreetingProps {
   user: User | null;
-  tip?: string;
 }
 
-export const AvatarGreeting: React.FC<AvatarGreetingProps> = ({ user, tip }) => {
+export const AvatarGreeting: React.FC<AvatarGreetingProps> = ({ user }) => {
   const firstName = user?.fullName?.split(' ')[0] || 'there';
   const avatar = user?.avatar;
   const hour = new Date().getHours();
@@ -22,7 +21,6 @@ export const AvatarGreeting: React.FC<AvatarGreetingProps> = ({ user, tip }) => 
       </Avatar>
       <span className="flex flex-col leading-tight">
         <span>{`${greeting}, ${firstName}`}</span>
-        {tip && <span className="text-xs text-muted-foreground">{tip}</span>}
       </span>
     </span>
   );
