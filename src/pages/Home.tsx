@@ -250,8 +250,8 @@ const Home = () => {
                 <TabsList className="mb-4 border-b">
                   <TabsTrigger value="trends" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Trends</TabsTrigger>
                   <TabsTrigger value="net" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Net Balance</TabsTrigger>
-                  <TabsTrigger value="category" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">By Category</TabsTrigger>
-                  <TabsTrigger value="subcategory" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Subcategories</TabsTrigger>
+                  <TabsTrigger value="category" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Category</TabsTrigger>
+                  <TabsTrigger value="subcategory" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Subcategory</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="trends" className="space-y-2">

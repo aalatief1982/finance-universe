@@ -23,7 +23,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
   return (
     <Card className="border border-border shadow-sm overflow-hidden">
       <CardHeader className="pb-0">
-        <CardTitle className="text-xl font-medium">By Category</CardTitle>
+        <CardTitle className="text-xl font-medium">Category</CardTitle>
       </CardHeader>
       <CardContent>
         {hasData ? (

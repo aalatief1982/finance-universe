@@ -51,7 +51,7 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
   return (
     <Card className="border border-border shadow-sm overflow-hidden">
       <CardHeader className="pb-0">
-        <CardTitle className="text-xl font-medium">Subcategories</CardTitle>
+        <CardTitle className="text-xl font-medium">Subcategory</CardTitle>
       </CardHeader>
       <CardContent>
         {hasData ? (
