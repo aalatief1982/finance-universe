@@ -86,7 +86,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
     padding-top: var(--safe-area-top); /* Add padding for mobile notches */
   }
   h1 {
