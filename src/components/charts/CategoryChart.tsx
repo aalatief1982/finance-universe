@@ -4,6 +4,37 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { formatCurrency } from '@/lib/formatters';
 import { CHART_COLORS } from '@/constants/analytics';
 
+
+const RADIAN = Math.PI / 180;
+
+const renderLabelLine = ({ cx, cy, midAngle, outerRadius }: any) => {
+  const radius = outerRadius + 6;
+  const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+  const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+  const ex = cx + radius * Math.cos(-midAngle * RADIAN);
+  const ey = cy + radius * Math.sin(-midAngle * RADIAN);
+  return <path d={`M${sx},${sy}L${ex},${ey}`} stroke="currentColor" fill="none" strokeWidth={1} />;
+};
+
+const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }: any) => {
+  const radius = outerRadius + 8;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="currentColor"
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      className="text-xs"
+    >
+      {(percent * 100).toFixed(0)}%
+    </text>
+  );
+};
+
+
 interface CategoryItem {
   name: string;
   value: number;
@@ -39,13 +70,15 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
                     data={limited}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
+                    labelLine={renderLabelLine}
                     outerRadius={80}
                     innerRadius={40}
                     fill="#8884d8"
                     dataKey="value"
                     isAnimationActive
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+
+                    label={renderLabel}
+
                   >
                     {limited.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
