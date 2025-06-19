@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
+import { CHART_COLORS } from '@/constants/analytics';
 
 interface Item {
   name: string;
@@ -13,7 +14,6 @@ interface SubcategoryChartProps {
 }
 
 const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
-const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 
 const BarTooltip = (total: number) => ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -64,7 +64,7 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
                 <Tooltip content={BarTooltip(total)} />
                 <Bar dataKey="value" radius={[4, 4, 4, 4]} isAnimationActive>
                   {data.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
