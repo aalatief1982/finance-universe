@@ -1,8 +1,8 @@
 
 // Map routes to their corresponding titles
 export const routeTitleMap: Record<string, string> = {
-  '/': 'Home',
-  '/home': 'Home',
+  '/': 'Xpensia',
+  '/home': 'Xpensia',
   '/transactions': 'Transactions',
   '/analytics': 'Analytics',
   '/process-sms': 'Process SMS',
