@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { formatCurrency } from '@/lib/formatters';
 import { CHART_COLORS } from '@/constants/analytics';
 
+
 const RADIAN = Math.PI / 180;
 
 const renderLabelLine = ({ cx, cy, midAngle, outerRadius }: any) => {
@@ -32,6 +33,7 @@ const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }: any) => {
     </text>
   );
 };
+
 
 interface CategoryItem {
   name: string;
@@ -74,7 +76,9 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
                     fill="#8884d8"
                     dataKey="value"
                     isAnimationActive
+
                     label={renderLabel}
+
                   >
                     {limited.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
