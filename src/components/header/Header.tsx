@@ -32,8 +32,8 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
     !isAuthPage &&
     !isLandingPage;
 
-  // Always show mobile menu and settings on the dashboard page
-  const showMobileIcons = shouldShowNavigation || location.pathname === '/dashboard';
+  // Show mobile menu and settings on all pages except onboarding
+  const showMobileIcons = !isAuthPage;
 
   if (isAuthPage) {
     return <AuthHeader className={className} />;
