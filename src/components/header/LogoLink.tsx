@@ -18,7 +18,9 @@ export const LogoLink: React.FC<LogoLinkProps> = ({ isLandingPage, currentPageTi
     >
       <Link to="/" className="flex items-center space-x-2">
         <XpensiaLogo />
-        <span className="text-xl font-semibold tracking-tight">Expensia</span>
+        <span className="text-xl font-semibold tracking-tight">
+          {isLandingPage ? 'Xpensia' : currentPageTitle}
+        </span>
       </Link>
     </motion.div>
   );
