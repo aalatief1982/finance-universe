@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, List, BarChart3, Settings } from 'lucide-react';
 
 const navItems = [
-  { name: 'Dashboard', path: '/dashboard', icon: Home },
+  { name: 'Home', path: '/home', icon: Home },
   { name: 'Transactions', path: '/transactions', icon: List },
   { name: 'Reports', path: '/analytics', icon: BarChart3 },
   { name: 'Settings', path: '/settings', icon: Settings }

@@ -2,7 +2,7 @@
 // Map routes to their corresponding titles
 export const routeTitleMap: Record<string, string> = {
   '/': 'Home',
-  '/dashboard': 'Dashboard',
+  '/home': 'Home',
   '/transactions': 'Transactions',
   '/analytics': 'Analytics',
   '/process-sms': 'Process SMS',
@@ -23,8 +23,8 @@ export const routeTitleMap: Record<string, string> = {
 // Navigation items that appear in the header
 export const getNavItems = () => [
   { 
-    title: 'Dashboard', 
-    path: '/dashboard', 
+    title: 'Home', 
+    path: '/home', 
     icon: 'Home', 
     description: 'Overview of your finances' 
   },

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
-import Dashboard from './pages/Dashboard';
+import Home from './pages/Home';
 import Transactions from './pages/Transactions';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
@@ -165,8 +165,8 @@ function AppWrapper() {
 
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/home" element={<Home />} />
       <Route path="/transactions" element={<Transactions />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/profile" element={<Profile />} />
