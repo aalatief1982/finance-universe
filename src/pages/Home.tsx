@@ -46,7 +46,6 @@ const Home = () => {
   const { user } = useUser();
   const navigate = useNavigate();
 
-  const tip = 'Remember to log your expenses today';
 
   type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';
   const [range, setRange] = React.useState<Range>('');
@@ -203,7 +202,7 @@ const Home = () => {
     <Layout withPadding={false} fullWidth>
       <div className="px-1">
         <PageHeader
-          title={<AvatarGreeting user={user} tip={tip} />}
+          title={<AvatarGreeting user={user} />}
         />
 
         <div className="my-2">
