@@ -23,12 +23,15 @@ import {
   ResponsiveContainer,
   LineChart,
   Line,
-  CartesianGrid
+  CartesianGrid,
+  Cell
 } from 'recharts';
 import { AnalyticsService } from '@/services/AnalyticsService';
 import { transactionService } from '@/services/TransactionService';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from '@/components/ui/use-toast';
+
+const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 
 const tips = [
   'Review your subscriptions regularly to avoid surprises.',
@@ -219,7 +222,11 @@ const Analytics: React.FC = () => {
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                       <YAxis tickFormatter={v => formatCurrency(v).replace(/[^0-9.]/g, '')} width={40} tick={{ fontSize: 11 }} />
                       <Tooltip formatter={(v:number)=>formatCurrency(Number(v))} />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4,4,0,0]} />
+                      <Bar dataKey="value" radius={[4,4,0,0]}>
+                        {topCategories.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

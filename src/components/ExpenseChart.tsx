@@ -170,7 +170,11 @@ const ExpenseChart = ({ expensesByCategory = [], expensesBySubcategory = [] }: E
                       <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
                       <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
                       <Tooltip content={BarTooltip(totalSubcategory)} />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 4, 4]} isAnimationActive />
+                      <Bar dataKey="value" radius={[4, 4, 4, 4]} isAnimationActive>
+                        {expensesBySubcategory.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

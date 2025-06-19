@@ -1,13 +1,15 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { MonthlyData } from '@/services/AnalyticsService';
 
 interface MonthlyTrendsChartProps {
   monthlyData: MonthlyData[];
 }
+
+const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 
 const MonthlyTrendsChart = ({ monthlyData }: MonthlyTrendsChartProps) => {
   // Custom tooltip for the chart
@@ -41,7 +43,11 @@ const MonthlyTrendsChart = ({ monthlyData }: MonthlyTrendsChartProps) => {
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{fontSize: '12px'}} />
-                <Bar dataKey="total" name="Spending" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total" name="Spending" radius={[4, 4, 0, 0]}>
+                  {monthlyData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
