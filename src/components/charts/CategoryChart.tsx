@@ -44,7 +44,9 @@ interface CategoryChartProps {
   data: CategoryItem[];
 }
 
-const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 40 };
+// Extra bottom spacing is required for the legend, so we provide an equal
+// top margin to keep the donut vertically centered within the chart.
+const CHART_MARGIN = { top: 40, right: 20, left: 20, bottom: 40 };
 
 const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
   const limited = data.slice(0, 5);
