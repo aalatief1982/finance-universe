@@ -137,23 +137,23 @@ const Dashboard = () => {
     }, {} as Record<string, number>);
 
   const iconMap: Record<string, JSX.Element> = {
-    Bills: <Receipt className="w-5 h-5" />,
-    Education: <GraduationCap className="w-5 h-5" />,
-    Entertainment: <Gamepad2 className="w-5 h-5" />,
-    Food: <Utensils className="w-5 h-5" />,
-    'Gifts & Donations': <Gift className="w-5 h-5" />,
-    Health: <HeartPulse className="w-5 h-5" />,
-    Housing: <Home className="w-5 h-5" />,
-    Kids: <Baby className="w-5 h-5" />,
-    'Personal Care': <Bath className="w-5 h-5" />,
-    Services: <ConciergeBell className="w-5 h-5" />,
-    Shopping: <ShoppingBag className="w-5 h-5" />,
-    Transfer: <ArrowLeftRight className="w-5 h-5" />,
-    Transportation: <Car className="w-5 h-5" />,
-    Travel: <Plane className="w-5 h-5" />,
-    Utilities: <Lightbulb className="w-5 h-5" />,
-    Income: <CircleDollarSign className="w-5 h-5" />,
-    Other: <Package className="w-5 h-5" />,
+    Bills: <Receipt className="w-6 h-6" />,
+    Education: <GraduationCap className="w-6 h-6" />,
+    Entertainment: <Gamepad2 className="w-6 h-6" />,
+    Food: <Utensils className="w-6 h-6" />,
+    'Gifts & Donations': <Gift className="w-6 h-6" />,
+    Health: <HeartPulse className="w-6 h-6" />,
+    Housing: <Home className="w-6 h-6" />,
+    Kids: <Baby className="w-6 h-6" />,
+    'Personal Care': <Bath className="w-6 h-6" />,
+    Services: <ConciergeBell className="w-6 h-6" />,
+    Shopping: <ShoppingBag className="w-6 h-6" />,
+    Transfer: <ArrowLeftRight className="w-6 h-6" />,
+    Transportation: <Car className="w-6 h-6" />,
+    Travel: <Plane className="w-6 h-6" />,
+    Utilities: <Lightbulb className="w-6 h-6" />,
+    Income: <CircleDollarSign className="w-6 h-6" />,
+    Other: <Package className="w-6 h-6" />,
   };
 
   const formatDisplayTitle = (txn: Transaction) => {
@@ -283,23 +283,25 @@ const Dashboard = () => {
                       key={transaction.id || idx}
                       onClick={() => navigate(`/edit-transaction/${transaction.id}`)}
                       aria-label="Edit transaction"
-                      className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer flex items-center justify-between gap-3"
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer"
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {iconMap[transaction.category] || iconMap['Other']}
-                        <span className="font-medium line-clamp-1">{formatDisplayTitle(transaction)}</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {iconMap[transaction.category] || iconMap['Other']}
+                          <span className="font-medium line-clamp-1">{formatDisplayTitle(transaction)}</span>
+                        </div>
+                        <div
+                          className={transaction.amount < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}
+                        >
+                          {transaction.amount < 0 ? '−' : '+'}
+                          {Math.abs(transaction.amount).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground flex-1 text-center whitespace-nowrap">
+                      <div className="text-xs text-muted-foreground mt-1">
                         {formatTxnDate(transaction.date)} • {transaction.category}
-                      </div>
-                      <div
-                        className={transaction.amount < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'}
-                      >
-                        {transaction.amount < 0 ? '−' : '+'}
-                        {Math.abs(transaction.amount).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
                       </div>
                     </div>
                   ))}

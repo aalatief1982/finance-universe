@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
+import { CHART_COLORS } from '@/constants/analytics';
 
 interface CategoryItem {
   name: string;
@@ -12,8 +13,7 @@ interface CategoryChartProps {
   data: CategoryItem[];
 }
 
-const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
-const CHART_MARGIN = { top: 20, right: 120, left: 20, bottom: 20 };
+const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 40 };
 
 const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
   const limited = data.slice(0, 5);
@@ -45,17 +45,17 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
                     fill="#8884d8"
                     dataKey="value"
                     isAnimationActive
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                   >
                     {limited.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                     ))}
                   </Pie>
                   <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-sm fill-foreground">
                     {formatCurrency(total)}
                   </text>
                   <Tooltip formatter={(value) => formatCurrency(Math.abs(Number(value)))} />
-                  <Legend layout="vertical" align="right" verticalAlign="middle" />
+                  <Legend layout="horizontal" align="center" verticalAlign="bottom" />
                 </PieChart>
               </ResponsiveContainer>
             </div>
