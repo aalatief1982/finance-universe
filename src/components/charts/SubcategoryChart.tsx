@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 
 interface Item {
@@ -13,6 +13,7 @@ interface SubcategoryChartProps {
 }
 
 const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
+const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 
 const BarTooltip = (total: number) => ({ active, payload }: any) => {
   if (active && payload && payload.length) {
@@ -61,7 +62,11 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
                 <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
                 <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
                 <Tooltip content={BarTooltip(total)} />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 4, 4]} isAnimationActive />
+                <Bar dataKey="value" radius={[4, 4, 4, 4]} isAnimationActive>
+                  {data.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
