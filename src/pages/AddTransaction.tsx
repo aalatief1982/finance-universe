@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { useTransactions } from '@/context/TransactionContext';
 import TransactionEditForm from '@/components/TransactionEditForm';
@@ -38,7 +39,9 @@ const AddTransaction = () => {
       >
 
         <Card className="w-full">
-          <CardHeader className="pb-2" />
+          <CardHeader className="pb-2">
+            <CardTitle>Add Transaction</CardTitle>
+          </CardHeader>
           <CardContent className="pt-0">
             <TransactionEditForm onSave={handleSave} compact showNotes={false} />
           </CardContent>

@@ -288,7 +288,11 @@ const Home = () => {
                   {filteredTransactions.slice(0, 5).map((transaction, idx) => (
                     <div
                       key={transaction.id || idx}
-                      onClick={() => navigate(`/edit-transaction/${transaction.id}`)}
+                      onClick={() =>
+                        navigate(`/edit-transaction/${transaction.id}`, {
+                          state: { transaction },
+                        })
+                      }
                       aria-label="Edit transaction"
                       className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer"
                     >
