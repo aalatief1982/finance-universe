@@ -18,6 +18,7 @@ export const routeTitleMap: Record<string, string> = {
   '/wireframes/sms-provider': 'SMS Provider',
   '/wireframes/sms-transaction': 'SMS Transaction',
   '/import-transactions': 'Import Transactions',
+  '/edit-transaction': 'Transaction',
 };
 
 // Navigation items that appear in the header

@@ -79,6 +79,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         title: transaction.title?.trim() || generateDefaultTitle(transaction),
         date: displayDate,
         description: transaction.description?.trim() || rawMessage,
+        toAccount: transaction.toAccount || '',
       };
     }
 
@@ -91,6 +92,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       subcategory: 'none',
       date: new Date().toISOString().split('T')[0],
       fromAccount: 'Cash',
+      toAccount: '',
       currency: 'SAR',
       description: '',
       notes: '',
@@ -102,7 +104,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     if (transaction) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
       if (transaction.source === 'smart-paste' || transaction.details?.rawMessage) {
-        ['type', 'title', 'amount', 'currency', 'vendor', 'fromAccount', 'date', 'category', 'subcategory'].forEach((field) => {
+        ['type', 'title', 'amount', 'currency', 'vendor', 'fromAccount', 'toAccount', 'date', 'category', 'subcategory'].forEach((field) => {
           const value = transaction[field as keyof Transaction];
           const isDriven =
             value != null &&
@@ -134,6 +136,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       if (field === 'type') {
         updated.category = 'Uncategorized';
         updated.subcategory = 'none';
+        if (value !== 'transfer') {
+          updated.toAccount = '';
+        }
       }
 
       if (field === 'category') {
@@ -288,6 +293,21 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
         />
       </div>
+
+      {editedTransaction.type === 'transfer' && (
+        <div className={rowClass}>
+          <label className={labelClass}>To Account*</label>
+
+          <Input
+            value={editedTransaction.toAccount || ''}
+            onChange={(e) => handleChange('toAccount', e.target.value)}
+            style={getDrivenFieldStyle('toAccount', drivenFields)}
+            placeholder="Destination account"
+            required
+            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+          />
+        </div>
+      )}
 
 
       <div className={rowClass}>
