@@ -18,6 +18,7 @@ import ProcessVendors from '@/pages/sms/ProcessVendors';
 import VendorCategorization from '@/pages/sms/VendorCategorization';
 import VendorMapping from '@/pages/VendorMapping';
 import ReviewDraftTransactions from '@/pages/ReviewDraftTransactions';
+import Analytics from './pages/Analytics';
 
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
@@ -167,6 +168,7 @@ function AppWrapper() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/transactions" element={<Transactions />} />
+      <Route path="/analytics" element={<Analytics />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/import-transactions" element={<ImportTransactions />} />
