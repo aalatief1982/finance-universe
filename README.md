@@ -143,3 +143,7 @@ BackgroundSmsListener.addListener('smsReceived', ({ sender, body }) => {
 
 This ensures SMS messages received while the app was not running are delivered on next startup.
 
+Duplicate SMS events should no longer occur when the listener is active, as the
+static receiver now checks whether the plugin is running before persisting or
+processing messages.
+
