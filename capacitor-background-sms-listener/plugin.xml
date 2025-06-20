@@ -1,0 +1,16 @@
+<plugin id="background-sms-listener-plugin" version="1.0.0">
+  <name>BackgroundSmsListener</name>
+  <js-module src="dist/plugin.js" name="BackgroundSmsListener">
+    <clobbers target="BackgroundSmsListener"/>
+  </js-module>
+  <platform name="android">
+    <config-file parent="/*" target="AndroidManifest.xml">
+      <uses-permission android:name="android.permission.RECEIVE_SMS" />
+      <uses-permission android:name="android.permission.READ_SMS" />
+      <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    </config-file>
+    <source-file src="android/src/main/java/app/xpensia/com/plugins/backgroundsmslistener/BackgroundSmsListenerPlugin.java" target-dir="src/app/xpensia/com/plugins/backgroundsmslistener" />
+    <source-file src="android/src/main/java/app/xpensia/com/plugins/backgroundsmslistener/SmsBroadcastReceiver.java" target-dir="src/app/xpensia/com/plugins/backgroundsmslistener" />
+    <source-file src="android/src/main/java/app/xpensia/com/plugins/backgroundsmslistener/SmsProcessingService.java" target-dir="src/app/xpensia/com/plugins/backgroundsmslistener" />
+  </platform>
+</plugin>
