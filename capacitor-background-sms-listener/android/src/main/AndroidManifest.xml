@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="app.xpensia.com.plugins.backgroundsmslistener">
+    <application>
+        <service
+            android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsProcessingService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+    </application>
+</manifest>
