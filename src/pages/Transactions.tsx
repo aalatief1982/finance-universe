@@ -4,10 +4,9 @@ import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
 import TransactionsByDate from '@/components/transactions/TransactionsByDate';
 import EditTransactionDialog from '@/components/transactions/EditTransactionDialog';
-import MobileActions from '@/components/transactions/MobileActions';
+import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
 import { useTransactionsState } from '@/hooks/useTransactionsState';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { DatePicker } from '@/components/ui/date-picker';
 import { CATEGORIES } from '@/lib/mock-data';
@@ -166,9 +165,6 @@ const Transactions = () => {
           ) : (
           <div className="flex flex-col items-center justify-center py-[var(--section-gap)] text-center">
             <p className="text-muted-foreground mb-3">No transactions found</p>
-            <Button onClick={() => navigate('/edit-transaction')}>
-              Add Transaction
-            </Button>
           </div>
         )}
         </div>
@@ -186,11 +182,7 @@ const Transactions = () => {
         categories={CATEGORIES}
       />
       
-      <MobileActions
-        onAddTransaction={() => navigate('/edit-transaction')}
-        onToggleFilters={() => {}}
-        filtersVisible={false}
-      />
+      <ResponsiveFAB onClick={() => navigate('/edit-transaction')} />
     </Layout>
   );
 };
