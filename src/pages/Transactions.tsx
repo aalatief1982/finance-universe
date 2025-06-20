@@ -102,7 +102,9 @@ const Transactions = () => {
     <Layout withPadding={false} showBack fullWidth>
       <PageHeader title={null} />
 
+
       <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 -mt-[7px] space-y-2">
+
         <ToggleGroup
           type="single"
           value={range}
