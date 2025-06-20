@@ -137,6 +137,7 @@ const Transactions = () => {
             </Button>
           </div>
         </div>
+      </div>
       
       <div className="px-[var(--page-padding-x)] pt-2 pb-24 mt-1">
         {filteredTransactions.length > 0 ? (
