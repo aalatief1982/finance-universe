@@ -27,8 +27,27 @@ import com.getcapacitor.annotation.Permission;
 )
 public class BackgroundSmsListenerPlugin extends Plugin {
     private static final String TAG = "BackgroundSmsListener";
+    private static BackgroundSmsListenerPlugin instance;
     private boolean isListening = false;
     private BroadcastReceiver smsReceiver;
+
+    @Override
+    public void load() {
+        instance = this;
+        super.load();
+    }
+
+    public static void notifySmsReceived(Context context, String sender, String body) {
+        JSObject data = new JSObject();
+        data.put("sender", sender);
+        data.put("body", body);
+
+        if (instance != null) {
+            instance.notifyListeners("smsReceived", data);
+        } else {
+            Log.d(TAG, "Instance null, sms not delivered");
+        }
+    }
 
     /**
      * Check if the SMS permission is granted
@@ -214,6 +233,7 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     protected void handleOnDestroy() {
         Log.d(TAG, "Plugin is being destroyed, cleaning up");
         unregisterSmsReceiver();
+        instance = null;
         super.handleOnDestroy();
     }
 }
