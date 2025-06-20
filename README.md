@@ -130,3 +130,16 @@ BackgroundSmsListener.addListener('smsReceived', ({ sender, body }) => {
 });
 ```
 
+### Testing delivery after app restart
+
+1. Install the app on a device or emulator.
+2. Force stop the app so no processes remain.
+3. Send an SMS message to the device while the app is stopped.
+4. Launch the app again.
+5. Check logcat for tags `STATIC_SMS_RECEIVER`, `PENDING_SMS_DELIVERY`, and `PLUGIN_INIT_LOGS` to confirm:
+   - the static receiver stored the SMS,
+   - the plugin delivered the pending message on load,
+   - and the `smsReceived` listener was triggered.
+
+This ensures SMS messages received while the app was not running are delivered on next startup.
+
