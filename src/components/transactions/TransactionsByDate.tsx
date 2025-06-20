@@ -38,16 +38,27 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
     }
   };
 
+  const categoryEmoji = (category: string) => {
+    const map: Record<string, string> = {
+      Health: '💊',
+      Transportation: '🚗',
+      Earnings: '💼',
+    };
+    return map[category] || '🛒';
+  };
+
   return (
-    <div className="space-y-6">
-      {sortedDates.map(date => (
-        <div key={date} className="space-y-2">
+    <div className="space-y-[var(--card-gap)] px-[var(--page-padding-x)]">
+      {sortedDates.map(date => {
+        const net = groupedTransactions[date].reduce((s, t) => s + t.amount, 0);
+        return (
+        <div key={date} className="space-y-[var(--card-gap)]">
           <h3 className="font-semibold text-gray-600 text-sm">
             {formatDate(date)}
           </h3>
-          
-          <div className="space-y-2">
-           {groupedTransactions[date].map((transaction, index) => {
+
+          <div className="space-y-[var(--card-gap)]">
+            {groupedTransactions[date].map((transaction, index) => {
   if (!transaction.id?.trim()) {
     console.warn('⚠️ Empty or invalid transaction.id:', transaction);
   }
@@ -55,33 +66,40 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
   return (
     <div
       key={transaction.id?.trim() || `txn-${date}-${index}`}
-      className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3"
+        className="bg-white rounded-2xl shadow-sm border border-gray-200 px-4 py-3"
     >
-      <div className="flex justify-between items-center">
-        <div className="flex-1">
-          <h4 className="font-medium">{transaction.title}</h4>
-          <p className="text-sm text-muted-foreground">{transaction.category}</p>
-        </div>
+        <div className="flex justify-between items-center">
+          <div>
+            <h4 className="font-medium text-sm">{transaction.title}</h4>
+            <span className="mt-0.5 inline-flex items-center gap-1 text-xs rounded px-2 py-0.5 bg-muted text-muted-foreground">
+              {categoryEmoji(transaction.category)} {transaction.category}
+            </span>
+          </div>
 
-        <div className="flex items-center gap-4">
-          <span
-            className={`font-semibold ${
-              transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
-            }`}
-          >
-            {formatCurrency(transaction.amount)}
-          </span>
+          <div className="flex items-center gap-4">
+            <span
+              className={`font-semibold ${
+                transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
+              }`}
+            >
+              {formatCurrency(transaction.amount)}
+            </span>
 
-          <TransactionActions transaction={transaction} variant="dropdown" />
-        </div>
-      </div>
-    </div>
-  );
-})}
-
+            <TransactionActions transaction={transaction} variant="dropdown" />
           </div>
         </div>
-      ))}
+      </div>
+    );
+  });
+
+          </div>
+            <div className="text-right text-sm font-semibold">
+              Net: {formatCurrency(net)}
+            </div>
+          </div>
+        </div>
+      );
+    })
     </div>
   );
 };

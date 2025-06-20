@@ -85,7 +85,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-lg mb-2" ref={constraintsRef}>
+    <div className="relative overflow-hidden rounded-2xl mb-2" ref={constraintsRef}>
       {/* Background elements */}
       <div className="absolute inset-0 flex justify-between items-stretch">
         <div className="bg-blue-500 w-1/2 flex items-center justify-center">
@@ -103,7 +103,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         animate={controls}
-        className="relative bg-card rounded-lg shadow z-10"
+        className="relative bg-card rounded-2xl shadow-sm z-10"
       >
         <Card className="p-[var(--card-padding)] cursor-grab active:cursor-grabbing">
           <div className="flex justify-between items-center">
