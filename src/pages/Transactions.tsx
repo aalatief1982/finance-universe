@@ -103,7 +103,54 @@ const Transactions = () => {
     <Layout withPadding={false} showBack fullWidth>
       <PageHeader title={null} className="pt-2" />
 
-      <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-2 pb-2">
+      <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-2 pb-2 space-y-2">
+        <ToggleGroup
+          type="single"
+          value={range}
+          onValueChange={val => setRange(val as Range)}
+          className="w-full bg-muted p-1 text-muted-foreground rounded-md"
+        >
+          {['day', 'week', 'month', 'year'].map(r => (
+            <ToggleGroupItem
+              key={r}
+              value={r}
+              className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+            >
+              {r.charAt(0).toUpperCase() + r.slice(1)}
+            </ToggleGroupItem>
+          ))}
+          <ToggleGroupItem
+            value="custom"
+            className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+          >
+            Custom
+          </ToggleGroupItem>
+        </ToggleGroup>
+
+        {range === 'custom' && (
+          <div className="flex items-center justify-center gap-2 animate-in fade-in">
+            <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
+            <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
+          </div>
+        )}
+
+        <ToggleGroup
+          type="single"
+          value={filter}
+          onValueChange={val => setFilter(val as 'all' | 'income' | 'expense')}
+          className="w-full bg-muted p-1 text-muted-foreground rounded-md"
+        >
+          {['all', 'income', 'expense'].map(f => (
+            <ToggleGroupItem
+              key={f}
+              value={f}
+              className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+
         <Input
           placeholder="Search transactions..."
           className="h-8 text-sm rounded-md w-full px-3 py-1.5"
@@ -113,55 +160,6 @@ const Transactions = () => {
       </div>
 
       <div className="px-[var(--page-padding-x)]">
-        <div className="space-y-2 pt-2">
-          <ToggleGroup
-            type="single"
-            value={filter}
-            onValueChange={val => setFilter(val as 'all' | 'income' | 'expense')}
-            className="w-full bg-muted p-1 text-muted-foreground rounded-md"
-          >
-            {['all', 'income', 'expense'].map(f => (
-              <ToggleGroupItem
-                key={f}
-                value={f}
-                className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-
-          <ToggleGroup
-            type="single"
-            value={range}
-            onValueChange={val => setRange(val as Range)}
-            className="w-full bg-muted p-1 text-muted-foreground rounded-md"
-          >
-            {['day','week','month','year'].map(r => (
-              <ToggleGroupItem
-                key={r}
-                value={r}
-                className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
-              >
-                {r.charAt(0).toUpperCase() + r.slice(1)}
-              </ToggleGroupItem>
-            ))}
-            <ToggleGroupItem
-              value="custom"
-              className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
-            >
-              Custom
-            </ToggleGroupItem>
-          </ToggleGroup>
-
-          {range === 'custom' && (
-            <div className="flex items-center justify-center gap-2 animate-in fade-in">
-              <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
-              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
-            </div>
-          )}
-        </div>
-
         <div className="pt-2 pb-24 mt-1">
           {filteredTransactions.length > 0 ? (
             <TransactionsByDate transactions={filteredTransactions} />
