@@ -96,3 +96,35 @@ Enable compact mode and hide notes at the same time:
 <TransactionEditForm onSave={handleSave} compact showNotes={false} />
 ```
 
+
+## BackgroundSmsListenerPlugin
+
+`BackgroundSmsListenerPlugin` enables the app to listen for incoming SMS messages while running in the background. The plugin is implemented in the `android` directory and is registered via Capacitor.
+
+### Required permissions
+
+The following permissions are required on Android. They are included in `android-manifest-additions.xml`:
+
+```xml
+<uses-permission android:name="android.permission.READ_SMS" />
+<uses-permission android:name="android.permission.RECEIVE_SMS" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+```
+
+### Enabling the listener
+
+1. Call `checkPermission()` to see if SMS access is granted.
+2. If not granted, call `requestPermission()`.
+3. After permission is granted, call `startListening()` and register an `smsReceived` listener:
+
+```ts
+const perm = await BackgroundSmsListener.checkPermission();
+if (!perm.granted) {
+  await BackgroundSmsListener.requestPermission();
+}
+await BackgroundSmsListener.startListening();
+BackgroundSmsListener.addListener('smsReceived', ({ sender, body }) => {
+  console.log('SMS from', sender, body);
+});
+```
+
