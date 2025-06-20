@@ -1,7 +1,7 @@
 import React from "react";
 import { format, parseISO } from "date-fns";
 import { Transaction } from "@/types/transaction";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency } from "@/utils/format-utils";
 import TransactionActions from "./TransactionActions";
 
 interface TransactionsByDateProps {
@@ -53,6 +53,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
     <div className="space-y-[var(--card-gap)] px-[var(--page-padding-x)]">
       {sortedDates.map((date) => {
         const net = groupedTransactions[date].reduce((s, t) => s + t.amount, 0);
+        const netCurrency = groupedTransactions[date][0]?.currency || 'USD';
         return (
           <div key={date} className="space-y-[var(--card-gap)]">
             <h3 className="font-semibold text-gray-600 text-sm">
@@ -105,8 +106,12 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
                 );
               })}
             </div>
-            <div className="text-right text-sm font-semibold">
-              Net: {formatCurrency(net)}
+            <div
+              className={`text-center text-sm font-semibold ${
+                net >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
+              Net: {formatCurrency(net, netCurrency)}
             </div>
           </div>
         );

@@ -5,23 +5,17 @@ import PageHeader from '@/components/layout/PageHeader';
 import TransactionsByDate from '@/components/transactions/TransactionsByDate';
 import EditTransactionDialog from '@/components/transactions/EditTransactionDialog';
 import MobileActions from '@/components/transactions/MobileActions';
-import SwipeableTransactionCard from '@/components/transactions/SwipeableTransactionCard';
 import { useTransactionsState } from '@/hooks/useTransactionsState';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { Search, Filter, List, Grid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CATEGORIES } from '@/lib/mock-data';
-import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 const Transactions = () => {
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'swipeable'>('list');
   const navigate = useNavigate();
-  const isMobile = useMediaQuery('(max-width: 768px)');
   
   const {
     transactions,
@@ -46,15 +40,11 @@ const Transactions = () => {
         return false;
       }
     }
-    
+
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      return (
-        tx.title.toLowerCase().includes(query) ||
-        tx.category.toLowerCase().includes(query) ||
-        (tx.notes && tx.notes.toLowerCase().includes(query))
-      );
+      return JSON.stringify(tx).toLowerCase().includes(query);
     }
     
     return true;
@@ -62,54 +52,19 @@ const Transactions = () => {
   
   return (
     <Layout withPadding={false} showBack fullWidth>
-      <PageHeader
-        title={null}
-        className="pt-2"
-        actions={
-          <>
-            {isMobile && (
-              <div className="border rounded-md p-0.5">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    'h-7 w-7 rounded-md bg-transparent text-muted-foreground',
-                    viewMode === 'list' && 'bg-primary text-white'
-                  )}
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    'h-7 w-7 rounded-md bg-transparent text-muted-foreground',
-                    viewMode === 'swipeable' && 'bg-primary text-white'
-                  )}
-                  onClick={() => setViewMode('swipeable')}
-                >
-                  <Grid className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            )}
-          </>
-        }
-      />
+      <PageHeader title={null} className="pt-2" />
+
+      <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-2 pb-2">
+        <Input
+          placeholder="Search transactions..."
+          className="h-8 text-sm rounded-md w-full px-3 py-1.5"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+      </div>
 
       <div className="px-[var(--page-padding-x)]">
-        {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center pt-2">
-          <div className="relative flex-1 w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-            <Input
-                placeholder="Search transactions..."
-                className="pl-10 h-8 text-sm rounded-md w-full px-3 py-1.5"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-          </div>
-          <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-2">
+        <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
             <Tabs value={filter} onValueChange={value => setFilter(value as 'all' | 'income' | 'expense')}>
               <TabsList className="h-8 bg-gray-100 rounded-md p-0.5">
                 <TabsTrigger
@@ -132,8 +87,7 @@ const Transactions = () => {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Button variant="outline" className="min-w-[80px] flex gap-1.5 h-8"  size="sm">
-              <Filter size={14} />
+            <Button variant="outline" className="min-w-[80px] h-8" size="sm">
               Filter
             </Button>
           </div>
@@ -141,19 +95,8 @@ const Transactions = () => {
 
           <div className="pt-2 pb-24 mt-1">
           {filteredTransactions.length > 0 ? (
-            isMobile && viewMode === 'swipeable' ? (
-              <div className="space-y-[var(--card-gap)]">
-                {filteredTransactions.map((transaction, index) => (
-                  <SwipeableTransactionCard
-                    key={transaction.id || `txn-${index}`}
-                  transaction={transaction}
-                />
-              ))}
-            </div>
-          ) : (
             <TransactionsByDate transactions={filteredTransactions} />
-          )
-        ) : (
+          ) : (
           <div className="flex flex-col items-center justify-center py-[var(--section-gap)] text-center">
             <p className="text-muted-foreground mb-3">No transactions found</p>
             <Button onClick={() => navigate('/edit-transaction')}>

@@ -24,7 +24,7 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import { CATEGORY_COLOR_MAP } from '@/constants/categoryColors';
-		import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency } from '@/utils/format-utils';
 		import { Transaction } from '@/types/transaction';
 		import { Card, CardContent } from '@/components/ui/card';
 		import { Button } from '@/components/ui/button';
@@ -154,7 +154,7 @@ import { CATEGORY_COLOR_MAP } from '@/constants/categoryColors';
 						isIncome ? "income-text" : "expense-text"
 					  )}>
 						{isIncome ? "+" : "-"}
-						{formatCurrency(Math.abs(transaction.amount))}
+                                                {formatCurrency(Math.abs(transaction.amount), transaction.currency || 'USD')}
 					  </span>
 					</div>
 				  </div>
