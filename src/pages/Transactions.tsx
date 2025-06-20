@@ -61,7 +61,7 @@ const Transactions = () => {
   });
   
   return (
-    <Layout withPadding={false} showBack>
+    <Layout withPadding={false} showBack fullWidth>
       <PageHeader
         title={null}
         className="pt-2"
@@ -97,9 +97,9 @@ const Transactions = () => {
         }
       />
 
-      <div className="px-[var(--page-padding-x)] pt-2">
+      <div className="px-1">
         {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-2 items-center">
+        <div className="flex flex-col sm:flex-row gap-2 items-center pt-2">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
@@ -137,14 +137,14 @@ const Transactions = () => {
             </Button>
           </div>
         </div>
-      
-      <div className="px-[var(--page-padding-x)] pt-2 pb-24 mt-1">
-        {filteredTransactions.length > 0 ? (
-          isMobile && viewMode === 'swipeable' ? (
-            <div className="space-y-[var(--card-gap)]">
-              {filteredTransactions.map((transaction, index) => (
-                <SwipeableTransactionCard
-                  key={transaction.id || `txn-${index}`}
+
+        <div className="pt-2 pb-24 mt-1">
+          {filteredTransactions.length > 0 ? (
+            isMobile && viewMode === 'swipeable' ? (
+              <div className="space-y-[var(--card-gap)]">
+                {filteredTransactions.map((transaction, index) => (
+                  <SwipeableTransactionCard
+                    key={transaction.id || `txn-${index}`}
                   transaction={transaction}
                 />
               ))}
@@ -160,6 +160,7 @@ const Transactions = () => {
             </Button>
           </div>
         )}
+        </div>
       </div>
       
       <EditTransactionDialog
