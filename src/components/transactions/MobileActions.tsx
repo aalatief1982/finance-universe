@@ -23,7 +23,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   filtersVisible
 }) => {
   return (
-    <div className="fixed bottom-4 right-4 flex flex-col gap-2 sm:hidden">
+    <div className="fixed bottom-16 right-4 flex flex-col gap-2 sm:hidden">
       <Sheet>
         <TooltipProvider>
           <Tooltip>
