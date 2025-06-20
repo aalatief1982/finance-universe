@@ -11,7 +11,6 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.getcapacitor.JSObject;
 
 public class SmsProcessingService extends Service {
     private static final String TAG = "SmsProcessingService";
