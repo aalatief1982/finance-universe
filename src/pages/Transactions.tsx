@@ -99,7 +99,7 @@ const Transactions = () => {
 
       <div className="px-[var(--page-padding-x)]">
         {/* Search and Filters */}
-        <div className="flex flex-col sm:flex-row gap-2 items-center pt-2">
+        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center pt-2">
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
@@ -108,7 +108,8 @@ const Transactions = () => {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
-            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-2">
             <Tabs value={filter} onValueChange={value => setFilter(value as 'all' | 'income' | 'expense')}>
               <TabsList className="h-8 bg-gray-100 rounded-md p-0.5">
                 <TabsTrigger
@@ -136,9 +137,9 @@ const Transactions = () => {
               Filter
             </Button>
           </div>
-        </div>
+          </div>
 
-        <div className="pt-2 pb-24 mt-1">
+          <div className="pt-2 pb-24 mt-1">
           {filteredTransactions.length > 0 ? (
             isMobile && viewMode === 'swipeable' ? (
               <div className="space-y-[var(--card-gap)]">
