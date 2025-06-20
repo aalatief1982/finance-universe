@@ -1,23 +1,37 @@
 {
   "name": "capacitor-background-sms-listener",
   "version": "1.0.0",
-  "description": "Capacitor plugin for listening to SMS in the background",
+  "description": "Capacitor plugin for background SMS listening",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/esm/index.d.ts",
+  "scripts": {
+    "build": "npm run clean && tsc && rollup -c rollup.config.js",
+    "clean": "rimraf ./dist",
+    "watch": "tsc --watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/core": "latest"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "latest"
+  },
   "files": [
-    "android/src/main/",
-    "android/build.gradle",
-    "android/proguard-rules.pro",
-    "dist/"
+    "dist/",
+    "android/",
+    "ios/",
+    "CapacitorBackgroundSmsListener.podspec"
+  ],
+  "keywords": [
+    "capacitor",
+    "plugin",
+    "native"
   ],
   "capacitor": {
     "android": {
       "src": "android"
     }
-  },
-  "peerDependencies": {
-    "@capacitor/core": "latest"
-  },
-  "license": "MIT"
+  }
 }
