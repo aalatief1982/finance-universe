@@ -17,6 +17,11 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION.equals(intent.getAction())) {
+            if (BackgroundSmsListenerPlugin.isPluginActive()) {
+                Log.d(TAG, "Plugin active, ignoring static receiver event");
+                return;
+            }
+
             SmsMessage[] messages = null;
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {

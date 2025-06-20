@@ -50,6 +50,14 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     private boolean isListening = false;
     private BroadcastReceiver smsReceiver;
 
+    /**
+     * Returns true if the plugin instance exists and is actively listening for
+     * SMS messages.
+     */
+    public static boolean isPluginActive() {
+        return instance != null && instance.isListening;
+    }
+
     @Override
     public void load() {
         Log.d(INIT_TAG, "Plugin load() called");
@@ -80,7 +88,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
             synchronized (pendingMessages) {
                 pendingMessages.add(data);
             }
-            persistMessage(context, sender, body);
         }
     }
 

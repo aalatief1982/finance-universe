@@ -1,6 +1,6 @@
 {
   "name": "capacitor-background-sms-listener",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Capacitor plugin for background SMS listening",
   "main": "dist/plugin.js",
   "module": "dist/esm/index.js",
