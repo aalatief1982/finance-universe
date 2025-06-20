@@ -32,14 +32,14 @@ const Layout = ({
     <div
       className={cn(
         "min-h-screen flex flex-col",
-        // Only apply safe area padding when no header is shown
+        showHeader && "pt-[var(--header-height)]",
         !showHeader && "pt-[var(--safe-area-top)]",
         className
       )}
     >
       {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} />}
 
-      <div className="flex flex-1 mt-[var(--header-height)]">
+      <div className="flex flex-1">
         {!hideNavigation && !isMobile && <Sidebar />}
 
         <main

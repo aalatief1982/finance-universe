@@ -39,10 +39,7 @@ const AddTransaction = () => {
       >
 
         <Card className="w-full">
-          <CardHeader className="pb-2">
-            <CardTitle>Add Transaction</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-[var(--card-padding)]">
             <TransactionEditForm onSave={handleSave} compact showNotes={false} />
           </CardContent>
         </Card>
