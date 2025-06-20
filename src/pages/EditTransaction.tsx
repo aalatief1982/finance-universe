@@ -126,12 +126,7 @@ const EditTransaction = () => {
         )}
 
         <Card className="w-full">
-          <CardHeader className="pb-2">
-            <CardTitle>
-              {isNewTransaction ? 'Add Transaction' : 'Edit Transaction'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-[var(--card-padding)]">
             <TransactionEditForm
               transaction={transaction}
               onSave={handleSave}
