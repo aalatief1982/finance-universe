@@ -47,7 +47,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
 
     @Override
     public void load() {
-        Log.d(TAG, "Plugin load() called");
         super.load();
         instance = this;
         deliverPersistedMessages();
@@ -79,7 +78,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     }
 
     private void deliverPersistedMessages() {
-        Log.d(TAG, "Checking for persisted messages");
         synchronized (PREF_LOCK) {
             SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String stored = prefs.getString(PREF_KEY, null);
@@ -98,8 +96,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
                     Log.e(TAG, "Failed to parse persisted SMS messages", e);
                 }
                 prefs.edit().remove(PREF_KEY).apply();
-            } else {
-                Log.d(TAG, "No persisted SMS messages found");
             }
         }
     }
@@ -125,7 +121,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
 
             arr.put(obj);
             prefs.edit().putString(PREF_KEY, arr.toString()).apply();
-            Log.d(TAG, "Persisted SMS from " + sender);
         }
     }
 
