@@ -101,6 +101,8 @@ Enable compact mode and hide notes at the same time:
 
 `BackgroundSmsListenerPlugin` enables the app to listen for incoming SMS messages while running in the background. The plugin is implemented in the `android` directory and is registered via Capacitor.
 
+Incoming messages received before the plugin initializes are saved to `SharedPreferences`. When the plugin loads, any persisted messages are delivered to JavaScript and then removed from storage.
+
 ### Required permissions
 
 The following permissions are required on Android. They are included in `android-manifest-additions.xml`:
