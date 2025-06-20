@@ -101,10 +101,10 @@ const Transactions = () => {
         {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-2 items-center">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
                 placeholder="Search transactions..."
-                className="pl-8 h-8 text-sm rounded-md w-full px-3 py-1.5"
+                className="pl-10 h-8 text-sm rounded-md w-full px-3 py-1.5"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
