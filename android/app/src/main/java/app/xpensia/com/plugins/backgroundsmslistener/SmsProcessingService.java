@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -26,7 +27,11 @@ public class SmsProcessingService extends Service {
             .setContentText("Processing incoming SMS")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .build();
-        startForeground(NOTIFICATION_ID, notification);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+        } else {
+            startForeground(NOTIFICATION_ID, notification);
+        }
     }
 
     @Override
@@ -38,6 +43,8 @@ public class SmsProcessingService extends Service {
             Log.d(TAG, "Processing SMS from " + sender + ": " + body);
             BackgroundSmsListenerPlugin.notifySmsReceived(getApplicationContext(), sender, body);
         }
+
+        stopSelf();
 
         return START_STICKY;
     }
