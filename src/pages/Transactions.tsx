@@ -102,7 +102,9 @@ const Transactions = () => {
     <Layout withPadding={false} showBack fullWidth>
       <PageHeader title={null} />
 
-      <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 -mt-1.5 space-y-2">
+
+      <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 -mt-[7px] space-y-2">
+
         <ToggleGroup
           type="single"
           value={range}
@@ -113,14 +115,14 @@ const Transactions = () => {
             <ToggleGroupItem
               key={r}
               value={r}
-              className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
             >
               {r.charAt(0).toUpperCase() + r.slice(1)}
             </ToggleGroupItem>
           ))}
           <ToggleGroupItem
             value="custom"
-            className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+            className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
           >
             Custom
           </ToggleGroupItem>
@@ -143,7 +145,7 @@ const Transactions = () => {
             <ToggleGroupItem
               key={f}
               value={f}
-              className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </ToggleGroupItem>
