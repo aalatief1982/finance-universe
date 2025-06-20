@@ -118,7 +118,7 @@ import { CATEGORY_COLOR_MAP } from '@/constants/categoryColors';
 			  transition={{ duration: 0.2 }}
 			  className={className}
 			>
-                          <Card className="overflow-hidden border hover:shadow-md transition-all duration-200">
+                          <Card className="overflow-hidden border rounded-2xl shadow-sm transition-all duration-200">
                                 <CardContent className="p-[var(--card-padding)]">
 				  <div className="flex items-center justify-between">
 					<div className="flex items-center space-x-3">
