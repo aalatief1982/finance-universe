@@ -1,9 +1,8 @@
-
-import React from 'react';
-import { format, parseISO } from 'date-fns';
-import { Transaction } from '@/types/transaction';
-import { formatCurrency } from '@/lib/formatters';
-import TransactionActions from './TransactionActions';
+import React from "react";
+import { format, parseISO } from "date-fns";
+import { Transaction } from "@/types/transaction";
+import { formatCurrency } from "@/lib/formatters";
+import TransactionActions from "./TransactionActions";
 
 interface TransactionsByDateProps {
   transactions: Transaction[];
@@ -12,26 +11,29 @@ interface TransactionsByDateProps {
 }
 
 const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
-  transactions
+  transactions,
 }) => {
   // Group transactions by date
-  const groupedTransactions = transactions.reduce((groups, transaction) => {
-    const date = transaction.date.split('T')[0]; // Get YYYY-MM-DD part
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(transaction);
-    return groups;
-  }, {} as Record<string, Transaction[]>);
+  const groupedTransactions = transactions.reduce(
+    (groups, transaction) => {
+      const date = transaction.date.split("T")[0]; // Get YYYY-MM-DD part
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(transaction);
+      return groups;
+    },
+    {} as Record<string, Transaction[]>,
+  );
 
   // Sort dates in descending order
-  const sortedDates = Object.keys(groupedTransactions).sort((a, b) => 
-    new Date(b).getTime() - new Date(a).getTime()
+  const sortedDates = Object.keys(groupedTransactions).sort(
+    (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
   const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), 'EEE, MMM d');
+      return format(parseISO(dateString), "EEE, MMM d");
     } catch (e) {
       // Fallback for any date parsing issues
       return dateString;
@@ -40,66 +42,75 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
 
   const categoryEmoji = (category: string) => {
     const map: Record<string, string> = {
-      Health: '💊',
-      Transportation: '🚗',
-      Earnings: '💼',
+      Health: "💊",
+      Transportation: "🚗",
+      Earnings: "💼",
     };
-    return map[category] || '🛒';
+    return map[category] || "🛒";
   };
 
   return (
     <div className="space-y-[var(--card-gap)] px-[var(--page-padding-x)]">
-      {sortedDates.map(date => {
+      {sortedDates.map((date) => {
         const net = groupedTransactions[date].reduce((s, t) => s + t.amount, 0);
         return (
-        <div key={date} className="space-y-[var(--card-gap)]">
-          <h3 className="font-semibold text-gray-600 text-sm">
-            {formatDate(date)}
-          </h3>
+          <div key={date} className="space-y-[var(--card-gap)]">
+            <h3 className="font-semibold text-gray-600 text-sm">
+              {formatDate(date)}
+            </h3>
 
-          <div className="space-y-[var(--card-gap)]">
-            {groupedTransactions[date].map((transaction, index) => {
-  if (!transaction.id?.trim()) {
-    console.warn('⚠️ Empty or invalid transaction.id:', transaction);
-  }
+            <div className="space-y-[var(--card-gap)]">
+              {groupedTransactions[date].map((transaction, index) => {
+                if (!transaction.id?.trim()) {
+                  console.warn(
+                    "⚠️ Empty or invalid transaction.id:",
+                    transaction,
+                  );
+                }
 
-  return (
-    <div
-      key={transaction.id?.trim() || `txn-${date}-${index}`}
-        className="bg-white rounded-2xl shadow-sm border border-gray-200 px-4 py-3"
-    >
-        <div className="flex justify-between items-center">
-          <div>
-            <h4 className="font-medium text-sm">{transaction.title}</h4>
-            <span className="mt-0.5 inline-flex items-center gap-1 text-xs rounded px-2 py-0.5 bg-muted text-muted-foreground">
-              {categoryEmoji(transaction.category)} {transaction.category}
-            </span>
-          </div>
+                return (
+                  <div
+                    key={transaction.id?.trim() || `txn-${date}-${index}`}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-200 px-4 py-3"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium text-sm">
+                          {transaction.title}
+                        </h4>
+                        <span className="mt-0.5 inline-flex items-center gap-1 text-xs rounded px-2 py-0.5 bg-muted text-muted-foreground">
+                          {categoryEmoji(transaction.category)}{" "}
+                          {transaction.category}
+                        </span>
+                      </div>
 
-          <div className="flex items-center gap-4">
-            <span
-              className={`font-semibold ${
-                transaction.amount < 0 ? 'text-red-600' : 'text-green-600'
-              }`}
-            >
-              {formatCurrency(transaction.amount)}
-            </span>
+                      <div className="flex items-center gap-4">
+                        <span
+                          className={`font-semibold ${
+                            transaction.amount < 0
+                              ? "text-red-600"
+                              : "text-green-600"
+                          }`}
+                        >
+                          {formatCurrency(transaction.amount)}
+                        </span>
 
-            <TransactionActions transaction={transaction} variant="dropdown" />
-          </div>
-        </div>
-      </div>
-    );
-  });
-
-          </div>
+                        <TransactionActions
+                          transaction={transaction}
+                          variant="dropdown"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
             <div className="text-right text-sm font-semibold">
               Net: {formatCurrency(net)}
             </div>
           </div>
-        </div>
-      );
-    })
+        );
+      })}
     </div>
   );
 };
