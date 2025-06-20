@@ -36,7 +36,7 @@ public class SmsProcessingService extends Service {
 
         if (sender != null && body != null) {
             Log.d(TAG, "Processing SMS from " + sender + ": " + body);
-            BackgroundSmsListenerPlugin.notifySmsReceived(sender, body);
+            BackgroundSmsListenerPlugin.notifySmsReceived(getApplicationContext(), sender, body);
         }
 
         return START_STICKY;

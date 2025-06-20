@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Telephony;
@@ -23,6 +24,9 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import java.util.ArrayList;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @CapacitorPlugin(
     name = "BackgroundSmsListener",
@@ -32,6 +36,10 @@ import java.util.ArrayList;
 )
 public class BackgroundSmsListenerPlugin extends Plugin {
     private static final String TAG = "BackgroundSmsListener";
+    private static final String PREFS_NAME = "BackgroundSmsPrefs";
+    private static final String PREF_KEY = "pendingMessages";
+    private static final Object PREF_LOCK = new Object();
+
     private static BackgroundSmsListenerPlugin instance;
     private static final ArrayList<JSObject> pendingMessages = new ArrayList<>();
     private boolean isListening = false;
@@ -41,6 +49,8 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     public void load() {
         super.load();
         instance = this;
+        deliverPersistedMessages();
+        synchronized (pendingMessages) {
         if (!pendingMessages.isEmpty()) {
             Log.d(TAG, "Delivering " + pendingMessages.size() + " queued SMS messages");
             for (JSObject msg : pendingMessages) {
@@ -48,9 +58,10 @@ public class BackgroundSmsListenerPlugin extends Plugin {
             }
             pendingMessages.clear();
         }
+        }
     }
 
-    public static void notifySmsReceived(String sender, String body) {
+    public static void notifySmsReceived(Context context, String sender, String body) {
         JSObject data = new JSObject();
         data.put("sender", sender);
         data.put("body", body);
@@ -59,7 +70,57 @@ public class BackgroundSmsListenerPlugin extends Plugin {
             instance.notifyListeners("smsReceived", data);
         } else {
             Log.d(TAG, "Instance null, queuing SMS message");
-            pendingMessages.add(data);
+            synchronized (pendingMessages) {
+                pendingMessages.add(data);
+            }
+            persistMessage(context, sender, body);
+        }
+    }
+
+    private void deliverPersistedMessages() {
+        synchronized (PREF_LOCK) {
+            SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String stored = prefs.getString(PREF_KEY, null);
+            if (stored != null && !stored.isEmpty()) {
+                try {
+                    JSONArray arr = new JSONArray(stored);
+                    Log.d(TAG, "Delivering " + arr.length() + " persisted SMS messages");
+                    for (int i = 0; i < arr.length(); i++) {
+                        JSONObject obj = arr.getJSONObject(i);
+                        JSObject data = new JSObject();
+                        data.put("sender", obj.optString("sender"));
+                        data.put("body", obj.optString("body"));
+                        notifyListeners("smsReceived", data);
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "Failed to parse persisted SMS messages", e);
+                }
+                prefs.edit().remove(PREF_KEY).apply();
+            }
+        }
+    }
+
+    private static void persistMessage(Context context, String sender, String body) {
+        synchronized (PREF_LOCK) {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String stored = prefs.getString(PREF_KEY, "[]");
+            JSONArray arr;
+            try {
+                arr = new JSONArray(stored);
+            } catch (JSONException e) {
+                arr = new JSONArray();
+            }
+
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("sender", sender);
+                obj.put("body", body);
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to encode SMS message", e);
+            }
+
+            arr.put(obj);
+            prefs.edit().putString(PREF_KEY, arr.toString()).apply();
         }
     }
 
