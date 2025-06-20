@@ -61,9 +61,9 @@ const Transactions = () => {
   });
   
   return (
-    <Layout withPadding={false}>
+    <Layout withPadding={false} showBack>
       <PageHeader
-        title="Transactions"
+        title={null}
         className="pt-2"
         actions={
           <>
