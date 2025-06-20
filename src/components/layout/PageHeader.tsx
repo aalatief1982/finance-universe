@@ -38,7 +38,9 @@ const PageHeader = ({
               </Button>
             )}
             <div>
-              <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+              {title && (
+                <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+              )}
               {description && (
                 <p className="text-xs text-muted-foreground">{description}</p>
               )}

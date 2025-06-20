@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
 import TransactionsByDate from '@/components/transactions/TransactionsByDate';
@@ -8,15 +8,16 @@ import MobileActions from '@/components/transactions/MobileActions';
 import { useTransactionsState } from '@/hooks/useTransactionsState';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { DatePicker } from '@/components/ui/date-picker';
 import { CATEGORIES } from '@/lib/mock-data';
 import { useNavigate } from 'react-router-dom';
 
 const Transactions = () => {
-  const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = React.useState<'all' | 'income' | 'expense'>('all');
+  const [searchQuery, setSearchQuery] = React.useState('');
   const navigate = useNavigate();
-  
+
   const {
     transactions,
     currentTransaction,
@@ -30,25 +31,73 @@ const Transactions = () => {
     openEditDialog,
     setCurrentTransaction,
   } = useTransactionsState();
+
+  type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';
+  const defaultEnd = React.useMemo(() => new Date(), []);
+  const defaultStart = React.useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d;
+  }, []);
+
+  const [range, setRange] = React.useState<Range>('custom');
+  const [customStart, setCustomStart] = React.useState<Date | null>(defaultStart);
+  const [customEnd, setCustomEnd] = React.useState<Date | null>(defaultEnd);
   
-  // Filter transactions based on tab and search query
-  const filteredTransactions = transactions.filter(tx => {
-    // Filter by type
-    if (filter !== 'all') {
-      const isIncome = tx.amount > 0;
-      if ((filter === 'income' && !isIncome) || (filter === 'expense' && isIncome)) {
-        return false;
+  const filteredTransactions = React.useMemo(() => {
+    let result = transactions;
+
+    if (range) {
+      const now = new Date();
+      let start = new Date(now);
+      let end = new Date(now);
+
+      switch (range) {
+        case 'day':
+          start.setHours(0, 0, 0, 0);
+          break;
+        case 'week':
+          start.setDate(now.getDate() - 6);
+          start.setHours(0, 0, 0, 0);
+          break;
+        case 'month':
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case 'year':
+          start = new Date(now.getFullYear(), 0, 1);
+          break;
+        case 'custom':
+          if (customStart) start = new Date(customStart);
+          if (customEnd) end = new Date(customEnd);
+          break;
       }
+
+      const toDate = range === 'custom' ? end : now;
+
+      result = result.filter(t => {
+        const d = new Date(t.date);
+        return d >= start && d <= toDate;
+      });
     }
 
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return JSON.stringify(tx).toLowerCase().includes(query);
-    }
-    
-    return true;
-  });
+    result = result.filter(tx => {
+      if (filter !== 'all') {
+        const isIncome = tx.amount > 0;
+        if ((filter === 'income' && !isIncome) || (filter === 'expense' && isIncome)) {
+          return false;
+        }
+      }
+
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return JSON.stringify(tx).toLowerCase().includes(query);
+      }
+
+      return true;
+    });
+
+    return result;
+  }, [transactions, filter, searchQuery, range, customStart, customEnd]);
   
   return (
     <Layout withPadding={false} showBack fullWidth>
@@ -64,35 +113,56 @@ const Transactions = () => {
       </div>
 
       <div className="px-[var(--page-padding-x)]">
-        <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
-            <Tabs value={filter} onValueChange={value => setFilter(value as 'all' | 'income' | 'expense')}>
-              <TabsList className="h-8 bg-gray-100 rounded-md p-0.5">
-                <TabsTrigger
-                  value="all"
-                  className="text-xs px-2.5 bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:rounded-md"
-                >
-                  All
-                </TabsTrigger>
-                <TabsTrigger
-                  value="income"
-                  className="text-xs px-2.5 bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:rounded-md"
-                >
-                  Income
-                </TabsTrigger>
-                <TabsTrigger
-                  value="expense"
-                  className="text-xs px-2.5 bg-gray-100 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:rounded-md"
-                >
-                  Expense
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button variant="outline" className="min-w-[80px] h-8" size="sm">
-              Filter
-            </Button>
-          </div>
+        <div className="space-y-2 pt-2">
+          <ToggleGroup
+            type="single"
+            value={filter}
+            onValueChange={val => setFilter(val as 'all' | 'income' | 'expense')}
+            className="w-full bg-muted p-1 text-muted-foreground rounded-md"
+          >
+            {['all', 'income', 'expense'].map(f => (
+              <ToggleGroupItem
+                key={f}
+                value={f}
+                className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              >
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
 
-          <div className="pt-2 pb-24 mt-1">
+          <ToggleGroup
+            type="single"
+            value={range}
+            onValueChange={val => setRange(val as Range)}
+            className="w-full bg-muted p-1 text-muted-foreground rounded-md"
+          >
+            {['day','week','month','year'].map(r => (
+              <ToggleGroupItem
+                key={r}
+                value={r}
+                className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              >
+                {r.charAt(0).toUpperCase() + r.slice(1)}
+              </ToggleGroupItem>
+            ))}
+            <ToggleGroupItem
+              value="custom"
+              className="flex-1 text-xs transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+            >
+              Custom
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          {range === 'custom' && (
+            <div className="flex items-center justify-center gap-2 animate-in fade-in">
+              <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
+              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
+            </div>
+          )}
+        </div>
+
+        <div className="pt-2 pb-24 mt-1">
           {filteredTransactions.length > 0 ? (
             <TransactionsByDate transactions={filteredTransactions} />
           ) : (
