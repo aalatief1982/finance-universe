@@ -1,6 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="app.xpensia.com.plugins.backgroundsmslistener">
     <application>
+        <receiver
+            android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsBroadcastReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <service
             android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsProcessingService"
             android:exported="false"

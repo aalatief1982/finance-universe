@@ -12,6 +12,8 @@ import android.os.Build;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
+import android.content.ComponentName;
+import android.content.pm.PackageManager;
 
 import androidx.core.content.ContextCompat;
 
@@ -36,6 +38,9 @@ import org.json.JSONObject;
 )
 public class BackgroundSmsListenerPlugin extends Plugin {
     private static final String TAG = "BackgroundSmsListener";
+    private static final String STATIC_TAG = "STATIC_SMS_RECEIVER";
+    private static final String PENDING_TAG = "PENDING_SMS_DELIVERY";
+    private static final String INIT_TAG = "PLUGIN_INIT_LOGS";
     private static final String PREFS_NAME = "BackgroundSmsPrefs";
     private static final String PREF_KEY = "pendingMessages";
     private static final Object PREF_LOCK = new Object();
@@ -47,13 +52,14 @@ public class BackgroundSmsListenerPlugin extends Plugin {
 
     @Override
     public void load() {
-        Log.d(TAG, "Plugin load() called");
+        Log.d(INIT_TAG, "Plugin load() called");
         super.load();
         instance = this;
+        checkStaticReceiver();
         deliverPersistedMessages();
         synchronized (pendingMessages) {
             if (!pendingMessages.isEmpty()) {
-                Log.d(TAG, "Delivering " + pendingMessages.size() + " queued SMS messages");
+                Log.d(PENDING_TAG, "Delivering " + pendingMessages.size() + " queued SMS messages");
                 for (JSObject msg : pendingMessages) {
                     notifyListeners("smsReceived", msg);
                 }
@@ -70,7 +76,7 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         if (instance != null) {
             instance.notifyListeners("smsReceived", data);
         } else {
-            Log.d(TAG, "Instance null, queuing SMS message");
+            Log.d(PENDING_TAG, "Instance null, queuing SMS message");
             synchronized (pendingMessages) {
                 pendingMessages.add(data);
             }
@@ -78,15 +84,25 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
+    private void checkStaticReceiver() {
+        ComponentName cn = new ComponentName(getContext(), SmsBroadcastReceiver.class);
+        try {
+            getContext().getPackageManager().getReceiverInfo(cn, PackageManager.ComponentInfoFlags.of(0));
+            Log.d(STATIC_TAG, "Static SMS receiver registered");
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.w(STATIC_TAG, "SmsBroadcastReceiver not found in manifest");
+        }
+    }
+
     private void deliverPersistedMessages() {
-        Log.d(TAG, "Checking for persisted messages");
+        Log.d(PENDING_TAG, "Checking for persisted messages");
         synchronized (PREF_LOCK) {
             SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String stored = prefs.getString(PREF_KEY, null);
             if (stored != null && !stored.isEmpty()) {
                 try {
                     JSONArray arr = new JSONArray(stored);
-                    Log.d(TAG, "Delivering " + arr.length() + " persisted SMS messages");
+                    Log.d(PENDING_TAG, "Delivering " + arr.length() + " persisted SMS messages");
                     for (int i = 0; i < arr.length(); i++) {
                         JSONObject obj = arr.getJSONObject(i);
                         JSObject data = new JSObject();
@@ -99,12 +115,12 @@ public class BackgroundSmsListenerPlugin extends Plugin {
                 }
                 prefs.edit().remove(PREF_KEY).apply();
             } else {
-                Log.d(TAG, "No persisted SMS messages found");
+                Log.d(PENDING_TAG, "No persisted SMS messages found");
             }
         }
     }
 
-    private static void persistMessage(Context context, String sender, String body) {
+    static void persistMessage(Context context, String sender, String body) {
         synchronized (PREF_LOCK) {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String stored = prefs.getString(PREF_KEY, "[]");
@@ -125,7 +141,7 @@ public class BackgroundSmsListenerPlugin extends Plugin {
 
             arr.put(obj);
             prefs.edit().putString(PREF_KEY, arr.toString()).apply();
-            Log.d(TAG, "Persisted SMS from " + sender);
+            Log.d(PENDING_TAG, "Persisted SMS from " + sender);
         }
     }
 
