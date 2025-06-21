@@ -3,7 +3,7 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CategorySummary } from '@/types/transaction';
-import { CHART_COLORS } from '@/constants/analytics';
+import { getChartColor } from '@/utils/color-utils';
 
 interface CategoryBreakdownChartProps {
   data: CategorySummary[];
@@ -33,7 +33,7 @@ const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({ data })
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             >
               {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={getChartColor(index)} />
               ))}
             </Pie>
             <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']} />

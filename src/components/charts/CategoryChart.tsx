@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
-import { CHART_COLORS } from '@/constants/analytics';
+import { getChartColor } from '@/utils/color-utils';
 
 
 const RADIAN = Math.PI / 180;
@@ -83,7 +83,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
 
                   >
                     {limited.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      <Cell key={`cell-${index}`} fill={getChartColor(index)} />
                     ))}
                   </Pie>
                   <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-sm fill-foreground">
