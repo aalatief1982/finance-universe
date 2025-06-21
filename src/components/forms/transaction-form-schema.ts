@@ -1,5 +1,6 @@
 
 import { z } from 'zod';
+import { getPeopleNames } from '@/lib/people-utils';
 
 export const transactionFormSchema = z.object({
   title: z.string().min(2, {
@@ -66,4 +67,4 @@ export const CURRENCIES = [
   { code: "AED", name: "UAE Dirham" }
 ];
 
-export const PEOPLE = ["Ahmed", "Marwa", "Youssef", "Salma", "Mazen"];
+export const PEOPLE = getPeopleNames();

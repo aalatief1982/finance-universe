@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { SupportedCurrency } from '@/types/locale';
-import { CATEGORY_HIERARCHY, PEOPLE, CURRENCIES, getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
+import { CATEGORY_HIERARCHY, CURRENCIES, getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
+import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
+import { Plus } from 'lucide-react';
 import { TransactionType } from '@/types/transaction';
 
 export interface SmsTransaction {
@@ -62,6 +64,9 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   const [editedTransaction, setEditedTransaction] = useState({ ...transaction });
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
+  const [people, setPeople] = useState<string[]>(() => getPeopleNames());
+  const [addPersonOpen, setAddPersonOpen] = useState(false);
+  const [newPerson, setNewPerson] = useState({ name: '', relation: '' });
 
   useEffect(() => {
     // Initialize categories based on transaction type
@@ -89,6 +94,15 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   const handleCancelEdit = () => {
     setEditedTransaction({ ...transaction });
     setIsEditing(false);
+  };
+
+  const handleSavePerson = () => {
+    if (!newPerson.name.trim()) return;
+    addUserPerson({ name: newPerson.name.trim(), relation: newPerson.relation.trim() || undefined });
+    setPeople(getPeopleNames());
+    setEditedTransaction(prev => ({ ...prev, person: newPerson.name.trim() }));
+    setNewPerson({ name: '', relation: '' });
+    setAddPersonOpen(false);
   };
 
   const handleChange = (field: keyof SmsTransaction, value: string | number | TransactionType) => {
@@ -380,20 +394,25 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             
             <div className="space-y-2">
               <label className="text-sm font-medium">Person (Optional)</label>
-              <Select 
-                value={editedTransaction.person || ''}
-                onValueChange={(value) => handleChange('person', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select person" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None</SelectItem>
-                  {PEOPLE.map(person => (
-                    <SelectItem key={person} value={person}>{person}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-1">
+                <Select
+                  value={editedTransaction.person || ''}
+                  onValueChange={(value) => handleChange('person', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select person" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    {people.map(person => (
+                      <SelectItem key={person} value={person}>{person}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" size="icon" onClick={() => setAddPersonOpen(true)}>
+                  <Plus className="size-4" />
+                </Button>
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -417,6 +436,28 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
               <Button onClick={handleSaveEdit}>Save</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addPersonOpen} onOpenChange={setAddPersonOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Person</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Name*</label>
+              <Input value={newPerson.name} onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Relation</label>
+              <Input value={newPerson.relation} onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))} />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setAddPersonOpen(false)}>Cancel</Button>
+            <Button onClick={handleSavePerson}>Save</Button>
           </div>
         </DialogContent>
       </Dialog>
