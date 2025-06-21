@@ -8,7 +8,7 @@ import { CHART_COLORS } from '@/constants/analytics';
 const RADIAN = Math.PI / 180;
 
 const renderLabelLine = ({ cx, cy, midAngle, outerRadius }: any) => {
-  const radius = outerRadius + 6;
+  const radius = outerRadius + 12;
   const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
   const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
   const ex = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -17,7 +17,7 @@ const renderLabelLine = ({ cx, cy, midAngle, outerRadius }: any) => {
 };
 
 const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }: any) => {
-  const radius = outerRadius + 8;
+  const radius = outerRadius + 20;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
   return (
