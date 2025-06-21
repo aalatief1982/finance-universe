@@ -22,11 +22,19 @@ function getDrivenFieldStyle(field: keyof Transaction, drivenFields: Partial<Rec
     : {};
 }
 
-export function generateDefaultTitle(txn: Transaction): string {
+/* export function generateDefaultTitle(txn: Transaction): string {
   const subcategory = txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '';
   const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
   const currency = txn.currency ? txn.currency.toUpperCase() : '';
   return subcategory && amount && currency ? `${subcategory} (${amount} ${currency})` : '';
+} */
+
+  export function generateDefaultTitle(txn: Transaction): string {
+  const label = txn.vendor?.trim() || (txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '');
+  const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
+  const currency = txn.currency?.toUpperCase() || '';
+
+  return label && amount && currency ? `${label} - ${amount} ${currency}` : '';
 }
 
 function toISOFormat(input: string): string {
