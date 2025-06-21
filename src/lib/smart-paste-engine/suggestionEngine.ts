@@ -4,9 +4,10 @@
  */
 
 import stringSimilarity from 'string-similarity';
-import * as vendorData from '../../data/ksa_all_vendors_clean_final.json';
-const fallbackVendors: Record<string, FallbackVendorEntry> =
-  ((vendorData as any).default ?? vendorData) as Record<string, FallbackVendorEntry>;
+import {
+  loadVendorFallbacks,
+  VendorFallbackData,
+} from './vendorFallbackUtils';
 
 const BANK_KEY = 'xpensia_keyword_bank';
 
@@ -18,12 +19,13 @@ export interface KeywordMapping {
   }[];
 }
 
-interface FallbackVendorEntry {
+interface FallbackVendorEntry extends VendorFallbackData {
   vendor: string;
-  type: 'expense' | 'income' | 'transfer';
-  category: string;
-  subcategory: string;
 }
+
+const getFallbackVendors = (): Record<string, VendorFallbackData> => {
+  return loadVendorFallbacks();
+};
 
 
 // Utility to normalize vendor names
@@ -66,6 +68,7 @@ const normalize = (str: string): string =>
 
 export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
   const lowerInput = softNormalize(vendorName);
+  const fallbackVendors = getFallbackVendors();
   const vendorKeys = Object.keys(fallbackVendors);
 
   // Step 1: Try full fuzzy match
@@ -109,7 +112,7 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   }
 
   console.log('[DEBUG] keywordBank:', keywordBank);
-  console.log('[DEBUG] fallbackVendors:', fallbackVendors);
+  console.log('[DEBUG] fallbackVendors:', getFallbackVendors());
 
   // ⬇️ Keyword-based inference
   keywordBank.forEach(({ keyword, mappings }) => {

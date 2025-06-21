@@ -1,4 +1,6 @@
 import { TransactionType } from '@/types/transaction';
+import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
+import { saveVendorFallbacks } from './vendorFallbackUtils';
 
 
 
@@ -212,6 +214,12 @@ export function initializeXpensiaStorageDefaults() {
   if (!localStorage.getItem('xpensia_vendor_map')) {
     localStorage.setItem('xpensia_vendor_map', JSON.stringify({}));
     console.log('[Init] xpensia_vendor_map initialized');
+  }
+
+  // Ensure vendor fallback data exists
+  if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
+    saveVendorFallbacks((vendorFallbackData as any).default ?? vendorFallbackData);
+    console.log('[Init] xpensia_vendor_fallbacks initialized');
   }
 
   // Ensure type keyword bank exists
