@@ -43,9 +43,16 @@ const Analytics: React.FC = () => {
   const { transactions } = useTransactions();
 
   type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';
-  const [range, setRange] = React.useState<Range>('month');
-  const [customStart, setCustomStart] = React.useState<Date | null>(null);
-  const [customEnd, setCustomEnd] = React.useState<Date | null>(null);
+  const defaultEnd = React.useMemo(() => new Date(), []);
+  const defaultStart = React.useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d;
+  }, []);
+
+  const [range, setRange] = React.useState<Range>('custom');
+  const [customStart, setCustomStart] = React.useState<Date | null>(defaultStart);
+  const [customEnd, setCustomEnd] = React.useState<Date | null>(defaultEnd);
 
   const filteredTransactions = React.useMemo(() => {
     if (!range) return transactions;
@@ -151,11 +158,11 @@ const Analytics: React.FC = () => {
   };
 
   return (
-    <Layout withPadding={false} fullWidth>
+    <Layout withPadding={false} showBack fullWidth>
       <div className="px-1">
-        <PageHeader title="Analytics" />
+        <PageHeader title={null} />
 
-        <div className="my-2">
+        <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 -mt-[7px] space-y-2">
           <ToggleGroup
             type="single"
             value={range}
