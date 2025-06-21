@@ -1,50 +1,32 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
-import { useToast } from '@/components/ui/use-toast';
 import { useTransactionsCrud } from './transactions/useTransactionsCrud';
 import { useTransactionsFilters } from './transactions/useTransactionsFilters';
 import { useTransactionsSorting } from './transactions/useTransactionsSorting';
 import { useTransactionsPagination } from './transactions/useTransactionsPagination';
 import { useUser } from '@/context/UserContext';
-import { 
-  getStoredTransactions, 
-  storeTransactions, 
-  storeTransaction, 
-  removeTransaction, 
-  getStoredCategories, 
-  getStoredCategoryRules, 
-  addCategoryChange, 
-  getCategoryHierarchy 
+import {
+  removeTransaction,
+  getStoredCategories,
+  getStoredCategoryRules,
+  addCategoryChange,
+  getCategoryHierarchy
 } from '@/utils/storage-utils';
+import { useTransactions } from '@/context/TransactionContext';
 
 export function useTransactionsState() {
   // Get user context for currency preferences
   const { user } = useUser();
   const userCurrency = user?.preferences?.currency || 'USD';
   
-  // Local state for transactions
-  const [transactions, setTransactionsState] = useState<Transaction[]>([]);
-  
-  // Load transactions on mount
-  useEffect(() => {
-    const storedTransactions = getStoredTransactions();
-    setTransactionsState(storedTransactions);
-  }, []);
-  
-  // Enhanced setter that updates both state and storage
-  const setTransactions = useCallback((newTransactions: Transaction[] | ((prev: Transaction[]) => Transaction[])) => {
-    setTransactionsState(prev => {
-      const updatedTransactions = typeof newTransactions === 'function' 
-        ? newTransactions(prev) 
-        : newTransactions;
-      
-      // Update storage
-      storeTransactions(updatedTransactions);
-      
-      return updatedTransactions;
-    });
-  }, []);
+  // Transactions from global context
+  const {
+    transactions,
+    addTransaction: contextAddTransaction,
+    updateTransaction: contextUpdateTransaction,
+    deleteTransaction: contextDeleteTransaction
+  } = useTransactions();
   
   // CRUD operations with enhanced storage
   const {
@@ -80,15 +62,12 @@ export function useTransactionsState() {
       currency: formData.currency || userCurrency
     };
 
-    // Store in local storage directly
-    storeTransaction(newTransaction);
-    
-    // Update state
-    setTransactions(prev => [newTransaction, ...prev]);
+    // Persist and update global state
+    contextAddTransaction(newTransaction);
     setIsAddingExpense(false);
-    
+
     return newTransaction;
-  }, [setTransactions, setIsAddingExpense, userCurrency]);
+  }, [contextAddTransaction, setIsAddingExpense, userCurrency]);
 
   const handleEditTransaction = useCallback((formData: any) => {
     if (!currentTransaction) return null;
@@ -120,27 +99,19 @@ export function useTransactionsState() {
       });
     }
 
-    // Store updated transaction
-    storeTransaction(updatedTransaction);
-    
-    // Update state
-    setTransactions(prev => 
-      prev.map(t => t.id === currentTransaction.id ? updatedTransaction : t)
-    );
-    
+    // Persist update
+    contextUpdateTransaction(updatedTransaction);
+
     setIsEditingExpense(false);
     setCurrentTransaction(null);
-    
+
     return updatedTransaction;
-  }, [currentTransaction, setTransactions, setIsEditingExpense, setCurrentTransaction]);
+  }, [currentTransaction, contextUpdateTransaction, setIsEditingExpense, setCurrentTransaction]);
 
   const handleDeleteTransaction = useCallback((id: string) => {
-    // Remove from storage
     removeTransaction(id);
-    
-    // Update state
-    setTransactions(prev => prev.filter(t => t.id !== id));
-  }, [setTransactions]);
+    contextDeleteTransaction(id);
+  }, [contextDeleteTransaction]);
 
   // Filtering
   const {
@@ -359,16 +330,13 @@ export function useTransactionsState() {
       };
     });
     
-    // Store each transaction
+    // Persist and update global state
     categorizedTransactions.forEach(transaction => {
-      storeTransaction(transaction);
+      contextAddTransaction(transaction);
     });
-    
-    // Update state
-    setTransactions(prev => [...categorizedTransactions, ...prev]);
-    
+
     return categorizedTransactions;
-  }, [setTransactions]);
+  }, [contextAddTransaction]);
 
   // Get category path for a transaction
   const getCategoryPath = useCallback((categoryId: string): string => {
@@ -403,7 +371,6 @@ export function useTransactionsState() {
   return {
     // CRUD-related
     transactions,
-    setTransactions,
     currentTransaction,
     setCurrentTransaction,
     isAddingExpense,
