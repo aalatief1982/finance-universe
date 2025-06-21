@@ -341,11 +341,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </Select>
       </div>
 
-      {availableSubcategories.length > 0 && (
+      <div className={rowClass}>
+        <label className={labelClass}>Subcategory</label>
 
-        <div className={rowClass}>
-          <label className={labelClass}>Subcategory</label>
-
+        {availableSubcategories.length > 0 ? (
           <Select
             value={editedTransaction.subcategory || 'none'}
             onValueChange={(value) => handleChange('subcategory', value)}
@@ -365,8 +364,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               ))}
             </SelectContent>
           </Select>
-        </div>
-      )}
+        ) : (
+          <div className={cn('flex-1 text-sm text-gray-500', inputPadding)}>N/A</div>
+        )}
+      </div>
 
 
       <div className={rowClass}>
