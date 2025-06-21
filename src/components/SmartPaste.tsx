@@ -33,6 +33,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [error, setError] = useState<string | null>(null);
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const [matchStatus, setMatchStatus] = useState('Paste a message to begin');
+  const [hasMatch, setHasMatch] = useState(false);
   const [confidence, setConfidence] = useState<number | null>(null);
   const [matchOrigin, setMatchOrigin] = useState<'template' | 'structure' | 'ml' | 'fallback' | null>(null);
 
@@ -41,6 +42,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   useEffect(() => {
     if (!text.trim()) {
       setMatchStatus('Paste a message to begin');
+      setHasMatch(false);
       return;
     }
 
@@ -55,11 +57,14 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         setMatchStatus(
           `Matched template from ${bank || 'saved template'}`
         );
+        setHasMatch(true);
       } else {
         setMatchStatus('No match yet');
+        setHasMatch(false);
       }
     } catch {
       setMatchStatus('No match yet');
+      setHasMatch(false);
     }
   }, [text]);
 
@@ -246,6 +251,7 @@ const handleSubmit = (e: React.FormEvent) => {
       <NoTransactionMessage
         show={!isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
         message={matchStatus}
+        matched={hasMatch}
       />
     </div>
   );
