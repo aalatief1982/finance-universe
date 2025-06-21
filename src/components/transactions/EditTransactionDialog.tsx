@@ -33,8 +33,9 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <ExpenseForm 
+      {/* Reduce top padding for better alignment */}
+      <DialogContent className="sm:max-w-md pt-2">
+        <ExpenseForm
           onSubmit={onSubmit} 
           categories={categories}
           defaultValues={{
