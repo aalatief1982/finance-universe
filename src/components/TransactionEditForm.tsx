@@ -228,12 +228,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     onSave(finalTransaction);
   };
 
-  const amountDigits =
-    editedTransaction.amount !== undefined && editedTransaction.amount !== null
-      ? editedTransaction.amount.toString().split('.')[0].replace('-', '').length
-      : 0;
-  const amountFontClass =
-    amountDigits > 5 ? 'text-lg md:text-xl' : 'text-xl md:text-2xl';
 
   const rowClass = cn('flex items-center', compact ? 'gap-1' : 'gap-2');
   const labelClass = cn(
@@ -359,9 +353,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           placeholder="0.00"
           required
           className={cn(
-            'w-full text-sm text-center truncate rounded-md border-gray-300 focus:ring-primary',
-            inputPadding,
-            amountFontClass
+            'w-full text-sm rounded-md border-gray-300 focus:ring-primary',
+            inputPadding
           )}
         />
       </div>
