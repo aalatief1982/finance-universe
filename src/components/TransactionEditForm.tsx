@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import vendorData from '@/data/ksa_all_vendors_clean_final.json';
+import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -123,6 +125,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [people, setPeople] = useState<string[]>(() => getPeopleNames());
   const [addPersonOpen, setAddPersonOpen] = useState(false);
   const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
+
+  const [vendors, setVendors] = useState<string[]>(() => {
+    const builtIn = Object.keys((vendorData as any) || {});
+    const stored = Object.keys(loadVendorFallbacks());
+    return Array.from(new Set([...builtIn, ...stored]));
+  });
+  const [addVendorOpen, setAddVendorOpen] = useState(false);
+  const [newVendor, setNewVendor] = useState<{ name: string; type: TransactionType; category: string; subcategory: string }>(
+    { name: '', type: 'expense', category: '', subcategory: '' }
+  );
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -291,6 +303,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     handleChange('person', newPerson.name.trim());
     setNewPerson({ name: '', relation: '' });
     setAddPersonOpen(false);
+  };
+
+  const handleSaveVendor = () => {
+    if (!newVendor.name.trim()) return;
+    addUserVendor(newVendor.name.trim(), {
+      type: newVendor.type,
+      category: newVendor.category.trim(),
+      subcategory: newVendor.subcategory.trim(),
+    });
+    setVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
+    handleChange('vendor', newVendor.name.trim());
+    setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
+    setAddVendorOpen(false);
   };
 
   const handleCalcInput = (val: string) => {
@@ -549,6 +574,45 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={addVendorOpen} onOpenChange={setAddVendorOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Vendor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Vendor Name*</label>
+              <Input value={newVendor.name} onChange={e => setNewVendor(prev => ({ ...prev, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Type*</label>
+              <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType }))}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Category*</label>
+              <Input value={newVendor.category} onChange={e => setNewVendor(prev => ({ ...prev, category: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Subcategory</label>
+              <Input value={newVendor.subcategory} onChange={e => setNewVendor(prev => ({ ...prev, subcategory: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAddVendorOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={handleSaveVendor}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
         <DialogContent className="sm:max-w-xs">
           <DialogHeader>
@@ -746,13 +810,24 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       <div className={rowClass}>
         <label className={labelClass}>Vendor</label>
 
-        <Input
-          value={editedTransaction.vendor || ''}
-          style={getDrivenFieldStyle('vendor', drivenFields)}
-          onChange={(e) => handleChange('vendor', e.target.value)}
-          placeholder="e.g., Netflix"
-          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
-        />
+        <div className="flex w-full items-center gap-1">
+          <Input
+            list="vendors-list"
+            value={editedTransaction.vendor || ''}
+            style={getDrivenFieldStyle('vendor', drivenFields)}
+            onChange={(e) => handleChange('vendor', e.target.value)}
+            placeholder="e.g., Netflix"
+            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+          />
+          <Button type="button" variant="outline" size="icon" onClick={() => setAddVendorOpen(true)}>
+            <Plus className="size-4" />
+          </Button>
+          <datalist id="vendors-list">
+            {vendors.map(v => (
+              <option key={v} value={v} />
+            ))}
+          </datalist>
+        </div>
       </div>
 
 
