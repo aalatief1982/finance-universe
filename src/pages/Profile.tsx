@@ -15,7 +15,9 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { FormLabel } from '@/components/ui/form';
+
+import { Label } from '@/components/ui/label';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -154,7 +156,9 @@ const Profile = () => {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <FormLabel htmlFor="fullName">Full Name<span className="text-red-500 ml-1">*</span></FormLabel>
+
+              <Label htmlFor="fullName">Full Name<span className="text-red-500 ml-1">*</span></Label>
+
               <Input
                 id="fullName"
                 name="fullName"
@@ -165,7 +169,9 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <FormLabel htmlFor="email">Email</FormLabel>
+
+              <Label htmlFor="email">Email</Label>
+
               <Input
                 id="email"
                 name="email"
@@ -177,7 +183,9 @@ const Profile = () => {
             </div>
 
             <div className="space-y-2">
-              <FormLabel htmlFor="phone">Mobile</FormLabel>
+
+              <Label htmlFor="phone">Mobile</Label>
+
               <Input
                 id="phone"
                 name="phone"
