@@ -17,7 +17,7 @@ export const routeTitleMap: Record<string, string> = {
   '/wireframes/settings': 'Settings',
   '/wireframes/sms-provider': 'SMS Provider',
   '/wireframes/sms-transaction': 'SMS Transaction',
-  '/import-transactions': 'Import Transactions',
+  '/import-transactions': 'Extract Transaction Details',
   '/edit-transaction': 'Transaction',
 };
 
@@ -41,11 +41,11 @@ export const getNavItems = () => [
     icon: 'List', 
     description: 'View and manage your transactions' 
   },
-  { 
-    title: 'Import Transactions', 
-    path: '/import-transactions', 
-    icon: 'Upload', 
-    description: 'Import transactions from SMS or paste' 
+  {
+    title: 'Extract Transaction Details',
+    path: '/import-transactions',
+    icon: 'Upload',
+    description: 'Import transactions from SMS or paste'
   },
   { 
     title: 'Process SMS', 
