@@ -12,9 +12,9 @@ const MobileSmsButton = () => {
         className="w-full gap-1 mb-4"
         asChild
       >
-        <Link to="/import-transactions">
+        <Link to="/paste-parse">
           <MessageSquare size={18} />
-          Import Transactions
+          Paste & Parse
         </Link>
       </Button>
     </div>
