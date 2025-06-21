@@ -271,6 +271,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         name: normalizedCategory,
         type: newCategory.type,
         subcategories: [],
+        user: true,
       };
       hierarchy.push(cat);
     }
@@ -283,6 +284,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         cat.subcategories.push({
           id: normalizedSubcategory.toLowerCase().replace(/\s+/g, '-'),
           name: normalizedSubcategory,
+          user: true,
         });
       }
     }

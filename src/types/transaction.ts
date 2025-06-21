@@ -58,6 +58,8 @@ export interface Category {
   parentId?: string;
   metadata?: CategoryMetadata;
   subcategories?: Category[];
+  /** Indicates entry was added by the user */
+  user?: boolean;
 }
 
 export interface CategoryWithSubcategories extends Category {

@@ -174,6 +174,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         id: uuidv4(),
         name: values.name,
         parentId: values.parentId,
+        user: true,
         metadata: {
           description: values.description,
           icon: values.icon ? { name: values.icon } : undefined,

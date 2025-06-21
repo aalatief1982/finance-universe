@@ -112,7 +112,8 @@ class TransactionService {
   addCategory(category: Omit<Category, 'id'>): Category {
     const newCategory = {
       ...category,
-      id: uuidv4()
+      id: uuidv4(),
+      user: true
     };
     
     const categories = this.getCategories();

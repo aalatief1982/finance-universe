@@ -65,6 +65,7 @@ export const validateCategoryForStorage = (category: any): Category => {
   if (category.parentId) validatedCategory.parentId = category.parentId;
   if (category.metadata) validatedCategory.metadata = category.metadata;
   if (category.subcategories) validatedCategory.subcategories = category.subcategories;
+  if (typeof category.user === 'boolean') validatedCategory.user = category.user;
   
   // Ensure ID is present
   if (!validatedCategory.id) {
