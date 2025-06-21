@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
+import { CURRENCIES } from '@/lib/categories-data';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -125,6 +126,18 @@ const Settings = () => {
   const handleNotificationsChange = (checked: boolean) => {
     setNotificationsEnabled(checked);
     updateNotificationSettings(checked);
+  };
+
+  const handleAppearanceSave = () => {
+    updateTheme(theme);
+    updateCurrency(currency);
+    updateLanguage(language);
+    updateNotificationSettings(notificationsEnabled);
+
+    toast({
+      title: "Appearance updated",
+      description: "Your appearance settings have been saved."
+    });
   };
   
   const handleDisplayOptionsChange = () => {
@@ -302,14 +315,11 @@ const Settings = () => {
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USD">USD ($)</SelectItem>
-                      <SelectItem value="EUR">EUR (€)</SelectItem>
-                      <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="JPY">JPY (¥)</SelectItem>
-                      <SelectItem value="CAD">CAD (C$)</SelectItem>
-                      <SelectItem value="AUD">AUD (A$)</SelectItem>
-                      <SelectItem value="CNY">CNY (¥)</SelectItem>
-                      <SelectItem value="INR">INR (₹)</SelectItem>
+                      {CURRENCIES.map((code) => (
+                        <SelectItem key={code} value={code}>
+                          {code}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -322,10 +332,7 @@ const Settings = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                      <SelectItem value="ja">日本語</SelectItem>
+                      <SelectItem value="ar">العربية</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -335,12 +342,18 @@ const Settings = () => {
                     <Label htmlFor="notifications">Notifications</Label>
                     <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
                   </div>
-                  <Switch 
-                    id="notifications" 
+                <Switch
+                    id="notifications"
                     checked={notificationsEnabled}
                     onCheckedChange={handleNotificationsChange}
                   />
                 </div>
+                <Button
+                  className="w-full mt-4"
+                  onClick={handleAppearanceSave}
+                >
+                  Save Appearance Settings
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
