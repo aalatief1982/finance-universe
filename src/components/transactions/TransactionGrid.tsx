@@ -50,9 +50,9 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
       initial="hidden"
       animate="visible"
     >
-      {transactions.map((transaction) => (
+      {transactions.map((transaction, idx) => (
         <motion.div
-          key={transaction.id}
+          key={transaction.id || idx}
           variants={itemVariants}
           className="group transition-all duration-300"
         >

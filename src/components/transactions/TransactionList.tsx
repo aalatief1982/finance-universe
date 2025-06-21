@@ -184,8 +184,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
   if (isMobile) {
     return (
       <div className="space-y-3">
-        {transactions.map(transaction => (
-          <Card key={transaction.id} className="overflow-hidden">
+        {transactions.map((transaction, idx) => (
+          <Card key={transaction.id || idx} className="overflow-hidden">
             <div className="p-[var(--card-padding)]">
               <div className="flex justify-between items-start mb-2">
                 <div>
@@ -325,11 +325,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map(transaction => {
+            {transactions.map((transaction, idx) => {
               const isExpanded = expandedRows[transaction.id] || false;
               
               return (
-                <React.Fragment key={transaction.id}>
+                <React.Fragment key={transaction.id || idx}>
                   <TableRow>
                     {showCheckboxes && (
                       <TableCell>

@@ -85,9 +85,9 @@ const TransactionTable = ({
               </TableCell>
             </TableRow>
           ) : (
-            transactions.map((transaction) => (
-              <TableRow 
-                key={transaction.id}
+            transactions.map((transaction, idx) => (
+              <TableRow
+                key={transaction.id || idx}
                 className="cursor-pointer hover:bg-muted/70 transition-colors"
                 onClick={() => onRowClick(transaction)}
               >

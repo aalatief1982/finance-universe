@@ -93,8 +93,8 @@ const RecentTransactions = ({
           animate="visible"
         >
           {filteredTransactions.length > 0 ? (
-            filteredTransactions.map((transaction) => (
-              <motion.div key={transaction.id} variants={itemVariants}>
+            filteredTransactions.map((transaction, idx) => (
+              <motion.div key={transaction.id || idx} variants={itemVariants}>
                 <TransactionCard
                   transaction={transaction}
                   showActions={false}
