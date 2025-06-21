@@ -11,6 +11,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { ArrowLeft } from 'lucide-react';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
+import { useTransactions } from '@/context/TransactionContext';
 
 interface DraftTransaction {
   id?: string;
@@ -31,6 +32,7 @@ const ReviewDraftTransactions: React.FC = () => {
   const { toast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
+  const { addTransaction, updateTransaction } = useTransactions();
 
   const messages: any[] = location.state?.messages || [];
   const vendorMap: Record<string, string> = location.state?.vendorMap || {};
@@ -140,8 +142,8 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
         rawMessage: txn.rawMessage,
         senderHint: txn.fromAccount || '',
         isNew: true,
-        addTransaction: () => {},
-        updateTransaction: () => {},
+        addTransaction,
+        updateTransaction,
         learnFromTransaction: () => {},
         navigateBack: () => {},
       });
