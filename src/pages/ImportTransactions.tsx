@@ -64,9 +64,9 @@ const ImportTransactions = () => {
   };
 
   return (
-    <Layout withPadding={false} fullWidth>
+    <Layout withPadding={false} fullWidth showBack>
       <div className="px-1">
-        <PageHeader title="Extract Transaction Details" showBack />
+        <PageHeader title="Extract Transaction Details" />
 
         <motion.div
           initial={{ opacity: 0 }}
