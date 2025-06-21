@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
-import { getCategoriesForType, getSubcategoriesForCategory, PEOPLE, CURRENCIES } from '@/lib/categories-data';
+import {
+  getCategoriesForType,
+  getSubcategoriesForCategory,
+  getCategoryHierarchy,
+  PEOPLE,
+  CURRENCIES,
+} from '@/lib/categories-data';
 import { Plus, Calculator } from 'lucide-react';
 import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -105,6 +111,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [accounts, setAccounts] = useState<Account[]>(() => getStoredAccounts());
   const [addAccountOpen, setAddAccountOpen] = useState(false);
   const [newAccount, setNewAccount] = useState<{ name: string; iban: string }>({ name: '', iban: '' });
+
+  const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const [newCategory, setNewCategory] = useState<{
+    type: TransactionType;
+    category: string;
+    subcategory: string;
+  }>({ type: 'expense', category: '', subcategory: '' });
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -222,6 +235,48 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setAccounts(getStoredAccounts());
     setNewAccount({ name: '', iban: '' });
     setAddAccountOpen(false);
+  };
+
+  const handleSaveCategory = () => {
+    if (!newCategory.category.trim()) return;
+
+    const hierarchy = getCategoryHierarchy();
+    const normalizedCategory = newCategory.category.trim();
+    const normalizedSubcategory = newCategory.subcategory.trim();
+
+    let cat = hierarchy.find(
+      (c) => c.type === newCategory.type && c.name.toLowerCase() === normalizedCategory.toLowerCase()
+    );
+
+    if (!cat) {
+      cat = {
+        id: normalizedCategory.toLowerCase().replace(/\s+/g, '-'),
+        name: normalizedCategory,
+        type: newCategory.type,
+        subcategories: [],
+      };
+      hierarchy.push(cat);
+    }
+
+    if (normalizedSubcategory) {
+      const exists = cat.subcategories.some(
+        (sc) => sc.name.toLowerCase() === normalizedSubcategory.toLowerCase()
+      );
+      if (!exists) {
+        cat.subcategories.push({
+          id: normalizedSubcategory.toLowerCase().replace(/\s+/g, '-'),
+          name: normalizedSubcategory,
+        });
+      }
+    }
+
+    localStorage.setItem('xpensia_category_hierarchy', JSON.stringify(hierarchy));
+
+    setAvailableCategories(getCategoriesForType(editedTransaction.type));
+    setAvailableSubcategories(getSubcategoriesForCategory(editedTransaction.category));
+
+    setNewCategory({ type: editedTransaction.type, category: '', subcategory: '' });
+    setAddCategoryOpen(false);
   };
 
   const handleCalcInput = (val: string) => {
@@ -404,6 +459,60 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={addCategoryOpen} onOpenChange={setAddCategoryOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Category</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Type*</label>
+              <Select
+                value={newCategory.type}
+                onValueChange={(val) =>
+                  setNewCategory((prev) => ({ ...prev, type: val as TransactionType }))
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Category*</label>
+              <Input
+                value={newCategory.category}
+                onChange={(e) =>
+                  setNewCategory((prev) => ({ ...prev, category: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Subcategory</label>
+              <Input
+                value={newCategory.subcategory}
+                onChange={(e) =>
+                  setNewCategory((prev) => ({ ...prev, subcategory: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAddCategoryOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSaveCategory}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
         <DialogContent className="sm:max-w-xs">
           <DialogHeader>
@@ -509,24 +618,37 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       <div className={rowClass}>
         <label className={labelClass}>Category*</label>
 
-        <Select
-          value={editedTransaction.category || ''}
-          onValueChange={(value) => handleChange('category', value)}
-        >
-          <SelectTrigger
-            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
-            style={getDrivenFieldStyle('category', drivenFields)}
+        <div className="flex w-full items-center gap-1">
+          <Select
+            value={editedTransaction.category || ''}
+            onValueChange={(value) => handleChange('category', value)}
           >
-            <SelectValue placeholder="Select category" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableCategories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <SelectTrigger
+              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+              style={getDrivenFieldStyle('category', drivenFields)}
+            >
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCategories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setNewCategory({ type: editedTransaction.type, category: '', subcategory: '' });
+              setAddCategoryOpen(true);
+            }}
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
       </div>
 
       <div className={rowClass}>
