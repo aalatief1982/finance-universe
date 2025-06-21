@@ -42,12 +42,16 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [error, setError] = useState<string | null>(null);
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const [matchStatus, setMatchStatus] = useState('Paste a message to begin');
+  const [confidence, setConfidence] = useState<number | null>(null);
+  const [confidenceOrigin, setConfidenceOrigin] = useState<"template" | "structure" | "ml" | "fallback" | null>(null);
 
   const { toast } = useToast();
 
   useEffect(() => {
     if (!text.trim()) {
       setMatchStatus('Paste a message to begin');
+      setConfidence(null);
+      setConfidenceOrigin(null);
       return;
     }
 
@@ -147,6 +151,9 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
 const handleSubmit = (e: React.FormEvent) => {
   e.preventDefault();
 
+  setConfidence(null);
+  setConfidenceOrigin(null);
+
   if (!text.trim()) {
     toast({
       title: "Error",
@@ -184,6 +191,9 @@ const handleSubmit = (e: React.FormEvent) => {
       origin
     });
 
+    setConfidence(confidence);
+    setConfidenceOrigin(origin);
+
     setDetectedTransactions([transaction]);
 
     if (onTransactionsDetected) {
@@ -220,7 +230,7 @@ const handleSubmit = (e: React.FormEvent) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-    console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
+    console.log('[SmartPaste] Sending transaction to PasteParse:', {
       transaction,
       parsedFields: {
         amount: transaction.amount,
@@ -264,7 +274,6 @@ const handleSubmit = (e: React.FormEvent) => {
             className="min-h-[100px]"
             dir="auto"
           />
-          <p className="text-xs text-muted-foreground">{matchStatus}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
@@ -303,7 +312,25 @@ const handleSubmit = (e: React.FormEvent) => {
 
       <NoTransactionMessage
         show={!isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
+        hint={matchStatus}
       />
+
+      {confidence !== null && (
+        <p
+          className={`text-xs mt-1 ${
+            confidence >= 0.8
+              ? 'text-green-600'
+              : confidence >= 0.5
+              ? 'text-yellow-600'
+              : 'text-red-600'
+          }`}
+        >
+          Confidence: {Math.round(confidence * 100)}% -{' '}
+          {confidenceOrigin === 'template'
+            ? 'Matched saved template.'
+            : 'Derived from message structure.'}
+        </p>
+      )}
     </div>
   );
 };

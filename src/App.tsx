@@ -8,7 +8,7 @@ import Onboarding from './pages/Onboarding';
 import { UserProvider } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { Toaster } from "@/components/ui/toaster";
-import ImportTransactions from './pages/ImportTransactions';
+import PasteParse from './pages/PasteParse';
 import EditTransaction from './pages/EditTransaction';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
@@ -173,7 +173,7 @@ function AppWrapper() {
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/import-transactions" element={<ImportTransactions />} />
+      <Route path="/paste-parse" element={<PasteParse />} />
       <Route path="/edit-transaction" element={<EditTransaction />} />
       <Route path="/edit-transaction/:id" element={<EditTransaction />} />
       <Route path="/train-model" element={<TrainModel />} />

@@ -6,10 +6,10 @@ import PageHeader from '@/components/layout/PageHeader';
 import SmartPaste from '@/components/SmartPaste';
 import { Transaction } from '@/types/transaction';
 
-const ImportTransactions = () => {
+const PasteParse = () => {
   const navigate = useNavigate();
 
-  console.log('[ImportTransactions] Page initialized');
+  console.log('[PasteParse] Page initialized');
 
   const handleTransactionsDetected = (
     transactions: Transaction[],
@@ -22,7 +22,7 @@ const ImportTransactions = () => {
 	  fieldScore?: number,
 	  keywordScore?: number
   ) => {
-    console.log('[ImportTransactions] Transactions detected', {
+    console.log('[PasteParse] Transactions detected', {
       count: transactions.length,
       transaction: transactions[0],
       rawMessageLength: rawMessage?.length,
@@ -38,7 +38,7 @@ const ImportTransactions = () => {
       console.warn('⚠️ Empty or invalid transaction.id:', transaction);
     }
 
-    console.log('[ImportTransactions] Navigate to edit with parameters:', {
+    console.log('[PasteParse] Navigate to edit with parameters:', {
       //shouldTrain,
       matchOrigin,
       transaction,
@@ -66,7 +66,7 @@ const ImportTransactions = () => {
   return (
     <Layout withPadding={false} fullWidth>
       <div className="px-1">
-        <PageHeader title="Import Transactions" showBack />
+        <PageHeader title='Paste & Parse' showBack />
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -83,4 +83,4 @@ const ImportTransactions = () => {
   );
 };
 
-export default ImportTransactions;
+export default PasteParse;
