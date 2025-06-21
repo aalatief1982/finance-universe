@@ -33,6 +33,8 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [error, setError] = useState<string | null>(null);
   const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
   const [matchStatus, setMatchStatus] = useState('Paste a message to begin');
+  const [confidence, setConfidence] = useState<number | null>(null);
+  const [matchOrigin, setMatchOrigin] = useState<'template' | 'structure' | 'ml' | 'fallback' | null>(null);
 
   const { toast } = useToast();
 
@@ -86,6 +88,8 @@ const handleSubmit = (e: React.FormEvent) => {
   console.log("[SmartPaste] Submitting message:", text);
   setIsProcessing(true);
   setError(null);
+  setConfidence(null);
+  setMatchOrigin(null);
 
   try {
     const {
@@ -102,6 +106,8 @@ const handleSubmit = (e: React.FormEvent) => {
     });
 
     setDetectedTransactions([transaction]);
+    setConfidence(confidence);
+    setMatchOrigin(origin);
 
     if (onTransactionsDetected) {
       console.log("[SmartPaste] Final transaction inference:", transaction);
@@ -117,6 +123,8 @@ const handleSubmit = (e: React.FormEvent) => {
   } catch (err: any) {
     console.error("[SmartPaste] Error in structure parsing:", err);
     setError("Could not parse the message. Try again or report.");
+    setConfidence(null);
+    setMatchOrigin(null);
   } finally {
     setIsProcessing(false);
   }
@@ -164,10 +172,7 @@ const handleSubmit = (e: React.FormEvent) => {
   return (
     <div className="pt-4 space-y-4">
       <div className="mb-2">
-        <h2 className="text-lg font-semibold">Smart Paste</h2>
-        <p className="text-sm text-muted-foreground">
-          Paste a message from your bank or SMS app to automatically extract transaction details.
-        </p>
+        <h2 className="text-lg font-semibold">Paste & Parse</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -199,6 +204,31 @@ const handleSubmit = (e: React.FormEvent) => {
             Paste from Clipboard
           </Button>
         </div>
+
+        {confidence !== null && (
+          <p
+            className={`text-sm mt-2 ${
+              confidence >= 0.8
+                ? 'text-green-600'
+                : confidence >= 0.5
+                ? 'text-yellow-600'
+                : 'text-red-600'
+            }`}
+          >
+            Confidence: {(confidence * 100).toFixed(0)}% -{' '}
+            {matchOrigin === 'template'
+              ? 'matched a saved template.'
+              : matchOrigin === 'ml'
+              ? 'AI extracted.'
+              : matchOrigin === 'fallback'
+              ? 'basic guess from text.'
+              : 'structure match.'}
+          </p>
+        )}
+
+        <p className="text-sm text-muted-foreground mt-2">
+          Paste a message from your bank or SMS app to automatically extract transaction details.
+        </p>
       </form>
 
       <ErrorAlert error={error} />

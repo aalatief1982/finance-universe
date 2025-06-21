@@ -48,7 +48,7 @@ graph TD
 graph TD
     A[Background SMS Listener] --> B{Message from Known Sender?}
     B -->|Yes| C[Parse Message Content]
-    C --> D[Extract Transaction Details]
+    C --> D[Paste & Parse]
     D --> E[Auto-Categorize Transaction]
     E --> F[Show Confirmation Popup]
     F --> G{User Confirms?}
