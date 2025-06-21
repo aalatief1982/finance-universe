@@ -33,14 +33,14 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       id: transaction.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       source: transaction.source || 'manual'
     }));
-    
+
     // Update state
     setTransactions(prevTransactions => {
-      const updatedTransactions = [...prevTransactions, ...validTransactions];
-      
+      const updatedTransactions = [...validTransactions, ...prevTransactions];
+
       // Store in local storage
       storeTransactions(updatedTransactions);
-      
+
       return updatedTransactions;
     });
   };
@@ -55,11 +55,11 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
     
     // Update state
     setTransactions(prevTransactions => {
-      const updatedTransactions = [...prevTransactions, validTransaction];
-      
+      const updatedTransactions = [validTransaction, ...prevTransactions];
+
       // Store in local storage
       storeTransactions(updatedTransactions);
-      
+
       return updatedTransactions;
     });
   };
