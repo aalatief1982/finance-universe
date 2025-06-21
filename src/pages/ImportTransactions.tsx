@@ -1,30 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import TelegramBotSetup from '@/components/TelegramBotSetup';
+import PageHeader from '@/components/layout/PageHeader';
 import SmartPaste from '@/components/SmartPaste';
 import { Transaction } from '@/types/transaction';
-import { useTransactions } from '@/context/TransactionContext';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from '@/components/ui/card';
-import {
-  loadKeywordBank,
-  saveKeywordBank,
-} from '@/lib/smart-paste-engine/keywordBankUtils';
 
 const ImportTransactions = () => {
-  const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
-  const { addTransactions } = useTransactions();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   console.log('[ImportTransactions] Page initialized');
@@ -82,44 +64,21 @@ const ImportTransactions = () => {
   };
 
   return (
-    <Layout withPadding={false}>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="pt-[calc(var(--safe-area-top)+56px)] px-[var(--page-padding-x)]"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-bold">Import Transactions</h1>
-          </div>
-        </div>
+    <Layout withPadding={false} fullWidth>
+      <div className="px-1">
+        <PageHeader title="Import Transactions" showBack />
 
-        <Card>
-          <CardContent className="pt-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-[calc(var(--section-gap)/2)]"
+        >
+          <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
             <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">Telegram Bot</CardTitle>
-            <CardDescription className="text-sm text-muted-foreground">
-              Connect your Telegram account to forward messages directly for transaction extraction.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <TelegramBotSetup />
-          </CardContent>
-        </Card>
-      </motion.div>
+          </div>
+        </motion.div>
+      </div>
     </Layout>
   );
 };
