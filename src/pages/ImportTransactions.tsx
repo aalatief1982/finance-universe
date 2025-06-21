@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import PageHeader from '@/components/layout/PageHeader';
 import SmartPaste from '@/components/SmartPaste';
 import { Transaction } from '@/types/transaction';
 
@@ -66,7 +65,6 @@ const ImportTransactions = () => {
   return (
     <Layout withPadding={false} fullWidth showBack>
       <div className="px-1">
-        <PageHeader title="Paste & Parse" />
 
         <motion.div
           initial={{ opacity: 0 }}

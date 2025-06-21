@@ -17,7 +17,7 @@ export const routeTitleMap: Record<string, string> = {
   '/wireframes/settings': 'Settings',
   '/wireframes/sms-provider': 'SMS Provider',
   '/wireframes/sms-transaction': 'SMS Transaction',
-  '/import-transactions': 'Paste Parse',
+  '/import-transactions': 'Paste & Parse',
   '/edit-transaction': 'Transaction',
 };
 
