@@ -62,7 +62,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
         {hasData ? (
           limited.length > 1 ? (
             <div
-              className="h-[300px] w-full flex items-center"
+              className="h-[300px] w-full"
               role="img"
               aria-label="Expenses by category donut chart"
             >
