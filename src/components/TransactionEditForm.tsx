@@ -9,6 +9,7 @@ import {
 } from '@/lib/categories-data';
 import { Plus, Calculator } from 'lucide-react';
 import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
+import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,6 +119,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     category: string;
     subcategory: string;
   }>({ type: 'expense', category: '', subcategory: '' });
+
+  const [people, setPeople] = useState<string[]>(() => getPeopleNames());
+  const [addPersonOpen, setAddPersonOpen] = useState(false);
+  const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -277,6 +282,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
     setNewCategory({ type: editedTransaction.type, category: '', subcategory: '' });
     setAddCategoryOpen(false);
+  };
+
+  const handleSavePerson = () => {
+    if (!newPerson.name.trim()) return;
+    addUserPerson({ name: newPerson.name.trim(), relation: newPerson.relation.trim() || undefined });
+    setPeople(getPeopleNames());
+    handleChange('person', newPerson.name.trim());
+    setNewPerson({ name: '', relation: '' });
+    setAddPersonOpen(false);
   };
 
   const handleCalcInput = (val: string) => {
@@ -513,6 +527,28 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={addPersonOpen} onOpenChange={setAddPersonOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Person</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Name*</label>
+              <Input value={newPerson.name} onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Relation</label>
+              <Input value={newPerson.relation} onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAddPersonOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={handleSavePerson}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
         <DialogContent className="sm:max-w-xs">
           <DialogHeader>
@@ -683,22 +719,27 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       <div className={rowClass}>
         <label className={labelClass}>Person (Optional)</label>
 
-        <Select
-          value={editedTransaction.person || 'none'}
-          onValueChange={(value) => handleChange('person', value)}
-        >
-          <SelectTrigger className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}>
-            <SelectValue placeholder="Select person" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">None</SelectItem>
-            {PEOPLE.map((person) => (
-              <SelectItem key={person} value={person}>
-                {person}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex w-full items-center gap-1">
+          <Select
+            value={editedTransaction.person || 'none'}
+            onValueChange={(value) => handleChange('person', value)}
+          >
+            <SelectTrigger className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}>
+              <SelectValue placeholder="Select person" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {people.map((person) => (
+                <SelectItem key={person} value={person}>
+                  {person}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button type="button" variant="outline" size="icon" onClick={() => setAddPersonOpen(true)}>
+            <Plus className="size-4" />
+          </Button>
+        </div>
       </div>
 
 

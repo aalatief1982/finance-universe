@@ -1,6 +1,7 @@
 import { TransactionType } from '@/types/transaction';
+import { getPeopleNames } from './people-utils';
 
-export const PEOPLE = ['Ahmed', 'Marwa', 'Youssef', 'Salma', 'Mazen'];
+export const PEOPLE = getPeopleNames();
 export const CURRENCIES = ['SAR', 'EGP', 'USD', 'BHD', 'AED'];
 
 type TransactionCategory = {

@@ -1,5 +1,6 @@
 
 import { TransactionType } from '@/types/transaction';
+import { getPeopleNames } from './people-utils';
 
 
 // Fallback in case localStorage isn't ready (optional dev/testing mode)
@@ -35,7 +36,7 @@ export const getSubcategoriesForCategory = (categoryName: string): string[] => {
   const category = getCategoryHierarchy().find(cat => cat.name === categoryName);
   return category ? category.subcategories.map(sub => sub.name) : [];
 };
-export const PEOPLE = ['Ahmed', 'Marwa', 'Youssef', 'Salma', 'Mazen'];
+export const PEOPLE = getPeopleNames();
 
 export const CURRENCIES = ['SAR', 'EGP', 'USD', 'BHD', 'AED'];
 
