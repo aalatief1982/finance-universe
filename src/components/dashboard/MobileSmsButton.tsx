@@ -14,7 +14,7 @@ const MobileSmsButton = () => {
       >
         <Link to="/import-transactions">
           <MessageSquare size={18} />
-          Extract Transaction Details
+          Paste & Parse
         </Link>
       </Button>
     </div>

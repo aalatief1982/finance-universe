@@ -66,7 +66,7 @@ const ImportTransactions = () => {
   return (
     <Layout withPadding={false} fullWidth showBack>
       <div className="px-1">
-        <PageHeader title="Extract Transaction Details" />
+        <PageHeader title="Paste & Parse" />
 
         <motion.div
           initial={{ opacity: 0 }}
