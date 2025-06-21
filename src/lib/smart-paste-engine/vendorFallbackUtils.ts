@@ -29,12 +29,13 @@ export function getVendorNames(): string[] {
 
 export function addUserVendor(
   name: string,
-  data: Omit<VendorFallbackData, 'user'>
+  data: Omit<VendorFallbackData, 'user'>,
+  user: boolean = true
 ): void {
   if (!name.trim()) return;
   const vendors = loadVendorFallbacks();
   if (!vendors[name]) {
-    vendors[name] = { ...data, user: true } as VendorFallbackData;
+    vendors[name] = { ...data, ...(user ? { user: true } : {}) } as VendorFallbackData;
     saveVendorFallbacks(vendors);
   }
 }

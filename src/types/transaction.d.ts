@@ -31,4 +31,6 @@ export interface Category {
     icon?: string;
     budget?: number;
   };
+  /** Indicates entry was added by the user */
+  user?: boolean;
 }

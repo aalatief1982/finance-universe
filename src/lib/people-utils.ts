@@ -28,13 +28,13 @@ export function getPeopleNames(): string[] {
   return getStoredPeople().map(p => p.name);
 }
 
-export function addUserPerson(person: Person) {
+export function addUserPerson(person: Person, user = true) {
   if (!person.name.trim()) return;
   try {
     const raw = localStorage.getItem(PEOPLE_KEY);
     const arr: Person[] = raw ? JSON.parse(raw) : [];
     if (!arr.some(p => p.name.toLowerCase() === person.name.toLowerCase())) {
-      arr.push({ ...person, user: true });
+      arr.push({ ...person, ...(user ? { user: true } : {}) });
       localStorage.setItem(PEOPLE_KEY, JSON.stringify(arr));
     }
   } catch {

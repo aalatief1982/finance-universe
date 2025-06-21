@@ -25,13 +25,13 @@ export function getStoredAccounts(): Account[] {
   }
 }
 
-export function addUserAccount(account: Account) {
+export function addUserAccount(account: Account, user = true) {
   if (!account.name.trim()) return;
   try {
     const raw = localStorage.getItem(ACCOUNTS_KEY);
     const arr: Account[] = raw ? JSON.parse(raw) : [];
     if (!arr.some(a => a.name.toLowerCase() === account.name.toLowerCase())) {
-      arr.push({ ...account, user: true });
+      arr.push({ ...account, ...(user ? { user: true } : {}) });
       localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(arr));
     }
   } catch {
