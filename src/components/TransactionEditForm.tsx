@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { getCategoriesForType, getSubcategoriesForCategory, PEOPLE, CURRENCIES } from '@/lib/categories-data';
+import { Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -74,6 +76,29 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
+  const CUSTOM_CURRENCIES_KEY = 'xpensia_custom_currencies';
+  type CustomCurrency = {
+    code: string;
+    country: string;
+    conversionRate?: number;
+    isCustom: boolean;
+  };
+  const loadCurrencies = (): string[] => {
+    const base = [...CURRENCIES];
+    try {
+      const raw = localStorage.getItem(CUSTOM_CURRENCIES_KEY);
+      if (raw) {
+        const custom: CustomCurrency[] = JSON.parse(raw);
+        base.push(...custom.map(c => c.code));
+      }
+    } catch {
+      // ignore
+    }
+    return base;
+  };
+  const [currencies, setCurrencies] = useState<string[]>(() => loadCurrencies());
+  const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
+  const [newCurrency, setNewCurrency] = useState({ code: '', country: '', rate: '' });
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -163,6 +188,28 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     });
   };
 
+  const handleSaveCurrency = () => {
+    if (!newCurrency.code.trim() || !newCurrency.country.trim()) return;
+    const currencyObj: CustomCurrency = {
+      code: newCurrency.code.trim().toUpperCase(),
+      country: newCurrency.country.trim(),
+      conversionRate: newCurrency.rate ? parseFloat(newCurrency.rate) : undefined,
+      isCustom: true,
+    };
+    try {
+      const raw = localStorage.getItem(CUSTOM_CURRENCIES_KEY);
+      const arr: CustomCurrency[] = raw ? JSON.parse(raw) : [];
+      arr.push(currencyObj);
+      localStorage.setItem(CUSTOM_CURRENCIES_KEY, JSON.stringify(arr));
+    } catch {
+      // ignore
+    }
+    setCurrencies(prev => [...prev, currencyObj.code]);
+    handleChange('currency', currencyObj.code);
+    setNewCurrency({ code: '', country: '', rate: '' });
+    setAddCurrencyOpen(false);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalTransaction = { ...editedTransaction };
@@ -248,25 +295,56 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       <div className={rowClass}>
         <label className={labelClass}>Currency*</label>
 
-        <Select
-          value={editedTransaction.currency || 'SAR'}
-          onValueChange={(value) => handleChange('currency', value)}
-        >
-          <SelectTrigger
-            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
-            style={getDrivenFieldStyle('currency', drivenFields)}
+        <div className="flex w-full items-center gap-1">
+          <Select
+            value={editedTransaction.currency || 'SAR'}
+            onValueChange={(value) => handleChange('currency', value)}
           >
-            <SelectValue placeholder="Select currency" />
-          </SelectTrigger>
-          <SelectContent>
-            {CURRENCIES.map((currency) => (
-              <SelectItem key={currency} value={currency}>
-                {currency}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <SelectTrigger
+              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+              style={getDrivenFieldStyle('currency', drivenFields)}
+            >
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((currency) => (
+                <SelectItem key={currency} value={currency}>
+                  {currency}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button type="button" variant="outline" size="icon" onClick={() => setAddCurrencyOpen(true)}>
+            <Plus className="size-4" />
+          </Button>
+        </div>
       </div>
+
+      <Dialog open={addCurrencyOpen} onOpenChange={setAddCurrencyOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Currency</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Short Name*</label>
+              <Input value={newCurrency.code} onChange={e => setNewCurrency(prev => ({ ...prev, code: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Country*</label>
+              <Input value={newCurrency.country} onChange={e => setNewCurrency(prev => ({ ...prev, country: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Conversion Rate</label>
+              <Input type="number" step="0.0001" value={newCurrency.rate} onChange={e => setNewCurrency(prev => ({ ...prev, rate: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAddCurrencyOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={handleSaveCurrency}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
 
       <div className={rowClass}>
