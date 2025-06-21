@@ -7,6 +7,7 @@ import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults';
 import './styles/app.css';
 import { initializeCapacitor } from './lib/capacitor-init';
+import { demoTransactionService } from './services/DemoTransactionService';
 
 // Initialize Capacitor
 try {
@@ -16,6 +17,7 @@ try {
 }
 
 initializeXpensiaStorageDefaults();
+demoTransactionService.seedDemoTransactions();
 
 
 // Setup global error handlers
