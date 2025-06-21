@@ -171,11 +171,11 @@ const handleSubmit = (e: React.FormEvent) => {
 
   return (
     <div className="pt-4 space-y-4">
-      <div className="mb-2">
-        <h2 className="text-lg font-semibold">Paste & Parse</h2>
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Paste a message from your bank or SMS app to automatically extract transaction details.
+        </p>
         <div className="grid gap-2">
           <Label htmlFor="message">Bank/SMS Message</Label>
           <Textarea
@@ -186,7 +186,6 @@ const handleSubmit = (e: React.FormEvent) => {
             className="min-h-[100px]"
             dir="auto"
           />
-          <p className="text-xs text-muted-foreground">{matchStatus}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
@@ -225,10 +224,6 @@ const handleSubmit = (e: React.FormEvent) => {
               : 'structure match.'}
           </p>
         )}
-
-        <p className="text-sm text-muted-foreground mt-2">
-          Paste a message from your bank or SMS app to automatically extract transaction details.
-        </p>
       </form>
 
       <ErrorAlert error={error} />
@@ -250,6 +245,7 @@ const handleSubmit = (e: React.FormEvent) => {
 
       <NoTransactionMessage
         show={!isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
+        message={matchStatus}
       />
     </div>
   );
