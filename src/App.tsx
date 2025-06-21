@@ -19,6 +19,8 @@ import VendorCategorization from '@/pages/sms/VendorCategorization';
 import VendorMapping from '@/pages/VendorMapping';
 import ReviewDraftTransactions from '@/pages/ReviewDraftTransactions';
 import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
@@ -177,11 +179,13 @@ function AppWrapper() {
       <Route path="/train-model" element={<TrainModel />} />
       <Route path="/build-template" element={<BuildTemplate />} />
       <Route path="/keyword-bank" element={<KeywordBankManager />} />
+      <Route path="/settings" element={<Settings />} />
       <Route path="/process-sms" element={<ProcessSmsMessages />} />
       <Route path="/sms/process-vendors" element={<ProcessVendors />} />
       <Route path="/sms/vendors" element={<VendorCategorization />} />
       <Route path="/vendor-mapping" element={<VendorMapping />} />
       <Route path="/review-draft-transactions" element={<ReviewDraftTransactions />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
