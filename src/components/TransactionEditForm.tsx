@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { getCategoriesForType, getSubcategoriesForCategory, PEOPLE, CURRENCIES } from '@/lib/categories-data';
 import { Plus, Calculator } from 'lucide-react';
+import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -101,6 +102,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [newCurrency, setNewCurrency] = useState({ code: '', country: '', rate: '' });
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [calcExpr, setCalcExpr] = useState('');
+  const [accounts, setAccounts] = useState<Account[]>(() => getStoredAccounts());
+  const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [newAccount, setNewAccount] = useState<{ name: string; iban: string }>({ name: '', iban: '' });
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -210,6 +214,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     handleChange('currency', currencyObj.code);
     setNewCurrency({ code: '', country: '', rate: '' });
     setAddCurrencyOpen(false);
+  };
+
+  const handleSaveAccount = () => {
+    if (!newAccount.name.trim()) return;
+    addUserAccount({ name: newAccount.name.trim(), iban: newAccount.iban.trim() || undefined });
+    setAccounts(getStoredAccounts());
+    setNewAccount({ name: '', iban: '' });
+    setAddAccountOpen(false);
   };
 
   const handleCalcInput = (val: string) => {
@@ -370,6 +382,28 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Name*</label>
+              <Input value={newAccount.name} onChange={e => setNewAccount(prev => ({ ...prev, name: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">IBAN</label>
+              <Input value={newAccount.iban} onChange={e => setNewAccount(prev => ({ ...prev, iban: e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAddAccountOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={handleSaveAccount}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
         <DialogContent className="sm:max-w-xs">
           <DialogHeader>
@@ -429,28 +463,45 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       <div className={rowClass}>
         <label className={labelClass}>From Account*</label>
 
-        <Input
-          value={editedTransaction.fromAccount || ''}
-          onChange={(e) => handleChange('fromAccount', e.target.value)}
-          style={getDrivenFieldStyle('fromAccount', drivenFields)}
-          placeholder="Source account"
-          required
-          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
-        />
+        <div className="flex w-full items-center gap-1">
+          <Input
+            list="accounts-list"
+            value={editedTransaction.fromAccount || ''}
+            onChange={(e) => handleChange('fromAccount', e.target.value)}
+            style={getDrivenFieldStyle('fromAccount', drivenFields)}
+            placeholder="Source account"
+            required
+            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+          />
+          <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
+            <Plus className="size-4" />
+          </Button>
+          <datalist id="accounts-list">
+            {accounts.map(acc => (
+              <option key={acc.name} value={acc.name} />
+            ))}
+          </datalist>
+        </div>
       </div>
 
       {editedTransaction.type === 'transfer' && (
         <div className={rowClass}>
           <label className={labelClass}>To Account*</label>
 
-          <Input
-            value={editedTransaction.toAccount || ''}
-            onChange={(e) => handleChange('toAccount', e.target.value)}
-            style={getDrivenFieldStyle('toAccount', drivenFields)}
-            placeholder="Destination account"
-            required
-            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
-          />
+          <div className="flex w-full items-center gap-1">
+            <Input
+              list="accounts-list"
+              value={editedTransaction.toAccount || ''}
+              onChange={(e) => handleChange('toAccount', e.target.value)}
+              style={getDrivenFieldStyle('toAccount', drivenFields)}
+              placeholder="Destination account"
+              required
+              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+            />
+            <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
+              <Plus className="size-4" />
+            </Button>
+          </div>
         </div>
       )}
 
