@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { getCategoriesForType, getSubcategoriesForCategory, PEOPLE, CURRENCIES } from '@/lib/categories-data';
-import { Plus } from 'lucide-react';
+import { Plus, Calculator } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -99,6 +99,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [currencies, setCurrencies] = useState<string[]>(() => loadCurrencies());
   const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
   const [newCurrency, setNewCurrency] = useState({ code: '', country: '', rate: '' });
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [calcExpr, setCalcExpr] = useState('');
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -208,6 +210,34 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     handleChange('currency', currencyObj.code);
     setNewCurrency({ code: '', country: '', rate: '' });
     setAddCurrencyOpen(false);
+  };
+
+  const handleCalcInput = (val: string) => {
+    setCalcExpr(prev => prev + val);
+  };
+
+  const clearCalc = () => setCalcExpr('');
+
+  const evaluateCalc = () => {
+    try {
+      // eslint-disable-next-line no-new-func
+      const result = Function(`return (${calcExpr || 0})`)();
+      setCalcExpr(String(result));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleUseCalc = () => {
+    try {
+      // eslint-disable-next-line no-new-func
+      const result = Function(`return (${calcExpr || 0})`)();
+      handleChange('amount', parseFloat(result));
+    } catch {
+      // ignore
+    }
+    setCalculatorOpen(false);
+    setCalcExpr('');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -340,23 +370,59 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
+      <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Calculator</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Input readOnly value={calcExpr} />
+            <div className="grid grid-cols-4 gap-2 text-sm">
+              {['7','8','9','/','4','5','6','*','1','2','3','-','0','.','C','+'].map(ch => (
+                <Button key={ch} type="button" variant="secondary" size="sm" onClick={() => {
+                  if (ch === 'C') return clearCalc();
+                  handleCalcInput(ch);
+                }}>
+                  {ch}
+                </Button>
+              ))}
+              <Button type="button" variant="default" className="col-span-4" onClick={evaluateCalc}>=</Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setCalculatorOpen(false)}>Cancel</Button>
+            <Button type="button" onClick={handleUseCalc}>Use</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <div className={rowClass}>
         <label className={labelClass}>Amount*</label>
 
-        <Input
-          type="number"
-          step="0.01"
-          value={editedTransaction.amount}
-          style={getDrivenFieldStyle('amount', drivenFields)}
-          onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
-          placeholder="0.00"
-          required
-          className={cn(
-            'w-full text-sm rounded-md border-gray-300 focus:ring-primary',
-            inputPadding
-          )}
-        />
+        <div className="flex w-full items-center gap-1">
+          <Input
+            type="number"
+            step="0.01"
+            value={editedTransaction.amount}
+            style={getDrivenFieldStyle('amount', drivenFields)}
+            onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
+            placeholder="0.00"
+            required
+            className={cn(
+              'w-full text-sm rounded-md border-gray-300 focus:ring-primary',
+              inputPadding
+            )}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setCalculatorOpen(true)}
+          >
+            <Calculator className="size-4" />
+          </Button>
+        </div>
       </div>
 
 
