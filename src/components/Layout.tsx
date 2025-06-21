@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './header/Header';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,6 +28,7 @@ const Layout = ({
   showBack = false,
 }: LayoutProps) => {
   const isMobile = useIsMobile();
+  const location = useLocation();
   
   return (
     <div
@@ -56,8 +58,10 @@ const Layout = ({
               !fullWidth && "max-w-[var(--content-max-width)] mx-auto"
             )}
           >
-            <AnimatePresence mode="wait">
-              {children}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={location.pathname}>
+                {children}
+              </motion.div>
             </AnimatePresence>
           </div>
         </main>
