@@ -21,6 +21,7 @@ const localStorageMock = (() => {
 })();
 
 globalThis.localStorage = localStorageMock as any;
+globalThis.window = {} as any;
 
 test('loadVendorFallbacks strips blank keys and persists result', () => {
   localStorage.clear();
