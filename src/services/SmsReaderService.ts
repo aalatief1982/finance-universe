@@ -75,6 +75,7 @@ export class SmsReaderService {
     try {
       const result = await SmsReader.readSmsMessages({
         ...options,
+        limit: options.limit ?? 10000,
         startDate: String(startDate),
         endDate: String(endDate),
       });
