@@ -4,6 +4,7 @@ import { extractTemplateStructure, getAllTemplates, saveNewTemplate, loadTemplat
 import { loadKeywordBank, saveKeywordBank } from './keywordBankUtils';
 import { storeTransaction } from '@/utils/storage-utils';
 import { toast } from '@/components/ui/use-toast';
+import { applyVendorMapping } from './structureParser';
 
 interface SaveOptions {
   rawMessage?: string;
@@ -32,7 +33,8 @@ export function saveTransactionWithLearning(
   const newTransaction: Transaction = {
     ...transaction,
     id: transaction.id || uuidv4(),
-    source: transaction.source || 'manual'
+    source: transaction.source || 'manual',
+    vendor: applyVendorMapping(transaction.vendor)
   };
 
   if (isNew) {
@@ -62,7 +64,9 @@ export function saveTransactionWithLearning(
     });
 
     // Keyword Bank Mapping
-    const keyword = placeholders?.vendor?.toLowerCase() || newTransaction.vendor.toLowerCase();
+    const keyword = applyVendorMapping(
+      placeholders?.vendor || newTransaction.vendor
+    ).toLowerCase();
     const bank = loadKeywordBank();
     const existing = bank.find(k => k.keyword === keyword);
 
