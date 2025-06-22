@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { subDays } from 'date-fns';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,6 +16,8 @@ interface ProcessedSmsEntry extends SmsEntry {
   matchedKeyword?: string;
 }
 
+const THIRTY_DAYS_AGO = subDays(new Date(), 30);
+
 const ProcessSmsMessages: React.FC = () => {
   const [messages, setMessages] = useState<ProcessedSmsEntry[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ProcessedSmsEntry[]>([]);
@@ -23,6 +26,15 @@ const ProcessSmsMessages: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [senders, setSenders] = useState<string[]>([]);
   const [selectedSenders, setSelectedSenders] = useState<string[]>([]);
+  const [collapsedSenders, setCollapsedSenders] = useState<Record<string, boolean>>(
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem('sms_collapsed_senders') || '{}');
+      } catch {
+        return {};
+      }
+    }
+  );
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -45,6 +57,30 @@ const ProcessSmsMessages: React.FC = () => {
       setSenders(distinctSenders);
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (senders.length > 0) {
+      setCollapsedSenders((prev) => {
+        const updated = { ...prev };
+        let changed = false;
+        senders.forEach((s) => {
+          if (!(s in updated)) {
+            updated[s] = true;
+            changed = true;
+          }
+        });
+        if (changed) {
+          localStorage.setItem('sms_collapsed_senders', JSON.stringify(updated));
+          return updated;
+        }
+        return prev;
+      });
+    }
+  }, [senders]);
+
+  useEffect(() => {
+    localStorage.setItem('sms_collapsed_senders', JSON.stringify(collapsedSenders));
+  }, [collapsedSenders]);
 
   useEffect(() => {
     const selectedMsgs =
@@ -155,6 +191,14 @@ const handleReadSms = async () => {
     }
   };
 
+  const toggleSenderCollapse = (sender: string) => {
+    setCollapsedSenders((prev) => {
+      const updated = { ...prev, [sender]: !prev[sender] };
+      localStorage.setItem('sms_collapsed_senders', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const handleProceed = () => {
     const vendorMap: Record<string, string> = {};
     const keywordMap: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
@@ -236,22 +280,43 @@ const handleReadSms = async () => {
               </TabsList>
             </Tabs>
 
-            {Object.entries(filteredBySender).map(([sender, msgs]) => (
-              <Card key={sender} className="p-[var(--card-padding)] space-y-2">
-                <h3 className="font-semibold">{sender}</h3>
-                {msgs.map((msg, idx) => (
-                  <div key={idx} className="border rounded p-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{new Date(msg.date).toLocaleString()}</span>
-                      <Badge variant={msg.matchedKeyword ? 'success' : 'outline'}>
-                        {msg.matchedKeyword ? 'Matched' : 'Skipped'}
-                      </Badge>
-                    </div>
-                    <pre className="whitespace-pre-wrap text-sm">{msg.message}</pre>
+            {Object.entries(filteredBySender).map(([sender, msgs]) => {
+              const collapsed = collapsedSenders[sender] ?? true;
+              const displayed = collapsed
+                ? msgs.filter((m) => new Date(m.date) >= THIRTY_DAYS_AGO)
+                : msgs;
+
+              return (
+                <Card key={sender} className="p-[var(--card-padding)] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">{sender}</h3>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => toggleSenderCollapse(sender)}
+                    >
+                      {collapsed ? 'Show older messages' : 'Hide older messages'}
+                    </Button>
                   </div>
-                ))}
-              </Card>
-            ))}
+                  {displayed.map((msg, idx) => (
+                    <div key={idx} className="border rounded p-2 space-y-1">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{new Date(msg.date).toLocaleString()}</span>
+                        <Badge variant={msg.matchedKeyword ? 'success' : 'outline'}>
+                          {msg.matchedKeyword ? 'Matched' : 'Skipped'}
+                        </Badge>
+                      </div>
+                      <pre className="whitespace-pre-wrap text-sm">{msg.message}</pre>
+                    </div>
+                  ))}
+                  {collapsed && displayed.length < msgs.length && (
+                    <p className="text-xs text-muted-foreground">
+                      Showing recent messages only
+                    </p>
+                  )}
+                </Card>
+              );
+            })}
           </>
         )}
       </div>
