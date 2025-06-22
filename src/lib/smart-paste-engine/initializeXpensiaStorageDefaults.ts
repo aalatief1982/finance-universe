@@ -1,6 +1,6 @@
 import { TransactionType } from '@/types/transaction';
 import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
-import { saveVendorFallbacks } from './vendorFallbackUtils';
+import { saveVendorFallbacks, loadVendorFallbacks } from './vendorFallbackUtils';
 
 
 
@@ -225,6 +225,11 @@ export function initializeXpensiaStorageDefaults() {
     );
     saveVendorFallbacks(filtered);
     console.log('[Init] xpensia_vendor_fallbacks initialized');
+  } else {
+    // Migration: clean up vendor fallbacks with empty names
+    // Loading and saving ensures blank keys are stripped from storage
+    const sanitized = loadVendorFallbacks();
+    saveVendorFallbacks(sanitized);
   }
 
   // Ensure type keyword bank exists
