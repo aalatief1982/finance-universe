@@ -6,7 +6,14 @@ export function isFinancialTransactionMessage(text: string): boolean {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        storedKeywords = parsed;
+        storedKeywords = parsed
+          .map((entry: any) => {
+            if (typeof entry === 'string') return entry;
+            if (entry && typeof entry.keyword === 'string') return entry.keyword;
+            console.warn('[MessageFilter] Invalid keyword entry:', entry);
+            return null;
+          })
+          .filter((k: string | null): k is string => !!k);
       } else {
         console.warn('[MessageFilter] Invalid xpensia_type_keywords format:', parsed);
       }
