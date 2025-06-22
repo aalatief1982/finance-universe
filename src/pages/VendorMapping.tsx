@@ -6,7 +6,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { findClosestFallbackMatch } from '@/lib/smart-paste-engine/suggestionEngine';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { ArrowLeft } from 'lucide-react';
 
 interface VendorMappingEntry {
   vendor: string;
@@ -102,28 +101,20 @@ const VendorMapping: React.FC = () => {
   };
 
   return (
-    <Layout>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Vendor Mapping</h1>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {vendors.map((vendor, index) => (
-          <Card key={vendor.vendor} className="p-[var(--card-padding)]">
-            <div className="mb-2">
-              <label className="block mb-1 font-semibold">Vendor:</label>
-              <input
-                type="text"
-                value={vendor.updatedVendor}
-                onChange={e => handleVendorChange(index, 'updatedVendor', e.target.value)}
-                className="w-full border rounded p-2"
-              />
-            </div>
+    <Layout showBack withPadding={false} fullWidth>
+      <div className="px-1">
+        <div className="space-y-4">
+          {vendors.map((vendor, index) => (
+            <Card key={vendor.vendor} className="p-[var(--card-padding)]">
+              <div className="mb-2">
+                <label className="block mb-1 font-semibold">Vendor:</label>
+                <input
+                  type="text"
+                  value={vendor.updatedVendor}
+                  onChange={e => handleVendorChange(index, 'updatedVendor', e.target.value)}
+                  className="w-full border rounded p-2"
+                />
+              </div>
 
             <div className="mb-2">
               <label className="block mb-1 font-semibold">Category:</label>
@@ -154,9 +145,10 @@ const VendorMapping: React.FC = () => {
         ))}
       </div>
 
-      <Button className="mt-6 w-full" onClick={handleConfirm}>
-        Confirm
-      </Button>
+        <Button className="mt-6 w-full" onClick={handleConfirm}>
+          Confirm
+        </Button>
+      </div>
     </Layout>
   );
 };

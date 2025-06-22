@@ -7,7 +7,6 @@ import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import Layout from '@/components/Layout';
-import { ArrowLeft } from 'lucide-react';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
 interface ProcessedSmsEntry extends SmsEntry {
@@ -156,51 +155,44 @@ const handleReadSms = async () => {
   };
 
   return (
-    <Layout>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Process SMS Messages</h1>
-        </div>
-      </div>
+    <Layout showBack withPadding={false} fullWidth>
+      <div className="px-1">
+        <Button className="w-full mb-4" onClick={handleReadSms} disabled={loading}>
+          {loading ? 'Reading...' : 'Read SMS'}
+        </Button>
 
-      <Button className="w-full mb-4" onClick={handleReadSms} disabled={loading}>
-        {loading ? 'Reading...' : 'Read SMS'}
-      </Button>
+        {senders.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2">Select Senders:</h2>
+            {senders.map((sender) => (
+              <label key={sender} className="flex items-center mb-2">
+                <input
+                  type="checkbox"
+                  checked={selectedSenders.includes(sender)}
+                  onChange={() => toggleSenderSelect(sender)}
+                  className="mr-2"
+                />
+                {sender}
+              </label>
+            ))}
 
-      {senders.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Select Senders:</h2>
-          {senders.map((sender) => (
-            <label key={sender} className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                checked={selectedSenders.includes(sender)}
-                onChange={() => toggleSenderSelect(sender)}
-                className="mr-2"
-              />
-              {sender}
-            </label>
+            <Button className="mt-4 w-full" onClick={handleProceed}>
+              Proceed to Vendor Mapping
+            </Button>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {filteredMessages
+            .filter((msg): msg is ProcessedSmsEntry => !!msg && typeof msg.sender === 'string')
+            .map((msg, index) => (
+              <Card key={index} className="p-[var(--card-padding)]">
+                <p><strong>From:</strong> {msg.sender}</p>
+                <p><strong>Date:</strong> {new Date(msg.date).toLocaleString()}</p>
+                <p><strong>Message:</strong> {msg.message}</p>
+              </Card>
           ))}
-
-          <Button className="mt-4 w-full" onClick={handleProceed}>
-            Proceed to Vendor Mapping
-          </Button>
         </div>
-      )}
-
-      <div className="space-y-4">
-        {filteredMessages
-          .filter((msg): msg is ProcessedSmsEntry => !!msg && typeof msg.sender === 'string')
-          .map((msg, index) => (
-            <Card key={index} className="p-[var(--card-padding)]">
-              <p><strong>From:</strong> {msg.sender}</p>
-              <p><strong>Date:</strong> {new Date(msg.date).toLocaleString()}</p>
-              <p><strong>Message:</strong> {msg.message}</p>
-            </Card>
-        ))}
       </div>
     </Layout>
   );

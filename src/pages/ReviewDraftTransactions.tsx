@@ -9,7 +9,6 @@ import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransa
 import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { ArrowLeft } from 'lucide-react';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { useTransactions } from '@/context/TransactionContext';
 
@@ -158,15 +157,8 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
   };
 
   return (
-    <Layout>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Review SMS Transactions</h1>
-        </div>
-      </div>
+    <Layout showBack withPadding={false} fullWidth>
+      <div className="px-1">
 
       {transactions.map((txn, index) => (
         <Card key={index} className="p-[var(--card-padding)] mb-4">
@@ -201,9 +193,10 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
         </Card>
       ))}
 
-      <Button className="w-full mt-4" onClick={handleSave}>
-        Save All
-      </Button>
+        <Button className="w-full mt-4" onClick={handleSave}>
+          Save All
+        </Button>
+      </div>
     </Layout>
   );
 };
