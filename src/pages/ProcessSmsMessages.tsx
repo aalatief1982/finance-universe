@@ -231,7 +231,7 @@ const handleReadSms = async () => {
 
   return (
     <Layout showBack withPadding={false} fullWidth>
-      <div className="px-1 space-y-[var(--card-gap)]">
+      <div className="px-1 space-y-[var(--card-gap)] pb-[var(--header-height)]">
         <Button
           variant="default"
           className="w-full"
