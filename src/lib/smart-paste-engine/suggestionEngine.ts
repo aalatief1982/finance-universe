@@ -32,6 +32,10 @@ const getFallbackVendors = (): Record<string, VendorFallbackData> => {
 const normalize = (str: string): string =>
   str.normalize('NFC').replace(/[\s\-_,×]+/g, '').toLowerCase();
 
+// Escape string for use in regex
+const escapeRegex = (str: string): string =>
+  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /* export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
   const lowerInput = vendorName.toLowerCase();
   const vendorKeys = Object.keys(fallbackVendors);
@@ -85,9 +89,12 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
     return { vendor: originalKey, ...data };
   }
 
-  // Step 2: Try substring match
+  // Step 2: Try substring match with word boundaries
   for (const key of vendorKeys) {
-    if (lowerInput.includes(softNormalize(key))) {
+    const normalizedKey = softNormalize(key);
+    if (normalizedKey.length < 4) continue; // skip very short keys
+    const pattern = new RegExp(`\\b${escapeRegex(normalizedKey)}\\b`);
+    if (pattern.test(lowerInput)) {
       const data = fallbackVendors[key];
       console.info('[SmartPaste] Substring matched vendor:', key, '→', data);
       return { vendor: key, ...data };
