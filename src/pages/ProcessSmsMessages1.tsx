@@ -231,7 +231,7 @@ const ProcessSmsMessages = () => {
       <div className="container mx-auto py-[var(--page-padding-y)]">
         <Card>
           <CardHeader>
-            <CardTitle>Process SMS Messages</CardTitle>
+          <CardTitle>Import SMS Messages</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

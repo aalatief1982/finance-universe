@@ -47,11 +47,11 @@ export const getNavItems = () => [
     icon: 'Upload',
     description: 'Import transactions from SMS or paste'
   },
-  { 
-    title: 'Process SMS', 
-    path: '/process-sms', 
-    icon: 'MessageSquare', 
-    description: 'Import transactions from SMS' 
+  {
+    title: 'Import SMS',
+    path: '/process-sms',
+    icon: 'MessageSquare',
+    description: 'Import transactions from SMS'
   },
   {
     title: 'Settings',
