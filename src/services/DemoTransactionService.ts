@@ -1,7 +1,7 @@
 import { Transaction, TransactionType } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { getCategoryHierarchy, CURRENCIES } from '@/lib/categories-data';
-import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
+import { transactionStore } from '@/state/transactionStore';
 
 const FROM_ACCOUNTS = [
   'SAB Bank Debit',
@@ -34,7 +34,7 @@ class DemoTransactionService {
       return;
     }
 
-    const existing = getStoredTransactions();
+    const existing = transactionStore.get();
     if (existing.length > 0) {
       localStorage.setItem(INIT_FLAG_KEY, 'true');
       return;
@@ -84,7 +84,7 @@ class DemoTransactionService {
       });
     });
 
-    storeTransactions([...existing, ...newTransactions]);
+    transactionStore.set([...existing, ...newTransactions]);
     localStorage.setItem(INIT_FLAG_KEY, 'true');
   }
 }
