@@ -31,7 +31,7 @@ export function normalizeDate(dateStr: string): string | undefined {
 }
 
 
-export function parseSmsMessage(rawMessage: string) {
+export function parseStructuredSms(rawMessage: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
 	if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
