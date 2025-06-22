@@ -108,7 +108,7 @@ if (directFields['date']) {
 
 
 
-function applyVendorMapping(vendor: string): string {
+export function applyVendorMapping(vendor: string): string {
   const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
   return map[vendor] || vendor;
 }

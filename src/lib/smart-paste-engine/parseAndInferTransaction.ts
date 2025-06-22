@@ -1,6 +1,6 @@
 import { Transaction, TransactionType } from '@/types/transaction';
 import { nanoid } from 'nanoid';
-import { parseSmsMessage } from './structureParser';
+import { parseSmsMessage, applyVendorMapping } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates } from './templateUtils';
 import {
@@ -26,6 +26,10 @@ export function parseAndInferTransaction(
 ): ParsedTransactionResult {
   const parsed = parseSmsMessage(rawMessage);
 
+  const vendor = applyVendorMapping(
+    parsed.inferredFields.vendor || parsed.directFields.vendor || ''
+  );
+
   const transaction: Transaction = {
     id: nanoid(),
     amount: parseFloat(parsed.directFields.amount || '0'),
@@ -34,7 +38,7 @@ export function parseAndInferTransaction(
     type: (parsed.inferredFields.type as TransactionType) || 'expense',
     category: parsed.inferredFields.category || 'Uncategorized',
     subcategory: parsed.inferredFields.subcategory || 'none',
-    vendor: parsed.inferredFields.vendor || parsed.directFields.vendor || '',
+    vendor,
     fromAccount:
       parsed.directFields.fromAccount ||
       parsed.inferredFields.fromAccount ||
