@@ -103,7 +103,7 @@ const VendorMapping: React.FC = () => {
   return (
     <Layout showBack withPadding={false} fullWidth>
       <div className="px-1">
-        <div className="space-y-4">
+        <div className="space-y-[var(--card-gap)]">
           {vendors.map((vendor, index) => (
             <Card key={vendor.vendor} className="p-[var(--card-padding)]">
               <div className="mb-2">
