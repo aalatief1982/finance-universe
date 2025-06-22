@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
-import { getStoredTransactions, storeTransactions, getStoredCategories, storeCategories, getStoredCategoryRules, storeCategoryRules, getStoredCategoryChanges, storeCategoryChanges } from '@/utils/storage-utils';
+import { getStoredCategories, storeCategories, getStoredCategoryRules, storeCategoryRules, getStoredCategoryChanges, storeCategoryChanges } from '@/utils/storage-utils';
+import { transactionStore } from '@/state/transactionStore';
 import { transactionAnalyticsService } from './TransactionAnalyticsService';
 import { processSmsEntries } from './SmsProcessingService';
 
@@ -9,12 +10,12 @@ class TransactionService {
 
   // Get all transactions
   getAllTransactions(): Transaction[] {
-    return getStoredTransactions();
+    return transactionStore.get();
   }
 
   // Save transactions
   saveTransactions(transactions: Transaction[]): void {
-    storeTransactions(transactions);
+    transactionStore.set(transactions);
   }
 
   // Add a new transaction

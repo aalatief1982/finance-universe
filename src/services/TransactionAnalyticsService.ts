@@ -1,11 +1,11 @@
 
 import { Transaction, TransactionSummary, CategorySummary, TimePeriodData, TimePeriod } from '@/types/transaction';
-import { getStoredTransactions } from '@/utils/storage-utils';
+import { transactionStore } from '@/state/transactionStore';
 
 export class TransactionAnalyticsService {
   // Get transactions summary statistics
   getTransactionsSummary(): TransactionSummary {
-    const transactions = getStoredTransactions();
+    const transactions = transactionStore.get();
     
     const income = transactions
       .filter(t => t.amount > 0)
@@ -22,7 +22,7 @@ export class TransactionAnalyticsService {
 
   // Get transactions grouped by category
   getTransactionsByCategory(): CategorySummary[] {
-    const transactions = getStoredTransactions();
+    const transactions = transactionStore.get();
     const categories: Record<string, number> = {};
     
     transactions
@@ -37,7 +37,7 @@ export class TransactionAnalyticsService {
 
   // Get transactions grouped by time period
   getTransactionsByTimePeriod(period: TimePeriod = 'month'): TimePeriodData[] {
-    const transactions = getStoredTransactions();
+    const transactions = transactionStore.get();
     const timelineData: Record<string, { income: number; expense: number }> = {};
     
     // Get date format based on period
