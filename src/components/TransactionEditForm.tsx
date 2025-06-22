@@ -123,7 +123,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
 
   const [vendors, setVendors] = useState<string[]>(() => {
-    const builtIn = Object.keys((vendorData as any) || {});
+    const builtIn = Object.keys((vendorData as any) || {}).filter(v => v.trim());
     const stored = Object.keys(loadVendorFallbacks());
     return Array.from(new Set([...builtIn, ...stored]));
   });

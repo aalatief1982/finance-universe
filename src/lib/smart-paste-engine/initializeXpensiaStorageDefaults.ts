@@ -218,7 +218,12 @@ export function initializeXpensiaStorageDefaults() {
 
   // Ensure vendor fallback data exists
   if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
-    saveVendorFallbacks((vendorFallbackData as any).default ?? vendorFallbackData);
+    const initial: Record<string, VendorFallbackData> =
+      (vendorFallbackData as any).default ?? vendorFallbackData;
+    const filtered = Object.fromEntries(
+      Object.entries(initial).filter(([name]) => name.trim())
+    );
+    saveVendorFallbacks(filtered);
     console.log('[Init] xpensia_vendor_fallbacks initialized');
   }
 
