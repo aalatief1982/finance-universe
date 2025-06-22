@@ -157,23 +157,36 @@ const handleReadSms = async () => {
   return (
     <Layout showBack withPadding={false} fullWidth>
       <div className="px-1 space-y-[var(--card-gap)]">
-        <Button className="w-full" onClick={handleReadSms} disabled={loading}>
+        <Button
+          variant="default"
+          className="w-full"
+          onClick={handleReadSms}
+          disabled={loading}
+        >
           {loading ? 'Reading...' : 'Read SMS'}
         </Button>
 
         {senders.length > 0 && (
           <Card className="p-[var(--card-padding)] space-y-2">
             <h2 className="text-lg font-semibold">Select Senders:</h2>
+            <p className="text-sm text-muted-foreground">
+              Select which senders to include:
+            </p>
             {senders.map((sender) => (
-              <label key={sender} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={selectedSenders.includes(sender)}
-                  onChange={() => toggleSenderSelect(sender)}
-                  className="mr-2"
-                />
-                {sender}
-              </label>
+              <div
+                key={sender}
+                className="p-2 rounded-md mb-2 border"
+              >
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedSenders.includes(sender)}
+                    onChange={() => toggleSenderSelect(sender)}
+                    className="mr-2"
+                  />
+                  {sender}
+                </label>
+              </div>
             ))}
 
             <Button className="w-full" onClick={handleProceed}>
