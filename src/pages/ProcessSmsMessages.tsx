@@ -231,7 +231,7 @@ const handleReadSms = async () => {
 
   return (
     <Layout showBack withPadding={false} fullWidth>
-      <div className="px-1 space-y-[var(--card-gap)] pb-[var(--header-height)]">
+      <div className="px-1 pt-4 space-y-[var(--card-gap)] pb-[var(--header-height)]">
         <Button
           variant="default"
           className="w-full"
@@ -299,7 +299,7 @@ const handleReadSms = async () => {
                     </Button>
                   </div>
                   {displayed.map((msg, idx) => (
-                    <div key={idx} className="border rounded p-2 space-y-1">
+                    <div key={idx} className="border rounded bg-card p-2 space-y-1">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{new Date(msg.date).toLocaleString()}</span>
                         <Badge variant={msg.matchedKeyword ? 'success' : 'outline'}>
