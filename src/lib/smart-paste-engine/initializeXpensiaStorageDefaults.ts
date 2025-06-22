@@ -1,10 +1,7 @@
 import { TransactionType } from '@/types/transaction';
-import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
 import { saveVendorFallbacks, loadVendorFallbacks } from './vendorFallbackUtils';
 
-
-
-	  export const CATEGORY_HIERARCHY = [
+export const CATEGORY_HIERARCHY = [
   {
     id: 'bills', name: 'Bills', type: 'expense' as TransactionType,
     subcategories: [
@@ -216,18 +213,8 @@ export function initializeXpensiaStorageDefaults() {
     console.log('[Init] xpensia_vendor_map initialized');
   }
 
-  // Ensure vendor fallback data exists
-  if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
-    const initial: Record<string, VendorFallbackData> =
-      (vendorFallbackData as any).default ?? vendorFallbackData;
-    const filtered = Object.fromEntries(
-      Object.entries(initial).filter(([name]) => name.trim())
-    );
-    saveVendorFallbacks(filtered);
-    console.log('[Init] xpensia_vendor_fallbacks initialized');
-  } else {
-    // Migration: clean up vendor fallbacks with empty names
-    // Loading and saving ensures blank keys are stripped from storage
+  // Sanitize existing vendor fallback data if present
+  if (localStorage.getItem('xpensia_vendor_fallbacks')) {
     const sanitized = loadVendorFallbacks();
     saveVendorFallbacks(sanitized);
   }
