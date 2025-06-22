@@ -232,6 +232,14 @@ const handleReadSms = async () => {
   return (
     <Layout showBack withPadding={false} fullWidth>
       <div className="px-1 pt-4 space-y-[var(--card-gap)] pb-[var(--header-height)]">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold flex items-center justify-center gap-1 mb-1">
+            <span>📩</span> Import from Bank SMS
+          </h2>
+          <p className="text-sm text-muted-foreground px-2 mb-2">
+            Choose your SMS senders and tap <b>Read SMS</b> to begin importing transactions.
+          </p>
+        </div>
         <Button
           variant="default"
           className="w-full"
