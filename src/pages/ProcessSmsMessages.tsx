@@ -156,16 +156,16 @@ const handleReadSms = async () => {
 
   return (
     <Layout showBack withPadding={false} fullWidth>
-      <div className="px-1">
-        <Button className="w-full mb-4" onClick={handleReadSms} disabled={loading}>
+      <div className="px-1 space-y-[var(--card-gap)]">
+        <Button className="w-full" onClick={handleReadSms} disabled={loading}>
           {loading ? 'Reading...' : 'Read SMS'}
         </Button>
 
         {senders.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">Select Senders:</h2>
+          <Card className="p-[var(--card-padding)] space-y-2">
+            <h2 className="text-lg font-semibold">Select Senders:</h2>
             {senders.map((sender) => (
-              <label key={sender} className="flex items-center mb-2">
+              <label key={sender} className="flex items-center">
                 <input
                   type="checkbox"
                   checked={selectedSenders.includes(sender)}
@@ -176,23 +176,29 @@ const handleReadSms = async () => {
               </label>
             ))}
 
-            <Button className="mt-4 w-full" onClick={handleProceed}>
+            <Button className="w-full" onClick={handleProceed}>
               Proceed to Vendor Mapping
             </Button>
-          </div>
+          </Card>
         )}
 
-        <div className="space-y-4">
+        <Card className="p-[var(--card-padding)] space-y-2">
           {filteredMessages
             .filter((msg): msg is ProcessedSmsEntry => !!msg && typeof msg.sender === 'string')
             .map((msg, index) => (
               <Card key={index} className="p-[var(--card-padding)]">
-                <p><strong>From:</strong> {msg.sender}</p>
-                <p><strong>Date:</strong> {new Date(msg.date).toLocaleString()}</p>
-                <p><strong>Message:</strong> {msg.message}</p>
+                <p>
+                  <strong>From:</strong> {msg.sender}
+                </p>
+                <p>
+                  <strong>Date:</strong> {new Date(msg.date).toLocaleString()}
+                </p>
+                <p>
+                  <strong>Message:</strong> {msg.message}
+                </p>
               </Card>
-          ))}
-        </div>
+            ))}
+        </Card>
       </div>
     </Layout>
   );
