@@ -12,7 +12,19 @@ export function loadVendorFallbacks(): Record<string, VendorFallbackData> {
   const raw = localStorage.getItem(KEY);
   if (!raw) return {};
   try {
-    return JSON.parse(raw) as Record<string, VendorFallbackData>;
+    const parsed = JSON.parse(raw) as Record<string, VendorFallbackData>;
+    const entries = Object.entries(parsed).filter(([k]) => k.trim());
+    const sanitized = Object.fromEntries(entries) as Record<string, VendorFallbackData>;
+
+    if (entries.length !== Object.entries(parsed).length) {
+      try {
+        saveVendorFallbacks(sanitized);
+      } catch {
+        // ignore persistence errors
+      }
+    }
+
+    return sanitized;
   } catch (e) {
     console.error('[VendorFallbackUtils] Failed to parse stored vendor data:', e);
     return {};
