@@ -82,14 +82,20 @@ export function parseStructuredSms(rawMessage: string) {
     directFields[key] = value;
   });
 }
-// Normalize known field names like 'date'
-if (directFields['date']) {
-  const normalized = normalizeDate(directFields['date']);
-  if (normalized) {
-    directFields['date'] = normalized;
-    console.log('[SmartPaste] Normalized date:', directFields['date']);
+
+  // Normalize known field names like 'date'
+  if (directFields['date']) {
+    const normalized = normalizeDate(directFields['date']);
+    if (normalized) {
+      directFields['date'] = normalized;
+      console.log('[SmartPaste] Normalized date:', directFields['date']);
+    }
   }
-}
+
+  // Apply saved vendor mappings before running inference
+  if (directFields['vendor']) {
+    directFields['vendor'] = applyVendorMapping(directFields['vendor']);
+  }
 
   const inferred = inferIndirectFields(rawMessage, directFields);
   console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
@@ -108,6 +114,9 @@ if (directFields['date']) {
 
 
 
+// Utility to normalize vendor names based on user-maintained mappings.
+// The mapping is stored in localStorage under `xpensia_vendor_map` and is
+// consulted by the parser and forms for consistent vendor labels.
 export function applyVendorMapping(vendor: string): string {
   const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
   return map[vendor] || vendor;
