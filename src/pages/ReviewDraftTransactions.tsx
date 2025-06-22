@@ -158,7 +158,7 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 
   return (
     <Layout showBack withPadding={false} fullWidth>
-      <div className="px-1 space-y-[var(--card-gap)]">
+      <div className="px-1 space-y-[var(--card-gap)] pb-[var(--header-height)]">
         <div className="space-y-[var(--card-gap)]">
           {transactions.map((txn, index) => (
             <Card key={index} className="w-full">

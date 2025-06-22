@@ -118,7 +118,7 @@ const VendorMapping: React.FC = () => {
 
   return (
     <Layout showBack withPadding={false} fullWidth>
-      <div className="px-1 pb-24">
+      <div className="px-1 pb-[var(--header-height)]">
         <Accordion type="multiple" className="space-y-[var(--card-gap)]">
           {vendors.map((vendor, index) => (
             <AccordionItem key={vendor.vendor} value={vendor.vendor}>
