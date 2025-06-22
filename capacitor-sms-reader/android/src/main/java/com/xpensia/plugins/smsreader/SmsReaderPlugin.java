@@ -61,7 +61,7 @@ public class SmsReaderPlugin extends Plugin {
 
         String startDate = call.getString("startDate");
         String endDate = call.getString("endDate");
-        Integer limit = call.getInt("limit", 100);
+        Integer limit = call.getInt("limit");
         JSArray senders = call.getArray("senders");
 
         JSObject ret = new JSObject();
@@ -85,12 +85,17 @@ public class SmsReaderPlugin extends Plugin {
             }
 
             // Query the SMS content provider
+            String sortOrder = Telephony.Sms.DATE + " DESC";
+            if (limit != null && limit > 0) {
+                sortOrder += " LIMIT " + limit;
+            }
+
             Cursor cursor = getContext().getContentResolver().query(
                     Telephony.Sms.Inbox.CONTENT_URI,
                     projection,
                     selection,
                     selectionArgs,
-                    Telephony.Sms.DATE + " DESC LIMIT " + limit
+                    sortOrder
             );
 
             if (cursor != null && cursor.moveToFirst()) {
