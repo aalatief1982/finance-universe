@@ -5,7 +5,7 @@ export const routeTitleMap: Record<string, string> = {
   '/home': 'Xpensia',
   '/transactions': 'Transactions',
   '/analytics': 'Analytics',
-  '/process-sms': 'Process SMS',
+  '/process-sms': 'Import SMS',
   '/settings': 'Settings',
   '/profile': 'Profile',
   '/sms-providers': 'SMS Providers',
