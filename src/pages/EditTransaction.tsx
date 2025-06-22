@@ -69,6 +69,25 @@ const EditTransaction = () => {
           </Alert>
         )}
 
+        {isSuggested && confidenceScore !== undefined && (
+          <p
+            className={`text-sm mt-1 ${
+              confidenceScore >= 0.8
+                ? 'text-green-600'
+                : confidenceScore >= 0.5
+                ? 'text-yellow-600'
+                : 'text-red-600'
+            }`}
+          >
+            Confidence: {(confidenceScore * 100).toFixed(0)}%
+            {confidenceScore >= 0.8
+              ? ' (High)'
+              : confidenceScore >= 0.5
+              ? ' (Medium)'
+              : ' (Low)'}
+          </p>
+        )}
+
         {rawMessage && (
           <div className="bg-muted p-3 rounded-md">
             <p className="text-xs font-mono break-words">
