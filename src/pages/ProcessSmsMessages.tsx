@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
@@ -16,11 +18,26 @@ interface ProcessedSmsEntry extends SmsEntry {
 const ProcessSmsMessages: React.FC = () => {
   const [messages, setMessages] = useState<ProcessedSmsEntry[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ProcessedSmsEntry[]>([]);
+  const [messagesBySender, setMessagesBySender] = useState<Record<string, ProcessedSmsEntry[]>>({});
+  const [filter, setFilter] = useState<'all' | 'matched' | 'skipped'>('all');
   const [loading, setLoading] = useState(false);
   const [senders, setSenders] = useState<string[]>([]);
   const [selectedSenders, setSelectedSenders] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const filteredBySender = React.useMemo(() => {
+    const res: Record<string, ProcessedSmsEntry[]> = {};
+    Object.entries(messagesBySender).forEach(([sender, msgs]) => {
+      const filteredMsgs = msgs.filter((m) => {
+        if (filter === 'matched') return !!m.matchedKeyword;
+        if (filter === 'skipped') return !m.matchedKeyword;
+        return true;
+      });
+      if (filteredMsgs.length > 0) res[sender] = filteredMsgs;
+    });
+    return res;
+  }, [messagesBySender, filter]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -30,10 +47,24 @@ const ProcessSmsMessages: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (selectedSenders.length > 0) {
-      const selectedMsgs = messages.filter((msg) => selectedSenders.includes(msg?.sender || ''));
-      setFilteredMessages(selectedMsgs);
-    }
+    const selectedMsgs =
+      selectedSenders.length > 0
+        ? messages.filter((msg) => selectedSenders.includes(msg?.sender || ''))
+        : messages;
+    setFilteredMessages(selectedMsgs);
+
+    const grouped: Record<string, ProcessedSmsEntry[]> = {};
+    selectedMsgs.forEach((msg) => {
+      const sender = msg.sender || 'Unknown';
+      if (!grouped[sender]) grouped[sender] = [];
+      grouped[sender].push(msg);
+    });
+    Object.keys(grouped).forEach((s) => {
+      grouped[s].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+    });
+    setMessagesBySender(grouped);
   }, [selectedSenders, messages]);
 
 const handleReadSms = async () => {
@@ -195,23 +226,34 @@ const handleReadSms = async () => {
           </Card>
         )}
 
-        <Card className="p-[var(--card-padding)] space-y-2">
-          {filteredMessages
-            .filter((msg): msg is ProcessedSmsEntry => !!msg && typeof msg.sender === 'string')
-            .map((msg, index) => (
-              <Card key={index} className="p-[var(--card-padding)]">
-                <p>
-                  <strong>From:</strong> {msg.sender}
-                </p>
-                <p>
-                  <strong>Date:</strong> {new Date(msg.date).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Message:</strong> {msg.message}
-                </p>
+        {Object.keys(messagesBySender).length > 0 && (
+          <>
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'matched' | 'skipped')} className="w-full">
+              <TabsList className="w-full mb-2 grid grid-cols-3">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="matched">Matched</TabsTrigger>
+                <TabsTrigger value="skipped">Skipped</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {Object.entries(filteredBySender).map(([sender, msgs]) => (
+              <Card key={sender} className="p-[var(--card-padding)] space-y-2">
+                <h3 className="font-semibold">{sender}</h3>
+                {msgs.map((msg, idx) => (
+                  <div key={idx} className="border rounded p-2 space-y-1">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{new Date(msg.date).toLocaleString()}</span>
+                      <Badge variant={msg.matchedKeyword ? 'success' : 'outline'}>
+                        {msg.matchedKeyword ? 'Matched' : 'Skipped'}
+                      </Badge>
+                    </div>
+                    <pre className="whitespace-pre-wrap text-sm">{msg.message}</pre>
+                  </div>
+                ))}
               </Card>
             ))}
-        </Card>
+          </>
+        )}
       </div>
     </Layout>
   );
