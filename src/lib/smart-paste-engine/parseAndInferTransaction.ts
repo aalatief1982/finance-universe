@@ -1,6 +1,6 @@
 import { Transaction, TransactionType } from '@/types/transaction';
 import { nanoid } from 'nanoid';
-import { parseSmsMessage, applyVendorMapping } from './structureParser';
+import { parseStructuredSms, applyVendorMapping } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates } from './templateUtils';
 import {
@@ -14,7 +14,7 @@ export interface ParsedTransactionResult {
   transaction: Transaction;
   confidence: number;
   origin: 'template' | 'structure' | 'ml' | 'fallback';
-  parsed: ReturnType<typeof parseSmsMessage>;
+  parsed: ReturnType<typeof parseStructuredSms>;
 }
 
 /**
@@ -24,7 +24,7 @@ export function parseAndInferTransaction(
   rawMessage: string,
   senderHint?: string
 ): ParsedTransactionResult {
-  const parsed = parseSmsMessage(rawMessage);
+  const parsed = parseStructuredSms(rawMessage);
 
   const vendor = applyVendorMapping(
     parsed.inferredFields.vendor || parsed.directFields.vendor || ''
