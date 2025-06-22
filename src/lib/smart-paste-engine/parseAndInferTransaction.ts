@@ -30,9 +30,10 @@ export function parseAndInferTransaction(
     parsed.inferredFields.vendor || parsed.directFields.vendor || ''
   );
 
+  const parsedAmount = parseFloat(parsed.directFields.amount || '');
   const transaction: Transaction = {
     id: nanoid(),
-    amount: parseFloat(parsed.directFields.amount || '0'),
+    amount: isNaN(parsedAmount) ? 0 : parsedAmount,
     currency: parsed.directFields.currency || 'SAR',
     date: parsed.directFields.date || '',
     type: (parsed.inferredFields.type as TransactionType) || 'expense',
