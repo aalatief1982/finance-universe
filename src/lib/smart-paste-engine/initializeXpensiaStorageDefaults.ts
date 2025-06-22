@@ -277,10 +277,10 @@ export function initializeXpensiaStorageDefaults() {
   }
   
 
-   // Ensure type keyword bank exists
-if (!localStorage.getItem('xpensia_category_hierarchy')) {
-  localStorage.setItem('xpensia_category_hierarchy', JSON.stringify(CATEGORY_HIERARCHY));
-}
+   // Ensure category hierarchy exists
+   if (!localStorage.getItem('xpensia_category_hierarchy')) {
+     localStorage.setItem('xpensia_category_hierarchy', JSON.stringify(CATEGORY_HIERARCHY));
+   }
   
   
 }
