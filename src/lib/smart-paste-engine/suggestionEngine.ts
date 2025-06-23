@@ -1,13 +1,5 @@
-/**
- * Suggests indirect transaction fields using keyword mappings.
- * Reads from localStorage['xpensia_keyword_bank'].
- */
-
 import stringSimilarity from 'string-similarity';
-import {
-  loadVendorFallbacks,
-  VendorFallbackData,
-} from './vendorFallbackUtils';
+import { loadVendorFallbacks, VendorFallbackData } from './vendorFallbackUtils';
 
 const BANK_KEY = 'xpensia_keyword_bank';
 
@@ -24,62 +16,24 @@ interface FallbackVendorEntry extends VendorFallbackData {
 }
 
 const getFallbackVendors = (): Record<string, VendorFallbackData> => {
+  console.log('[SmartPaste] Loading fallback vendors...');
   return loadVendorFallbacks();
 };
 
-
-// Utility to normalize vendor names
-const normalize = (str: string): string =>
-  str.normalize('NFC').replace(/[\s\-_,×]+/g, '').toLowerCase();
-
-// Escape string for use in regex
 const escapeRegex = (str: string): string =>
   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/* export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
-  const lowerInput = vendorName.toLowerCase();
-  const vendorKeys = Object.keys(fallbackVendors);
-
-  // Step 1: Try full fuzzy match
-  const match = stringSimilarity.findBestMatch(lowerInput, vendorKeys);
-  if (match.bestMatch.rating >= 0.7) {
-    const key = match.bestMatch.target;
-    const data = (fallbackVendors as Record<string, FallbackVendorEntry>)[key];
-    return { vendor: key, ...data };
-  }
-
-  // Step 2: Try partial substring match (no fuzzy score needed)
-  for (const key of vendorKeys) {
-    if (lowerInput.includes(key)) {
-      const data = (fallbackVendors as Record<string, FallbackVendorEntry>)[key];
-      return { vendor: key, ...data };
-    }
-  }
-
-  return null;
-}
- */
- 
- 
- function softNormalize(str: string): string {
-  return str
-    .normalize('NFC') // Canonical form, avoids multi-representation issues
-    .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width characters
-    .toLowerCase();
-}
-
-
+const softNormalize = (str: string): string =>
+  str.normalize('NFC').replace(/[\u200B-\u200D\uFEFF]/g, '').toLowerCase();
 
 export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
+  console.log('[SmartPaste] Starting fallback match for vendor:', vendorName);
   const lowerInput = softNormalize(vendorName);
   const fallbackVendors = getFallbackVendors();
   const vendorKeys = Object.keys(fallbackVendors);
 
-  // Step 1: Try full fuzzy match
   const match = stringSimilarity.findBestMatch(lowerInput, vendorKeys.map(softNormalize));
-  const originalKeysMap = Object.fromEntries(
-    vendorKeys.map(key => [softNormalize(key), key])
-  );
+  const originalKeysMap = Object.fromEntries(vendorKeys.map(key => [softNormalize(key), key]));
 
   if (match.bestMatch.rating >= 0.7) {
     const normalizedKey = match.bestMatch.target;
@@ -89,10 +43,9 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
     return { vendor: originalKey, ...data };
   }
 
-  // Step 2: Try substring match with word boundaries
   for (const key of vendorKeys) {
     const normalizedKey = softNormalize(key);
-    if (normalizedKey.length < 4) continue; // skip very short keys
+    if (normalizedKey.length < 4) continue;
     const pattern = new RegExp(`\\b${escapeRegex(normalizedKey)}\\b`);
     if (pattern.test(lowerInput)) {
       const data = fallbackVendors[key];
@@ -105,121 +58,45 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   return null;
 }
 
-/* export function inferIndirectFields(
-  text: string,
-  knowns: Partial<Record<string, string>> = {}
-): Record<string, string> {
-  const rawText = (text + ' ' + (knowns.vendor || '')).toLowerCase();
-  const inferred: Record<string, string> = {};
-
-  // ⬇️ Load keyword bank
-  const keywordBank: KeywordMapping[] = JSON.parse(localStorage.getItem(BANK_KEY) || '[]') || [];
-  if (!Array.isArray(keywordBank)) {
-    console.error('[ERROR] Invalid keyword bank data:', keywordBank);
-  }
-
-  console.log('[DEBUG] keywordBank:', keywordBank);
-  console.log('[DEBUG] fallbackVendors:', getFallbackVendors());
-
-  // ⬇️ Keyword-based inference
-  keywordBank.forEach(({ keyword, mappings }) => {
-    if (rawText.includes(keyword.toLowerCase())) {
-      mappings.forEach(({ field, value }) => {
-        if (typeof value !== 'string' || !value) {
-          console.warn(`[KeywordMapping] Skipping invalid value for field "${field}":`, value);
-          return;
-        }
-        if (!inferred[field] && !knowns[field]) {
-          inferred[field] = value.trim();
-        }
-      });
-    }
-  });
-
-  // ⬇️ Type keywords (fallback)
-  if (!inferred['type']) {
-    const typeKeywords = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]');
-    for (const entry of typeKeywords) {
-      if (rawText.includes(entry.keyword.toLowerCase())) {
-        inferred['type'] = entry.type;
-        break;
-      }
-    }
-  }
-
-  // ⬇️ Fallback vendor inference if category/subcategory missing
-  const needsCategoryFallback = ['category', 'subcategory'].some(f => !inferred[f] && !knowns[f]);
-  if (needsCategoryFallback) {
-	const vendorText = knowns.vendor || extractVendorName(text);
-	const fallback = findClosestFallbackMatch(vendorText);
-	console.log("Fallback vendorText used:", vendorText);
-	console.log("Fallback result:", fallback);
-
-	const finalType = inferred['type'] || knowns['type'];
-
-	if (fallback && (!finalType || fallback.type === finalType)) {
-	  if (!inferred['category'] && !knowns['category']) {
-		inferred['category'] = fallback.category;
-	  }
-	  if (!inferred['subcategory'] && !knowns['subcategory']) {
-		inferred['subcategory'] = fallback.subcategory;
-	  }
-	}
-
-	// ✅ Special fallback for income if vendor fallback failed
-	const stillMissingCategory = !inferred['category'] && !knowns['category'];
-	const stillMissingSubcategory = !inferred['subcategory'] && !knowns['subcategory'];
-
-	if (finalType === 'income' && stillMissingCategory && stillMissingSubcategory && !fallback) {
-	  inferred['category'] = 'Earnings';
-	  inferred['subcategory'] = 'Benefits';
-	  inferred['__fallbackTag'] = 'income_default';
-	  console.info('[SmartPaste] Applied income fallback: Earnings > Benefits');
-	}
-  }
-
-  console.log('[SmartPaste] Inferred indirect fields:', inferred);
-  return inferred;
-} */
-
-
 export function inferIndirectFields(
   text: string,
   knowns: Partial<Record<string, string>> = {}
 ): Record<string, string> {
+  console.log('[SmartPaste] Starting indirect field inference...');
   const rawText = (text + ' ' + (knowns.vendor || '')).toLowerCase();
   const inferred: Record<string, string> = {};
 
-  // Step 1: Load keyword bank
-  const keywordBank: KeywordMapping[] = JSON.parse(localStorage.getItem('xpensia_keyword_bank') || '[]') || [];
-  if (!Array.isArray(keywordBank)) {
-    console.error('[SmartPaste] Invalid keyword bank format:', keywordBank);
-  }
+  console.log('[SmartPaste] Raw text used for inference:', rawText);
 
-  // Step 2: Keyword-based mapping
+  const keywordBank: KeywordMapping[] = JSON.parse(localStorage.getItem(BANK_KEY) || '[]') || [];
+  console.log('[SmartPaste] Loaded keyword bank:', keywordBank);
+
   keywordBank.forEach(({ keyword, mappings }) => {
     if (rawText.includes(keyword.toLowerCase())) {
+      console.log(`[SmartPaste] Matched keyword: "${keyword}"`);
       mappings.forEach(({ field, value }) => {
         if (!value || typeof value !== 'string') return;
         if (!inferred[field] && !knowns[field]) {
           inferred[field] = value.trim();
+          console.log(`[SmartPaste] Inferred ${field} from keyword:`, value);
         }
       });
     }
   });
 
-  // Step 3: Type keyword inference
   if (!inferred['type']) {
     const typeKeywords = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') || [];
+    console.log('[SmartPaste] Loaded type keywords:', typeKeywords);
+
     for (const entry of typeKeywords) {
       if (rawText.includes(entry.keyword.toLowerCase())) {
         inferred['type'] = entry.type;
+        console.log('[SmartPaste] Inferred type from typeKeywords:', entry.type);
         break;
       }
     }
   }
 
-  // Step 4: Fallback vendor-based matching (only if category/subcategory are missing)
   const needsCategory = !inferred['category'] && !knowns['category'];
   const needsSubcategory = !inferred['subcategory'] && !knowns['subcategory'];
 
@@ -232,11 +109,16 @@ export function inferIndirectFields(
     const finalType = inferred['type'] || knowns['type'];
 
     if (fallback && (!finalType || fallback.type.toLowerCase() === finalType.toLowerCase())) {
-      if (needsCategory) inferred['category'] = fallback.category;
-      if (needsSubcategory) inferred['subcategory'] = fallback.subcategory;
+      if (needsCategory) {
+        inferred['category'] = fallback.category;
+        console.log('[SmartPaste] Inferred category from fallback:', fallback.category);
+      }
+      if (needsSubcategory) {
+        inferred['subcategory'] = fallback.subcategory;
+        console.log('[SmartPaste] Inferred subcategory from fallback:', fallback.subcategory);
+      }
     }
 
-    // Step 5: Absolute fallback for income type
     if (finalType === 'income' && !inferred['category'] && !inferred['subcategory']) {
       inferred['category'] = 'Earnings';
       inferred['subcategory'] = 'Benefits';
@@ -249,18 +131,14 @@ export function inferIndirectFields(
   return inferred;
 }
 
-
-
-
-
 export function extractVendorName(message: string): string {
+  console.log('[SmartPaste] Extracting vendor from message:', message);
   const match = message.match(
     /(?:لدى|من|في|عند|من عند|تم الدفع لـ|تم الشراء من|at|from|paid to|purchased from)[:\s]*([^\n,؛;:\-]+)/i
   );
 
   if (match && match[1]) {
     const candidate = match[1].trim();
-
     const isValidVendor =
       candidate.length > 2 &&
       isNaN(Number(candidate)) &&
@@ -269,17 +147,18 @@ export function extractVendorName(message: string): string {
       !candidate.match(/^\*{2,}/) &&
       !candidate.match(/^\d+(?:[.,]\d+)?$/);
 
-    if (isValidVendor) return candidate;
+    if (isValidVendor) {
+      console.log('[SmartPaste] Extracted vendor candidate:', candidate);
+      return candidate;
+    }
   }
 
-  // Fallback logic for salary transfers
   const lowerText = message.toLowerCase();
   if (lowerText.includes("راتب") || lowerText.includes("salary")) {
+    console.log('[SmartPaste] Fallback vendor: Company (due to salary keyword)');
     return "Company";
   }
 
-  console.warn("[extractVendorName] No valid vendor found for message:", message);
+  console.warn("[SmartPaste] No valid vendor found for message:", message);
   return "";
 }
-
-
