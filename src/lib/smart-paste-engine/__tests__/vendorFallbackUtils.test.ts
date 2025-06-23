@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { loadVendorFallbacks, VENDOR_FALLBACK_KEY } from '../vendorFallbackUtils';
+import { loadVendorFallbacks, VENDOR_FALLBACK_KEY } from '../vendorFallbackUtils?real';
 
 // Simple in-memory localStorage mock
 const localStorageMock = (() => {
