@@ -73,7 +73,18 @@ const escapeRegex = (str: string): string =>
 export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
   const lowerInput = softNormalize(vendorName);
   const fallbackVendors = getFallbackVendors();
-  const vendorKeys = Object.keys(fallbackVendors);
+  let vendorKeys: string[];
+  try {
+    vendorKeys = Object.keys(fallbackVendors);
+  } catch (e) {
+    console.warn('[SmartPaste] Invalid fallback vendor structure:', fallbackVendors);
+    return null;
+  }
+
+  if (!Array.isArray(vendorKeys) || vendorKeys.some(k => typeof k !== 'string')) {
+    console.warn('[SmartPaste] Invalid fallback vendor keys:', vendorKeys);
+    return null;
+  }
 
   // Step 1: Try full fuzzy match
   const match = stringSimilarity.findBestMatch(lowerInput, vendorKeys.map(softNormalize));
