@@ -42,6 +42,17 @@ npm run lint
 npm run build
 ```
 
+## Setup
+
+Create a `.env` file in the project root or copy `.env.example` and provide values for the following variables:
+
+```bash
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+These values are required for connecting to your Supabase project.
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).
