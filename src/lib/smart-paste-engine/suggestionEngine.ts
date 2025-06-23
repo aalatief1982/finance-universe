@@ -30,7 +30,15 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   console.log('[SmartPaste] Starting fallback match for vendor:', vendorName);
   const lowerInput = softNormalize(vendorName);
   const fallbackVendors = getFallbackVendors();
+  if (!fallbackVendors || typeof fallbackVendors !== 'object') {
+    console.warn('[SmartPaste] Invalid fallback vendor structure:', fallbackVendors);
+    return null;
+  }
   const vendorKeys = Object.keys(fallbackVendors);
+  if (vendorKeys.length === 0) {
+    console.warn('[SmartPaste] No fallback vendors available');
+    return null;
+  }
 
   const match = stringSimilarity.findBestMatch(lowerInput, vendorKeys.map(softNormalize));
   const originalKeysMap = Object.fromEntries(vendorKeys.map(key => [softNormalize(key), key]));
