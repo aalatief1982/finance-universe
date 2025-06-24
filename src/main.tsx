@@ -16,7 +16,8 @@ try {
   console.error('[Capacitor] Initialization error:', err);
 }
 
-const defer = (fn: () => void) => {
+const defer = (fn: () => void | Promise<void>) => {
+
   if ('requestIdleCallback' in window) {
     (window as any).requestIdleCallback(fn);
   } else {
@@ -24,8 +25,10 @@ const defer = (fn: () => void) => {
   }
 };
 
-defer(() => {
-  initializeXpensiaStorageDefaults();
+
+defer(async () => {
+  await initializeXpensiaStorageDefaults();
+
   demoTransactionService.seedDemoTransactions();
 });
 
