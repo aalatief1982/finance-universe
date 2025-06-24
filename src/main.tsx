@@ -17,6 +17,7 @@ try {
 }
 
 const defer = (fn: () => void | Promise<void>) => {
+
   if ('requestIdleCallback' in window) {
     (window as any).requestIdleCallback(fn);
   } else {
@@ -24,8 +25,10 @@ const defer = (fn: () => void | Promise<void>) => {
   }
 };
 
+
 defer(async () => {
   await initializeXpensiaStorageDefaults();
+
   demoTransactionService.seedDemoTransactions();
 });
 
