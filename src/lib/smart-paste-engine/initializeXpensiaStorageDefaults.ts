@@ -1,5 +1,4 @@
 import { TransactionType } from '@/types/transaction';
-import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
 import {
   saveVendorFallbacks,
   loadVendorFallbacks,
@@ -205,7 +204,7 @@ export const CATEGORY_HIERARCHY = [
   
 
 
-export function initializeXpensiaStorageDefaults() {
+export async function initializeXpensiaStorageDefaults(): Promise<void> {
   // Ensure structure templates store exists
   if (!localStorage.getItem('xpensia_structure_templates')) {
     localStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
@@ -220,8 +219,9 @@ export function initializeXpensiaStorageDefaults() {
 
   // Ensure vendor fallback data exists
   if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
+    const module = await import('../../data/ksa_all_vendors_clean_final.json');
     const initial: Record<string, VendorFallbackData> =
-      (vendorFallbackData as any).default ?? vendorFallbackData;
+      (module as any).default ?? module;
     const filtered = Object.fromEntries(
       Object.entries(initial).filter(([name]) => name.trim())
     );
