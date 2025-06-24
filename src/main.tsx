@@ -16,8 +16,18 @@ try {
   console.error('[Capacitor] Initialization error:', err);
 }
 
-initializeXpensiaStorageDefaults();
-demoTransactionService.seedDemoTransactions();
+const defer = (fn: () => void) => {
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(fn);
+  } else {
+    setTimeout(fn, 0);
+  }
+};
+
+defer(() => {
+  initializeXpensiaStorageDefaults();
+  demoTransactionService.seedDemoTransactions();
+});
 
 
 // Setup global error handlers
