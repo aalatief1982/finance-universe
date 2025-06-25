@@ -17,7 +17,7 @@ const routeTitleMap: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/transactions': 'Transactions',
   '/analytics': 'Analytics',
-  '/process-sms': 'Process SMS',
+  '/process-sms': 'Import SMS',
   '/settings': 'Settings',
   '/profile': 'Profile',
   '/sms-providers': 'SMS Providers',
