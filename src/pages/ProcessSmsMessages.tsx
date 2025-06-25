@@ -10,7 +10,6 @@ import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import Layout from '@/components/Layout';
-import { ArrowLeft } from 'lucide-react';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
 interface ProcessedSmsEntry extends SmsEntry {
@@ -179,16 +178,14 @@ const handleReadSms = async () => {
   };
 
   return (
-    <Layout>
+    <Layout showBack>
       <div className="pt-4 pb-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Import SMS Messages</h1>
+        <div className="px-2 mb-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2 mb-1">
+            <span role="img" aria-label="sms">📩</span> Import from Bank SMS
+          </h2>
+          <p className="text-sm text-muted-foreground px-2 mb-2">Choose your SMS senders and tap <b>Read SMS</b> to begin importing transactions.</p>
         </div>
-      </div>
 
       <Button className="w-full mb-4" onClick={handleReadSms} disabled={loading}>
         {loading ? 'Reading...' : 'Read SMS'}
