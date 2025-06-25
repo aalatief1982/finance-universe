@@ -194,18 +194,9 @@ const handleSubmit = (e: React.FormEvent) => {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
-          <Button type="submit" disabled={isProcessing || !text.trim()}
-            >
+          <Button type="submit" disabled={isProcessing || !text.trim()}>
             {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Extract Transaction
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlePaste}
-            disabled={isProcessing}
-          >
-            Paste from Clipboard
           </Button>
         </div>
 
