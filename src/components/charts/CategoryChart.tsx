@@ -90,7 +90,20 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
                     {formatCurrency(total)}
                   </text>
                   <Tooltip formatter={(value) => formatCurrency(Math.abs(Number(value)))} />
-                  <Legend layout="horizontal" align="center" verticalAlign="bottom" />
+                  <Legend
+                    layout="horizontal"
+                    align="center"
+                    verticalAlign="bottom"
+                    wrapperStyle={{
+                      fontSize: '12px',
+                      paddingTop: '10px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      width: '100%',
+                      whiteSpace: 'nowrap',
+                      overflowX: 'auto',
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
