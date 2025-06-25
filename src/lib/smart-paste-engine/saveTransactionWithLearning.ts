@@ -13,6 +13,7 @@ interface SaveOptions {
   updateTransaction: (txn: Transaction) => void;
   learnFromTransaction: (msg: string, txn: Transaction, hint: string) => void;
   navigateBack: () => void;
+  silent?: boolean;
 }
 
 export function saveTransactionWithLearning(
@@ -27,6 +28,7 @@ export function saveTransactionWithLearning(
     updateTransaction,
     learnFromTransaction,
     navigateBack,
+    silent = false,
   } = options;
 
   const newTransaction: Transaction = {
@@ -56,10 +58,12 @@ export function saveTransactionWithLearning(
       saveNewTemplate(template, fields, rawMessage);
     }
 
-    toast({
-      title: 'Pattern saved for learning',
-      description: 'Future similar messages will be recognized automatically',
-    });
+    if (!silent) {
+      toast({
+        title: 'Pattern saved for learning',
+        description: 'Future similar messages will be recognized automatically',
+      });
+    }
 
     // Keyword Bank Mapping
     const keyword = placeholders?.vendor?.toLowerCase() || newTransaction.vendor.toLowerCase();
@@ -107,10 +111,12 @@ export function saveTransactionWithLearning(
     }
   }
 
-  toast({
-    title: isNew ? 'Transaction created' : 'Transaction updated',
-    description: `Your transaction has been successfully ${isNew ? 'created' : 'updated'}`,
-  });
+  if (!silent) {
+    toast({
+      title: isNew ? 'Transaction created' : 'Transaction updated',
+      description: `Your transaction has been successfully ${isNew ? 'created' : 'updated'}`,
+    });
+  }
 
   navigateBack();
 }
