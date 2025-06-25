@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
@@ -16,26 +19,41 @@ interface ProcessedSmsEntry extends SmsEntry {
 
 const ProcessSmsMessages: React.FC = () => {
   const [messages, setMessages] = useState<ProcessedSmsEntry[]>([]);
+  const [skippedMessages, setSkippedMessages] = useState<ProcessedSmsEntry[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ProcessedSmsEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [senders, setSenders] = useState<string[]>([]);
   const [selectedSenders, setSelectedSenders] = useState<string[]>([]);
+  const [filter, setFilter] = useState<'all' | 'matched' | 'skipped'>('all');
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (messages.length > 0) {
-      const distinctSenders = Array.from(new Set(messages.map((msg) => msg?.sender).filter(Boolean)));
+    const all = [...messages, ...skippedMessages];
+    if (all.length > 0) {
+      const distinctSenders = Array.from(new Set(all.map((msg) => msg?.sender).filter(Boolean)));
       setSenders(distinctSenders);
     }
-  }, [messages]);
+  }, [messages, skippedMessages]);
 
   useEffect(() => {
-    if (selectedSenders.length > 0) {
-      const selectedMsgs = messages.filter((msg) => selectedSenders.includes(msg?.sender || ''));
-      setFilteredMessages(selectedMsgs);
+    let list: ProcessedSmsEntry[] = [];
+
+    if (filter === 'skipped') {
+      list = [...skippedMessages];
+    } else {
+      list = [...messages];
+      if (filter === 'matched') {
+        list = list.filter((msg) => !!msg.matchedKeyword);
+      }
     }
-  }, [selectedSenders, messages]);
+
+    if (selectedSenders.length > 0) {
+      list = list.filter((msg) => selectedSenders.includes(msg?.sender || ''));
+    }
+
+    setFilteredMessages(list);
+  }, [selectedSenders, messages, skippedMessages, filter]);
 
 const handleReadSms = async () => {
   setLoading(true);
@@ -70,8 +88,8 @@ const handleReadSms = async () => {
 
     const smsMessages = await SmsReaderService.readSmsMessages({ startDate: sixMonthsAgo });
 
-    const validMessages: { msg: string }[] = [];
-    const invalidMessages: { msg: string }[] = [];
+    const validMessages: ProcessedSmsEntry[] = [];
+    const invalidMessages: ProcessedSmsEntry[] = [];
 
     const filtered: ProcessedSmsEntry[] = smsMessages
       .map((msg) => {
@@ -89,12 +107,15 @@ const handleReadSms = async () => {
 
         const containsOtp = otpKeywords.some((kw) => lower.includes(kw));
 
+        const matchedKeyword = keywords.find((kw) => lower.includes(kw));
+
         if (isRelevant && !containsOtp) {
-          validMessages.push({ msg: msg.message });
-          const matchedKeyword = keywords.find((kw) => lower.includes(kw));
-          return { ...msg, matchedKeyword };
+          const entry = { ...msg, matchedKeyword };
+          validMessages.push(entry);
+          return entry;
         } else {
-          invalidMessages.push({ msg: msg.message });
+          const skippedEntry = { ...msg, matchedKeyword };
+          invalidMessages.push(skippedEntry);
           console.warn("[SmartPaste] Skipped message:", msg.message);
           return null;
         }
@@ -106,6 +127,8 @@ const handleReadSms = async () => {
     localStorage.setItem('uat_invalid_sms', JSON.stringify(invalidMessages));
 
     setMessages(filtered);
+    setSkippedMessages(invalidMessages);
+    setFilter('all');
 
     toast({ title: 'Success', description: `Fetched and filtered ${filtered.length} SMS messages` });
   } catch (error) {
@@ -157,6 +180,7 @@ const handleReadSms = async () => {
 
   return (
     <Layout>
+      <div className="pt-4 pb-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
@@ -170,11 +194,25 @@ const handleReadSms = async () => {
         {loading ? 'Reading...' : 'Read SMS'}
       </Button>
 
+      {messages.length > 0 && (
+        <ToggleGroup type="single" value={filter} onValueChange={(val) => setFilter((val as any) || 'all')} className="mb-4">
+          <ToggleGroupItem value="all">All</ToggleGroupItem>
+          <ToggleGroupItem value="matched">Matched</ToggleGroupItem>
+          <ToggleGroupItem value="skipped">Skipped</ToggleGroupItem>
+        </ToggleGroup>
+      )}
+
       {senders.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold mb-2">Select Senders:</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Choose the senders whose messages you want to analyze.
+          </p>
           {senders.map((sender) => (
-            <label key={sender} className="flex items-center mb-2">
+            <label
+              key={sender}
+              className="flex items-center mb-2 p-2 rounded-md border cursor-pointer"
+            >
               <input
                 type="checkbox"
                 checked={selectedSenders.includes(sender)}
@@ -191,16 +229,43 @@ const handleReadSms = async () => {
         </div>
       )}
 
-      <div className="space-y-4">
-        {filteredMessages
-          .filter((msg): msg is ProcessedSmsEntry => !!msg && typeof msg.sender === 'string')
-          .map((msg, index) => (
-            <Card key={index} className="p-[var(--card-padding)]">
-              <p><strong>From:</strong> {msg.sender}</p>
-              <p><strong>Date:</strong> {new Date(msg.date).toLocaleString()}</p>
-              <p><strong>Message:</strong> {msg.message}</p>
-            </Card>
+      <div className="space-y-4 pt-4 pb-24">
+        {Object.entries(
+          filteredMessages.reduce<Record<string, ProcessedSmsEntry[]>>((acc, msg) => {
+            const sender = msg.sender || 'Unknown';
+            if (!acc[sender]) acc[sender] = [];
+            acc[sender].push(msg);
+            return acc;
+          }, {})
+        ).map(([sender, msgs]) => (
+          <Accordion type="multiple" key={sender} className="border rounded-md">
+            <AccordionItem value={sender}>
+              <AccordionTrigger className="px-4 py-2 font-medium">
+                {sender} ({msgs.length})
+              </AccordionTrigger>
+              <AccordionContent className="space-y-2">
+                {msgs
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .map((m, idx) => (
+                    <Card key={idx} className="p-[var(--card-padding)]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(m.date).toLocaleString()}
+                        </span>
+                        <Badge variant={m.matchedKeyword ? 'success' : 'secondary'}>
+                          {m.matchedKeyword ? 'Matched' : 'Skipped'}
+                        </Badge>
+                      </div>
+                      <pre className="whitespace-pre-wrap break-words text-sm">
+                        {m.message}
+                      </pre>
+                    </Card>
+                  ))}
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         ))}
+      </div>
       </div>
     </Layout>
   );
