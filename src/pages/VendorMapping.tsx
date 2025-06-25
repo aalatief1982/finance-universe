@@ -111,7 +111,7 @@ const handleConfirm = () => {
 
     const messages = location.state?.messages || [];
 
-    navigate('/review-draft-transactions', {
+    navigate('/review-sms-transactions', {
       state: {
         messages,
         vendorMap,

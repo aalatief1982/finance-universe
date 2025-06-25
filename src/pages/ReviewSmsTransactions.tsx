@@ -7,9 +7,8 @@ import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { generateDefaultTitle } from '@/components/TransactionEditForm';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { ArrowLeft } from 'lucide-react';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { useTransactions } from '@/context/TransactionContext';
 
@@ -27,11 +26,10 @@ interface DraftTransaction {
   rawMessage: string;
 }
 
-const ReviewDraftTransactions: React.FC = () => {
+const ReviewSmsTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<DraftTransaction[]>([]);
   const { toast } = useToast();
   const location = useLocation();
-  const navigate = useNavigate();
   const { addTransaction, updateTransaction } = useTransactions();
 
   const messages: any[] = location.state?.messages || [];
@@ -146,6 +144,7 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
         updateTransaction,
         learnFromTransaction: () => {},
         navigateBack: () => {},
+        silent: true,
       });
     });
 
@@ -158,14 +157,9 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
   };
 
   return (
-    <Layout>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Review SMS Transactions</h1>
-        </div>
+    <Layout showBack>
+      <div className="flex justify-end mb-4">
+        <Button onClick={handleSave}>Save All</Button>
       </div>
 
       {transactions.map((txn, index) => (
@@ -208,4 +202,4 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
   );
 };
 
-export default ReviewDraftTransactions;
+export default ReviewSmsTransactions;
