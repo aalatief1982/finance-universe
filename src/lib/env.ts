@@ -28,8 +28,8 @@ declare global {
 }
 
 // Supabase configuration
-export const SUPABASE_URL = getEnvironmentVariable('SUPABASE_URL');
-export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY');
+export const SUPABASE_URL = getEnvironmentVariable('SUPABASE_URL', 'https://cfacrxykzimdfzvbwhba.supabase.co');
+export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmYWNyeHlremltZGZ6dmJ3aGJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMyNDkxMzQsImV4cCI6MjA1ODgyNTEzNH0.x_ZGHodH9IYx5cgKRinAWQ2WpPX9iJaC32GfSKP0noY');
 
 // Feature flags
 export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
