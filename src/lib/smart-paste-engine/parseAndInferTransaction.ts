@@ -1,6 +1,6 @@
 import { Transaction, TransactionType } from '@/types/transaction';
 import { nanoid } from 'nanoid';
-import { parseStructuredSms, applyVendorMapping } from './structureParser';
+import { parseSmsMessage } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates } from './templateUtils';
 import {
@@ -14,7 +14,7 @@ export interface ParsedTransactionResult {
   transaction: Transaction;
   confidence: number;
   origin: 'template' | 'structure' | 'ml' | 'fallback';
-  parsed: ReturnType<typeof parseStructuredSms>;
+  parsed: ReturnType<typeof parseSmsMessage>;
 }
 
 /**
@@ -24,22 +24,17 @@ export function parseAndInferTransaction(
   rawMessage: string,
   senderHint?: string
 ): ParsedTransactionResult {
-  const parsed = parseStructuredSms(rawMessage);
+  const parsed = parseSmsMessage(rawMessage);
 
-  const vendor = applyVendorMapping(
-    parsed.inferredFields.vendor || parsed.directFields.vendor || ''
-  );
-
-  const parsedAmount = parseFloat(parsed.directFields.amount || '');
   const transaction: Transaction = {
     id: nanoid(),
-    amount: isNaN(parsedAmount) ? 0 : parsedAmount,
+    amount: parseFloat(parsed.directFields.amount || '0'),
     currency: parsed.directFields.currency || 'SAR',
     date: parsed.directFields.date || '',
     type: (parsed.inferredFields.type as TransactionType) || 'expense',
     category: parsed.inferredFields.category || 'Uncategorized',
     subcategory: parsed.inferredFields.subcategory || 'none',
-    vendor,
+    vendor: parsed.inferredFields.vendor || parsed.directFields.vendor || '',
     fromAccount:
       parsed.directFields.fromAccount ||
       parsed.inferredFields.fromAccount ||

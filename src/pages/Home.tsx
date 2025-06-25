@@ -113,14 +113,10 @@ const Home = () => {
 
     const toDate = range === 'custom' ? end : now;
 
-    return transactions
-      .filter(t => {
-        const d = new Date(t.date);
-        return d >= start && d <= toDate;
-      })
-      .sort((a, b) =>
-        new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
+    return transactions.filter(t => {
+      const d = new Date(t.date);
+      return d >= start && d <= toDate;
+    });
   }, [transactions, range, customStart, customEnd]);
 
   const summary = filteredTransactions.reduce(

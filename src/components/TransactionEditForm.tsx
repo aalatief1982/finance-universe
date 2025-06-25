@@ -18,7 +18,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
-import { applyVendorMapping } from '@/lib/smart-paste-engine/structureParser';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -70,6 +69,11 @@ function toISOFormat(input: string): string {
   return isNaN(fallback.getTime()) ? '' : fallback.toISOString().split('T')[0];
 }
 
+function remapVendor(vendor?: string): string {
+  if (!vendor) return '';
+  const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+  return map[vendor] && map[vendor].trim() !== '' ? map[vendor] : vendor;
+}
 
 const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   transaction,
@@ -123,7 +127,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
 
   const [vendors, setVendors] = useState<string[]>(() => {
-    const builtIn = Object.keys((vendorData as any) || {}).filter(v => v.trim());
+    const builtIn = Object.keys((vendorData as any) || {});
     const stored = Object.keys(loadVendorFallbacks());
     return Array.from(new Set([...builtIn, ...stored]));
   });
@@ -134,7 +138,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
-      const mappedVendor = applyVendorMapping(transaction.vendor);
+      const mappedVendor = remapVendor(transaction.vendor);
       const displayDate = transaction.date ? toISOFormat(transaction.date) : '';
       const rawMessage = (transaction as any).rawMessage || transaction.details?.rawMessage || '';
 

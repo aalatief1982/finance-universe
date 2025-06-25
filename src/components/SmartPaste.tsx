@@ -9,7 +9,7 @@ import { Label } from './ui/label';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import ErrorAlert from './smart-paste/ErrorAlert';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
-import { parseStructuredSms } from '@/lib/smart-paste-engine/structureParser';
+import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
@@ -47,7 +47,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     }
 
     try {
-      const parsed = parseStructuredSms(text);
+      const parsed = parseSmsMessage(text);
       if (parsed.matched) {
         const bank =
           parsed.inferredFields.vendor ||

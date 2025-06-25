@@ -32,10 +32,6 @@ const getFallbackVendors = (): Record<string, VendorFallbackData> => {
 const normalize = (str: string): string =>
   str.normalize('NFC').replace(/[\s\-_,×]+/g, '').toLowerCase();
 
-// Escape string for use in regex
-const escapeRegex = (str: string): string =>
-  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 /* export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
   const lowerInput = vendorName.toLowerCase();
   const vendorKeys = Object.keys(fallbackVendors);
@@ -73,18 +69,7 @@ const escapeRegex = (str: string): string =>
 export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
   const lowerInput = softNormalize(vendorName);
   const fallbackVendors = getFallbackVendors();
-  let vendorKeys: string[];
-  try {
-    vendorKeys = Object.keys(fallbackVendors);
-  } catch (e) {
-    console.warn('[SmartPaste] Invalid fallback vendor structure:', fallbackVendors);
-    return null;
-  }
-
-  if (!Array.isArray(vendorKeys) || vendorKeys.some(k => typeof k !== 'string')) {
-    console.warn('[SmartPaste] Invalid fallback vendor keys:', vendorKeys);
-    return null;
-  }
+  const vendorKeys = Object.keys(fallbackVendors);
 
   // Step 1: Try full fuzzy match
   const match = stringSimilarity.findBestMatch(lowerInput, vendorKeys.map(softNormalize));
@@ -100,12 +85,9 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
     return { vendor: originalKey, ...data };
   }
 
-  // Step 2: Try substring match with word boundaries
+  // Step 2: Try substring match
   for (const key of vendorKeys) {
-    const normalizedKey = softNormalize(key);
-    if (normalizedKey.length < 4) continue; // skip very short keys
-    const pattern = new RegExp(`\\b${escapeRegex(normalizedKey)}\\b`);
-    if (pattern.test(lowerInput)) {
+    if (lowerInput.includes(softNormalize(key))) {
       const data = fallbackVendors[key];
       console.info('[SmartPaste] Substring matched vendor:', key, '→', data);
       return { vendor: key, ...data };

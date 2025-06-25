@@ -40,7 +40,7 @@ function normalizeDate(value: string): string | null {
 }
 
 
-export function parseSimpleSms(message: string): TransactionDraft | null {
+export function parseSmsMessage(message: string): TransactionDraft | null {
   if (!message) return null;
 
   let amount = 0;

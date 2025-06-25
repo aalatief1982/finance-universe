@@ -25,7 +25,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
   });
 
   useEffect(() => {
-    const builtIn = Object.keys((vendorData as any) || {}).filter(v => v.trim());
+    const builtIn = Object.keys((vendorData as any) || {});
     const stored = Object.keys(loadVendorFallbacks());
     const all = Array.from(new Set([...builtIn, ...stored]));
     setVendors(all);

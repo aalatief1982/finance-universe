@@ -1,55 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { subDays } from 'date-fns';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import Layout from '@/components/Layout';
+import { ArrowLeft } from 'lucide-react';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
 interface ProcessedSmsEntry extends SmsEntry {
   matchedKeyword?: string;
 }
 
-const THIRTY_DAYS_AGO = subDays(new Date(), 30);
-
 const ProcessSmsMessages: React.FC = () => {
   const [messages, setMessages] = useState<ProcessedSmsEntry[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ProcessedSmsEntry[]>([]);
-  const [messagesBySender, setMessagesBySender] = useState<Record<string, ProcessedSmsEntry[]>>({});
-  const [filter, setFilter] = useState<'all' | 'matched' | 'skipped'>('all');
   const [loading, setLoading] = useState(false);
   const [senders, setSenders] = useState<string[]>([]);
   const [selectedSenders, setSelectedSenders] = useState<string[]>([]);
-  const [collapsedSenders, setCollapsedSenders] = useState<Record<string, boolean>>(
-    () => {
-      try {
-        return JSON.parse(localStorage.getItem('sms_collapsed_senders') || '{}');
-      } catch {
-        return {};
-      }
-    }
-  );
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  const filteredBySender = React.useMemo(() => {
-    const res: Record<string, ProcessedSmsEntry[]> = {};
-    Object.entries(messagesBySender).forEach(([sender, msgs]) => {
-      const filteredMsgs = msgs.filter((m) => {
-        if (filter === 'matched') return !!m.matchedKeyword;
-        if (filter === 'skipped') return !m.matchedKeyword;
-        return true;
-      });
-      if (filteredMsgs.length > 0) res[sender] = filteredMsgs;
-    });
-    return res;
-  }, [messagesBySender, filter]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -59,48 +31,10 @@ const ProcessSmsMessages: React.FC = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (senders.length > 0) {
-      setCollapsedSenders((prev) => {
-        const updated = { ...prev };
-        let changed = false;
-        senders.forEach((s) => {
-          if (!(s in updated)) {
-            updated[s] = true;
-            changed = true;
-          }
-        });
-        if (changed) {
-          localStorage.setItem('sms_collapsed_senders', JSON.stringify(updated));
-          return updated;
-        }
-        return prev;
-      });
+    if (selectedSenders.length > 0) {
+      const selectedMsgs = messages.filter((msg) => selectedSenders.includes(msg?.sender || ''));
+      setFilteredMessages(selectedMsgs);
     }
-  }, [senders]);
-
-  useEffect(() => {
-    localStorage.setItem('sms_collapsed_senders', JSON.stringify(collapsedSenders));
-  }, [collapsedSenders]);
-
-  useEffect(() => {
-    const selectedMsgs =
-      selectedSenders.length > 0
-        ? messages.filter((msg) => selectedSenders.includes(msg?.sender || ''))
-        : messages;
-    setFilteredMessages(selectedMsgs);
-
-    const grouped: Record<string, ProcessedSmsEntry[]> = {};
-    selectedMsgs.forEach((msg) => {
-      const sender = msg.sender || 'Unknown';
-      if (!grouped[sender]) grouped[sender] = [];
-      grouped[sender].push(msg);
-    });
-    Object.keys(grouped).forEach((s) => {
-      grouped[s].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      );
-    });
-    setMessagesBySender(grouped);
   }, [selectedSenders, messages]);
 
 const handleReadSms = async () => {
@@ -191,14 +125,6 @@ const handleReadSms = async () => {
     }
   };
 
-  const toggleSenderCollapse = (sender: string) => {
-    setCollapsedSenders((prev) => {
-      const updated = { ...prev, [sender]: !prev[sender] };
-      localStorage.setItem('sms_collapsed_senders', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
   const handleProceed = () => {
     const vendorMap: Record<string, string> = {};
     const keywordMap: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
@@ -230,103 +156,51 @@ const handleReadSms = async () => {
   };
 
   return (
-    <Layout showBack withPadding={false} fullWidth>
-      <div className="px-1 pt-4 space-y-[var(--card-gap)] pb-[var(--header-height)]">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold flex items-center justify-center gap-1 mb-1">
-            <span>📩</span> Import from Bank SMS
-          </h2>
-          <p className="text-sm text-muted-foreground px-2 mb-2">
-            Choose your SMS senders and tap <b>Read SMS</b> to begin importing transactions.
-          </p>
+    <Layout>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl sm:text-2xl font-bold">Process SMS Messages</h1>
         </div>
-        <Button
-          variant="default"
-          className="w-full"
-          onClick={handleReadSms}
-          disabled={loading}
-        >
-          {loading ? 'Reading...' : 'Read SMS'}
-        </Button>
+      </div>
 
-        {senders.length > 0 && (
-          <Card className="p-[var(--card-padding)] space-y-2">
-            <h2 className="text-lg font-semibold">Select Senders:</h2>
-            <p className="text-sm text-muted-foreground">
-              Select which senders to include:
-            </p>
-            {senders.map((sender) => (
-              <div
-                key={sender}
-                className="p-2 rounded-md mb-2 border"
-              >
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedSenders.includes(sender)}
-                    onChange={() => toggleSenderSelect(sender)}
-                    className="mr-2"
-                  />
-                  {sender}
-                </label>
-              </div>
-            ))}
+      <Button className="w-full mb-4" onClick={handleReadSms} disabled={loading}>
+        {loading ? 'Reading...' : 'Read SMS'}
+      </Button>
 
-            <Button className="w-full" onClick={handleProceed}>
-              Proceed to Vendor Mapping
-            </Button>
-          </Card>
-        )}
+      {senders.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-2">Select Senders:</h2>
+          {senders.map((sender) => (
+            <label key={sender} className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                checked={selectedSenders.includes(sender)}
+                onChange={() => toggleSenderSelect(sender)}
+                className="mr-2"
+              />
+              {sender}
+            </label>
+          ))}
 
-        {Object.keys(messagesBySender).length > 0 && (
-          <>
-            <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | 'matched' | 'skipped')} className="w-full">
-              <TabsList className="w-full mb-2 grid grid-cols-3">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="matched">Matched</TabsTrigger>
-                <TabsTrigger value="skipped">Skipped</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <Button className="mt-4 w-full" onClick={handleProceed}>
+            Proceed to Vendor Mapping
+          </Button>
+        </div>
+      )}
 
-            {Object.entries(filteredBySender).map(([sender, msgs]) => {
-              const collapsed = collapsedSenders[sender] ?? true;
-              const displayed = collapsed
-                ? msgs.filter((m) => new Date(m.date) >= THIRTY_DAYS_AGO)
-                : msgs;
-
-              return (
-                <Card key={sender} className="p-[var(--card-padding)] space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{sender}</h3>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() => toggleSenderCollapse(sender)}
-                    >
-                      {collapsed ? 'Show older messages' : 'Hide older messages'}
-                    </Button>
-                  </div>
-                  {displayed.map((msg, idx) => (
-                    <div key={idx} className="border rounded bg-card p-2 space-y-1">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{new Date(msg.date).toLocaleString()}</span>
-                        <Badge variant={msg.matchedKeyword ? 'success' : 'outline'}>
-                          {msg.matchedKeyword ? 'Matched' : 'Skipped'}
-                        </Badge>
-                      </div>
-                      <pre className="whitespace-pre-wrap text-sm">{msg.message}</pre>
-                    </div>
-                  ))}
-                  {collapsed && displayed.length < msgs.length && (
-                    <p className="text-xs text-muted-foreground">
-                      Showing recent messages only
-                    </p>
-                  )}
-                </Card>
-              );
-            })}
-          </>
-        )}
+      <div className="space-y-4">
+        {filteredMessages
+          .filter((msg): msg is ProcessedSmsEntry => !!msg && typeof msg.sender === 'string')
+          .map((msg, index) => (
+            <Card key={index} className="p-[var(--card-padding)]">
+              <p><strong>From:</strong> {msg.sender}</p>
+              <p><strong>Date:</strong> {new Date(msg.date).toLocaleString()}</p>
+              <p><strong>Message:</strong> {msg.message}</p>
+            </Card>
+        ))}
       </div>
     </Layout>
   );

@@ -27,7 +27,7 @@ const routeTitleMap: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/transactions': 'Transactions',
   '/analytics': 'Analytics',
-  '/process-sms': 'Import SMS',
+  '/process-sms': 'Process SMS',
   '/settings': 'Settings',
   '/profile': 'Profile',
 };
@@ -46,7 +46,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
     { title: 'Dashboard', path: '/dashboard', icon: Home, description: 'Overview of your finances' },
     { title: 'Analytics', path: '/analytics', icon: PieChart, description: 'Detailed reports and charts' },
     { title: 'Transactions', path: '/transactions', icon: List, description: 'View and manage your transactions' },
-    { title: 'Import SMS', path: '/process-sms', icon: MessageSquare, description: 'Import transactions from SMS' },
+    { title: 'Process SMS', path: '/process-sms', icon: MessageSquare, description: 'Import transactions from SMS' },
     { title: 'Settings', path: '/settings', icon: Settings, description: 'Configure app preferences' },
     { title: 'Profile', path: '/profile', icon: User, description: 'Manage your profile' },
   ];

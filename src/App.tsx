@@ -26,7 +26,7 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
-import { parseLegacySms } from '@/lib/sms-parser';
+import { parseSmsMessage } from '@/lib/sms-parser';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -92,7 +92,7 @@ function AppWrapper() {
                 return;
               }
 
-              const parsed = parseLegacySms(body, sender);
+              const parsed = parseSmsMessage(body, sender);
 
               const txn: Transaction = {
                 id: uuidv4(),

@@ -1,7 +1,10 @@
 import { TransactionType } from '@/types/transaction';
-import { saveVendorFallbacks, loadVendorFallbacks } from './vendorFallbackUtils';
+import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
+import { saveVendorFallbacks } from './vendorFallbackUtils';
 
-export const CATEGORY_HIERARCHY = [
+
+
+	  export const CATEGORY_HIERARCHY = [
   {
     id: 'bills', name: 'Bills', type: 'expense' as TransactionType,
     subcategories: [
@@ -213,10 +216,10 @@ export function initializeXpensiaStorageDefaults() {
     console.log('[Init] xpensia_vendor_map initialized');
   }
 
-  // Sanitize existing vendor fallback data if present
-  if (localStorage.getItem('xpensia_vendor_fallbacks')) {
-    const sanitized = loadVendorFallbacks();
-    saveVendorFallbacks(sanitized);
+  // Ensure vendor fallback data exists
+  if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
+    saveVendorFallbacks((vendorFallbackData as any).default ?? vendorFallbackData);
+    console.log('[Init] xpensia_vendor_fallbacks initialized');
   }
 
   // Ensure type keyword bank exists
@@ -264,10 +267,10 @@ export function initializeXpensiaStorageDefaults() {
   }
   
 
-   // Ensure category hierarchy exists
-   if (!localStorage.getItem('xpensia_category_hierarchy')) {
-     localStorage.setItem('xpensia_category_hierarchy', JSON.stringify(CATEGORY_HIERARCHY));
-   }
+   // Ensure type keyword bank exists
+if (!localStorage.getItem('xpensia_category_hierarchy')) {
+  localStorage.setItem('xpensia_category_hierarchy', JSON.stringify(CATEGORY_HIERARCHY));
+}
   
   
 }

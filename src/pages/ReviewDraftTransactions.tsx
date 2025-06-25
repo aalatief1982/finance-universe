@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
@@ -9,6 +9,7 @@ import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransa
 import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
+import { ArrowLeft } from 'lucide-react';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { useTransactions } from '@/context/TransactionContext';
 
@@ -157,49 +158,52 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
   };
 
   return (
-    <Layout showBack withPadding={false} fullWidth>
-      <div className="px-1 space-y-[var(--card-gap)] pb-[var(--header-height)]">
-        <div className="space-y-[var(--card-gap)]">
-          {transactions.map((txn, index) => (
-            <Card key={index} className="w-full">
-              <CardContent className="pt-[var(--card-padding)] space-y-2">
-                <p className="text-sm text-gray-500">{txn.rawMessage}</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <input value={txn.vendor} onChange={e => handleFieldChange(index, 'vendor', e.target.value)} className="border rounded p-2" />
-                  <input value={txn.title} readOnly className="border rounded p-2 text-gray-600 bg-gray-50" />
-                  <input value={txn.amount || ''} onChange={e => handleFieldChange(index, 'amount', e.target.value)} className="border rounded p-2" />
-                  <input value={txn.currency || ''} onChange={e => handleFieldChange(index, 'currency', e.target.value)} className="border rounded p-2" />
-                  <input type="date" value={txn.date?.split('T')[0] || ''} onChange={e => handleFieldChange(index, 'date', e.target.value)} className="border rounded p-2" />
-                  <select value={txn.category} onChange={e => handleFieldChange(index, 'category', e.target.value)} className="border rounded p-2">
-                    {getCategoryHierarchy().filter(c => c.type === txn.type).map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
-                  <select value={txn.subcategory} onChange={e => handleFieldChange(index, 'subcategory', e.target.value)} className="border rounded p-2">
-                    {(getCategoryHierarchy().find(
-                      c => c.name === txn.category && c.type === txn.type
-                    )?.subcategories || []).map(sub => (
-                      <option key={sub.id} value={sub.name}>
-                        {sub.name}
-                      </option>
-                    ))}
-                  </select>
-                  <input value={txn.fromAccount || ''} onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)} className="border rounded p-2" />
-                  <select value={txn.type} onChange={e => handleFieldChange(index, 'type', e.target.value)} className="border rounded p-2">
-                    <option value="expense">Expense</option>
-                    <option value="income">Income</option>
-                    <option value="transfer">Transfer</option>
-                  </select>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+    <Layout>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-xl sm:text-2xl font-bold">Review SMS Transactions</h1>
         </div>
-
-        <Button className="w-full" onClick={handleSave}>
-          Save All
-        </Button>
       </div>
+
+      {transactions.map((txn, index) => (
+        <Card key={index} className="p-[var(--card-padding)] mb-4">
+          <p className="mb-2 text-sm text-gray-500">{txn.rawMessage}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <input value={txn.vendor} onChange={e => handleFieldChange(index, 'vendor', e.target.value)} className="border rounded p-2" />
+            <input value={txn.title} readOnly className="border rounded p-2 text-gray-600 bg-gray-50" />
+            <input value={txn.amount || ''} onChange={e => handleFieldChange(index, 'amount', e.target.value)} className="border rounded p-2" />
+            <input value={txn.currency || ''} onChange={e => handleFieldChange(index, 'currency', e.target.value)} className="border rounded p-2" />
+            <input type="date" value={txn.date?.split('T')[0] || ''} onChange={e => handleFieldChange(index, 'date', e.target.value)} className="border rounded p-2" />
+            <select value={txn.category} onChange={e => handleFieldChange(index, 'category', e.target.value)} className="border rounded p-2">
+              {getCategoryHierarchy().filter(c => c.type === txn.type).map(c => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
+            </select>
+            <select value={txn.subcategory} onChange={e => handleFieldChange(index, 'subcategory', e.target.value)} className="border rounded p-2">
+              {(getCategoryHierarchy().find(
+					c => c.name === txn.category && c.type === txn.type
+				  )?.subcategories || []).map(sub => (
+					<option key={sub.id} value={sub.name}>
+					  {sub.name}
+					</option>
+				  ))}
+            </select>
+            <input value={txn.fromAccount || ''} onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)} className="border rounded p-2" />
+            <select value={txn.type} onChange={e => handleFieldChange(index, 'type', e.target.value)} className="border rounded p-2">
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+              <option value="transfer">Transfer</option>
+            </select>
+          </div>
+        </Card>
+      ))}
+
+      <Button className="w-full mt-4" onClick={handleSave}>
+        Save All
+      </Button>
     </Layout>
   );
 };

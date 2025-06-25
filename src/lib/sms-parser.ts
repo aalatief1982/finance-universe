@@ -166,7 +166,7 @@ function getUserPreferredCurrency(): SupportedCurrency {
 /**
  * Parse an SMS message to extract transaction details
  */
-export function parseLegacySms(message: string, sender: string): ParsedTransaction | null {
+export function parseSmsMessage(message: string, sender: string): ParsedTransaction | null {
   // Try each transaction pattern until one matches
   for (const pattern of TRANSACTION_PATTERNS) {
     const matches = message.match(pattern.regex);

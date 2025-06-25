@@ -16,13 +16,7 @@ export interface KeywordMapping {
 
 export function loadKeywordBank(): KeywordMapping[] {
   const raw = localStorage.getItem(KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw);
-  } catch (err) {
-    console.warn('[KeywordBank] Failed to parse stored bank', err);
-    return [];
-  }
+  return raw ? JSON.parse(raw) : [];
 }
 
 export function saveKeywordBank(bank: KeywordMapping[]) {

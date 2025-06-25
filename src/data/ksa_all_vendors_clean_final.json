@@ -1892,117 +1892,117 @@
   "barns": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "dr.": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "starbucks": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "costa": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "%": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "cafe": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "dunkin'": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "tim": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "half": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "brew92": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "elixir": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "wacafe": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "java": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "cova": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "molly's": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "address": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "toby's": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "camel": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "chorisia": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "capital": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "agave": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "brunch": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "good": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "catrion": {
     "type": "Expense",
@@ -2104,7 +2104,7 @@
     "category": "Food",
     "subcategory": "Dining"
   },
-  "brioché": {
+  "brioch\u00e9": {
     "type": "Expense",
     "category": "Food",
     "subcategory": "Dining"
@@ -2279,7 +2279,7 @@
     "category": "Food",
     "subcategory": "Dining Out"
   },
-  "lenôtre": {
+  "len\u00f4tre": {
     "type": "Expense",
     "category": "Food",
     "subcategory": "Dining Out"
@@ -2609,7 +2609,7 @@
     "category": "Food",
     "subcategory": "Sweet"
   },
-  "sucré": {
+  "sucr\u00e9": {
     "type": "Expense",
     "category": "Food",
     "subcategory": "Sweet"
@@ -2979,7 +2979,17 @@
     "category": "Gifts & Donations",
     "subcategory": "Tips"
   },
+  "mada": {
+    "type": "Expense",
+    "category": "Gifts & Donations",
+    "subcategory": "Tips"
+  },
   "halalah": {
+    "type": "Expense",
+    "category": "Gifts & Donations",
+    "subcategory": "Tips"
+  },
+  "cash": {
     "type": "Expense",
     "category": "Gifts & Donations",
     "subcategory": "Tips"
@@ -5507,22 +5517,22 @@
   "thecapitallounge": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "chorisialounge": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "cafebateel": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "urthcaffe": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "obayalounge": {
     "type": "Expense",
@@ -6162,52 +6172,52 @@
   "simitcafe": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "baskinrobbins": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "cinnabon": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "coffeechill": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "barnscafe": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "mado": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "golavita": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "elixirbunn": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "barnespresso": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "cupandcino": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "pizzahut": {
     "type": "Expense",
@@ -6487,22 +6497,22 @@
   "elixirbunncoffee": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "mochaandmore": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "bunzcoffee": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "cofix": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "najdivillage": {
     "type": "Expense",
@@ -7612,17 +7622,17 @@
   "cinnabonegypt": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "costacoffee": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "timhortons": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "alromansiah": {
     "type": "Expense",
@@ -7852,7 +7862,7 @@
   "drcafe": {
     "type": "Expense",
     "category": "Food",
-    "subcategory": "Café"
+    "subcategory": "Caf\u00e9"
   },
   "bernorth": {
     "type": "Expense",

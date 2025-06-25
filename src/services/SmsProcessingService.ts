@@ -1,4 +1,4 @@
-import { parseStructuredSms } from '@/lib/smart-paste-engine/structureParser';
+import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { Transaction } from '@/types/transaction';
 
 interface SmsEntry {
@@ -16,7 +16,7 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
   return entries.map(entry => {
     try {
       // Use the smart paste engine to parse the SMS message
-      const parsedResult = parseStructuredSms(entry.message);
+      const parsedResult = parseSmsMessage(entry.message);
 
       // Extract relevant information from the parsed result
       const { directFields, inferredFields } = parsedResult;
