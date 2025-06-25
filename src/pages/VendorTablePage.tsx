@@ -3,6 +3,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/components/ui/use-toast";
 
 interface VendorEntry {
   vendor: string;
@@ -18,6 +19,7 @@ const defaultCategories = [
 
 const VendorTablePage: React.FC = () => {
   const [vendors, setVendors] = useState<VendorEntry[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Load extracted vendors from localStorage
@@ -40,7 +42,10 @@ const VendorTablePage: React.FC = () => {
 
   const handleSave = () => {
     localStorage.setItem('xpensia_vendor_mappings', JSON.stringify(vendors));
-    alert("Vendor mappings saved successfully!");
+    toast({
+      title: "Vendor mappings saved",
+      description: "Your vendor mappings were stored successfully.",
+    });
   };
 
   return (
