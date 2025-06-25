@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Transaction } from '@/types/transaction';
@@ -7,14 +7,11 @@ import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription
+  CardContent
 } from '@/components/ui/card';
 import TransactionEditForm from '@/components/TransactionEditForm';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import SmartPasteSummary from '@/components/SmartPasteSummary';
 import { LearnedEntry } from '@/types/learning';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
@@ -22,7 +19,6 @@ import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransa
 const EditTransaction = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const params = useParams();
   const { addTransaction, updateTransaction } = useTransactions();
   const { toast } = useToast();
   const { learnFromTransaction } = useLearningEngine();
@@ -51,6 +47,24 @@ const EditTransaction = () => {
     });
   };
 
+  useEffect(() => {
+    if (isSuggested) {
+      toast({
+        title: "Suggested transaction",
+        description:
+          "This transaction was automatically suggested based on previous patterns. You can edit any field before saving.",
+      });
+    }
+
+    if (matchDetails?.confidence === 0.4) {
+      toast({
+        title: "Low confidence match",
+        description:
+          "This transaction was matched using a saved template structure with partial confidence (40%). You can review and adjust the fields before saving to improve future detection.",
+      });
+    }
+  }, [isSuggested, matchDetails, toast]);
+
   return (
     <Layout showBack withPadding={false} fullWidth>
       <motion.div
@@ -59,15 +73,6 @@ const EditTransaction = () => {
         transition={{ duration: 0.5 }}
         className="w-full px-1 space-y-4"
       >
-
-        {isSuggested && (
-          <Alert>
-            <AlertDescription className="text-sm">
-              This transaction was automatically suggested based on previous patterns.
-              You can edit any field before saving.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {rawMessage && (
           <div className="bg-muted p-3 rounded-md">
@@ -86,15 +91,6 @@ const EditTransaction = () => {
               totalTemplates={location.state.totalTemplates}
             />
           )}
-
-        {matchDetails?.confidence === 0.4 && (
-          <Alert className="bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-300 border-purple-300">
-            <AlertDescription className="text-sm">
-              This transaction was matched using a saved <strong>template structure</strong> with partial confidence (40%).<br />
-              You can review and adjust the fields before saving to improve future detection.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {matchDetails?.entry && (
           <div className="border border-red-300 bg-red-50 dark:bg-red-950/20 p-4 rounded-md">
