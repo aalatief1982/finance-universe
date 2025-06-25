@@ -4,7 +4,7 @@ import { useUser } from '@/context/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+
 import { ArrowLeft, WifiOff } from 'lucide-react';
 import PhoneVerification from '@/components/auth/PhoneVerification';
 import VerificationCodeForm from './phone-verification/VerificationCodeForm';
@@ -76,16 +76,19 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
 
   // Offline banner component
   const OfflineBanner = () => {
-    if (networkStatus === 'online') return null;
-    
-    return (
-      <Alert className="bg-red-50 border-red-200 mb-4">
-        <WifiOff className="h-4 w-4 text-red-600" />
-        <AlertDescription className="text-red-700">
-          You are currently offline. Please check your internet connection and try again.
-        </AlertDescription>
-      </Alert>
-    );
+    const previousStatus = React.useRef(networkStatus);
+
+    React.useEffect(() => {
+      if (previousStatus.current !== 'offline' && networkStatus === 'offline') {
+        toast({
+          title: 'Network error',
+          variant: 'destructive',
+        });
+      }
+      previousStatus.current = networkStatus;
+    }, [networkStatus, toast]);
+
+    return null;
   };
 
   return (
