@@ -162,7 +162,7 @@ const handleReadSms = async () => {
           <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Process SMS Messages</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Import SMS Messages</h1>
         </div>
       </div>
 

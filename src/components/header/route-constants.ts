@@ -5,7 +5,7 @@ export const routeTitleMap: Record<string, string> = {
   '/home': 'Xpensia',
   '/transactions': 'Transactions',
   '/analytics': 'Analytics',
-  '/process-sms': 'Process SMS',
+  '/process-sms': 'Import SMS',
   '/settings': 'Settings',
   '/profile': 'Profile',
   '/sms-providers': 'SMS Providers',
@@ -47,11 +47,11 @@ export const getNavItems = () => [
     icon: 'Upload',
     description: 'Import transactions from SMS or paste'
   },
-  { 
-    title: 'Process SMS', 
-    path: '/process-sms', 
-    icon: 'MessageSquare', 
-    description: 'Import transactions from SMS' 
+  {
+    title: 'Import SMS',
+    path: '/process-sms',
+    icon: 'MessageSquare',
+    description: 'Import transactions from SMS'
   },
   {
     title: 'Settings',
