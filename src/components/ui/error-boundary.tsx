@@ -1,8 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton"; 
-import { RefreshCw, AlertTriangle, Info } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCw, Info } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { handleError } from "@/utils/error-utils";
 import { ErrorType, ErrorSeverity } from "@/types/error";
 
@@ -53,12 +53,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       type: ErrorType.UNKNOWN,
       message: `Error in ${this.props.name || 'component'}: ${error.message}`,
       severity: ErrorSeverity.ERROR,
-      details: { 
+      details: {
         componentStack: errorInfo.componentStack,
         componentName: this.props.name
       },
       originalError: error
     });
+
+    if (this.props.fallbackType === 'alert') {
+      toast({
+        variant: 'destructive',
+        title: `Error: ${this.props.name || 'Component'} failed to load`,
+        description: `${error.message || 'An unexpected error occurred.'} Please try again using the Retry button.`
+      });
+    }
   }
 
   handleReset = (): void => {
@@ -70,7 +78,6 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   };
 
   renderDefaultFallback() {
-    const { error, errorInfo } = this.state;
     
     switch(this.props.fallbackType) {
       case "skeleton":
@@ -114,28 +121,21 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       case "alert":
       default:
         return (
-          <Alert className="my-4" variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Error: {this.props.name || 'Component'} failed to load</AlertTitle>
-            <AlertDescription className="space-y-4">
-              <p>
-                {error?.message || 'An unexpected error occurred. You can try reloading this component.'}
-              </p>
-              {process.env.NODE_ENV === 'development' && errorInfo && (
-                <div className="mt-2 max-h-32 overflow-auto text-xs p-2 bg-gray-800 text-gray-200 rounded">
-                  <pre>{errorInfo.componentStack}</pre>
-                </div>
-              )}
-              <Button 
-                variant="outline" 
-                onClick={this.handleReset}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw size={16} />
-                Retry
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-gray-500 my-2">
+            <div className="flex items-center gap-2 text-sm mb-2">
+              <Info size={16} />
+              <span>This component couldn't be loaded</span>
+            </div>
+            <Button
+              variant="ghost"
+              onClick={this.handleReset}
+              size="sm"
+              className="flex items-center gap-1.5 h-8 text-xs"
+            >
+              <RefreshCw size={12} />
+              Retry
+            </Button>
+          </div>
         );
     }
   }
