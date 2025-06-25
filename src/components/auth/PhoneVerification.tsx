@@ -4,15 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/context/UserContext';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, Loader2, Clock, Phone } from 'lucide-react';
+import { CheckCircle2, Loader2, Clock, Phone } from 'lucide-react';
 import { 
   getVerificationSessionTimeRemaining,
   getVerificationAttemptsRemaining 
 } from '@/lib/supabase-auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
 
 interface PhoneVerificationProps {
   onVerificationComplete?: () => void;
@@ -79,8 +77,8 @@ const PhoneVerification = ({
           setError('Verification session has expired. Please request a new code.');
           setErrorType('auth');
           toast({
-            title: 'Session Expired',
-            description: 'Your verification session has timed out. Please request a new code.',
+            title: 'Error',
+            description: 'Verification session has expired. Please request a new code.',
             variant: 'destructive',
           });
         }
@@ -162,7 +160,7 @@ const PhoneVerification = ({
       setError('Please enter a valid phone number with country code');
       setErrorType('validation');
       toast({
-        title: 'Invalid phone number',
+        title: 'Error',
         description: 'Please enter a valid phone number with country code',
         variant: 'destructive',
       });
@@ -179,8 +177,12 @@ const PhoneVerification = ({
         setIsVerificationSent(true);
         setSuccess('Verification code sent successfully!');
         toast({
-          title: 'Verification code sent',
-          description: 'For demo purposes, the code is 1234',
+          title: 'Success',
+          description: 'Verification code sent successfully!',
+        });
+        toast({
+          title: 'Demo Code',
+          description: 'For this demo, please use code: 1234',
         });
         
         // Clear success message after a few seconds
@@ -195,8 +197,8 @@ const PhoneVerification = ({
       setError('Failed to send code. Please check your phone number and try again.');
       setErrorType('network');
       toast({
-        title: 'Failed to send code',
-        description: 'Please check your phone number and try again later',
+        title: 'Error',
+        description: 'Failed to send code. Please check your phone number and try again.',
         variant: 'destructive',
       });
     } finally {
@@ -209,7 +211,7 @@ const PhoneVerification = ({
       setError('Please enter a valid 4-digit code');
       setErrorType('validation');
       toast({
-        title: 'Invalid code',
+        title: 'Error',
         description: 'Please enter a valid 4-digit code',
         variant: 'destructive',
       });
@@ -220,8 +222,8 @@ const PhoneVerification = ({
       setError('Verification session has expired. Please request a new code.');
       setErrorType('auth');
       toast({
-        title: 'Session expired',
-        description: 'Your verification session has timed out. Please request a new code.',
+        title: 'Error',
+        description: 'Verification session has expired. Please request a new code.',
         variant: 'destructive',
       });
       return;
@@ -236,8 +238,8 @@ const PhoneVerification = ({
       if (success) {
         setSuccess('Phone number verified successfully!');
         toast({
-          title: 'Phone verified',
-          description: 'Your phone number has been verified',
+          title: 'Success',
+          description: 'Phone number verified successfully!',
         });
         
         if (onVerificationComplete) {
@@ -258,7 +260,7 @@ const PhoneVerification = ({
       setError(`Invalid code. ${attemptsRemaining} attempts remaining.`);
       setErrorType('validation');
       toast({
-        title: 'Verification failed',
+        title: 'Error',
         description: `Invalid code. ${attemptsRemaining} attempts remaining. For this demo, use 1234.`,
         variant: 'destructive',
       });
@@ -310,23 +312,7 @@ const PhoneVerification = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Success Message */}
-        {success && (
-          <Alert className="mb-4 bg-green-50 border-green-200" role="status" aria-live="polite">
-            <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />
-            <AlertTitle className="text-green-800">Success</AlertTitle>
-            <AlertDescription className="text-green-700">{success}</AlertDescription>
-          </Alert>
-        )}
-        
-        {/* Error Message */}
-        {error && (
-          <Alert variant="destructive" className="mb-4" role="alert" aria-live="assertive">
-            <AlertCircle className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        {/* Success and error messages are shown via toast */}
         
         {/* Hidden status for screen readers */}
         <div aria-live="polite" className="sr-only">
@@ -464,16 +450,7 @@ const PhoneVerification = ({
               </div>
             </div>
             
-            {/* Demo Info */}
-            <Alert 
-              className="bg-amber-50 border-amber-200" 
-              role="note"
-              aria-label="Demo information"
-            >
-              <AlertDescription className="text-amber-800 text-sm">
-                For this demo, please use code: <span className="font-bold">1234</span>
-              </AlertDescription>
-            </Alert>
+            {/* Demo notice is shown via toast */}
             
             <Button
               className={`w-full ${success ? 'bg-green-600 hover:bg-green-700' : ''}`}
