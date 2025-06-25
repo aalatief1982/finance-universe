@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from '@/components/ui/accordion';
 import { getCategoryHierarchy } from "@/lib/category-utils";
 import { useToast } from '@/components/ui/use-toast';
-import { findClosestFallbackMatch } from '@/lib/smart-paste-engine/suggestionEngine';
+import {
+  findClosestFallbackMatch,
+  extractVendorName
+} from '@/lib/smart-paste-engine/suggestionEngine';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { ArrowLeft } from 'lucide-react';
@@ -13,6 +22,7 @@ interface VendorMappingEntry {
   updatedVendor: string;
   category: string;
   subcategory: string;
+  sampleMessage?: string;
 }
 
 const VendorMapping: React.FC = () => {
@@ -37,6 +47,14 @@ const VendorMapping: React.FC = () => {
       return;
     }
 
+    const vendorSamples: Record<string, string> = {};
+    messages.forEach((m: any) => {
+      const extracted = extractVendorName(m.message);
+      if (extracted && !vendorSamples[extracted]) {
+        vendorSamples[extracted] = m.message;
+      }
+    });
+
     const uniqueVendors = Object.keys(incomingVendorMap);
 
     const initialMappings = uniqueVendors.map(vendor => {
@@ -56,10 +74,11 @@ const VendorMapping: React.FC = () => {
 	}
 
       return {
-         vendor,
-		  updatedVendor: incomingVendorMap[vendor],
-		  category: category || 'Other',
-		  subcategory: subcategory || 'Miscellaneous',
+        vendor,
+        updatedVendor: incomingVendorMap[vendor],
+        category: category || 'Other',
+        subcategory: subcategory || 'Miscellaneous',
+        sampleMessage: vendorSamples[vendor]
       };
     });
 
@@ -74,7 +93,7 @@ const VendorMapping: React.FC = () => {
     });
   };
 
-  const handleConfirm = () => {
+const handleConfirm = () => {
     const vendorMap: Record<string, string> = {};
     const keywordBank: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
 
@@ -101,6 +120,10 @@ const VendorMapping: React.FC = () => {
     });
   };
 
+  const handleRetry = () => {
+    navigate('/process-sms');
+  };
+
   return (
     <Layout>
       <div className="flex items-center justify-between mb-4">
@@ -112,51 +135,71 @@ const VendorMapping: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {vendors.map((vendor, index) => (
-          <Card key={vendor.vendor} className="p-[var(--card-padding)]">
-            <div className="mb-2">
-              <label className="block mb-1 font-semibold">Vendor:</label>
-              <input
-                type="text"
-                value={vendor.updatedVendor}
-                onChange={e => handleVendorChange(index, 'updatedVendor', e.target.value)}
-                className="w-full border rounded p-2"
-              />
-            </div>
+      <div className="space-y-2 pb-24">
+        <Accordion type="multiple" className="w-full">
+          {vendors.map((vendor, index) => (
+            <AccordionItem key={vendor.vendor} value={vendor.vendor}>
+              <AccordionTrigger>
+                {vendor.updatedVendor || vendor.vendor}
+              </AccordionTrigger>
+              <AccordionContent>
+                <Card className="p-[var(--card-padding)] space-y-3">
+                  <div>
+                    <label className="block mb-1 font-semibold">Vendor:</label>
+                    <input
+                      type="text"
+                      value={vendor.updatedVendor}
+                      onChange={e => handleVendorChange(index, 'updatedVendor', e.target.value)}
+                      className="w-full border rounded p-2"
+                    />
+                  </div>
 
-            <div className="mb-2">
-              <label className="block mb-1 font-semibold">Category:</label>
-              <select
-                value={vendor.category}
-                onChange={e => handleVendorChange(index, 'category', e.target.value)}
-                className="w-full border rounded p-2"
-              >
-                {getCategoryHierarchy().filter(c => c.type === 'expense').map(c => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-            </div>
+                  <div>
+                    <label className="block mb-1 font-semibold">Category:</label>
+                    <select
+                      value={vendor.category}
+                      onChange={e => handleVendorChange(index, 'category', e.target.value)}
+                      className="w-full border rounded p-2"
+                    >
+                      {getCategoryHierarchy().filter(c => c.type === 'expense').map(c => (
+                        <option key={c.id} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-            <div>
-              <label className="block mb-1 font-semibold">Subcategory:</label>
-              <select
-                value={vendor.subcategory}
-                onChange={e => handleVendorChange(index, 'subcategory', e.target.value)}
-                className="w-full border rounded p-2"
-              >
-                {getCategoryHierarchy().find(c => c.name === vendor.category)?.subcategories.map(sub => (
-                  <option key={sub.id} value={sub.name}>{sub.name}</option>
-                ))}
-              </select>
-            </div>
-          </Card>
-        ))}
+                  <div>
+                    <label className="block mb-1 font-semibold">Subcategory:</label>
+                    <select
+                      value={vendor.subcategory}
+                      onChange={e => handleVendorChange(index, 'subcategory', e.target.value)}
+                      className="w-full border rounded p-2"
+                    >
+                      {getCategoryHierarchy().find(c => c.name === vendor.category)?.subcategories.map(sub => (
+                        <option key={sub.id} value={sub.name}>{sub.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {vendor.sampleMessage && (
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Sample SMS:</strong> {vendor.sampleMessage}
+                    </p>
+                  )}
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
 
-      <Button className="mt-6 w-full" onClick={handleConfirm}>
-        Confirm
-      </Button>
+      <div className="fixed bottom-16 left-0 right-0 px-4 flex gap-4 z-20">
+        <Button className="flex-1" variant="outline" onClick={handleRetry}>
+          Retry
+        </Button>
+        <Button className="flex-1" onClick={handleConfirm}>
+          Save
+        </Button>
+      </div>
     </Layout>
   );
 };
