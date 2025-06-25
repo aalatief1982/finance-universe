@@ -161,7 +161,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label="Open navigation menu">
-                      <Menu size={24} />
+                      <Menu size={28} />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="left" className="w-[300px] sm:w-[400px]">
