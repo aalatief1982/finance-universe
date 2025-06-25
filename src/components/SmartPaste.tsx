@@ -199,6 +199,14 @@ const handleSubmit = (e: React.FormEvent) => {
             {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Extract Transaction
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePaste}
+            disabled={isProcessing}
+          >
+            Paste from Clipboard
+          </Button>
         </div>
 
         {confidence !== null && (

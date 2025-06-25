@@ -1,7 +1,6 @@
 import { Transaction, TransactionType } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { getCategoryHierarchy, CURRENCIES } from '@/lib/categories-data';
-import { ENABLE_DEMO_MODE } from '@/lib/env';
 import { transactionStore } from '@/state/transactionStore';
 
 const FROM_ACCOUNTS = [
@@ -31,9 +30,6 @@ const INIT_FLAG_KEY = 'xpensia_demo_transactions_initialized';
 
 class DemoTransactionService {
   seedDemoTransactions(): void {
-    if (!ENABLE_DEMO_MODE) {
-      return;
-    }
     if (localStorage.getItem(INIT_FLAG_KEY)) {
       return;
     }
@@ -69,7 +65,7 @@ class DemoTransactionService {
     categories.forEach(cat => {
       const subs = cat.subcategories.length > 0 ? cat.subcategories.map(s => s.name) : [cat.name];
       subs.forEach(sub => {
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 4; i++) {
           newTransactions.push({
             id: uuidv4(),
             title: sub,

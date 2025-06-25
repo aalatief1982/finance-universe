@@ -1,9 +1,5 @@
 import { TransactionType } from '@/types/transaction';
-import {
-  saveVendorFallbacks,
-  loadVendorFallbacks,
-  VendorFallbackData,
-} from './vendorFallbackUtils';
+import { saveVendorFallbacks, loadVendorFallbacks } from './vendorFallbackUtils';
 
 export const CATEGORY_HIERARCHY = [
   {
@@ -204,7 +200,7 @@ export const CATEGORY_HIERARCHY = [
   
 
 
-export async function initializeXpensiaStorageDefaults(): Promise<void> {
+export function initializeXpensiaStorageDefaults() {
   // Ensure structure templates store exists
   if (!localStorage.getItem('xpensia_structure_templates')) {
     localStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
@@ -217,18 +213,8 @@ export async function initializeXpensiaStorageDefaults(): Promise<void> {
     console.log('[Init] xpensia_vendor_map initialized');
   }
 
-  // Ensure vendor fallback data exists
-  if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
-    const module = await import('../../data/ksa_all_vendors_clean_final.json');
-    const initial: Record<string, VendorFallbackData> =
-      (module as any).default ?? module;
-    const filtered = Object.fromEntries(
-      Object.entries(initial).filter(([name]) => name.trim())
-    );
-    saveVendorFallbacks(filtered);
-    console.log('[Init] xpensia_vendor_fallbacks initialized');
-  } else {
-    // Sanitize existing vendor fallback data if present
+  // Sanitize existing vendor fallback data if present
+  if (localStorage.getItem('xpensia_vendor_fallbacks')) {
     const sanitized = loadVendorFallbacks();
     saveVendorFallbacks(sanitized);
   }
