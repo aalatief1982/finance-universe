@@ -69,7 +69,7 @@ export class SmsReaderService {
     const monthsBack = parseInt(localStorage.getItem('xpensia_sms_period_months') || '6');
     // Fetch limit to pass to the native plugin. Allows overriding via localStorage.
     // Defaults to 500 messages which is higher than the plugin's default of 100.
-    const limit = parseInt(localStorage.getItem('xpensia_sms_fetch_limit') || '500');
+    const limit = parseInt(localStorage.getItem('xpensia_sms_fetch_limit') || '500000');
     const startDate = subMonths(startOfToday(), monthsBack).getTime();
     const endDate = Date.now();
     console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
