@@ -19,10 +19,12 @@ const LOCALE_SETTINGS_STORAGE_KEY = 'xpensia_locale_settings';
 const STRUCTURE_KEY = 'xpensia_structure_templates';
 
 
-// Helper function to safely get data from localStorage
+// Helper function to safely get data from storage
+// Falls back to sessionStorage if the item is not found in localStorage
 const getFromStorage = <T>(key: string, defaultValue: T): T => {
   try {
-    const storedData = localStorage.getItem(key);
+    const storedData =
+      localStorage.getItem(key) ?? sessionStorage.getItem(key);
     return storedData ? JSON.parse(storedData) : defaultValue;
   } catch (error) {
     console.error(`Error retrieving ${key} from storage:`, error);
@@ -58,6 +60,20 @@ export const safeSetItem = <T>(key: string, data: T): boolean => {
         `[CRITICAL] Failed to set '${key}' in localStorage due to quota limitations.`,
         error
       );
+
+      // Fallback to sessionStorage when quota is exceeded
+      try {
+        sessionStorage.setItem(key, JSON.stringify(data));
+        console.warn(
+          `[STORAGE] Stored '${key}' in sessionStorage due to localStorage quota.`
+        );
+        return true;
+      } catch (sessionError) {
+        console.error(
+          `[CRITICAL] Failed to set '${key}' in sessionStorage after localStorage quota exceeded.`,
+          sessionError
+        );
+      }
     } else {
       console.error(`Error storing ${key} in storage:`, error);
     }
