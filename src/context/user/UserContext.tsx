@@ -22,6 +22,7 @@ import {
   checkUserExists as checkUserExistsUtil,
   isProfileComplete as isProfileCompleteUtil
 } from './auth-utils';
+import { safeSetItem } from '@/utils/storage-utils';
 import {
   updateUserPreferences as updateUserPreferencesUtil,
   updateDisplayOptions as updateDisplayOptionsUtil,
@@ -139,7 +140,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Save user to local storage whenever it changes
   useEffect(() => {
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
+      safeSetItem('user', user);
       
       // If Supabase is enabled, also update the user profile there
       if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && user.id) {
