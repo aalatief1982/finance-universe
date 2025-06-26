@@ -51,7 +51,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({ isLandingPage }) => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User profile and options">
                       <Avatar>
-                        <AvatarImage src="/placeholder.svg" alt={user?.fullName || 'User'} />
+                        <AvatarImage
+                          src={user?.avatar || '/placeholder.svg'}
+                          alt={user?.fullName || 'User'}
+                        />
                         <AvatarFallback>
                           {user?.fullName ? user.fullName.charAt(0) : 'U'}
                         </AvatarFallback>

@@ -115,7 +115,10 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User profile and options">
                       <Avatar>
-                        <AvatarImage src="/placeholder.svg" alt={user?.fullName || 'User'} />
+                        <AvatarImage
+                          src={user?.avatar || '/placeholder.svg'}
+                          alt={user?.fullName || 'User'}
+                        />
                         <AvatarFallback>{user?.fullName?.charAt(0) || 'U'}</AvatarFallback>
                       </Avatar>
                     </Button>
@@ -178,7 +181,10 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                       {user && (
                         <div className="flex items-center space-x-3 p-4 mb-4 bg-muted/50 rounded-lg">
                           <Avatar>
-                            <AvatarImage src="/placeholder.svg" alt={user.fullName || 'User'} />
+                            <AvatarImage
+                              src={user.avatar || '/placeholder.svg'}
+                              alt={user.fullName || 'User'}
+                            />
                             <AvatarFallback>
                               {user.fullName ? user.fullName.charAt(0) : 'U'}
                             </AvatarFallback>
