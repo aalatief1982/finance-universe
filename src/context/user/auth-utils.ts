@@ -16,6 +16,7 @@ import {
 } from '@/lib/supabase-auth';
 import { ErrorType } from '@/types/error';
 import { createError } from '@/utils/error-utils';
+import { safeSetItem } from '@/utils/storage-utils';
 
 /**
  * Check if a user with the given phone number exists
@@ -155,7 +156,7 @@ export const checkSupabaseAuth = async (
           }));
           
           // Update localStorage
-          localStorage.setItem('user', JSON.stringify(updatedUser));
+          safeSetItem('user', updatedUser);
           return;
         }
       }

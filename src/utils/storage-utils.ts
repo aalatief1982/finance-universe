@@ -39,6 +39,33 @@ const setInStorage = <T>(key: string, data: T): void => {
   }
 };
 
+/**
+ * Attempts to persist a value in localStorage.
+ * Returns true on success and false if an error occurred
+ * (e.g. QuotaExceededError).
+ */
+export const safeSetItem = <T>(key: string, data: T): boolean => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    return true;
+  } catch (error: any) {
+    const isQuotaExceeded =
+      error instanceof DOMException &&
+      (error.name === 'QuotaExceededError' || error.code === 22 || error.code === 1014);
+
+    if (isQuotaExceeded) {
+      console.error(
+        `[CRITICAL] Failed to set '${key}' in localStorage due to quota limitations.`,
+        error
+      );
+    } else {
+      console.error(`Error storing ${key} in storage:`, error);
+    }
+
+    return false;
+  }
+};
+
 // Transactions storage functions
 export const getStoredTransactions = (): Transaction[] => {
   return getFromStorage<Transaction[]>(TRANSACTIONS_STORAGE_KEY, []);
