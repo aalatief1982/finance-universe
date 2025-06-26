@@ -65,10 +65,15 @@ const Profile = () => {
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const imageUrl = URL.createObjectURL(file);
-    setEditFormData({ ...editFormData, avatar: imageUrl });
-    updateUser({ avatar: imageUrl });
-    toast({ title: 'Avatar updated', description: 'Your profile picture has been updated.' });
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      setEditFormData({ ...editFormData, avatar: dataUrl });
+      updateUser({ avatar: dataUrl });
+      toast({ title: 'Avatar updated', description: 'Your profile picture has been updated.' });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDeleteAccount = () => {
