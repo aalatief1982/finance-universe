@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import Home from './pages/Home';
@@ -35,10 +35,30 @@ import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import SmsImportService from '@/services/SmsImportService';
 import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
 import { useUser } from './context/UserContext';
+import SmartPasteReviewQueueModal from '@/components/sms/SmartPasteReviewQueueModal';
+import { getQueuedMessages, clearQueuedMessages } from '@/services/smsQueueService';
 
 function AppWrapper() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const [queueOpen, setQueueOpen] = useState(false);
+  const [queuedMessages, setQueuedMessages] = useState<{ sender: string; body: string }[]>([]);
+
+  useEffect(() => {
+    const checkQueue = async () => {
+      const msgs = await getQueuedMessages();
+      if (msgs.length > 0) {
+        setQueuedMessages(msgs);
+        setQueueOpen(true);
+      }
+    };
+
+    checkQueue();
+    const resume = CapacitorApp.addListener('resume', checkQueue);
+    return () => {
+      resume.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const platform = Capacitor.getPlatform();
@@ -178,6 +198,7 @@ function AppWrapper() {
   }, [user, navigate]);
 
   return (
+    <>
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/home" element={<Home />} />
@@ -200,6 +221,16 @@ function AppWrapper() {
       <Route path="/review-sms-transactions" element={<ReviewSmsTransactions />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <SmartPasteReviewQueueModal
+      open={queueOpen}
+      messages={queuedMessages}
+      onClose={() => {
+        clearQueuedMessages();
+        setQueueOpen(false);
+        setQueuedMessages([]);
+      }}
+    />
+    </>
   );
 }
 
