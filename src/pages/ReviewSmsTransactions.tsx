@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ import Layout from '@/components/Layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useNavigate } from 'react-router-dom';
 import { setLastSmsImportDate, updateSmsSenderImportDates } from '@/utils/storage-utils';
+import { learnVendorCategoryRule } from '@/lib/smart-paste-engine/senderCategoryRules';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { TransactionType } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
@@ -35,6 +37,8 @@ interface DraftTransaction {
   fromAccount?: string;
   type?: string;
   rawMessage: string;
+  sender?: string;
+  alwaysApply?: boolean;
 }
 
 const ReviewSmsTransactions: React.FC = () => {
@@ -66,7 +70,9 @@ const ReviewSmsTransactions: React.FC = () => {
             category: cat,
             subcategory: sub,
             rawMessage,
-            title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub })
+            title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub }),
+            sender: msg.sender,
+            alwaysApply: false
           };
         })
       );
@@ -120,6 +126,19 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
   setTransactions(updated);
 };
 
+const handleAlwaysApplyChange = (index: number, checked: boolean) => {
+  const updated = [...transactions];
+  updated[index].alwaysApply = checked;
+  setTransactions(updated);
+
+  if (checked) {
+    const msg = messages[index];
+    if (msg?.sender) {
+      learnVendorCategoryRule(msg.sender, updated[index].category, updated[index].subcategory);
+    }
+  }
+};
+
   const handleSave = () => {
     const valid: Array<{ txn: DraftTransaction; idx: number }> = [];
     const skippedTransactions: DraftTransaction[] = [];
@@ -163,6 +182,10 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
         navigateBack: () => {},
         silent: true,
       });
+
+      if (txn.alwaysApply && txn.sender) {
+        learnVendorCategoryRule(txn.sender, txn.category, txn.subcategory);
+      }
     });
 
     const senderDates: Record<string, string> = {};
@@ -259,6 +282,17 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
                 ))}
               </SelectContent>
             </Select>
+            <div className="col-span-2 flex items-center gap-2">
+              <Checkbox
+                id={`apply-${index}`}
+                checked={txn.alwaysApply || false}
+                onCheckedChange={checked => handleAlwaysApplyChange(index, !!checked)}
+                className="mr-2"
+              />
+              <label htmlFor={`apply-${index}`} className="text-sm">
+                Always apply for this sender
+              </label>
+            </div>
             <Input
               value={txn.fromAccount || ''}
               onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)}
