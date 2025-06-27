@@ -19,6 +19,32 @@ interface ProcessedSmsEntry extends SmsEntry {
   matchedKeyword?: string;
 }
 
+interface ImportProgress {
+  index: number;
+  total: number;
+  vendorMappings: Record<string, string>;
+}
+
+const IMPORT_PROGRESS_KEY = 'importProgress';
+
+const loadImportProgress = (): ImportProgress | null => {
+  try {
+    const stored = localStorage.getItem(IMPORT_PROGRESS_KEY);
+    return stored ? (JSON.parse(stored) as ImportProgress) : null;
+  } catch (err) {
+    console.error('Failed to load import progress', err);
+    return null;
+  }
+};
+
+const saveImportProgress = (progress: ImportProgress) => {
+  localStorage.setItem(IMPORT_PROGRESS_KEY, JSON.stringify(progress));
+};
+
+const clearImportProgress = () => {
+  localStorage.removeItem(IMPORT_PROGRESS_KEY);
+};
+
 const ProcessSmsMessages: React.FC = () => {
   const [messages, setMessages] = useState<ProcessedSmsEntry[]>([]);
   const [skippedMessages, setSkippedMessages] = useState<ProcessedSmsEntry[]>([]);
@@ -30,6 +56,39 @@ const ProcessSmsMessages: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [mapOpen, setMapOpen] = useState(false);
+
+  const resumeHistoryImport = () => {
+    const progress = loadImportProgress();
+    if (!progress) return;
+
+    try {
+      const stored = localStorage.getItem('uat_valid_sms');
+      if (!stored) {
+        clearImportProgress();
+        return;
+      }
+      const msgs: ProcessedSmsEntry[] = JSON.parse(stored);
+      if (progress.index >= progress.total || msgs.length === 0) {
+        clearImportProgress();
+        return;
+      }
+
+      setMessages(msgs);
+      setFilter('all');
+      const allSenders = Array.from(
+        new Set(msgs.map(m => m.sender).filter(Boolean))
+      ) as string[];
+      setSenders(allSenders);
+      setSelectedSenders(allSenders);
+    } catch (err) {
+      console.error('Failed to resume import', err);
+      clearImportProgress();
+    }
+  };
+
+  useEffect(() => {
+    resumeHistoryImport();
+  }, []);
 
   useEffect(() => {
     const all = [...messages, ...skippedMessages];
@@ -139,6 +198,8 @@ const handleReadSms = async () => {
     localStorage.setItem('uat_valid_sms', JSON.stringify(validMessages));
     localStorage.setItem('uat_invalid_sms', JSON.stringify(invalidMessages));
 
+    saveImportProgress({ index: 0, total: smsMessages.length, vendorMappings: {} });
+
     setMessages(filtered);
     setSkippedMessages(invalidMessages);
     setFilter('all');
@@ -183,6 +244,13 @@ const handleReadSms = async () => {
     });
 
     setSelectedSmsSenders(selectedSenders);
+
+    const progress = loadImportProgress();
+    if (progress) {
+      progress.vendorMappings = vendorMap;
+      saveImportProgress(progress);
+      clearImportProgress();
+    }
 
     navigate('/vendor-mapping', {
       state: {
@@ -292,6 +360,12 @@ const handleReadSms = async () => {
         onComplete={(vendorMap, keywordMap) => {
           setMapOpen(false);
           setSelectedSmsSenders(selectedSenders);
+          const progress = loadImportProgress();
+          if (progress) {
+            progress.vendorMappings = vendorMap;
+            saveImportProgress(progress);
+            clearImportProgress();
+          }
           navigate('/review-sms-transactions', {
             state: {
               messages: filteredMessages,
