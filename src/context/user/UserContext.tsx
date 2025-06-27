@@ -188,16 +188,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             theme: 'light',
             notifications: true,
             language: 'en',
-            displayOptions: {
-              showCents: true,
-              weekStartsOn: 'sunday',
-              defaultView: 'list',
-              compactMode: false,
-              showCategories: true,
-              showTags: true
-            }
+          displayOptions: {
+            showCents: true,
+            weekStartsOn: 'sunday',
+            defaultView: 'list',
+            compactMode: false,
+            showCategories: true,
+            showTags: true
+          },
+          sms: {
+            autoImport: false
           }
-        };
+        }
+      };
         return newUser;
       }
       

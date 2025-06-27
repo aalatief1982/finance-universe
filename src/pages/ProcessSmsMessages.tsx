@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
+import { setSelectedSmsSenders } from '@/utils/storage-utils';
 import Layout from '@/components/Layout';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
@@ -168,6 +169,8 @@ const handleReadSms = async () => {
         }
       }
     });
+
+    setSelectedSmsSenders(selectedSenders);
 
     navigate('/vendor-mapping', {
       state: {

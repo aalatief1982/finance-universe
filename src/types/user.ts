@@ -62,6 +62,7 @@ export interface UserPreferences {
     startDate?: string;
     autoDetectProviders: boolean;
     showDetectionNotifications: boolean;
+    autoImport?: boolean;
   };
   categories?: {
     showUncategorized: boolean;

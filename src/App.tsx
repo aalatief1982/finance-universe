@@ -32,9 +32,13 @@ import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageF
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
+import SmsImportService from '@/services/SmsImportService';
+import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
+import { useUser } from './context/UserContext';
 
 function AppWrapper() {
   const navigate = useNavigate();
+  const { user } = useUser();
 
   useEffect(() => {
     const platform = Capacitor.getPlatform();
@@ -165,6 +169,13 @@ function AppWrapper() {
 
     setupSmsListener();
   }, [navigate]);
+
+  useEffect(() => {
+    if (!ENABLE_SMS_INTEGRATION) return;
+    if (user?.preferences?.sms?.autoImport) {
+      SmsImportService.checkForNewMessages(navigate);
+    }
+  }, [user, navigate]);
 
   return (
     <Routes>

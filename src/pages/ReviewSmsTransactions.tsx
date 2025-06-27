@@ -18,6 +18,7 @@ import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
+import { setLastSmsImportDate } from '@/utils/storage-utils';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { useTransactions } from '@/context/TransactionContext';
 
@@ -167,6 +168,8 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
       title: 'Saved',
       description: `${validTransactions.length} transaction(s) saved successfully.`,
     });
+
+    setLastSmsImportDate(new Date().toISOString());
 
     setTransactions([]);
   };

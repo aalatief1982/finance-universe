@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Download, UploadCloud, RefreshCw, Shield, Sun, Moon, Trash, Bell, Database, Eye, Globe, Languages } from 'lucide-react';
+import { Download, UploadCloud, RefreshCw, Shield, Sun, Moon, Trash, Bell, Database, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -589,6 +589,28 @@ const Settings = () => {
                       </Button>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border border-border shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <MessageSquare className="mr-2" size={20} />
+                  <span>SMS Import</span>
+                </CardTitle>
+                <CardDescription>Automatically import new SMS messages</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="auto-sms-import">Automatic SMS import</Label>
+                    <p className="text-sm text-muted-foreground">Check for new SMS on startup</p>
+                  </div>
+                  <Switch
+                    id="auto-sms-import"
+                    checked={!!user?.preferences?.sms?.autoImport}
+                    onCheckedChange={(checked) => updateUserPreferences({ sms: { autoImport: checked } })}
+                  />
                 </div>
               </CardContent>
             </Card>
