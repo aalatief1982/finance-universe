@@ -294,7 +294,7 @@ const Home = () => {
                         })
                       }
                       aria-label="Edit transaction"
-                      className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3 hover:shadow-md hover:bg-gray-50 transition-all cursor-pointer"
+                      className="bg-card text-card-foreground dark:bg-black dark:text-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">

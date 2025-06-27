@@ -56,7 +56,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
         const netCurrency = groupedTransactions[date][0]?.currency || 'USD';
         return (
           <div key={date} className="space-y-[var(--card-gap)]">
-            <h3 className="font-semibold text-gray-600 text-sm">
+            <h3 className="font-semibold text-card-foreground dark:text-white text-sm">
               {formatDate(date)}
             </h3>
 
@@ -72,7 +72,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
                 return (
                   <div
                     key={transaction.id?.trim() || `txn-${date}-${index}`}
-                    className="bg-white rounded-2xl shadow-sm border border-gray-200 px-4 py-3"
+                    className="bg-card text-card-foreground dark:bg-black dark:text-white rounded-2xl shadow-sm border px-4 py-3"
                   >
                     <div className="flex justify-between items-center">
                       <div>
