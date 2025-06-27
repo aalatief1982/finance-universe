@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "495648821355",
+    "project_id": "xpensia-505ac",
+    "storage_bucket": "xpensia-505ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:495648821355:android:a5fdd969c5b165a1cb212e",
+        "android_client_info": {
+          "package_name": "com.xpensia.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBk_6hPIlrmynRs1LY1gmHO2SSlVIYuwPQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
