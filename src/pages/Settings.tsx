@@ -266,16 +266,12 @@ const Settings = () => {
       >
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         
-        <Tabs defaultValue="appearance" className="w-full">
+        <Tabs defaultValue="preferences" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="display">Display</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="data">Data Management</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
             <TabsTrigger value="danger">Danger Zone</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="appearance" className="space-y-4">
+          <TabsContent value="preferences" className="space-y-4">
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -356,9 +352,7 @@ const Settings = () => {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="display" className="space-y-4">
+
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -427,9 +421,6 @@ const Settings = () => {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="privacy" className="space-y-4">
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -488,9 +479,6 @@ const Settings = () => {
                 </Button>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="data" className="space-y-4">
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
