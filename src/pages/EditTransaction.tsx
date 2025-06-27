@@ -71,7 +71,7 @@ const EditTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full px-1 space-y-4"
+        className="w-full px-1 space-y-4 dark:bg-black dark:text-white min-h-screen"
       >
 
         {rawMessage && (
