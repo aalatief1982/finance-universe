@@ -68,7 +68,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     }
   }, [text]);
 
-const handleSubmit = (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (!text.trim()) {
@@ -102,7 +102,7 @@ const handleSubmit = (e: React.FormEvent) => {
       confidence,
       origin,
       parsed
-    } = parseAndInferTransaction(text, senderHint);
+    } = await parseAndInferTransaction(text, senderHint);
 
     console.log("[SmartPaste] Parsed result:", parsed);
     console.log("[SmartPaste] Confidence Breakdown:", {
@@ -233,7 +233,7 @@ const handleSubmit = (e: React.FormEvent) => {
               transaction={txn}
               isSmartMatch={true}
               onAddTransaction={handleAddTransaction}
-              origin="structure"
+              origin={matchOrigin ?? undefined}
             />
           ))}
         </div>
