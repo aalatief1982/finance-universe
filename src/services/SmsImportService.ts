@@ -1,6 +1,6 @@
 import { SmsReaderService, SmsEntry } from './SmsReaderService';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
-import { getLastSmsImportDate, getSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
+import { getSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
 
 export class SmsImportService {
   static async checkForNewMessages(navigate: (path: string, options?: any) => void): Promise<void> {
@@ -8,17 +8,29 @@ export class SmsImportService {
       const senders = getSelectedSmsSenders();
       if (senders.length === 0) return;
 
-      const startDateStr = getLastSmsImportDate();
-      const startDate = startDateStr ? new Date(startDateStr) : undefined;
       const senderMap = getSmsSenderImportMap();
+
+      // Determine the earliest date we need to scan from based on the
+      // per-sender import map. Any sender without a stored date defaults to
+      // six months ago. We then use the earliest of these dates when querying
+      // the device to reduce the search range.
+      const defaultStart = new Date();
+      defaultStart.setMonth(defaultStart.getMonth() - 6);
+      const senderDates = senders.map(s =>
+        senderMap[s] ? new Date(senderMap[s]) : defaultStart
+      );
+      const startDate =
+        senderDates.length > 0
+          ? new Date(Math.min(...senderDates.map(d => d.getTime())))
+          : defaultStart;
 
       const messages: SmsEntry[] = await SmsReaderService.readSmsMessages({ startDate, senders });
       if (!messages || messages.length === 0) return;
 
       const filteredMessages = messages.filter(msg => {
         const lastForSender = senderMap[msg.sender];
-        if (!lastForSender) return true;
-        return new Date(msg.date).getTime() > new Date(lastForSender).getTime();
+        const senderDate = lastForSender ? new Date(lastForSender) : defaultStart;
+        return new Date(msg.date).getTime() > senderDate.getTime();
       });
 
       if (filteredMessages.length === 0) return;
