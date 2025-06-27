@@ -35,7 +35,7 @@ const AddTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full px-1"
+        className="w-full px-1 dark:bg-black dark:text-white min-h-screen"
       >
 
         <Card className="w-full">
