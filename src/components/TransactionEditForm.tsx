@@ -881,7 +881,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <Button
           type="submit"
           className={cn(
-            'bg-primary text-white w-full rounded-md',
+            'bg-primary text-black w-full rounded-md',
             compact ? 'py-2' : 'py-3'
           )}
         >
