@@ -159,7 +159,7 @@ const Analytics: React.FC = () => {
 
   return (
     <Layout withPadding={false} showBack fullWidth>
-      <div className="px-1">
+      <div className="container px-1">
         <PageHeader title={null} />
 
         <div className="sticky top-[var(--header-height)] z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 -mt-[7px] space-y-2">
@@ -173,14 +173,14 @@ const Analytics: React.FC = () => {
               <ToggleGroupItem
                 key={r}
                 value={r}
-                className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+                className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
               >
                 {r.charAt(0).toUpperCase() + r.slice(1)}
               </ToggleGroupItem>
             ))}
             <ToggleGroupItem
               value="custom"
-              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
               Custom
             </ToggleGroupItem>

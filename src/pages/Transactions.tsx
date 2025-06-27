@@ -100,6 +100,7 @@ const Transactions = () => {
   
   return (
     <Layout withPadding={false} showBack fullWidth>
+      <div className="container px-1">
       <PageHeader title={null} />
 
 
@@ -115,14 +116,14 @@ const Transactions = () => {
             <ToggleGroupItem
               key={r}
               value={r}
-              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
               {r.charAt(0).toUpperCase() + r.slice(1)}
             </ToggleGroupItem>
           ))}
           <ToggleGroupItem
             value="custom"
-            className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+            className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
           >
             Custom
           </ToggleGroupItem>
@@ -145,7 +146,7 @@ const Transactions = () => {
             <ToggleGroupItem
               key={f}
               value={f}
-              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </ToggleGroupItem>
@@ -172,6 +173,8 @@ const Transactions = () => {
         </div>
       </div>
       
+      </div>
+
       <EditTransactionDialog
         isOpen={isEditingExpense}
         onOpenChange={setIsEditingExpense}
