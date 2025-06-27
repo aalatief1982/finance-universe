@@ -1,6 +1,13 @@
 
 import React from 'react';
 import { Filter } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface TransactionFiltersProps {
   activeTab: string;
@@ -34,15 +41,16 @@ const TransactionFilters = ({
       </div>
       
       <div className="flex items-center space-x-1">
-        <select 
-          className="text-sm border rounded-md px-2 py-1"
-          value={period}
-          onChange={(e) => setPeriod(e.target.value)}
-        >
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-          <option value="year">This Year</option>
-        </select>
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="text-sm px-2 py-1 dark:bg-white dark:text-black">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="week">This Week</SelectItem>
+            <SelectItem value="month">This Month</SelectItem>
+            <SelectItem value="year">This Year</SelectItem>
+          </SelectContent>
+        </Select>
         <button className="p-1 rounded-md bg-gray-100">
           <Filter size={16} />
         </button>

@@ -3,6 +3,7 @@ import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
 import { Calendar, ChevronRight, Search, AlertTriangle, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface UserData {
   name?: string;
@@ -138,10 +139,10 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
       
         <div className="relative mb-4">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search SMS Contacts" 
-            className="w-full p-2 pl-8 border rounded-lg"
+          <Input
+            type="text"
+            placeholder="Search SMS Contacts"
+            className="pl-8 dark:bg-white dark:text-black"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

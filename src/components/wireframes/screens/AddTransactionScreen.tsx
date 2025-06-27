@@ -3,6 +3,14 @@ import React, { useState } from 'react';
 import WireframeContainer from '../WireframeContainer';
 import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { X, ArrowDown, ArrowUp, Calendar, Tag, CreditCard, Receipt } from 'lucide-react';
 
 interface AddTransactionScreenProps {
@@ -89,10 +97,10 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
           <label className="block text-gray-700 mb-1">Amount</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-            <input 
-              type="text" 
-              placeholder="0.00" 
-              className={`w-full p-2 pl-8 border rounded-lg ${errors.amount ? 'border-red-500' : ''}`}
+            <Input
+              type="text"
+              placeholder="0.00"
+              className={`pl-8 ${errors.amount ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
@@ -104,16 +112,18 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
           <label className="block text-gray-700 mb-1">Category</label>
           <div className="relative">
             <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
-            <select 
-              className={`w-full p-2 pl-8 border rounded-lg appearance-none ${errors.category ? 'border-red-500' : ''}`}
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              <option value="">Select a category</option>
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className={`pl-8 ${errors.category ? 'border-red-500' : ''} dark:bg-white dark:text-black`}>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map(cat => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
         </div>
@@ -122,9 +132,9 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
           <label className="block text-gray-700 mb-1">Date</label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
-            <input 
-              type="date" 
-              className={`w-full p-2 pl-8 border rounded-lg ${errors.date ? 'border-red-500' : ''}`}
+            <Input
+              type="date"
+              className={`pl-8 ${errors.date ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />

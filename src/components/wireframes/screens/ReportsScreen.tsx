@@ -4,6 +4,13 @@ import WireframeHeader from '../WireframeHeader';
 import WireframeButton from '../WireframeButton';
 import { useTransactions } from '@/context/TransactionContext';
 import { Calendar, PieChart, BarChart, Download } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ReportsScreenProps {
   onExportReport?: () => void;
@@ -60,15 +67,16 @@ const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
           </div>
           
           <div className="flex items-center space-x-1">
-            <select 
-              className="text-sm border rounded-md px-2 py-1"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value)}
-            >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </select>
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="text-sm px-2 py-1 dark:bg-white dark:text-black">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         

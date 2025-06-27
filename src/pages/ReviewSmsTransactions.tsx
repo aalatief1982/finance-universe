@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
@@ -166,31 +174,79 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
         <Card key={index} className="p-[var(--card-padding)] mb-4">
           <p className="mb-2 text-sm text-gray-500">{txn.rawMessage}</p>
           <div className="grid grid-cols-2 gap-2">
-            <input value={txn.vendor} onChange={e => handleFieldChange(index, 'vendor', e.target.value)} className="border rounded p-2" />
-            <input value={txn.title} readOnly className="border rounded p-2 text-gray-600 bg-gray-50" />
-            <input value={txn.amount || ''} onChange={e => handleFieldChange(index, 'amount', e.target.value)} className="border rounded p-2" />
-            <input value={txn.currency || ''} onChange={e => handleFieldChange(index, 'currency', e.target.value)} className="border rounded p-2" />
-            <input type="date" value={txn.date?.split('T')[0] || ''} onChange={e => handleFieldChange(index, 'date', e.target.value)} className="border rounded p-2" />
-            <select value={txn.category} onChange={e => handleFieldChange(index, 'category', e.target.value)} className="border rounded p-2">
-              {getCategoryHierarchy().filter(c => c.type === txn.type).map(c => (
-                <option key={c.id} value={c.name}>{c.name}</option>
-              ))}
-            </select>
-            <select value={txn.subcategory} onChange={e => handleFieldChange(index, 'subcategory', e.target.value)} className="border rounded p-2">
-              {(getCategoryHierarchy().find(
-					c => c.name === txn.category && c.type === txn.type
-				  )?.subcategories || []).map(sub => (
-					<option key={sub.id} value={sub.name}>
-					  {sub.name}
-					</option>
-				  ))}
-            </select>
-            <input value={txn.fromAccount || ''} onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)} className="border rounded p-2" />
-            <select value={txn.type} onChange={e => handleFieldChange(index, 'type', e.target.value)} className="border rounded p-2">
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-              <option value="transfer">Transfer</option>
-            </select>
+            <Input
+              value={txn.vendor}
+              onChange={e => handleFieldChange(index, 'vendor', e.target.value)}
+              className="p-2 dark:bg-white dark:text-black"
+            />
+            <Input
+              value={txn.title}
+              readOnly
+              className="p-2 text-gray-600 bg-gray-50 dark:bg-white dark:text-black"
+            />
+            <Input
+              value={txn.amount || ''}
+              onChange={e => handleFieldChange(index, 'amount', e.target.value)}
+              className="p-2 dark:bg-white dark:text-black"
+            />
+            <Input
+              value={txn.currency || ''}
+              onChange={e => handleFieldChange(index, 'currency', e.target.value)}
+              className="p-2 dark:bg-white dark:text-black"
+            />
+            <Input
+              type="date"
+              value={txn.date?.split('T')[0] || ''}
+              onChange={e => handleFieldChange(index, 'date', e.target.value)}
+              className="p-2 dark:bg-white dark:text-black"
+            />
+            <Select
+              value={txn.category}
+              onValueChange={value => handleFieldChange(index, 'category', value)}
+            >
+              <SelectTrigger className="p-2 dark:bg-white dark:text-black">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {getCategoryHierarchy().filter(c => c.type === txn.type).map(c => (
+                  <SelectItem key={c.id} value={c.name}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={txn.subcategory}
+              onValueChange={value => handleFieldChange(index, 'subcategory', value)}
+            >
+              <SelectTrigger className="p-2 dark:bg-white dark:text-black">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(getCategoryHierarchy().find(
+                  c => c.name === txn.category && c.type === txn.type
+                )?.subcategories || []).map(sub => (
+                  <SelectItem key={sub.id} value={sub.name}>
+                    {sub.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              value={txn.fromAccount || ''}
+              onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)}
+              className="p-2 dark:bg-white dark:text-black"
+            />
+            <Select value={txn.type} onValueChange={value => handleFieldChange(index, 'type', value)}>
+              <SelectTrigger className="p-2 dark:bg-white dark:text-black">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="expense">Expense</SelectItem>
+                <SelectItem value="income">Income</SelectItem>
+                <SelectItem value="transfer">Transfer</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </Card>
       ))}
