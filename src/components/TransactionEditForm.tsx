@@ -370,7 +370,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const rowClass = cn('flex items-center', compact ? 'gap-1' : 'gap-2');
   const labelClass = cn(
     compact ? 'w-24 md:w-28' : 'w-32',
-    'text-sm font-semibold text-gray-700 dark:text-white dark:bg-black'
+    'text-sm font-semibold text-gray-700 dark:text-white bg-card'
   );
   const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
   const darkFieldClass =
