@@ -28,10 +28,12 @@ interface TransactionEditFormProps {
   showNotes?: boolean;
 }
 
-function getDrivenFieldStyle(field: keyof Transaction, drivenFields: Partial<Record<keyof Transaction, boolean>>) {
-  return drivenFields[field]
-    ? { border: '2px solid #4caf50', backgroundColor: '#f0fff4' }
-    : {};
+
+function isDriven(
+  field: keyof Transaction,
+  drivenFields: Partial<Record<keyof Transaction, boolean>>
+) {
+  return !!drivenFields[field]
 }
 
 /* export function generateDefaultTitle(txn: Transaction): string {
@@ -370,7 +372,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const rowClass = cn('flex items-center', compact ? 'gap-1' : 'gap-2');
   const labelClass = cn(
     compact ? 'w-24 md:w-28' : 'w-32',
-    'text-sm font-semibold text-gray-700 dark:text-white dark:bg-black'
+    'text-sm font-semibold text-gray-700 dark:text-white dark:bg-transparent'
   );
   const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
   const darkFieldClass =
@@ -397,7 +399,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
               darkFieldClass
             )}
-            style={getDrivenFieldStyle('type', drivenFields)}
+            isAutoFilled={isDriven('type', drivenFields)}
           >
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
@@ -419,7 +421,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             setTitleManuallyEdited(true);
             handleChange('title', e.target.value);
           }}
-          style={getDrivenFieldStyle('title', drivenFields)}
+          isAutoFilled={isDriven('title', drivenFields)}
           placeholder="Transaction title"
           required
           className={cn(
@@ -447,7 +449,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass
               )}
-              style={getDrivenFieldStyle('currency', drivenFields)}
+              isAutoFilled={isDriven('currency', drivenFields)}
             >
               <SelectValue placeholder="Select currency" />
             </SelectTrigger>
@@ -703,12 +705,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <label className={labelClass}>Amount*</label>
 
         <div className="flex w-full items-center gap-1">
-          <Input
-            type="number"
-            step="0.01"
-            value={editedTransaction.amount}
-            style={getDrivenFieldStyle('amount', drivenFields)}
-            onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
+            <Input
+              type="number"
+              step="0.01"
+              value={editedTransaction.amount}
+              isAutoFilled={isDriven('amount', drivenFields)}
+              onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
             placeholder="0.00"
             required
           className={cn(
@@ -734,11 +736,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <label className={labelClass}>From Account*</label>
 
         <div className="flex w-full items-center gap-1">
-          <Input
-            list="accounts-list"
-            value={editedTransaction.fromAccount || ''}
-            onChange={(e) => handleChange('fromAccount', e.target.value)}
-            style={getDrivenFieldStyle('fromAccount', drivenFields)}
+            <Input
+              list="accounts-list"
+              value={editedTransaction.fromAccount || ''}
+              onChange={(e) => handleChange('fromAccount', e.target.value)}
+              isAutoFilled={isDriven('fromAccount', drivenFields)}
             placeholder="Source account"
             required
             className={cn(
@@ -768,7 +770,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               list="accounts-list"
               value={editedTransaction.toAccount || ''}
               onChange={(e) => handleChange('toAccount', e.target.value)}
-              style={getDrivenFieldStyle('toAccount', drivenFields)}
+              isAutoFilled={isDriven('toAccount', drivenFields)}
               placeholder="Destination account"
               required
               className={cn(
@@ -801,7 +803,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass
               )}
-              style={getDrivenFieldStyle('category', drivenFields)}
+              isAutoFilled={isDriven('category', drivenFields)}
             >
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -842,7 +844,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass
               )}
-              style={getDrivenFieldStyle('subcategory', drivenFields)}
+              isAutoFilled={isDriven('subcategory', drivenFields)}
             >
               <SelectValue placeholder="Select subcategory" />
             </SelectTrigger>
@@ -902,7 +904,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <Input
             list="vendors-list"
             value={editedTransaction.vendor || ''}
-            style={getDrivenFieldStyle('vendor', drivenFields)}
+            isAutoFilled={isDriven('vendor', drivenFields)}
             onChange={(e) => handleChange('vendor', e.target.value)}
             placeholder="e.g., Netflix"
             className={cn(
@@ -931,7 +933,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           type="date"
           value={editedTransaction.date || ''}
           onChange={(e) => handleChange('date', e.target.value)}
-          style={getDrivenFieldStyle('date', drivenFields)}
+          isAutoFilled={isDriven('date', drivenFields)}
           required
           className={cn(
             'w-full text-sm',
@@ -954,6 +956,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           }}
           placeholder="Enter a detailed description..."
           rows={2}
+          isAutoFilled={isDriven('description', drivenFields)}
           className={cn(
             'w-full text-sm',
             inputPadding,
@@ -973,6 +976,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onChange={(e) => handleChange('notes', e.target.value)}
             placeholder="Additional notes..."
             rows={2}
+            isAutoFilled={isDriven('notes', drivenFields)}
             className={cn(
               'w-full text-sm',
               inputPadding,
