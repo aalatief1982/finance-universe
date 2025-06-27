@@ -70,6 +70,15 @@ This project is built with .
 
 Simply open [Lovable](https://lovable.dev/projects/44f11ecc-0e77-4a7d-a302-6102d5d50c2b) and click on Share -> Publish.
 
+## Environment Variables
+
+The app reads configuration from Vite environment variables. The newly added `VITE_CLOUD_FUNCTIONS_BASE_URL` controls where the Firebase Cloud Functions requests are sent.
+
+- **Production URL:** `https://us-central1-xpensia-505ac.cloudfunctions.net`
+- **Local emulator URL:** `http://localhost:5001/xpensia-505ac/us-central1`
+
+Define this variable in your `.env` file when running locally or configure it in your hosting environment.
+
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)

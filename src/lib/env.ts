@@ -39,3 +39,7 @@ export const ENABLE_DEMO_MODE = getEnvironmentVariable('ENABLE_DEMO_MODE', 'fals
 // Configuration options
 export const DEFAULT_CURRENCY = getEnvironmentVariable('DEFAULT_CURRENCY', 'USD');
 export const APP_VERSION = getEnvironmentVariable('APP_VERSION', '1.0.0');
+export const CLOUD_FUNCTIONS_BASE_URL = getEnvironmentVariable(
+  'CLOUD_FUNCTIONS_BASE_URL',
+  'https://us-central1-xpensia-505ac.cloudfunctions.net'
+);
