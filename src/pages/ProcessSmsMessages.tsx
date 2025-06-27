@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
-import { setSelectedSmsSenders, getLastSmsImportDate, getSmsSenderImportMap } from '@/utils/storage-utils';
+import { setSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
 import Layout from '@/components/Layout';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
@@ -84,11 +84,16 @@ const handleReadSms = async () => {
     const keywordObjects = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
     const keywords = keywordObjects.map(obj => obj.keyword.toLowerCase());
 
-    const last = getLastSmsImportDate();
-    const startDate = last ? new Date(last) : new Date(new Date().setMonth(new Date().getMonth() - 6));
+    // Determine start dates for the selected senders based on the
+    // per-sender import map. If a sender has no entry, default to six
+    // months ago. We then use the earliest of those dates when reading
+    // from the device to minimize the query range.
     const senderMap = getSmsSenderImportMap();
+    const defaultStart = new Date(new Date().setMonth(new Date().getMonth() - 6));
+    const senderDates = selectedSenders.map(s => senderMap[s] ? new Date(senderMap[s]) : defaultStart);
+    const startDate = senderDates.length > 0 ? new Date(Math.min(...senderDates.map(d => d.getTime()))) : defaultStart;
 
-    const smsMessages = await SmsReaderService.readSmsMessages({ startDate });
+    const smsMessages = await SmsReaderService.readSmsMessages({ startDate, senders: selectedSenders });
 
     const validMessages: ProcessedSmsEntry[] = [];
     const invalidMessages: ProcessedSmsEntry[] = [];
@@ -98,7 +103,7 @@ const handleReadSms = async () => {
         if (!msg || !msg.message) return null;
 
         const lastForSender = senderMap[msg.sender];
-        const senderDate = lastForSender ? new Date(lastForSender) : startDate;
+        const senderDate = lastForSender ? new Date(lastForSender) : defaultStart;
         if (new Date(msg.date).getTime() <= senderDate.getTime()) return null;
 
         const lower = msg.message.toLowerCase();
