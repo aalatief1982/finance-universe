@@ -98,7 +98,7 @@ const ReviewSmsTransactions: React.FC = () => {
 
             title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub }),
             sender: msg.sender,
-            alwaysApply: false
+            alwaysApply: false,
 
 
            
