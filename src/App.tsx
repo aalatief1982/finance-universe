@@ -15,6 +15,7 @@ import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
+import CustomParsingRules from '@/pages/CustomParsingRules';
 import ProcessVendors from '@/pages/sms/ProcessVendors';
 import VendorCategorization from '@/pages/sms/VendorCategorization';
 import VendorMapping from '@/pages/VendorMapping';
@@ -124,7 +125,7 @@ function AppWrapper() {
                 title: parsed?.description || `SMS from ${sender}`,
                 amount: parsed?.amount ?? 0,
                 category: parsed?.category || 'Uncategorized',
-                type: parsed?.amount && parsed.amount < 0 ? 'expense' : 'income',
+                type: parsed?.type || (parsed?.amount && parsed.amount < 0 ? 'expense' : 'income'),
                 date: parsed?.date
                   ? parsed.date.toISOString().split('T')[0]
                   : new Date().toISOString().split('T')[0],
@@ -213,6 +214,7 @@ function AppWrapper() {
       <Route path="/train-model" element={<TrainModel />} />
       <Route path="/build-template" element={<BuildTemplate />} />
       <Route path="/keyword-bank" element={<KeywordBankManager />} />
+      <Route path="/custom-parsing-rules" element={<CustomParsingRules />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/process-sms" element={<ProcessSmsMessages />} />
       <Route path="/sms/process-vendors" element={<ProcessVendors />} />
