@@ -373,7 +373,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     'text-sm font-semibold text-gray-700'
   );
   const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
-  const darkFieldClass = 'dark:bg-white dark:text-black dark:border-gray-300';
+  const darkFieldClass =
+    'dark:bg-zinc-900 dark:text-white dark:border-gray-600 dark:placeholder-gray-400';
   const formClass = cn(
     'bg-white p-4 rounded-md shadow-sm',
     compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28'
@@ -393,7 +394,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             className={cn(
               'w-full text-sm',
               inputPadding,
-              'rounded-md border-gray-300 focus:ring-primary'
+              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+              darkFieldClass
             )}
             style={getDrivenFieldStyle('type', drivenFields)}
           >
@@ -423,7 +425,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           className={cn(
             'w-full text-sm',
             inputPadding,
-            'rounded-md border-gray-300 focus:ring-primary',
+            'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             darkFieldClass
           )}
         />
@@ -442,7 +444,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               className={cn(
                 'w-full text-sm',
                 inputPadding,
-                'rounded-md border-gray-300 focus:ring-primary',
+                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass
               )}
               style={getDrivenFieldStyle('currency', drivenFields)}
@@ -547,7 +549,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   setNewCategory((prev) => ({ ...prev, type: val as TransactionType }))
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className={cn('w-full', darkFieldClass)}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -636,7 +638,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             <div>
               <label className="mb-1 block text-sm font-medium">Type*</label>
               <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType }))}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className={cn('w-full', darkFieldClass)}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -710,7 +712,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             placeholder="0.00"
             required
           className={cn(
-            'w-full text-sm rounded-md border-gray-300 focus:ring-primary',
+            'w-full text-sm rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             inputPadding
           ,
             darkFieldClass
@@ -742,7 +744,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             className={cn(
               'w-full text-sm',
               inputPadding,
-              'rounded-md border-gray-300 focus:ring-primary',
+              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
               darkFieldClass
             )}
           />
@@ -772,7 +774,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               className={cn(
                 'w-full text-sm',
                 inputPadding,
-                'rounded-md border-gray-300 focus:ring-primary',
+                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass
               )}
             />
@@ -793,7 +795,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('category', value)}
           >
             <SelectTrigger
-              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                darkFieldClass
+              )}
               style={getDrivenFieldStyle('category', drivenFields)}
             >
               <SelectValue placeholder="Select category" />
@@ -829,7 +836,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('subcategory', value)}
           >
             <SelectTrigger
-              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                darkFieldClass
+              )}
               style={getDrivenFieldStyle('subcategory', drivenFields)}
             >
               <SelectValue placeholder="Select subcategory" />
@@ -857,7 +869,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             value={editedTransaction.person || 'none'}
             onValueChange={(value) => handleChange('person', value)}
           >
-            <SelectTrigger className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}>
+            <SelectTrigger
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                darkFieldClass
+              )}
+            >
               <SelectValue placeholder="Select person" />
             </SelectTrigger>
             <SelectContent>
@@ -889,7 +908,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             className={cn(
               'w-full text-sm',
               inputPadding,
-              'rounded-md border-gray-300 focus:ring-primary',
+              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
               darkFieldClass
             )}
           />
@@ -917,7 +936,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           className={cn(
             'w-full text-sm',
             inputPadding,
-            'rounded-md border-gray-300 focus:ring-primary',
+            'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             darkFieldClass
           )}
         />
@@ -938,7 +957,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           className={cn(
             'w-full text-sm',
             inputPadding,
-            'rounded-md border-gray-300 focus:ring-primary',
+            'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             darkFieldClass
           )}
         />
@@ -957,7 +976,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             className={cn(
               'w-full text-sm',
               inputPadding,
-              'rounded-md border-gray-300 focus:ring-primary',
+              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
               darkFieldClass
             )}
           />
