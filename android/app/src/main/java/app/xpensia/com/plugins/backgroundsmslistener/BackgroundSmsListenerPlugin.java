@@ -41,7 +41,7 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     private static final String PENDING_TAG = "PENDING_SMS_DELIVERY";
     private static final String INIT_TAG = "PLUGIN_INIT_LOGS";
     private static final String PREFS_NAME = "BackgroundSmsPrefs";
-    private static final String PREF_KEY = "pendingMessages";
+    private static final String PREF_KEY = "newIncomingBuffer";
     private static final Object PREF_LOCK = new Object();
 
     private static BackgroundSmsListenerPlugin instance;
