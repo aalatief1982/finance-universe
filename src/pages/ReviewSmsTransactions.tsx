@@ -177,34 +177,34 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
             <Input
               value={txn.vendor}
               onChange={e => handleFieldChange(index, 'vendor', e.target.value)}
-              className="p-2 dark:bg-white dark:text-black"
+              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
             />
             <Input
               value={txn.title}
               readOnly
-              className="p-2 text-gray-600 bg-gray-50 dark:bg-white dark:text-black"
+              className="p-2 text-gray-600 bg-gray-50 dark:bg-black dark:text-white dark:border-zinc-700"
             />
             <Input
               value={txn.amount || ''}
               onChange={e => handleFieldChange(index, 'amount', e.target.value)}
-              className="p-2 dark:bg-white dark:text-black"
+              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
             />
             <Input
               value={txn.currency || ''}
               onChange={e => handleFieldChange(index, 'currency', e.target.value)}
-              className="p-2 dark:bg-white dark:text-black"
+              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
             />
             <Input
               type="date"
               value={txn.date?.split('T')[0] || ''}
               onChange={e => handleFieldChange(index, 'date', e.target.value)}
-              className="p-2 dark:bg-white dark:text-black"
+              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
             />
             <Select
               value={txn.category}
               onValueChange={value => handleFieldChange(index, 'category', value)}
             >
-              <SelectTrigger className="p-2 dark:bg-white dark:text-black">
+              <SelectTrigger className="p-2 dark:bg-black dark:text-white dark:border-zinc-700">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -219,7 +219,7 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
               value={txn.subcategory}
               onValueChange={value => handleFieldChange(index, 'subcategory', value)}
             >
-              <SelectTrigger className="p-2 dark:bg-white dark:text-black">
+              <SelectTrigger className="p-2 dark:bg-black dark:text-white dark:border-zinc-700">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -235,10 +235,10 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
             <Input
               value={txn.fromAccount || ''}
               onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)}
-              className="p-2 dark:bg-white dark:text-black"
+              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
             />
             <Select value={txn.type} onValueChange={value => handleFieldChange(index, 'type', value)}>
-              <SelectTrigger className="p-2 dark:bg-white dark:text-black">
+              <SelectTrigger className="p-2 dark:bg-black dark:text-white dark:border-zinc-700">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
