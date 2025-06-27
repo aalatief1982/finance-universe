@@ -1,5 +1,6 @@
 import { getAuth } from 'firebase/auth';
 import { firebaseApp } from '@/firebase';
+import { CLOUD_FUNCTIONS_BASE_URL } from '@/lib/env';
 
 export async function classifySmsViaCloud(text: string) {
   const auth = getAuth(firebaseApp);
@@ -8,7 +9,7 @@ export async function classifySmsViaCloud(text: string) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
   try {
-    const res = await fetch('/classifySMS', {
+    const res = await fetch(`${CLOUD_FUNCTIONS_BASE_URL}/classifySMS`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
