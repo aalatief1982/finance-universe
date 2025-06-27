@@ -22,6 +22,17 @@ import { setLastSmsImportDate, updateSmsSenderImportDates } from '@/utils/storag
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { TransactionType } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface DraftTransaction {
   id?: string;
@@ -35,6 +46,7 @@ interface DraftTransaction {
   fromAccount?: string;
   type?: string;
   rawMessage: string;
+  confidence: number;
 }
 
 const ReviewSmsTransactions: React.FC = () => {
@@ -46,6 +58,9 @@ const ReviewSmsTransactions: React.FC = () => {
   const messages: any[] = location.state?.messages || [];
   const vendorMap: Record<string, string> = location.state?.vendorMap || {};
   const keywordMap: any[] = location.state?.keywordMap || [];
+
+  const allHighConfidence =
+    transactions.length > 0 && transactions.every(t => t.confidence >= 0.9);
 
   useEffect(() => {
     const parseAll = async () => {
@@ -66,6 +81,7 @@ const ReviewSmsTransactions: React.FC = () => {
             category: cat,
             subcategory: sub,
             rawMessage,
+            confidence: result.confidence,
             title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub })
           };
         })
@@ -292,6 +308,34 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
           </div>
         </Card>
       ))}
+
+      {allHighConfidence && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button className="w-full mt-4">Confirm All</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Confirm {transactions.length} Transactions
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                <ul className="list-disc list-inside space-y-1 max-h-40 overflow-y-auto mt-2">
+                  {transactions.map((t, i) => (
+                    <li key={i}>
+                      {(t.title || t.vendor) + ' - ' + (t.amount || '') + ' ' + (t.currency || '')}
+                    </li>
+                  ))}
+                </ul>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleSave}>Confirm</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       <Button className="w-full mt-4" onClick={handleSave}>
         Save All
