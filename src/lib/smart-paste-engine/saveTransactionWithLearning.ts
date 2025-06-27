@@ -14,6 +14,8 @@ interface SaveOptions {
   learnFromTransaction: (msg: string, txn: Transaction, hint: string) => void;
   navigateBack: () => void;
   silent?: boolean;
+  showPatternToast?: boolean;
+  combineToasts?: boolean;
 }
 
 export function saveTransactionWithLearning(
@@ -29,6 +31,8 @@ export function saveTransactionWithLearning(
     learnFromTransaction,
     navigateBack,
     silent = false,
+    showPatternToast = true,
+    combineToasts = false,
   } = options;
 
   const newTransaction: Transaction = {
@@ -58,7 +62,7 @@ export function saveTransactionWithLearning(
       saveNewTemplate(template, fields, rawMessage);
     }
 
-    if (!silent) {
+    if (!silent && showPatternToast && !combineToasts) {
       toast({
         title: 'Pattern saved for learning',
         description: 'Future similar messages will be recognized automatically',
@@ -112,10 +116,21 @@ export function saveTransactionWithLearning(
   }
 
   if (!silent) {
-    toast({
-      title: isNew ? 'Transaction created' : 'Transaction updated',
-      description: `Your transaction has been successfully ${isNew ? 'created' : 'updated'}`,
-    });
+    if (combineToasts) {
+      let description = `Your transaction has been successfully ${isNew ? 'created' : 'updated'}.`;
+      if (rawMessage && newTransaction.source === 'smart-paste' && showPatternToast) {
+        description += ' Pattern saved for learning.';
+      }
+      toast({
+        title: isNew ? 'Transaction created' : 'Transaction updated',
+        description,
+      });
+    } else {
+      toast({
+        title: isNew ? 'Transaction created' : 'Transaction updated',
+        description: `Your transaction has been successfully ${isNew ? 'created' : 'updated'}`,
+      });
+    }
   }
 
   navigateBack();
