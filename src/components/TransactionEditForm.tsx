@@ -7,10 +7,11 @@ import {
   PEOPLE,
   CURRENCIES,
 } from '@/lib/categories-data';
-import { Plus, Calculator } from 'lucide-react';
+import { Plus, Calculator, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
 import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { addSuggestionsFeedbackEntry } from '@/utils/suggestions-feedback-log';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -113,6 +114,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [newCurrency, setNewCurrency] = useState({ code: '', country: '', rate: '' });
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [calcExpr, setCalcExpr] = useState('');
+
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState<Partial<Record<keyof Transaction, boolean>>>({});
   const [accounts, setAccounts] = useState<Account[]>(() => getStoredAccounts());
   const [addAccountOpen, setAddAccountOpen] = useState(false);
   const [newAccount, setNewAccount] = useState<{ name: string; iban: string }>({ name: '', iban: '' });
@@ -350,6 +354,34 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setCalcExpr('');
   };
 
+  const handleFeedback = (field: keyof Transaction, positive: boolean) => {
+    addSuggestionsFeedbackEntry({
+      field,
+      positive,
+      value: (editedTransaction as any)[field],
+      timestamp: new Date().toISOString(),
+    });
+    setFeedbackGiven(prev => ({ ...prev, [field]: true }));
+  };
+
+  const renderFeedbackIcons = (field: keyof Transaction) => {
+    if (!showFeedback || !isDriven(field, drivenFields) || feedbackGiven[field]) {
+      return null;
+    }
+    return (
+      <span className="ml-1 flex items-center gap-1">
+        <ThumbsUp
+          className="size-4 cursor-pointer text-green-600"
+          onClick={() => handleFeedback(field, true)}
+        />
+        <ThumbsDown
+          className="size-4 cursor-pointer text-red-600"
+          onClick={() => handleFeedback(field, false)}
+        />
+      </span>
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalTransaction = { ...editedTransaction };
@@ -366,6 +398,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     }
 
     onSave(finalTransaction);
+    setShowFeedback(true);
   };
 
 
@@ -406,9 +439,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <SelectContent>
             <SelectItem value="expense">Expense</SelectItem>
             <SelectItem value="income">Income</SelectItem>
-            <SelectItem value="transfer">Transfer</SelectItem>
-          </SelectContent>
+          <SelectItem value="transfer">Transfer</SelectItem>
+        </SelectContent>
         </Select>
+        {renderFeedbackIcons('type')}
       </div>
 
 
@@ -431,6 +465,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             darkFieldClass
           )}
         />
+        {renderFeedbackIcons('title')}
       </div>
 
 
@@ -442,29 +477,30 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             value={editedTransaction.currency || 'SAR'}
             onValueChange={(value) => handleChange('currency', value)}
           >
-            <SelectTrigger
-              className={cn(
-                'w-full text-sm',
-                inputPadding,
-                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                darkFieldClass
-              )}
-              isAutoFilled={isDriven('currency', drivenFields)}
-            >
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencies.map((currency) => (
-                <SelectItem key={currency} value={currency}>
-                  {currency}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button type="button" variant="outline" size="icon" onClick={() => setAddCurrencyOpen(true)}>
-            <Plus className="size-4" />
-          </Button>
-        </div>
+          <SelectTrigger
+            className={cn(
+              'w-full text-sm',
+              inputPadding,
+              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+              darkFieldClass
+            )}
+            isAutoFilled={isDriven('currency', drivenFields)}
+          >
+            <SelectValue placeholder="Select currency" />
+          </SelectTrigger>
+          <SelectContent>
+            {currencies.map((currency) => (
+              <SelectItem key={currency} value={currency}>
+                {currency}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button type="button" variant="outline" size="icon" onClick={() => setAddCurrencyOpen(true)}>
+          <Plus className="size-4" />
+        </Button>
+        {renderFeedbackIcons('currency')}
+      </div>
       </div>
 
       <Dialog open={addCurrencyOpen} onOpenChange={setAddCurrencyOpen}>
@@ -726,8 +762,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             size="icon"
             onClick={() => setCalculatorOpen(true)}
           >
-            <Calculator className="size-4" />
-          </Button>
+          <Calculator className="size-4" />
+        </Button>
+        {renderFeedbackIcons('amount')}
         </div>
       </div>
 
@@ -758,6 +795,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               <option key={acc.name} value={acc.name} />
             ))}
           </datalist>
+          {renderFeedbackIcons('fromAccount')}
         </div>
       </div>
 
@@ -783,6 +821,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
               <Plus className="size-4" />
             </Button>
+            {renderFeedbackIcons('toAccount')}
           </div>
         </div>
       )}
@@ -826,6 +865,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           >
             <Plus className="size-4" />
           </Button>
+          {renderFeedbackIcons('category')}
         </div>
       </div>
 
@@ -855,8 +895,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   {subcategory}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
+          </SelectContent>
+        </Select>
+        {renderFeedbackIcons('subcategory')}
         ) : (
           <div className={cn('flex-1 text-sm text-gray-500', inputPadding)}>N/A</div>
         )}
@@ -893,6 +934,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <Button type="button" variant="outline" size="icon" onClick={() => setAddPersonOpen(true)}>
             <Plus className="size-4" />
           </Button>
+          {renderFeedbackIcons('person')}
         </div>
       </div>
 
@@ -922,6 +964,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               <option key={v} value={v} />
             ))}
           </datalist>
+          {renderFeedbackIcons('vendor')}
         </div>
       </div>
 
@@ -942,6 +985,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             darkFieldClass
           )}
         />
+        {renderFeedbackIcons('date')}
       </div>
 
 
@@ -964,6 +1008,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             darkFieldClass
           )}
         />
+        {renderFeedbackIcons('description')}
       </div>
 
 
@@ -984,6 +1029,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               darkFieldClass
             )}
           />
+          {renderFeedbackIcons('notes')}
         </div>
       )}
 
