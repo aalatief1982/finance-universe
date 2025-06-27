@@ -101,7 +101,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       transaction,
       confidence,
       origin,
-      parsed
+      parsed,
+      fieldConfidences,
+      parsingStatus
     } = await parseAndInferTransaction(text, senderHint);
 
     console.log("[SmartPaste] Parsed result:", parsed);
