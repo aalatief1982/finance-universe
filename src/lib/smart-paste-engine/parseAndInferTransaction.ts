@@ -4,6 +4,7 @@ import { parseSmsMessage } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates } from './templateUtils';
 import { classifySmsViaCloud } from './cloudClassifier';
+import { logParsingFailure } from '@/utils/parsingLogger';
 import {
   getFieldConfidence,
   getTemplateConfidence,
@@ -16,6 +17,8 @@ export interface ParsedTransactionResult {
   confidence: number;
   origin: 'template' | 'structure' | 'ml' | 'fallback';
   parsed: ReturnType<typeof parseSmsMessage>;
+  fieldConfidences: Record<string, number>;
+  parsingStatus: 'success' | 'partial' | 'failed';
 }
 
 /**
@@ -23,7 +26,8 @@ export interface ParsedTransactionResult {
  */
 export async function parseAndInferTransaction(
   rawMessage: string,
-  senderHint?: string
+  senderHint?: string,
+  smsId?: string
 ): Promise<ParsedTransactionResult> {
   const parsed = parseSmsMessage(rawMessage);
 
@@ -54,7 +58,36 @@ export async function parseAndInferTransaction(
   const fieldScore = getFieldConfidence(parsed);
   const templateScore = getTemplateConfidence(matchedTemplates, templates.length);
   const keywordScore = getKeywordConfidence(transaction, keywordBank);
-  const finalConfidence = computeOverallConfidence(fieldScore, templateScore, keywordScore);
+  const finalConfidence = computeOverallConfidence(
+    fieldScore,
+    templateScore,
+    keywordScore
+  );
+
+  const fields = [
+    'amount',
+    'currency',
+    'date',
+    'type',
+    'category',
+    'subcategory',
+    'vendor',
+    'fromAccount',
+  ];
+  const fieldConfidences: Record<string, number> = {};
+  fields.forEach((f) => {
+    if (parsed.directFields?.[f]) fieldConfidences[f] = 1;
+    else if (parsed.inferredFields?.[f]) fieldConfidences[f] = 0.6;
+    else if (parsed.defaultValues?.[f]) fieldConfidences[f] = 0.4;
+    else fieldConfidences[f] = 0;
+  });
+
+  const parsingStatus: ParsedTransactionResult['parsingStatus'] =
+    finalConfidence >= 0.8
+      ? 'success'
+      : finalConfidence >= 0.4
+        ? 'partial'
+        : 'failed';
 
   let origin: ParsedTransactionResult['origin'] = parsed.matched
     ? 'template'
@@ -65,15 +98,31 @@ export async function parseAndInferTransaction(
       const cloud = await classifySmsViaCloud(rawMessage);
       Object.assign(transaction, cloud);
       origin = 'ml';
+      const cloudConfidence = cloud.confidence ?? finalConfidence;
+      const cloudStatus: ParsedTransactionResult['parsingStatus'] =
+        cloudConfidence >= 0.8
+          ? 'success'
+          : cloudConfidence >= 0.4
+            ? 'partial'
+            : 'failed';
+      if (cloudStatus === 'failed' && smsId) {
+        logParsingFailure(smsId);
+      }
       return {
         transaction,
-        confidence: cloud.confidence ?? finalConfidence,
+        confidence: cloudConfidence,
         origin,
         parsed,
+        fieldConfidences,
+        parsingStatus: cloudStatus,
       };
     } catch (err) {
       console.warn('Cloud classifier failed:', err);
     }
+  }
+
+  if (parsingStatus === 'failed' && smsId) {
+    logParsingFailure(smsId);
   }
 
   return {
@@ -81,5 +130,7 @@ export async function parseAndInferTransaction(
     confidence: finalConfidence,
     origin,
     parsed,
+    fieldConfidences,
+    parsingStatus,
   };
 }

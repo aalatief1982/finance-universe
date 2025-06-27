@@ -17,6 +17,7 @@ import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { setLastSmsImportDate, updateSmsSenderImportDates } from '@/utils/storage-utils';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
@@ -46,7 +47,11 @@ interface DraftTransaction {
   fromAccount?: string;
   type?: string;
   rawMessage: string;
-  confidence: number;
+
+  confidence?: number;
+  fieldConfidences?: Record<string, number>;
+  parsingStatus?: 'success' | 'partial' | 'failed';
+
 }
 
 const ReviewSmsTransactions: React.FC = () => {
@@ -67,9 +72,13 @@ const ReviewSmsTransactions: React.FC = () => {
       const parsed = await Promise.all(
         messages.map(async (msg) => {
           const rawMessage = msg.message || msg.rawMessage || "";
-          const result = await parseAndInferTransaction(rawMessage, msg.sender);
-          const txn = result.transaction;
-
+          const result = await parseAndInferTransaction(
+            rawMessage,
+            msg.sender,
+            msg.id
+          );
+          const { transaction: txn, confidence, fieldConfidences, parsingStatus } = result;
+          
           const mappedVendor = vendorMap[txn.vendor] || txn.vendor;
           const kbEntry = keywordMap.find(kb => kb.keyword === mappedVendor);
           const cat = kbEntry?.mappings.find(m => m.field === "category")?.value || txn.category;
@@ -81,8 +90,12 @@ const ReviewSmsTransactions: React.FC = () => {
             category: cat,
             subcategory: sub,
             rawMessage,
-            confidence: result.confidence,
-            title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub })
+
+            title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub }),
+            confidence,
+            fieldConfidences,
+            parsingStatus
+
           };
         })
       );
@@ -211,14 +224,40 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
         <Button onClick={handleSave}>Save All</Button>
       </div>
 
-      {transactions.map((txn, index) => (
-        <Card key={index} className="p-[var(--card-padding)] mb-4">
-          <p className="mb-2 text-sm text-gray-500">{txn.rawMessage}</p>
+      {transactions.map((txn, index) => {
+        const borderColor =
+          txn.parsingStatus === 'success'
+            ? 'border-green-500'
+            : txn.parsingStatus === 'partial'
+              ? 'border-amber-500'
+              : 'border-red-500';
+        const badgeVariant =
+          txn.parsingStatus === 'success'
+            ? 'success'
+            : txn.parsingStatus === 'partial'
+              ? 'warning'
+              : 'destructive';
+        return (
+        <Card key={index} className={`p-[var(--card-padding)] mb-4 border ${borderColor}`}> 
+          <div className="flex justify-between mb-2 items-center">
+            <p className="text-sm text-gray-500 break-words">{txn.rawMessage}</p>
+            {txn.confidence !== undefined && (
+              <Badge variant={badgeVariant} className="shrink-0 ml-2">
+                {Math.round(txn.confidence * 100)}%
+              </Badge>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <Input
               value={txn.vendor}
               onChange={e => handleFieldChange(index, 'vendor', e.target.value)}
-              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
+              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                (txn.fieldConfidences?.vendor ?? 0) >= 0.8
+                  ? 'border-green-500'
+                  : (txn.fieldConfidences?.vendor ?? 0) >= 0.4
+                    ? 'border-amber-500'
+                    : 'border-red-500'
+              }`}
             />
             <Input
               value={txn.title}
@@ -228,24 +267,50 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
             <Input
               value={txn.amount || ''}
               onChange={e => handleFieldChange(index, 'amount', e.target.value)}
-              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
+              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                (txn.fieldConfidences?.amount ?? 0) >= 0.8
+                  ? 'border-green-500'
+                  : (txn.fieldConfidences?.amount ?? 0) >= 0.4
+                    ? 'border-amber-500'
+                    : 'border-red-500'
+              }`}
             />
             <Input
               value={txn.currency || ''}
               onChange={e => handleFieldChange(index, 'currency', e.target.value)}
-              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
+              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                (txn.fieldConfidences?.currency ?? 0) >= 0.8
+                  ? 'border-green-500'
+                  : (txn.fieldConfidences?.currency ?? 0) >= 0.4
+                    ? 'border-amber-500'
+                    : 'border-red-500'
+              }`}
             />
             <Input
               type="date"
               value={txn.date?.split('T')[0] || ''}
               onChange={e => handleFieldChange(index, 'date', e.target.value)}
-              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
+              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                (txn.fieldConfidences?.date ?? 0) >= 0.8
+                  ? 'border-green-500'
+                  : (txn.fieldConfidences?.date ?? 0) >= 0.4
+                    ? 'border-amber-500'
+                    : 'border-red-500'
+              }`}
             />
             <Select
               value={txn.category}
               onValueChange={value => handleFieldChange(index, 'category', value)}
             >
-              <SelectTrigger className="p-2 dark:bg-black dark:text-white dark:border-zinc-700">
+              <SelectTrigger
+                className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                  (txn.fieldConfidences?.category ?? 0) >= 0.8
+                    ? 'border-green-500'
+                    : (txn.fieldConfidences?.category ?? 0) >= 0.4
+                      ? 'border-amber-500'
+                      : 'border-red-500'
+                }`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -262,7 +327,15 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
               value={txn.subcategory}
               onValueChange={value => handleFieldChange(index, 'subcategory', value)}
             >
-              <SelectTrigger className="p-2 dark:bg-black dark:text-white dark:border-zinc-700">
+              <SelectTrigger
+                className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                  (txn.fieldConfidences?.subcategory ?? 0) >= 0.8
+                    ? 'border-green-500'
+                    : (txn.fieldConfidences?.subcategory ?? 0) >= 0.4
+                      ? 'border-amber-500'
+                      : 'border-red-500'
+                }`}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -278,7 +351,13 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
             <Input
               value={txn.fromAccount || ''}
               onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)}
-              className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
+              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                (txn.fieldConfidences?.fromAccount ?? 0) >= 0.8
+                  ? 'border-green-500'
+                  : (txn.fieldConfidences?.fromAccount ?? 0) >= 0.4
+                    ? 'border-amber-500'
+                    : 'border-red-500'
+              }`}
             />
             <ToggleGroup
               type="single"
@@ -286,7 +365,13 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
               onValueChange={val =>
                 val && handleFieldChange(index, 'type', val)
               }
-              className="flex justify-start"
+              className={`flex justify-start ${
+                (txn.fieldConfidences?.type ?? 0) >= 0.8
+                  ? 'border border-green-500'
+                  : (txn.fieldConfidences?.type ?? 0) >= 0.4
+                    ? 'border border-amber-500'
+                    : 'border border-red-500'
+              }`}
             >
               <ToggleGroupItem value="expense">Expense</ToggleGroupItem>
               <ToggleGroupItem value="income">Income</ToggleGroupItem>
