@@ -12,6 +12,7 @@ interface EditTransactionDialogProps {
   onSubmit: (formData: TransactionFormValues) => void;
   onCancel: () => void;
   categories: string[];
+  origin?: 'template' | 'structure' | 'ml' | 'fallback';
 }
 
 const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
@@ -20,7 +21,8 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
   currentTransaction,
   onSubmit,
   onCancel,
-  categories
+  categories,
+  origin
 }) => {
   if (!currentTransaction) return null;
 
@@ -35,8 +37,13 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {/* Reduce top padding for better alignment */}
       <DialogContent className="sm:max-w-md pt-2">
+        {origin === 'ml' && (
+          <p className="text-yellow-600 text-xs mb-2">
+            AI-generated fields – please verify.
+          </p>
+        )}
         <ExpenseForm
-          onSubmit={onSubmit} 
+          onSubmit={onSubmit}
           categories={categories}
           defaultValues={{
             title: currentTransaction.title,

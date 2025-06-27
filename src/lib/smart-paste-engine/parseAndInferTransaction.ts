@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { parseSmsMessage } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates } from './templateUtils';
+import { classifySmsViaCloud } from './cloudClassifier';
 import {
   getFieldConfidence,
   getTemplateConfidence,
@@ -20,10 +21,10 @@ export interface ParsedTransactionResult {
 /**
  * Given a raw message, extract transaction fields and compute confidence
  */
-export function parseAndInferTransaction(
+export async function parseAndInferTransaction(
   rawMessage: string,
   senderHint?: string
-): ParsedTransactionResult {
+): Promise<ParsedTransactionResult> {
   const parsed = parseSmsMessage(rawMessage);
 
   const transaction: Transaction = {
@@ -55,9 +56,25 @@ export function parseAndInferTransaction(
   const keywordScore = getKeywordConfidence(transaction, keywordBank);
   const finalConfidence = computeOverallConfidence(fieldScore, templateScore, keywordScore);
 
-  const origin: ParsedTransactionResult['origin'] = parsed.matched
+  let origin: ParsedTransactionResult['origin'] = parsed.matched
     ? 'template'
     : 'structure';
+
+  if (!parsed.matched || finalConfidence < 0.5) {
+    try {
+      const cloud = await classifySmsViaCloud(rawMessage);
+      Object.assign(transaction, cloud);
+      origin = 'ml';
+      return {
+        transaction,
+        confidence: cloud.confidence ?? finalConfidence,
+        origin,
+        parsed,
+      };
+    } catch (err) {
+      console.warn('Cloud classifier failed:', err);
+    }
+  }
 
   return {
     transaction,

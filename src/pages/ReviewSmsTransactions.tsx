@@ -46,29 +46,35 @@ const ReviewSmsTransactions: React.FC = () => {
   const keywordMap: any[] = location.state?.keywordMap || [];
 
   useEffect(() => {
-    const parsed = messages.map((msg) => {
-      const rawMessage = msg.message || msg.rawMessage || '';
-      const result = parseAndInferTransaction(rawMessage, msg.sender);
-      const txn = result.transaction;
+    const parseAll = async () => {
+      const parsed = await Promise.all(
+        messages.map(async (msg) => {
+          const rawMessage = msg.message || msg.rawMessage || "";
+          const result = await parseAndInferTransaction(rawMessage, msg.sender);
+          const txn = result.transaction;
 
-      // Apply manual overrides from vendor map and keyword bank
-      const mappedVendor = vendorMap[txn.vendor] || txn.vendor;
-      const kbEntry = keywordMap.find(kb => kb.keyword === mappedVendor);
-      const cat = kbEntry?.mappings.find(m => m.field === 'category')?.value || txn.category;
-      const sub = kbEntry?.mappings.find(m => m.field === 'subcategory')?.value || txn.subcategory;
+          const mappedVendor = vendorMap[txn.vendor] || txn.vendor;
+          const kbEntry = keywordMap.find(kb => kb.keyword === mappedVendor);
+          const cat = kbEntry?.mappings.find(m => m.field === "category")?.value || txn.category;
+          const sub = kbEntry?.mappings.find(m => m.field === "subcategory")?.value || txn.subcategory;
 
-      return {
-        ...txn,
-        vendor: mappedVendor,
-        category: cat,
-        subcategory: sub,
-        rawMessage,
-        title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub })
-      };
-    });
+          return {
+            ...txn,
+            vendor: mappedVendor,
+            category: cat,
+            subcategory: sub,
+            rawMessage,
+            title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub })
+          };
+        })
+      );
 
-    setTransactions(parsed);
-  }, []	);
+      setTransactions(parsed);
+    };
+
+    parseAll();
+  }, [] );
+
 
 /*   const handleFieldChange = (index: number, field: keyof DraftTransaction, value: string) => {
     const updated = [...transactions];
