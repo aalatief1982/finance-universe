@@ -11,15 +11,16 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { getCategoryHierarchy } from '@/lib/categories-data';
-import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import PageHeader from '@/components/layout/PageHeader';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useNavigate } from 'react-router-dom';
 import { setLastSmsImportDate, updateSmsSenderImportDates } from '@/utils/storage-utils';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
+import { TransactionType } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 
 interface DraftTransaction {
@@ -186,9 +187,10 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
     setTransactions([]);
   };
 
+  const navigate = useNavigate();
+
   return (
     <Layout showBack>
-      <PageHeader title="Review Details" showBack />
       <div className="flex justify-end mb-4">
         <Button onClick={handleSave}>Save All</Button>
       </div>
@@ -231,11 +233,13 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {getCategoryHierarchy().filter(c => c.type === txn.type).map(c => (
-                  <SelectItem key={c.id} value={c.name}>
-                    {c.name}
-                  </SelectItem>
-                ))}
+                {getCategoryHierarchy()
+                  .filter(c => c.type === txn.type)
+                  .map(c => (
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             <Select
@@ -260,16 +264,31 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
               onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)}
               className="p-2 dark:bg-black dark:text-white dark:border-zinc-700"
             />
-            <Select value={txn.type} onValueChange={value => handleFieldChange(index, 'type', value)}>
-              <SelectTrigger className="p-2 dark:bg-black dark:text-white dark:border-zinc-700">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="expense">Expense</SelectItem>
-                <SelectItem value="income">Income</SelectItem>
-                <SelectItem value="transfer">Transfer</SelectItem>
-              </SelectContent>
-            </Select>
+            <ToggleGroup
+              type="single"
+              value={txn.type}
+              onValueChange={val =>
+                val && handleFieldChange(index, 'type', val)
+              }
+              className="flex justify-start"
+            >
+              <ToggleGroupItem value="expense">Expense</ToggleGroupItem>
+              <ToggleGroupItem value="income">Income</ToggleGroupItem>
+              <ToggleGroupItem value="transfer">Transfer</ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+          <div className="flex justify-end mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                navigate('/edit-transaction', {
+                  state: { transaction: txn, rawMessage: txn.rawMessage },
+                })
+              }
+            >
+              Full Form
+            </Button>
           </div>
         </Card>
       ))}
