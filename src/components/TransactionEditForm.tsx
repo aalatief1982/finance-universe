@@ -373,6 +373,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     'text-sm font-semibold text-gray-700'
   );
   const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
+  const darkFieldClass = 'dark:bg-white dark:text-black dark:border-gray-300';
   const formClass = cn(
     'bg-white p-4 rounded-md shadow-sm',
     compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28'
@@ -419,7 +420,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           style={getDrivenFieldStyle('title', drivenFields)}
           placeholder="Transaction title"
           required
-          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+          className={cn(
+            'w-full text-sm',
+            inputPadding,
+            'rounded-md border-gray-300 focus:ring-primary',
+            darkFieldClass
+          )}
         />
       </div>
 
@@ -433,7 +439,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('currency', value)}
           >
             <SelectTrigger
-              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-gray-300 focus:ring-primary',
+                darkFieldClass
+              )}
               style={getDrivenFieldStyle('currency', drivenFields)}
             >
               <SelectValue placeholder="Select currency" />
@@ -460,15 +471,29 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <div className="space-y-2 py-2">
             <div>
               <label className="mb-1 block text-sm font-medium">Short Name*</label>
-              <Input value={newCurrency.code} onChange={e => setNewCurrency(prev => ({ ...prev, code: e.target.value }))} />
+              <Input
+                value={newCurrency.code}
+                onChange={e => setNewCurrency(prev => ({ ...prev, code: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Country*</label>
-              <Input value={newCurrency.country} onChange={e => setNewCurrency(prev => ({ ...prev, country: e.target.value }))} />
+              <Input
+                value={newCurrency.country}
+                onChange={e => setNewCurrency(prev => ({ ...prev, country: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Conversion Rate</label>
-              <Input type="number" step="0.0001" value={newCurrency.rate} onChange={e => setNewCurrency(prev => ({ ...prev, rate: e.target.value }))} />
+              <Input
+                type="number"
+                step="0.0001"
+                value={newCurrency.rate}
+                onChange={e => setNewCurrency(prev => ({ ...prev, rate: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -486,11 +511,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <div className="space-y-2 py-2">
             <div>
               <label className="mb-1 block text-sm font-medium">Name*</label>
-              <Input value={newAccount.name} onChange={e => setNewAccount(prev => ({ ...prev, name: e.target.value }))} />
+              <Input
+                value={newAccount.name}
+                onChange={e => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">IBAN</label>
-              <Input value={newAccount.iban} onChange={e => setNewAccount(prev => ({ ...prev, iban: e.target.value }))} />
+              <Input
+                value={newAccount.iban}
+                onChange={e => setNewAccount(prev => ({ ...prev, iban: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -531,6 +564,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 onChange={(e) =>
                   setNewCategory((prev) => ({ ...prev, category: e.target.value }))
                 }
+                className={darkFieldClass}
               />
             </div>
             <div>
@@ -540,6 +574,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 onChange={(e) =>
                   setNewCategory((prev) => ({ ...prev, subcategory: e.target.value }))
                 }
+                className={darkFieldClass}
               />
             </div>
           </div>
@@ -562,11 +597,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <div className="space-y-2 py-2">
             <div>
               <label className="mb-1 block text-sm font-medium">Name*</label>
-              <Input value={newPerson.name} onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))} />
+              <Input
+                value={newPerson.name}
+                onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Relation</label>
-              <Input value={newPerson.relation} onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))} />
+              <Input
+                value={newPerson.relation}
+                onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -584,7 +627,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <div className="space-y-2 py-2">
             <div>
               <label className="mb-1 block text-sm font-medium">Vendor Name*</label>
-              <Input value={newVendor.name} onChange={e => setNewVendor(prev => ({ ...prev, name: e.target.value }))} />
+              <Input
+                value={newVendor.name}
+                onChange={e => setNewVendor(prev => ({ ...prev, name: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Type*</label>
@@ -601,11 +648,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Category*</label>
-              <Input value={newVendor.category} onChange={e => setNewVendor(prev => ({ ...prev, category: e.target.value }))} />
+              <Input
+                value={newVendor.category}
+                onChange={e => setNewVendor(prev => ({ ...prev, category: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Subcategory</label>
-              <Input value={newVendor.subcategory} onChange={e => setNewVendor(prev => ({ ...prev, subcategory: e.target.value }))} />
+              <Input
+                value={newVendor.subcategory}
+                onChange={e => setNewVendor(prev => ({ ...prev, subcategory: e.target.value }))}
+                className={darkFieldClass}
+              />
             </div>
           </div>
           <DialogFooter>
@@ -621,7 +676,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             <DialogTitle>Calculator</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
-            <Input readOnly value={calcExpr} />
+            <Input readOnly value={calcExpr} className={darkFieldClass} />
             <div className="grid grid-cols-4 gap-2 text-sm">
               {['7','8','9','/','4','5','6','*','1','2','3','-','0','.','C','+'].map(ch => (
                 <Button key={ch} type="button" variant="secondary" size="sm" onClick={() => {
@@ -654,11 +709,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
             placeholder="0.00"
             required
-            className={cn(
-              'w-full text-sm rounded-md border-gray-300 focus:ring-primary',
-              inputPadding
-            )}
-          />
+          className={cn(
+            'w-full text-sm rounded-md border-gray-300 focus:ring-primary',
+            inputPadding
+          ,
+            darkFieldClass
+          )}
+        />
           <Button
             type="button"
             variant="outline"
@@ -682,7 +739,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             style={getDrivenFieldStyle('fromAccount', drivenFields)}
             placeholder="Source account"
             required
-            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+            className={cn(
+              'w-full text-sm',
+              inputPadding,
+              'rounded-md border-gray-300 focus:ring-primary',
+              darkFieldClass
+            )}
           />
           <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
             <Plus className="size-4" />
@@ -707,7 +769,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               style={getDrivenFieldStyle('toAccount', drivenFields)}
               placeholder="Destination account"
               required
-              className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-gray-300 focus:ring-primary',
+                darkFieldClass
+              )}
             />
             <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
               <Plus className="size-4" />
@@ -819,7 +886,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             style={getDrivenFieldStyle('vendor', drivenFields)}
             onChange={(e) => handleChange('vendor', e.target.value)}
             placeholder="e.g., Netflix"
-            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+            className={cn(
+              'w-full text-sm',
+              inputPadding,
+              'rounded-md border-gray-300 focus:ring-primary',
+              darkFieldClass
+            )}
           />
           <Button type="button" variant="outline" size="icon" onClick={() => setAddVendorOpen(true)}>
             <Plus className="size-4" />
@@ -842,7 +914,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           onChange={(e) => handleChange('date', e.target.value)}
           style={getDrivenFieldStyle('date', drivenFields)}
           required
-          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+          className={cn(
+            'w-full text-sm',
+            inputPadding,
+            'rounded-md border-gray-300 focus:ring-primary',
+            darkFieldClass
+          )}
         />
       </div>
 
@@ -858,7 +935,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           }}
           placeholder="Enter a detailed description..."
           rows={2}
-          className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+          className={cn(
+            'w-full text-sm',
+            inputPadding,
+            'rounded-md border-gray-300 focus:ring-primary',
+            darkFieldClass
+          )}
         />
       </div>
 
@@ -872,7 +954,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onChange={(e) => handleChange('notes', e.target.value)}
             placeholder="Additional notes..."
             rows={2}
-            className={cn('w-full text-sm', inputPadding, 'rounded-md border-gray-300 focus:ring-primary')}
+            className={cn(
+              'w-full text-sm',
+              inputPadding,
+              'rounded-md border-gray-300 focus:ring-primary',
+              darkFieldClass
+            )}
           />
         </div>
       )}
