@@ -431,7 +431,8 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
             </Button>
           </div>
         </Card>
-      ))}
+      );
+      })}
 
       {allHighConfidence && (
         <AlertDialog>
