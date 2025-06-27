@@ -13,6 +13,7 @@ import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine
 import { setSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
 import Layout from '@/components/Layout';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
+import ImportAndMapModal from '@/components/sms/ImportAndMapModal';
 
 interface ProcessedSmsEntry extends SmsEntry {
   matchedKeyword?: string;
@@ -28,6 +29,7 @@ const ProcessSmsMessages: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'matched' | 'skipped'>('all');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => {
     const all = [...messages, ...skippedMessages];
@@ -234,9 +236,14 @@ const handleReadSms = async () => {
             </label>
           ))}
 
-          <Button className="mt-4 w-full" onClick={handleProceed}>
-            Proceed to Vendor Mapping
-          </Button>
+          <div className="flex flex-col gap-2 mt-4">
+            <Button className="w-full" onClick={handleProceed}>
+              Proceed to Vendor Mapping
+            </Button>
+            <Button variant="outline" className="w-full" onClick={() => setMapOpen(true)}>
+              Quick Map &amp; Review
+            </Button>
+          </div>
         </div>
       )}
 
@@ -277,6 +284,23 @@ const handleReadSms = async () => {
           </Accordion>
         ))}
       </div>
+      </div>
+      <ImportAndMapModal
+        open={mapOpen}
+        onOpenChange={setMapOpen}
+        messages={filteredMessages}
+        onComplete={(vendorMap, keywordMap) => {
+          setMapOpen(false);
+          setSelectedSmsSenders(selectedSenders);
+          navigate('/review-sms-transactions', {
+            state: {
+              messages: filteredMessages,
+              vendorMap,
+              keywordMap,
+            },
+          });
+        }}
+      />
       </div>
     </Layout>
   );
