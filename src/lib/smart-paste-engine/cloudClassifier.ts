@@ -1,7 +1,8 @@
 import { getAuth } from 'firebase/auth';
+import { firebaseApp } from '@/firebase';
 
 export async function classifySmsViaCloud(text: string) {
-  const auth = getAuth();
+  const auth = getAuth(firebaseApp);
   const idToken = await auth.currentUser?.getIdToken(true);
 
   const controller = new AbortController();
