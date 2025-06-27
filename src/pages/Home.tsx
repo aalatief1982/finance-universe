@@ -207,7 +207,7 @@ const Home = () => {
 
   return (
     <Layout withPadding={false} fullWidth>
-      <div className="px-1">
+      <div className="container px-1">
         <PageHeader
           title={<AvatarGreeting user={user} />}
         />
@@ -223,14 +223,14 @@ const Home = () => {
               <ToggleGroupItem
                 key={r}
                 value={r}
-                className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+                className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
               >
                 {r.charAt(0).toUpperCase() + r.slice(1)}
               </ToggleGroupItem>
             ))}
             <ToggleGroupItem
               value="custom"
-              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground font-medium"
+              className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
               Custom
             </ToggleGroupItem>

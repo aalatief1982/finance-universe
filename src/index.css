@@ -105,6 +105,11 @@
   @apply bg-card border border-border rounded-lg shadow-sm;
   padding: var(--card-padding);
 }
+
+/* Ensure containers get a dark background and text */
+.container {
+  @apply dark:bg-black dark:text-white;
+}
 }
 
 /* Mobile-specific optimizations */
