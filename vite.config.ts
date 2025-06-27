@@ -13,6 +13,7 @@ export default defineConfig({
     conditions: ['web', 'browser', 'default']
   },
   optimizeDeps: {
+    include: ['firebase/app', 'firebase/auth'],
     esbuildOptions: {
       // Required for Capacitor plugin imports to work
       define: {
