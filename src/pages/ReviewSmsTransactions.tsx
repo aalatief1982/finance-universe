@@ -18,7 +18,7 @@ import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
-import { setLastSmsImportDate } from '@/utils/storage-utils';
+import { setLastSmsImportDate, updateSmsSenderImportDates } from '@/utils/storage-utils';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { useTransactions } from '@/context/TransactionContext';
 
@@ -120,13 +120,13 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 };
 
   const handleSave = () => {
-    const validTransactions: DraftTransaction[] = [];
+    const valid: Array<{ txn: DraftTransaction; idx: number }> = [];
     const skippedTransactions: DraftTransaction[] = [];
 
-    transactions.forEach((txn) => {
+    transactions.forEach((txn, idx) => {
       const title = generateDefaultTitle(txn);
       if (txn.amount && txn.currency && txn.date && txn.category && txn.subcategory && title) {
-        validTransactions.push({ ...txn, title });
+        valid.push({ txn: { ...txn, title }, idx });
       } else {
         skippedTransactions.push(txn);
       }
@@ -140,9 +140,9 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
       });
     }
 
-    if (validTransactions.length === 0) return;
+    if (valid.length === 0) return;
 
-    validTransactions.forEach(txn => {
+    valid.forEach(({ txn }) => {
       const normalizedAmount =
         txn.type === 'expense' ? -Math.abs(parseFloat(txn.amount!)) : Math.abs(parseFloat(txn.amount!));
 
@@ -164,9 +164,21 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
       });
     });
 
+    const senderDates: Record<string, string> = {};
+    valid.forEach(({ idx }) => {
+      const msg = messages[idx];
+      if (msg?.sender) {
+        const existing = senderDates[msg.sender];
+        if (!existing || new Date(msg.date).getTime() > new Date(existing).getTime()) {
+          senderDates[msg.sender] = msg.date;
+        }
+      }
+    });
+    updateSmsSenderImportDates(senderDates);
+
     toast({
       title: 'Saved',
-      description: `${validTransactions.length} transaction(s) saved successfully.`,
+      description: `${valid.length} transaction(s) saved successfully.`,
     });
 
     setLastSmsImportDate(new Date().toISOString());

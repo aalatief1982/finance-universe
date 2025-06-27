@@ -19,6 +19,7 @@ const LOCALE_SETTINGS_STORAGE_KEY = 'xpensia_locale_settings';
 const STRUCTURE_KEY = 'xpensia_structure_templates';
 const SMS_LAST_IMPORT_KEY = 'xpensia_sms_last_import';
 const SMS_SELECTED_SENDERS_KEY = 'xpensia_sms_selected_senders';
+const SMS_SENDER_IMPORT_MAP_KEY = 'xpensia_sms_sender_import_map';
 
 
 // Helper function to safely get data from storage
@@ -441,4 +442,22 @@ export const getSelectedSmsSenders = (): string[] => {
 
 export const setSelectedSmsSenders = (senders: string[]): void => {
   setInStorage(SMS_SELECTED_SENDERS_KEY, senders);
+};
+
+export const getSmsSenderImportMap = (): Record<string, string> => {
+  return getFromStorage<Record<string, string>>(SMS_SENDER_IMPORT_MAP_KEY, {});
+};
+
+export const setSmsSenderImportDate = (sender: string, date: string): void => {
+  const map = getSmsSenderImportMap();
+  map[sender] = date;
+  setInStorage(SMS_SENDER_IMPORT_MAP_KEY, map);
+};
+
+export const updateSmsSenderImportDates = (updates: Record<string, string>): void => {
+  const map = getSmsSenderImportMap();
+  Object.entries(updates).forEach(([sender, date]) => {
+    map[sender] = date;
+  });
+  setInStorage(SMS_SENDER_IMPORT_MAP_KEY, map);
 };
