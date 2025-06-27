@@ -1,7 +1,7 @@
 
 // This module contains the SMS parsing logic for the expense tracker app
 import { transactionService } from '@/services/TransactionService';
-import { CategoryRule } from '@/types/transaction';
+import { CategoryRule, TransactionType } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 import { getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
 
@@ -17,6 +17,35 @@ export interface ParsedTransaction {
   country?: string;
   fromAccount?: string;
   toAccount?: string;
+  type?: TransactionType;
+}
+
+interface CustomParsingRule {
+  id: string;
+  keywords: string[];
+  type: TransactionType;
+  category: string;
+  subcategory?: string;
+}
+
+function loadCustomRules(): CustomParsingRule[] {
+  try {
+    const raw = localStorage.getItem('xpensia_custom_rules');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function applyCustomRules(message: string): Partial<CustomParsingRule> {
+  const rules = loadCustomRules();
+  const lower = message.toLowerCase();
+  for (const rule of rules) {
+    if (rule.keywords.some(k => lower.includes(k.toLowerCase()))) {
+      return rule;
+    }
+  }
+  return {};
 }
 
 // Generic pattern matchers that are not tied to specific banks
@@ -182,31 +211,48 @@ export function parseSmsMessage(message: string, sender: string): ParsedTransact
       
       // Apply category rules to determine the category
       const category = applyCategoryRules(description, amount, message);
-      
+
       // Determine if this is a transfer message
       const isTransfer = detectTransfer(message);
-      
+
       // Extract recipient/toAccount for transfers
       let toAccount = null;
       if (isTransfer) {
         toAccount = extractToAccount(message);
       }
-      
+
       // Try to identify a subcategory if possible
       const subcategory = determineSubcategory(category, description, message);
-      
+
+      const custom = applyCustomRules(message);
+
+      let finalType: TransactionType = isTransfer
+        ? 'transfer'
+        : amount < 0
+        ? 'expense'
+        : 'income';
+      if (custom.type) {
+        finalType = custom.type;
+        if (custom.type === 'expense') amount = -Math.abs(amount);
+        else if (custom.type === 'income') amount = Math.abs(amount);
+      }
+
+      const finalCategory = custom.category || category;
+      const finalSubcategory = custom.subcategory || subcategory;
+
       return {
         amount,
         date: extractDateFromMessage(message) || new Date(),
         sender: extractBankName(sender, message), // Dynamically extract bank name
-        category,
-        subcategory,
+        category: finalCategory,
+        subcategory: finalSubcategory,
         description,
         rawMessage: message,
         currency,
         country: detectCountry(message),
         fromAccount: extractBankName(sender, message),
-        toAccount: toAccount
+        toAccount: toAccount,
+        type: finalType
       };
     }
   }
