@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
-import { setSelectedSmsSenders } from '@/utils/storage-utils';
+import { setSelectedSmsSenders, getLastSmsImportDate } from '@/utils/storage-utils';
 import Layout from '@/components/Layout';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
@@ -84,10 +84,10 @@ const handleReadSms = async () => {
     const keywordObjects = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
     const keywords = keywordObjects.map(obj => obj.keyword.toLowerCase());
 
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const last = getLastSmsImportDate();
+    const startDate = last ? new Date(last) : new Date(new Date().setMonth(new Date().getMonth() - 6));
 
-    const smsMessages = await SmsReaderService.readSmsMessages({ startDate: sixMonthsAgo });
+    const smsMessages = await SmsReaderService.readSmsMessages({ startDate });
 
     const validMessages: ProcessedSmsEntry[] = [];
     const invalidMessages: ProcessedSmsEntry[] = [];
