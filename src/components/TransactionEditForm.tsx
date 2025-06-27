@@ -376,7 +376,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const darkFieldClass =
     'dark:bg-black dark:text-white dark:border-zinc-700 dark:placeholder-gray-400';
   const formClass = cn(
-    'bg-white p-4 rounded-md shadow-sm',
+    'bg-card p-4 rounded-md shadow-sm',
     compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28'
   );
 
