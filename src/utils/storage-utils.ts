@@ -17,6 +17,8 @@ const CATEGORY_CHANGES_STORAGE_KEY = 'xpensia_category_changes';
 const USER_SETTINGS_STORAGE_KEY = 'xpensia_user_settings';
 const LOCALE_SETTINGS_STORAGE_KEY = 'xpensia_locale_settings';
 const STRUCTURE_KEY = 'xpensia_structure_templates';
+const SMS_LAST_IMPORT_KEY = 'xpensia_sms_last_import';
+const SMS_SELECTED_SENDERS_KEY = 'xpensia_sms_selected_senders';
 
 
 // Helper function to safely get data from storage
@@ -377,6 +379,9 @@ export const getUserSettings = (): UserPreferences => {
       autoBackup: false,
       backupFrequency: 'weekly',
       dataRetention: 'forever'
+    },
+    sms: {
+      autoImport: false
     }
   });
 };
@@ -420,4 +425,20 @@ export const updateCurrency = (currency: SupportedCurrency): void => {
     ...localeSettings,
     currency
   });
+};
+
+export const getLastSmsImportDate = (): string | null => {
+  return getFromStorage<string | null>(SMS_LAST_IMPORT_KEY, null);
+};
+
+export const setLastSmsImportDate = (date: string): void => {
+  setInStorage(SMS_LAST_IMPORT_KEY, date);
+};
+
+export const getSelectedSmsSenders = (): string[] => {
+  return getFromStorage<string[]>(SMS_SELECTED_SENDERS_KEY, []);
+};
+
+export const setSelectedSmsSenders = (senders: string[]): void => {
+  setInStorage(SMS_SELECTED_SENDERS_KEY, senders);
 };

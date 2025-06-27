@@ -46,5 +46,8 @@ export interface UserPreferences {
     backupFrequency?: 'daily' | 'weekly' | 'monthly';
     dataRetention?: '3months' | '6months' | '1year' | 'forever';
   };
+  sms?: {
+    autoImport?: boolean;
+  };
   updatedAt?: string;
 }
