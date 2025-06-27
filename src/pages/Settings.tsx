@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
+import PageHeader from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -258,13 +259,13 @@ const Settings = () => {
   
   return (
     <Layout>
+      <PageHeader title="Settings" />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="space-y-6"
       >
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         
         <Tabs defaultValue="preferences" className="w-full">
           <TabsList className="mb-4">
