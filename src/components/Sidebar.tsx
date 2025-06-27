@@ -19,6 +19,7 @@ const Sidebar: React.FC = () => {
     { name: 'Transactions', path: '/transactions', icon: <BarChart3 size={20} /> },
     { name: 'Analytics', path: '/analytics', icon: <LineChart size={20} /> },
     { name: 'Paste & Parse', path: '/import-transactions', icon: <Upload size={20} /> },
+    { name: 'NER Paste', path: '/import-transactions-ner', icon: <Upload size={20} /> },
     { name: 'Import SMS', path: '/process-sms', icon: <MessageSquare size={20} /> },
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
