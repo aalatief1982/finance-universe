@@ -26,6 +26,7 @@ const AddTransaction = () => {
       updateTransaction,
       learnFromTransaction,
       navigateBack: () => navigate(-1),
+      combineToasts: true,
     });
   };
 
