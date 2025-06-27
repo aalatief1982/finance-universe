@@ -17,6 +17,7 @@ import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransa
 import { generateDefaultTitle } from '@/components/TransactionEditForm';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
+import PageHeader from '@/components/layout/PageHeader';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { useTransactions } from '@/context/TransactionContext';
 
@@ -166,6 +167,7 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 
   return (
     <Layout showBack>
+      <PageHeader title="Review Details" showBack />
       <div className="flex justify-end mb-4">
         <Button onClick={handleSave}>Save All</Button>
       </div>
