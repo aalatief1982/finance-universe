@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
-import { setSelectedSmsSenders, getLastSmsImportDate } from '@/utils/storage-utils';
+import { setSelectedSmsSenders, getLastSmsImportDate, getSmsSenderImportMap } from '@/utils/storage-utils';
 import Layout from '@/components/Layout';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
@@ -86,6 +86,7 @@ const handleReadSms = async () => {
 
     const last = getLastSmsImportDate();
     const startDate = last ? new Date(last) : new Date(new Date().setMonth(new Date().getMonth() - 6));
+    const senderMap = getSmsSenderImportMap();
 
     const smsMessages = await SmsReaderService.readSmsMessages({ startDate });
 
@@ -95,6 +96,10 @@ const handleReadSms = async () => {
     const filtered: ProcessedSmsEntry[] = smsMessages
       .map((msg) => {
         if (!msg || !msg.message) return null;
+
+        const lastForSender = senderMap[msg.sender];
+        const senderDate = lastForSender ? new Date(lastForSender) : startDate;
+        if (new Date(msg.date).getTime() <= senderDate.getTime()) return null;
 
         const lower = msg.message.toLowerCase();
 
