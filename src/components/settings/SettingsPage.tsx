@@ -28,15 +28,15 @@ const SettingsPage = () => {
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="data">Data</TabsTrigger>
             <TabsTrigger value="learning">Learning</TabsTrigger>
           </TabsList>
           
           <TabsContent value="general">
             <div className="space-y-8">
               <CurrencySettings />
+              <ThemeSettings />
+              <PrivacySettings />
+              <DataManagementSettings />
               {/* Add more general settings components as needed */}
             </div>
           </TabsContent>
@@ -49,17 +49,6 @@ const SettingsPage = () => {
             <NotificationSettings />
           </TabsContent>
           
-          <TabsContent value="appearance">
-            <ThemeSettings />
-          </TabsContent>
-          
-          <TabsContent value="privacy">
-            <PrivacySettings />
-          </TabsContent>
-          
-          <TabsContent value="data">
-            <DataManagementSettings />
-          </TabsContent>
           
           <TabsContent value="learning">
             <LearningEngineSettings />
