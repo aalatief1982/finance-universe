@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, MessageSquare, Calendar, Search, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import WireframeButton from '../../WireframeButton';
 import { smsProviderSelectionService, SmsProvider } from '@/services/SmsProviderSelectionService';
 import { useToast } from '@/components/ui/use-toast';
@@ -235,10 +236,10 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       
       <div className="relative mb-2">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <input
+        <Input
           type="text"
           placeholder="Search providers..."
-          className="w-full pl-9 py-2 pr-3 border rounded-md text-sm"
+          className="pl-9 py-2 pr-3 text-sm dark:bg-white dark:text-black"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />

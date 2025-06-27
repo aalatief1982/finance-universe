@@ -134,11 +134,11 @@ const Profile = () => {
               className="absolute bottom-0 right-0 bg-primary text-primary-foreground h-8 w-8 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
             >
               <Camera size={14} />
-              <input
+              <Input
                 id="avatar-upload"
                 type="file"
                 accept="image/*"
-                className="hidden"
+                className="hidden dark:bg-white dark:text-black"
                 onChange={handleAvatarUpload}
               />
             </label>

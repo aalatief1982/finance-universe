@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Accordion,
   AccordionContent,
@@ -146,38 +154,44 @@ const handleConfirm = () => {
                 <Card className="p-[var(--card-padding)] space-y-3">
                   <div>
                     <label className="block mb-1 font-semibold">Vendor:</label>
-                    <input
+                    <Input
                       type="text"
                       value={vendor.updatedVendor}
                       onChange={e => handleVendorChange(index, 'updatedVendor', e.target.value)}
-                      className="w-full border rounded p-2"
+                      className="w-full p-2 dark:bg-white dark:text-black"
                     />
                   </div>
 
                   <div>
                     <label className="block mb-1 font-semibold">Category:</label>
-                    <select
-                      value={vendor.category}
-                      onChange={e => handleVendorChange(index, 'category', e.target.value)}
-                      className="w-full border rounded p-2"
-                    >
-                      {getCategoryHierarchy().filter(c => c.type === 'expense').map(c => (
-                        <option key={c.id} value={c.name}>{c.name}</option>
-                      ))}
-                    </select>
+                    <Select value={vendor.category} onValueChange={value => handleVendorChange(index, 'category', value)}>
+                      <SelectTrigger className="w-full p-2 dark:bg-white dark:text-black">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getCategoryHierarchy().filter(c => c.type === 'expense').map(c => (
+                          <SelectItem key={c.id} value={c.name}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
                     <label className="block mb-1 font-semibold">Subcategory:</label>
-                    <select
-                      value={vendor.subcategory}
-                      onChange={e => handleVendorChange(index, 'subcategory', e.target.value)}
-                      className="w-full border rounded p-2"
-                    >
-                      {getCategoryHierarchy().find(c => c.name === vendor.category)?.subcategories.map(sub => (
-                        <option key={sub.id} value={sub.name}>{sub.name}</option>
-                      ))}
-                    </select>
+                    <Select value={vendor.subcategory} onValueChange={value => handleVendorChange(index, 'subcategory', value)}>
+                      <SelectTrigger className="w-full p-2 dark:bg-white dark:text-black">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getCategoryHierarchy().find(c => c.name === vendor.category)?.subcategories.map(sub => (
+                          <SelectItem key={sub.id} value={sub.name}>
+                            {sub.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {vendor.sampleMessage && (

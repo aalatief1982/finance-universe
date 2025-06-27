@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { ArrowLeft, WifiOff } from 'lucide-react';
@@ -146,11 +147,11 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
               <label className="text-sm font-medium" htmlFor="email">
                 Email Address
               </label>
-              <input
+              <Input
                 id="email"
                 type="email"
                 placeholder="Enter your email address"
-                className={`w-full p-2 border rounded ${networkStatus === 'offline' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`p-2 ${networkStatus === 'offline' ? 'bg-gray-100 cursor-not-allowed' : ''} dark:bg-white dark:text-black`}
                 disabled={networkStatus === 'offline'}
               />
               {networkStatus === 'offline' && (

@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
@@ -210,11 +211,11 @@ const handleReadSms = async () => {
               key={sender}
               className="flex items-center mb-2 p-2 rounded-md border cursor-pointer"
             >
-              <input
+              <Input
                 type="checkbox"
                 checked={selectedSenders.includes(sender)}
                 onChange={() => toggleSenderSelect(sender)}
-                className="mr-2"
+                className="mr-2 dark:bg-white dark:text-black"
               />
               {sender}
             </label>
