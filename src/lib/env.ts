@@ -43,3 +43,9 @@ export const CLOUD_FUNCTIONS_BASE_URL = getEnvironmentVariable(
   'CLOUD_FUNCTIONS_BASE_URL',
   'https://us-central1-xpensia-505ac.cloudfunctions.net'
 );
+
+// Default SMS look-back period (in months) used when no user preference is set
+export const SMS_LOOKBACK_MONTHS = parseInt(
+  getEnvironmentVariable('SMS_LOOKBACK_MONTHS', '6'),
+  10
+);
