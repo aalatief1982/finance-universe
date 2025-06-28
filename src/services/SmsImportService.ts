@@ -2,6 +2,10 @@ import { SmsReaderService, SmsEntry } from './SmsReaderService';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import { getSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
 
+// Flags to ensure auto import prompts only appear once per session
+let autoPromptShown = false;
+let autoAlertShown = false;
+
 export class SmsImportService {
   static async checkForNewMessages(
     navigate: (path: string, options?: any) => void,
@@ -14,7 +18,8 @@ export class SmsImportService {
       const senders = getSelectedSmsSenders();
       if (senders.length === 0) return;
 
-      if (auto) {
+      if (auto && !autoPromptShown) {
+        autoPromptShown = true;
         const proceed = window.confirm(
           'Automatically import new SMS messages from your saved senders?'
         );
@@ -48,7 +53,8 @@ export class SmsImportService {
 
       if (filteredMessages.length === 0) return;
 
-      if (auto) {
+      if (auto && !autoAlertShown) {
+        autoAlertShown = true;
         window.alert(
           `Auto import will process ${filteredMessages.length} messages from ${senders.join(
             ', '
