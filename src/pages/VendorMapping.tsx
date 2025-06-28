@@ -36,6 +36,7 @@ interface VendorMappingEntry {
 const VendorMapping: React.FC = () => {
   const [vendors, setVendors] = useState<VendorMappingEntry[]>([]);
   const location = useLocation();
+  console.log('VendorMapping state:', location.state);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -110,6 +111,7 @@ const VendorMapping: React.FC = () => {
     });
 
     setVendors(initialMappings);
+    console.log('VendorMapping vendors:', initialMappings);
   }, [location.state]);
 
   const handleVendorChange = (index: number, field: keyof VendorMappingEntry, value: string) => {
