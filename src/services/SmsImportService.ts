@@ -3,9 +3,11 @@ import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine
 import { getSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
 
 // Flags to ensure auto import prompts only appear once per session
+
 // and track whether the user accepted the auto import prompt
 let autoPromptShown = false;
 let autoPromptAccepted: boolean | null = null;
+
 let autoAlertShown = false;
 
 export class SmsImportService {
@@ -22,7 +24,9 @@ export class SmsImportService {
 
       if (auto && !autoPromptShown) {
         autoPromptShown = true;
+
         autoPromptAccepted = window.confirm(
+
           'Automatically import new SMS messages from your saved senders?'
         );
         if (!autoPromptAccepted) return;
