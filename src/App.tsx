@@ -41,6 +41,10 @@ import { getQueuedMessages, clearQueuedMessages } from '@/services/smsQueueServi
 
 function AppWrapper() {
   const navigate = useNavigate();
+  const navigateRef = React.useRef(navigate);
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
   const { user } = useUser();
   const [queueOpen, setQueueOpen] = useState(false);
   const [queuedMessages, setQueuedMessages] = useState<{ sender: string; body: string }[]>([]);
@@ -201,9 +205,9 @@ function AppWrapper() {
   useEffect(() => {
     if (!ENABLE_SMS_INTEGRATION) return;
     if (user?.preferences?.sms?.autoImport) {
-      SmsImportService.checkForNewMessages(navigate, { auto: true });
+      SmsImportService.checkForNewMessages(navigateRef.current, { auto: true });
     }
-  }, [user, navigate]);
+  }, [user]);
 
   return (
     <>
