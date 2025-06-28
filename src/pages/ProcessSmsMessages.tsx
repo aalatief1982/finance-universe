@@ -375,7 +375,6 @@ const handleReadSms = async () => {
           });
         }}
       />
-      </div>
     </Layout>
   );
 };
