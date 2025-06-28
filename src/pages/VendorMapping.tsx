@@ -23,7 +23,7 @@ import {
 } from '@/lib/smart-paste-engine/suggestionEngine';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 
 interface VendorMappingEntry {
   vendor: string;
@@ -122,7 +122,11 @@ const VendorMapping: React.FC = () => {
     });
   };
 
-const handleConfirm = () => {
+  const handleRemoveVendor = (index: number) => {
+    setVendors(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleConfirm = () => {
     console.log('VendorMapping: save clicked');
 
     if (!hasRequiredState() || !hasValidData()) {
@@ -151,7 +155,12 @@ const handleConfirm = () => {
       });
     });
 
-    const messages = location.state?.messages || [];
+    const allMessages = location.state?.messages || [];
+    const allowed = new Set(vendors.map(v => v.vendor));
+    const messages = allMessages.filter((m: any) => {
+      const extracted = extractVendorName(m.message);
+      return extracted && allowed.has(extracted);
+    });
 
     navigate('/review-sms-transactions', {
       state: {
@@ -229,7 +238,19 @@ const handleRetry = () => {
           {vendors.map((vendor, index) => (
             <AccordionItem key={vendor.vendor} value={vendor.vendor}>
               <AccordionTrigger>
-                {vendor.updatedVendor || vendor.vendor}
+                <div className="flex items-center justify-between w-full">
+                  <span>{vendor.updatedVendor || vendor.vendor}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleRemoveVendor(index);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
               </AccordionTrigger>
               <AccordionContent>
                 <Card className="p-[var(--card-padding)] space-y-3">
