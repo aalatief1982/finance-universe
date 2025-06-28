@@ -17,6 +17,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (Telephony.Sms.Intents.SMS_RECEIVED_ACTION.equals(intent.getAction())) {
+            Log.d("AIS-10", "Static receiver triggered");
             if (BackgroundSmsListenerPlugin.isPluginActive()) {
                 Log.d(TAG, "Plugin active, ignoring static receiver event");
                 return;
@@ -46,17 +47,15 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 String body = bodyBuilder.toString();
 
                 Log.d(TAG, "SMS received from " + sender + ": " + body);
-                try {
-                    BackgroundSmsListenerPlugin.persistMessage(context, sender, body);
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to store SMS", e);
-                }
 
-                Intent serviceIntent = new Intent(context, SmsProcessingService.class);
-                serviceIntent.putExtra("sender", sender);
-                serviceIntent.putExtra("body", body);
+                // BackgroundSmsListenerPlugin.persistMessage(context, sender, body);
 
-                ContextCompat.startForegroundService(context, serviceIntent);
+
+                // Intent serviceIntent = new Intent(context, SmsProcessingService.class);
+                // serviceIntent.putExtra("sender", sender);
+                // serviceIntent.putExtra("body", body);
+
+                // ContextCompat.startForegroundService(context, serviceIntent);
             }
         }
     }
