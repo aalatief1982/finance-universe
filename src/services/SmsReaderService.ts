@@ -2,7 +2,7 @@
 import { Capacitor } from "@capacitor/core";
 import { SmsReader } from "../plugins/SmsReaderPlugin";
 import { subMonths, startOfToday } from 'date-fns';
-import { SMS_LOOKBACK_MONTHS } from '@/lib/env';
+import { getSmsLookbackMonths } from '@/lib/env';
 
 export interface SmsReadOptions {
   startDate?: Date;
@@ -70,10 +70,7 @@ export class SmsReaderService {
     // Determine the time range to query. If the caller did not supply a
     // start date we fall back to the "months back" value stored in local
     // storage. The end date defaults to "now" if not provided.
-    const monthsBack = parseInt(
-      localStorage.getItem('xpensia_sms_period_months') || String(SMS_LOOKBACK_MONTHS),
-      10
-    );
+    const monthsBack = getSmsLookbackMonths();
     // Fetch limit to pass to the native plugin. Allows overriding via
     // localStorage. Defaults to a large value which is higher than the
     // plugin's default.

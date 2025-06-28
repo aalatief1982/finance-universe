@@ -11,7 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import { setSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
-import { SMS_LOOKBACK_MONTHS } from '@/lib/env';
+import { getSmsLookbackMonths } from '@/lib/env';
 import {
   Dialog,
   DialogContent,
@@ -168,10 +168,7 @@ const handleReadSms = async () => {
     // period. The earliest of these dates is used to minimize the query
     // range when fetching messages from the device.
     const senderMap = getSmsSenderImportMap();
-    const monthsBack = parseInt(
-      localStorage.getItem('xpensia_sms_period_months') || String(SMS_LOOKBACK_MONTHS),
-      10
-    );
+    const monthsBack = getSmsLookbackMonths();
     const defaultStart = new Date();
     defaultStart.setMonth(defaultStart.getMonth() - monthsBack);
 
