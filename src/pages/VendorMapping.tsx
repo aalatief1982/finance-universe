@@ -39,6 +39,10 @@ const VendorMapping: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const hasValidData = () => {
+    return vendors.length > 0 && (location.state?.messages?.length ?? 0) > 0;
+  };
+
   // Redirect if this page was accessed directly without state
   useEffect(() => {
     if (!location.state) {
@@ -113,6 +117,18 @@ const VendorMapping: React.FC = () => {
   };
 
 const handleConfirm = () => {
+    console.log('VendorMapping: save clicked');
+
+    if (!hasValidData()) {
+      console.warn('Save attempted without valid vendor data or messages');
+      toast({
+        variant: 'destructive',
+        title: 'Missing vendor data',
+        description: 'Vendor information or messages are missing.'
+      });
+      return;
+    }
+
     const vendorMap: Record<string, string> = {};
     const keywordBank: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
 
@@ -139,8 +155,33 @@ const handleConfirm = () => {
     });
   };
 
-  const handleRetry = () => {
+const handleRetry = () => {
+    console.log('VendorMapping: retry clicked');
+
+    if (!hasValidData()) {
+      console.warn('Retry attempted without valid vendor data or messages');
+      toast({
+        variant: 'destructive',
+        title: 'Missing vendor data',
+        description: 'Vendor information or messages are missing.'
+      });
+      return;
+    }
+
     navigate('/process-sms');
+  };
+
+  const handleBack = () => {
+    console.log('VendorMapping: back clicked');
+    if (!hasValidData()) {
+      console.warn('Back navigation attempted without valid vendor data or messages');
+      toast({
+        variant: 'destructive',
+        title: 'Missing vendor data',
+        description: 'Vendor information or messages are missing.'
+      });
+    }
+    navigate(-1);
   };
 
   if (!location.state) {
@@ -151,7 +192,7 @@ const handleConfirm = () => {
     <Layout>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="outline" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-xl sm:text-2xl font-bold">Vendor Mapping</h1>
