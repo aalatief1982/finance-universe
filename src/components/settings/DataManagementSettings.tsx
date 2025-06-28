@@ -8,7 +8,12 @@ import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Download, UploadCloud, RefreshCw, Database } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { getUserSettings, storeUserSettings } from '@/utils/storage-utils';
+import {
+  getUserSettings,
+  storeUserSettings,
+  getStoredTransactions,
+  storeTransactions
+} from '@/utils/storage-utils';
 
 // Define the correct types for backupFrequency and dataRetention
 type BackupFrequency = 'daily' | 'weekly' | 'monthly' | 'never';
@@ -90,8 +95,8 @@ const DataManagementSettings = () => {
   
   const handleExportData = () => {
     try {
-      const data = localStorage.getItem('transactions');
-      if (!data) {
+      const transactions = getStoredTransactions();
+      if (!transactions.length) {
         toast({
           title: "No data to export",
           description: "You don't have any transactions to export.",
@@ -99,8 +104,10 @@ const DataManagementSettings = () => {
         });
         return;
       }
-      
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(data);
+
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(transactions));
       const downloadAnchorNode = document.createElement('a');
       downloadAnchorNode.setAttribute("href", dataStr);
       downloadAnchorNode.setAttribute("download", "expense-tracker-data.json");
@@ -136,7 +143,7 @@ const DataManagementSettings = () => {
       reader.onload = (event) => {
         try {
           const jsonData = JSON.parse(event.target?.result as string);
-          localStorage.setItem('transactions', JSON.stringify(jsonData));
+          storeTransactions(jsonData);
           toast({
             title: "Import successful",
             description: "Your data has been imported successfully.",
@@ -158,7 +165,7 @@ const DataManagementSettings = () => {
   };
   
   const handleResetData = () => {
-    localStorage.removeItem('transactions');
+    localStorage.removeItem('xpensia_transactions');
     toast({
       title: "Data reset successful",
       description: "All your transaction data has been reset.",
