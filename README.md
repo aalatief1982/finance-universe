@@ -156,3 +156,15 @@ Duplicate SMS events should no longer occur when the listener is active, as the
 static receiver now checks whether the plugin is running before persisting or
 processing messages.
 
+### Debug logging
+
+Additional log markers are emitted to help verify the SMS workflow:
+
+- `AIS-01` when `SmsReaderService.readSmsMessages` executes.
+- `AIS-02` when `SmsImportService.checkForNewMessages` runs.
+- `AIS-03` when the app starts the background SMS listener.
+- `AIS-04` when the listener is stopped during cleanup.
+- `AIS-10`–`AIS-14` from the Android plugin to trace receiver activity.
+
+Use `adb logcat | grep AIS-` while testing to see these markers.
+

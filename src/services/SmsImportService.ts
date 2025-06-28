@@ -4,6 +4,7 @@ import { getSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-ut
 
 export class SmsImportService {
   static async checkForNewMessages(navigate: (path: string, options?: any) => void): Promise<void> {
+    console.log('AIS-02 checkForNewMessages');
     try {
       const senders = getSelectedSmsSenders();
       if (senders.length === 0) return;

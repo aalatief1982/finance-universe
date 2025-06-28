@@ -54,7 +54,7 @@ export class SmsReaderService {
   }
 
   static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
-    console.log("[SmsReaderService] readSmsMessages() called");
+    console.log('AIS-01 readSmsMessages', options);
 
     if (!Capacitor.isNativePlatform()) {
       console.warn("[SmsReaderService] Not a native platform, returning empty list.");

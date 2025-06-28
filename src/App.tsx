@@ -101,6 +101,7 @@ function AppWrapper() {
           }
           
           console.log('[SMS] Starting to listen for SMS...');
+          console.log('AIS-03 starting listener');
           try {
             await BackgroundSmsListener.startListening();
             console.log('[SMS] Successfully started listening for SMS messages');
@@ -189,6 +190,12 @@ function AppWrapper() {
     };
 
     setupSmsListener();
+    return () => {
+      console.log('AIS-04 stopping listener');
+      BackgroundSmsListener.stopListening().catch(err => {
+        console.warn('[SMS] Error stopping SMS listener:', err);
+      });
+    };
   }, [navigate]);
 
   useEffect(() => {
