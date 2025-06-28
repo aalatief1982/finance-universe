@@ -11,6 +11,7 @@ import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import { setSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
+import { getSmsLookbackMonths } from '@/lib/env';
 import {
   Dialog,
   DialogContent,
@@ -162,16 +163,22 @@ const handleReadSms = async () => {
     const keywordObjects = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
     const keywords = keywordObjects.map(obj => obj.keyword.toLowerCase());
 
-    // Determine start dates for the selected senders based on the
-    // per-sender import map. If a sender has no entry, default to six
-    // months ago. We then use the earliest of those dates when reading
-    // from the device to minimize the query range.
+    // Determine the start date for reading messages. We consult the
+    // per-sender import map and fall back to the default look-back
+    // period. The earliest of these dates is used to minimize the query
+    // range when fetching messages from the device.
     const senderMap = getSmsSenderImportMap();
-    const defaultStart = new Date(new Date().setMonth(new Date().getMonth() - 6));
-    const senderDates = selectedSenders.map(s => senderMap[s] ? new Date(senderMap[s]) : defaultStart);
-    const startDate = senderDates.length > 0 ? new Date(Math.min(...senderDates.map(d => d.getTime()))) : defaultStart;
+    const monthsBack = getSmsLookbackMonths();
+    const defaultStart = new Date();
+    defaultStart.setMonth(defaultStart.getMonth() - monthsBack);
 
-    const smsMessages = await SmsReaderService.readSmsMessages({ startDate, senders: selectedSenders });
+    const mapDates = Object.values(senderMap).map(d => new Date(d).getTime());
+    const earliestMap = mapDates.length > 0 ? new Date(Math.min(...mapDates)) : null;
+    const startDate = earliestMap && earliestMap.getTime() < defaultStart.getTime()
+      ? earliestMap
+      : defaultStart;
+
+    const smsMessages = await SmsReaderService.readSmsMessages({ startDate });
 
     const validMessages: ProcessedSmsEntry[] = [];
     const invalidMessages: ProcessedSmsEntry[] = [];

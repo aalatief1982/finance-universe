@@ -43,3 +43,35 @@ export const CLOUD_FUNCTIONS_BASE_URL = getEnvironmentVariable(
   'CLOUD_FUNCTIONS_BASE_URL',
   'https://us-central1-xpensia-505ac.cloudfunctions.net'
 );
+
+// Default SMS look-back period (in months) used when no user preference is set
+export const VITE_SMS_LOOKBACK_MONTHS = parseInt(
+  getEnvironmentVariable('SMS_LOOKBACK_MONTHS', '6'),
+  10
+);
+
+/**
+ * Returns the SMS look-back period in months.
+ *
+ * The value is determined by checking the `xpensia_sms_period_months`
+ * entry in local storage. If no user preference is stored, the
+ * `VITE_SMS_LOOKBACK_MONTHS` environment variable is used and the
+ * value is persisted to local storage for future calls.
+ */
+export const getSmsLookbackMonths = (): number => {
+  try {
+    const stored = localStorage.getItem('xpensia_sms_period_months');
+    if (stored !== null) {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed)) {
+        return parsed;
+      }
+    } else {
+      localStorage.setItem('xpensia_sms_period_months', String(VITE_SMS_LOOKBACK_MONTHS));
+    }
+  } catch {
+    // Ignore storage errors and fall back to env default
+  }
+
+  return VITE_SMS_LOOKBACK_MONTHS;
+};
