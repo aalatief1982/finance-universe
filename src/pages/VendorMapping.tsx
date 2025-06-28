@@ -206,7 +206,7 @@ const handleConfirm = () => {
         </Accordion>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 px-4 flex gap-4 z-20">
+      <div className="fixed bottom-16 left-0 right-0 px-4 flex gap-4 z-40">
         <Button className="flex-1" variant="outline" onClick={handleRetry}>
           Retry
         </Button>
