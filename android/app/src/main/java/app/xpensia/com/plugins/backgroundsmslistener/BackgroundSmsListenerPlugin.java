@@ -16,7 +16,6 @@ import android.content.ComponentName;
 
 import androidx.core.content.ContextCompat;
 
-import app.xpensia.com.plugins.backgroundsmslistener.SmsProcessingService;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -215,10 +214,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
 
             registerSmsReceiver();
 
-            Context context = getContext();
-            Intent serviceIntent = new Intent(context, SmsProcessingService.class);
-            ContextCompat.startForegroundService(context, serviceIntent);
-
             call.resolve();
             Log.d(TAG, "Now listening for SMS messages");
         } catch (Exception e) {
@@ -243,8 +238,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
             unregisterSmsReceiver();
 
             Context context = getContext();
-            context.stopService(new Intent(context, SmsProcessingService.class));
-
             call.resolve();
             Log.d(TAG, "Stopped listening for SMS messages");
         } catch (Exception e) {
@@ -361,7 +354,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     protected void handleOnDestroy() {
         Log.d(TAG, "Plugin is being destroyed, cleaning up");
         unregisterSmsReceiver();
-        getContext().stopService(new Intent(getContext(), SmsProcessingService.class));
         instance = null;
         super.handleOnDestroy();
     }

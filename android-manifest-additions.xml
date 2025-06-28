@@ -11,11 +11,5 @@
     <!-- Network state monitoring -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Service declaration for background SMS processing -->
-    <application>
-        <service
-            android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsProcessingService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
-    </application>
+    <!-- Service declaration removed: SMS processing handled directly in receiver -->
 </manifest>

@@ -47,18 +47,15 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 String body = bodyBuilder.toString();
 
                 Log.d(TAG, "SMS received from " + sender + ": " + body);
-                Log.d("AIS-11", "Static receiver SMS from " + sender);
-                try {
-                    BackgroundSmsListenerPlugin.persistMessage(context, sender, body);
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to store SMS", e);
-                }
 
-                Intent serviceIntent = new Intent(context, SmsProcessingService.class);
-                serviceIntent.putExtra("sender", sender);
-                serviceIntent.putExtra("body", body);
+                // BackgroundSmsListenerPlugin.persistMessage(context, sender, body);
 
-                ContextCompat.startForegroundService(context, serviceIntent);
+
+                // Intent serviceIntent = new Intent(context, SmsProcessingService.class);
+                // serviceIntent.putExtra("sender", sender);
+                // serviceIntent.putExtra("body", body);
+
+                // ContextCompat.startForegroundService(context, serviceIntent);
             }
         }
     }
