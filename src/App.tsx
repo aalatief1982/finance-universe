@@ -201,7 +201,7 @@ function AppWrapper() {
   useEffect(() => {
     if (!ENABLE_SMS_INTEGRATION) return;
     if (user?.preferences?.sms?.autoImport) {
-      SmsImportService.checkForNewMessages(navigate);
+      SmsImportService.checkForNewMessages(navigate, { auto: true });
     }
   }, [user, navigate]);
 
