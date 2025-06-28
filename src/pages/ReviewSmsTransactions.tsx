@@ -480,9 +480,6 @@ const handleSkip = (index: number) => {
         </AlertDialog>
       )}
 
-      <Button className="w-full mt-4" onClick={handleSave}>
-        Save All
-      </Button>
     </Layout>
   );
 };
