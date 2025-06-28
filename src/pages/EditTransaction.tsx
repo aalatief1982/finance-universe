@@ -90,6 +90,8 @@ const EditTransaction = () => {
               confidence={confidenceScore}
               matchedCount={location.state.matchedCount}
               totalTemplates={location.state.totalTemplates}
+              fieldScore={location.state.fieldScore}
+              keywordScore={location.state.keywordScore}
             />
           )}
 

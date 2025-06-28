@@ -19,6 +19,10 @@ export interface ParsedTransactionResult {
   parsed: ReturnType<typeof parseSmsMessage>;
   fieldConfidences: Record<string, number>;
   parsingStatus: 'success' | 'partial' | 'failed';
+  matchedCount: number;
+  totalTemplates: number;
+  fieldScore: number;
+  keywordScore: number;
 }
 
 /**
@@ -115,6 +119,10 @@ export async function parseAndInferTransaction(
         parsed,
         fieldConfidences,
         parsingStatus: cloudStatus,
+        matchedCount: matchedTemplates,
+        totalTemplates: templates.length,
+        fieldScore,
+        keywordScore,
       };
     } catch (err) {
       console.warn('Cloud classifier failed:', err);
@@ -132,5 +140,9 @@ export async function parseAndInferTransaction(
     parsed,
     fieldConfidences,
     parsingStatus,
+    matchedCount: matchedTemplates,
+    totalTemplates: templates.length,
+    fieldScore,
+    keywordScore,
   };
 }
