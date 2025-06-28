@@ -872,35 +872,39 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       <div className={rowClass}>
         <label className={labelClass}>Subcategory</label>
 
-        {availableSubcategories.length > 0 ? (
-          <Select
-            value={editedTransaction.subcategory || 'none'}
-            onValueChange={(value) => handleChange('subcategory', value)}
-          >
-            <SelectTrigger
-              className={cn(
-                'w-full text-sm',
-                inputPadding,
-                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                darkFieldClass
-              )}
-              isAutoFilled={isDriven('subcategory', drivenFields)}
-            >
-              <SelectValue placeholder="Select subcategory" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {availableSubcategories.map((subcategory) => (
-                <SelectItem key={subcategory} value={subcategory}>
-                  {subcategory}
-                </SelectItem>
-              ))}
-          </SelectContent>
-        </Select>
-        {renderFeedbackIcons('subcategory')}
-        ) : (
-          <div className={cn('flex-1 text-sm text-gray-500', inputPadding)}>N/A</div>
-        )}
+        <div className="flex w-full items-center gap-1">
+          {availableSubcategories.length > 0 ? (
+            <>
+              <Select
+                value={editedTransaction.subcategory || 'none'}
+                onValueChange={(value) => handleChange('subcategory', value)}
+              >
+                <SelectTrigger
+                  className={cn(
+                    'w-full text-sm',
+                    inputPadding,
+                    'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                    darkFieldClass
+                  )}
+                  isAutoFilled={isDriven('subcategory', drivenFields)}
+                >
+                  <SelectValue placeholder="Select subcategory" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {availableSubcategories.map((subcategory) => (
+                    <SelectItem key={subcategory} value={subcategory}>
+                      {subcategory}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {renderFeedbackIcons('subcategory')}
+            </>
+          ) : (
+            <div className={cn('flex-1 text-sm text-gray-500', inputPadding)}>N/A</div>
+          )}
+        </div>
       </div>
 
 
