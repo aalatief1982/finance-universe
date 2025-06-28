@@ -11,6 +11,14 @@ import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router-dom';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import { setSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 import Layout from '@/components/Layout';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import ImportAndMapModal from '@/components/sms/ImportAndMapModal';
@@ -56,10 +64,19 @@ const ProcessSmsMessages: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [mapOpen, setMapOpen] = useState(false);
+  const [showInitialDialog, setShowInitialDialog] = useState(false);
 
   const resumeHistoryImport = () => {
     const progress = loadImportProgress();
-    if (!progress) return;
+    if (!progress) {
+      const mapSenders = Object.keys(getSmsSenderImportMap());
+      if (mapSenders.length > 0) {
+        setSenders(mapSenders);
+        setSelectedSenders(mapSenders);
+        setShowInitialDialog(true);
+      }
+      return;
+    }
 
     try {
       const stored = localStorage.getItem('uat_valid_sms');
@@ -381,6 +398,32 @@ const handleReadSms = async () => {
           });
         }}
       />
+      <Dialog
+        open={showInitialDialog}
+        onOpenChange={(o) => {
+          if (!o) {
+            setShowInitialDialog(false);
+            handleReadSms();
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Importing SMS</DialogTitle>
+            <DialogDescription>
+              Xpensia will read new SMS messages from your saved senders and process them as if you pressed "Read SMS".
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => {
+              setShowInitialDialog(false);
+              handleReadSms();
+            }}>
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
