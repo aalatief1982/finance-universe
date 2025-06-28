@@ -38,7 +38,18 @@ const VendorMapping: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
   const navigate = useNavigate();
- 
+
+  // Redirect if this page was accessed directly without state
+  useEffect(() => {
+    if (!location.state) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing vendor data',
+        description: 'Please reprocess SMS messages.',
+      });
+      navigate(-1);
+    }
+  }, [location.state, navigate, toast]);
 
   useEffect(() => {
     const incomingVendorMap = location.state?.vendorMap || {};
@@ -91,7 +102,7 @@ const VendorMapping: React.FC = () => {
     });
 
     setVendors(initialMappings);
-  }, []);
+  }, [location.state]);
 
   const handleVendorChange = (index: number, field: keyof VendorMappingEntry, value: string) => {
     setVendors(prev => {
@@ -131,6 +142,10 @@ const handleConfirm = () => {
   const handleRetry = () => {
     navigate('/process-sms');
   };
+
+  if (!location.state) {
+    return null;
+  }
 
   return (
     <Layout>
