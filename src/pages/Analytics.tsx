@@ -2,7 +2,6 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
 import { useTransactions } from '@/context/TransactionContext';
-import { getStoredTransactions } from '@/utils/storage-utils';
 import {
   ToggleGroup,
   ToggleGroupItem
@@ -143,7 +142,8 @@ const Analytics: React.FC = () => {
   const randomTip = React.useMemo(() => tips[Math.floor(Math.random() * tips.length)], []);
 
   const handleExport = () => {
-    const transactions = getStoredTransactions();
+    const data = localStorage.getItem('xpensia_transactions');
+    const transactions = data ? JSON.parse(data) : [];
     if (!transactions.length) {
       toast({ title: 'No data to export' });
       return;
