@@ -2,6 +2,7 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
 import { useTransactions } from '@/context/TransactionContext';
+import { getStoredTransactions } from '@/utils/storage-utils';
 import {
   ToggleGroup,
   ToggleGroupItem
@@ -142,12 +143,12 @@ const Analytics: React.FC = () => {
   const randomTip = React.useMemo(() => tips[Math.floor(Math.random() * tips.length)], []);
 
   const handleExport = () => {
-    const data = localStorage.getItem('transactions');
-    if (!data) {
+    const transactions = getStoredTransactions();
+    if (!transactions.length) {
       toast({ title: 'No data to export' });
       return;
     }
-    const blob = new Blob([data], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(transactions)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
