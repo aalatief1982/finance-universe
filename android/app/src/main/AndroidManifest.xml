@@ -49,10 +49,6 @@
             </intent-filter>
         </receiver>
 
-        <service
-            android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsProcessingService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
     </application>
 
     <!-- Permissions -->

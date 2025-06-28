@@ -46,17 +46,13 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 String body = bodyBuilder.toString();
 
                 Log.d(TAG, "SMS received from " + sender + ": " + body);
-                try {
-                    BackgroundSmsListenerPlugin.persistMessage(context, sender, body);
-                } catch (Exception e) {
-                    Log.e(TAG, "Failed to store SMS", e);
-                }
+                // BackgroundSmsListenerPlugin.persistMessage(context, sender, body);
 
-                Intent serviceIntent = new Intent(context, SmsProcessingService.class);
-                serviceIntent.putExtra("sender", sender);
-                serviceIntent.putExtra("body", body);
+                // Intent serviceIntent = new Intent(context, SmsProcessingService.class);
+                // serviceIntent.putExtra("sender", sender);
+                // serviceIntent.putExtra("body", body);
 
-                ContextCompat.startForegroundService(context, serviceIntent);
+                // ContextCompat.startForegroundService(context, serviceIntent);
             }
         }
     }
