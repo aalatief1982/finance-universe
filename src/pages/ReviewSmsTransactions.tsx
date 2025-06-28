@@ -410,14 +410,14 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
                   : (txn.fieldConfidences?.type ?? 0) >= 0.4
                     ? 'border border-amber-500'
                     : 'border border-red-500'
-              }`}
+              } col-span-2`}
             >
               <ToggleGroupItem value="expense">Expense</ToggleGroupItem>
               <ToggleGroupItem value="income">Income</ToggleGroupItem>
               <ToggleGroupItem value="transfer">Transfer</ToggleGroupItem>
             </ToggleGroup>
           </div>
-          <div className="flex justify-end mt-2">
+          <div className="flex justify-end mt-2 col-span-2">
             <Button
               variant="outline"
               size="sm"

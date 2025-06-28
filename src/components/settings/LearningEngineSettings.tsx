@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Brain, Trash2, Database, Settings2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -84,6 +85,7 @@ const LearningEngineSettings = () => {
   };
 
   return (
+    <>
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
@@ -190,6 +192,22 @@ const LearningEngineSettings = () => {
         </div>
       </CardContent>
     </Card>
+
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings2 className="h-5 w-5" />
+          Custom Parsing Rules
+        </CardTitle>
+        <CardDescription>Define your own message parsing rules</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button asChild className="w-full">
+          <Link to="/custom-parsing-rules">Manage Rules</Link>
+        </Button>
+      </CardContent>
+    </Card>
+    </>
   );
 };
 

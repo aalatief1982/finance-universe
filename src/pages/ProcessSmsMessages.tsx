@@ -284,35 +284,41 @@ const handleReadSms = async () => {
       )}
 
       {senders.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-2">Select Senders:</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Choose the senders whose messages you want to analyze.
-          </p>
-          {senders.map((sender) => (
-            <label
-              key={sender}
-              className="flex items-center mb-2 p-2 rounded-md border cursor-pointer"
-            >
-              <Input
-                type="checkbox"
-                checked={selectedSenders.includes(sender)}
-                onChange={() => toggleSenderSelect(sender)}
-                className="mr-2 dark:bg-white dark:text-black"
-              />
-              {sender}
-            </label>
-          ))}
+        <Accordion type="single" collapsible defaultValue="senders" className="mb-6">
+          <AccordionItem value="senders">
+            <AccordionTrigger className="text-lg font-semibold">Select Senders</AccordionTrigger>
+            <AccordionContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choose the senders whose messages you want to analyze.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {senders.map((sender) => (
+                  <label
+                    key={sender}
+                    className="flex items-center p-2 rounded-md border cursor-pointer gap-2"
+                  >
+                    <Input
+                      type="checkbox"
+                      checked={selectedSenders.includes(sender)}
+                      onChange={() => toggleSenderSelect(sender)}
+                      className="dark:bg-white dark:text-black"
+                    />
+                    <span className="text-sm break-words">{sender}</span>
+                  </label>
+                ))}
+              </div>
 
-          <div className="flex flex-col gap-2 mt-4">
-            <Button className="w-full" onClick={handleProceed}>
-              Proceed to Vendor Mapping
-            </Button>
-            <Button variant="outline" className="w-full" onClick={() => setMapOpen(true)}>
-              Quick Map &amp; Review
-            </Button>
-          </div>
-        </div>
+              <div className="flex flex-col gap-2 mt-4">
+                <Button className="w-full" onClick={handleProceed}>
+                  Proceed to Vendor Mapping
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => setMapOpen(true)}>
+                  Quick Map &amp; Review
+                </Button>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       )}
 
       <div className="space-y-4 pt-4 pb-24">
