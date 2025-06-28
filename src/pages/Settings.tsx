@@ -264,7 +264,7 @@ const Settings = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="space-y-6"
+        className="space-y-6 pb-24"
       >
         
         <Tabs defaultValue="preferences" className="w-full">
