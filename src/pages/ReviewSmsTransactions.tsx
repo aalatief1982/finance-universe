@@ -20,7 +20,7 @@ import Layout from '@/components/Layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { setLastSmsImportDate, updateSmsSenderImportDates } from '@/utils/storage-utils';
+import { updateSmsSenderImportDates } from '@/utils/storage-utils';
 import { learnVendorCategoryRule } from '@/lib/smart-paste-engine/senderCategoryRules';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
 import { TransactionType } from '@/types/transaction';
@@ -238,8 +238,6 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
       title: 'Saved',
       description: `${valid.length} transaction(s) saved successfully.`,
     });
-
-    setLastSmsImportDate(new Date().toISOString());
 
     setTransactions([]);
   };
