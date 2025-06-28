@@ -3,11 +3,23 @@ import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine
 import { getSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
 
 export class SmsImportService {
-  static async checkForNewMessages(navigate: (path: string, options?: any) => void): Promise<void> {
+  static async checkForNewMessages(
+    navigate: (path: string, options?: any) => void,
+    opts?: { auto?: boolean }
+  ): Promise<void> {
     console.log('AIS-02 checkForNewMessages');
     try {
+      const { auto = false } = opts || {};
+
       const senders = getSelectedSmsSenders();
       if (senders.length === 0) return;
+
+      if (auto) {
+        const proceed = window.confirm(
+          'Automatically import new SMS messages from your saved senders?'
+        );
+        if (!proceed) return;
+      }
 
       const senderMap = getSmsSenderImportMap();
 
@@ -35,6 +47,14 @@ export class SmsImportService {
       });
 
       if (filteredMessages.length === 0) return;
+
+      if (auto) {
+        window.alert(
+          `Auto import will process ${filteredMessages.length} messages from ${senders.join(
+            ', '
+          )} since ${startDate.toLocaleDateString()}. Additional senders can be added via manual import.`
+        );
+      }
 
       const vendorMap: Record<string, string> = {};
       const keywordMap: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
