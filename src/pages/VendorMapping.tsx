@@ -36,26 +36,32 @@ interface VendorMappingEntry {
 const VendorMapping: React.FC = () => {
   const [vendors, setVendors] = useState<VendorMappingEntry[]>([]);
   const location = useLocation();
+  console.log('VendorMapping state:', location.state);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const hasValidData = () => {
-    return vendors.length > 0 && (location.state?.messages?.length ?? 0) > 0;
+  const hasRequiredState = () => {
+    return !!location.state && (location.state?.messages?.length ?? 0) > 0;
   };
 
-  // Redirect if this page was accessed directly without state
+  const hasValidData = () => {
+    return vendors.length > 0 && hasRequiredState();
+  };
+
+  // Notify if this page was accessed directly without required state
   useEffect(() => {
-    if (!location.state) {
+    if (!hasRequiredState()) {
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
         description: 'Please reprocess SMS messages.',
       });
-      navigate(-1);
     }
-  }, [location.state, navigate, toast]);
+  }, [location.state, toast]);
 
   useEffect(() => {
+    if (!hasRequiredState()) return;
+
     const incomingVendorMap = location.state?.vendorMap || {};
     const incomingKeywordBank = location.state?.keywordMap || [];
     const messages = location.state?.messages || [];
@@ -66,7 +72,6 @@ const VendorMapping: React.FC = () => {
         title: 'Missing vendor data',
         description: 'No vendor data passed. Please reprocess SMS messages.',
       });
-      navigate('/');
       return;
     }
 
@@ -106,6 +111,7 @@ const VendorMapping: React.FC = () => {
     });
 
     setVendors(initialMappings);
+    console.log('VendorMapping vendors:', initialMappings);
   }, [location.state]);
 
   const handleVendorChange = (index: number, field: keyof VendorMappingEntry, value: string) => {
@@ -119,13 +125,14 @@ const VendorMapping: React.FC = () => {
 const handleConfirm = () => {
     console.log('VendorMapping: save clicked');
 
-    if (!hasValidData()) {
+    if (!hasRequiredState() || !hasValidData()) {
       console.warn('Save attempted without valid vendor data or messages');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
         description: 'Vendor information or messages are missing.'
       });
+      if (!hasRequiredState()) navigate('/');
       return;
     }
 
@@ -158,13 +165,14 @@ const handleConfirm = () => {
 const handleRetry = () => {
     console.log('VendorMapping: retry clicked');
 
-    if (!hasValidData()) {
+    if (!hasRequiredState() || !hasValidData()) {
       console.warn('Retry attempted without valid vendor data or messages');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
         description: 'Vendor information or messages are missing.'
       });
+      if (!hasRequiredState()) navigate('/');
       return;
     }
 
@@ -173,6 +181,16 @@ const handleRetry = () => {
 
   const handleBack = () => {
     console.log('VendorMapping: back clicked');
+    if (!hasRequiredState()) {
+      console.warn('Back navigation attempted without valid vendor data or messages');
+      toast({
+        variant: 'destructive',
+        title: 'Missing vendor data',
+        description: 'Vendor information or messages are missing.'
+      });
+      navigate('/');
+      return;
+    }
     if (!hasValidData()) {
       console.warn('Back navigation attempted without valid vendor data or messages');
       toast({
@@ -184,8 +202,15 @@ const handleRetry = () => {
     navigate(-1);
   };
 
-  if (!location.state) {
-    return null;
+  if (!hasRequiredState()) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center gap-4 py-8">
+          <p className="text-center">Missing vendor data. Please reprocess SMS messages.</p>
+          <Button onClick={() => navigate('/')}>Go Home</Button>
+        </div>
+      </Layout>
+    );
   }
 
   return (

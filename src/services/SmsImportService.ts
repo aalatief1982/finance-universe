@@ -1,6 +1,10 @@
 import { SmsReaderService, SmsEntry } from './SmsReaderService';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
-import { getSelectedSmsSenders, getSmsSenderImportMap } from '@/utils/storage-utils';
+import {
+  getSelectedSmsSenders,
+  getSmsSenderImportMap,
+  setSelectedSmsSenders
+} from '@/utils/storage-utils';
 
 // Flags to ensure auto import prompts only appear once per session
 
@@ -60,6 +64,8 @@ export class SmsImportService {
         return new Date(msg.date).getTime() > senderDate.getTime();
       });
 
+      setSelectedSmsSenders(senders);
+
       if (filteredMessages.length === 0) return;
 
       if (auto && !autoAlertShown) {
@@ -88,6 +94,10 @@ export class SmsImportService {
           }
         }
       });
+
+      if (filteredMessages.length === 0 || Object.keys(vendorMap).length === 0) {
+        return;
+      }
 
       navigate('/vendor-mapping', { state: { messages: filteredMessages, vendorMap, keywordMap } });
     } catch (error) {
