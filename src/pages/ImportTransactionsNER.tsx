@@ -15,14 +15,14 @@ const ImportTransactionsNER = () => {
 
   const handleTransactionsDetected = (
     transactions: Transaction[],
-	  rawMessage?: string,
-	  senderHint?: string,
-	  confidence?: number,
-	  matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
-	  matchedCount?: number,
-	  totalTemplates?: number,
-	  fieldScore?: number,
-	  keywordScore?: number
+    rawMessage?: string,
+    senderHint?: string,
+    confidence?: number,
+    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+    matchedCount?: number,
+    totalTemplates?: number,
+    fieldScore?: number,
+    keywordScore?: number
   ) => {
     console.log('[ImportTransactionsNER] Transactions detected', {
       count: transactions.length,

@@ -26,19 +26,6 @@ export class SmsImportService {
       const senders = getSelectedSmsSenders();
       if (senders.length === 0) return;
 
-      if (auto && !autoPromptShown) {
-        autoPromptShown = true;
-
-        autoPromptAccepted = window.confirm(
-
-          'Automatically import new SMS messages from your saved senders?'
-        );
-        if (!autoPromptAccepted) return;
-      } else if (auto && autoPromptShown && autoPromptAccepted === false) {
-        // user declined earlier in this session
-        return;
-      }
-
       const senderMap = getSmsSenderImportMap();
 
       // Determine the earliest date we need to scan from based on the
@@ -67,6 +54,19 @@ export class SmsImportService {
       setSelectedSmsSenders(senders);
 
       if (filteredMessages.length === 0) return;
+
+      if (auto && !autoPromptShown) {
+        autoPromptShown = true;
+
+        autoPromptAccepted = window.confirm(
+          'Automatically import new SMS messages from your saved senders?'
+        );
+
+        if (!autoPromptAccepted) return;
+      } else if (auto && autoPromptShown && autoPromptAccepted === false) {
+        // user declined earlier in this session
+        return;
+      }
 
       if (auto && !autoAlertShown) {
         autoAlertShown = true;

@@ -22,8 +22,11 @@ interface SmartPasteProps {
     rawMessage?: string,
     senderHint?: string,
     confidence?: number,
-    shouldTrain?: boolean,
-    matchOrigin?: "template" | "structure" | "ml" | "fallback"
+    matchOrigin?: "template" | "structure" | "ml" | "fallback",
+    matchedCount?: number,
+    totalTemplates?: number,
+    fieldScore?: number,
+    keywordScore?: number
   ) => void;
 }
 
@@ -103,7 +106,11 @@ const handleSubmit = async (e: React.FormEvent) => {
       origin,
       parsed,
       fieldConfidences,
-      parsingStatus
+      parsingStatus,
+      matchedCount,
+      totalTemplates,
+      fieldScore,
+      keywordScore
     } = await parseAndInferTransaction(text, senderHint);
 
     console.log("[SmartPaste] Parsed result:", parsed);
@@ -123,8 +130,11 @@ const handleSubmit = async (e: React.FormEvent) => {
         text,
         transaction.fromAccount,
         confidence,
-        origin === 'template' || origin === 'ml',
-        origin
+        origin,
+        matchedCount,
+        totalTemplates,
+        fieldScore,
+        keywordScore
       );
     }
   } catch (err: any) {
@@ -167,7 +177,17 @@ const handleSubmit = async (e: React.FormEvent) => {
     
     console.log("[SmartPaste] Transaction added:", transaction);
     if (onTransactionsDetected) {
-      onTransactionsDetected([transaction], text, senderHint, 0.95, true, 'structure');
+      onTransactionsDetected(
+        [transaction],
+        text,
+        senderHint,
+        0.95,
+        'structure',
+        0,
+        0,
+        undefined,
+        undefined
+      );
     }
 
     toast({

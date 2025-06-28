@@ -24,8 +24,11 @@ interface NERSmartPasteProps {
     rawMessage?: string,
     senderHint?: string,
     confidence?: number,
-    shouldTrain?: boolean,
-    matchOrigin?: "template" | "structure" | "ml" | "fallback"
+    matchOrigin?: "template" | "structure" | "ml" | "fallback",
+    matchedCount?: number,
+    totalTemplates?: number,
+    fieldScore?: number,
+    keywordScore?: number
   ) => void;
 }
 
@@ -80,7 +83,17 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     if (onTransactionsDetected) {
       console.log('[NER] Final transaction:', transaction);
-      onTransactionsDetected([transaction], text, senderHint);
+      onTransactionsDetected(
+        [transaction],
+        text,
+        senderHint,
+        0.9,
+        'ml',
+        0,
+        0,
+        undefined,
+        undefined
+      );
     }
   } catch (err: any) {
     console.error('[NER] Extraction error:', err);
@@ -122,7 +135,17 @@ const handleSubmit = async (e: React.FormEvent) => {
     
     console.log('[NER] Transaction added:', transaction);
     if (onTransactionsDetected) {
-      onTransactionsDetected([transaction], text, senderHint);
+      onTransactionsDetected(
+        [transaction],
+        text,
+        senderHint,
+        0.9,
+        'ml',
+        0,
+        0,
+        undefined,
+        undefined
+      );
     }
 
     toast({

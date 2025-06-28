@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -61,6 +62,7 @@ interface DraftTransaction {
 
 const ReviewSmsTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<DraftTransaction[]>([]);
+  const [skipped, setSkipped] = useState<DraftTransaction[]>([]);
   const { toast } = useToast();
   const location = useLocation();
   const { addTransaction, updateTransaction } = useTransactions();
@@ -173,24 +175,36 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
   }
 };
 
+const handleSkip = (index: number) => {
+  const tx = transactions[index];
+  setSkipped(prev => [...prev, tx]);
+  setTransactions(transactions.filter((_, i) => i !== index));
+
+  toast({
+    variant: 'destructive',
+    title: 'Message skipped',
+    description: 'This transaction will not be saved.',
+  });
+};
+
   const handleSave = () => {
     const valid: Array<{ txn: DraftTransaction; idx: number }> = [];
-    const skippedTransactions: DraftTransaction[] = [];
+    const incomplete: DraftTransaction[] = [];
 
     transactions.forEach((txn, idx) => {
       const title = generateDefaultTitle(txn);
       if (txn.amount && txn.currency && txn.date && txn.category && txn.subcategory && title) {
         valid.push({ txn: { ...txn, title }, idx });
       } else {
-        skippedTransactions.push(txn);
+        incomplete.push(txn);
       }
     });
 
-    if (skippedTransactions.length > 0) {
+    if (incomplete.length > 0) {
       toast({
         variant: 'destructive',
         title: 'Some transactions skipped',
-        description: `${skippedTransactions.length} incomplete transaction(s) were not saved.`,
+        description: `${incomplete.length} incomplete transaction(s) were not saved.`,
       });
     }
 
@@ -240,6 +254,7 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
     });
 
     setTransactions([]);
+    setSkipped([]);
   };
 
   const navigate = useNavigate();
@@ -264,14 +279,19 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
               ? 'warning'
               : 'destructive';
         return (
-        <Card key={index} className={`p-[var(--card-padding)] mb-4 border ${borderColor}`}> 
+        <Card key={index} className={`p-[var(--card-padding)] mb-4 border ${borderColor}`}>
           <div className="flex justify-between mb-2 items-center">
             <p className="text-sm text-gray-500 break-words">{txn.rawMessage}</p>
-            {txn.confidence !== undefined && (
-              <Badge variant={badgeVariant} className="shrink-0 ml-2">
-                {Math.round(txn.confidence * 100)}%
-              </Badge>
-            )}
+            <div className="flex items-center gap-1">
+              {txn.confidence !== undefined && (
+                <Badge variant={badgeVariant} className="shrink-0 ml-2">
+                  {Math.round(txn.confidence * 100)}%
+                </Badge>
+              )}
+              <Button variant="ghost" size="icon" onClick={() => handleSkip(index)}>
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Input
@@ -460,9 +480,6 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
         </AlertDialog>
       )}
 
-      <Button className="w-full mt-4" onClick={handleSave}>
-        Save All
-      </Button>
     </Layout>
   );
 };
