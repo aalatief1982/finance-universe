@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Trash2 } from 'lucide-react';
 import Layout from '@/components/Layout';
@@ -30,9 +30,12 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
+import { useProfileImage } from '@/hooks/useProfileImage';
+
 const Profile = () => {
   const { user, updateUser } = useUser();
   const { toast } = useToast();
+  const { image, takeOrSelectPhoto } = useProfileImage();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     fullName: user?.fullName || '',
@@ -40,6 +43,12 @@ const Profile = () => {
     phone: user?.phone || '',
     avatar: user?.avatar,
   });
+
+  useEffect(() => {
+    if (image) {
+      updateUser({ avatar: image });
+    }
+  }, [image, updateUser]);
 
   const handleSaveProfile = () => {
     if (!editFormData.fullName.trim()) {
@@ -62,19 +71,6 @@ const Profile = () => {
     setEditFormData({ ...editFormData, [name]: value });
   };
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      setEditFormData({ ...editFormData, avatar: dataUrl });
-      updateUser({ avatar: dataUrl });
-      toast({ title: 'Avatar updated', description: 'Your profile picture has been updated.' });
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleDeleteAccount = () => {
     toast({
@@ -126,22 +122,16 @@ const Profile = () => {
         <div className="bg-card rounded-lg border p-6 flex flex-col items-center text-center space-y-4">
           <div className="relative">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={user?.avatar || '/placeholder.svg'} alt={user?.fullName || 'User'} />
+              <AvatarImage src={image ?? user?.avatar || '/placeholder.svg'} alt={user?.fullName || 'User'} />
               <AvatarFallback>{user?.fullName?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
-            <label
-              htmlFor="avatar-upload"
+            <button
+              type="button"
+              onClick={takeOrSelectPhoto}
               className="absolute bottom-0 right-0 bg-primary text-primary-foreground h-8 w-8 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
             >
               <Camera size={14} />
-              <Input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="hidden dark:bg-white dark:text-black"
-                onChange={handleAvatarUpload}
-              />
-            </label>
+            </button>
           </div>
 
           <div className="space-y-1">
