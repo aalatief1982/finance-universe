@@ -19,6 +19,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
+import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -183,7 +184,7 @@ const Settings = () => {
   };
   
   const handleResetData = () => {
-    localStorage.removeItem('transactions');
+    localStorage.removeItem('xpensia_transactions');
     toast({
       title: "Data reset successful",
       description: "All your transaction data has been reset.",
@@ -192,8 +193,8 @@ const Settings = () => {
   };
   
   const handleExportData = () => {
-    const transactions = localStorage.getItem('transactions');
-    if (!transactions) {
+    const transactions = getStoredTransactions();
+    if (!transactions.length) {
       toast({
         title: "No data to export",
         description: "You don't have any transactions to export.",
@@ -201,8 +202,10 @@ const Settings = () => {
       });
       return;
     }
-    
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(transactions);
+
+    const dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(transactions));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", "expense-tracker-data.json");
@@ -224,7 +227,7 @@ const Settings = () => {
     reader.onload = (e) => {
       try {
         const jsonData = JSON.parse(e.target?.result as string);
-        localStorage.setItem('transactions', JSON.stringify(jsonData));
+        storeTransactions(jsonData);
         toast({
           title: "Import successful",
           description: "Your data has been imported successfully.",
