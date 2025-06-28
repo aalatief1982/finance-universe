@@ -61,4 +61,49 @@ describe('SmsImportService.checkForNewMessages', () => {
       state: { messages, vendorMap, keywordMap }
     });
   });
+
+  it('prompts user only when there are new messages in auto mode', async () => {
+    const messages = [
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() }
+    ];
+
+    (SmsReaderService.readSmsMessages as jest.Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as jest.Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as jest.Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
+    (setSelectedSmsSenders as jest.Mock).mockImplementation(() => {});
+
+    (extractVendorName as jest.Mock).mockReturnValue('Starbucks');
+    (inferIndirectFields as jest.Mock).mockReturnValue({ category: 'Food', subcategory: 'Coffee', type: 'expense' });
+
+    const navigate = jest.fn();
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+
+    await SmsImportService.checkForNewMessages(navigate, { auto: true });
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('does not prompt when no new messages are found in auto mode', async () => {
+    const messages = [
+      { sender: 'BANK', message: 'Old message', date: new Date(0).toISOString() }
+    ];
+
+    (SmsReaderService.readSmsMessages as jest.Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as jest.Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as jest.Mock).mockReturnValue({ BANK: new Date().toISOString() });
+    (setSelectedSmsSenders as jest.Mock).mockImplementation(() => {});
+
+    const navigate = jest.fn();
+    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+
+    await SmsImportService.checkForNewMessages(navigate, { auto: true });
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    expect(navigate).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
 });
