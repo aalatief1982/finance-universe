@@ -122,7 +122,12 @@ const Profile = () => {
         <div className="bg-card rounded-lg border p-6 flex flex-col items-center text-center space-y-4">
           <div className="relative">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={image ?? user?.avatar || '/placeholder.svg'} alt={user?.fullName || 'User'} />
+
+              <AvatarImage
+                src={image ?? (user?.avatar || '/placeholder.svg')}
+                alt={user?.fullName || 'User'}
+              />
+
               <AvatarFallback>{user?.fullName?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <button
