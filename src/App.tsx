@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import { UserProvider } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
+import { LocaleProvider } from './context/LocaleContext';
 import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
 import ImportTransactionsNER from './pages/ImportTransactionsNER';
@@ -251,12 +252,14 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" attribute="class">
-        <UserProvider>
-          <TransactionProvider>
-            <AppWrapper />
-            <Toaster />
-          </TransactionProvider>
-        </UserProvider>
+        <LocaleProvider>
+          <UserProvider>
+            <TransactionProvider>
+              <AppWrapper />
+              <Toaster />
+            </TransactionProvider>
+          </UserProvider>
+        </LocaleProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

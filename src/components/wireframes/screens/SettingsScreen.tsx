@@ -20,7 +20,7 @@ interface UserData {
     currency?: string;
     displayOptions?: {
       showCents?: boolean;
-      weekStartsOn?: 'sunday' | 'monday';
+      weekStartsOn?: 'sunday' | 'monday' | 'saturday';
       defaultView?: 'list' | 'stats' | 'calendar';
       compactMode?: boolean;
     };

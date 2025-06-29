@@ -107,7 +107,7 @@ export const userPreferencesSchema = z.object({
   }),
   displayOptions: z.object({
     showCents: z.boolean(),
-    weekStartsOn: z.enum(["sunday", "monday"]),
+    weekStartsOn: z.enum(["sunday", "monday", "saturday"]),
     defaultView: z.enum(["list", "stats", "calendar"]),
     compactMode: z.boolean().optional(),
     showCategories: z.boolean().optional(),

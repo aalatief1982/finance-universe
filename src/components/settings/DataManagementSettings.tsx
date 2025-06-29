@@ -14,6 +14,7 @@ import {
   getStoredTransactions,
   storeTransactions
 } from '@/utils/storage-utils';
+import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
 
 // Define the correct types for backupFrequency and dataRetention
 type BackupFrequency = 'daily' | 'weekly' | 'monthly' | 'never';
@@ -105,16 +106,18 @@ const DataManagementSettings = () => {
         return;
       }
 
-      const dataStr =
-        "data:text/json;charset=utf-8," +
-        encodeURIComponent(JSON.stringify(transactions));
+      const csv = convertTransactionsToCsv(transactions);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
       const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", "expense-tracker-data.json");
+      downloadAnchorNode.href = url;
+      downloadAnchorNode.download = 'transactions.csv';
       document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
-      
+      URL.revokeObjectURL(url);
+
       toast({
         title: "Export successful",
         description: "Your data has been exported successfully.",
@@ -131,7 +134,7 @@ const DataManagementSettings = () => {
   const handleImportData = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.json';
+    fileInput.accept = '.json,.csv';
     
     fileInput.onchange = (e) => {
       const target = e.target as HTMLInputElement;
@@ -139,11 +142,18 @@ const DataManagementSettings = () => {
       
       const file = target.files[0];
       const reader = new FileReader();
-      
+
       reader.onload = (event) => {
         try {
-          const jsonData = JSON.parse(event.target?.result as string);
-          storeTransactions(jsonData);
+          const text = event.target?.result as string;
+          const isCsv = file.name.toLowerCase().endsWith('.csv');
+          const data = isCsv ? parseCsvTransactions(text) : JSON.parse(text);
+
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('No valid transactions');
+          }
+
+          storeTransactions(data as any);
           toast({
             title: "Import successful",
             description: "Your data has been imported successfully.",
@@ -152,12 +162,12 @@ const DataManagementSettings = () => {
         } catch (error) {
           toast({
             title: "Import failed",
-            description: "Failed to parse the imported file. Make sure it's a valid JSON file.",
+            description: "Failed to parse the imported file. Make sure it's a valid JSON or CSV file.",
             variant: "destructive",
           });
         }
       };
-      
+
       reader.readAsText(file);
     };
     

@@ -36,7 +36,7 @@ export interface UserPreferences {
   };
   displayOptions: {
     showCents: boolean;
-    weekStartsOn: 'sunday' | 'monday';
+    weekStartsOn: 'sunday' | 'monday' | 'saturday';
     defaultView: 'list' | 'stats' | 'calendar';
     compactMode: boolean;
     showCategories: boolean;
@@ -63,6 +63,7 @@ export interface UserPreferences {
     autoDetectProviders: boolean;
     showDetectionNotifications: boolean;
     autoImport?: boolean;
+    backgroundSmsEnabled?: boolean;
   };
   categories?: {
     showUncategorized: boolean;

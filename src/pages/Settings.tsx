@@ -8,33 +8,33 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Download, UploadCloud, RefreshCw, Shield, Sun, Moon, Trash, Bell, Database, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
+import { Sun, Moon, Trash, Bell, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
+import { SmsReaderService } from '@/services/SmsReaderService';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
-import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
+import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
+import { useLocale } from '@/context/LocaleContext';
 
 const Settings = () => {
   const { toast } = useToast();
-  const { 
+  const {
     user, 
     updateTheme, 
     updateCurrency, 
     updateLanguage, 
     updateNotificationSettings,
     updateDisplayOptions,
-    updatePrivacySettings,
-    updateDataManagement,
     updateUserPreferences,
     getEffectiveTheme
   } = useUser();
+  const { setLanguage: loadLanguage } = useLocale();
   
   // State for form values
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
@@ -45,40 +45,13 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.preferences?.notifications || false
   );
-  // Fix: Explicitly type showCents as boolean instead of letting TypeScript infer it
-  const [showCents, setShowCents] = useState<boolean>(
-    user?.preferences?.displayOptions?.showCents !== false
+  const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
+    user?.preferences?.sms?.backgroundSmsEnabled || false
   );
-  const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday'>(
+  const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday' | 'saturday'>(
     user?.preferences?.displayOptions?.weekStartsOn || 'sunday'
   );
-  const [defaultView, setDefaultView] = useState<'list' | 'stats' | 'calendar'>(
-    user?.preferences?.displayOptions?.defaultView || 'list'
-  );
-  const [compactMode, setCompactMode] = useState(
-    user?.preferences?.displayOptions?.compactMode || false
-  );
-  
-  // Fix: Explicitly type maskAmounts as boolean and use Boolean() for initialization
-  const [maskAmounts, setMaskAmounts] = useState<boolean>(
-    Boolean(user?.preferences?.privacy?.maskAmounts)
-  );
-  
-  const [requireAuth, setRequireAuth] = useState(
-    user?.preferences?.privacy?.requireAuthForSensitiveActions || false
-  );
-  const [dataSharing, setDataSharing] = useState<'none' | 'anonymous' | 'full'>(
-    user?.preferences?.privacy?.dataSharing || 'none'
-  );
-  const [autoBackup, setAutoBackup] = useState(
-    user?.preferences?.dataManagement?.autoBackup || false
-  );
-  const [backupFrequency, setBackupFrequency] = useState<'daily' | 'weekly' | 'monthly'>(
-    user?.preferences?.dataManagement?.backupFrequency || 'weekly'
-  );
-  const [dataRetention, setDataRetention] = useState<'3months' | '6months' | '1year' | 'forever'>(
-    user?.preferences?.dataManagement?.dataRetention || 'forever'
-  );
+
   
   // Initialize values from user context on component mount
   useEffect(() => {
@@ -87,25 +60,12 @@ const Settings = () => {
       setCurrency(user.preferences.currency || 'USD');
       setLanguage(user.preferences.language || 'en');
       setNotificationsEnabled(user.preferences.notifications || false);
-      
+      if (user.preferences.sms) {
+        setBackgroundSmsEnabled(user.preferences.sms.backgroundSmsEnabled || false);
+      }
+
       if (user.preferences.displayOptions) {
-        setShowCents(user.preferences.displayOptions.showCents || true);
         setWeekStartsOn(user.preferences.displayOptions.weekStartsOn || 'sunday');
-        setDefaultView(user.preferences.displayOptions.defaultView || 'list');
-        setCompactMode(user.preferences.displayOptions.compactMode || false);
-      }
-      
-      if (user.preferences.privacy) {
-        // Ensure we use Boolean to convert to a proper boolean value
-        setMaskAmounts(Boolean(user.preferences.privacy.maskAmounts));
-        setRequireAuth(user.preferences.privacy.requireAuthForSensitiveActions || false);
-        setDataSharing(user.preferences.privacy.dataSharing || 'none');
-      }
-      
-      if (user.preferences.dataManagement) {
-        setAutoBackup(user.preferences.dataManagement.autoBackup || false);
-        setBackupFrequency(user.preferences.dataManagement.backupFrequency || 'weekly');
-        setDataRetention(user.preferences.dataManagement.dataRetention || 'forever');
       }
     }
   }, [user]);
@@ -119,11 +79,13 @@ const Settings = () => {
   const handleCurrencyChange = (value: string) => {
     setCurrency(value);
     updateCurrency(value);
+    persistCurrency(value);
   };
-  
+
   const handleLanguageChange = (value: string) => {
     setLanguage(value);
     updateLanguage(value);
+    loadLanguage(value);
   };
   
   const handleNotificationsChange = (checked: boolean) => {
@@ -131,10 +93,26 @@ const Settings = () => {
     updateNotificationSettings(checked);
   };
 
+  const handleBackgroundSmsChange = async (checked: boolean) => {
+    if (checked) {
+      const granted = await SmsReaderService.checkOrRequestPermission();
+      if (!granted) {
+        alert('SMS permission is required to read messages in the background.');
+        setBackgroundSmsEnabled(false);
+        return;
+      }
+    }
+
+    setBackgroundSmsEnabled(checked);
+    updateUserPreferences({ sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked } });
+  };
+
   const handleAppearanceSave = () => {
     updateTheme(theme);
     updateCurrency(currency);
+    persistCurrency(currency);
     updateLanguage(language);
+    loadLanguage(language);
     updateNotificationSettings(notificationsEnabled);
 
     toast({
@@ -145,10 +123,7 @@ const Settings = () => {
   
   const handleDisplayOptionsChange = () => {
     updateDisplayOptions({
-      showCents,
-      weekStartsOn,
-      defaultView,
-      compactMode
+      weekStartsOn
     });
     
     toast({
@@ -157,112 +132,9 @@ const Settings = () => {
     });
   };
   
-  const handlePrivacySettingsChange = () => {
-    updatePrivacySettings({
-      maskAmounts,
-      requireAuthForSensitiveActions: requireAuth,
-      dataSharing
-    });
-    
-    toast({
-      title: "Privacy settings updated",
-      description: "Your privacy settings have been saved."
-    });
-  };
-  
-  const handleDataManagementChange = () => {
-    updateDataManagement({
-      autoBackup,
-      backupFrequency,
-      dataRetention
-    });
-    
-    toast({
-      title: "Data management updated",
-      description: "Your data management settings have been saved."
-    });
-  };
-  
-  const handleResetData = () => {
-    localStorage.removeItem('xpensia_transactions');
-    toast({
-      title: "Data reset successful",
-      description: "All your transaction data has been reset.",
-    });
-    window.location.reload();
-  };
-  
-  const handleExportData = () => {
-    const transactions = getStoredTransactions();
-    if (!transactions.length) {
-      toast({
-        title: "No data to export",
-        description: "You don't have any transactions to export.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const dataStr =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(transactions));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "expense-tracker-data.json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    
-    toast({
-      title: "Export successful",
-      description: "Your data has been exported successfully.",
-    });
-  };
-  
-  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const jsonData = JSON.parse(e.target?.result as string);
-        storeTransactions(jsonData);
-        toast({
-          title: "Import successful",
-          description: "Your data has been imported successfully.",
-        });
-        setTimeout(() => window.location.reload(), 1500);
-      } catch (error) {
-        toast({
-          title: "Import failed",
-          description: "Failed to parse the imported file. Make sure it's a valid JSON file.",
-          variant: "destructive",
-        });
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  // Fix: Improve the maskAmounts handler to use the new boolean state
-  const handleMaskAmountsChange = (checked: boolean) => {
-    // Use the boolean value directly
-    setMaskAmounts(checked);
-    
-    updatePrivacySettings({
-      maskAmounts: checked,
-      requireAuthForSensitiveActions: requireAuth,
-      dataSharing
-    });
-    
-    toast({
-      title: "Privacy settings updated",
-      description: "Your privacy settings have been saved."
-    });
-  };
   
   return (
-    <Layout>
+    <Layout showBack>
       <PageHeader title="Settings" />
       <motion.div
         initial={{ opacity: 0 }}
@@ -338,17 +210,6 @@ const Settings = () => {
                   </Select>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notifications">Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
-                  </div>
-                <Switch
-                    id="notifications"
-                    checked={notificationsEnabled}
-                    onCheckedChange={handleNotificationsChange}
-                  />
-                </div>
                 <Button
                   className="w-full mt-4"
                   onClick={handleAppearanceSave}
@@ -367,54 +228,19 @@ const Settings = () => {
                 <CardDescription>Customize how information is displayed</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="show-cents">Show Cents</Label>
-                    <p className="text-sm text-muted-foreground">Display decimal values for amounts</p>
-                  </div>
-                  <Switch 
-                    id="show-cents" 
-                    checked={showCents}
-                    onCheckedChange={(checked) => setShowCents(checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="compact-mode">Compact Mode</Label>
-                    <p className="text-sm text-muted-foreground">Use more compact UI elements</p>
-                  </div>
-                  <Switch 
-                    id="compact-mode" 
-                    checked={compactMode}
-                    onCheckedChange={(checked) => setCompactMode(checked)}
-                  />
-                </div>
-                
                 <div className="space-y-2">
                   <Label>Week Starts On</Label>
-                  <ToggleGroup 
-                    type="single" 
+                  <ToggleGroup
+                    type="single"
                     value={weekStartsOn}
-                    onValueChange={(value) => value && setWeekStartsOn(value as 'sunday' | 'monday')}
+                    onValueChange={(value) =>
+                      value && setWeekStartsOn(value as 'sunday' | 'monday' | 'saturday')
+                    }
                     className="justify-start"
                   >
                     <ToggleGroupItem value="sunday">Sunday</ToggleGroupItem>
                     <ToggleGroupItem value="monday">Monday</ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Default View</Label>
-                  <ToggleGroup 
-                    type="single" 
-                    value={defaultView}
-                    onValueChange={(value) => value && setDefaultView(value as 'list' | 'stats' | 'calendar')}
-                    className="justify-start"
-                  >
-                    <ToggleGroupItem value="list">List</ToggleGroupItem>
-                    <ToggleGroupItem value="stats">Stats</ToggleGroupItem>
-                    <ToggleGroupItem value="calendar">Calendar</ToggleGroupItem>
+                    <ToggleGroupItem value="saturday">Saturday</ToggleGroupItem>
                   </ToggleGroup>
                 </div>
                 
@@ -424,183 +250,46 @@ const Settings = () => {
                 >
                   Save Display Preferences
                 </Button>
-              </CardContent>
-            </Card>
-            <Card className="border border-border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="mr-2" size={20} />
-                  <span>Privacy Settings</span>
-                </CardTitle>
-                <CardDescription>Manage your data privacy and security</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="mask-amounts">Mask Amounts</Label>
-                    <p className="text-sm text-muted-foreground">Hide transaction amounts by default</p>
-                  </div>
-                  <Switch 
-                    id="mask-amounts" 
-                    checked={maskAmounts}
-                    onCheckedChange={handleMaskAmountsChange}
-                  />
+            </CardContent>
+          </Card>
+          <Card className="border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bell className="mr-2" size={20} />
+                <span>Notification Settings</span>
+              </CardTitle>
+              <CardDescription>Manage notification preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notifications">Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="require-auth">Require Authentication for Sensitive Actions</Label>
-                    <p className="text-sm text-muted-foreground">Additional security for important changes</p>
-                  </div>
-                  <Switch 
-                    id="require-auth" 
-                    checked={requireAuth}
-                    onCheckedChange={setRequireAuth}
-                  />
+                <Switch
+                  id="notifications"
+                  checked={notificationsEnabled}
+                  onCheckedChange={handleNotificationsChange}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
+                  <p className="text-sm text-muted-foreground">Read incoming SMS in the background</p>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="data-sharing">Data Sharing</Label>
-                  <Select value={dataSharing} onValueChange={(value) => setDataSharing(value as 'none' | 'anonymous' | 'full')}>
-                    <SelectTrigger id="data-sharing" className="w-full">
-                      <SelectValue placeholder="Data sharing level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No data sharing</SelectItem>
-                      <SelectItem value="anonymous">Anonymous usage data only</SelectItem>
-                      <SelectItem value="full">Full data sharing</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Controls what data is shared with us to help improve the app.
-                  </p>
-                </div>
-                
-                <Button 
-                  className="w-full mt-4" 
-                  onClick={handlePrivacySettingsChange}
-                >
-                  Save Privacy Settings
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="border border-border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Database className="mr-2" size={20} />
-                  <span>Data Management</span>
-                </CardTitle>
-                <CardDescription>Manage your data and privacy settings</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="auto-backup">Automatic Backups</Label>
-                      <p className="text-sm text-muted-foreground">Regularly back up your data</p>
-                    </div>
-                    <Switch 
-                      id="auto-backup" 
-                      checked={autoBackup}
-                      onCheckedChange={setAutoBackup}
-                    />
-                  </div>
-                  
-                  {autoBackup && (
-                    <div className="space-y-2">
-                      <Label htmlFor="backup-frequency">Backup Frequency</Label>
-                      <Select 
-                        value={backupFrequency} 
-                        onValueChange={(value) => setBackupFrequency(value as 'daily' | 'weekly' | 'monthly')}
-                        disabled={!autoBackup}
-                      >
-                        <SelectTrigger id="backup-frequency" className="w-full">
-                          <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="data-retention">Data Retention</Label>
-                    <Select 
-                      value={dataRetention} 
-                      onValueChange={(value) => setDataRetention(value as '3months' | '6months' | '1year' | 'forever')}
-                    >
-                      <SelectTrigger id="data-retention" className="w-full">
-                        <SelectValue placeholder="Select data retention" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="3months">3 Months</SelectItem>
-                        <SelectItem value="6months">6 Months</SelectItem>
-                        <SelectItem value="1year">1 Year</SelectItem>
-                        <SelectItem value="forever">Forever</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      How long to keep your transaction history.
-                    </p>
-                  </div>
-                  
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
-                    onClick={handleDataManagementChange}
-                  >
-                    Save Data Management Settings
-                  </Button>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Export Data</p>
-                      <p className="text-sm text-muted-foreground">Download all your transaction data</p>
-                    </div>
-                    <Button variant="outline" onClick={handleExportData} className="gap-2">
-                      <Download size={16} />
-                      Export
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Import Data</p>
-                      <p className="text-sm text-muted-foreground">Import transactions from a file</p>
-                    </div>
-                    <div>
-                      <Input
-                        id="import-file"
-                        type="file"
-                        accept=".json"
-                        className="hidden"
-                        onChange={handleImportData}
-                      />
-                      <Button 
-                        variant="outline" 
-                        className="gap-2"
-                        onClick={() => document.getElementById('import-file')?.click()}
-                      >
-                        <UploadCloud size={16} />
-                        Import
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border border-border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MessageSquare className="mr-2" size={20} />
-                  <span>SMS Import</span>
+                <Switch
+                  id="background-sms"
+                  checked={backgroundSmsEnabled}
+                  onCheckedChange={handleBackgroundSmsChange}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="mr-2" size={20} />
+                <span>SMS Import</span>
                 </CardTitle>
                 <CardDescription>Automatically import new SMS messages</CardDescription>
               </CardHeader>
@@ -613,7 +302,9 @@ const Settings = () => {
                   <Switch
                     id="auto-sms-import"
                     checked={!!user?.preferences?.sms?.autoImport}
-                    onCheckedChange={(checked) => updateUserPreferences({ sms: { autoImport: checked } })}
+                    onCheckedChange={(checked) =>
+                      updateUserPreferences({ sms: { ...user?.preferences?.sms, autoImport: checked } })
+                    }
                   />
                 </div>
               </CardContent>
@@ -630,32 +321,6 @@ const Settings = () => {
                 <CardDescription>Irreversible actions that affect your data</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full gap-2">
-                      <RefreshCw size={16} />
-                      Reset All Data
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action will permanently delete all your transaction data and cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onClick={handleResetData}
-                      >
-                        Reset All Data
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" className="w-full">Delete Account</Button>
