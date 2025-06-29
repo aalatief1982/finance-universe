@@ -48,6 +48,7 @@ export interface UserPreferences {
   };
   sms?: {
     autoImport?: boolean;
+    backgroundSmsEnabled?: boolean;
   };
   updatedAt?: string;
 }
