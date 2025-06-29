@@ -72,22 +72,34 @@ Simply open [Lovable](https://lovable.dev/projects/44f11ecc-0e77-4a7d-a302-6102d
 
 ## Environment Variables
 
-The app reads configuration from Vite environment variables. The newly added `VITE_CLOUD_FUNCTIONS_BASE_URL` controls where the Firebase Cloud Functions requests are sent.
-`VITE_SMS_LOOKBACK_MONTHS` sets the default number of months of SMS history to scan when importing messages (default `6`).
+The project reads configuration from Vite environment variables. Copy `.env.sample` to `.env` and fill in your own values before running the app.
 
-Two variables are required to connect to Supabase:
+Required variables:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 
-Create a `.env` file based on `.env.sample` and set these values before running the app.
+Optional variables:
 
-For the Cloud Functions base URL you can use:
+- `VITE_CLOUD_FUNCTIONS_BASE_URL` &ndash; controls where Firebase Cloud Functions requests are sent.
+- `VITE_SMS_LOOKBACK_MONTHS` &ndash; sets the default number of months of SMS history to scan when importing messages (default `6`).
 
-- **Production URL:** `https://us-central1-xpensia-505ac.cloudfunctions.net`
-- **Local emulator URL:** `http://localhost:5001/xpensia-505ac/us-central1`
+Example Cloud Functions base URLs:
 
-Define this variable in your `.env` file when running locally or configure it in your hosting environment.
+- **Production:** `https://us-central1-xpensia-505ac.cloudfunctions.net`
+- **Local emulator:** `http://localhost:5001/xpensia-505ac/us-central1`
+
+Define these variables in your `.env` file when running locally or configure them in your hosting environment.
+
+## Firebase setup
+
+Firebase features such as Cloud Functions and push notifications require a `google-services.json` file in the Android project. If you customise the Android application ID you must also generate a matching `google-services.json`.
+
+1. In the Firebase console create or open your project and add an **Android app**.
+2. Use the application ID from `capacitor.config.ts` (default `app.xpensia.com`). If you change this ID update it both in `capacitor.config.ts` and in `android/app/build.gradle`, and rename the Java package folders under `android/app/src/main/java` to match.
+3. Download the `google-services.json` generated for that app.
+4. Place the file at `android/app/google-services.json`.
+5. Rebuild the project so the Google Services Gradle plugin picks up the new configuration.
 
 ## I want to use a custom domain - is that possible?
 
