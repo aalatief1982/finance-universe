@@ -129,6 +129,23 @@ const Settings = () => {
       description: t('settings-saved-desc')
     });
   };
+
+  // Legacy handler used by the save button
+  const handleSaveSettings = () => {
+    handleAppearanceSave();
+  };
+
+  // Handler for the display options "save" button
+  const handleDisplayOptionsChange = () => {
+    updateDisplayOptions({
+      weekStartsOn
+    });
+
+    toast({
+      title: t('settings-updated'),
+      description: t('settings-saved-desc')
+    });
+  };
   
   
   return (
