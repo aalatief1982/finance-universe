@@ -1,25 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
-import PageHeader from '@/components/layout/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Sun, Moon, Trash, Bell, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
+import { Sun, Moon, Trash, Bell, Eye, MessageSquare, Download, UploadCloud, Database } from 'lucide-react';
 import { SmsReaderService } from '@/services/SmsReaderService';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
-import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
+import { updateCurrency as persistCurrency, getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
+import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
 import { useLocale } from '@/context/LocaleContext';
 
 const Settings = () => {
@@ -28,8 +23,7 @@ const Settings = () => {
     user, 
     updateTheme, 
     updateCurrency, 
-    updateLanguage, 
-    updateNotificationSettings,
+    updateLanguage,
     updateDisplayOptions,
     updateUserPreferences,
     getEffectiveTheme
@@ -42,9 +36,6 @@ const Settings = () => {
   );
   const [currency, setCurrency] = useState(user?.preferences?.currency || 'USD');
   const [language, setLanguage] = useState(user?.preferences?.language || 'en');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(
-    user?.preferences?.notifications || false
-  );
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false
   );
@@ -59,7 +50,6 @@ const Settings = () => {
       setTheme(user.preferences.theme || 'light');
       setCurrency(user.preferences.currency || 'USD');
       setLanguage(user.preferences.language || 'en');
-      setNotificationsEnabled(user.preferences.notifications || false);
       if (user.preferences.sms) {
         setBackgroundSmsEnabled(user.preferences.sms.backgroundSmsEnabled || false);
       }
@@ -87,11 +77,6 @@ const Settings = () => {
     updateLanguage(value);
     loadLanguage(value);
   };
-  
-  const handleNotificationsChange = (checked: boolean) => {
-    setNotificationsEnabled(checked);
-    updateNotificationSettings(checked);
-  };
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
     if (checked) {
@@ -113,7 +98,6 @@ const Settings = () => {
     persistCurrency(currency);
     updateLanguage(language);
     loadLanguage(language);
-    updateNotificationSettings(notificationsEnabled);
 
     toast({
       title: "Appearance updated",
@@ -121,34 +105,104 @@ const Settings = () => {
     });
   };
   
-  const handleDisplayOptionsChange = () => {
-    updateDisplayOptions({
-      weekStartsOn
-    });
-    
+  const updateWeekStartsOn = (value: 'sunday' | 'monday' | 'saturday') => {
+    setWeekStartsOn(value);
+    updateDisplayOptions({ weekStartsOn: value });
     toast({
       title: "Display preferences updated",
       description: "Your display settings have been saved."
     });
   };
+
+  const handleExportData = () => {
+    try {
+      const transactions = getStoredTransactions();
+      if (!transactions.length) {
+        toast({
+          title: "No data to export",
+          description: "You don't have any transactions to export.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const csv = convertTransactionsToCsv(transactions);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.href = url;
+      downloadAnchorNode.download = 'transactions.csv';
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export successful",
+        description: "Your data has been exported successfully."
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "An error occurred while exporting your data.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleImportData = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json,.csv';
+
+    fileInput.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      if (!target.files?.length) return;
+
+      const file = target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        try {
+          const text = event.target?.result as string;
+          const isCsv = file.name.toLowerCase().endsWith('.csv');
+          const data = isCsv ? parseCsvTransactions(text) : JSON.parse(text);
+
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('No valid transactions');
+          }
+
+          storeTransactions(data as any);
+          toast({
+            title: "Import successful",
+            description: "Your data has been imported successfully."
+          });
+          setTimeout(() => window.location.reload(), 1500);
+        } catch {
+          toast({
+            title: "Import failed",
+            description: "Failed to parse the imported file. Make sure it's a valid JSON or CSV file.",
+            variant: "destructive"
+          });
+        }
+      };
+
+      reader.readAsText(file);
+    };
+
+    fileInput.click();
+  };
   
   
   return (
     <Layout showBack>
-      <PageHeader title="Settings" />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
         className="space-y-6 pb-24"
       >
-        
-        <Tabs defaultValue="preferences" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="danger">Danger Zone</TabsTrigger>
-          </TabsList>
-          <TabsContent value="preferences" className="space-y-4">
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -214,7 +268,7 @@ const Settings = () => {
                   className="w-full mt-4"
                   onClick={handleAppearanceSave}
                 >
-                  Save Appearance Settings
+                  Save Settings
                 </Button>
               </CardContent>
             </Card>
@@ -234,7 +288,7 @@ const Settings = () => {
                     type="single"
                     value={weekStartsOn}
                     onValueChange={(value) =>
-                      value && setWeekStartsOn(value as 'sunday' | 'monday' | 'saturday')
+                      value && updateWeekStartsOn(value as 'sunday' | 'monday' | 'saturday')
                     }
                     className="justify-start"
                   >
@@ -243,13 +297,6 @@ const Settings = () => {
                     <ToggleGroupItem value="saturday">Saturday</ToggleGroupItem>
                   </ToggleGroup>
                 </div>
-                
-                <Button 
-                  className="w-full mt-4" 
-                  onClick={handleDisplayOptionsChange}
-                >
-                  Save Display Preferences
-                </Button>
             </CardContent>
           </Card>
           <Card className="border border-border shadow-sm">
@@ -261,17 +308,6 @@ const Settings = () => {
               <CardDescription>Manage notification preferences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="notifications">Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
-                </div>
-                <Switch
-                  id="notifications"
-                  checked={notificationsEnabled}
-                  onCheckedChange={handleNotificationsChange}
-                />
-              </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
@@ -308,42 +344,72 @@ const Settings = () => {
                   />
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="danger" className="space-y-4">
-            <Card className="border border-destructive/20 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center text-destructive">
-                  <Trash className="mr-2" size={20} />
-                  <span>Danger Zone</span>
-                </CardTitle>
-                <CardDescription>Irreversible actions that affect your data</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full">Delete Account</Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Delete Account
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </Card>
+
+          <Card className="border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Database className="mr-2" size={20} />
+                <span>Data Management</span>
+              </CardTitle>
+              <CardDescription>Manage your data</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Export Data</p>
+                  <p className="text-sm text-muted-foreground">Download all your transaction data</p>
+                </div>
+                <Button variant="outline" onClick={handleExportData} className="gap-2">
+                  <Download size={16} />
+                  Export
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Import Data</p>
+                  <p className="text-sm text-muted-foreground">Import transactions from a file</p>
+                </div>
+                <Button variant="outline" onClick={handleImportData} className="gap-2">
+                  <UploadCloud size={16} />
+                  Import
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-destructive/20 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center text-destructive">
+                <Trash className="mr-2" size={20} />
+                <span>Danger Zone</span>
+              </CardTitle>
+              <CardDescription>Irreversible actions that affect your data</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full">Delete Account</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete Account
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
+
       </motion.div>
     </Layout>
   );

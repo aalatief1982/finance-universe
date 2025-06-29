@@ -1,98 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Download, UploadCloud, RefreshCw, Database } from 'lucide-react';
+import { Download, UploadCloud, Database } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  getUserSettings,
-  storeUserSettings,
-  getStoredTransactions,
-  storeTransactions
-} from '@/utils/storage-utils';
+import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
-
-// Define the correct types for backupFrequency and dataRetention
-type BackupFrequency = 'daily' | 'weekly' | 'monthly' | 'never';
-type DataRetention = '3months' | '6months' | '1year' | 'forever';
 
 const DataManagementSettings = () => {
   const { toast } = useToast();
-  const [autoBackup, setAutoBackup] = useState(false);
-  const [backupFrequency, setBackupFrequency] = useState<BackupFrequency>('weekly');
-  const [dataRetention, setDataRetention] = useState<DataRetention>('forever');
-  
-  useEffect(() => {
-    // Get user settings on component mount
-    const userSettings = getUserSettings();
-    setAutoBackup(userSettings.dataManagement?.autoBackup === true);
-    
-    // Ensure we cast to the correct type or fallback to the default
-    const storedBackupFrequency = userSettings.dataManagement?.backupFrequency;
-    if (storedBackupFrequency && 
-        (storedBackupFrequency === 'daily' || 
-         storedBackupFrequency === 'weekly' || 
-         storedBackupFrequency === 'monthly' || 
-         storedBackupFrequency === 'never')) {
-      setBackupFrequency(storedBackupFrequency);
-    }
-    
-    // Ensure we cast to the correct type or fallback to the default
-    const storedDataRetention = userSettings.dataManagement?.dataRetention;
-    if (storedDataRetention && 
-        (storedDataRetention === '3months' || 
-         storedDataRetention === '6months' || 
-         storedDataRetention === '1year' || 
-         storedDataRetention === 'forever')) {
-      setDataRetention(storedDataRetention);
-    }
-  }, []);
-  
-  const handleAutoBackupToggle = (enabled: boolean) => {
-    setAutoBackup(enabled);
-    
-    // Update user settings
-    const userSettings = getUserSettings();
-    storeUserSettings({
-      ...userSettings,
-      dataManagement: {
-        ...userSettings.dataManagement,
-        autoBackup: enabled
-      }
-    });
-  };
-  
-  const handleBackupFrequencyChange = (frequency: BackupFrequency) => {
-    setBackupFrequency(frequency);
-    
-    // Update user settings
-    const userSettings = getUserSettings();
-    storeUserSettings({
-      ...userSettings,
-      dataManagement: {
-        ...userSettings.dataManagement,
-        backupFrequency: frequency
-      }
-    });
-  };
-  
-  const handleDataRetentionChange = (retention: DataRetention) => {
-    setDataRetention(retention);
-    
-    // Update user settings
-    const userSettings = getUserSettings();
-    storeUserSettings({
-      ...userSettings,
-      dataManagement: {
-        ...userSettings.dataManagement,
-        dataRetention: retention
-      }
-    });
-  };
   
   const handleExportData = () => {
     try {
@@ -174,15 +90,6 @@ const DataManagementSettings = () => {
     fileInput.click();
   };
   
-  const handleResetData = () => {
-    localStorage.removeItem('xpensia_transactions');
-    toast({
-      title: "Data reset successful",
-      description: "All your transaction data has been reset.",
-    });
-    window.location.reload();
-  };
-  
   return (
     <Card className="border border-border shadow-sm">
       <CardHeader>
@@ -193,53 +100,7 @@ const DataManagementSettings = () => {
         <CardDescription>Manage your data and privacy settings</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">Automatic Backups</p>
-            <p className="text-sm text-muted-foreground">Regularly back up your data</p>
-          </div>
-          <Switch
-            checked={autoBackup}
-            onCheckedChange={handleAutoBackupToggle}
-          />
-        </div>
-        
-        {autoBackup && (
-          <div className="flex items-center justify-between pl-6">
-            <Label htmlFor="backup-frequency">Backup Frequency</Label>
-            <Select value={backupFrequency} onValueChange={handleBackupFrequencyChange}>
-              <SelectTrigger id="backup-frequency" className="w-[150px]">
-                <SelectValue placeholder="Select frequency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="never">Never</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">Data Retention</p>
-            <p className="text-sm text-muted-foreground">How long to keep your transaction history</p>
-          </div>
-          <Select value={dataRetention} onValueChange={handleDataRetentionChange}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3months">3 months</SelectItem>
-              <SelectItem value="6months">6 months</SelectItem>
-              <SelectItem value="1year">1 year</SelectItem>
-              <SelectItem value="forever">Forever</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="pt-4 space-y-4">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Export Data</p>
@@ -250,7 +111,7 @@ const DataManagementSettings = () => {
               Export
             </Button>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Import Data</p>
@@ -261,32 +122,6 @@ const DataManagementSettings = () => {
               Import
             </Button>
           </div>
-          
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full gap-2 mt-4">
-                <RefreshCw size={16} />
-                Reset All Data
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action will permanently delete all your transaction data and cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction 
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={handleResetData}
-                >
-                  Reset All Data
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </CardContent>
     </Card>
