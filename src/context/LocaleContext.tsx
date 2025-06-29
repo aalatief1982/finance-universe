@@ -16,16 +16,21 @@ const LocaleContext = createContext<LocaleContextType>({
   t: (key: string) => key,
 });
 
+const translationFiles = import.meta.glob('../locales/*.json', {
+  eager: true,
+  import: 'default'
+}) as Record<string, Translations>;
+
 export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState('en');
   const [translations, setTranslations] = useState<Translations>({});
 
   const loadTranslations = async (lang: string) => {
-    try {
-      const msgs: Translations = (await import(/* @vite-ignore */ `../locales/${lang}.json`)).default;
+    const msgs = translationFiles[`../locales/${lang}.json`];
+    if (msgs) {
       setTranslations(msgs);
-    } catch (err) {
-      console.error('Failed to load translations for', lang, err);
+    } else {
+      console.error(`Translations for ${lang} not found`);
       setTranslations({});
     }
   };
