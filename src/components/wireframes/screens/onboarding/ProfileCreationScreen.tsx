@@ -186,11 +186,11 @@ const ProfileCreationScreen = ({
                       <Button
                         variant="outline"
                         className={cn(
-                          "pl-3 h-11 text-left font-normal",
+                          "ps-3 h-11 text-start font-normal",
                           !field.value && "text-muted-foreground"
                         )}
                       >
-                        <Calendar className="mr-2 h-4 w-4" />
+                        <Calendar className="me-2 h-4 w-4" />
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (

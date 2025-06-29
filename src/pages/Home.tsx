@@ -209,7 +209,7 @@ const Home = () => {
 
   return (
     <Layout withPadding={false} fullWidth>
-      <div className="container px-1">
+      <div className="px-[var(--page-padding-x)] py-[var(--page-padding-y)] max-w-[var(--content-max-width)] mx-auto w-full">
         <PageHeader
           title={<AvatarGreeting user={user} />}
         />

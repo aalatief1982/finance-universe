@@ -127,7 +127,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
         
         {error && (
           <div className="mb-4 text-sm p-2 bg-red-50 text-red-600 rounded-md w-full">
-            <AlertTriangle className="inline-block mr-1 h-4 w-4" />
+            <AlertTriangle className="inline-block me-1 h-4 w-4" />
             {error}
           </div>
         )}

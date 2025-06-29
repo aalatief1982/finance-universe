@@ -478,7 +478,7 @@ const TrainModel = () => {
                       >
                         <div>
                           <span className="text-sm font-medium">{selection.text}</span>
-                          <span className="text-xs text-muted-foreground ml-2">
+                          <span className="text-xs text-muted-foreground ms-2">
                             {selection.attributeType === 'direct' ? 
                               `→ ${selection.field}` : 
                               selection.attributeType === 'infer' ? 

@@ -374,7 +374,7 @@ const PhoneVerification = ({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" aria-hidden="true" />
                   <span>Sending...</span>
                 </>
               ) : (
@@ -461,12 +461,12 @@ const PhoneVerification = ({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" aria-hidden="true" />
                   <span>Verifying...</span>
                 </>
               ) : success ? (
                 <>
-                  <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  <CheckCircle2 className="me-2 h-4 w-4" aria-hidden="true" />
                   <span>Verified!</span>
                 </>
               ) : (
@@ -491,7 +491,7 @@ const PhoneVerification = ({
             variant="ghost" 
             onClick={handleResendCode} 
             disabled={isLoading || timeRemaining > 0}
-            className={hidePhoneInput ? "ml-auto" : ""}
+            className={hidePhoneInput ? "ms-auto" : ""}
             aria-label="Resend verification code"
             aria-disabled={isLoading || timeRemaining > 0}
           >

@@ -28,9 +28,9 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
           </div>
           <h3 className="text-2xl font-semibold text-green-500">{formatCurrency(income)}</h3>
           <div className="mt-2 flex items-center text-sm">
-            <ArrowUp size={16} className="text-green-500 mr-1" />
+            <ArrowUp size={16} className="text-green-500 me-1" />
             <span className="text-green-500 font-medium">12% </span>
-            <span className="text-muted-foreground ml-1">from last month</span>
+            <span className="text-muted-foreground ms-1">from last month</span>
           </div>
         </CardContent>
       </Card>
@@ -45,9 +45,9 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
           </div>
           <h3 className="text-2xl font-semibold text-red-500">{formatCurrency(expenses)}</h3>
           <div className="mt-2 flex items-center text-sm">
-            <ArrowDown size={16} className="text-green-500 mr-1" />
+            <ArrowDown size={16} className="text-green-500 me-1" />
             <span className="text-green-500 font-medium">3% </span>
-            <span className="text-muted-foreground ml-1">from last month</span>
+            <span className="text-muted-foreground ms-1">from last month</span>
           </div>
         </CardContent>
       </Card>
@@ -66,12 +66,12 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
           <div className="mt-2 flex items-center text-sm">
             {isPositiveSavings ? (
               <>
-                <ArrowUp size={16} className="text-green-500 mr-1" />
+                <ArrowUp size={16} className="text-green-500 me-1" />
                 <span className="text-green-500 font-medium">Good savings</span>
               </>
             ) : (
               <>
-                <ArrowDown size={16} className="text-red-500 mr-1" />
+                <ArrowDown size={16} className="text-red-500 me-1" />
                 <span className="text-red-500 font-medium">Needs improvement</span>
               </>
             )}

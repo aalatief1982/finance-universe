@@ -73,13 +73,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({ isLandingPage }) => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
+                        <User className="me-2 h-4 w-4" />
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/settings" className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
+                        <Settings className="me-2 h-4 w-4" />
                         <span>Settings</span>
                       </Link>
                     </DropdownMenuItem>
@@ -89,7 +89,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ isLandingPage }) => {
                       asChild
                     >
                       <div onClick={logOut}>
-                        <LogOut className="mr-2 h-4 w-4" />
+                        <LogOut className="me-2 h-4 w-4" />
                         <span>Log out</span>
                       </div>
                     </DropdownMenuItem>

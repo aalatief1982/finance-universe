@@ -107,7 +107,7 @@ const RecentTransactions = ({
               <div className="flex space-x-2">
                 <Button size="sm" asChild>
                   <Link to="/process-sms">
-                    <MessageSquare className="mr-1" size={14} />
+                    <MessageSquare className="me-1" size={14} />
                     Import SMS
                   </Link>
                 </Button>
@@ -116,7 +116,7 @@ const RecentTransactions = ({
                   variant="outline" 
                   onClick={() => setIsAddingExpense(true)}
                 >
-                  <Plus className="mr-1" size={14} />
+                  <Plus className="me-1" size={14} />
                   Add Manually
                 </Button>
               </div>
@@ -127,7 +127,7 @@ const RecentTransactions = ({
               <Button variant="outline" size="sm" className="w-full group" asChild>
                 <Link to="/transactions" className="flex items-center justify-center">
                   View All Transactions
-                  <ArrowRight size={14} className="ml-1 transition-transform duration-200 group-hover:translate-x-1" />
+                  <ArrowRight size={14} className="ms-1 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
               </Button>
             </div>

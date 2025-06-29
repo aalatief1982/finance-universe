@@ -99,7 +99,7 @@ const DataManagementSettings = () => {
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Database className="mr-2" size={20} />
+          <Database className="me-2" size={20} />
           <span>Data Management</span>
         </CardTitle>
         <CardDescription>Manage your data and privacy settings</CardDescription>

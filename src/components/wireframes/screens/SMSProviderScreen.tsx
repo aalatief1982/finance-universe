@@ -127,7 +127,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
       
         {hasDetections && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-2 flex items-start">
-            <Check className="text-green-500 mr-2 mt-0.5" size={16} />
+            <Check className="text-green-500 me-2 mt-0.5" size={16} />
             <div>
               <h3 className="text-sm font-medium text-green-800">Providers Detected!</h3>
               <p className="text-xs text-green-600">
@@ -142,7 +142,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
           <Input
             type="text"
             placeholder="Search SMS Contacts"
-            className="pl-8 dark:bg-white dark:text-black"
+            className="ps-8 dark:bg-white dark:text-black"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -150,7 +150,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
         
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-2 flex items-center text-red-700">
-            <AlertTriangle className="mr-2 text-red-500" size={16} />
+            <AlertTriangle className="me-2 text-red-500" size={16} />
             <span className="text-sm">{error}</span>
           </div>
         )}
@@ -179,7 +179,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
                   onClick={() => toggleProvider(provider.id)}
                 >
                   <div className="flex items-center">
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center me-3 ${
                       selectedProviders.includes(provider.id)
                         ? 'bg-blue-500 border-blue-500'
                         : 'border-gray-300'
@@ -190,7 +190,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
                       <div className="flex items-center">
                         <span className="font-medium">{provider.name}</span>
                         {provider.isDetected && (
-                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                          <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
                             Detected
                           </span>
                         )}
@@ -219,7 +219,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
             }`}
             onClick={handleDateSelect}
           >
-            <Calendar className={`mr-2 ${startDate ? 'text-blue-500' : 'text-gray-500'}`} size={20} />
+            <Calendar className={`me-2 ${startDate ? 'text-blue-500' : 'text-gray-500'}`} size={20} />
             <span className={startDate ? 'text-blue-700' : 'text-gray-700'}>
               {startDate || `Choose Date (Up to 6 months: ${formatDate(sixMonthsAgo)})`}
             </span>

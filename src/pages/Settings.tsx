@@ -149,7 +149,7 @@ const Settings = () => {
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Sun className="mr-2" size={20} />
+                  <Sun className="me-2" size={20} />
                   <span>{t('appearance')}</span>
                 </CardTitle>
                 <CardDescription>{t('customize-appearance')}</CardDescription>
@@ -216,7 +216,7 @@ const Settings = () => {
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Eye className="mr-2" size={20} />
+                  <Eye className="me-2" size={20} />
                   <span>{t('display-options')}</span>
                 </CardTitle>
                 <CardDescription>{t('customize-appearance')}</CardDescription>
@@ -244,7 +244,7 @@ const Settings = () => {
           <Card className="border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Bell className="mr-2" size={20} />
+                <Bell className="me-2" size={20} />
                 <span>{t('notification-settings')}</span>
               </CardTitle>
               <CardDescription>{t('receive-alerts')}</CardDescription>
@@ -277,7 +277,7 @@ const Settings = () => {
           <Card className="border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <MessageSquare className="mr-2" size={20} />
+                <MessageSquare className="me-2" size={20} />
                 <span>{t('sms-import')}</span>
 
                 </CardTitle>
@@ -304,7 +304,7 @@ const Settings = () => {
             <Card className="border border-destructive/20 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-destructive">
-                  <Trash className="mr-2" size={20} />
+                  <Trash className="me-2" size={20} />
                   <span>{t('danger-zone')}</span>
                 </CardTitle>
                 <CardDescription>{t('danger-zone-desc')}</CardDescription>

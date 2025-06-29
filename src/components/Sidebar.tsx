@@ -51,7 +51,7 @@ const Sidebar: React.FC = () => {
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
-                  <span className="mr-3">{item.icon}</span>
+                  <span className="me-3">{item.icon}</span>
                   {item.name}
                 </Link>
               </li>
@@ -64,7 +64,7 @@ const Sidebar: React.FC = () => {
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               <User size={16} />
             </div>
-            <div className="ml-2">
+            <div className="ms-2">
               <p className="text-sm font-medium">User Profile</p>
               <p className="text-xs text-muted-foreground">Manage Account</p>
             </div>

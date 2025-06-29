@@ -151,7 +151,7 @@ const VerificationCodeForm = ({
         aria-label="Demo information"
       >
         <div className="flex items-start">
-          <Info className="h-5 w-5 text-amber-500 mt-0.5 mr-2" aria-hidden="true" />
+          <Info className="h-5 w-5 text-amber-500 mt-0.5 me-2" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium text-amber-800">Demo Info</p>
             <p className="text-xs text-amber-700">
@@ -194,7 +194,7 @@ const VerificationCodeForm = ({
           aria-live="assertive"
         >
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-2" aria-hidden="true" />
+            <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 me-2" aria-hidden="true" />
             <div>
               <p className="text-sm font-medium text-red-800">You're offline</p>
               <p className="text-xs text-red-700">
@@ -233,12 +233,12 @@ const VerificationCodeForm = ({
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              <Loader2 className="me-2 h-4 w-4 animate-spin" aria-hidden="true" />
               <span>Verifying...</span>
             </>
           ) : success ? (
             <>
-              <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
+              <CheckCircle2 className="me-2 h-4 w-4" aria-hidden="true" />
               <span>Verified!</span>
             </>
           ) : (

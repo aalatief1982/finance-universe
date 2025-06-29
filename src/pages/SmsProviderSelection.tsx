@@ -150,7 +150,7 @@ const SmsProviderSelection = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
           <Input 
             placeholder="Search SMS providers..." 
-            className="pl-10"
+            className="ps-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -213,7 +213,7 @@ const SmsProviderSelection = () => {
             }`}
             onClick={handleDateSelect}
           >
-            <Calendar className={`mr-2 ${startDate ? 'text-primary' : 'text-muted-foreground'}`} size={20} />
+            <Calendar className={`me-2 ${startDate ? 'text-primary' : 'text-muted-foreground'}`} size={20} />
             <span className={startDate ? 'text-foreground' : 'text-muted-foreground'}>
               {startDate ? startDate.toLocaleDateString() : 'Choose Date (Up to 6 months)'}
             </span>

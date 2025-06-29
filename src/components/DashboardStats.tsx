@@ -50,7 +50,7 @@ const DashboardStats = ({
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('income')}</p>
                     <ArrowUpCircle className="text-green-600" size={20} />
                   </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-green-500">{formatValue(income)}</h3>
+                  <h3 className="mt-1 text-start text-lg font-semibold text-green-500">{formatValue(income)}</h3>
                   {renderSubtitle(income)}
                 </CardContent>
               </Card>
@@ -74,7 +74,7 @@ const DashboardStats = ({
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('expenses')}</p>
                     <ArrowDownCircle className="text-red-600" size={20} />
                   </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
+                  <h3 className="mt-1 text-start text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
                   {renderSubtitle(expenses)}
                 </CardContent>
               </Card>
@@ -100,14 +100,14 @@ const DashboardStats = ({
                       {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
                   </div>
-                  <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatValue(balance)}</h3>
+                  <h3 className={`mt-1 text-start text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatValue(balance)}</h3>
                   {renderSubtitle(balance)}
                   {previousBalance !== undefined && (
                     <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
                       {isPositiveChange ? (
-                        <TrendingUp size={14} className="mr-1" />
+                        <TrendingUp size={14} className="me-1" />
                       ) : (
-                        <TrendingDown size={14} className="mr-1" />
+                        <TrendingDown size={14} className="me-1" />
                       )}
                       {Math.abs(balanceChange).toFixed(1)}% {t('from-last-month')}
                     </p>
