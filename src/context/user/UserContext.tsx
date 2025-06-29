@@ -23,6 +23,7 @@ import {
   isProfileComplete as isProfileCompleteUtil
 } from './auth-utils';
 import { safeSetItem } from '@/utils/storage-utils';
+import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
 import {
   updateUserPreferences as updateUserPreferencesUtil,
   updateDisplayOptions as updateDisplayOptionsUtil,
@@ -256,6 +257,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const updateCurrency = useCallback((currency: string) => {
     updateUserPreferences({ currency });
+    persistCurrency(currency);
   }, [updateUserPreferences]);
   
   const updateLanguage = useCallback((language: string) => {
