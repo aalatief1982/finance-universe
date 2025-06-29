@@ -134,7 +134,7 @@ const Settings = () => {
   
   
   return (
-    <Layout>
+    <Layout showBack>
       <PageHeader title="Settings" />
       <motion.div
         initial={{ opacity: 0 }}
