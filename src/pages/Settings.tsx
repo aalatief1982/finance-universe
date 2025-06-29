@@ -18,7 +18,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
-import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
+
+import DataManagementSettings from '@/components/settings/DataManagementSettings';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -82,26 +83,18 @@ const Settings = () => {
     updateNotificationSettings(checked);
   };
 
-  const handleAppearanceSave = () => {
+  const handleSaveSettings = () => {
     updateTheme(theme);
     updateCurrency(currency);
     updateLanguage(language);
     updateNotificationSettings(notificationsEnabled);
-
-    toast({
-      title: "Appearance updated",
-      description: "Your appearance settings have been saved."
-    });
-  };
-  
-  const handleDisplayOptionsChange = () => {
     updateDisplayOptions({
       weekStartsOn
     });
-    
+
     toast({
-      title: "Display preferences updated",
-      description: "Your display settings have been saved."
+      title: "Settings updated",
+      description: "Your preferences have been saved."
     });
   };
   
@@ -109,6 +102,9 @@ const Settings = () => {
   return (
     <Layout>
       <PageHeader title="Settings" />
+      <div className="flex justify-end pb-4">
+        <Button onClick={handleSaveSettings}>Save Settings</Button>
+      </div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -194,12 +190,6 @@ const Settings = () => {
                     onCheckedChange={handleNotificationsChange}
                   />
                 </div>
-                <Button
-                  className="w-full mt-4"
-                  onClick={handleAppearanceSave}
-                >
-                  Save Appearance Settings
-                </Button>
               </CardContent>
             </Card>
 
@@ -225,12 +215,6 @@ const Settings = () => {
                   </ToggleGroup>
                 </div>
                 
-                <Button 
-                  className="w-full mt-4" 
-                  onClick={handleDisplayOptionsChange}
-                >
-                  Save Display Preferences
-                </Button>
               </CardContent>
             </Card>
             <Card className="border border-border shadow-sm">
@@ -255,6 +239,7 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+            <DataManagementSettings />
           </TabsContent>
           
           <TabsContent value="danger" className="space-y-4">
