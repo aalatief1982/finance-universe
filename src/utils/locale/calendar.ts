@@ -73,7 +73,7 @@ export const getMonthNames = (
 /**
  * Gets the first day of the week for the current locale
  */
-export const getFirstDayOfWeek = (locale?: SupportedLocale): 0 | 1 => {
+export const getFirstDayOfWeek = (locale?: SupportedLocale): 0 | 1 | 6 => {
   try {
     const settings = getLocaleSettings();
     const localeCode = locale || settings.locale;
@@ -81,12 +81,19 @@ export const getFirstDayOfWeek = (locale?: SupportedLocale): 0 | 1 => {
     // First check user preferences
     const userPreferences = getUserSettings();
     if (userPreferences?.displayOptions?.weekStartsOn) {
-      return userPreferences.displayOptions.weekStartsOn === 'monday' ? 1 : 0;
+      switch (userPreferences.displayOptions.weekStartsOn) {
+        case 'monday':
+          return 1;
+        case 'saturday':
+          return 6;
+        default:
+          return 0;
+      }
     }
     
     // Then check locale settings
     if (settings.firstDayOfWeek !== undefined) {
-      return settings.firstDayOfWeek as 0 | 1;
+      return settings.firstDayOfWeek as 0 | 1 | 6;
     }
     
     // Then check locale defaults

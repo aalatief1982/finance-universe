@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sun, Moon, Trash, Bell, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
+import { SmsReaderService } from '@/services/SmsReaderService';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,9 +22,13 @@ import { CURRENCIES } from '@/lib/categories-data';
 
 import DataManagementSettings from '@/components/settings/DataManagementSettings';
 
+import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
+import { useLocale } from '@/context/LocaleContext';
+
+
 const Settings = () => {
   const { toast } = useToast();
-  const { 
+  const {
     user, 
     updateTheme, 
     updateCurrency, 
@@ -33,6 +38,7 @@ const Settings = () => {
     updateUserPreferences,
     getEffectiveTheme
   } = useUser();
+  const { setLanguage: loadLanguage } = useLocale();
   
   // State for form values
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
@@ -43,7 +49,10 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.preferences?.notifications || false
   );
-  const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday'>(
+  const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
+    user?.preferences?.sms?.backgroundSmsEnabled || false
+  );
+  const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday' | 'saturday'>(
     user?.preferences?.displayOptions?.weekStartsOn || 'sunday'
   );
 
@@ -55,7 +64,10 @@ const Settings = () => {
       setCurrency(user.preferences.currency || 'USD');
       setLanguage(user.preferences.language || 'en');
       setNotificationsEnabled(user.preferences.notifications || false);
-      
+      if (user.preferences.sms) {
+        setBackgroundSmsEnabled(user.preferences.sms.backgroundSmsEnabled || false);
+      }
+
       if (user.preferences.displayOptions) {
         setWeekStartsOn(user.preferences.displayOptions.weekStartsOn || 'sunday');
       }
@@ -71,11 +83,13 @@ const Settings = () => {
   const handleCurrencyChange = (value: string) => {
     setCurrency(value);
     updateCurrency(value);
+    persistCurrency(value);
   };
-  
+
   const handleLanguageChange = (value: string) => {
     setLanguage(value);
     updateLanguage(value);
+    loadLanguage(value);
   };
   
   const handleNotificationsChange = (checked: boolean) => {
@@ -83,10 +97,28 @@ const Settings = () => {
     updateNotificationSettings(checked);
   };
 
-  const handleSaveSettings = () => {
+
+
+  const handleBackgroundSmsChange = async (checked: boolean) => {
+    if (checked) {
+      const granted = await SmsReaderService.checkOrRequestPermission();
+      if (!granted) {
+        alert('SMS permission is required to read messages in the background.');
+        setBackgroundSmsEnabled(false);
+        return;
+      }
+    }
+
+    setBackgroundSmsEnabled(checked);
+    updateUserPreferences({ sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked } });
+  };
+
+  const handleAppearanceSave = () => {
     updateTheme(theme);
     updateCurrency(currency);
+    persistCurrency(currency);
     updateLanguage(language);
+    loadLanguage(language);
     updateNotificationSettings(notificationsEnabled);
     updateDisplayOptions({
       weekStartsOn
@@ -100,7 +132,7 @@ const Settings = () => {
   
   
   return (
-    <Layout>
+    <Layout showBack>
       <PageHeader title="Settings" />
       <div className="flex justify-end pb-4">
         <Button onClick={handleSaveSettings}>Save Settings</Button>
@@ -179,6 +211,7 @@ const Settings = () => {
                   </Select>
                 </div>
                 
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="notifications">Notifications</Label>
@@ -190,6 +223,7 @@ const Settings = () => {
                     onCheckedChange={handleNotificationsChange}
                   />
                 </div>
+
               </CardContent>
             </Card>
 
@@ -207,21 +241,65 @@ const Settings = () => {
                   <ToggleGroup
                     type="single"
                     value={weekStartsOn}
-                    onValueChange={(value) => value && setWeekStartsOn(value as 'sunday' | 'monday')}
+                    onValueChange={(value) =>
+                      value && setWeekStartsOn(value as 'sunday' | 'monday' | 'saturday')
+                    }
                     className="justify-start"
                   >
                     <ToggleGroupItem value="sunday">Sunday</ToggleGroupItem>
                     <ToggleGroupItem value="monday">Monday</ToggleGroupItem>
+                    <ToggleGroupItem value="saturday">Saturday</ToggleGroupItem>
                   </ToggleGroup>
                 </div>
                 
-              </CardContent>
-            </Card>
-            <Card className="border border-border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MessageSquare className="mr-2" size={20} />
-                  <span>SMS Import</span>
+
+                <Button 
+                  className="w-full mt-4" 
+                  onClick={handleDisplayOptionsChange}
+                >
+                  Save Display Preferences
+                </Button>
+            </CardContent>
+          </Card>
+          <Card className="border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bell className="mr-2" size={20} />
+                <span>Notification Settings</span>
+              </CardTitle>
+              <CardDescription>Manage notification preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notifications">Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
+                </div>
+                <Switch
+                  id="notifications"
+                  checked={notificationsEnabled}
+                  onCheckedChange={handleNotificationsChange}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
+                  <p className="text-sm text-muted-foreground">Read incoming SMS in the background</p>
+                </div>
+                <Switch
+                  id="background-sms"
+                  checked={backgroundSmsEnabled}
+                  onCheckedChange={handleBackgroundSmsChange}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="mr-2" size={20} />
+                <span>SMS Import</span>
+
                 </CardTitle>
                 <CardDescription>Automatically import new SMS messages</CardDescription>
               </CardHeader>
@@ -234,7 +312,9 @@ const Settings = () => {
                   <Switch
                     id="auto-sms-import"
                     checked={!!user?.preferences?.sms?.autoImport}
-                    onCheckedChange={(checked) => updateUserPreferences({ sms: { autoImport: checked } })}
+                    onCheckedChange={(checked) =>
+                      updateUserPreferences({ sms: { ...user?.preferences?.sms, autoImport: checked } })
+                    }
                   />
                 </div>
               </CardContent>

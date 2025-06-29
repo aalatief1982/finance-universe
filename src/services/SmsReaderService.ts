@@ -54,6 +54,14 @@ export class SmsReaderService {
     }
   }
 
+  static async checkOrRequestPermission(): Promise<boolean> {
+    const hasPermission = await SmsReaderService.hasPermission();
+    if (hasPermission) {
+      return true;
+    }
+    return SmsReaderService.requestPermission();
+  }
+
   static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
     console.log('AIS-01 readSmsMessages', options);
 
