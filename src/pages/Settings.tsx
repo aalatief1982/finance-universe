@@ -19,8 +19,12 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
+
+import DataManagementSettings from '@/components/settings/DataManagementSettings';
+
 import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
 import { useLocale } from '@/context/LocaleContext';
+
 
 const Settings = () => {
   const { toast } = useToast();
@@ -93,6 +97,8 @@ const Settings = () => {
     updateNotificationSettings(checked);
   };
 
+
+
   const handleBackgroundSmsChange = async (checked: boolean) => {
     if (checked) {
       const granted = await SmsReaderService.checkOrRequestPermission();
@@ -114,21 +120,13 @@ const Settings = () => {
     updateLanguage(language);
     loadLanguage(language);
     updateNotificationSettings(notificationsEnabled);
-
-    toast({
-      title: "Appearance updated",
-      description: "Your appearance settings have been saved."
-    });
-  };
-  
-  const handleDisplayOptionsChange = () => {
     updateDisplayOptions({
       weekStartsOn
     });
-    
+
     toast({
-      title: "Display preferences updated",
-      description: "Your display settings have been saved."
+      title: "Settings updated",
+      description: "Your preferences have been saved."
     });
   };
   
@@ -136,6 +134,9 @@ const Settings = () => {
   return (
     <Layout showBack>
       <PageHeader title="Settings" />
+      <div className="flex justify-end pb-4">
+        <Button onClick={handleSaveSettings}>Save Settings</Button>
+      </div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -210,12 +211,19 @@ const Settings = () => {
                   </Select>
                 </div>
                 
-                <Button
-                  className="w-full mt-4"
-                  onClick={handleAppearanceSave}
-                >
-                  Save Appearance Settings
-                </Button>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="notifications">Notifications</Label>
+                    <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
+                  </div>
+                <Switch
+                    id="notifications"
+                    checked={notificationsEnabled}
+                    onCheckedChange={handleNotificationsChange}
+                  />
+                </div>
+
               </CardContent>
             </Card>
 
@@ -244,6 +252,7 @@ const Settings = () => {
                   </ToggleGroup>
                 </div>
                 
+
                 <Button 
                   className="w-full mt-4" 
                   onClick={handleDisplayOptionsChange}
@@ -290,6 +299,7 @@ const Settings = () => {
               <CardTitle className="flex items-center">
                 <MessageSquare className="mr-2" size={20} />
                 <span>SMS Import</span>
+
                 </CardTitle>
                 <CardDescription>Automatically import new SMS messages</CardDescription>
               </CardHeader>
@@ -309,6 +319,7 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+            <DataManagementSettings />
           </TabsContent>
           
           <TabsContent value="danger" className="space-y-4">
