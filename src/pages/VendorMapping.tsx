@@ -23,7 +23,8 @@ import {
 } from '@/lib/smart-paste-engine/suggestionEngine';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Ban } from 'lucide-react';
+import { updateSmsSenderImportDates } from '@/utils/storage-utils';
 
 interface VendorMappingEntry {
   vendor: string;
@@ -31,6 +32,7 @@ interface VendorMappingEntry {
   category: string;
   subcategory: string;
   sampleMessage?: string;
+  skipped?: boolean;
 }
 
 const VendorMapping: React.FC = () => {
@@ -45,7 +47,7 @@ const VendorMapping: React.FC = () => {
   };
 
   const hasValidData = () => {
-    return vendors.length > 0 && hasRequiredState();
+    return vendors.some(v => !v.skipped) && hasRequiredState();
   };
 
   // Notify if this page was accessed directly without required state
@@ -106,7 +108,8 @@ const VendorMapping: React.FC = () => {
         updatedVendor: incomingVendorMap[vendor],
         category: category || 'Other',
         subcategory: subcategory || 'Miscellaneous',
-        sampleMessage: vendorSamples[vendor]
+        sampleMessage: vendorSamples[vendor],
+        skipped: false
       };
     });
 
@@ -126,6 +129,22 @@ const VendorMapping: React.FC = () => {
     setVendors(prev => prev.filter((_, i) => i !== index));
   };
 
+  const toggleSkipVendor = (index: number) => {
+    setVendors(prev => {
+      const updated = [...prev];
+      updated[index].skipped = !updated[index].skipped;
+      return updated;
+    });
+  };
+
+  const skipAllVendors = () => {
+    setVendors(prev => prev.map(v => ({ ...v, skipped: true })));
+  };
+
+  const unskipAllVendors = () => {
+    setVendors(prev => prev.map(v => ({ ...v, skipped: false })));
+  };
+
   const handleConfirm = () => {
     console.log('VendorMapping: save clicked');
 
@@ -143,7 +162,9 @@ const VendorMapping: React.FC = () => {
     const vendorMap: Record<string, string> = {};
     const keywordBank: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
 
-    vendors.forEach(v => {
+    const skippedVendors = vendors.filter(v => v.skipped).map(v => v.vendor);
+
+    vendors.filter(v => !v.skipped).forEach(v => {
       vendorMap[v.vendor] = v.updatedVendor;
 
       keywordBank.push({
@@ -156,11 +177,29 @@ const VendorMapping: React.FC = () => {
     });
 
     const allMessages = location.state?.messages || [];
-    const allowed = new Set(vendors.map(v => v.vendor));
+    const allowed = new Set(vendors.filter(v => !v.skipped).map(v => v.vendor));
     const messages = allMessages.filter((m: any) => {
       const extracted = extractVendorName(m.message);
       return extracted && allowed.has(extracted);
     });
+
+    const skippedMsgs = allMessages.filter((m: any) => {
+      const extracted = extractVendorName(m.message);
+      return extracted && skippedVendors.includes(extracted);
+    });
+
+    if (skippedMsgs.length > 0) {
+      const senderDates: Record<string, string> = {};
+      skippedMsgs.forEach(m => {
+        if (m.sender) {
+          const existing = senderDates[m.sender];
+          if (!existing || new Date(m.date).getTime() > new Date(existing).getTime()) {
+            senderDates[m.sender] = m.date;
+          }
+        }
+      });
+      updateSmsSenderImportDates(senderDates);
+    }
 
     navigate('/review-sms-transactions', {
       state: {
@@ -231,6 +270,20 @@ const handleRetry = () => {
           </Button>
           <h1 className="text-xl sm:text-2xl font-bold">Vendor Mapping</h1>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            const allSkipped = vendors.every(v => v.skipped);
+            if (allSkipped) {
+              unskipAllVendors();
+            } else {
+              skipAllVendors();
+            }
+          }}
+        >
+          {vendors.every(v => v.skipped) ? 'Unskip All' : 'Skip All'}
+        </Button>
       </div>
 
       <div className="space-y-2 pb-24">
@@ -240,16 +293,28 @@ const handleRetry = () => {
               <AccordionTrigger>
                 <div className="flex items-center justify-between w-full">
                   <span>{vendor.updatedVendor || vendor.vendor}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleRemoveVendor(index);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={e => {
+                        e.stopPropagation();
+                        toggleSkipVendor(index);
+                      }}
+                    >
+                      <Ban className={`h-4 w-4 ${vendor.skipped ? 'text-yellow-500' : 'text-muted-foreground'}`} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveVendor(index);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent>

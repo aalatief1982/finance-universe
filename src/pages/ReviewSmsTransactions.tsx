@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -53,6 +53,8 @@ interface DraftTransaction {
   sender?: string;
   alwaysApply?: boolean;
 
+  skipped?: boolean;
+
 
   confidence?: number;
   fieldConfidences?: Record<string, number>;
@@ -62,7 +64,6 @@ interface DraftTransaction {
 
 const ReviewSmsTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<DraftTransaction[]>([]);
-  const [skipped, setSkipped] = useState<DraftTransaction[]>([]);
   const { toast } = useToast();
   const location = useLocation();
   const { addTransaction, updateTransaction } = useTransactions();
@@ -175,23 +176,30 @@ const handleAlwaysApplyChange = (index: number, checked: boolean) => {
   }
 };
 
-const handleSkip = (index: number) => {
-  const tx = transactions[index];
-  setSkipped(prev => [...prev, tx]);
-  setTransactions(transactions.filter((_, i) => i !== index));
-
-  toast({
-    variant: 'destructive',
-    title: 'Message skipped',
-    description: 'This transaction will not be saved.',
+const toggleSkip = (index: number) => {
+  setTransactions(prev => {
+    const updated = [...prev];
+    updated[index].skipped = !updated[index].skipped;
+    return updated;
   });
+};
+
+const toggleSkipAll = () => {
+  const allSkipped = transactions.every(t => t.skipped);
+  setTransactions(prev => prev.map(t => ({ ...t, skipped: !allSkipped })));
 };
 
   const handleSave = () => {
     const valid: Array<{ txn: DraftTransaction; idx: number }> = [];
     const incomplete: DraftTransaction[] = [];
+    const skippedTxns: DraftTransaction[] = [];
 
     transactions.forEach((txn, idx) => {
+      if (txn.skipped) {
+        skippedTxns.push(txn);
+        return;
+      }
+
       const title = generateDefaultTitle(txn);
       if (txn.amount && txn.currency && txn.date && txn.category && txn.subcategory && title) {
         valid.push({ txn: { ...txn, title }, idx });
@@ -208,7 +216,7 @@ const handleSkip = (index: number) => {
       });
     }
 
-    if (valid.length === 0) return;
+    if (valid.length === 0 && skippedTxns.length === 0) return;
 
     valid.forEach(({ txn }) => {
       const normalizedAmount =
@@ -246,22 +254,32 @@ const handleSkip = (index: number) => {
         }
       }
     });
+    skippedTxns.forEach(txn => {
+      if (txn.sender && txn.date) {
+        const existing = senderDates[txn.sender];
+        if (!existing || new Date(txn.date).getTime() > new Date(existing).getTime()) {
+          senderDates[txn.sender] = txn.date;
+        }
+      }
+    });
     updateSmsSenderImportDates(senderDates);
 
     toast({
       title: 'Saved',
-      description: `${valid.length} transaction(s) saved successfully.`,
+      description: `${valid.length} transaction(s) saved, ${skippedTxns.length} skipped.`,
     });
 
     setTransactions([]);
-    setSkipped([]);
   };
 
   const navigate = useNavigate();
 
   return (
     <Layout showBack>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-2">
+        <Button variant="outline" onClick={toggleSkipAll}>
+          {transactions.every(t => t.skipped) ? 'Unskip All' : 'Skip All'}
+        </Button>
         <Button onClick={handleSave}>Save All</Button>
       </div>
 
@@ -288,8 +306,8 @@ const handleSkip = (index: number) => {
                   {Math.round(txn.confidence * 100)}%
                 </Badge>
               )}
-              <Button variant="ghost" size="icon" onClick={() => handleSkip(index)}>
-                <Trash2 className="h-4 w-4 text-red-500" />
+              <Button variant="ghost" size="icon" onClick={() => toggleSkip(index)}>
+                <Ban className={`h-4 w-4 ${txn.skipped ? 'text-yellow-500' : 'text-muted-foreground'}`} />
               </Button>
             </div>
           </div>
