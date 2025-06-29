@@ -38,7 +38,12 @@ export const getLocaleSettings = (): LocaleSettings => {
                 (userPreferences.language && isValidLocale(`${userPreferences.language}-${userPreferences.language.toUpperCase()}`) ? 
                 `${userPreferences.language}-${userPreferences.language.toUpperCase()}` as SupportedLocale : 
                 storedSettings.locale),
-        firstDayOfWeek: userPreferences.displayOptions?.weekStartsOn === 'monday' ? 1 : 0,
+        firstDayOfWeek:
+          userPreferences.displayOptions?.weekStartsOn === 'monday'
+            ? 1
+            : userPreferences.displayOptions?.weekStartsOn === 'saturday'
+            ? 6
+            : 0,
         // If user has date and time format in preferences, use those
         dateFormat: mapDateFormat(userPreferences),
         timeFormat: mapTimeFormat(userPreferences),
@@ -134,7 +139,12 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
               showCategories: (displayOptions as any).showCategories === false ? false : true,
               showTags: (displayOptions as any).showTags === false ? false : true,
               // Preserve weekStartsOn from settings.firstDayOfWeek
-              weekStartsOn: settings.firstDayOfWeek === 1 ? 'monday' : 'sunday',
+              weekStartsOn:
+                settings.firstDayOfWeek === 1
+                  ? 'monday'
+                  : settings.firstDayOfWeek === 6
+                  ? 'saturday'
+                  : 'sunday',
               // Handle showCents from settings.numberFormat
               showCents: settings.numberFormat?.minimumFractionDigits !== 0,
               // Map date format

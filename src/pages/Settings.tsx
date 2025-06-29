@@ -42,7 +42,7 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.preferences?.notifications || false
   );
-  const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday'>(
+  const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday' | 'saturday'>(
     user?.preferences?.displayOptions?.weekStartsOn || 'sunday'
   );
 
@@ -217,11 +217,14 @@ const Settings = () => {
                   <ToggleGroup
                     type="single"
                     value={weekStartsOn}
-                    onValueChange={(value) => value && setWeekStartsOn(value as 'sunday' | 'monday')}
+                    onValueChange={(value) =>
+                      value && setWeekStartsOn(value as 'sunday' | 'monday' | 'saturday')
+                    }
                     className="justify-start"
                   >
                     <ToggleGroupItem value="sunday">Sunday</ToggleGroupItem>
                     <ToggleGroupItem value="monday">Monday</ToggleGroupItem>
+                    <ToggleGroupItem value="saturday">Saturday</ToggleGroupItem>
                   </ToggleGroup>
                 </div>
                 
