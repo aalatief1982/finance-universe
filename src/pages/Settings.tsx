@@ -8,20 +8,13 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Sun, Moon, Trash, Bell, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
+import { Sun, Moon, Trash, Bell, Eye, MessageSquare } from 'lucide-react';
 import { SmsReaderService } from '@/services/SmsReaderService';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
-
 import DataManagementSettings from '@/components/settings/DataManagementSettings';
-
 import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
 import { useLocale } from '@/context/LocaleContext';
 
@@ -135,24 +128,15 @@ const Settings = () => {
     handleAppearanceSave();
   };
 
-  // Handler for the display options "save" button
-  const handleDisplayOptionsChange = () => {
-    updateDisplayOptions({
-      weekStartsOn
-    });
-
-    toast({
-      title: t('settings-updated'),
-      description: t('settings-saved-desc')
-    });
-  };
   
   
   return (
     <Layout showBack>
       <PageHeader title={t('settings')} />
-      <div className="flex justify-end pb-4">
-        <Button onClick={handleSaveSettings}>{t('save-settings')}</Button>
+      <div className="pb-4">
+        <Button className="w-full" onClick={handleSaveSettings}>
+          {t('save-settings')}
+        </Button>
       </div>
       <motion.div
         initial={{ opacity: 0 }}
@@ -161,12 +145,7 @@ const Settings = () => {
         className="space-y-6 pb-24"
       >
         
-        <Tabs defaultValue="preferences" className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="preferences">{t('preferences')}</TabsTrigger>
-            <TabsTrigger value="danger">{t('danger-zone')}</TabsTrigger>
-          </TabsList>
-          <TabsContent value="preferences" className="space-y-4">
+        <div className="space-y-4">
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -229,17 +208,7 @@ const Settings = () => {
                 </div>
                 
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notifications">{t('notifications')}</Label>
-                    <p className="text-sm text-muted-foreground">{t('receive-alerts')}</p>
-                  </div>
-                <Switch
-                    id="notifications"
-                    checked={notificationsEnabled}
-                    onCheckedChange={handleNotificationsChange}
-                  />
-                </div>
+
 
               </CardContent>
             </Card>
@@ -270,12 +239,6 @@ const Settings = () => {
                 </div>
                 
 
-                <Button
-                  className="w-full mt-4"
-                  onClick={handleDisplayOptionsChange}
-                >
-                  {t('save-display')}
-                </Button>
             </CardContent>
           </Card>
           <Card className="border border-border shadow-sm">
@@ -337,9 +300,7 @@ const Settings = () => {
               </CardContent>
             </Card>
             <DataManagementSettings />
-          </TabsContent>
-          
-          <TabsContent value="danger" className="space-y-4">
+
             <Card className="border border-destructive/20 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-destructive">
@@ -370,8 +331,7 @@ const Settings = () => {
                 </AlertDialog>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+        </div>
       </motion.div>
     </Layout>
   );
