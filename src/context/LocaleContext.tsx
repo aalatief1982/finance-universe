@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback
+} from 'react';
 
 export type Translations = Record<string, string>;
 
@@ -16,29 +22,21 @@ const LocaleContext = createContext<LocaleContextType>({
   t: (key: string) => key,
 });
 
-
+// ✅ Eagerly load all translations at build time
 const translationFiles = import.meta.glob('../locales/*.json', {
   eager: true,
   import: 'default'
 }) as Record<string, Translations>;
 
-
 export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState('en');
   const [translations, setTranslations] = useState<Translations>({});
 
+  // ✅ Use direct object access (no await) for eagerly loaded translations
   const loadTranslations = async (lang: string) => {
-
-    const importer = translationFiles[`../locales/${lang}.json`];
-    if (importer) {
-      try {
-        const msgs: Translations = (await importer()).default;
-        setTranslations(msgs);
-      } catch (err) {
-        console.error('Failed to load translations for', lang, err);
-        setTranslations({});
-      }
-
+    const msgs = translationFiles[`../locales/${lang}.json`];
+    if (msgs) {
+      setTranslations(msgs);
     } else {
       console.error(`Translations for ${lang} not found`);
       setTranslations({});
@@ -59,11 +57,14 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, []);
 
   useEffect(() => {
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }, [language]);
 
-  const t = (key: string) => translations[key] || key;
+  const t = useCallback(
+    (key: string) => translations[key] || key,
+    [translations]
+  );
 
   return (
     <LocaleContext.Provider value={{ language, translations, setLanguage, t }}>
