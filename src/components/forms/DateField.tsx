@@ -30,7 +30,7 @@ const DateField: React.FC<DateFieldProps> = ({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full pl-3 text-left font-normal",
+                    "w-full ps-3 text-start font-normal",
                     !field.value && "text-muted-foreground"
                   )}
                 >
@@ -39,7 +39,7 @@ const DateField: React.FC<DateFieldProps> = ({
                   ) : (
                     <span>Select date</span>
                   )}
-                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  <CalendarIcon className="ms-auto h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">

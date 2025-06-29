@@ -369,7 +369,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       return null;
     }
     return (
-      <span className="ml-1 flex items-center gap-1">
+      <span className="ms-1 flex items-center gap-1">
         <ThumbsUp
           className="size-4 cursor-pointer text-green-600"
           onClick={() => handleFeedback(field, true)}

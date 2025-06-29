@@ -38,7 +38,7 @@ const BalanceCard = ({
             onChange={setCurrency}
             darkMode={true}
           />
-          <DollarSign size={18} className="opacity-80 ml-1" />
+          <DollarSign size={18} className="opacity-80 ms-1" />
         </div>
       </div>
       <h2 className="text-2xl font-bold">{formatCurrency(balance)}</h2>

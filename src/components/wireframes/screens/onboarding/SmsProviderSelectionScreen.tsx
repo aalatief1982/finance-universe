@@ -239,13 +239,13 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
         <Input
           type="text"
           placeholder="Search providers..."
-          className="pl-9 py-2 pr-3 text-sm dark:bg-white dark:text-black"
+          className="ps-9 py-2 pe-3 text-sm dark:bg-white dark:text-black"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
       
-      <div className="grid grid-cols-1 gap-3 max-h-[320px] overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 gap-3 max-h-[320px] overflow-y-auto pe-1">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
@@ -265,7 +265,7 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
               onClick={() => toggleProvider(provider.id)}
             >
               <div className="flex items-start">
-                <div className="flex-shrink-0 text-2xl mr-3">
+                <div className="flex-shrink-0 text-2xl me-3">
                   {provider.id.includes('bank') ? '🏦' : 
                    provider.id.includes('credit') ? '💳' :
                    provider.id.includes('investment') ? '📈' :
@@ -275,7 +275,7 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
                   <div className="flex items-center">
                     <h4 className="font-medium text-foreground">{provider.name}</h4>
                     {provider.isDetected && (
-                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                      <span className="ms-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                         Detected
                       </span>
                     )}
@@ -283,7 +283,7 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
                   <p className="text-sm text-muted-foreground">{provider.pattern}</p>
                 </div>
                 {provider.isSelected && (
-                  <div className="flex-shrink-0 ml-2">
+                  <div className="flex-shrink-0 ms-2">
                     <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                       <Check className="h-3 w-3 text-white" />
                     </div>
@@ -301,7 +301,7 @@ const SmsProviderSelectionScreen = ({ onComplete, onSkip }: SmsProviderSelection
       
       <div className="border rounded-lg p-4 cursor-pointer hover:bg-secondary/50" onClick={handleDateSelect}>
         <div className="flex items-center">
-          <Calendar className="mr-3 text-primary" size={24} />
+          <Calendar className="me-3 text-primary" size={24} />
           <div>
             <h4 className="font-medium">Set Start Date</h4>
             <p className="text-sm text-muted-foreground">

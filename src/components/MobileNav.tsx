@@ -66,7 +66,7 @@ const MobileNav: React.FC = () => {
                         }`}
                         onClick={() => setIsOpen(false)}
                       >
-                        <span className="mr-3">{item.icon}</span>
+                        <span className="me-3">{item.icon}</span>
                         {item.name}
                       </Link>
                     </li>
@@ -79,7 +79,7 @@ const MobileNav: React.FC = () => {
                   <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                     <User size={20} />
                   </div>
-                  <div className="ml-3">
+                  <div className="ms-3">
                     <p className="font-medium">User Profile</p>
                     <p className="text-sm text-muted-foreground">Manage Account</p>
                   </div>

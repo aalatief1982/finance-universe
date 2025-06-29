@@ -260,7 +260,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <div key={category.id} className="category-item">
         <div 
           className={`flex items-center p-2 rounded-md hover:bg-gray-100 ${
-            level > 0 ? 'ml-6' : ''
+            level > 0 ? 'ms-6' : ''
           }`}
         >
           <div className="flex-1 flex items-center">
@@ -268,7 +268,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="p-1 mr-1" 
+                className="p-1 me-1" 
                 onClick={() => toggleExpand(category.id)}
               >
                 {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -276,18 +276,18 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             )}
             
             <div 
-              className="w-4 h-4 mr-2 rounded-full" 
+              className="w-4 h-4 me-2 rounded-full" 
               style={{ backgroundColor: category.metadata?.color || '#8B5CF6' }} 
             />
             
             {hasSubcategories ? (
-              isExpanded ? <FolderOpen size={18} className="mr-2" /> : <Folder size={18} className="mr-2" />
+              isExpanded ? <FolderOpen size={18} className="me-2" /> : <Folder size={18} className="me-2" />
             ) : null}
             
             <span className="font-medium">{category.name}</span>
             
             {category.metadata?.budget && (
-              <span className="ml-2 text-sm text-gray-500">
+              <span className="ms-2 text-sm text-gray-500">
                 Budget: ${category.metadata.budget}
               </span>
             )}
@@ -323,7 +323,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         
         {/* Subcategories */}
         {isExpanded && hasSubcategories && (
-          <div className="ml-6 border-l-2 border-gray-100 pl-2 mt-1">
+          <div className="ms-6 border-l-2 border-gray-100 ps-2 mt-1">
             {categories
               .filter(c => c.parentId === category.id)
               .map(subcategory => renderCategoryItem(subcategory, level + 1))}
@@ -341,7 +341,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Category Manager</CardTitle>
         <Button onClick={() => startAddingCategory()} size="sm">
-          <Plus size={16} className="mr-1" /> Add Category
+          <Plus size={16} className="me-1" /> Add Category
         </Button>
       </CardHeader>
       
@@ -427,7 +427,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                                     className="w-full justify-start"
                                   >
                                     <div
-                                      className="w-4 h-4 rounded-full mr-2"
+                                      className="w-4 h-4 rounded-full me-2"
                                       style={{ backgroundColor: field.value || '#8B5CF6' }}
                                     />
                                     <span>{
@@ -522,10 +522,10 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                       
                       <div className="flex justify-end space-x-2 pt-2">
                         <Button variant="outline" type="button" onClick={cancelEditing}>
-                          <X size={16} className="mr-1" /> Cancel
+                          <X size={16} className="me-1" /> Cancel
                         </Button>
                         <Button type="submit">
-                          <Save size={16} className="mr-1" /> Save
+                          <Save size={16} className="me-1" /> Save
                         </Button>
                       </div>
                     </form>
@@ -544,7 +544,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             <div className="text-center py-8">
               <div className="text-gray-400 mb-2">No categories found</div>
               <Button onClick={() => startAddingCategory()}>
-                <PlusCircle size={16} className="mr-1" /> Create your first category
+                <PlusCircle size={16} className="me-1" /> Create your first category
               </Button>
             </div>
           )}

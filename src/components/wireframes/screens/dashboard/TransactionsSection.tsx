@@ -34,7 +34,7 @@ const TransactionsSection = ({
         transactions.map(tx => (
           <div key={tx.id} className="flex justify-between items-center p-3 bg-white border rounded-lg">
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center me-2">
                 <CreditCard size={16} className="text-gray-500" />
               </div>
               <div>
@@ -42,7 +42,7 @@ const TransactionsSection = ({
                 <span className="text-xs text-gray-500">{tx.date} • {tx.category}</span>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <span className={`font-semibold ${tx.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
                 {tx.amount < 0 ? '-' : '+'}{formatCurrency(Math.abs(tx.amount))}
               </span>
@@ -60,10 +60,10 @@ const TransactionsSection = ({
           <p className="text-gray-500 mb-2">No transactions to display</p>
           <div className="flex justify-center space-x-2">
             <WireframeButton onClick={onAddTransaction} variant="secondary" size="small">
-              <Plus size={14} className="mr-1" /> Add Manually
+              <Plus size={14} className="me-1" /> Add Manually
             </WireframeButton>
             <WireframeButton onClick={onImportSms} variant="secondary" size="small">
-              <MessageSquare size={14} className="mr-1" /> Import SMS
+              <MessageSquare size={14} className="me-1" /> Import SMS
             </WireframeButton>
           </div>
         </div>

@@ -23,7 +23,7 @@ const ActionButtons = ({
         variant="primary"
       >
         <div className="flex items-center justify-center">
-          <Plus size={18} className="mr-1" />
+          <Plus size={18} className="me-1" />
           <span>Add Transaction</span>
         </div>
       </WireframeButton>

@@ -173,11 +173,11 @@ const CategorySettings = () => {
                   </p>
                   <Button variant="outline" onClick={() => setActiveTab('suggestions')}>
                     Generate Rule Suggestions
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ms-2 h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <ScrollArea className="h-[500px] pr-4">
+                <ScrollArea className="h-[500px] pe-4">
                   <div className="space-y-4">
                     {categoryRules.map((rule) => (
                       <Card key={rule.id} className="p-[var(--card-padding)]">
@@ -250,7 +250,7 @@ const CategorySettings = () => {
                   </Button>
                 </div>
               ) : (
-                <ScrollArea className="h-[500px] pr-4">
+                <ScrollArea className="h-[500px] pe-4">
                   <div className="space-y-4">
                     {ruleSuggestions.map((suggestion, index) => (
                       <Card key={index} className="p-[var(--card-padding)]">

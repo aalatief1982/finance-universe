@@ -98,8 +98,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
     if (sortField !== field) return null;
     
     return sortDirection === 'asc' ? 
-      <ChevronUp className="ml-1 h-4 w-4" /> : 
-      <ChevronDown className="ml-1 h-4 w-4" />;
+      <ChevronUp className="ms-1 h-4 w-4" /> : 
+      <ChevronDown className="ms-1 h-4 w-4" />;
   };
 
   const renderAmount = (transaction: Transaction) => {
@@ -109,7 +109,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return (
       <div className="flex items-center">
         <Icon 
-          className={`mr-1 h-4 w-4 ${isIncome ? 'text-green-500' : 'text-red-500'}`} 
+          className={`me-1 h-4 w-4 ${isIncome ? 'text-green-500' : 'text-red-500'}`} 
         />
         <span className={isIncome ? 'text-green-600' : 'text-red-600'}>
           {formatCurrency(Math.abs(transaction.amount), transaction.currency || 'USD')}
@@ -214,7 +214,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <DropdownMenuContent>
                     {onEdit && (
                       <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                        <Edit className="mr-2 h-4 w-4" />
+                        <Edit className="me-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
                     )}
@@ -223,7 +223,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                         onClick={() => onDelete(transaction.id)}
                         className="text-red-600"
                       >
-                        <Trash className="mr-2 h-4 w-4" />
+                        <Trash className="me-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>
                     )}
@@ -321,7 +321,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 </div>
               </TableHead>
               <TableHead>Type</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-end">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -352,8 +352,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                         >
                           {isExpanded ? 'Hide details' : 'Show details'}
                           {isExpanded ? 
-                            <ChevronUp className="ml-1 h-3 w-3" /> : 
-                            <ChevronDown className="ml-1 h-3 w-3" />
+                            <ChevronUp className="ms-1 h-3 w-3" /> : 
+                            <ChevronDown className="ms-1 h-3 w-3" />
                           }
                         </Button>
                       )}
@@ -362,7 +362,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     <TableCell>{renderCategory(transaction)}</TableCell>
                     <TableCell>{renderDate(transaction.date)}</TableCell>
                     <TableCell>{renderType(transaction.type)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-end">
                       <div className="flex justify-end">
                         {onEdit && (
                           <Button

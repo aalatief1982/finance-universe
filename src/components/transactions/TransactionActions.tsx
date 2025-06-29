@@ -73,7 +73,7 @@ const TransactionActions = ({
         <DropdownMenuContent>
           <DropdownMenuItem asChild>
             <div onClick={handleEdit}>
-              <Pen className="mr-2 h-4 w-4" />
+              <Pen className="me-2 h-4 w-4" />
               <span>Edit</span>
             </div>
           </DropdownMenuItem>
@@ -82,7 +82,7 @@ const TransactionActions = ({
               onClick={handleDelete}
               className="text-red-600 focus:text-red-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
+              <Trash2 className="me-2 h-4 w-4" />
               <span>Delete</span>
             </div>
           </DropdownMenuItem>

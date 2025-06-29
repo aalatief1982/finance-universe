@@ -115,18 +115,18 @@ const EnterPhoneForm = ({
             onChange={handlePhoneChange}
             className={`${
               error ? "border-red-500" : 
-              validationState === 'valid' ? "border-green-500 pr-10" : 
-              validationState === 'invalid' ? "border-amber-500 pr-10" : ""
+              validationState === 'valid' ? "border-green-500 pe-10" : 
+              validationState === 'invalid' ? "border-amber-500 pe-10" : ""
             }`}
             disabled={isOffline}
           />
           {validationState === 'valid' && !error && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <div className="absolute inset-y-0 right-0 flex items-center pe-3 pointer-events-none">
               <Check className="h-5 w-5 text-green-500" />
             </div>
           )}
           {validationState === 'invalid' && !error && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <div className="absolute inset-y-0 right-0 flex items-center pe-3 pointer-events-none">
               <AlertCircle className="h-5 w-5 text-amber-500" />
             </div>
           )}
@@ -165,7 +165,7 @@ const EnterPhoneForm = ({
       >
         {isLoading ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="me-2 h-4 w-4 animate-spin" />
             Sending Code...
           </>
         ) : (
