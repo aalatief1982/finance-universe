@@ -33,6 +33,8 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const setLanguage = async (lang: string) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     await loadTranslations(lang);
   };
 
@@ -40,6 +42,11 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const stored = localStorage.getItem('language') || 'en';
     setLanguage(stored);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [language]);
 
   const t = (key: string) => translations[key] || key;
 
