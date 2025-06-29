@@ -30,7 +30,7 @@ export interface UserPreferences {
   };
   displayOptions: {
     showCents: boolean;
-    weekStartsOn: 'sunday' | 'monday';
+    weekStartsOn: 'sunday' | 'monday' | 'saturday';
     defaultView: 'list' | 'stats' | 'calendar';
     compactMode?: boolean;
     showCategories?: boolean;
