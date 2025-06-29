@@ -75,6 +75,15 @@ Simply open [Lovable](https://lovable.dev/projects/44f11ecc-0e77-4a7d-a302-6102d
 The app reads configuration from Vite environment variables. The newly added `VITE_CLOUD_FUNCTIONS_BASE_URL` controls where the Firebase Cloud Functions requests are sent.
 `VITE_SMS_LOOKBACK_MONTHS` sets the default number of months of SMS history to scan when importing messages (default `6`).
 
+Two variables are required to connect to Supabase:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Create a `.env` file based on `.env.sample` and set these values before running the app.
+
+For the Cloud Functions base URL you can use:
+
 - **Production URL:** `https://us-central1-xpensia-505ac.cloudfunctions.net`
 - **Local emulator URL:** `http://localhost:5001/xpensia-505ac/us-central1`
 
