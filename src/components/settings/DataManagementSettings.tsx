@@ -14,6 +14,7 @@ import {
   getStoredTransactions,
   storeTransactions
 } from '@/utils/storage-utils';
+import { convertTransactionsToCsv } from '@/utils/csv';
 
 // Define the correct types for backupFrequency and dataRetention
 type BackupFrequency = 'daily' | 'weekly' | 'monthly' | 'never';
@@ -105,16 +106,18 @@ const DataManagementSettings = () => {
         return;
       }
 
-      const dataStr =
-        "data:text/json;charset=utf-8," +
-        encodeURIComponent(JSON.stringify(transactions));
+      const csv = convertTransactionsToCsv(transactions);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
       const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", "expense-tracker-data.json");
+      downloadAnchorNode.href = url;
+      downloadAnchorNode.download = 'transactions.csv';
       document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
-      
+      URL.revokeObjectURL(url);
+
       toast({
         title: "Export successful",
         description: "Your data has been exported successfully.",
