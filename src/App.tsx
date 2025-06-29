@@ -60,9 +60,14 @@ function AppWrapper() {
     };
 
     checkQueue();
-    const resume = CapacitorApp.addListener('resume', checkQueue);
+    let resume: any;
+    CapacitorApp.addListener('resume', checkQueue).then((listener) => {
+      resume = listener;
+    });
     return () => {
-      resume.remove();
+      if (resume) {
+        resume.remove();
+      }
     };
   }, []);
 
