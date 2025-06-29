@@ -63,6 +63,7 @@ export interface UserPreferences {
     autoDetectProviders: boolean;
     showDetectionNotifications: boolean;
     autoImport?: boolean;
+    backgroundSmsEnabled?: boolean;
   };
   categories?: {
     showUncategorized: boolean;

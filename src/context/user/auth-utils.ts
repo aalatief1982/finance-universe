@@ -98,7 +98,8 @@ export const getUserFromLocalStorage = (): User | null => {
             showTags: true
           },
           sms: {
-            autoImport: false
+            autoImport: false,
+            backgroundSmsEnabled: false
           }
         };
       }

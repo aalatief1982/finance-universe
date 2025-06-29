@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Sun, Moon, Trash, Bell, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
+import { SmsReaderService } from '@/services/SmsReaderService';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -42,6 +43,9 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.preferences?.notifications || false
   );
+  const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
+    user?.preferences?.sms?.backgroundSmsEnabled || false
+  );
   const [weekStartsOn, setWeekStartsOn] = useState<'sunday' | 'monday' | 'saturday'>(
     user?.preferences?.displayOptions?.weekStartsOn || 'sunday'
   );
@@ -54,7 +58,10 @@ const Settings = () => {
       setCurrency(user.preferences.currency || 'USD');
       setLanguage(user.preferences.language || 'en');
       setNotificationsEnabled(user.preferences.notifications || false);
-      
+      if (user.preferences.sms) {
+        setBackgroundSmsEnabled(user.preferences.sms.backgroundSmsEnabled || false);
+      }
+
       if (user.preferences.displayOptions) {
         setWeekStartsOn(user.preferences.displayOptions.weekStartsOn || 'sunday');
       }
@@ -80,6 +87,20 @@ const Settings = () => {
   const handleNotificationsChange = (checked: boolean) => {
     setNotificationsEnabled(checked);
     updateNotificationSettings(checked);
+  };
+
+  const handleBackgroundSmsChange = async (checked: boolean) => {
+    if (checked) {
+      const granted = await SmsReaderService.checkOrRequestPermission();
+      if (!granted) {
+        alert('SMS permission is required to read messages in the background.');
+        setBackgroundSmsEnabled(false);
+        return;
+      }
+    }
+
+    setBackgroundSmsEnabled(checked);
+    updateUserPreferences({ sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked } });
   };
 
   const handleAppearanceSave = () => {
@@ -183,17 +204,6 @@ const Settings = () => {
                   </Select>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="notifications">Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
-                  </div>
-                <Switch
-                    id="notifications"
-                    checked={notificationsEnabled}
-                    onCheckedChange={handleNotificationsChange}
-                  />
-                </div>
                 <Button
                   className="w-full mt-4"
                   onClick={handleAppearanceSave}
@@ -234,13 +244,46 @@ const Settings = () => {
                 >
                   Save Display Preferences
                 </Button>
-              </CardContent>
-            </Card>
-            <Card className="border border-border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <MessageSquare className="mr-2" size={20} />
-                  <span>SMS Import</span>
+            </CardContent>
+          </Card>
+          <Card className="border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bell className="mr-2" size={20} />
+                <span>Notification Settings</span>
+              </CardTitle>
+              <CardDescription>Manage notification preferences</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notifications">Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
+                </div>
+                <Switch
+                  id="notifications"
+                  checked={notificationsEnabled}
+                  onCheckedChange={handleNotificationsChange}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
+                  <p className="text-sm text-muted-foreground">Read incoming SMS in the background</p>
+                </div>
+                <Switch
+                  id="background-sms"
+                  checked={backgroundSmsEnabled}
+                  onCheckedChange={handleBackgroundSmsChange}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <MessageSquare className="mr-2" size={20} />
+                <span>SMS Import</span>
                 </CardTitle>
                 <CardDescription>Automatically import new SMS messages</CardDescription>
               </CardHeader>
@@ -253,7 +296,9 @@ const Settings = () => {
                   <Switch
                     id="auto-sms-import"
                     checked={!!user?.preferences?.sms?.autoImport}
-                    onCheckedChange={(checked) => updateUserPreferences({ sms: { autoImport: checked } })}
+                    onCheckedChange={(checked) =>
+                      updateUserPreferences({ sms: { ...user?.preferences?.sms, autoImport: checked } })
+                    }
                   />
                 </div>
               </CardContent>

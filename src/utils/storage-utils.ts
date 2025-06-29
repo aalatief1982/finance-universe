@@ -380,7 +380,8 @@ export const getUserSettings = (): UserPreferences => {
       dataRetention: 'forever'
     },
     sms: {
-      autoImport: false
+      autoImport: false,
+      backgroundSmsEnabled: false
     }
   });
 };
