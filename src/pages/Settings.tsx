@@ -19,11 +19,12 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
-import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
+import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
+import { useLocale } from '@/context/LocaleContext';
 
 const Settings = () => {
   const { toast } = useToast();
-  const { 
+  const {
     user, 
     updateTheme, 
     updateCurrency, 
@@ -33,6 +34,7 @@ const Settings = () => {
     updateUserPreferences,
     getEffectiveTheme
   } = useUser();
+  const { setLanguage: loadLanguage } = useLocale();
   
   // State for form values
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
@@ -77,11 +79,13 @@ const Settings = () => {
   const handleCurrencyChange = (value: string) => {
     setCurrency(value);
     updateCurrency(value);
+    persistCurrency(value);
   };
-  
+
   const handleLanguageChange = (value: string) => {
     setLanguage(value);
     updateLanguage(value);
+    loadLanguage(value);
   };
   
   const handleNotificationsChange = (checked: boolean) => {
@@ -106,7 +110,9 @@ const Settings = () => {
   const handleAppearanceSave = () => {
     updateTheme(theme);
     updateCurrency(currency);
+    persistCurrency(currency);
     updateLanguage(language);
+    loadLanguage(language);
     updateNotificationSettings(notificationsEnabled);
 
     toast({

@@ -1,0 +1,55 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+
+export type Translations = Record<string, string>;
+
+interface LocaleContextType {
+  language: string;
+  translations: Translations;
+  setLanguage: (lang: string) => Promise<void>;
+  t: (key: string) => string;
+}
+
+const LocaleContext = createContext<LocaleContextType>({
+  language: 'en',
+  translations: {},
+  setLanguage: async () => {},
+  t: (key: string) => key,
+});
+
+export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [language, setLanguageState] = useState('en');
+  const [translations, setTranslations] = useState<Translations>({});
+
+  const loadTranslations = async (lang: string) => {
+    try {
+      const msgs: Translations = (await import(/* @vite-ignore */ `../locales/${lang}.json`)).default;
+      setTranslations(msgs);
+    } catch (err) {
+      console.error('Failed to load translations for', lang, err);
+      setTranslations({});
+    }
+  };
+
+  const setLanguage = async (lang: string) => {
+    setLanguageState(lang);
+    localStorage.setItem('language', lang);
+    await loadTranslations(lang);
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('language') || 'en';
+    setLanguage(stored);
+  }, []);
+
+  const t = (key: string) => translations[key] || key;
+
+  return (
+    <LocaleContext.Provider value={{ language, translations, setLanguage, t }}>
+      {children}
+    </LocaleContext.Provider>
+  );
+};
+
+export const useLocale = () => useContext(LocaleContext);
+
+export default LocaleContext;
