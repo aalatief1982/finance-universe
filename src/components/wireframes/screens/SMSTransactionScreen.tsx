@@ -241,7 +241,7 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
                     }`}
                     onClick={() => toggleMessage(msg.id)}
                   >
-                    <div className={`w-6 h-6 rounded-full border me-3 flex-shrink-0 flex items-center justify-center ${
+                    <div className={`w-6 h-6 rounded-full border mr-3 flex-shrink-0 flex items-center justify-center ${
                       selectedMessages.includes(msg.id) 
                         ? 'bg-blue-500 border-blue-500' 
                         : 'border-gray-300'
@@ -265,19 +265,19 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
                       <div className="flex mt-1.5 gap-2">
                         {country && (
                           <div className="inline-flex items-center text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-0.5">
-                            <Globe size={10} className="me-1" />
+                            <Globe size={10} className="mr-1" />
                             {country}
                           </div>
                         )}
                         {currency && (
                           <div className="inline-flex items-center text-xs bg-gray-100 text-gray-700 rounded-full px-2 py-0.5">
-                            <DollarSign size={10} className="me-1" />
+                            <DollarSign size={10} className="mr-1" />
                             {currency}
                           </div>
                         )}
                       </div>
                     </div>
-                    <ChevronRight size={16} className="text-gray-400 ms-2 flex-shrink-0" />
+                    <ChevronRight size={16} className="text-gray-400 ml-2 flex-shrink-0" />
                   </div>
                 )
               })

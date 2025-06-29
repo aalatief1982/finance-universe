@@ -57,7 +57,7 @@ const WireframeHeader = ({
       {leftElement ? (
         leftElement
       ) : onBack ? (
-        <button onClick={onBack} className="me-2">
+        <button onClick={onBack} className="mr-2">
           <ChevronRight className="transform rotate-180" size={24} />
         </button>
       ) : (

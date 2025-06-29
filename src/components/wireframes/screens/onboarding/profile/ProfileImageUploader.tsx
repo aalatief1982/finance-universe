@@ -136,7 +136,7 @@ const ProfileImageUploader: React.FC<ProfileImageUploaderProps> = ({
           onClick={takePicture}
           disabled={isUploading}
         >
-          <Camera className="h-4 w-4 me-2" />
+          <Camera className="h-4 w-4 mr-2" />
           {isNative ? 'Camera' : 'Upload'}
         </Button>
         
@@ -148,7 +148,7 @@ const ProfileImageUploader: React.FC<ProfileImageUploaderProps> = ({
             onClick={selectFromGallery}
             disabled={isUploading}
           >
-            <Upload className="h-4 w-4 me-2" />
+            <Upload className="h-4 w-4 mr-2" />
             Gallery
           </Button>
         )}

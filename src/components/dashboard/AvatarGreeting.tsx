@@ -1,23 +1,16 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from '@/types/user';
-import { useLocale } from '@/context/LocaleContext';
 
 interface AvatarGreetingProps {
   user: User | null;
 }
 
 export const AvatarGreeting: React.FC<AvatarGreetingProps> = ({ user }) => {
-  const { t } = useLocale();
   const firstName = user?.fullName?.split(' ')[0] || 'there';
   const avatar = user?.avatar;
   const hour = new Date().getHours();
-  const greeting =
-    hour < 12
-      ? t('good-morning')
-      : hour < 18
-        ? t('good-afternoon')
-        : t('good-evening');
+  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
   const initials = firstName.charAt(0).toUpperCase();
 
   return (

@@ -98,7 +98,7 @@ const Profile = () => {
                 size="sm"
                 className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
               >
-                <Trash2 className="h-4 w-4 me-1" />
+                <Trash2 className="h-4 w-4 mr-1" />
                 Delete Account
               </Button>
             </AlertDialogTrigger>
@@ -157,7 +157,7 @@ const Profile = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
 
-              <Label htmlFor="fullName">Full Name<span className="text-red-500 ms-1">*</span></Label>
+              <Label htmlFor="fullName">Full Name<span className="text-red-500 ml-1">*</span></Label>
 
               <Input
                 id="fullName"

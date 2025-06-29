@@ -207,9 +207,9 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             <p className={`font-semibold ${getTransactionTypeColor(transaction.type)}`}>
               {formatAmount(transaction.amount, transaction.currency)}
             </p>
-            <p className="text-xs text-muted-foreground text-end">{transaction.date}</p>
+            <p className="text-xs text-muted-foreground text-right">{transaction.date}</p>
             {transaction.providerDetails?.balanceAfterTransaction !== undefined && (
-              <p className="text-xs text-muted-foreground text-end">
+              <p className="text-xs text-muted-foreground text-right">
                 Balance: {formatAmount(transaction.providerDetails.balanceAfterTransaction, transaction.currency)}
               </p>
             )}

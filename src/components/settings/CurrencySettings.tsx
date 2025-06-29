@@ -38,7 +38,7 @@ const CurrencySettings = () => {
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <DollarSign className="me-2" size={20} />
+          <DollarSign className="mr-2" size={20} />
           <span>Currency Settings</span>
         </CardTitle>
         <CardDescription>Change your preferred currency</CardDescription>

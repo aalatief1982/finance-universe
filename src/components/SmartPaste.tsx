@@ -217,7 +217,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
         <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
           <Button type="submit" disabled={isProcessing || !text.trim()}>
-            {isProcessing && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Extract Transaction
           </Button>
         </div>

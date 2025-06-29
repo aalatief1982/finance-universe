@@ -4,12 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root {
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
 @layer base {
   :root {
     --background: 210 20% 98%;

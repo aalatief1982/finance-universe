@@ -78,7 +78,7 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
             onClick={() => setTransactionType('expense')}
           >
             <div className="flex items-center justify-center">
-              <ArrowDown size={18} className="me-1" />
+              <ArrowDown size={18} className="mr-1" />
               <span>Expense</span>
             </div>
           </button>
@@ -87,7 +87,7 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
             onClick={() => setTransactionType('income')}
           >
             <div className="flex items-center justify-center">
-              <ArrowUp size={18} className="me-1" />
+              <ArrowUp size={18} className="mr-1" />
               <span>Income</span>
             </div>
           </button>
@@ -100,7 +100,7 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
             <Input
               type="text"
               placeholder="0.00"
-              className={`ps-8 ${errors.amount ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
+              className={`pl-8 ${errors.amount ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
@@ -113,7 +113,7 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
           <div className="relative">
             <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className={`ps-8 ${errors.category ? 'border-red-500' : ''} dark:bg-white dark:text-black`}>
+              <SelectTrigger className={`pl-8 ${errors.category ? 'border-red-500' : ''} dark:bg-white dark:text-black`}>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
@@ -134,7 +134,7 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
             <Input
               type="date"
-              className={`ps-8 ${errors.date ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
+              className={`pl-8 ${errors.date ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
@@ -148,7 +148,7 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
             <Receipt className="absolute left-3 top-3 text-gray-500" size={16} />
             <textarea 
               placeholder="Add a description" 
-              className="w-full p-2 ps-8 border rounded-lg min-h-[80px]"
+              className="w-full p-2 pl-8 border rounded-lg min-h-[80px]"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />

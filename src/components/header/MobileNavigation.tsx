@@ -47,7 +47,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPageT
         <SheetContent side="left" className="w-[300px] sm:w-[400px]">
           <SheetHeader className="border-b pb-4 mb-4">
             <SheetTitle className="flex items-center">
-              <div className="h-8 w-8 rounded-lg bg-primary overflow-hidden flex items-center justify-center me-2">
+              <div className="h-8 w-8 rounded-lg bg-primary overflow-hidden flex items-center justify-center mr-2">
                 <img 
                   src="/xpensia-logo.png" 
                   alt="Xpensia Logo" 
@@ -94,7 +94,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPageT
                       )}
                       aria-current={location.pathname === item.path ? "page" : undefined}
                     >
-                      {IconComponent && <IconComponent size={20} className="me-3" />}
+                      {IconComponent && <IconComponent size={20} className="mr-3" />}
                       <div>
                         <p className="font-medium">{item.title}</p>
                         <p className="text-xs text-muted-foreground">{item.description}</p>
@@ -112,7 +112,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentPageT
                   className="w-full justify-start" 
                   onClick={logOut}
                 >
-                  <LogOut size={18} className="me-2" />
+                  <LogOut size={18} className="mr-2" />
                   Log out
                 </Button>
               </div>

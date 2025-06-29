@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
-    "lib": ["es2020"],
     "module": "commonjs",
     "noImplicitReturns": true,
+    "noUnusedLocals": true,
     "outDir": "lib",
     "sourceMap": true,
-    "target": "es2020",
-    "esModuleInterop": true,
     "strict": true,
-"typeRoots": ["./node_modules/@types"]
+    "target": "es2017"
   },
-  "include": ["src"]
+  "compileOnSave": true,
+  "include": [
+    "src"
+  ]
 }

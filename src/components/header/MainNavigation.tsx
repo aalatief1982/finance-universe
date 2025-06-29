@@ -36,7 +36,7 @@ export const MainNavigation: React.FC = () => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.1 }}
-      className="hidden md:block ms-8"
+      className="hidden md:block ml-8"
     >
       <ul className="flex items-center space-x-1">
         {navItems.map((item) => {
@@ -56,7 +56,7 @@ export const MainNavigation: React.FC = () => {
                 title={item.title}
                 aria-current={location.pathname === item.path ? "page" : undefined}
               >
-                {IconComponent && <IconComponent size={18} className="me-2" />}
+                {IconComponent && <IconComponent size={18} className="mr-2" />}
                 {item.title}
               </Link>
             </li>

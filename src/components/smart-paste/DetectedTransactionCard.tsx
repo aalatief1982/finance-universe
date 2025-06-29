@@ -45,7 +45,7 @@ const DetectedTransactionCard = ({
               <h3 className="font-medium">{transaction.title}</h3>
               {isSmartMatch && (
                 <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900/30 dark:text-green-300">
-                  <Check className="inline h-3 w-3 me-1" />
+                  <Check className="inline h-3 w-3 mr-1" />
                   Smart Match
                 </span>
               )}
@@ -80,7 +80,7 @@ const DetectedTransactionCard = ({
             className="shrink-0"
             onClick={() => onAddTransaction(transaction)}
           >
-            <Plus className="h-4 w-4 me-1" />
+            <Plus className="h-4 w-4 mr-1" />
             Add
           </Button>
         </div>

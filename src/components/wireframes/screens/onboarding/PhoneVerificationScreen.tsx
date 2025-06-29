@@ -106,7 +106,7 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
           className="flex items-center mb-4" 
           onClick={onBack}
         >
-          <ArrowLeft className="h-4 w-4 me-1" />
+          <ArrowLeft className="h-4 w-4 mr-1" />
           Back
         </Button>
       )}
@@ -156,7 +156,7 @@ const PhoneVerificationScreen = ({ onNext, onBack }: PhoneVerificationScreenProp
               />
               {networkStatus === 'offline' && (
                 <p className="text-xs text-red-600">
-                  <WifiOff className="h-3 w-3 inline me-1" />
+                  <WifiOff className="h-3 w-3 inline mr-1" />
                   This feature is unavailable while offline
                 </p>
               )}

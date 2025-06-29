@@ -40,13 +40,11 @@ import { useUser } from '@/context/UserContext';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { AnalyticsService } from '@/services/AnalyticsService';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useLocale } from '@/context/LocaleContext';
 
 const Home = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
-  const { t } = useLocale();
 
 
   type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';
@@ -209,7 +207,7 @@ const Home = () => {
 
   return (
     <Layout withPadding={false} fullWidth>
-      <div className="px-[var(--page-padding-x)] py-[var(--page-padding-y)] max-w-[var(--content-max-width)] mx-auto w-full">
+      <div className="container px-1">
         <PageHeader
           title={<AvatarGreeting user={user} />}
         />
@@ -227,20 +225,20 @@ const Home = () => {
                 value={r}
                 className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
               >
-                {t(r)}
+                {r.charAt(0).toUpperCase() + r.slice(1)}
               </ToggleGroupItem>
             ))}
             <ToggleGroupItem
               value="custom"
               className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
-              {t('custom')}
+              Custom
             </ToggleGroupItem>
           </ToggleGroup>
           {range === 'custom' && (
             <div className="mt-2 flex items-center justify-center gap-2 animate-in fade-in">
-              <DatePicker date={customStart} setDate={setCustomStart} placeholder={t('start')} />
-              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder={t('end')} />
+              <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
+              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
             </div>
           )}
         </div>
@@ -256,19 +254,19 @@ const Home = () => {
             <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="mb-4 border-b">
-                  <TabsTrigger value="trends" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">{t('spending-trends')}</TabsTrigger>
-                  <TabsTrigger value="net" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">{t('net-balance')}</TabsTrigger>
-                  <TabsTrigger value="category" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">{t('category')}</TabsTrigger>
-                  <TabsTrigger value="subcategory" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">{t('subcategory')}</TabsTrigger>
+                  <TabsTrigger value="trends" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Trends</TabsTrigger>
+                  <TabsTrigger value="net" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Net Balance</TabsTrigger>
+                  <TabsTrigger value="category" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Category</TabsTrigger>
+                  <TabsTrigger value="subcategory" className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors">Subcategory</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="trends" className="space-y-2">
-                  <h2 className="text-lg font-semibold">{t('spending-trends')}</h2>
+                  <h2 className="text-lg font-semibold">Spending Trends</h2>
                   <TimelineChart data={timelineData} />
                 </TabsContent>
 
                 <TabsContent value="net" className="space-y-2">
-                  <h2 className="text-lg font-semibold">{t('net-growth-summary')}</h2>
+                  <h2 className="text-lg font-semibold">Net Growth Summary</h2>
                   <NetBalanceChart data={timelineData} />
                 </TabsContent>
 
@@ -283,7 +281,7 @@ const Home = () => {
             </div>
 
             <div className="bg-card p-[var(--card-padding)] rounded-lg shadow flex flex-col justify-between">
-              <h2 className="text-lg font-semibold mb-2">{t('recent-transactions')}</h2>
+              <h2 className="text-lg font-semibold mb-2">Recent Transactions</h2>
 
               {filteredTransactions.length > 0 ? (
                 <div className="space-y-1 flex-1">
@@ -320,7 +318,7 @@ const Home = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-muted-foreground py-6">{t('no-transactions')}</p>
+                <p className="text-center text-muted-foreground py-6">No transactions found for this period.</p>
               )}
 
               <div className="flex justify-start mt-3 mb-16">
@@ -329,7 +327,7 @@ const Home = () => {
                   aria-label="View full transaction history"
                   className="text-sm text-blue-600 hover:underline flex items-center space-x-1"
                 >
-                  <span>{t('view-all')}</span>
+                  <span>View All</span>
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>

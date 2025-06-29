@@ -52,12 +52,10 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
   ];
 
   return (
-    <header
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border',
-        className
-      )}
-    >
+    <header className={cn(
+      'sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border',
+      className
+    )}>
       <div className="max-w-7xl mx-auto px-[var(--page-padding-x)] py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -79,7 +77,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
-                className="hidden md:block ms-8"
+                className="hidden md:block ml-8"
               >
                 <ul className="flex items-center space-x-1">
                   {navItems.map((item) => (
@@ -95,7 +93,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                         title={item.title}
                         aria-current={location.pathname === item.path ? 'page' : undefined}
                       >
-                        <item.icon size={18} className="me-2" />
+                        <item.icon size={18} className="mr-2" />
                         {item.title}
                       </Link>
                     </li>
@@ -137,13 +135,13 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="cursor-pointer">
-                        <User className="me-2 h-4 w-4" />
+                        <User className="mr-2 h-4 w-4" />
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/settings" className="cursor-pointer">
-                        <Settings className="me-2 h-4 w-4" />
+                        <Settings className="mr-2 h-4 w-4" />
                         <span>Settings</span>
                       </Link>
                     </DropdownMenuItem>
@@ -152,7 +150,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                       className="text-red-500 focus:text-red-500 cursor-pointer"
                       onClick={logOut}
                     >
-                      <LogOut className="me-2 h-4 w-4" />
+                      <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -162,7 +160,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
 
             {/* Mobile Nav */}
             {shouldShowNavigation && (
-              <div className="md:hidden ms-3">
+              <div className="md:hidden ml-3">
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="ghost" size="icon" aria-label="Open navigation menu">
@@ -172,7 +170,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                   <SheetContent side="left" className="w-[300px] sm:w-[400px]">
                     <SheetHeader className="border-b pb-4 mb-4">
                       <SheetTitle className="flex items-center">
-                        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center me-2">
+                        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mr-2">
                           <span className="text-white font-semibold text-lg">X</span>
                         </div>
                         <span>{currentPageTitle}</span>
@@ -210,7 +208,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                                   : 'text-foreground'
                               )}
                             >
-                              <item.icon size={20} className="me-3" />
+                              <item.icon size={20} className="mr-3" />
                               <div>
                                 <p className="font-medium">{item.title}</p>
                                 <p className="text-xs text-muted-foreground">{item.description}</p>
@@ -227,7 +225,7 @@ const Header = ({ className, showNavigation = true }: HeaderProps) => {
                             className="w-full justify-start"
                             onClick={logOut}
                           >
-                            <LogOut size={18} className="me-2" />
+                            <LogOut size={18} className="mr-2" />
                             Log out
                           </Button>
                         </div>

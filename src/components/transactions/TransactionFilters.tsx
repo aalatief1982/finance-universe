@@ -89,7 +89,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
           <Input
             placeholder="Search transactions..."
-            className="ps-10"
+            className="pl-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -117,7 +117,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                     <PopoverTrigger asChild>
                       <Button 
                         variant="outline" 
-                        className="w-full justify-start font-normal text-start h-10"
+                        className="w-full justify-start font-normal text-left h-10"
                       >
                         {getCategoryName(selectedCategory)}
                       </Button>
@@ -296,7 +296,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="h-10">
-                  <Calendar size={16} className="me-2" />
+                  <Calendar size={16} className="mr-2" />
                   Date Range
                 </Button>
               </PopoverTrigger>
@@ -336,7 +336,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             {(searchQuery || selectedCategory || selectedType || startDate || endDate || 
               (minAmount && minAmount > 0) || (maxAmount && maxAmount > 0)) && (
               <Button variant="ghost" size="sm" onClick={clearFilters} aria-label="Clear all filters">
-                <Filter className="text-muted-foreground me-1" size={16} />
+                <Filter className="text-muted-foreground mr-1" size={16} />
                 Clear
               </Button>
             )}

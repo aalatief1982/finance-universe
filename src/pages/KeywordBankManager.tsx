@@ -134,7 +134,7 @@ const KeywordBankManager = () => {
           {draftMap.length > 0 && (
             <div className="bg-muted p-3 rounded text-sm">
               <p className="font-semibold mb-2">Draft Mappings:</p>
-              <ul className="list-disc ps-5">
+              <ul className="list-disc pl-5">
                 {draftMap.map((m, i) => (
                   <li key={i}>
                     <strong>{m.field}:</strong> {m.value}
@@ -172,7 +172,7 @@ const KeywordBankManager = () => {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="ps-6 pb-4">
+            <CardContent className="pl-6 pb-4">
               <ul className="list-disc text-sm space-y-1">
                 {entry.mappings.map((m, idx) => (
                   <li key={idx}>

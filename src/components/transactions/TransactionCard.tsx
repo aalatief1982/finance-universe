@@ -148,7 +148,7 @@ import { formatCurrency } from '@/utils/format-utils';
 					  </div>
 					</div>
 					
-					<div className="text-end">
+					<div className="text-right">
 					  <span className={cn(
 						"font-medium",
 						isIncome ? "income-text" : "expense-text"
@@ -171,7 +171,7 @@ import { formatCurrency } from '@/utils/format-utils';
 						  }}
 						  className="h-8 px-2"
 						>
-						  <Edit size={14} className="me-1" />
+						  <Edit size={14} className="mr-1" />
 						  Edit
 						</Button>
 					  )}
@@ -186,7 +186,7 @@ import { formatCurrency } from '@/utils/format-utils';
 						  }}
 						  className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-100"
 						>
-						  <Trash2 size={14} className="me-1" />
+						  <Trash2 size={14} className="mr-1" />
 						  Delete
 						</Button>
 					  )}

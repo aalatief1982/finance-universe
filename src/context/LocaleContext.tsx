@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback
-} from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export type Translations = Record<string, string>;
 
@@ -22,23 +16,16 @@ const LocaleContext = createContext<LocaleContextType>({
   t: (key: string) => key,
 });
 
-// ✅ Eagerly load all translations at build time
-const translationFiles = import.meta.glob('../locales/*.json', {
-  eager: true,
-  import: 'default'
-}) as Record<string, Translations>;
-
 export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState('en');
   const [translations, setTranslations] = useState<Translations>({});
 
-  // ✅ Use direct object access (no await) for eagerly loaded translations
   const loadTranslations = async (lang: string) => {
-    const msgs = translationFiles[`../locales/${lang}.json`];
-    if (msgs) {
+    try {
+      const msgs: Translations = (await import(/* @vite-ignore */ `../locales/${lang}.json`)).default;
       setTranslations(msgs);
-    } else {
-      console.error(`Translations for ${lang} not found`);
+    } catch (err) {
+      console.error('Failed to load translations for', lang, err);
       setTranslations({});
     }
   };
@@ -46,8 +33,6 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const setLanguage = async (lang: string) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
-    document.documentElement.lang = lang;
-    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     await loadTranslations(lang);
   };
 
@@ -56,15 +41,7 @@ export const LocaleProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLanguage(stored);
   }, []);
 
-  useEffect(() => {
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  }, [language]);
-
-  const t = useCallback(
-    (key: string) => translations[key] || key,
-    [translations]
-  );
+  const t = (key: string) => translations[key] || key;
 
   return (
     <LocaleContext.Provider value={{ language, translations, setLanguage, t }}>

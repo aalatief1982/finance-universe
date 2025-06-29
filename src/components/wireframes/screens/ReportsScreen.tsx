@@ -50,7 +50,7 @@ const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
               }`}
               onClick={() => setActiveTab('category')}
             >
-              <PieChart size={14} className="me-1" />
+              <PieChart size={14} className="mr-1" />
               <span>By Category</span>
             </button>
             <button 
@@ -61,7 +61,7 @@ const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
               }`}
               onClick={() => setActiveTab('timeline')}
             >
-              <BarChart size={14} className="me-1" />
+              <BarChart size={14} className="mr-1" />
               <span>Timeline</span>
             </button>
           </div>
@@ -119,7 +119,7 @@ const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
                     {categoryData.map((category, index) => (
                       <div key={category.name} className="flex items-center">
                         <div 
-                          className="w-3 h-3 rounded-full me-1"
+                          className="w-3 h-3 rounded-full mr-1"
                           style={{ backgroundColor: chartColors[index % chartColors.length] }}
                         />
                         <span className="text-xs">{category.name}: ${category.value.toFixed(2)}</span>
@@ -144,7 +144,7 @@ const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
                     <div key={category.name} className="p-3 flex justify-between items-center">
                       <div className="flex items-center">
                         <div 
-                          className="w-8 h-8 rounded-full me-2 flex items-center justify-center text-white"
+                          className="w-8 h-8 rounded-full mr-2 flex items-center justify-center text-white"
                           style={{ backgroundColor: ['#3b82f6', '#10b981', '#f59e0b'][index] }}
                         >
                           {index + 1}
@@ -186,11 +186,11 @@ const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
                   </div>
                   <div className="flex justify-center space-x-4 mt-3">
                     <div className="flex items-center">
-                      <div className="w-3 h-3 bg-green-500 rounded-full me-1" />
+                      <div className="w-3 h-3 bg-green-500 rounded-full mr-1" />
                       <span className="text-xs">Income</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-3 h-3 bg-red-500 rounded-full me-1" />
+                      <div className="w-3 h-3 bg-red-500 rounded-full mr-1" />
                       <span className="text-xs">Expenses</span>
                     </div>
                   </div>
@@ -230,7 +230,7 @@ const ReportsScreen = ({ onExportReport, onBack }: ReportsScreenProps) => {
         
         <WireframeButton variant="secondary" onClick={onExportReport}>
           <div className="flex items-center justify-center">
-            <Download size={18} className="me-1" />
+            <Download size={18} className="mr-1" />
             <span>Export Report</span>
           </div>
         </WireframeButton>

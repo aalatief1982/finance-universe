@@ -103,7 +103,7 @@ const EditTransaction = () => {
               <p><strong>Matched Template:</strong> {matchDetails.entry.rawMessage.substring(0, 50)}...</p>
               <div>
                 <p className="font-semibold mb-1">Matched Fields:</p>
-                <ul className="list-disc list-inside ps-2 space-y-1">
+                <ul className="list-disc list-inside pl-2 space-y-1">
                   <li>Transaction Type: {matchDetails.entry.confirmedFields.type}</li>
                   <li>Amount: {matchDetails.entry.confirmedFields.amount} {matchDetails.entry.confirmedFields.currency}</li>
                   <li>Category: {matchDetails.entry.confirmedFields.category}</li>

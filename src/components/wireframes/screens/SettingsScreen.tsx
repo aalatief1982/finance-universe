@@ -240,7 +240,7 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
                 value={currency} 
                 onChange={handleCurrencyChange} 
                 darkMode={darkMode}
-                className="ms-auto"
+                className="ml-auto"
               />
             )
           },
@@ -314,7 +314,7 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
             label: 'Current Plan', 
             action: () => {},
             custom: (
-              <span className="ms-auto font-medium text-blue-600">
+              <span className="ml-auto font-medium text-blue-600">
                 {userData?.subscription?.plan || 'Free'}
               </span>
             )
@@ -335,7 +335,7 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
               <WireframeButton 
                 variant="primary" 
                 size="small" 
-                className="ms-auto"
+                className="ml-auto"
               >
                 Upgrade
               </WireframeButton>
@@ -362,7 +362,7 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
             }`}
             onClick={() => setActiveTab(tab.id)}
           >
-            <span className="me-1">{tab.icon}</span>
+            <span className="mr-1">{tab.icon}</span>
             <span>{tab.label}</span>
           </div>
         ))}
@@ -383,7 +383,7 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
                   onClick={item.action}
                 >
                   <div className="flex items-center">
-                    <div className={`me-3 ${item.danger ? 'text-red-500' : 'text-gray-500'}`}>
+                    <div className={`mr-3 ${item.danger ? 'text-red-500' : 'text-gray-500'}`}>
                       {item.icon}
                     </div>
                     <div>

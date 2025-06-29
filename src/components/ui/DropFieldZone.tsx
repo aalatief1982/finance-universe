@@ -43,7 +43,7 @@ const DropFieldZone: React.FC<DropFieldZoneProps> = ({ field, tokens = [], onDro
             {token}
             <span
               onClick={() => onRemoveToken(field, token)}
-              className="ms-1 text-white hover:text-red-300 text-xs"
+              className="ml-1 text-white hover:text-red-300 text-xs"
               style={{ cursor: 'pointer' }}
             >
               ×

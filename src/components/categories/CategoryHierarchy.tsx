@@ -86,7 +86,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
             <Button 
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 me-1"
+              className="h-6 w-6 p-0 mr-1"
               onClick={(e) => handleToggleExpand(category.id, e)}
             >
               {isExpanded ? 
@@ -100,15 +100,15 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
           
           {hasSubcategories ? (
             isExpanded ? 
-              <FolderOpen className="h-4 w-4 me-2 text-muted-foreground" /> : 
-              <Folder className="h-4 w-4 me-2 text-muted-foreground" />
+              <FolderOpen className="h-4 w-4 mr-2 text-muted-foreground" /> : 
+              <Folder className="h-4 w-4 mr-2 text-muted-foreground" />
           ) : (
             <div className="w-6" /> // Spacer for leaf nodes
           )}
           
           <div className="flex items-center flex-1">
             <div
-              className="h-3 w-3 rounded-full me-2"
+              className="h-3 w-3 rounded-full mr-2"
               style={{ backgroundColor: category.metadata?.color || '#8B5CF6' }}
             />
             <span className={cn(
@@ -120,7 +120,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
           </div>
           
           {showBudgets && category.metadata?.budget && (
-            <span className="text-xs text-muted-foreground ms-auto">
+            <span className="text-xs text-muted-foreground ml-auto">
               ${category.metadata.budget.toLocaleString()}
             </span>
           )}
@@ -149,14 +149,14 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
               <AccordionTrigger className="hover:no-underline py-2">
                 <div className="flex items-center">
                   <div
-                    className="h-3 w-3 rounded-full me-2"
+                    className="h-3 w-3 rounded-full mr-2"
                     style={{ backgroundColor: category.metadata?.color || '#8B5CF6' }}
                   />
                   <span className="text-sm font-medium">{category.name}</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <div className="ps-4 space-y-1">
+                <div className="pl-4 space-y-1">
                   {category.subcategories?.map(subcat => (
                     <div 
                       key={subcat.id} 
@@ -168,7 +168,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
                       onClick={() => handleCategoryClick(subcat.id)}
                     >
                       <div
-                        className="h-3 w-3 rounded-full me-2"
+                        className="h-3 w-3 rounded-full mr-2"
                         style={{ backgroundColor: subcat.metadata?.color || '#8B5CF6' }}
                       />
                       <span className="text-sm">{subcat.name}</span>
@@ -187,7 +187,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
               onClick={() => handleCategoryClick(category.id)}
             >
               <div
-                className="h-3 w-3 rounded-full me-2"
+                className="h-3 w-3 rounded-full mr-2"
                 style={{ backgroundColor: category.metadata?.color || '#8B5CF6' }}
               />
               <span className="text-sm">{category.name}</span>
@@ -243,7 +243,7 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
       className="w-full" 
       viewportClassName="max-h-[var(--max-height)]" 
     >
-      <div className="pe-4" style={{"--max-height": typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight} as React.CSSProperties}>
+      <div className="pr-4" style={{"--max-height": typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight} as React.CSSProperties}>
         {content}
       </div>
     </ScrollArea>

@@ -56,7 +56,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(-1)}
-                className="me-2"
+                className="mr-2"
               >
                 <ArrowLeft size={20} />
               </Button>
@@ -71,7 +71,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
                 <MobileNavigation currentPageTitle={currentPageTitle} />
                 <Link
                   to="/settings"
-                  className="ms-2 md:hidden"
+                  className="ml-2 md:hidden"
                   title="App Settings"
                   aria-label="App Settings"
                 >

@@ -69,7 +69,7 @@ const TransactionTable = ({
               {renderSortIcon('category')}
             </TableHead>
             <TableHead 
-              className="cursor-pointer flex items-center text-end"
+              className="cursor-pointer flex items-center text-right"
               onClick={() => onSort('amount')}
             >
               <span>Amount</span>
@@ -96,7 +96,7 @@ const TransactionTable = ({
                 <TableCell>
                   <CategoryPill category={transaction.category} />
                 </TableCell>
-                <TableCell className={`text-end font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                <TableCell className={`text-right font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
                   {formatCurrency(transaction.amount)}
                 </TableCell>
               </TableRow>

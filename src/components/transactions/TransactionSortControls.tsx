@@ -44,9 +44,9 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
         onClick={() => onSortDirectionChange(sortDirection === 'asc' ? 'desc' : 'asc')}
       >
         {sortDirection === 'asc' ? (
-          <ChevronUp className="h-4 w-4 me-1" />
+          <ChevronUp className="h-4 w-4 mr-1" />
         ) : (
-          <ChevronDown className="h-4 w-4 me-1" />
+          <ChevronDown className="h-4 w-4 mr-1" />
         )}
         {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
       </Button>

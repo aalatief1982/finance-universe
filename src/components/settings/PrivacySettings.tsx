@@ -77,7 +77,7 @@ const PrivacySettings = () => {
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Shield className="me-2" size={20} />
+          <Shield className="mr-2" size={20} />
           <span>Privacy Settings</span>
         </CardTitle>
         <CardDescription>Control your privacy and security options</CardDescription>
@@ -86,7 +86,7 @@ const PrivacySettings = () => {
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="mask-amounts" className="flex items-center">
-              {maskAmounts ? <EyeOff size={16} className="me-2" /> : <Eye size={16} className="me-2" />}
+              {maskAmounts ? <EyeOff size={16} className="mr-2" /> : <Eye size={16} className="mr-2" />}
               Mask Transaction Amounts
             </Label>
             <p className="text-sm text-muted-foreground">
@@ -103,7 +103,7 @@ const PrivacySettings = () => {
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="require-auth" className="flex items-center">
-              <Lock size={16} className="me-2" />
+              <Lock size={16} className="mr-2" />
               Require Authentication
             </Label>
             <p className="text-sm text-muted-foreground">
@@ -119,7 +119,7 @@ const PrivacySettings = () => {
         
         <div className="space-y-2">
           <Label htmlFor="data-sharing" className="flex items-center">
-            <Shield size={16} className="me-2" />
+            <Shield size={16} className="mr-2" />
             Data Sharing
           </Label>
           <Select value={dataSharing} onValueChange={handleDataSharingChange}>

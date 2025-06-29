@@ -27,7 +27,7 @@ const ThemeSettings = () => {
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Sun className="me-2" size={20} />
+          <Sun className="mr-2" size={20} />
           <span>Appearance</span>
         </CardTitle>
         <CardDescription>Customize how the application looks</CardDescription>

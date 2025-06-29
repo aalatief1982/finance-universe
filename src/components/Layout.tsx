@@ -33,25 +33,21 @@ const Layout = ({
   return (
     <div
       className={cn(
-        "flex flex-col h-dvh overflow-hidden",
+        "min-h-screen flex flex-col",
         showHeader && "pt-[var(--header-height)]",
         !showHeader && "pt-[var(--safe-area-top)]",
         className
       )}
     >
-      {showHeader && (
-        <header className="fixed top-0 left-0 right-0 z-50 h-[var(--header-height)] bg-white shadow-md">
-          <Header showNavigation={!hideNavigation} showBack={showBack} />
-        </header>
-      )}
+      {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} />}
 
       <div className="flex flex-1">
         {!hideNavigation && !isMobile && <Sidebar />}
 
         <main
           className={cn(
-            "flex-1 w-full overflow-y-auto",
-            !hideNavigation && !isMobile && "lg:ms-[var(--sidebar-width)]",
+            "flex-1 w-full",
+            !hideNavigation && !isMobile && "lg:ml-[var(--sidebar-width)]",
             !fullWidth && "container"
           )}
         >
@@ -70,11 +66,7 @@ const Layout = ({
           </div>
         </main>
       </div>
-      {!hideNavigation && isMobile && (
-        <footer className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-inner">
-          <BottomNav />
-        </footer>
-      )}
+      {!hideNavigation && isMobile && <BottomNav />}
     </div>
   );
 };

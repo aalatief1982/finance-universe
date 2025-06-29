@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useLocale } from '@/context/LocaleContext';
 
 interface DashboardStatsProps {
   income: number;
@@ -20,8 +19,7 @@ const DashboardStats = ({
   balance,
   previousBalance,
 }: DashboardStatsProps) => {
-  const { t } = useLocale();
-  const balanceChange = previousBalance !== undefined
+  const balanceChange = previousBalance !== undefined 
     ? ((balance - previousBalance) / Math.abs(previousBalance || 1)) * 100
     : 0;
   
@@ -31,7 +29,7 @@ const DashboardStats = ({
     Number.isFinite(val) ? formatCurrency(val) : '--';
   const renderSubtitle = (val: number) =>
     Number.isFinite(val) ? null : (
-      <p className="text-xs text-muted-foreground">{t('no-data-yet')}</p>
+      <p className="text-xs text-muted-foreground">No data yet</p>
     );
   
   return (
@@ -47,15 +45,15 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('income')}</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
                     <ArrowUpCircle className="text-green-600" size={20} />
                   </div>
-                  <h3 className="mt-1 text-start text-lg font-semibold text-green-500">{formatValue(income)}</h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-green-500">{formatValue(income)}</h3>
                   {renderSubtitle(income)}
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent>{t('transactions-tooltip')}</TooltipContent>
+            <TooltipContent>Click to see transactions for this period</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </motion.div>
@@ -71,15 +69,15 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('expenses')}</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
                     <ArrowDownCircle className="text-red-600" size={20} />
                   </div>
-                  <h3 className="mt-1 text-start text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
                   {renderSubtitle(expenses)}
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent>{t('transactions-tooltip')}</TooltipContent>
+            <TooltipContent>Click to see transactions for this period</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </motion.div>
@@ -95,27 +93,27 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('balance')}</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance</p>
                     <div className={`${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                       {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
                   </div>
-                  <h3 className={`mt-1 text-start text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatValue(balance)}</h3>
+                  <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatValue(balance)}</h3>
                   {renderSubtitle(balance)}
                   {previousBalance !== undefined && (
                     <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
                       {isPositiveChange ? (
-                        <TrendingUp size={14} className="me-1" />
+                        <TrendingUp size={14} className="mr-1" />
                       ) : (
-                        <TrendingDown size={14} className="me-1" />
+                        <TrendingDown size={14} className="mr-1" />
                       )}
-                      {Math.abs(balanceChange).toFixed(1)}% {t('from-last-month')}
+                      {Math.abs(balanceChange).toFixed(1)}% from last month
                     </p>
                   )}
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent>{t('transactions-tooltip')}</TooltipContent>
+            <TooltipContent>Click to see transactions for this period</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </motion.div>

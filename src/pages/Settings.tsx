@@ -8,30 +8,33 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Sun, Moon, Trash, Bell, Eye, MessageSquare } from 'lucide-react';
+import { Sun, Moon, Trash, Bell, Eye, Globe, Languages, MessageSquare } from 'lucide-react';
 import { SmsReaderService } from '@/services/SmsReaderService';
 import { useToast } from '@/components/ui/use-toast';
 import { useUser } from '@/context/UserContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 import { CURRENCIES } from '@/lib/categories-data';
-import DataManagementSettings from '@/components/settings/DataManagementSettings';
 import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
 import { useLocale } from '@/context/LocaleContext';
-
 
 const Settings = () => {
   const { toast } = useToast();
   const {
-    user,
-    updateTheme,
-    updateCurrency,
-    updateLanguage,
+    user, 
+    updateTheme, 
+    updateCurrency, 
+    updateLanguage, 
     updateNotificationSettings,
     updateDisplayOptions,
     updateUserPreferences,
     getEffectiveTheme
   } = useUser();
-  const { setLanguage: loadLanguage, t } = useLocale();
+  const { setLanguage: loadLanguage } = useLocale();
   
   // State for form values
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
@@ -90,8 +93,6 @@ const Settings = () => {
     updateNotificationSettings(checked);
   };
 
-
-
   const handleBackgroundSmsChange = async (checked: boolean) => {
     if (checked) {
       const granted = await SmsReaderService.checkOrRequestPermission();
@@ -113,31 +114,28 @@ const Settings = () => {
     updateLanguage(language);
     loadLanguage(language);
     updateNotificationSettings(notificationsEnabled);
+
+    toast({
+      title: "Appearance updated",
+      description: "Your appearance settings have been saved."
+    });
+  };
+  
+  const handleDisplayOptionsChange = () => {
     updateDisplayOptions({
       weekStartsOn
     });
-
+    
     toast({
-      title: t('settings-updated'),
-      description: t('settings-saved-desc')
+      title: "Display preferences updated",
+      description: "Your display settings have been saved."
     });
   };
-
-  // Legacy handler used by the save button
-  const handleSaveSettings = () => {
-    handleAppearanceSave();
-  };
-
   
   
   return (
     <Layout showBack>
-      <PageHeader title={t('settings')} />
-      <div className="pb-4">
-        <Button className="w-full" onClick={handleSaveSettings}>
-          {t('save-settings')}
-        </Button>
-      </div>
+      <PageHeader title="Settings" />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -145,44 +143,49 @@ const Settings = () => {
         className="space-y-6 pb-24"
       >
         
-        <div className="space-y-4">
+        <Tabs defaultValue="preferences" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="danger">Danger Zone</TabsTrigger>
+          </TabsList>
+          <TabsContent value="preferences" className="space-y-4">
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Sun className="me-2" size={20} />
-                  <span>{t('appearance')}</span>
+                  <Sun className="mr-2" size={20} />
+                  <span>Appearance</span>
                 </CardTitle>
-                <CardDescription>{t('customize-appearance')}</CardDescription>
+                <CardDescription>Customize how the application looks</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>{t('theme')}</Label>
-                  <ToggleGroup
-                    type="single"
+                  <Label>Theme</Label>
+                  <ToggleGroup 
+                    type="single" 
                     value={theme}
                     onValueChange={(value) => handleThemeChange(value as 'light' | 'dark' | 'system')}
                     className="justify-start"
                   >
                     <ToggleGroupItem value="light" className="gap-1">
                       <Sun size={16} />
-                      {t('light')}
+                      Light
                     </ToggleGroupItem>
                     <ToggleGroupItem value="dark" className="gap-1">
                       <Moon size={16} />
-                      {t('dark')}
+                      Dark
                     </ToggleGroupItem>
                     <ToggleGroupItem value="system" className="gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide lucide-monitor"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></svg>
-                      {t('system')}
+                      System
                     </ToggleGroupItem>
                   </ToggleGroup>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="currency">{t('currency')}</Label>
+                  <Label htmlFor="currency">Currency</Label>
                   <Select value={currency} onValueChange={handleCurrencyChange}>
                     <SelectTrigger id="currency" className="w-full">
-                      <SelectValue placeholder={t('currency')} />
+                      <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>
                       {CURRENCIES.map((code) => (
@@ -195,10 +198,10 @@ const Settings = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="language">{t('language')}</Label>
+                  <Label htmlFor="language">Language</Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
                     <SelectTrigger id="language" className="w-full">
-                      <SelectValue placeholder={t('language')} />
+                      <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
@@ -207,23 +210,26 @@ const Settings = () => {
                   </Select>
                 </div>
                 
-
-
-
+                <Button
+                  className="w-full mt-4"
+                  onClick={handleAppearanceSave}
+                >
+                  Save Appearance Settings
+                </Button>
               </CardContent>
             </Card>
 
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Eye className="me-2" size={20} />
-                  <span>{t('display-options')}</span>
+                  <Eye className="mr-2" size={20} />
+                  <span>Display Options</span>
                 </CardTitle>
-                <CardDescription>{t('customize-appearance')}</CardDescription>
+                <CardDescription>Customize how information is displayed</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>{t('week-starts-on')}</Label>
+                  <Label>Week Starts On</Label>
                   <ToggleGroup
                     type="single"
                     value={weekStartsOn}
@@ -238,22 +244,27 @@ const Settings = () => {
                   </ToggleGroup>
                 </div>
                 
-
+                <Button 
+                  className="w-full mt-4" 
+                  onClick={handleDisplayOptionsChange}
+                >
+                  Save Display Preferences
+                </Button>
             </CardContent>
           </Card>
           <Card className="border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <Bell className="me-2" size={20} />
-                <span>{t('notification-settings')}</span>
+                <Bell className="mr-2" size={20} />
+                <span>Notification Settings</span>
               </CardTitle>
-              <CardDescription>{t('receive-alerts')}</CardDescription>
+              <CardDescription>Manage notification preferences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="notifications">{t('notifications')}</Label>
-                  <p className="text-sm text-muted-foreground">{t('receive-alerts')}</p>
+                  <Label htmlFor="notifications">Notifications</Label>
+                  <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
                 </div>
                 <Switch
                   id="notifications"
@@ -263,8 +274,8 @@ const Settings = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="background-sms">{t('enable-background-sms')}</Label>
-                  <p className="text-sm text-muted-foreground">{t('read-incoming-sms')}</p>
+                  <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
+                  <p className="text-sm text-muted-foreground">Read incoming SMS in the background</p>
                 </div>
                 <Switch
                   id="background-sms"
@@ -277,17 +288,16 @@ const Settings = () => {
           <Card className="border border-border shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center">
-                <MessageSquare className="me-2" size={20} />
-                <span>{t('sms-import')}</span>
-
+                <MessageSquare className="mr-2" size={20} />
+                <span>SMS Import</span>
                 </CardTitle>
-                <CardDescription>{t('automatic-sms-import')}</CardDescription>
+                <CardDescription>Automatically import new SMS messages</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="auto-sms-import">{t('automatic-sms-import')}</Label>
-                    <p className="text-sm text-muted-foreground">{t('check-new-sms')}</p>
+                    <Label htmlFor="auto-sms-import">Automatic SMS import</Label>
+                    <p className="text-sm text-muted-foreground">Check for new SMS on startup</p>
                   </div>
                   <Switch
                     id="auto-sms-import"
@@ -299,39 +309,41 @@ const Settings = () => {
                 </div>
               </CardContent>
             </Card>
-            <DataManagementSettings />
-
+          </TabsContent>
+          
+          <TabsContent value="danger" className="space-y-4">
             <Card className="border border-destructive/20 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center text-destructive">
-                  <Trash className="me-2" size={20} />
-                  <span>{t('danger-zone')}</span>
+                  <Trash className="mr-2" size={20} />
+                  <span>Danger Zone</span>
                 </CardTitle>
-                <CardDescription>{t('danger-zone-desc')}</CardDescription>
+                <CardDescription>Irreversible actions that affect your data</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full">{t('delete-account')}</Button>
+                    <Button variant="destructive" className="w-full">Delete Account</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>{t('are-you-sure')}</AlertDialogTitle>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {t('delete-account-desc')}
+                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        {t('delete-account')}
+                        Delete Account
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </CardContent>
             </Card>
-        </div>
+          </TabsContent>
+        </Tabs>
       </motion.div>
     </Layout>
   );
