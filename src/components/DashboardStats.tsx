@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useLocale } from '@/context/LocaleContext';
 
 interface DashboardStatsProps {
   income: number;
@@ -19,7 +20,8 @@ const DashboardStats = ({
   balance,
   previousBalance,
 }: DashboardStatsProps) => {
-  const balanceChange = previousBalance !== undefined 
+  const { t } = useLocale();
+  const balanceChange = previousBalance !== undefined
     ? ((balance - previousBalance) / Math.abs(previousBalance || 1)) * 100
     : 0;
   
@@ -29,7 +31,7 @@ const DashboardStats = ({
     Number.isFinite(val) ? formatCurrency(val) : '--';
   const renderSubtitle = (val: number) =>
     Number.isFinite(val) ? null : (
-      <p className="text-xs text-muted-foreground">No data yet</p>
+      <p className="text-xs text-muted-foreground">{t('no-data-yet')}</p>
     );
   
   return (
@@ -45,7 +47,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('income')}</p>
                     <ArrowUpCircle className="text-green-600" size={20} />
                   </div>
                   <h3 className="mt-1 text-left text-lg font-semibold text-green-500">{formatValue(income)}</h3>
@@ -53,7 +55,7 @@ const DashboardStats = ({
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent>Click to see transactions for this period</TooltipContent>
+            <TooltipContent>{t('transactions-tooltip')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </motion.div>
@@ -69,7 +71,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('expenses')}</p>
                     <ArrowDownCircle className="text-red-600" size={20} />
                   </div>
                   <h3 className="mt-1 text-left text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
@@ -77,7 +79,7 @@ const DashboardStats = ({
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent>Click to see transactions for this period</TooltipContent>
+            <TooltipContent>{t('transactions-tooltip')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </motion.div>
@@ -93,7 +95,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('balance')}</p>
                     <div className={`${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
                       {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
@@ -107,13 +109,13 @@ const DashboardStats = ({
                       ) : (
                         <TrendingDown size={14} className="mr-1" />
                       )}
-                      {Math.abs(balanceChange).toFixed(1)}% from last month
+                      {Math.abs(balanceChange).toFixed(1)}% {t('from-last-month')}
                     </p>
                   )}
                 </CardContent>
               </Card>
             </TooltipTrigger>
-            <TooltipContent>Click to see transactions for this period</TooltipContent>
+            <TooltipContent>{t('transactions-tooltip')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </motion.div>
