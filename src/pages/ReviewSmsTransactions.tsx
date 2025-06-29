@@ -268,6 +268,10 @@ const toggleSkipAll = () => {
     });
 
     setTransactions([]);
+
+    if (valid.length === 0 && skippedTxns.length > 0) {
+      navigate('/');
+    }
   };
 
   const navigate = useNavigate();

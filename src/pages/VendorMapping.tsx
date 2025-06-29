@@ -148,14 +148,40 @@ const VendorMapping: React.FC = () => {
   const handleConfirm = () => {
     console.log('VendorMapping: save clicked');
 
-    if (!hasRequiredState() || !hasValidData()) {
+    if (!hasRequiredState()) {
+      console.warn('Save attempted without required vendor data');
+      toast({
+        variant: 'destructive',
+        title: 'Missing vendor data',
+        description: 'Vendor information or messages are missing.'
+      });
+      navigate('/');
+      return;
+    }
+
+    if (vendors.every(v => v.skipped)) {
+      const allMessages = location.state?.messages || [];
+      const senderDates: Record<string, string> = {};
+      allMessages.forEach((m: any) => {
+        if (m.sender) {
+          const existing = senderDates[m.sender];
+          if (!existing || new Date(m.date).getTime() > new Date(existing).getTime()) {
+            senderDates[m.sender] = m.date;
+          }
+        }
+      });
+      updateSmsSenderImportDates(senderDates);
+      navigate('/');
+      return;
+    }
+
+    if (!hasValidData()) {
       console.warn('Save attempted without valid vendor data or messages');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
         description: 'Vendor information or messages are missing.'
       });
-      if (!hasRequiredState()) navigate('/');
       return;
     }
 
