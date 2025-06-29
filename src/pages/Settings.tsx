@@ -29,16 +29,16 @@ import { useLocale } from '@/context/LocaleContext';
 const Settings = () => {
   const { toast } = useToast();
   const {
-    user, 
-    updateTheme, 
-    updateCurrency, 
-    updateLanguage, 
+    user,
+    updateTheme,
+    updateCurrency,
+    updateLanguage,
     updateNotificationSettings,
     updateDisplayOptions,
     updateUserPreferences,
     getEffectiveTheme
   } = useUser();
-  const { setLanguage: loadLanguage } = useLocale();
+  const { setLanguage: loadLanguage, t } = useLocale();
   
   // State for form values
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(
@@ -125,17 +125,17 @@ const Settings = () => {
     });
 
     toast({
-      title: "Settings updated",
-      description: "Your preferences have been saved."
+      title: t('settings-updated'),
+      description: t('settings-saved-desc')
     });
   };
   
   
   return (
     <Layout showBack>
-      <PageHeader title="Settings" />
+      <PageHeader title={t('settings')} />
       <div className="flex justify-end pb-4">
-        <Button onClick={handleSaveSettings}>Save Settings</Button>
+        <Button onClick={handleSaveSettings}>{t('save-settings')}</Button>
       </div>
       <motion.div
         initial={{ opacity: 0 }}
@@ -146,47 +146,47 @@ const Settings = () => {
         
         <Tabs defaultValue="preferences" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="danger">Danger Zone</TabsTrigger>
+            <TabsTrigger value="preferences">{t('preferences')}</TabsTrigger>
+            <TabsTrigger value="danger">{t('danger-zone')}</TabsTrigger>
           </TabsList>
           <TabsContent value="preferences" className="space-y-4">
             <Card className="border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Sun className="mr-2" size={20} />
-                  <span>Appearance</span>
+                  <span>{t('appearance')}</span>
                 </CardTitle>
-                <CardDescription>Customize how the application looks</CardDescription>
+                <CardDescription>{t('customize-appearance')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Theme</Label>
-                  <ToggleGroup 
-                    type="single" 
+                  <Label>{t('theme')}</Label>
+                  <ToggleGroup
+                    type="single"
                     value={theme}
                     onValueChange={(value) => handleThemeChange(value as 'light' | 'dark' | 'system')}
                     className="justify-start"
                   >
                     <ToggleGroupItem value="light" className="gap-1">
                       <Sun size={16} />
-                      Light
+                      {t('light')}
                     </ToggleGroupItem>
                     <ToggleGroupItem value="dark" className="gap-1">
                       <Moon size={16} />
-                      Dark
+                      {t('dark')}
                     </ToggleGroupItem>
                     <ToggleGroupItem value="system" className="gap-1">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide lucide-monitor"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></svg>
-                      System
+                      {t('system')}
                     </ToggleGroupItem>
                   </ToggleGroup>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">{t('currency')}</Label>
                   <Select value={currency} onValueChange={handleCurrencyChange}>
                     <SelectTrigger id="currency" className="w-full">
-                      <SelectValue placeholder="Select currency" />
+                      <SelectValue placeholder={t('currency')} />
                     </SelectTrigger>
                     <SelectContent>
                       {CURRENCIES.map((code) => (
@@ -199,10 +199,10 @@ const Settings = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
+                  <Label htmlFor="language">{t('language')}</Label>
                   <Select value={language} onValueChange={handleLanguageChange}>
                     <SelectTrigger id="language" className="w-full">
-                      <SelectValue placeholder="Select language" />
+                      <SelectValue placeholder={t('language')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
@@ -214,8 +214,8 @@ const Settings = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="notifications">Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
+                    <Label htmlFor="notifications">{t('notifications')}</Label>
+                    <p className="text-sm text-muted-foreground">{t('receive-alerts')}</p>
                   </div>
                 <Switch
                     id="notifications"
@@ -231,13 +231,13 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Eye className="mr-2" size={20} />
-                  <span>Display Options</span>
+                  <span>{t('display-options')}</span>
                 </CardTitle>
-                <CardDescription>Customize how information is displayed</CardDescription>
+                <CardDescription>{t('customize-appearance')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Week Starts On</Label>
+                  <Label>{t('week-starts-on')}</Label>
                   <ToggleGroup
                     type="single"
                     value={weekStartsOn}
@@ -253,11 +253,11 @@ const Settings = () => {
                 </div>
                 
 
-                <Button 
-                  className="w-full mt-4" 
+                <Button
+                  className="w-full mt-4"
                   onClick={handleDisplayOptionsChange}
                 >
-                  Save Display Preferences
+                  {t('save-display')}
                 </Button>
             </CardContent>
           </Card>
@@ -265,15 +265,15 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Bell className="mr-2" size={20} />
-                <span>Notification Settings</span>
+                <span>{t('notification-settings')}</span>
               </CardTitle>
-              <CardDescription>Manage notification preferences</CardDescription>
+              <CardDescription>{t('receive-alerts')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="notifications">Notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive alerts and notifications</p>
+                  <Label htmlFor="notifications">{t('notifications')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('receive-alerts')}</p>
                 </div>
                 <Switch
                   id="notifications"
@@ -283,8 +283,8 @@ const Settings = () => {
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
-                  <p className="text-sm text-muted-foreground">Read incoming SMS in the background</p>
+                  <Label htmlFor="background-sms">{t('enable-background-sms')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('read-incoming-sms')}</p>
                 </div>
                 <Switch
                   id="background-sms"
@@ -298,16 +298,16 @@ const Settings = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <MessageSquare className="mr-2" size={20} />
-                <span>SMS Import</span>
+                <span>{t('sms-import')}</span>
 
                 </CardTitle>
-                <CardDescription>Automatically import new SMS messages</CardDescription>
+                <CardDescription>{t('automatic-sms-import')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="auto-sms-import">Automatic SMS import</Label>
-                    <p className="text-sm text-muted-foreground">Check for new SMS on startup</p>
+                    <Label htmlFor="auto-sms-import">{t('automatic-sms-import')}</Label>
+                    <p className="text-sm text-muted-foreground">{t('check-new-sms')}</p>
                   </div>
                   <Switch
                     id="auto-sms-import"
@@ -327,26 +327,26 @@ const Settings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center text-destructive">
                   <Trash className="mr-2" size={20} />
-                  <span>Danger Zone</span>
+                  <span>{t('danger-zone')}</span>
                 </CardTitle>
-                <CardDescription>Irreversible actions that affect your data</CardDescription>
+                <CardDescription>{t('danger-zone-desc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full">Delete Account</Button>
+                    <Button variant="destructive" className="w-full">{t('delete-account')}</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle>{t('are-you-sure')}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                        {t('delete-account-desc')}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
                       <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                        Delete Account
+                        {t('delete-account')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
