@@ -24,6 +24,10 @@ import ReviewSmsTransactions from '@/pages/ReviewSmsTransactions';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
+import AccountsPage from './pages/budget/AccountsPage';
+import SetBudgetPage from './pages/budget/SetBudgetPage';
+import BudgetReportPage from './pages/budget/BudgetReportPage';
+import BudgetInsightsPage from './pages/budget/BudgetInsightsPage';
 
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
@@ -233,6 +237,10 @@ function AppWrapper() {
       <Route path="/sms/vendors" element={<VendorCategorization />} />
       <Route path="/vendor-mapping" element={<VendorMapping />} />
       <Route path="/review-sms-transactions" element={<ReviewSmsTransactions />} />
+      <Route path="/budget/accounts" element={<AccountsPage />} />
+      <Route path="/budget/set" element={<SetBudgetPage />} />
+      <Route path="/budget/report" element={<BudgetReportPage />} />
+      <Route path="/budget/insights" element={<BudgetInsightsPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     <SmartPasteReviewQueueModal
