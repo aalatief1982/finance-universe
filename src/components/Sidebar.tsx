@@ -25,7 +25,14 @@ const Sidebar: React.FC = () => {
     { name: 'Settings', path: '/settings', icon: <Settings size={20} /> },
 	{ name: 'Keyword Bank', path: '/keyword-bank', icon: <Tag size={20} /> },
     { name: 'Build Template', path: '/build-template', icon: <BrainCircuit size={20} /> }
-	
+
+  ];
+
+  const budgetItems = [
+    { name: 'Accounts & Balances', path: '/budget/accounts' },
+    { name: 'Set Budget', path: '/budget/set' },
+    { name: 'Budget vs Actual', path: '/budget/report' },
+    { name: 'Suggestions & Insights', path: '/budget/insights' }
   ];
 
   const isActive = (path: string) => {
@@ -41,21 +48,40 @@ const Sidebar: React.FC = () => {
         
         <nav className="flex-1 px-3 py-2">
           <ul className="space-y-1">
-            {navItems.map((item) => (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <span className="mr-3">{item.icon}</span>
-                  {item.name}
-                </Link>
-              </li>
-            ))}
+          {navItems.map((item) => (
+            <li key={item.path}>
+              <Link
+                to={item.path}
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <span className="mr-3">{item.icon}</span>
+                {item.name}
+              </Link>
+            </li>
+          ))}
+            <li>
+              <details open>
+                <summary className="flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer select-none">
+                  Budget ▾
+                </summary>
+                <ul className="mt-1 ml-4 space-y-1">
+                  {budgetItems.map(b => (
+                    <li key={b.path}>
+                      <Link
+                        to={b.path}
+                        className={`block px-3 py-1 rounded-md text-sm transition-colors ${isActive(b.path) ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                      >
+                        {b.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            </li>
           </ul>
         </nav>
         
