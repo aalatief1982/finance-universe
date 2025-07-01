@@ -71,8 +71,8 @@ export function saveTransactionWithLearning(
 
     // Keyword Bank Mapping
     const keyword = placeholders?.vendor?.toLowerCase() || newTransaction.vendor.toLowerCase();
-    const bank = loadKeywordBank();
-    const existing = bank.find(k => k.keyword === keyword);
+    const keywordBank = loadKeywordBank();
+    const existing = keywordBank.find(k => k.keyword === keyword);
 
     const newMappings = [
       { field: 'category', value: newTransaction.category },
@@ -85,9 +85,9 @@ export function saveTransactionWithLearning(
         if (!alreadyMapped) existing.mappings.push(mapping);
       });
     } else {
-      bank.push({ keyword, mappings: newMappings });
+      keywordBank.push({ keyword, mappings: newMappings });
     }
-    saveKeywordBank(bank);
+    saveKeywordBank(keywordBank);
 
     // Vendor Remapping
     if (
