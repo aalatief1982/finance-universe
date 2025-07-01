@@ -1,6 +1,6 @@
 import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
-import { extractTemplateStructure, getAllTemplates, saveNewTemplate, loadTemplateBank, saveTemplateBank } from './templateUtils';
+import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from './templateUtils';
 import { loadKeywordBank, saveKeywordBank } from './keywordBankUtils';
 import { storeTransaction } from '@/utils/storage-utils';
 import { toast } from '@/components/ui/use-toast';
@@ -56,10 +56,10 @@ export function saveTransactionWithLearning(
     const fields = Object.keys(placeholders);
     const templateHash = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
 
-    const existingTemplates = getAllTemplates();
-    const alreadyExists = existingTemplates.some(t => t.id === templateHash);
-    if (!alreadyExists) {
-      saveNewTemplate(template, fields, rawMessage);
+    const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
+    const bank = loadTemplateBank();
+    if (!bank[key]) {
+      saveNewTemplate(template, fields, rawMessage, senderHint, newTransaction.fromAccount);
     }
 
     if (!silent && showPatternToast && !combineToasts) {
@@ -104,10 +104,11 @@ export function saveTransactionWithLearning(
     // Default From Account Mapping
     if (templateHash && newTransaction.fromAccount) {
       const templates = loadTemplateBank();
-      const targetTemplate = templates.find(t => t.id === templateHash);
-      if (targetTemplate && !targetTemplate.defaultValues?.fromAccount) {
-        targetTemplate.defaultValues = {
-          ...targetTemplate.defaultValues,
+      const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
+      const target = templates[key] || templates[getTemplateKey(senderHint, undefined, templateHash)];
+      if (target && !target.defaultValues?.fromAccount) {
+        target.defaultValues = {
+          ...target.defaultValues,
           fromAccount: newTransaction.fromAccount,
         };
         saveTemplateBank(templates);

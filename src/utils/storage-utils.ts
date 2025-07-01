@@ -4,11 +4,8 @@ import { validateTransactionForStorage, validateCategoryForStorage, validateCate
 import { UserPreferences } from '@/types/user';
 import { SupportedCurrency, LocaleSettings } from '@/types/locale';
 import { StructureTemplateEntry } from '@/types/template';
-import { extractTemplateStructure } from '@/lib/smart-paste-engine/templateUtils';
-import { getAllTemplates } from '@/lib/smart-paste-engine/templateUtils';
-import { saveNewTemplate } from '@/lib/smart-paste-engine/templateUtils';
+import { extractTemplateStructure, getAllTemplates, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from '@/lib/smart-paste-engine/templateUtils';
 import { loadKeywordBank,saveKeywordBank } from '@/lib/smart-paste-engine/keywordBankUtils';
-import { loadTemplateBank, saveTemplateBank } from '@/lib/smart-paste-engine/templateUtils';
 // Storage keys for local storage
 const TRANSACTIONS_STORAGE_KEY = 'xpensia_transactions';
 const CATEGORIES_STORAGE_KEY = 'xpensia_categories';
@@ -148,10 +145,10 @@ export function learnFromTransaction(
   const fields = Object.keys(placeholders);
   const templateHash = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
 
-  const existingTemplates = getAllTemplates();
-  const alreadyExists = existingTemplates.some(t => t.id === templateHash);
-  if (!alreadyExists) {
-    saveNewTemplate(template, fields, rawMessage);
+  const key = getTemplateKey(senderHint, txn.fromAccount, templateHash);
+  const bank = loadTemplateBank();
+  if (!bank[key]) {
+    saveNewTemplate(template, fields, rawMessage, senderHint, txn.fromAccount);
   }
 
   // Save Keyword Mapping (Vendor → Category/Subcategory)
@@ -191,7 +188,8 @@ export function learnFromTransaction(
   // Save Template Hash → From Account mapping
   if (templateHash && txn.fromAccount) {
     const templates = loadTemplateBank();
-    const t = templates.find(t => t.id === templateHash);
+    const key = getTemplateKey(senderHint, txn.fromAccount, templateHash);
+    const t = templates[key] || templates[getTemplateKey(senderHint, undefined, templateHash)];
     if (t && !t.defaultValues?.fromAccount) {
       t.defaultValues = {
         ...t.defaultValues,

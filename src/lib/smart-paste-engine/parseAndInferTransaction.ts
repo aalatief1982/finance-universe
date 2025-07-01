@@ -33,7 +33,7 @@ export async function parseAndInferTransaction(
   senderHint?: string,
   smsId?: string
 ): Promise<ParsedTransactionResult> {
-  const parsed = parseSmsMessage(rawMessage);
+  const parsed = parseSmsMessage(rawMessage, senderHint);
 
   const transaction: Transaction = {
     id: nanoid(),

@@ -50,7 +50,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     }
 
     try {
-      const parsed = parseSmsMessage(text);
+      const parsed = parseSmsMessage(text, senderHint);
       if (parsed.matched) {
         const bank =
           parsed.inferredFields.vendor ||
