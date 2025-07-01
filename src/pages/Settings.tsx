@@ -234,7 +234,7 @@ const Settings = () => {
         transition={{ duration: 0.5 }}
         className="space-y-6 pb-24"
       >
-        <Button className="mb-4" onClick={handleSaveSettings}>
+        <Button className="w-full mb-2" onClick={handleSaveSettings}>
           Save Settings
         </Button>
         <section className="space-y-4">
