@@ -4,5 +4,11 @@ export default {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
   },
-  extensionsToTreatAsEsm: ['.ts', '.tsx']
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  globals: {
+    'ts-jest': {
+      tsconfig: './tsconfig.app.json',
+      useESM: true
+    }
+  }
 };
