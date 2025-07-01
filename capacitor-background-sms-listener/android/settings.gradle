@@ -1,2 +1,0 @@
-include ':capacitor-background-sms-listener'
-project(':capacitor-background-sms-listener').projectDir = new File(rootDir, '../capacitor-background-sms-listener/android')
