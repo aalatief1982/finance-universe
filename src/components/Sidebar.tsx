@@ -1,14 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import {
   LineChart,
   Home,
   BarChart3,
@@ -46,9 +38,9 @@ const Sidebar: React.FC = () => {
 
   const budgetItems = [
     { name: 'Accounts', path: '/budget/accounts', icon: <CreditCard size={18} /> },
-    { name: 'Budgets', path: '/budget/set', icon: <ClipboardList size={18} /> },
-    { name: 'Reports', path: '/budget/report', icon: <Target size={18} /> },
-    { name: 'Insights', path: '/budget/insights', icon: <TrendingDown size={18} /> },
+    { name: 'Set Budget', path: '/budget/set', icon: <ClipboardList size={18} /> },
+    { name: 'Budget vs Actual', path: '/budget/report', icon: <Target size={18} /> },
+    { name: 'Suggestions & Insights', path: '/budget/insights', icon: <TrendingDown size={18} /> },
   ];
 
   const isActive = (path: string) => {
@@ -82,7 +74,7 @@ const Sidebar: React.FC = () => {
             <li>
               <button
                 type="button"
-                onClick={() => setBudgetOpen(true)}
+                onClick={() => setBudgetOpen(!budgetOpen)}
                 className={`flex w-full items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   location.pathname.startsWith('/budget')
                     ? 'bg-primary text-primary-foreground'
@@ -91,27 +83,28 @@ const Sidebar: React.FC = () => {
               >
                 <Scale size={20} className="mr-3" />
                 <span className="flex-1 text-left">Budget</span>
+                <span className="ml-auto">{budgetOpen ? '▾' : '▸'}</span>
               </button>
 
-              <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
-                <DialogContent className="sm:max-w-xs">
-                  <DialogHeader>
-                    <DialogTitle>Select Budget Page</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-2 py-2">
-                    {budgetItems.map((b) => (
-                      <DialogClose asChild key={b.path}>
-                        <Button asChild variant="outline" className="justify-start">
-                          <Link to={b.path} className="flex items-center gap-2">
-                            {b.icon}
-                            {b.name}
-                          </Link>
-                        </Button>
-                      </DialogClose>
-                    ))}
-                  </div>
-                </DialogContent>
-              </Dialog>
+              {budgetOpen && (
+                <ul className="mt-1 space-y-1 pl-6">
+                  {budgetItems.map((b) => (
+                    <li key={b.path}>
+                      <Link
+                        to={b.path}
+                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive(b.path)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}
+                      >
+                        <span className="mr-3">{b.icon}</span>
+                        {b.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           </ul>
         </nav>
