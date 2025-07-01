@@ -66,6 +66,12 @@ This project is built with .
 - shadcn-ui
 - Tailwind CSS
 
+## Header component location
+
+The original `src/components/Header.tsx` file has been removed. Header-related
+components now reside under `src/components/header`. Import from these modules
+instead of the old path.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/44f11ecc-0e77-4a7d-a302-6102d5d50c2b) and click on Share -> Publish.
