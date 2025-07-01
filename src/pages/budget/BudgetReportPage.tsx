@@ -1,6 +1,5 @@
 import React from 'react';
 import Layout from '@/components/Layout';
-import PageHeader from '@/components/layout/PageHeader';
 import { useTransactions } from '@/context/TransactionContext';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, LineChart, Line, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { budgetService } from '@/services/BudgetService';
@@ -47,7 +46,6 @@ const BudgetReportPage = () => {
   return (
     <Layout showBack>
       <div className="container px-1 space-y-4">
-        <PageHeader title="Budget vs Actual" />
         <div className="bg-card p-4 rounded-xl">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
