@@ -46,7 +46,7 @@ const Sidebar: React.FC = () => {
           <h2 className="text-xl font-bold">Xpensia</h2>
         </div>
         
-        <nav className="flex-1 px-3 py-2">
+        <nav className="flex-1 px-3 py-2 overflow-y-auto">
           <ul className="space-y-1">
           {navItems.map((item) => (
             <li key={item.path}>
