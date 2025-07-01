@@ -5,9 +5,10 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { getNavItems } from './route-constants';
 import { 
-  Home, 
-  PieChart, 
-  ListIcon, 
+  Home,
+  PieChart,
+  Scale,
+  ListIcon,
   MessageSquare, 
   Settings, 
   User, 
@@ -19,6 +20,7 @@ import {
 const iconMap = {
   'Home': Home,
   'PieChart': PieChart,
+  'Scale': Scale,
   'List': ListIcon,
   'MessageSquare': MessageSquare,
   'Settings': Settings,
