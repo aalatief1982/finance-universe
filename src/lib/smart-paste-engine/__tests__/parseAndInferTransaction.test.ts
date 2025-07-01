@@ -7,7 +7,7 @@ jest.mock('../structureParser', () => ({
   parseSmsMessage: jest.fn(() => ({
     rawMessage: 'raw',
     template: 'tmpl',
-    templateHash: 'hash',
+    structure: { structure: 'tmpl', hash: 'hash', version: 'v2', hashAlgorithm: 'SHA256' },
     matched: true,
     directFields: {
       amount: { value: '100', confidenceScore: 1, source: 'direct' },

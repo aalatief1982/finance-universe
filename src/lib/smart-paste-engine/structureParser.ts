@@ -8,10 +8,12 @@
 import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
+import { normalizeTemplateStructure } from './templateNormalizer';
+import { createHash } from 'crypto';
 //import { normalizeDate } from './dateUtils';
 
-// Hashing util (replace with real hash lib if needed)
-const simpleHash = (text: string) => btoa(unescape(encodeURIComponent(text))).slice(0, 24);
+const sha256 = (text: string) =>
+  createHash('sha256').update(text, 'utf8').digest('hex');
 
 
 export function normalizeDate(dateStr: string): string | undefined {
@@ -58,7 +60,14 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     throw err; // Let upstream handler deal with it
   }
 
-  const templateHash = simpleHash(template);
+  const normalized = result.normalized || normalizeTemplateStructure(template);
+  const templateHash = sha256(normalized);
+  const structure = {
+    structure: normalized,
+    hash: templateHash,
+    version: 'v2',
+    hashAlgorithm: 'SHA256'
+  };
   console.log('[SmartPaste] Step 2: Extracted Template:', template);
   console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
 
@@ -136,7 +145,7 @@ if (directFields['date']) {
   return {
     rawMessage,
     template,
-    templateHash,
+    structure,
     matched: !!matchedTemplate,
     directFields,
     inferredFields: inferred,

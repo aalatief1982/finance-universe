@@ -1,7 +1,10 @@
 import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate } from '@/types/template';
+import { normalizeTemplateStructure } from './templateNormalizer';
+import { createHash } from 'crypto';
 
 const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
+const sha256 = (text: string) => createHash('sha256').update(text, 'utf8').digest('hex');
 
 export function getTemplateKey(
   sender?: string,
@@ -53,6 +56,13 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
     localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
   }
 
+  // Ensure legacy entries without version/hashAlgorithm remain untouched
+  Object.values(bank || {}).forEach((t: any) => {
+    if (t.structure && (!t.structure.version || !t.structure.hashAlgorithm)) {
+      // legacy entry - do not modify
+    }
+  });
+
   return bank as Record<string, SmartPasteTemplate>;
 }
 
@@ -78,7 +88,8 @@ export function saveNewTemplate(
   fromAccount?: string
 ) {
   const templates = loadTemplateBank();
-  const id = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
+  const normalized = normalizeTemplateStructure(template);
+  const id = sha256(normalized);
   const key = getTemplateKey(sender, fromAccount, id);
 
   if (!templates[key]) {
@@ -88,11 +99,25 @@ export function saveNewTemplate(
       fields,
       defaultValues: {},
       created: new Date().toISOString(),
-      rawSample: rawMessage || ''
-    };
+      rawSample: rawMessage || '',
+      structure: {
+        structure: normalized,
+        hash: id,
+        version: 'v2',
+        hashAlgorithm: 'SHA256'
+      }
+    } as any;
   } else {
     templates[key].fields = [...new Set([...templates[key].fields, ...fields])];
     if (rawMessage) templates[key].rawSample = rawMessage;
+    if (!templates[key].structure) {
+      (templates[key] as any).structure = {
+        structure: normalized,
+        hash: id,
+        version: 'v2',
+        hashAlgorithm: 'SHA256'
+      };
+    }
   }
 
   saveTemplateBank(templates);
@@ -105,7 +130,7 @@ export function getAllTemplates(): SmartPasteTemplate[] {
 
 export function extractTemplateStructure(
   message: string
-): { template: string; placeholders: Record<string, string> } {
+): { template: string; placeholders: Record<string, string>; normalized: string } {
   const patterns = [
    {
 	  // Support formats like: SAR 55,100.00 | 35 SAR | 200.00 ر.س | ٣٥٠ جنيه مصري
@@ -202,5 +227,7 @@ export function extractTemplateStructure(
     templateText = templateText.slice(0, start) + replacement + templateText.slice(end);
   }
 
-  return { template: templateText.trim(), placeholders };
+  const trimmed = templateText.trim();
+  const normalized = normalizeTemplateStructure(trimmed);
+  return { template: trimmed, placeholders, normalized };
 }
