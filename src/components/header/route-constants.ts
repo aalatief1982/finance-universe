@@ -20,6 +20,10 @@ export const routeTitleMap: Record<string, string> = {
   '/import-transactions': 'Paste & Parse',
   '/review-sms-transactions': 'Review Details',
   '/edit-transaction': 'Transaction',
+  '/budget/accounts': 'Accounts & Balances',
+  '/budget/set': 'Set Budget',
+  '/budget/report': 'Budget vs Actual',
+  '/budget/insights': 'Suggestions & Insights',
 };
 
 // Navigation items that appear in the header
@@ -30,17 +34,23 @@ export const getNavItems = () => [
     icon: 'Home', 
     description: 'Overview of your finances' 
   },
-  { 
-    title: 'Analytics', 
-    path: '/analytics', 
-    icon: 'PieChart', 
-    description: 'Detailed reports and charts' 
+  {
+    title: 'Analytics',
+    path: '/analytics',
+    icon: 'PieChart',
+    description: 'Detailed reports and charts'
   },
-  { 
-    title: 'Transactions', 
-    path: '/transactions', 
-    icon: 'List', 
-    description: 'View and manage your transactions' 
+  {
+    title: 'Budget',
+    path: '/budget/accounts',
+    icon: 'PieChart',
+    description: 'Manage budgets and accounts'
+  },
+  {
+    title: 'Transactions',
+    path: '/transactions',
+    icon: 'List',
+    description: 'View and manage your transactions'
   },
   {
     title: 'Paste & Parse',
