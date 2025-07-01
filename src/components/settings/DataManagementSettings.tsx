@@ -69,10 +69,18 @@ const DataManagementSettings = () => {
             throw new Error('No valid transactions');
           }
 
-          storeTransactions(data as any);
+          const existing = getStoredTransactions();
+          const confirmImport = window.confirm(
+            `This will add ${data.length} transactions to your existing ${existing.length}. Continue?`
+          );
+
+          if (!confirmImport) return;
+
+          const merged = [...existing, ...(data as any[])];
+          storeTransactions(merged as any);
           toast({
             title: "Import successful",
-            description: "Your data has been imported successfully.",
+            description: `Added ${data.length} transactions successfully.`,
           });
           setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
