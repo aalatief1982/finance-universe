@@ -34,17 +34,23 @@ export const getNavItems = () => [
     icon: 'Home', 
     description: 'Overview of your finances' 
   },
-  { 
-    title: 'Analytics', 
-    path: '/analytics', 
-    icon: 'PieChart', 
-    description: 'Detailed reports and charts' 
+  {
+    title: 'Analytics',
+    path: '/analytics',
+    icon: 'PieChart',
+    description: 'Detailed reports and charts'
   },
-  { 
-    title: 'Transactions', 
-    path: '/transactions', 
-    icon: 'List', 
-    description: 'View and manage your transactions' 
+  {
+    title: 'Budget',
+    path: '/budget/accounts',
+    icon: 'PieChart',
+    description: 'Manage budgets and accounts'
+  },
+  {
+    title: 'Transactions',
+    path: '/transactions',
+    icon: 'List',
+    description: 'View and manage your transactions'
   },
   {
     title: 'Paste & Parse',
