@@ -10,7 +10,7 @@ import {
   Upload,
   BrainCircuit,
   Tag,
-  PieChart,
+  Scale,
   CreditCard,
   ClipboardList,
   Target,
@@ -83,7 +83,7 @@ const Sidebar: React.FC = () => {
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <PieChart size={20} className="mr-3" />
+                <Scale size={20} className="mr-3" />
                 <span className="flex-1 text-left">Budget</span>
                 <span className="ml-auto">{budgetOpen ? '▾' : '▸'}</span>
               </button>

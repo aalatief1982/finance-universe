@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LogOut, Menu, Home, PieChart, List, MessageSquare, Settings, User, Upload, BrainCircuit } from 'lucide-react';
+import { LogOut, Menu, Home, PieChart, Scale, List, MessageSquare, Settings, User, Upload, BrainCircuit } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,6 +19,7 @@ import { getNavItems } from './route-constants';
 const iconMap = {
   'Home': Home,
   'PieChart': PieChart,
+  'Scale': Scale,
   'List': List,
   'MessageSquare': MessageSquare,
   'Settings': Settings,

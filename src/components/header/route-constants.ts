@@ -43,7 +43,7 @@ export const getNavItems = () => [
   {
     title: 'Budget',
     path: '/budget/accounts',
-    icon: 'PieChart',
+    icon: 'Scale',
     description: 'Manage budgets and accounts'
   },
   {
