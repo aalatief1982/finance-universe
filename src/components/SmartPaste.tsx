@@ -53,9 +53,9 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
       const parsed = parseSmsMessage(text, senderHint);
       if (parsed.matched) {
         const bank =
-          parsed.inferredFields.vendor ||
-          parsed.directFields.vendor ||
-          parsed.directFields.fromAccount ||
+          parsed.inferredFields.vendor?.value ||
+          parsed.directFields.vendor?.value ||
+          parsed.directFields.fromAccount?.value ||
           '';
         setMatchStatus(
           `Matched template from ${bank || 'saved template'}`

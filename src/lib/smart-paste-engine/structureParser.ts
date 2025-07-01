@@ -7,6 +7,7 @@
 
 import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
+import { computeConfidenceScore } from './confidenceUtils';
 //import { normalizeDate } from './dateUtils';
 
 // Hashing util (replace with real hash lib if needed)
@@ -30,6 +31,12 @@ export function normalizeDate(dateStr: string): string | undefined {
   return isNaN(parsed.getTime()) ? undefined : parsed.toISOString().split('T')[0];
 }
 
+
+export interface ParsedField {
+  value: string
+  confidenceScore: number
+  source: 'direct' | 'inferred' | 'default'
+}
 
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
@@ -60,42 +67,69 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     senderHint,
     (placeholders as any).account
   );
-  const directFields: Record<string, string> = {};
+  const directFields: Record<string, ParsedField> = {};
+  const defaultValues: Record<string, ParsedField> = {};
 
   if (matchedTemplate) {
-    matchedTemplate.fields.forEach(field => {
-	  const value = placeholders[field];
-	  if (value) {
-		directFields[field] = value;
-	  } else {
-		console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
-	  }
-	});
+    matchedTemplate.fields.forEach((field) => {
+      const value = placeholders[field];
+      if (value) {
+        directFields[field] = {
+          value,
+          confidenceScore: computeConfidenceScore('direct'),
+          source: 'direct',
+        };
+      } else {
+        console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
+      }
+    });
 
     if (matchedTemplate.defaultValues) {
       Object.entries(matchedTemplate.defaultValues).forEach(([key, value]) => {
         if (!directFields[key]) {
-          directFields[key] = value;
+          const field = {
+            value,
+            confidenceScore: computeConfidenceScore('default'),
+            source: 'default' as const,
+          };
+          directFields[key] = field;
+          defaultValues[key] = field;
         }
       });
     }
+  } else {
+    // ✅ FIRST-TIME message – use raw extracted values
+    Object.entries(placeholders).forEach(([key, value]) => {
+      directFields[key] = {
+        value,
+        confidenceScore: computeConfidenceScore('direct'),
+        source: 'direct',
+      };
+    });
   }
-  else {
-  // ✅ FIRST-TIME message – use raw extracted values
-  Object.entries(placeholders).forEach(([key, value]) => {
-    directFields[key] = value;
-  });
-}
 // Normalize known field names like 'date'
 if (directFields['date']) {
-  const normalized = normalizeDate(directFields['date']);
+  const normalized = normalizeDate(directFields['date'].value);
   if (normalized) {
-    directFields['date'] = normalized;
-    console.log('[SmartPaste] Normalized date:', directFields['date']);
+    directFields['date'].value = normalized;
+    console.log('[SmartPaste] Normalized date:', directFields['date'].value);
   }
 }
 
-  const inferred = inferIndirectFields(rawMessage, directFields);
+  const rawDirects: Record<string, string> = {};
+  Object.entries(directFields).forEach(([k, v]) => (rawDirects[k] = v.value));
+
+  const inferredRaw = inferIndirectFields(rawMessage, rawDirects);
+  const inferred: Record<string, ParsedField> = {};
+  Object.entries(inferredRaw).forEach(([key, value]) => {
+    if (!directFields[key]) {
+      inferred[key] = {
+        value,
+        confidenceScore: computeConfidenceScore('inferred'),
+        source: 'inferred',
+      };
+    }
+  });
   console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
   console.log('[SmartPaste] Final directFields:', directFields);
 
@@ -106,7 +140,7 @@ if (directFields['date']) {
     matched: !!matchedTemplate,
     directFields,
     inferredFields: inferred,
-    defaultValues: matchedTemplate?.defaultValues || {}
+    defaultValues,
   };
 }
 

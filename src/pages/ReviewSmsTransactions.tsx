@@ -461,7 +461,11 @@ const toggleSkipAll = () => {
               size="sm"
               onClick={() =>
                 navigate('/edit-transaction', {
-                  state: { transaction: txn, rawMessage: txn.rawMessage },
+                  state: {
+                    transaction: txn,
+                    rawMessage: txn.rawMessage,
+                    fieldConfidences: txn.fieldConfidences,
+                  },
                 })
               }
             >

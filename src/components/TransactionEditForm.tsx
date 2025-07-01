@@ -27,6 +27,8 @@ interface TransactionEditFormProps {
   compact?: boolean;
   /** Whether to display the notes field */
   showNotes?: boolean;
+  /** Optional confidence scores for fields */
+  fieldConfidences?: Partial<Record<keyof Transaction, number>>;
 }
 
 
@@ -35,6 +37,14 @@ function isDriven(
   drivenFields: Partial<Record<keyof Transaction, boolean>>
 ) {
   return !!drivenFields[field]
+}
+
+function hasLowConfidence(
+  field: keyof Transaction,
+  scores: Partial<Record<keyof Transaction, number>>
+) {
+  const score = scores[field]
+  return score !== undefined && score < 0.6
 }
 
 /* export function generateDefaultTitle(txn: Transaction): string {
@@ -83,6 +93,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   onSave,
   compact = false,
   showNotes = true,
+  fieldConfidences = {},
 }) => {
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
@@ -482,9 +493,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               'w-full text-sm',
               inputPadding,
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass
+              darkFieldClass,
+              hasLowConfidence('currency', fieldConfidences) && 'border-amber-500'
             )}
             isAutoFilled={isDriven('currency', drivenFields)}
+            title={hasLowConfidence('currency', fieldConfidences) ? 'Low confidence' : undefined}
           >
             <SelectValue placeholder="Select currency" />
           </SelectTrigger>
@@ -749,11 +762,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
             placeholder="0.00"
             required
+            title={hasLowConfidence('amount', fieldConfidences) ? 'Low confidence' : undefined}
           className={cn(
             'w-full text-sm rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             inputPadding
           ,
-            darkFieldClass
+            darkFieldClass,
+            hasLowConfidence('amount', fieldConfidences) && 'border-amber-500'
           )}
         />
           <Button
@@ -778,13 +793,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               value={editedTransaction.fromAccount || ''}
               onChange={(e) => handleChange('fromAccount', e.target.value)}
               isAutoFilled={isDriven('fromAccount', drivenFields)}
+            title={hasLowConfidence('fromAccount', fieldConfidences) ? 'Low confidence' : undefined}
             placeholder="Source account"
             required
             className={cn(
               'w-full text-sm',
               inputPadding,
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass
+              darkFieldClass,
+              hasLowConfidence('fromAccount', fieldConfidences) && 'border-amber-500'
             )}
           />
           <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
@@ -840,9 +857,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'w-full text-sm',
                 inputPadding,
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                darkFieldClass
+                darkFieldClass,
+                hasLowConfidence('category', fieldConfidences) && 'border-amber-500'
               )}
               isAutoFilled={isDriven('category', drivenFields)}
+              title={hasLowConfidence('category', fieldConfidences) ? 'Low confidence' : undefined}
             >
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -884,9 +903,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                     'w-full text-sm',
                     inputPadding,
                     'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                    darkFieldClass
+                    darkFieldClass,
+                    hasLowConfidence('subcategory', fieldConfidences) && 'border-amber-500'
                   )}
                   isAutoFilled={isDriven('subcategory', drivenFields)}
+                  title={hasLowConfidence('subcategory', fieldConfidences) ? 'Low confidence' : undefined}
                 >
                   <SelectValue placeholder="Select subcategory" />
                 </SelectTrigger>
@@ -953,11 +974,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             isAutoFilled={isDriven('vendor', drivenFields)}
             onChange={(e) => handleChange('vendor', e.target.value)}
             placeholder="e.g., Netflix"
+            title={hasLowConfidence('vendor', fieldConfidences) ? 'Low confidence' : undefined}
             className={cn(
               'w-full text-sm',
               inputPadding,
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass
+              darkFieldClass,
+              hasLowConfidence('vendor', fieldConfidences) && 'border-amber-500'
             )}
           />
           <Button type="button" variant="outline" size="icon" onClick={() => setAddVendorOpen(true)}>
@@ -981,12 +1004,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           value={editedTransaction.date || ''}
           onChange={(e) => handleChange('date', e.target.value)}
           isAutoFilled={isDriven('date', drivenFields)}
+          title={hasLowConfidence('date', fieldConfidences) ? 'Low confidence' : undefined}
           required
           className={cn(
             'w-full text-sm',
             inputPadding,
             'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-            darkFieldClass
+            darkFieldClass,
+            hasLowConfidence('date', fieldConfidences) && 'border-amber-500'
           )}
         />
         {renderFeedbackIcons('date')}
