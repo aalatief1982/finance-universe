@@ -33,6 +33,9 @@ const EditTransaction = () => {
   const senderHint = location.state?.senderHint as string | undefined;
   const isSuggested = location.state?.isSuggested as boolean | undefined;
   const confidenceScore = location.state?.confidence as number | undefined;
+  const fieldConfidences = location.state?.fieldConfidences as
+    | Record<string, number>
+    | undefined;
   const isNewTransaction = !transaction;
 
   const handleSave = (editedTransaction: Transaction) => {
@@ -131,6 +134,7 @@ const EditTransaction = () => {
               onSave={handleSave}
               compact
               showNotes={false}
+              fieldConfidences={fieldConfidences}
             />
           </CardContent>
         </Card>

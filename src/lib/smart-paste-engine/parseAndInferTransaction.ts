@@ -37,17 +37,20 @@ export async function parseAndInferTransaction(
 
   const transaction: Transaction = {
     id: nanoid(),
-    amount: parseFloat(parsed.directFields.amount || '0'),
-    currency: parsed.directFields.currency || 'SAR',
-    date: parsed.directFields.date || '',
-    type: (parsed.inferredFields.type as TransactionType) || 'expense',
-    category: parsed.inferredFields.category || 'Uncategorized',
-    subcategory: parsed.inferredFields.subcategory || 'none',
-    vendor: parsed.inferredFields.vendor || parsed.directFields.vendor || '',
+    amount: parseFloat(parsed.directFields.amount?.value || '0'),
+    currency: parsed.directFields.currency?.value || 'SAR',
+    date: parsed.directFields.date?.value || '',
+    type: (parsed.inferredFields.type?.value as TransactionType) || 'expense',
+    category: parsed.inferredFields.category?.value || 'Uncategorized',
+    subcategory: parsed.inferredFields.subcategory?.value || 'none',
+    vendor:
+      parsed.inferredFields.vendor?.value ||
+      parsed.directFields.vendor?.value ||
+      '',
     fromAccount:
-      parsed.directFields.fromAccount ||
-      parsed.inferredFields.fromAccount ||
-      parsed.defaultValues?.fromAccount ||
+      parsed.directFields.fromAccount?.value ||
+      parsed.inferredFields.fromAccount?.value ||
+      parsed.defaultValues?.fromAccount?.value ||
       senderHint || '',
     source: 'smart-paste',
     createdAt: new Date().toISOString(),
@@ -80,9 +83,9 @@ export async function parseAndInferTransaction(
   ];
   const fieldConfidences: Record<string, number> = {};
   fields.forEach((f) => {
-    if (parsed.directFields?.[f]) fieldConfidences[f] = 1;
-    else if (parsed.inferredFields?.[f]) fieldConfidences[f] = 0.6;
-    else if (parsed.defaultValues?.[f]) fieldConfidences[f] = 0.4;
+    if (parsed.directFields?.[f]) fieldConfidences[f] = parsed.directFields[f].confidenceScore;
+    else if (parsed.inferredFields?.[f]) fieldConfidences[f] = parsed.inferredFields[f].confidenceScore;
+    else if (parsed.defaultValues?.[f]) fieldConfidences[f] = parsed.defaultValues[f].confidenceScore;
     else fieldConfidences[f] = 0;
   });
 

@@ -9,8 +9,19 @@ jest.mock('../structureParser', () => ({
     template: 'tmpl',
     templateHash: 'hash',
     matched: true,
-    directFields: { amount: '100', currency: 'SAR', date: '2024-05-01', fromAccount: 'Bank', vendor: 'Shop' },
-    inferredFields: { type: 'expense', category: 'Food', subcategory: 'Groceries', vendor: 'Shop' },
+    directFields: {
+      amount: { value: '100', confidenceScore: 1, source: 'direct' },
+      currency: { value: 'SAR', confidenceScore: 1, source: 'direct' },
+      date: { value: '2024-05-01', confidenceScore: 1, source: 'direct' },
+      fromAccount: { value: 'Bank', confidenceScore: 1, source: 'direct' },
+      vendor: { value: 'Shop', confidenceScore: 1, source: 'direct' }
+    },
+    inferredFields: {
+      type: { value: 'expense', confidenceScore: 0.7, source: 'inferred' },
+      category: { value: 'Food', confidenceScore: 0.7, source: 'inferred' },
+      subcategory: { value: 'Groceries', confidenceScore: 0.7, source: 'inferred' },
+      vendor: { value: 'Shop', confidenceScore: 0.7, source: 'inferred' }
+    },
     defaultValues: {}
   }))
 }));

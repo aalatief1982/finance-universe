@@ -24,19 +24,23 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
       // Combine direct and inferred fields to create a transaction object
       const transaction: Transaction = {
         id: 'sms-' + Math.random().toString(36).substring(2, 15), // Generate a random ID
-        title: directFields.vendor || inferredFields.vendor || 'SMS Transaction',
-        amount: parseFloat(directFields.amount || inferredFields.amount || '0'),
-        category: inferredFields.category || 'Uncategorized',
-        subcategory: inferredFields.subcategory || 'none',
-        date: directFields.date || new Date().toISOString().split('T')[0],
-        type: (directFields.type || inferredFields.type || (parseFloat(directFields.amount || '0') > 0 ? 'income' : 'expense')) as 'income' | 'expense',
+        title: directFields.vendor?.value || inferredFields.vendor?.value || 'SMS Transaction',
+        amount: parseFloat(directFields.amount?.value || inferredFields.amount?.value || '0'),
+        category: inferredFields.category?.value || 'Uncategorized',
+        subcategory: inferredFields.subcategory?.value || 'none',
+        date: directFields.date?.value || new Date().toISOString().split('T')[0],
+        type: (directFields.type?.value || inferredFields.type?.value || (parseFloat(directFields.amount?.value || '0') > 0 ? 'income' : 'expense')) as 'income' | 'expense',
         notes: '',
         source: 'sms-import',
-        currency: directFields.currency || inferredFields.currency || 'USD',
-        fromAccount: inferredFields.fromAccount || 'Cash',
+        currency: directFields.currency?.value || inferredFields.currency?.value || 'USD',
+        fromAccount: inferredFields.fromAccount?.value || 'Cash',
         details: {
-          ...directFields,
-          ...inferredFields,
+          ...Object.fromEntries(
+            Object.entries(directFields).map(([k, v]) => [k, v.value])
+          ),
+          ...Object.fromEntries(
+            Object.entries(inferredFields).map(([k, v]) => [k, v.value])
+          ),
           sms: {
             sender: entry.sender,
             message: entry.message,
