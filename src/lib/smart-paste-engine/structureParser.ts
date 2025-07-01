@@ -31,7 +31,7 @@ export function normalizeDate(dateStr: string): string | undefined {
 }
 
 
-export function parseSmsMessage(rawMessage: string) {
+export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
 	if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
@@ -55,7 +55,11 @@ export function parseSmsMessage(rawMessage: string) {
   console.log('[SmartPaste] Step 2: Extracted Template:', template);
   console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
 
-  const matchedTemplate = getTemplateByHash(templateHash);
+  const matchedTemplate = getTemplateByHash(
+    templateHash,
+    senderHint,
+    (placeholders as any).account
+  );
   const directFields: Record<string, string> = {};
 
   if (matchedTemplate) {

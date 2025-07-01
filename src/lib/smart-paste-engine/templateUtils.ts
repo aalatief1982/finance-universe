@@ -1,49 +1,106 @@
 import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate } from '@/types/template';
 
-export function loadTemplateBank(): SmartPasteTemplate[] {
-  const raw = localStorage.getItem('xpensia_structure_templates');
-  return raw ? JSON.parse(raw) : [];
+const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
+
+export function getTemplateKey(
+  sender?: string,
+  fromAccount?: string,
+  hash: string
+): string {
+  let base = sender?.toLowerCase().trim();
+  if (!base) base = fromAccount?.toLowerCase().trim();
+  if (!base) base = '__unknown__';
+  return `${base}:${hash}`;
 }
 
-export function saveTemplateBank(templates: SmartPasteTemplate[]) {
-  localStorage.setItem('xpensia_structure_templates', JSON.stringify(templates));
+export function parseTemplateKey(key: string): { sender: string; hash: string } {
+  if (key.includes(':')) {
+    const [sender, hash] = key.split(':');
+    return { sender, hash };
+  }
+  return { sender: '__unknown__', hash: key };
 }
 
-export function getTemplateByHash(hash: string): SmartPasteTemplate | undefined {
+export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
+  let raw = localStorage.getItem(TEMPLATE_BANK_KEY);
+  let bank: any = raw ? JSON.parse(raw) : null;
+
+  if (!bank) {
+    const legacy = localStorage.getItem('xpensia_structure_templates');
+    if (legacy) {
+      const arr = JSON.parse(legacy) as SmartPasteTemplate[];
+      bank = {} as Record<string, SmartPasteTemplate>;
+      if (Array.isArray(arr)) {
+        arr.forEach(t => {
+          const key = getTemplateKey(undefined, undefined, t.id);
+          bank[key] = t;
+        });
+      }
+      localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
+    } else {
+      bank = {};
+    }
+  }
+
+  if (Array.isArray(bank)) {
+    const converted: Record<string, SmartPasteTemplate> = {};
+    bank.forEach((t: SmartPasteTemplate) => {
+      const key = getTemplateKey(undefined, undefined, t.id);
+      converted[key] = t;
+    });
+    bank = converted;
+    localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
+  }
+
+  return bank as Record<string, SmartPasteTemplate>;
+}
+
+export function saveTemplateBank(templates: Record<string, SmartPasteTemplate>) {
+  localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(templates));
+}
+
+export function getTemplateByHash(
+  hash: string,
+  sender?: string,
+  fromAccount?: string
+): SmartPasteTemplate | undefined {
   const templates = loadTemplateBank();
-  return templates.find(t => t.id === hash);
+  const key = getTemplateKey(sender, fromAccount, hash);
+  return templates[key] || templates[getTemplateKey(undefined, undefined, hash)];
 }
 
-export function saveNewTemplate(template: string, fields: string[], rawMessage?: string) {
+export function saveNewTemplate(
+  template: string,
+  fields: string[],
+  rawMessage?: string,
+  sender?: string,
+  fromAccount?: string
+) {
   const templates = loadTemplateBank();
   const id = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
-  
-  const existingIndex = templates.findIndex(t => t.id === id);
-  
-  if (existingIndex === -1) {
-    templates.push({
+  const key = getTemplateKey(sender, fromAccount, id);
+
+  if (!templates[key]) {
+    templates[key] = {
       id,
       template,
       fields,
       defaultValues: {},
       created: new Date().toISOString(),
       rawSample: rawMessage || ''
-    });
+    };
   } else {
-    // Update existing template
-    templates[existingIndex].fields = [...new Set([...templates[existingIndex].fields, ...fields])];
-    if (rawMessage) {
-      templates[existingIndex].rawSample = rawMessage;
-    }
+    templates[key].fields = [...new Set([...templates[key].fields, ...fields])];
+    if (rawMessage) templates[key].rawSample = rawMessage;
   }
-  
+
   saveTemplateBank(templates);
   return id;
 }
 
 export function getAllTemplates(): SmartPasteTemplate[] {
-  return loadTemplateBank();
+  return Object.values(loadTemplateBank());
 }
 
 export function extractTemplateStructure(

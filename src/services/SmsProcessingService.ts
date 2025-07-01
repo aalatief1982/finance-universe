@@ -16,7 +16,7 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
   return entries.map(entry => {
     try {
       // Use the smart paste engine to parse the SMS message
-      const parsedResult = parseSmsMessage(entry.message);
+      const parsedResult = parseSmsMessage(entry.message, entry.sender);
 
       // Extract relevant information from the parsed result
       const { directFields, inferredFields } = parsedResult;

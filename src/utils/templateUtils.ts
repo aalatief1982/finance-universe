@@ -1,8 +1,10 @@
-export function loadTemplateBank(): SmartPasteTemplate[] {
-  const raw = localStorage.getItem('xpensia_structure_templates');
-  return raw ? JSON.parse(raw) : [];
+import { SmartPasteTemplate } from '@/types/template';
+
+export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
+  const raw = localStorage.getItem('xpensia_template_bank');
+  return raw ? JSON.parse(raw) : {};
 }
 
-export function saveTemplateBank(templates: SmartPasteTemplate[]) {
-  localStorage.setItem('xpensia_structure_templates', JSON.stringify(templates));
+export function saveTemplateBank(templates: Record<string, SmartPasteTemplate>) {
+  localStorage.setItem('xpensia_template_bank', JSON.stringify(templates));
 }
