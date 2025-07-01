@@ -1,14 +1,20 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  LineChart, 
-  Home, 
-  BarChart3, 
-  MessageSquare, 
+import {
+  LineChart,
+  Home,
+  BarChart3,
+  MessageSquare,
   Settings,
   User,
   Upload,
-  BrainCircuit,Tag
+  BrainCircuit,
+  Tag,
+  PieChart,
+  CreditCard,
+  ClipboardList,
+  Target,
+  TrendingDown,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -28,11 +34,15 @@ const Sidebar: React.FC = () => {
 
   ];
 
+  const [budgetOpen, setBudgetOpen] = React.useState(
+    location.pathname.startsWith('/budget')
+  );
+
   const budgetItems = [
-    { name: 'Accounts & Balances', path: '/budget/accounts' },
-    { name: 'Set Budget', path: '/budget/set' },
-    { name: 'Budget vs Actual', path: '/budget/report' },
-    { name: 'Suggestions & Insights', path: '/budget/insights' }
+    { name: 'Accounts', path: '/budget/accounts', icon: <CreditCard size={18} /> },
+    { name: 'Budgets', path: '/budget/set', icon: <ClipboardList size={18} /> },
+    { name: 'Reports', path: '/budget/report', icon: <Target size={18} /> },
+    { name: 'Insights', path: '/budget/insights', icon: <TrendingDown size={18} /> },
   ];
 
   const isActive = (path: string) => {
@@ -64,23 +74,38 @@ const Sidebar: React.FC = () => {
             </li>
           ))}
             <li>
-              <details open>
-                <summary className="flex items-center px-3 py-2 rounded-md text-sm font-medium cursor-pointer select-none">
-                  Budget ▾
-                </summary>
+              <button
+                type="button"
+                onClick={() => setBudgetOpen(!budgetOpen)}
+                className={`flex w-full items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  location.pathname.startsWith('/budget')
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <PieChart size={20} className="mr-3" />
+                <span className="flex-1 text-left">Budget</span>
+                <span className="ml-auto">{budgetOpen ? '▾' : '▸'}</span>
+              </button>
+              {budgetOpen && (
                 <ul className="mt-1 ml-4 space-y-1">
-                  {budgetItems.map(b => (
+                  {budgetItems.map((b) => (
                     <li key={b.path}>
                       <Link
                         to={b.path}
-                        className={`block px-3 py-1 rounded-md text-sm transition-colors ${isActive(b.path) ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive(b.path)
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}
                       >
+                        <span className="mr-3">{b.icon}</span>
                         {b.name}
                       </Link>
                     </li>
                   ))}
                 </ul>
-              </details>
+              )}
             </li>
           </ul>
         </nav>
