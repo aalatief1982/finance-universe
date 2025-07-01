@@ -20,6 +20,10 @@ export const routeTitleMap: Record<string, string> = {
   '/import-transactions': 'Paste & Parse',
   '/review-sms-transactions': 'Review Details',
   '/edit-transaction': 'Transaction',
+  '/budget/accounts': 'Accounts & Balances',
+  '/budget/set': 'Set Budget',
+  '/budget/report': 'Budget vs Actual',
+  '/budget/insights': 'Suggestions & Insights',
 };
 
 // Navigation items that appear in the header
