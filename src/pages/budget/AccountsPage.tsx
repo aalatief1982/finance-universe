@@ -1,6 +1,5 @@
 import React from 'react';
 import Layout from '@/components/Layout';
-import PageHeader from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,7 +37,6 @@ const AccountsPage = () => {
   return (
     <Layout showBack>
       <div className="container px-1">
-        <PageHeader title="Accounts & Balances" />
         <div className="space-y-3 py-4">
           {accounts.map(acc => (
             <div key={acc.id} className="flex items-center justify-between bg-card p-3 rounded-xl">
