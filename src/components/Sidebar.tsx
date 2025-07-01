@@ -38,6 +38,10 @@ const Sidebar: React.FC = () => {
     location.pathname.startsWith('/budget')
   );
 
+  React.useEffect(() => {
+    setBudgetOpen(location.pathname.startsWith('/budget'));
+  }, [location.pathname]);
+
   const budgetItems = [
     { name: 'Accounts', path: '/budget/accounts', icon: <CreditCard size={18} /> },
     { name: 'Budgets', path: '/budget/set', icon: <ClipboardList size={18} /> },
