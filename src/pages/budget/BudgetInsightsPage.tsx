@@ -1,6 +1,5 @@
 import React from 'react';
 import Layout from '@/components/Layout';
-import PageHeader from '@/components/layout/PageHeader';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTransactions } from '@/context/TransactionContext';
 import { budgetService } from '@/services/BudgetService';
@@ -40,7 +39,6 @@ const BudgetInsightsPage = () => {
   return (
     <Layout showBack>
       <div className="container px-1 space-y-3">
-        <PageHeader title="Suggestions & Insights" />
         {insights.map(i => (
           <Alert key={i.id} className="bg-card">
             <AlertTitle>Insight</AlertTitle>
