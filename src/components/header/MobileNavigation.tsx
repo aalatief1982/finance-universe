@@ -30,13 +30,6 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { getNavItems } from "./route-constants";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog";
 
 // Map of icon names to their components
 const iconMap = {
@@ -134,7 +127,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                     <div key={item.title}>
                       <button
                         type="button"
-                        onClick={() => setBudgetOpen(true)}
+                        onClick={() => setBudgetOpen(!budgetOpen)}
                         className={cn(
                           "flex w-full items-center px-4 py-3 rounded-md transition-colors",
                           location.pathname.startsWith("/budget")
@@ -151,36 +144,31 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                             {item.description}
                           </p>
                         </div>
+                        <span className="ml-auto">{budgetOpen ? "▾" : "▸"}</span>
                       </button>
 
-                      <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
-                        <DialogContent className="sm:max-w-xs">
-                          <DialogHeader>
-                            <DialogTitle>Select Budget Page</DialogTitle>
-                          </DialogHeader>
-                          <div className="grid gap-2 py-2">
-                            {budgetItems.map((b) => (
-                              <DialogClose asChild key={b.path}>
-                                <SheetClose asChild>
-                                  <Button
-                                    asChild
-                                    variant="outline"
-                                    className="justify-start"
-                                  >
-                                    <Link
-                                      to={b.path}
-                                      className="flex items-center gap-2"
-                                    >
-                                      {b.icon}
-                                      {b.name}
-                                    </Link>
-                                  </Button>
-                                </SheetClose>
-                              </DialogClose>
-                            ))}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      {budgetOpen && (
+                        <ul className="mt-1 ml-6 space-y-1">
+                          {budgetItems.map((b) => (
+                            <li key={b.path}>
+                              <SheetClose asChild>
+                                <Link
+                                  to={b.path}
+                                  className={cn(
+                                    "flex items-center px-4 py-2 rounded-md text-sm transition-colors",
+                                    location.pathname === b.path
+                                      ? "bg-primary/10 text-primary"
+                                      : "text-foreground hover:bg-accent",
+                                  )}
+                                >
+                                  {b.icon}
+                                  <span className="ml-2">{b.name}</span>
+                                </Link>
+                              </SheetClose>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   );
                 }
