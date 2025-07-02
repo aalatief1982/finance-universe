@@ -23,57 +23,71 @@ export const routeTitleMap: Record<string, string> = {
   "/budget/set": "Set Budget",
   "/budget/report": "Budget vs Actual",
   "/budget/insights": "Suggestions & Insights",
+  "/dev/template-health": "Template Health",
 };
 
 // Navigation items that appear in the header
-export const getNavItems = () => [
-  {
-    title: "Home",
-    path: "/home",
-    icon: "Home",
-    description: "Overview of your finances",
-  },
-  {
-    title: "Analytics",
-    path: "/analytics",
-    icon: "PieChart",
-    description: "Detailed reports and charts",
-  },
-  {
-    title: "Budget",
-    // Opens a modal instead of linking directly
-    modal: "budget",
-    icon: "Scale",
-    description: "Manage budgets and accounts",
-  },
-  {
-    title: "Transactions",
-    path: "/transactions",
-    icon: "List",
-    description: "View and manage your transactions",
-  },
-  {
-    title: "Paste & Parse",
-    path: "/import-transactions",
-    icon: "Upload",
-    description: "Import transactions from SMS or paste",
-  },
-  {
-    title: "Import SMS",
-    path: "/process-sms",
-    icon: "MessageSquare",
-    description: "Import transactions from SMS",
-  },
-  {
-    title: "Settings",
-    path: "/settings",
-    icon: "Settings",
-    description: "Configure app preferences",
-  },
-  {
-    title: "Profile",
-    path: "/profile",
-    icon: "User",
-    description: "Manage your profile",
-  },
-];
+export const getNavItems = () => {
+  const items = [
+    {
+      title: "Home",
+      path: "/home",
+      icon: "Home",
+      description: "Overview of your finances",
+    },
+    {
+      title: "Analytics",
+      path: "/analytics",
+      icon: "PieChart",
+      description: "Detailed reports and charts",
+    },
+    {
+      title: "Budget",
+      // Opens a modal instead of linking directly
+      modal: "budget",
+      icon: "Scale",
+      description: "Manage budgets and accounts",
+    },
+    {
+      title: "Transactions",
+      path: "/transactions",
+      icon: "List",
+      description: "View and manage your transactions",
+    },
+    {
+      title: "Paste & Parse",
+      path: "/import-transactions",
+      icon: "Upload",
+      description: "Import transactions from SMS or paste",
+    },
+    {
+      title: "Import SMS",
+      path: "/process-sms",
+      icon: "MessageSquare",
+      description: "Import transactions from SMS",
+    },
+    {
+      title: "Settings",
+      path: "/settings",
+      icon: "Settings",
+      description: "Configure app preferences",
+    },
+    {
+      title: "Profile",
+      path: "/profile",
+      icon: "User",
+      description: "Manage your profile",
+    },
+  ];
+
+  if (process.env.NODE_ENV === 'development') {
+    items.push({
+      title: "Template Health",
+      path: "/dev/template-health",
+      icon: "Activity",
+      description: "Template usage metrics",
+    });
+  }
+
+  return items;
+};
