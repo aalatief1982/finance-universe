@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Target,
   TrendingDown,
+  Activity,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -33,6 +34,14 @@ const Sidebar: React.FC = () => {
     { name: 'Build Template', path: '/build-template', icon: <BrainCircuit size={20} /> }
 
   ];
+
+  if (process.env.NODE_ENV === 'development') {
+    navItems.push({
+      name: 'Template Health',
+      path: '/dev/template-health',
+      icon: <Activity size={20} />,
+    });
+  }
 
   const [budgetOpen, setBudgetOpen] = React.useState(false);
 
