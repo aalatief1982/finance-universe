@@ -40,14 +40,14 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const arrow = isRtl ? '←' : '→';
 
   return (
-    <div dir="auto" className="flex flex-col h-screen justify-between">
+    <div dir="auto" className="flex flex-col h-[100dvh] overflow-hidden">
       <Swiper
-        className="flex-1"
+        className="flex-1 min-h-0"
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
         loop={false}
       >
         {slides.map((slide, i) => (
-          <SwiperSlide key={i} className="flex items-center">
+          <SwiperSlide key={i} className="flex items-center justify-center h-full">
             <motion.div
               className="flex flex-col items-center justify-center text-center px-8 w-full"
               initial={{ opacity: 0, y: 20 }}
@@ -57,17 +57,17 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
               <img
                 src={slide.image}
                 alt="Expense tracking illustration"
-                className="max-h-72 mx-auto mb-6"
+                className="max-h-72 md:max-h-96 mx-auto mb-6"
               />
               <h2
-                className="mb-2 font-bold"
-                style={{ color: '#2C3E50', fontFamily: 'Roboto', fontSize: '24px' }}
+                className="mb-2 font-bold text-2xl md:text-3xl text-[#2C3E50]"
+                style={{ fontFamily: 'Roboto' }}
               >
                 {slide.title}
               </h2>
               <p
-                className="text-base"
-                style={{ color: '#2C3E50', fontFamily: 'Roboto' }}
+                className="text-base md:text-lg text-[#2C3E50]"
+                style={{ fontFamily: 'Roboto' }}
               >
                 {slide.subtitle}
               </p>
@@ -77,7 +77,10 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
       </Swiper>
 
 
-      <div className="px-4">
+      <div
+        className="px-4 pb-4"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
         {index === slides.length - 1 && (
           <Button className="w-full" onClick={onComplete}>
             {`Start the Journey ${arrow}`}
