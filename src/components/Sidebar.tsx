@@ -16,6 +16,7 @@ import {
   Target,
   TrendingDown,
   Activity,
+  Bug,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -40,6 +41,11 @@ const Sidebar: React.FC = () => {
       name: 'Template Health',
       path: '/dev/template-health',
       icon: <Activity size={20} />,
+    });
+    navItems.push({
+      name: 'Template Failures',
+      path: '/dev/template-failures',
+      icon: <Bug size={20} />,
     });
   }
 
