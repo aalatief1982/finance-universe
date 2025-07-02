@@ -10,8 +10,6 @@ import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
 //import { normalizeDate } from './dateUtils';
 
-// Hashing util (replace with real hash lib if needed)
-const simpleHash = (text: string) => btoa(unescape(encodeURIComponent(text))).slice(0, 24);
 
 
 export function normalizeDate(dateStr: string): string | undefined {
@@ -43,23 +41,24 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
 	if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
   }
-  let template = '';
+  let structure = '';
   let placeholders = {};
+  let templateHash = '';
   try {
     const result = extractTemplateStructure(rawMessage);
-    template = result.template;
+    structure = result.structure;
     placeholders = result.placeholders;
-	
-	if (!template) throw new Error('Extracted template is empty');
-	if (!placeholders) throw new Error('Extracted placeholders are missing');
+    templateHash = result.hash;
+
+        if (!structure) throw new Error('Extracted template is empty');
+        if (!placeholders) throw new Error('Extracted placeholders are missing');
 	
   } catch (err) {
     console.error('[SmartPaste] ❌ extractTemplateStructure failed:', err);
     throw err; // Let upstream handler deal with it
   }
 
-  const templateHash = simpleHash(template);
-  console.log('[SmartPaste] Step 2: Extracted Template:', template);
+  console.log('[SmartPaste] Step 2: Extracted Template:', structure);
   console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
 
   const matchedTemplate = getTemplateByHash(
@@ -135,7 +134,7 @@ if (directFields['date']) {
 
   return {
     rawMessage,
-    template,
+    template: structure,
     templateHash,
     matched: !!matchedTemplate,
     directFields,
