@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import SHA256 from 'crypto-js/sha256';
 
 export interface NormalizedTemplate {
   structure: string;
@@ -12,7 +12,7 @@ export interface NormalizedTemplate {
  * - Normalizes common date and amount patterns
  */
 export function normalizeTemplateStructure(msg: string): NormalizedTemplate {
-  if (!msg) return { structure: '', hash: createHash('sha256').update('').digest('hex') };
+  if (!msg) return { structure: '', hash: SHA256('').toString() };
 
   let text = msg.normalize('NFKD');
 
@@ -36,7 +36,7 @@ export function normalizeTemplateStructure(msg: string): NormalizedTemplate {
   // Normalize numeric amounts
   text = text.replace(/(?:\d{1,3},)*\d+(?:\.\d{1,2})?/g, 'AMOUNT');
 
-  const hash = createHash('sha256').update(text).digest('hex');
+  const hash = SHA256(text).toString();
   return { structure: text, hash };
 }
 
