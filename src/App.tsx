@@ -16,6 +16,7 @@ import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
 import TemplateHealthDashboard from '@/pages/DevTools/TemplateHealthDashboard';
+import TemplateFailureLog from '@/pages/DevTools/TemplateFailureLog';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
 import CustomParsingRules from '@/pages/CustomParsingRules';
 import ProcessVendors from '@/pages/sms/ProcessVendors';
@@ -232,7 +233,10 @@ function AppWrapper() {
       <Route path="/build-template" element={<BuildTemplate />} />
       <Route path="/keyword-bank" element={<KeywordBankManager />} />
       {process.env.NODE_ENV === 'development' && (
-        <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
+        <>
+          <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
+          <Route path="/dev/template-failures" element={<TemplateFailureLog />} />
+        </>
       )}
       <Route path="/custom-parsing-rules" element={<CustomParsingRules />} />
       <Route path="/settings" element={<Settings />} />
