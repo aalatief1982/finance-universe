@@ -145,9 +145,50 @@ export function learnFromTransaction(
   const fields = Object.keys(placeholders);
 
   const key = getTemplateKey(senderHint, txn.fromAccount, templateHash);
-  const bank = loadTemplateBank();
+  let bank = loadTemplateBank();
   if (!bank[key]) {
     saveNewTemplate(structure, fields, rawMessage, senderHint, txn.fromAccount);
+    bank = loadTemplateBank();
+  }
+
+  const template = bank[key];
+  if (template) {
+    if (!template.meta) template.meta = {} as any;
+    template.meta.usageCount = (template.meta.usageCount || 0) + 1;
+    template.meta.lastUsedAt = new Date().toISOString();
+
+    const toLower = (v?: string) => (v || '').toLowerCase().trim();
+    const amtPlace = placeholders.amount
+      ? parseFloat(placeholders.amount.replace(/,/g, ''))
+      : undefined;
+    const amtTxn = txn.amount !== undefined ? parseFloat(String(txn.amount)) : undefined;
+
+    const isVendorMatch = placeholders.vendor
+      ? toLower(placeholders.vendor) === toLower(txn.vendor)
+      : true;
+    const isCurrencyMatch = placeholders.currency
+      ? toLower(placeholders.currency) === toLower(txn.currency)
+      : true;
+    const isAccountMatch = placeholders.account
+      ? toLower(placeholders.account) === toLower(txn.fromAccount)
+      : true;
+    const isAmountMatch =
+      amtPlace !== undefined && amtTxn !== undefined
+        ? amtPlace === amtTxn
+        : true;
+
+    const isSuccess = isVendorMatch && isCurrencyMatch && isAccountMatch && isAmountMatch;
+
+    template.meta.successCount = template.meta.successCount ?? 0;
+    template.meta.fallbackCount = template.meta.fallbackCount ?? 0;
+    if (isSuccess) {
+      template.meta.successCount += 1;
+    } else {
+      template.meta.fallbackCount += 1;
+    }
+
+    bank[key] = template;
+    saveTemplateBank(bank);
   }
 
   // Save Keyword Mapping (Vendor → Category/Subcategory)
