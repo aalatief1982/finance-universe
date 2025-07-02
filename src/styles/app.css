@@ -1,0 +1,48 @@
+
+/* =================== */
+/* Global Design Tokens */
+/* =================== */
+
+:root {
+  --space-xs: 2px;
+  --space-sm: 4px;
+  --space-md: 8px;
+  --space-lg: 12px;
+  --space-xl: 16px;
+}
+
+/* Typography */
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.subtext {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Inputs */
+.input-default {
+  padding: var(--space-sm);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: white;
+  transition: border 0.2s ease;
+}
+
+.input-driven {
+  border: 2px solid #4caf50 !important;
+  background-color: #f0fff4 !important;
+}
+
+/* Form Layout */
+.form-field {
+  margin-bottom: var(--space-md);
+}
+
+.section {
+  padding: var(--space-md) var(--space-sm);
+  margin-bottom: var(--space-md);
+}

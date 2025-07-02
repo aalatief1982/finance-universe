@@ -1,0 +1,25 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'app.xpensia.com.plugins.backgroundsmslistener'
+    // Align with project-wide compile SDK
+    compileSdkVersion 35
+
+    defaultConfig {
+        minSdkVersion 22
+        targetSdkVersion 34
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation project(':capacitor-android') // ✅ Required for all Capacitor plugins
+
+    implementation 'androidx.core:core:1.12.0'
+}

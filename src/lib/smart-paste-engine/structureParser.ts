@@ -8,9 +8,11 @@
 import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
-import { normalizeTemplateStructure } from './templateNormalizer';
-import { sha256 } from './sha256';
 //import { normalizeDate } from './dateUtils';
+
+// Hashing util (replace with real hash lib if needed)
+const simpleHash = (text: string) => btoa(unescape(encodeURIComponent(text))).slice(0, 24);
+
 
 export function normalizeDate(dateStr: string): string | undefined {
   if (!dateStr) return undefined;
@@ -29,47 +31,34 @@ export function normalizeDate(dateStr: string): string | undefined {
   return isNaN(parsed.getTime()) ? undefined : parsed.toISOString().split('T')[0];
 }
 
+
 export interface ParsedField {
   value: string
   confidenceScore: number
   source: 'direct' | 'inferred' | 'default'
 }
 
-interface TemplateExtractionResult {
-  template: string
-  placeholders: Record<string, string>
-  normalized: string
-}
-
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
-        if (!rawMessage) {
+	if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
   }
   let template = '';
-  let placeholders: Record<string, string> = {};
-  let result: TemplateExtractionResult;
+  let placeholders = {};
   try {
-    result = extractTemplateStructure(rawMessage);
+    const result = extractTemplateStructure(rawMessage);
     template = result.template;
     placeholders = result.placeholders;
-
-        if (!template) throw new Error('Extracted template is empty');
-        if (!placeholders) throw new Error('Extracted placeholders are missing');
-
+	
+	if (!template) throw new Error('Extracted template is empty');
+	if (!placeholders) throw new Error('Extracted placeholders are missing');
+	
   } catch (err) {
     console.error('[SmartPaste] ❌ extractTemplateStructure failed:', err);
     throw err; // Let upstream handler deal with it
   }
 
-  const normalized = result.normalized || normalizeTemplateStructure(template);
-  const templateHash = sha256(normalized);
-  const structure = {
-    structure: normalized,
-    hash: templateHash,
-    version: 'v2',
-    hashAlgorithm: 'SHA256'
-  };
+  const templateHash = simpleHash(template);
   console.log('[SmartPaste] Step 2: Extracted Template:', template);
   console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
 
@@ -147,13 +136,15 @@ if (directFields['date']) {
   return {
     rawMessage,
     template,
-    structure,
+    templateHash,
     matched: !!matchedTemplate,
     directFields,
     inferredFields: inferred,
     defaultValues,
   };
 }
+
+
 
 function applyVendorMapping(vendor: string): string {
   const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');

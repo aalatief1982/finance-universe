@@ -1,0 +1,10 @@
+
+.inputAutoFilled {
+  border: 1px solid #4caf50 !important;
+  background-color: #f0fff4;
+}
+
+.inputManual {
+  border: 1px solid #ccc;
+  background-color: #fff;
+}

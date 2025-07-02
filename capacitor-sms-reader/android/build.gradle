@@ -1,0 +1,19 @@
+plugins {
+    id 'com.android.library'
+  }
+
+android {
+    namespace 'app.xpensia.com.plugins.smsreader'
+    // Align with project-wide compile SDK
+    compileSdkVersion 35
+
+    defaultConfig {
+        minSdkVersion 23    
+        targetSdkVersion 34
+    }
+}
+
+dependencies {
+     implementation project(':capacitor-android')
+	 implementation "androidx.core:core:1.13.1"  // 🔥 Added for ActivityCompat
+}

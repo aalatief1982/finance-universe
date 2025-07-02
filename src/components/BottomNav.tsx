@@ -1,0 +1,34 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Home, Upload, MessageSquare, LineChart } from 'lucide-react';
+
+const navItems = [
+  { name: 'Home', path: '/home', icon: Home, color: 'text-blue-500' },
+  { name: 'Paste SMS', path: '/import-transactions', icon: Upload, color: 'text-green-500' },
+  { name: 'Import SMS', path: '/process-sms', icon: MessageSquare, color: 'text-orange-500' },
+  { name: 'Analytics', path: '/analytics', icon: LineChart, color: 'text-purple-500' }
+];
+
+const BottomNav: React.FC = () => {
+  const location = useLocation();
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border">
+      <ul className="flex justify-around py-2">
+        {navItems.map(({ name, path, icon: Icon, color }) => (
+          <li key={path}>
+            <Link
+              to={path}
+              className={`flex flex-col items-center text-xs ${location.pathname === path ? color : 'text-muted-foreground'}`}
+            aria-label={name}
+          >
+              <Icon size={20} className={location.pathname === path ? color : ''} />
+              {name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
+
+export default BottomNav;

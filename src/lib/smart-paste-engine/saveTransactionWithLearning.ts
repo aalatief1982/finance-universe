@@ -1,7 +1,6 @@
 import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from './templateUtils';
-import { sha256 } from './sha256';
 import { loadKeywordBank, saveKeywordBank } from './keywordBankUtils';
 import { storeTransaction } from '@/utils/storage-utils';
 import { toast } from '@/components/ui/use-toast';
@@ -53,9 +52,9 @@ export function saveTransactionWithLearning(
   if (rawMessage && newTransaction.source === 'smart-paste') {
     learnFromTransaction(rawMessage, newTransaction, senderHint || '');
 
-    const { template, placeholders, normalized } = extractTemplateStructure(rawMessage);
+    const { template, placeholders } = extractTemplateStructure(rawMessage);
     const fields = Object.keys(placeholders);
-    const templateHash = sha256(normalized);
+    const templateHash = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
 
     const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
     const bank = loadTemplateBank();

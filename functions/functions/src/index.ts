@@ -1,0 +1,1 @@
+export { classifySMS } from './classifySMS';
