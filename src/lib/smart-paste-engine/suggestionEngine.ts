@@ -19,6 +19,24 @@ export interface KeywordMapping {
   }[];
 }
 
+export interface KeywordEntry {
+  keyword: string
+  type: string
+  lastUpdated?: string
+  mappingCount?: number
+  senderContext?: string
+  transactionTypeContext?: string
+}
+
+export function getKeywordMatches(keyword: string): KeywordEntry[] {
+  const raw = localStorage.getItem(BANK_KEY)
+  const bank: KeywordEntry[] = raw ? JSON.parse(raw) : []
+  const lower = keyword.toLowerCase()
+  return bank
+    .filter(e => e.keyword.toLowerCase().includes(lower))
+    .sort((a, b) => (b.mappingCount || 0) - (a.mappingCount || 0))
+}
+
 interface FallbackVendorEntry extends VendorFallbackData {
   vendor: string;
 }
