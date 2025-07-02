@@ -6,20 +6,25 @@
 
 const KEY = 'xpensia_keyword_bank';
 
-export interface KeywordMapping {
-  keyword: string;
+export interface KeywordEntry {
+  keyword: string
+  type: string
+  lastUpdated?: string
+  mappingCount?: number
+  senderContext?: string
+  transactionTypeContext?: string
   mappings: {
-    field: 'type' | 'category' | 'subcategory' | 'fromAccount' | 'vendor';
-    value: string;
-  }[];
+    field: 'type' | 'category' | 'subcategory' | 'fromAccount' | 'vendor'
+    value: string
+  }[]
 }
 
-export function loadKeywordBank(): KeywordMapping[] {
+export function loadKeywordBank(): KeywordEntry[] {
   const raw = localStorage.getItem(KEY);
   return raw ? JSON.parse(raw) : [];
 }
 
-export function saveKeywordBank(bank: KeywordMapping[]) {
+export function saveKeywordBank(bank: KeywordEntry[]) {
   localStorage.setItem(KEY, JSON.stringify(bank));
 }
 
