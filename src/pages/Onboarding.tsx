@@ -26,7 +26,7 @@ const Onboarding = () => {
   };
 
   return (
-    <Layout hideNavigation>
+    <Layout hideNavigation showHeader={false} withPadding={false} fullWidth>
       <OnboardingSlides onComplete={handleComplete} />
     </Layout>
   );

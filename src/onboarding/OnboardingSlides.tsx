@@ -13,19 +13,19 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    image: '/assets/onboarding/slide1.png',
-    title: 'Welcome to Xpensia',
-    subtitle: 'Track expenses the easy way'
+    image: '/placeholder.png',
+    title: 'Track Expenses Instantly',
+    subtitle: 'Smart parsing of SMS in seconds'
   },
   {
-    image: '/assets/onboarding/slide2.png',
-    title: 'Stay Organized',
-    subtitle: 'Everything in one place'
+    image: '/placeholder.png',
+    title: 'Auto-Categorized for You',
+    subtitle: 'No setup needed, we learn as you go!'
   },
   {
-    image: '/assets/onboarding/slide3.png',
-    title: 'Get Insights',
-    subtitle: 'Understand your spending'
+    image: '/placeholder.png',
+    title: 'See Where Your Money Goes',
+    subtitle: 'Real-time dashboards & easy reports'
   }
 ];
 
@@ -40,7 +40,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const arrow = isRtl ? '←' : '→';
 
   return (
-    <div dir="auto" className="flex flex-col h-screen overflow-y-auto justify-between pb-6">
+    <div dir="auto" className="flex flex-col h-screen justify-between">
       <Swiper
         className="flex-1"
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
@@ -54,7 +54,11 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <img src={slide.image} alt={slide.title} className="max-h-72 mx-auto mb-6" />
+              <img
+                src={slide.image}
+                alt="Expense tracking illustration"
+                className="max-h-72 mx-auto mb-6"
+              />
               <h2
                 className="mb-2 font-bold"
                 style={{ color: '#2C3E50', fontFamily: 'Roboto', fontSize: '24px' }}
@@ -72,17 +76,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
         ))}
       </Swiper>
 
-      <div className="flex justify-center gap-2 my-4">
-        {slides.map((_, i) => (
-          <span
-            key={i}
-            className={cn(
-              'h-2 w-2 rounded-full',
-              i === index ? 'bg-primary' : 'bg-muted'
-            )}
-          />
-        ))}
-      </div>
 
       <div className="px-4">
         {index === slides.length - 1 && (
