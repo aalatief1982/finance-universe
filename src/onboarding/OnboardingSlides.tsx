@@ -13,17 +13,17 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    image: '/placeholder.png',
+    image: '/assets/onboarding1.png',
     title: 'Track Expenses Instantly',
     subtitle: 'Smart parsing of SMS in seconds'
   },
   {
-    image: '/placeholder.png',
+    image: '/assets/onboarding2.png',
     title: 'Auto-Categorized for You',
     subtitle: 'No setup needed, we learn as you go!'
   },
   {
-    image: '/placeholder.png',
+    image: '/assets/onboarding3.png',
     title: 'See Where Your Money Goes',
     subtitle: 'Real-time dashboards & easy reports'
   }
