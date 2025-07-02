@@ -265,3 +265,50 @@ export function extractTemplateStructure(
   const { structure, hash } = normalizeTemplateStructure(templateText.trim());
   return { structure, placeholders, hash };
 }
+
+// ---------------- Template Failure Tracking ----------------
+
+interface TemplateFailureRecord {
+  hash: string;
+  sender?: string;
+  rawMessage: string;
+  expectedStructure: string;
+  timestamp: number;
+}
+
+const TEMPLATE_FAILURE_KEY = 'xpensia_template_failures';
+const FAILURE_THRESHOLD = 3;
+
+// In-memory map of template failures in this session
+const templateFailureMap: Record<string, number> = {};
+
+export function incrementTemplateFailure(
+  hash: string,
+  sender: string | undefined,
+  rawMessage: string,
+  expectedStructure: string
+) {
+  const key = getTemplateKey(sender, undefined, hash);
+  templateFailureMap[key] = (templateFailureMap[key] || 0) + 1;
+  if (templateFailureMap[key] >= FAILURE_THRESHOLD) {
+    const existing: TemplateFailureRecord[] = JSON.parse(
+      localStorage.getItem(TEMPLATE_FAILURE_KEY) || '[]'
+    );
+    existing.push({
+      hash,
+      sender,
+      rawMessage,
+      expectedStructure,
+      timestamp: Date.now(),
+    });
+    localStorage.setItem(TEMPLATE_FAILURE_KEY, JSON.stringify(existing));
+  }
+}
+
+export function getTemplateFailureCount(
+  hash: string,
+  sender?: string
+): number {
+  const key = getTemplateKey(sender, undefined, hash);
+  return templateFailureMap[key] || 0;
+}
