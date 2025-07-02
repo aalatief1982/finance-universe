@@ -150,6 +150,19 @@ export function getAllTemplates(): SmartPasteTemplate[] {
   return Object.values(loadTemplateBank());
 }
 
+export function getStaleTemplates(
+  bank: Record<string, SmartPasteTemplate>,
+  thresholdDays = 90
+): SmartPasteTemplate[] {
+  const now = Date.now();
+  return Object.values(bank).filter(t => {
+    const last = t.meta?.lastUsedAt
+      ? new Date(t.meta.lastUsedAt).getTime()
+      : 0;
+    return now - last > thresholdDays * 86400000;
+  });
+}
+
 export function extractTemplateStructure(
   message: string
 ): { structure: string; placeholders: Record<string, string>; hash: string } {
