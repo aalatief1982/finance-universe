@@ -1,0 +1,3 @@
+export const DIGIT_RANGES = '0-9\u0660-\u0669\u06F0-\u06F9';
+export const NUMBER_FRAGMENT = `[${DIGIT_RANGES},\.\u066B\u066C]+[${DIGIT_RANGES}]`;
+export const ACCOUNT_NUMBER_FRAGMENT = `[${DIGIT_RANGES}*]+`;
