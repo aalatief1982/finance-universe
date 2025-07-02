@@ -1,7 +1,7 @@
 import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from './templateUtils';
-import { sha256 } from './sha256';
+import { generateStructureHash } from './generateStructureHash';
 import { loadKeywordBank, saveKeywordBank } from './keywordBankUtils';
 import { storeTransaction } from '@/utils/storage-utils';
 import { toast } from '@/components/ui/use-toast';
@@ -55,7 +55,7 @@ export function saveTransactionWithLearning(
 
     const { template, placeholders, normalized } = extractTemplateStructure(rawMessage);
     const fields = Object.keys(placeholders);
-    const templateHash = sha256(normalized);
+    const templateHash = generateStructureHash(normalized);
 
     const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
     const bank = loadTemplateBank();

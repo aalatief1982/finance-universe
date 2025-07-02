@@ -1,7 +1,7 @@
 import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate } from '@/types/template';
 import { normalizeTemplateStructure } from './templateNormalizer';
-import { sha256 } from './sha256';
+import { generateStructureHash } from './generateStructureHash';
 
 const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
 
@@ -88,7 +88,7 @@ export function saveNewTemplate(
 ) {
   const templates = loadTemplateBank();
   const normalized = normalizeTemplateStructure(template);
-  const id = sha256(normalized);
+  const id = generateStructureHash(normalized);
   const key = getTemplateKey(sender, fromAccount, id);
 
   if (!templates[key]) {
