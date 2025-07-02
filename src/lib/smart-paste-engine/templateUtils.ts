@@ -6,8 +6,8 @@ import { sha256 } from './sha256';
 const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
 
 export function getTemplateKey(
-  sender?: string,
-  fromAccount?: string,
+  sender: string | undefined,
+  fromAccount: string | undefined,
   hash: string
 ): string {
   let base = sender?.toLowerCase().trim();
