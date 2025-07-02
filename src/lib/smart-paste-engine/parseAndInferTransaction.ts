@@ -2,7 +2,7 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { nanoid } from 'nanoid';
 import { parseSmsMessage } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
-import { getAllTemplates } from './templateUtils';
+import { getAllTemplates, incrementTemplateFailure } from './templateUtils';
 import { classifySmsViaCloud } from './cloudClassifier';
 import { logParsingFailure } from '@/utils/parsingLogger';
 import {
@@ -99,6 +99,15 @@ export async function parseAndInferTransaction(
   let origin: ParsedTransactionResult['origin'] = parsed.matched
     ? 'template'
     : 'structure';
+
+  if (parsed.matched && parsingStatus === 'failed') {
+    incrementTemplateFailure(
+      parsed.templateHash,
+      senderHint,
+      rawMessage,
+      parsed.template
+    );
+  }
 
   if (!parsed.matched || finalConfidence < 0.5) {
     try {

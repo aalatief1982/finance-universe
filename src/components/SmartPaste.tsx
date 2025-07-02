@@ -11,6 +11,8 @@ import ErrorAlert from './smart-paste/ErrorAlert';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { getTemplateFailureCount } from '@/lib/smart-paste-engine/templateUtils';
+import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 
 
@@ -41,6 +43,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [matchOrigin, setMatchOrigin] = useState<'template' | 'structure' | 'ml' | 'fallback' | null>(null);
 
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!text.trim()) {
@@ -136,6 +139,20 @@ const handleSubmit = async (e: React.FormEvent) => {
         fieldScore,
         keywordScore
       );
+    }
+
+    if (parsed.matched) {
+      const failCount = getTemplateFailureCount(parsed.templateHash, senderHint);
+      if (failCount >= 3) {
+        toast({
+          title: 'Parsing failed repeatedly — help us improve this template',
+        });
+        navigate(
+          `/train-model?msg=${encodeURIComponent(text)}&sender=${encodeURIComponent(
+            senderHint || ''
+          )}`
+        );
+      }
     }
   } catch (err: any) {
     console.error("[SmartPaste] Error in structure parsing:", err);
