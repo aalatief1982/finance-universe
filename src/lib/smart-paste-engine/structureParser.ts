@@ -9,7 +9,7 @@ import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
 import { normalizeTemplateStructure } from './templateNormalizer';
-import { generateStructureHash } from './generateStructureHash';
+import { sha256 } from './sha256';
 //import { normalizeDate } from './dateUtils';
 
 export function normalizeDate(dateStr: string): string | undefined {
@@ -35,22 +35,15 @@ export interface ParsedField {
   source: 'direct' | 'inferred' | 'default'
 }
 
-interface TemplateExtractionResult {
-  template: string
-  placeholders: Record<string, string>
-  normalized: string
-}
-
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
         if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
   }
   let template = '';
-  let placeholders: Record<string, string> = {};
-  let result: TemplateExtractionResult;
+  let placeholders = {};
   try {
-    result = extractTemplateStructure(rawMessage);
+    const result = extractTemplateStructure(rawMessage);
     template = result.template;
     placeholders = result.placeholders;
 
@@ -63,7 +56,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   }
 
   const normalized = result.normalized || normalizeTemplateStructure(template);
-  const templateHash = generateStructureHash(normalized);
+  const templateHash = sha256(normalized);
   const structure = {
     structure: normalized,
     hash: templateHash,
