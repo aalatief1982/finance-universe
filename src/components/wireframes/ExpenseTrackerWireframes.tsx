@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import OnboardingScreen from './screens/OnboardingScreen';
+import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import DashboardScreen from './screens/DashboardScreen';
 import AddTransactionScreen from './screens/AddTransactionScreen';
 import ReportsScreen from './screens/ReportsScreen';
@@ -94,11 +94,7 @@ const ExpenseTrackerWireframes = () => {
   return (
     <div className="max-w-sm mx-auto border rounded-lg overflow-hidden h-[640px] shadow-lg bg-white">
       {activeScreen === 'onboarding' && (
-        <OnboardingScreen
-          onNext={handleCompleteOnboarding}
-          userData={userData}
-          onUpdateUserData={handleUpdateUserData}
-        />
+        <OnboardingSlides onComplete={handleCompleteOnboarding} />
       )}
 
       {activeScreen === 'dashboard' && (

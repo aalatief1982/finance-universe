@@ -12,19 +12,19 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    image: '/assets/onboarding1.png',
-    title: 'Track Expenses Instantly',
-    subtitle: 'Smart parsing of SMS and receipts in seconds'
+    image: '/assets/onboarding/slide1.png',
+    title: 'Welcome to Xpensia',
+    subtitle: 'Track expenses the easy way'
   },
   {
-    image: '/assets/onboarding2.png',
-    title: 'Auto-Categorized for You',
-    subtitle: 'No setup needed — we learn as you go'
+    image: '/assets/onboarding/slide2.png',
+    title: 'Stay Organized',
+    subtitle: 'Everything in one place'
   },
   {
-    image: '/assets/onboarding3.png',
-    title: 'See Where Your Money Goes',
-    subtitle: 'Real-time dashboards and easy reports'
+    image: '/assets/onboarding/slide3.png',
+    title: 'Get Insights',
+    subtitle: 'Understand your spending'
   }
 ];
 
@@ -59,8 +59,11 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
     onComplete();
   };
 
+  const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+  const arrow = isRtl ? '←' : '→';
+
   return (
-    <div className="flex flex-col h-screen justify-between pb-6">
+    <div dir="auto" className="flex flex-col h-screen overflow-y-auto justify-between pb-6">
       <div className="flex-1" ref={emblaRef}>
         <div className="flex h-full">
           {slides.map((slide, i) => (
@@ -72,8 +75,18 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
               exit={{ opacity: 0 }}
             >
               <img src={slide.image} alt="" className="max-h-72 mx-auto mb-6" />
-              <h2 className="text-2xl font-semibold mb-2">{slide.title}</h2>
-              <p className="text-muted-foreground">{slide.subtitle}</p>
+              <h2
+                className="mb-2 font-bold"
+                style={{ color: '#2C3E50', fontFamily: 'Roboto', fontSize: '24px' }}
+              >
+                {slide.title}
+              </h2>
+              <p
+                className="text-base"
+                style={{ color: '#2C3E50', fontFamily: 'Roboto' }}
+              >
+                {slide.subtitle}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -98,12 +111,12 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
               Skip
             </Button>
             <Button className="flex-1" onClick={handleNext}>
-              Next →
+              {`Next ${arrow}`}
             </Button>
           </div>
         ) : (
           <Button className="w-full" onClick={onComplete}>
-            Start the Journey →
+            {`Start the Journey ${arrow}`}
           </Button>
         )}
       </div>
