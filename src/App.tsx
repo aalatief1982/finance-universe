@@ -15,6 +15,7 @@ import EditTransaction from './pages/EditTransaction';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
 import KeywordBankManager from '@/pages/KeywordBankManager';
+import TemplateHealthDashboard from '@/pages/DevTools/TemplateHealthDashboard';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
 import CustomParsingRules from '@/pages/CustomParsingRules';
 import ProcessVendors from '@/pages/sms/ProcessVendors';
@@ -230,6 +231,9 @@ function AppWrapper() {
       <Route path="/train-model" element={<TrainModel />} />
       <Route path="/build-template" element={<BuildTemplate />} />
       <Route path="/keyword-bank" element={<KeywordBankManager />} />
+      {process.env.NODE_ENV === 'development' && (
+        <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
+      )}
       <Route path="/custom-parsing-rules" element={<CustomParsingRules />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/process-sms" element={<ProcessSmsMessages />} />
