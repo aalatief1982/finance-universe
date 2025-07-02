@@ -9,7 +9,7 @@ import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
 import { normalizeTemplateStructure } from './templateNormalizer';
-import { sha256 } from './sha256';
+import { generateStructureHash } from './generateStructureHash';
 //import { normalizeDate } from './dateUtils';
 
 export function normalizeDate(dateStr: string): string | undefined {
@@ -63,7 +63,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   }
 
   const normalized = result.normalized || normalizeTemplateStructure(template);
-  const templateHash = sha256(normalized);
+  const templateHash = generateStructureHash(normalized);
   const structure = {
     structure: normalized,
     hash: templateHash,
