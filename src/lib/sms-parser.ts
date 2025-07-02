@@ -4,6 +4,8 @@ import { transactionService } from '@/services/TransactionService';
 import { CategoryRule, TransactionType } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 import { getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
+import { normalizeNumerals, normalizePunctuation, isRTL } from '@/lib/normalize-utils';
+import { DIGIT_RANGES } from '@/data/regex-bank';
 
 export interface ParsedTransaction {
   amount: number;
@@ -17,6 +19,7 @@ export interface ParsedTransaction {
   country?: string;
   fromAccount?: string;
   toAccount?: string;
+  rtl?: boolean;
   type?: TransactionType;
 }
 
@@ -52,7 +55,7 @@ function applyCustomRules(message: string): Partial<CustomParsingRule> {
 const TRANSACTION_PATTERNS = [
   // Generic debit/credit pattern
   {
-    regex: /(credit|debit|credited|debited|charged|payment|purchase|transaction|transfer|spent) (?:of|for|with|amount|sum)? ?([₹$€£₺¥₽₴₦₱₲₩₸₼₵฿¢]|SAR|AED|USD|EUR|GBP|EGP|INR|[A-Z]{3})?\s?([0-9,.]+[0-9](?:\.\d{1,2})?)/i,
+    regex: new RegExp(`(credit|debit|credited|debited|charged|payment|purchase|transaction|transfer|spent) (?:of|for|with|amount|sum)? ?([₹$€£₺¥₽₴₦₱₲₩₸₼₵฿¢]|SAR|AED|USD|EUR|GBP|EGP|INR|[A-Z]{3})?\\s?([${DIGIT_RANGES},.]+[${DIGIT_RANGES}](?:\\.\\d{1,2})?)`, 'i'),
     isExpense: (matches: RegExpMatchArray, message: string) => {
       const action = matches[1].toLowerCase();
       // Actions that typically indicate expenses
@@ -101,7 +104,7 @@ const TRANSACTION_PATTERNS = [
   
   // Pattern for amounts with currency code after the amount (common in many countries)
   {
-    regex: /([0-9,.]+[0-9](?:\.\d{1,2})?) ?([₹$€£₺¥₽₴₦₱₲₩₸₼₵฿¢]|SAR|AED|USD|EUR|GBP|EGP|INR|[A-Z]{3})/i,
+    regex: new RegExp(`([${DIGIT_RANGES},.]+[${DIGIT_RANGES}](?:\\.\\d{1,2})?) ?([₹$€£₺¥₽₴₦₱₲₩₸₼₵฿¢]|SAR|AED|USD|EUR|GBP|EGP|INR|[A-Z]{3})`, 'i'),
     isExpense: (matches: RegExpMatchArray, message: string) => {
       // Look for keywords that indicate expenses
       return !message.toLowerCase().includes('received') && 
@@ -136,7 +139,7 @@ const TRANSACTION_PATTERNS = [
   
   // Specific pattern for Saudi banks (using both SAR and numbers)
   {
-    regex: /(مبلغ|مدين|دائن|سحب|إيداع|دفع).*?([0-9,.]+[0-9](?:\.\d{1,2})?).*?(ريال|SAR|سعودي)/i,
+    regex: new RegExp(`(مبلغ|مدين|دائن|سحب|إيداع|دفع).*?([${DIGIT_RANGES},.]+[${DIGIT_RANGES}](?:\\.\\d{1,2})?).*?(ريال|SAR|سعودي)`, 'i'),
     isExpense: (matches: RegExpMatchArray, message: string) => {
       const action = matches[1].toLowerCase();
       // Arabic terms for debit, withdrawal, payment
@@ -148,7 +151,7 @@ const TRANSACTION_PATTERNS = [
   
   // Pattern for Egypt banks (using EGP)
   {
-    regex: /(amount|purchase|payment|transaction|مبلغ|عملية).*?([0-9,.]+[0-9](?:\.\d{1,2})?).*?(EGP|جنيه|مصري)/i,
+    regex: new RegExp(`(amount|purchase|payment|transaction|مبلغ|عملية).*?([${DIGIT_RANGES},.]+[${DIGIT_RANGES}](?:\\.\\d{1,2})?).*?(EGP|جنيه|مصري)`, 'i'),
     isExpense: (matches: RegExpMatchArray, message: string) => {
       return !message.toLowerCase().includes('received') && 
              !message.toLowerCase().includes('credited');
@@ -159,7 +162,7 @@ const TRANSACTION_PATTERNS = [
   
   // Pattern for Indian banks (using INR and ₹)
   {
-    regex: /(debited|credited|payment|purchase|spent|received|paid).*?(Rs\.?|₹|INR)?\s?([0-9,.]+[0-9](?:\.\d{1,2})?)/i,
+    regex: new RegExp(`(debited|credited|payment|purchase|spent|received|paid).*?(Rs\\.?|₹|INR)?\\s?([${DIGIT_RANGES},.]+[${DIGIT_RANGES}](?:\\.\\d{1,2})?)`, 'i'),
     isExpense: (matches: RegExpMatchArray, message: string) => {
       const action = matches[1].toLowerCase();
       return ['debited', 'payment', 'purchase', 'spent', 'paid'].includes(action);
@@ -196,6 +199,9 @@ function getUserPreferredCurrency(): SupportedCurrency {
  * Parse an SMS message to extract transaction details
  */
 export function parseSmsMessage(message: string, sender: string): ParsedTransaction | null {
+  message = normalizePunctuation(normalizeNumerals(message));
+  const rtl = isRTL(message);
+
   // Try each transaction pattern until one matches
   for (const pattern of TRANSACTION_PATTERNS) {
     const matches = message.match(pattern.regex);
@@ -252,7 +258,8 @@ export function parseSmsMessage(message: string, sender: string): ParsedTransact
         country: detectCountry(message),
         fromAccount: extractBankName(sender, message),
         toAccount: toAccount,
-        type: finalType
+        type: finalType,
+        rtl
       };
     }
   }
@@ -281,7 +288,7 @@ function extractToAccount(message: string): string | null {
   const patterns = [
     // Common patterns for recipient in transfer messages
     /(?:to|sent to|transferred to|recipient)[\s:]+([\w\s.']+?)(?:\s+on|\s+at|\s+for|\s+with|$)/i,
-    /(?:to account|account number|account no|a\/c)[\s:#]+([0-9*]+)/i,
+    new RegExp(`(?:to account|account number|account no|a\/c)[\\s:#]+([${DIGIT_RANGES}*]+)`, 'i'),
     // Arabic patterns
     /(?:حوالة|تحويل)[\s:]+([\w\s.']+?)(?:\s+في|\s+بتاريخ|\s+على|$)/i
   ];
