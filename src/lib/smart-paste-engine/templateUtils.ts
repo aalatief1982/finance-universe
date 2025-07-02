@@ -1,8 +1,20 @@
 import { extractVendorName } from './suggestionEngine';
-import { SmartPasteTemplate } from '@/types/template';
+import { SmartPasteTemplate, TemplateMeta } from '@/types/template';
 import { normalizeTemplateStructure } from './templateNormalizer';
 
 const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
+
+function ensureTemplateMeta(t: SmartPasteTemplate): TemplateMeta {
+  const meta: TemplateMeta = {
+    createdAt: t.meta?.createdAt || t.created || new Date().toISOString(),
+    lastUsedAt: t.meta?.lastUsedAt,
+    usageCount: t.meta?.usageCount ?? 0,
+    successCount: t.meta?.successCount ?? 0,
+    fallbackCount: t.meta?.fallbackCount ?? 0,
+  };
+  t.meta = meta;
+  return meta;
+}
 
 export function getTemplateKey(
   sender?: string,
@@ -61,6 +73,12 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
     }
   });
 
+  // Ensure meta defaults for backward compatibility
+  Object.values(bank).forEach((t: SmartPasteTemplate) => {
+    ensureTemplateMeta(t);
+  });
+  localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
+
   return bank as Record<string, SmartPasteTemplate>;
 }
 
@@ -75,7 +93,20 @@ export function getTemplateByHash(
 ): SmartPasteTemplate | undefined {
   const templates = loadTemplateBank();
   const key = getTemplateKey(sender, fromAccount, hash);
-  return templates[key] || templates[getTemplateKey(undefined, undefined, hash)];
+  let foundKey = key;
+  let template = templates[key];
+  if (!template) {
+    foundKey = getTemplateKey(undefined, undefined, hash);
+    template = templates[foundKey];
+  }
+  if (template) {
+    ensureTemplateMeta(template);
+    template.meta.lastUsedAt = new Date().toISOString();
+    template.meta.usageCount = (template.meta.usageCount || 0) + 1;
+    templates[foundKey] = template;
+    saveTemplateBank(templates);
+  }
+  return template;
 }
 
 export function saveNewTemplate(
@@ -98,7 +129,13 @@ export function saveNewTemplate(
       created: new Date().toISOString(),
       rawSample: rawMessage || '',
       version: 'v2',
-      hashAlgorithm: 'SHA256'
+      hashAlgorithm: 'SHA256',
+      meta: {
+        createdAt: new Date().toISOString(),
+        usageCount: 0,
+        successCount: 0,
+        fallbackCount: 0,
+      }
     };
   } else {
     templates[key].fields = [...new Set([...templates[key].fields, ...fields])];
