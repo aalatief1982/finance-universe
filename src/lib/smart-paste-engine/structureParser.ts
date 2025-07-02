@@ -35,15 +35,22 @@ export interface ParsedField {
   source: 'direct' | 'inferred' | 'default'
 }
 
+interface TemplateExtractionResult {
+  template: string
+  placeholders: Record<string, string>
+  normalized: string
+}
+
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
         if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
   }
   let template = '';
-  let placeholders = {};
+  let placeholders: Record<string, string> = {};
+  let result: TemplateExtractionResult;
   try {
-    const result = extractTemplateStructure(rawMessage);
+    result = extractTemplateStructure(rawMessage);
     template = result.template;
     placeholders = result.placeholders;
 
