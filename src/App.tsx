@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import Home from './pages/Home';
 import Transactions from './pages/Transactions';
@@ -48,6 +48,8 @@ import { getQueuedMessages, clearQueuedMessages } from '@/services/smsQueueServi
 
 function AppWrapper() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const showOnboarding = localStorage.getItem('xpensia_onb_done') !== 'true';
   const navigateRef = React.useRef(navigate);
   useEffect(() => {
     navigateRef.current = navigate;
@@ -215,6 +217,10 @@ function AppWrapper() {
       SmsImportService.checkForNewMessages(navigateRef.current, { auto: true });
     }
   }, [user]);
+
+  if (showOnboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   return (
     <>
