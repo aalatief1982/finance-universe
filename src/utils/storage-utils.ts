@@ -141,14 +141,13 @@ export function learnFromTransaction(
   txn: Transaction,
   senderHint: string = ''
 ) {
-  const { template, placeholders } = extractTemplateStructure(rawMessage);
+  const { structure, placeholders, hash: templateHash } = extractTemplateStructure(rawMessage);
   const fields = Object.keys(placeholders);
-  const templateHash = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
 
   const key = getTemplateKey(senderHint, txn.fromAccount, templateHash);
   const bank = loadTemplateBank();
   if (!bank[key]) {
-    saveNewTemplate(template, fields, rawMessage, senderHint, txn.fromAccount);
+    saveNewTemplate(structure, fields, rawMessage, senderHint, txn.fromAccount);
   }
 
   // Save Keyword Mapping (Vendor → Category/Subcategory)

@@ -52,14 +52,13 @@ export function saveTransactionWithLearning(
   if (rawMessage && newTransaction.source === 'smart-paste') {
     learnFromTransaction(rawMessage, newTransaction, senderHint || '');
 
-    const { template, placeholders } = extractTemplateStructure(rawMessage);
+    const { structure, placeholders, hash: templateHash } = extractTemplateStructure(rawMessage);
     const fields = Object.keys(placeholders);
-    const templateHash = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
 
     const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
     const bank = loadTemplateBank();
     if (!bank[key]) {
-      saveNewTemplate(template, fields, rawMessage, senderHint, newTransaction.fromAccount);
+      saveNewTemplate(structure, fields, rawMessage, senderHint, newTransaction.fromAccount);
     }
 
     if (!silent && showPatternToast && !combineToasts) {

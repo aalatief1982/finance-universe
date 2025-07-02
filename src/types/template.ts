@@ -6,6 +6,8 @@ export interface SmartPasteTemplate {
   defaultValues?: Record<string, string>;
   created: string;
   rawSample?: string;
+  version?: string;
+  hashAlgorithm?: string;
 }
 
 export interface StructureTemplateEntry {

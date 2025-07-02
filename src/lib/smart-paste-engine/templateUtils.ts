@@ -1,5 +1,6 @@
 import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate } from '@/types/template';
+import { normalizeTemplateStructure } from './templateNormalizer';
 
 const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
 
@@ -53,6 +54,13 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
     localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
   }
 
+  // Flag legacy templates without version/hashAlgorithm
+  Object.values(bank).forEach((t: any) => {
+    if (!('version' in t)) {
+      // legacy template retained as-is
+    }
+  });
+
   return bank as Record<string, SmartPasteTemplate>;
 }
 
@@ -88,7 +96,9 @@ export function saveNewTemplate(
       fields,
       defaultValues: {},
       created: new Date().toISOString(),
-      rawSample: rawMessage || ''
+      rawSample: rawMessage || '',
+      version: 'v2',
+      hashAlgorithm: 'SHA256'
     };
   } else {
     templates[key].fields = [...new Set([...templates[key].fields, ...fields])];
@@ -105,7 +115,7 @@ export function getAllTemplates(): SmartPasteTemplate[] {
 
 export function extractTemplateStructure(
   message: string
-): { template: string; placeholders: Record<string, string> } {
+): { structure: string; placeholders: Record<string, string>; hash: string } {
   const patterns = [
    {
 	  // Support formats like: SAR 55,100.00 | 35 SAR | 200.00 ر.س | ٣٥٠ جنيه مصري
@@ -202,5 +212,6 @@ export function extractTemplateStructure(
     templateText = templateText.slice(0, start) + replacement + templateText.slice(end);
   }
 
-  return { template: templateText.trim(), placeholders };
+  const { structure, hash } = normalizeTemplateStructure(templateText.trim());
+  return { structure, placeholders, hash };
 }
