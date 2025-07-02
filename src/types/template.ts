@@ -8,6 +8,15 @@ export interface SmartPasteTemplate {
   rawSample?: string;
   version?: string;
   hashAlgorithm?: string;
+  meta?: TemplateMeta;
+}
+
+export interface TemplateMeta {
+  createdAt: string;
+  lastUsedAt?: string;
+  usageCount?: number;
+  successCount?: number;
+  fallbackCount?: number;
 }
 
 export interface StructureTemplateEntry {
