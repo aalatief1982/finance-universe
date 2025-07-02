@@ -10,12 +10,22 @@ import { XpensiaLogo } from '@/components/header';
 const Index = () => {
   const { auth } = useUser();
   const navigate = useNavigate();
-  
+
+  const onboardingDone =
+    typeof window !== 'undefined' &&
+    localStorage.getItem('xpensia_onb_done') === 'true';
+
   React.useEffect(() => {
     if (auth.isAuthenticated) {
       navigate('/dashboard');
     }
   }, [auth.isAuthenticated, navigate]);
+
+  React.useEffect(() => {
+    if (!auth.isAuthenticated && onboardingDone) {
+      navigate('/home');
+    }
+  }, [auth.isAuthenticated, onboardingDone, navigate]);
 
   return (
     <Layout hideNavigation>
@@ -34,9 +44,11 @@ const Index = () => {
             Every expense has a story. We help you see where your money goes and why.
           </p>
           <div className="flex justify-center">
-            <Button size="lg" asChild>
-              <Link to="/onboarding">Register</Link>
-            </Button>
+            {!onboardingDone && (
+              <Button size="lg" asChild>
+                <Link to="/onboarding">Register</Link>
+              </Button>
+            )}
           </div>
           
           <div className="mt-12 space-y-4 text-sm text-muted-foreground">
