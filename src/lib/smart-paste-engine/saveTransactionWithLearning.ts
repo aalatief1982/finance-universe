@@ -1,7 +1,7 @@
 import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from './templateUtils';
-import { loadKeywordBank, saveKeywordBank } from './keywordBankUtils';
+import { loadKeywordBank, saveKeywordBank, KeywordEntry } from './keywordBankUtils';
 import { storeTransaction } from '@/utils/storage-utils';
 import { toast } from '@/components/ui/use-toast';
 
@@ -73,7 +73,7 @@ export function saveTransactionWithLearning(
     const keywordBank = loadKeywordBank();
     const existing = keywordBank.find(k => k.keyword === keyword);
 
-    const newMappings = [
+    const newMappings: KeywordEntry['mappings'] = [
       { field: 'category', value: newTransaction.category },
       { field: 'subcategory', value: newTransaction.subcategory || 'none' },
     ];

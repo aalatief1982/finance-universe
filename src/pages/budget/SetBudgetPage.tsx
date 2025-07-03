@@ -106,8 +106,8 @@ const SetBudgetPage = () => {
               </SelectContent>
             </Select>
             <div className="flex items-center space-x-2">
-              <Checkbox id="roll" checked={form.rollover} onCheckedChange={v=>setForm({...form,rollover:!!v})} />
-              <label htmlFor="roll" className="text-sm">Rollover</label>
+              <Checkbox checked={form.rollover} onCheckedChange={v=>setForm({...form,rollover:!!v})} />
+              <label className="text-sm">Rollover</label>
             </div>
             <Textarea placeholder="Notes" value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} />
             <DatePicker date={new Date(form.startDate)} setDate={d=>setForm({...form,startDate:d?d.toISOString().split('T')[0]:form.startDate})} />

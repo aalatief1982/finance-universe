@@ -1,5 +1,5 @@
 
-import { registerPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import type { PluginListenerHandle } from '@capacitor/core';
 
 export interface BackgroundSmsListenerPlugin {
@@ -14,7 +14,7 @@ export interface BackgroundSmsListenerPlugin {
   stopListening(): Promise<void>;
 }
 
-const BackgroundSmsListener = registerPlugin<BackgroundSmsListenerPlugin>('BackgroundSmsListener', {
+const BackgroundSmsListener = Capacitor.registerPlugin<BackgroundSmsListenerPlugin>('BackgroundSmsListener', {
   web: () => import('@/native/backgroundSms.web').then(m => m.default)
 });
 

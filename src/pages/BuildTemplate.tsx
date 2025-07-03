@@ -32,16 +32,9 @@ const BuildTemplate: React.FC = () => {
   const handleSave = () => {
     const newEntry: StructureTemplateEntry = {
       id: uuidv4(),
-      template: generatedTemplate,
-      rawExample: message,
-      defaultValues: {
-        type: type,
-        fromAccount: fromAccount,
-        currency: currency,
-        sender: senderHint,
-      },
+      structure: generatedTemplate,
       fields: detectedFields,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     saveStructureTemplate(newEntry);
     toast({ title: "Template saved", description: "You can now match messages with this structure." });

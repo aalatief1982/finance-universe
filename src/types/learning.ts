@@ -5,7 +5,7 @@
 
 import { TransactionType } from "./transaction";
 import { SupportedCurrency } from "./locale";
-import { Template } from "./template";
+import { SmartPasteTemplate as Template } from "./template";
 
 /**
  * Enhanced token structure with position information
