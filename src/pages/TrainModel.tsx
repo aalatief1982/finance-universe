@@ -140,7 +140,12 @@ const TrainModel = () => {
       selections: selections.length
     });
     
-    learningEngineService.saveUserTraining(message, transaction, senderHint, manualFieldTokenMap);
+    learningEngineService.saveUserTraining({
+      message,
+      transaction,
+      senderHint,
+      manualFieldTokenMap,
+    });
     toast({ title: 'Saved', description: 'Training data saved successfully.' });
     navigate('/dashboard');
   };

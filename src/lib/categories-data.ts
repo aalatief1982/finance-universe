@@ -8,7 +8,8 @@ interface CategoryHierarchy {
   id: string;
   name: string;
   type: TransactionType;
-  subcategories: Array<{ id: string; name: string; }>;
+  subcategories: Array<{ id: string; name: string; user?: boolean }>;
+  user?: boolean;
 }
 
 // Fallback in case localStorage isn't ready (optional dev/testing mode)

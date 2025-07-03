@@ -44,7 +44,7 @@ interface DraftTransaction {
   title: string;
   category: string;
   subcategory: string;
-  amount?: string;
+  amount?: string | number;
   currency?: string;
   date?: string;
   fromAccount?: string;
@@ -52,6 +52,8 @@ interface DraftTransaction {
   rawMessage: string;
   sender?: string;
   alwaysApply?: boolean;
+
+  source?: string;
 
   skipped?: boolean;
 
@@ -140,7 +142,7 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 		  txn.category = validCategories[0] || 'Uncategorized';
 		  console.log('[TYPE CHANGE] Selected Category:', txn.category);
 
-		  const validSubcategories = getSubcategoriesForCategory(txn.category).map(sc => sc.name);
+                  const validSubcategories = getSubcategoriesForCategory(txn.category);
 		  console.log('[TYPE CHANGE] Valid Subcategories for Category:', txn.category, validSubcategories);
 
 		  txn.subcategory = validSubcategories[0] || 'none';
@@ -149,7 +151,7 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 
 
   if (field === 'category') {
-    const validSubcategories = getSubcategoriesForCategory(value as string).map(sc => sc.name);
+    const validSubcategories = getSubcategoriesForCategory(value as string);
     txn.subcategory = validSubcategories[0] || 'none';
   }
 
@@ -416,12 +418,11 @@ const toggleSkipAll = () => {
             </Select>
             <div className="col-span-2 flex items-center gap-2">
               <Checkbox
-                id={`apply-${index}`}
                 checked={txn.alwaysApply || false}
                 onCheckedChange={checked => handleAlwaysApplyChange(index, !!checked)}
                 className="mr-2"
               />
-              <label htmlFor={`apply-${index}`} className="text-sm">
+              <label className="text-sm">
                 Always apply for this sender
               </label>
             </div>

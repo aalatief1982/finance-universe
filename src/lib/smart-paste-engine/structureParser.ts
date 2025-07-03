@@ -42,7 +42,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     throw new Error('Empty message passed to extractTemplateStructure');
   }
   let structure = '';
-  let placeholders = {};
+  let placeholders: Record<string, string> = {};
   let templateHash = '';
   try {
     const result = extractTemplateStructure(rawMessage);

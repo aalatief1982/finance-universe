@@ -183,7 +183,7 @@ const handleReadSms = async () => {
     const validMessages: ProcessedSmsEntry[] = [];
     const invalidMessages: ProcessedSmsEntry[] = [];
 
-    const filtered: ProcessedSmsEntry[] = smsMessages
+    const filtered = smsMessages
       .map((msg) => {
         if (!msg || !msg.message) return null;
 

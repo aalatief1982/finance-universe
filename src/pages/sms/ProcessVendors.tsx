@@ -4,13 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectItem } from '@/components/ui/select';
 import { getAllCategories, getSubcategoriesForCategory } from '@/lib/category-utils';
-import { TransactionCategory, TransactionSubcategory } from '@/types/transaction';
 import { useToast } from '@/components/ui/use-toast';
 
 interface VendorEntry {
   vendor: string;
-  category: TransactionCategory;
-  subcategory: TransactionSubcategory;
+  category: string;
+  subcategory: string;
 }
 
 const ProcessVendors: React.FC = () => {
@@ -29,14 +28,14 @@ const ProcessVendors: React.FC = () => {
     }
   }, []);
 
-  const handleCategoryChange = (index: number, newCategory: TransactionCategory) => {
+  const handleCategoryChange = (index: number, newCategory: string) => {
     const updated = [...vendors];
     updated[index].category = newCategory;
     updated[index].subcategory = 'none'; // reset subcategory
     setVendors(updated);
   };
 
-  const handleSubcategoryChange = (index: number, newSubcategory: TransactionSubcategory) => {
+  const handleSubcategoryChange = (index: number, newSubcategory: string) => {
     const updated = [...vendors];
     updated[index].subcategory = newSubcategory;
     setVendors(updated);
@@ -62,18 +61,18 @@ const ProcessVendors: React.FC = () => {
 
             <Select
               value={vendor.category}
-              onValueChange={(val) => handleCategoryChange(index, val as TransactionCategory)}
+              onValueChange={(val) => handleCategoryChange(index, val)}
             >
               {getAllCategories().map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
+                <SelectItem key={cat.category} value={cat.category}>
+                  {cat.category}
                 </SelectItem>
               ))}
             </Select>
 
             <Select
               value={vendor.subcategory}
-              onValueChange={(val) => handleSubcategoryChange(index, val as TransactionSubcategory)}
+              onValueChange={(val) => handleSubcategoryChange(index, val)}
             >
               {getSubcategoriesForCategory(vendor.category).map((sub) => (
                 <SelectItem key={sub} value={sub}>

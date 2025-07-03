@@ -5,7 +5,7 @@ import { UserPreferences } from '@/types/user';
 import { SupportedCurrency, LocaleSettings } from '@/types/locale';
 import { StructureTemplateEntry } from '@/types/template';
 import { extractTemplateStructure, getAllTemplates, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from '@/lib/smart-paste-engine/templateUtils';
-import { loadKeywordBank,saveKeywordBank } from '@/lib/smart-paste-engine/keywordBankUtils';
+import { loadKeywordBank, saveKeywordBank, KeywordEntry } from '@/lib/smart-paste-engine/keywordBankUtils';
 // Storage keys for local storage
 const TRANSACTIONS_STORAGE_KEY = 'xpensia_transactions';
 const CATEGORIES_STORAGE_KEY = 'xpensia_categories';
@@ -197,7 +197,7 @@ export function learnFromTransaction(
     const bank = loadKeywordBank();
     const existing = bank.find(k => k.keyword === keyword);
 
-    const newMappings = [
+    const newMappings: KeywordEntry['mappings'] = [
       { field: 'category', value: txn.category },
       { field: 'subcategory', value: txn.subcategory || 'none' }
     ];
@@ -418,8 +418,11 @@ export const getUserSettings = (): UserPreferences => {
       dataRetention: 'forever'
     },
     sms: {
+      startDate: '',
+      autoDetectProviders: false,
+      showDetectionNotifications: false,
       autoImport: false,
-      backgroundSmsEnabled: false
+      backgroundSmsEnabled: false,
     }
   });
 };

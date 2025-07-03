@@ -47,6 +47,7 @@ const KeywordBankManager = () => {
         mappingCount: (existing.mappingCount || 0) + 1,
         senderContext: senderCtx || existing.senderContext,
         transactionTypeContext: txnCtx || existing.transactionTypeContext,
+        mappings: existing.mappings,
       }
       updated = entries.map(e => (e.keyword === existing.keyword ? updatedEntry : e))
     } else {
@@ -55,6 +56,7 @@ const KeywordBankManager = () => {
         type: type.trim(),
         lastUpdated: now,
         mappingCount: 1,
+        mappings: [],
       }
       if (senderCtx.trim()) newEntry.senderContext = senderCtx.trim()
       if (txnCtx.trim()) newEntry.transactionTypeContext = txnCtx.trim()

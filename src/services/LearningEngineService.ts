@@ -1,5 +1,5 @@
 
-import { TokenLabels } from '@/components/TrainModel';
+type TokenLabels = Record<string, string>;
 import { Transaction } from '@/types/transaction';
 import { LearnedEntry, LearningEngineConfig, MatchResult, PositionedToken } from '@/types/learning';
 

@@ -1,5 +1,5 @@
 
-import { registerPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 export interface SmsFilterOptions {
   startDate?: string;
@@ -25,6 +25,6 @@ export interface SmsReaderPlugin {
 }
 
 // Register the plugin
-const SmsReader = registerPlugin<SmsReaderPlugin>('SmsReaderPlugin');
+const SmsReader = Capacitor.registerPlugin<SmsReaderPlugin>('SmsReaderPlugin');
 
 export { SmsReader };

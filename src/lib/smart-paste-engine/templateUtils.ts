@@ -17,8 +17,8 @@ function ensureTemplateMeta(t: SmartPasteTemplate): TemplateMeta {
 }
 
 export function getTemplateKey(
-  sender?: string,
-  fromAccount?: string,
+  sender: string | undefined,
+  fromAccount: string | undefined,
   hash: string
 ): string {
   let base = sender?.toLowerCase().trim();
