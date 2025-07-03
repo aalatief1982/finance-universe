@@ -14,7 +14,7 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    image: '/assets/onboarding1-2.png',
+    image: '/assets/onboarding1-1.png',
     title: 'Track Expenses Instantly',
     subtitle: 'Smart parsing of SMS in seconds'
   },
