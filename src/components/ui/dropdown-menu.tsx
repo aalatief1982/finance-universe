@@ -41,7 +41,6 @@ const DropdownMenuItem = React.forwardRef<
       inset && "pl-8",
       className
     )}
-    onClick={onClick}
     {...props}
   />
 ))

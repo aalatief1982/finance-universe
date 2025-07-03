@@ -58,7 +58,7 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
         {hasData ? (
           <div className="h-[300px] w-full" role="img" aria-label="Expenses by subcategory bar chart">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} layout="vertical" margin={CHART_MARGIN}>
+              <BarChart data={data} margin={CHART_MARGIN}>
                 <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
                 <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
                 <Tooltip content={BarTooltip(total)} />

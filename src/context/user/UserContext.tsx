@@ -198,6 +198,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             showTags: true
           },
           sms: {
+            autoDetectProviders: true,
+            showDetectionNotifications: true,
             autoImport: false,
             backgroundSmsEnabled: false
           }

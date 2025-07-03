@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
   ShoppingBag,
-  Home,
+  Home as HomeIcon,
   Car,
   Utensils,
   CircleDollarSign,
@@ -150,7 +150,7 @@ const Home = () => {
     Food: <Utensils className="w-6 h-6" />,
     'Gifts & Donations': <Gift className="w-6 h-6" />,
     Health: <HeartPulse className="w-6 h-6" />,
-    Housing: <Home className="w-6 h-6" />,
+    Housing: <HomeIcon className="w-6 h-6" />,
     Kids: <Baby className="w-6 h-6" />,
     'Personal Care': <Bath className="w-6 h-6" />,
     Services: <ConciergeBell className="w-6 h-6" />,

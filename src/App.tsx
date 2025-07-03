@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Route, Routes, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import Home from './pages/Home';
 import Transactions from './pages/Transactions';
@@ -68,7 +68,11 @@ function AppWrapper() {
     };
 
     checkQueue();
-    const resume = CapacitorApp.addListener('resume', checkQueue);
+    const resume = CapacitorApp.addListener('appStateChange', (state) => {
+      if (state.isActive) {
+        checkQueue();
+      }
+    });
     return () => {
       resume.remove();
     };
@@ -218,9 +222,11 @@ function AppWrapper() {
     }
   }, [user]);
 
-  if (showOnboarding && location.pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" replace />;
-  }
+  useEffect(() => {
+    if (showOnboarding && location.pathname !== '/onboarding') {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [showOnboarding, location.pathname, navigate]);
 
   return (
     <>

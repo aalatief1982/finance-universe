@@ -94,7 +94,7 @@ export const useSmartPaste = (
         const txn: Transaction = {
           id: `template-${Math.random().toString(36).substring(2, 9)}`,
           title: `Template: ${categoryInfo.category} | ${confirmedFields.amount}`,
-          amount: confirmedFields.amount.toFixed(2),
+          amount: confirmedFields.amount,
           currency: confirmedFields.currency,
           type: confirmedFields.type,
           fromAccount: confirmedFields.account || 'Unknown',

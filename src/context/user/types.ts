@@ -41,6 +41,13 @@ export interface User extends UserType {
       backupFrequency?: "daily" | "weekly" | "monthly";
       dataRetention?: "3months" | "6months" | "1year" | "forever";
     };
+    sms?: {
+      startDate?: string;
+      autoDetectProviders: boolean;
+      showDetectionNotifications: boolean;
+      autoImport?: boolean;
+      backgroundSmsEnabled?: boolean;
+    };
   };
 }
 

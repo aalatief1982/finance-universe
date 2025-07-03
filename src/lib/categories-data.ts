@@ -3,8 +3,16 @@ import { TransactionType } from '@/types/transaction';
 import { getPeopleNames } from './people-utils';
 
 
+// Define the base category hierarchy structure
+interface CategoryHierarchy {
+  id: string;
+  name: string;
+  type: TransactionType;
+  subcategories: Array<{ id: string; name: string; }>;
+}
+
 // Fallback in case localStorage isn't ready (optional dev/testing mode)
-const fallbackHierarchy: typeof CATEGORY_HIERARCHY = [
+const fallbackHierarchy: CategoryHierarchy[] = [
   {
     id: 'other',
     name: 'Other',
@@ -12,6 +20,9 @@ const fallbackHierarchy: typeof CATEGORY_HIERARCHY = [
     subcategories: [{ id: 'misc', name: 'Misc' }]
   }
 ];
+
+// Export the hierarchy constant for backward compatibility
+export const CATEGORY_HIERARCHY = fallbackHierarchy;
 
 
 // Dynamically load from localStorage
