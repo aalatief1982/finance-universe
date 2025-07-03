@@ -14,17 +14,17 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    image: 'assets/onboarding1.png',
+    image: '/assets/onboarding1-2.png',
     title: 'Track Expenses Instantly',
     subtitle: 'Smart parsing of SMS in seconds'
   },
   {
-    image: 'assets/onboarding2.png',
+    image: '/assets/onboarding2-2.png',
     title: 'Auto-Categorized for You',
     subtitle: 'No setup needed, we learn as you go!'
   },
   {
-    image: 'assets/onboarding3.png',
+    image: '/assets/onboarding3-3.png',
     title: 'See Where Your Money Goes',
     subtitle: 'Real-time dashboards & easy reports'
   }
@@ -36,48 +36,48 @@ interface Props {
 
 const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const [index, setIndex] = useState(0);
-
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const arrow = isRtl ? '←' : '→';
 
   return (
-    <div dir="auto" className="flex flex-col h-[100dvh] overflow-hidden bg-white">
+    <div dir="auto" className="w-full h-screen">
       <Swiper
-        className="flex-1 min-h-0"
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
         pagination={{ clickable: true }}
         modules={[Pagination]}
+        className="h-full"
       >
         {slides.map((slide, i) => (
-          <SwiperSlide key={i} className="flex items-center justify-center h-full">
-            <div className="flex flex-col items-center justify-center text-center px-6 w-full">
+          <SwiperSlide key={i}>
+            <div className="flex flex-col h-full items-center justify-between p-6 pt-10 text-center">
+              {/* Image */}
               <img
                 src={slide.image.trim()}
                 alt={`Slide ${i}`}
-                className="max-h-72 md:max-h-96 mx-auto mb-6 object-contain"
+                className="w-full max-h-[50vh] object-contain"
                 onError={() => console.error(`Failed to load image: ${slide.image}`)}
               />
-              <h2 className="mb-2 font-bold text-2xl md:text-3xl text-[#2C3E50] font-['Roboto']">
-                {slide.title}
-              </h2>
-              <p className="text-base md:text-lg text-[#2C3E50] font-['Roboto']">
-                {slide.subtitle}
-              </p>
+
+              {/* Text */}
+              <div className="mt-6">
+                <h2 className="text-2xl font-bold text-[#2C3E50] mb-2">{slide.title}</h2>
+                <p className="text-base text-[#2C3E50]">{slide.subtitle}</p>
+              </div>
+
+              {/* Final slide: button */}
+              {i === slides.length - 1 ? (
+                <div className="w-full pt-6">
+                  <Button className="w-full" onClick={onComplete}>
+                    {`Start the Journey ${arrow}`}
+                  </Button>
+                </div>
+              ) : (
+                <div className="h-12" /> // spacer for visual balance
+              )}
             </div>
           </SwiperSlide>
         ))}
       </Swiper>
-
-      <div
-        className="px-4 pb-4"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
-      >
-        {index === slides.length - 1 && (
-          <Button className="w-full" onClick={onComplete}>
-            {`Start the Journey ${arrow}`}
-          </Button>
-        )}
-      </div>
     </div>
   );
 };
