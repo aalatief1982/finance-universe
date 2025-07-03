@@ -12,9 +12,11 @@ const Onboarding = () => {
   };
 
   return (
-    <Layout hideNavigation showHeader={false} withPadding={false} fullWidth>
+    <Layout hideNavigation showHeader={false} withPadding={false} fullWidth className="w-full h-[100dvh] overflow-hidden">
       <OnboardingSlides onComplete={handleComplete} />
     </Layout>
+
+   
   );
 };
 
