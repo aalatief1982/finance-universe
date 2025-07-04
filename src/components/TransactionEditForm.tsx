@@ -382,11 +382,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     return (
       <span className="ml-1 flex items-center gap-1">
         <ThumbsUp
-          className="size-4 cursor-pointer text-green-600"
+          className="size-4 cursor-pointer text-success hover:text-success/80"
           onClick={() => handleFeedback(field, true)}
         />
         <ThumbsDown
-          className="size-4 cursor-pointer text-red-600"
+          className="size-4 cursor-pointer text-destructive hover:text-destructive/80"
           onClick={() => handleFeedback(field, false)}
         />
       </span>
@@ -416,11 +416,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const rowClass = cn('flex items-center', compact ? 'gap-1' : 'gap-2');
   const labelClass = cn(
     compact ? 'w-24 md:w-28' : 'w-32',
-    'text-sm font-semibold text-gray-700 dark:text-white dark:bg-transparent'
+    'text-sm font-semibold text-foreground'
   );
   const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
   const darkFieldClass =
-    'dark:bg-black dark:text-white dark:border-zinc-700 dark:placeholder-gray-400';
+    'bg-background text-foreground border-border placeholder:text-muted-foreground';
   const formClass = cn(
     'bg-card p-4 rounded-md shadow-sm',
     compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28'
@@ -440,7 +440,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             className={cn(
               'w-full text-sm',
               inputPadding,
-              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+              'rounded-md border-border focus:ring-ring',
               darkFieldClass
             )}
             isAutoFilled={isDriven('type', drivenFields)}
@@ -494,7 +494,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               inputPadding,
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
               darkFieldClass,
-              hasLowConfidence('currency', fieldConfidences) && 'border-amber-500'
+              hasLowConfidence('currency', fieldConfidences) && 'border-warning'
             )}
             isAutoFilled={isDriven('currency', drivenFields)}
             title={hasLowConfidence('currency', fieldConfidences) ? 'Low confidence' : undefined}
@@ -523,7 +523,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Short Name*</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">Short Name*</label>
               <Input
                 value={newCurrency.code}
                 onChange={e => setNewCurrency(prev => ({ ...prev, code: e.target.value }))}
@@ -531,7 +531,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Country*</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">Country*</label>
               <Input
                 value={newCurrency.country}
                 onChange={e => setNewCurrency(prev => ({ ...prev, country: e.target.value }))}
@@ -923,7 +923,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               {renderFeedbackIcons('subcategory')}
             </>
           ) : (
-            <div className={cn('flex-1 text-sm text-gray-500', inputPadding)}>N/A</div>
+            <div className={cn('flex-1 text-sm text-muted-foreground', inputPadding)}>N/A</div>
           )}
         </div>
       </div>
@@ -1066,7 +1066,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <Button
           type="submit"
           className={cn(
-            'bg-primary text-white hover:bg-primary/90 w-full rounded-md',
+            'bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-md',
             compact ? 'py-2' : 'py-3'
           )}
         >

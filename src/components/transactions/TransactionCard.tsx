@@ -184,7 +184,7 @@ import { formatCurrency } from '@/utils/format-utils';
 							e.stopPropagation();
 							onDelete();
 						  }}
-						  className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-100"
+						  className="h-8 px-2 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
 						>
 						  <Trash2 size={14} className="mr-1" />
 						  Delete

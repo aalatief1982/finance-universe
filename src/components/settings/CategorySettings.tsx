@@ -264,9 +264,9 @@ const CategorySettings = () => {
                             </div>
                             <div className="flex items-center">
                               <span className={`px-2 py-1 rounded-md text-xs ${
-                                suggestion.confidence >= 80 ? 'bg-green-100 text-green-800' :
-                                suggestion.confidence >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
+                                suggestion.confidence >= 80 ? 'bg-success/10 text-success' :
+                                suggestion.confidence >= 60 ? 'bg-warning/10 text-warning' :
+                                'bg-destructive/10 text-destructive'
                               }`}>
                                 {suggestion.confidence}% confidence
                               </span>

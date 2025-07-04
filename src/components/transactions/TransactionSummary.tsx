@@ -13,8 +13,8 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
   const { income, expenses, balance } = summary;
   
   const balanceChange = balance >= 0 
-    ? { icon: ArrowUpRight, color: 'text-green-500', bgColor: 'bg-green-50', label: 'Positive balance' }
-    : { icon: ArrowDownRight, color: 'text-red-500', bgColor: 'bg-red-50', label: 'Negative balance' };
+    ? { icon: ArrowUpRight, color: 'text-success', bgColor: 'bg-success/10', label: 'Positive balance' }
+    : { icon: ArrowDownRight, color: 'text-destructive', bgColor: 'bg-destructive/10', label: 'Negative balance' };
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -23,10 +23,10 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-1">Total Income</p>
-              <h3 className="text-2xl font-bold text-green-600">{formatCurrency(income)}</h3>
+              <h3 className="text-2xl font-bold text-success">{formatCurrency(income)}</h3>
             </div>
-            <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
-              <ArrowUpRight className="h-6 w-6 text-green-500" />
+            <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
+              <ArrowUpRight className="h-6 w-6 text-success" />
             </div>
           </div>
         </CardContent>
@@ -37,10 +37,10 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-1">Total Expenses</p>
-              <h3 className="text-2xl font-bold text-red-600">{formatCurrency(expenses)}</h3>
+              <h3 className="text-2xl font-bold text-destructive">{formatCurrency(expenses)}</h3>
             </div>
-            <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center">
-              <ArrowDownRight className="h-6 w-6 text-red-500" />
+            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ArrowDownRight className="h-6 w-6 text-destructive" />
             </div>
           </div>
         </CardContent>

@@ -157,7 +157,7 @@ const LearningEngineSettings = () => {
             
             <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="text-red-500 gap-1">
+                <Button variant="outline" size="sm" className="text-destructive gap-1">
                   <Trash2 className="h-4 w-4" />
                   <span>Clear Data</span>
                 </Button>
@@ -173,7 +173,7 @@ const LearningEngineSettings = () => {
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction 
                     onClick={handleClearLearning}
-                    className="bg-red-500 hover:bg-red-600"
+                    className="bg-destructive hover:bg-destructive/90"
                   >
                     Clear Data
                   </AlertDialogAction>

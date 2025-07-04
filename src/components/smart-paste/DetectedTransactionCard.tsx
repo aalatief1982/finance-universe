@@ -22,15 +22,15 @@ const DetectedTransactionCard = ({
   const getOriginDisplay = () => {
     switch (origin) {
       case 'template':
-        return { label: 'Template Match', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' };
+        return { label: 'Template Match', color: 'bg-success/10 text-success border border-success/20' };
       case 'structure':
-        return { label: 'Structure Match', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' };
+        return { label: 'Structure Match', color: 'bg-info/10 text-info border border-info/20' };
       case 'ml':
-        return { label: 'AI Extracted', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' };
+        return { label: 'AI Extracted', color: 'bg-warning/10 text-warning border border-warning/20' };
       case 'fallback':
-        return { label: 'Fallback', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' };
+        return { label: 'Fallback', color: 'bg-muted text-muted-foreground border border-border' };
       default:
-        return { label: 'Unknown', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' };
+        return { label: 'Unknown', color: 'bg-muted text-muted-foreground border border-border' };
     }
   };
 
@@ -44,7 +44,7 @@ const DetectedTransactionCard = ({
             <div className="flex items-center gap-2">
               <h3 className="font-medium">{transaction.title}</h3>
               {isSmartMatch && (
-                <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full dark:bg-green-900/30 dark:text-green-300">
+                <span className="bg-success/10 text-success text-xs px-2 py-0.5 rounded-full border border-success/20">
                   <Check className="inline h-3 w-3 mr-1" />
                   Smart Match
                 </span>

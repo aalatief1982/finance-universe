@@ -60,20 +60,20 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
           </div>
           
           <div className="flex items-center gap-4">
-            <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+            <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-destructive' : 'text-success'}`}>
               {formatCurrency(transaction.amount)}
             </span>
             
             <div className="flex">
               <button
                 onClick={handleEdit}
-                className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
+                className="p-2 text-info hover:bg-info/10 rounded-full"
               >
                 <Pen size={16} />
               </button>
               <button
                 onClick={handleDelete}
-                className="p-2 text-red-600 hover:bg-red-50 rounded-full"
+                className="p-2 text-destructive hover:bg-destructive/10 rounded-full"
               >
                 <Trash2 size={16} />
               </button>
@@ -88,10 +88,10 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
     <div className="relative overflow-hidden rounded-2xl mb-2" ref={constraintsRef}>
       {/* Background elements */}
       <div className="absolute inset-0 flex justify-between items-stretch">
-        <div className="bg-blue-500 w-1/2 flex items-center justify-center">
+        <div className="bg-info w-1/2 flex items-center justify-center">
           <Pen size={24} className="text-white" />
         </div>
-        <div className="bg-red-500 w-1/2 flex items-center justify-center">
+        <div className="bg-destructive w-1/2 flex items-center justify-center">
           <Trash2 size={24} className="text-white" />
         </div>
       </div>
@@ -112,7 +112,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
               <p className="text-sm text-muted-foreground">{transaction.category}</p>
             </div>
             
-            <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+            <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-destructive' : 'text-success'}`}>
               {formatCurrency(transaction.amount)}
             </span>
           </div>

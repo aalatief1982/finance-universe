@@ -133,11 +133,11 @@ const PhoneVerification = ({
     if (!timeRemaining) return 'bg-muted';
     
     // Less than 1 minute - urgent (red)
-    if (timeRemaining < 60000) return 'bg-red-600';
+    if (timeRemaining < 60000) return 'bg-destructive';
     // Less than 3 minutes - warning (amber)
-    if (timeRemaining < 180000) return 'bg-amber-600';
+    if (timeRemaining < 180000) return 'bg-warning';
     // Otherwise normal (green)
-    return 'bg-green-600';
+    return 'bg-success';
   };
 
   // Determine time warning color
@@ -145,11 +145,11 @@ const PhoneVerification = ({
     if (!timeRemaining) return 'text-muted-foreground';
     
     // Less than 1 minute - urgent (red)
-    if (timeRemaining < 60000) return 'text-red-600';
+    if (timeRemaining < 60000) return 'text-destructive';
     // Less than 3 minutes - warning (amber)
-    if (timeRemaining < 180000) return 'text-amber-600';
+    if (timeRemaining < 180000) return 'text-warning';
     // Otherwise normal (green)
-    return 'text-green-600';
+    return 'text-success';
   };
 
   const handleSendCode = async () => {
@@ -359,7 +359,7 @@ const PhoneVerification = ({
                 )}
                 
                 {error && errorType === 'validation' && (
-                  <p id="phone-error" className="text-xs text-red-500" aria-live="assertive">
+                  <p id="phone-error" className="text-xs text-destructive" aria-live="assertive">
                     {error}
                   </p>
                 )}
@@ -386,7 +386,7 @@ const PhoneVerification = ({
           <div className="space-y-4">
             {/* Session timer indicator */}
             <div 
-              className="mb-4 border rounded-lg p-3 bg-gray-50" 
+              className="mb-4 border rounded-lg p-3 bg-muted" 
               role="timer" 
               aria-label={`Session expires in ${formatTime(timeRemaining)}`}
               aria-live="polite"
@@ -453,7 +453,7 @@ const PhoneVerification = ({
             {/* Demo notice is shown via toast */}
             
             <Button
-              className={`w-full ${success ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              className={`w-full ${success ? 'bg-success hover:bg-success/90' : ''}`}
               onClick={handleVerifyCode}
               disabled={isLoading || timeRemaining <= 0}
               aria-busy={isLoading}

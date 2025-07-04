@@ -221,7 +221,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     {onDelete && (
                       <DropdownMenuItem 
                         onClick={() => onDelete(transaction.id)}
-                        className="text-red-600"
+                        className="text-destructive"
                       >
                         <Trash className="mr-2 h-4 w-4" />
                         Delete
@@ -378,7 +378,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                             variant="ghost"
                             size="sm"
                             onClick={() => onDelete(transaction.id)}
-                            className="text-red-600"
+                            className="text-destructive"
                           >
                             <Trash className="h-4 w-4" />
                           </Button>

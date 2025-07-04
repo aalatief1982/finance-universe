@@ -80,7 +80,7 @@ const TransactionActions = ({
           <DropdownMenuItem asChild>
             <div 
               onClick={handleDelete}
-              className="text-red-600 focus:text-red-600"
+              className="text-destructive focus:text-destructive"
             >
               <Trash2 className="mr-2 h-4 w-4" />
               <span>Delete</span>
@@ -105,7 +105,7 @@ const TransactionActions = ({
       <Button
         variant="ghost"
         size="icon"
-        className="h-8 w-8 text-muted-foreground hover:text-red-600"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive"
         onClick={handleDelete}
       >
         <Trash2 className="h-4 w-4" />

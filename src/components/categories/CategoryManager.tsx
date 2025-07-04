@@ -259,7 +259,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     return (
       <div key={category.id} className="category-item">
         <div 
-          className={`flex items-center p-2 rounded-md hover:bg-gray-100 ${
+          className={`flex items-center p-2 rounded-md hover:bg-muted/50 ${
             level > 0 ? 'ml-6' : ''
           }`}
         >
@@ -287,7 +287,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             <span className="font-medium">{category.name}</span>
             
             {category.metadata?.budget && (
-              <span className="ml-2 text-sm text-gray-500">
+              <span className="ml-2 text-sm text-muted-foreground">
                 Budget: ${category.metadata.budget}
               </span>
             )}
@@ -313,7 +313,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             <Button 
               variant="ghost" 
               size="sm" 
-              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50"
+              className="p-1 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
               onClick={() => deleteCategory(category.id)}
             >
               <Trash size={16} />
@@ -323,7 +323,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         
         {/* Subcategories */}
         {isExpanded && hasSubcategories && (
-          <div className="ml-6 border-l-2 border-gray-100 pl-2 mt-1">
+          <div className="ml-6 border-l-2 border-muted pl-2 mt-1">
             {categories
               .filter(c => c.parentId === category.id)
               .map(subcategory => renderCategoryItem(subcategory, level + 1))}
@@ -542,7 +542,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             rootCategories.map(category => renderCategoryItem(category))
           ) : (
             <div className="text-center py-8">
-              <div className="text-gray-400 mb-2">No categories found</div>
+              <div className="text-muted-foreground mb-2">No categories found</div>
               <Button onClick={() => startAddingCategory()}>
                 <PlusCircle size={16} className="mr-1" /> Create your first category
               </Button>
