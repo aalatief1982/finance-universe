@@ -332,7 +332,7 @@ const PhoneVerification = ({
                     value={phoneNumber}
                     onChange={handlePhoneChange}
                     onKeyDown={handlePhoneKeyDown}
-                    className={error && errorType === 'validation' ? "border-red-300 focus-visible:ring-red-400" : ""}
+                    className={error && errorType === 'validation' ? "border-destructive focus-visible:ring-destructive" : ""}
                     aria-labelledby="phone-label"
                     aria-describedby="phone-hint phone-error"
                     aria-invalid={error && errorType === 'validation' ? 'true' : 'false'}
@@ -346,13 +346,13 @@ const PhoneVerification = ({
                   Include country code (e.g., +1 for US)
                 </p>
                 
-                {phoneNumber && !phoneNumber.startsWith('+') && (
-                  <div className="mt-2 bg-amber-50 border border-amber-200 rounded p-2 text-xs" 
+                 {phoneNumber && !phoneNumber.startsWith('+') && (
+                  <div className="mt-2 bg-warning/5 border border-warning/20 rounded p-2 text-xs" 
                        id="phone-format-hint"
                        role="note"
                        aria-live="polite">
-                    <p className="font-medium text-amber-700">International Format Required</p>
-                    <p className="text-amber-600">
+                    <p className="font-medium text-warning-foreground">International Format Required</p>
+                    <p className="text-warning-foreground/80">
                       Example: +1 for US/Canada, +44 for UK, +61 for Australia
                     </p>
                   </div>
@@ -432,7 +432,7 @@ const PhoneVerification = ({
                       <InputOTPSlot 
                         key={index} 
                         index={index} 
-                        className={error ? "border-red-300" : success ? "border-green-300" : ""}
+                        className={error ? "border-destructive" : success ? "border-success" : ""}
                         aria-label={`Digit ${index + 1}`}
                       />
                     ))}

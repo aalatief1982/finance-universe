@@ -472,7 +472,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           className={cn(
             'w-full text-sm',
             inputPadding,
-            'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+            'rounded-md border-input focus:ring-ring',
             darkFieldClass
           )}
         />
