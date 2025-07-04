@@ -43,12 +43,12 @@ const DashboardStats = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-3">
+                <CardContent className="px-3 py-2">
                   <div className="flex items-center justify-center mb-2">
                     <ArrowUpCircle className="text-green-600 mr-2" size={18} strokeWidth={2.5} />
-                    <p className="font-bold text-sm text-foreground">Income</p>
+                    <p className="font-bold text-base sm:text-lg text-foreground">Income</p>
                   </div>
-                  <h3 className="text-left text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-green-500 truncate leading-tight">
+                  <h3 className="text-left text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-green-500 truncate leading-tight">
                     {formatValue(income)}
                   </h3>
                   {renderSubtitle(income)}
@@ -69,12 +69,12 @@ const DashboardStats = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-3">
+                <CardContent className="px-3 py-2">
                   <div className="flex items-center justify-center mb-2">
                     <ArrowDownCircle className="text-red-600 mr-2" size={18} strokeWidth={2.5} />
-                    <p className="font-bold text-sm text-foreground">Expenses</p>
+                    <p className="font-bold text-base sm:text-lg text-foreground">Expenses</p>
                   </div>
-                  <h3 className="text-left text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-red-500 truncate leading-tight">
+                  <h3 className="text-left text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-red-500 truncate leading-tight">
                     {formatValue(Math.abs(expenses))}
                   </h3>
                   {renderSubtitle(expenses)}
@@ -94,18 +94,18 @@ const DashboardStats = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-center mb-2">
-                    <div className={`mr-2 ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                      {balance >= 0 ? <TrendingUp size={18} strokeWidth={2.5} /> : <TrendingDown size={18} strokeWidth={2.5} />}
+                <Card className="overflow-hidden border border-border" role="button">
+                  <CardContent className="px-3 py-2">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className={`mr-2 ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                        {balance >= 0 ? <TrendingUp size={18} strokeWidth={2.5} /> : <TrendingDown size={18} strokeWidth={2.5} />}
+                      </div>
+                      <p className="font-bold text-base sm:text-lg text-foreground">Balance</p>
                     </div>
-                    <p className="font-bold text-sm text-foreground">Balance</p>
-                  </div>
-                  <h3 className={`text-left text-sm sm:text-base md:text-lg lg:text-xl font-semibold ${balance >= 0 ? 'text-blue-600' : 'text-red-500'} truncate leading-tight`}>
-                    {formatValue(balance)}
-                  </h3>
-                  {renderSubtitle(balance)}
+                    <h3 className={`text-left text-base sm:text-lg md:text-xl lg:text-2xl font-semibold ${balance >= 0 ? 'text-blue-600' : 'text-red-500'} truncate leading-tight`}>
+                      {formatValue(balance)}
+                    </h3>
+                    {renderSubtitle(balance)}
                   {previousBalance !== undefined && (
                     <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'} truncate`}>
                       {isPositiveChange ? (
