@@ -96,7 +96,7 @@ const TransactionTable = ({
                 <TableCell>
                   <CategoryPill category={transaction.category} />
                 </TableCell>
-                <TableCell className={`text-right font-medium ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                <TableCell className={`text-right font-medium ${transaction.amount < 0 ? 'text-destructive' : 'text-success'}`}>
                   {formatCurrency(transaction.amount)}
                 </TableCell>
               </TableRow>

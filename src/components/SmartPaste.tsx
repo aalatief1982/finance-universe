@@ -243,10 +243,10 @@ const handleSubmit = async (e: React.FormEvent) => {
           <p
             className={`text-sm mt-2 ${
               confidence >= 0.8
-                ? 'text-green-600'
+                ? 'text-success'
                 : confidence >= 0.5
-                ? 'text-yellow-600'
-                : 'text-red-600'
+                ? 'text-warning'
+                : 'text-destructive'
             }`}
           >
             Confidence: {(confidence * 100).toFixed(0)}% -{' '}

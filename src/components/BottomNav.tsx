@@ -3,10 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Upload, MessageSquare, LineChart } from 'lucide-react';
 
 const navItems = [
-  { name: 'Home', path: '/home', icon: Home, color: 'text-blue-500' },
-  { name: 'Paste SMS', path: '/import-transactions', icon: Upload, color: 'text-green-500' },
-  { name: 'Import SMS', path: '/process-sms', icon: MessageSquare, color: 'text-orange-500' },
-  { name: 'Analytics', path: '/analytics', icon: LineChart, color: 'text-purple-500' }
+  { name: 'Home', path: '/home', icon: Home, color: 'text-primary' },
+  { name: 'Paste SMS', path: '/import-transactions', icon: Upload, color: 'text-success' },
+  { name: 'Import SMS', path: '/process-sms', icon: MessageSquare, color: 'text-secondary' },
+  { name: 'Analytics', path: '/analytics', icon: LineChart, color: 'text-accent' }
 ];
 
 const BottomNav: React.FC = () => {

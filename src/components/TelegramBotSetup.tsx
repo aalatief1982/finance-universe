@@ -135,7 +135,7 @@ const TelegramBotSetup: React.FC = () => {
           
           <div className="text-xs text-muted-foreground border-t pt-4">
             <div className="flex items-start gap-1">
-              <AlertTriangle className="text-amber-500 h-4 w-4 flex-shrink-0 mt-0.5" />
+              <AlertTriangle className="text-warning h-4 w-4 flex-shrink-0 mt-0.5" />
               <p>
                 Create a new bot on Telegram by messaging @BotFather and following the
                 instructions. After setup, forward your bank messages to this bot.
@@ -145,11 +145,11 @@ const TelegramBotSetup: React.FC = () => {
         </>
       ) : (
         <div className="space-y-4">
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-md">
-            <p className="text-sm font-medium text-green-700 dark:text-green-300">
+          <div className="p-4 bg-success/10 rounded-md">
+            <p className="text-sm font-medium text-success">
               Your Telegram bot is connected!
             </p>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+            <p className="text-xs text-success mt-1">
               Forward your bank SMS messages to your bot to automatically import transactions.
             </p>
           </div>

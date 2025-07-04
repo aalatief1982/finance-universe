@@ -150,11 +150,11 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   const getTransactionTypeColor = (type: TransactionType) => {
     switch (type) {
       case 'expense':
-        return 'text-red-500';
+        return 'text-destructive';
       case 'income':
-        return 'text-green-500';
+        return 'text-success';
       case 'transfer':
-        return 'text-blue-500';
+        return 'text-info';
       default:
         return '';
     }
@@ -196,7 +196,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             
             {transaction.type === 'transfer' && transaction.toAccount && (
               <div className="flex items-center gap-1 mt-1">
-                <ArrowRightLeft size={12} className="text-blue-500" />
+                <ArrowRightLeft size={12} className="text-info" />
                 <p className="text-xs">To: {transaction.toAccount}</p>
               </div>
             )}
@@ -270,7 +270,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             <Button 
               size="sm" 
               variant="outline" 
-              className="p-1 h-8 w-8 text-red-500 hover:bg-red-500/10"
+              className="p-1 h-8 w-8 text-destructive hover:bg-destructive/10"
               onClick={() => onDecline(transaction.id)}
             >
               <X size={16} />
@@ -278,7 +278,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             <Button 
               size="sm" 
               variant="outline"
-              className="p-1 h-8 w-8 text-green-500 hover:bg-green-500/10"
+              className="p-1 h-8 w-8 text-success hover:bg-success/10"
               onClick={() => onConfirm(transaction)}
             >
               <Check size={16} />

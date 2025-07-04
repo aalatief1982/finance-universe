@@ -109,9 +109,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return (
       <div className="flex items-center">
         <Icon 
-          className={`mr-1 h-4 w-4 ${isIncome ? 'text-green-500' : 'text-red-500'}`} 
+          className={`mr-1 h-4 w-4 ${isIncome ? 'text-success' : 'text-destructive'}`} 
         />
-        <span className={isIncome ? 'text-green-600' : 'text-red-600'}>
+        <span className={isIncome ? 'text-success' : 'text-destructive'}>
           {formatCurrency(Math.abs(transaction.amount), transaction.currency || 'USD')}
         </span>
       </div>
@@ -129,11 +129,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const renderType = (type: string) => {
     switch (type) {
       case 'income':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Income</Badge>;
+        return <Badge variant="outline" className="bg-success/10 text-success border-success/20">Income</Badge>;
       case 'expense':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Expense</Badge>;
+        return <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">Expense</Badge>;
       case 'transfer':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Transfer</Badge>;
+        return <Badge variant="outline" className="bg-info/10 text-info border-info/20">Transfer</Badge>;
       default:
         return <Badge variant="outline">{type}</Badge>;
     }

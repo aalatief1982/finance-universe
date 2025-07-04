@@ -18,8 +18,8 @@ const SmartPasteSummary: React.FC<Props> = ({
   keywordScore 
 }) => {
   return (
-    <Card className="bg-purple-50 border-l-4 border-purple-600 text-purple-900 p-[var(--card-padding)] text-sm rounded-md">
-      <h2 className="font-semibold mb-2 text-purple-800">
+    <Card className="bg-accent/10 border-l-4 border-accent text-accent-foreground p-[var(--card-padding)] text-sm rounded-md">
+      <h2 className="font-semibold mb-2 text-accent">
         🧠 SmartPaste Summary
       </h2>
 		<ul className="list-disc list-inside">

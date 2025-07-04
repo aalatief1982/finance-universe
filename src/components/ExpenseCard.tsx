@@ -53,7 +53,7 @@ const ExpenseCard = ({
         </div>
         <p className={cn(
           "text-lg font-medium",
-          amount < 0 ? "text-red-500" : "text-green-500"
+          amount < 0 ? "text-destructive" : "text-success"
         )}>
           {formatCurrency(amount)}
         </p>
