@@ -119,7 +119,7 @@ try {
   // Render a minimal error page for catastrophic errors
   const errorContainer = document.createElement('div');
   errorContainer.innerHTML = `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; color: #666;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Lato-Black', sans-serif; color: #666;">
       <h1 style="margin-bottom: 1rem;">Unable to Load Application</h1>
       <p>We're sorry, but the application couldn't be loaded. Please try refreshing the page.</p>
       <button 

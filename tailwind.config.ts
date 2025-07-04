@@ -32,9 +32,10 @@ export default {
 			padding: {
 				safe: 'env(safe-area-inset-top)',
 			  },
-			fontFamily: {
-				sans: ['Inter var', 'sans-serif'],
-			},
+			
+                        fontFamily: {
+                                sans: ['Lato-Black', 'sans-serif'],
+                        },
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
