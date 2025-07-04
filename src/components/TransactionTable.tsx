@@ -13,8 +13,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import CategoryPill from '@/components/CategoryPill';
-import { VirtualizedList } from '@/components/performance/VirtualizedList';
-import { cn } from '@/lib/utils';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -22,8 +20,6 @@ interface TransactionTableProps {
   sortDirection: 'asc' | 'desc';
   onSort: (field: string) => void;
   onRowClick: (transaction: Transaction) => void;
-  virtualized?: boolean;
-  containerHeight?: number;
 }
 
 const TransactionTable = ({
@@ -32,8 +28,6 @@ const TransactionTable = ({
   sortDirection,
   onSort,
   onRowClick,
-  virtualized = false,
-  containerHeight = 600,
 }: TransactionTableProps) => {
   const renderSortIcon = (field: string) => {
     if (sortField !== field) return null;
@@ -47,26 +41,6 @@ const TransactionTable = ({
       return dateString;
     }
   };
-
-  const renderTransactionRow = (transaction: Transaction, index: number) => (
-    <TableRow
-      key={transaction.id || index}
-      className="cursor-pointer hover:bg-muted/50 transition-colors"
-      onClick={() => onRowClick(transaction)}
-    >
-      <TableCell>{formatDate(transaction.date)}</TableCell>
-      <TableCell>{transaction.title}</TableCell>
-      <TableCell>
-        <CategoryPill category={transaction.category} />
-      </TableCell>
-      <TableCell className={cn(
-        'text-right font-medium',
-        transaction.amount < 0 ? 'text-destructive' : 'text-success'
-      )}>
-        {formatCurrency(transaction.amount)}
-      </TableCell>
-    </TableRow>
-  );
 
   return (
     <div className="rounded-md border overflow-hidden">
@@ -111,9 +85,22 @@ const TransactionTable = ({
               </TableCell>
             </TableRow>
           ) : (
-            transactions.map((transaction, idx) => 
-              renderTransactionRow(transaction, idx)
-            )
+            transactions.map((transaction, idx) => (
+              <TableRow
+                key={transaction.id || idx}
+                className="cursor-pointer hover:bg-muted/70 transition-colors"
+                onClick={() => onRowClick(transaction)}
+              >
+                <TableCell>{formatDate(transaction.date)}</TableCell>
+                <TableCell>{transaction.title}</TableCell>
+                <TableCell>
+                  <CategoryPill category={transaction.category} />
+                </TableCell>
+                <TableCell className={`text-right font-medium ${transaction.amount < 0 ? 'text-destructive' : 'text-success'}`}>
+                  {formatCurrency(transaction.amount)}
+                </TableCell>
+              </TableRow>
+            ))
           )}
         </TableBody>
       </Table>

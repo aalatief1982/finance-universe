@@ -101,7 +101,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       
       case "minimal":
         return (
-          <div className="p-[var(--card-padding)] border border-border rounded-md bg-muted/50 text-muted-foreground my-2">
+          <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-gray-500 my-2">
             <div className="flex items-center gap-2 text-sm mb-2">
               <Info size={16} />
               <span>This component couldn't be loaded</span>
@@ -121,7 +121,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       case "alert":
       default:
         return (
-          <div className="p-[var(--card-padding)] border border-border rounded-md bg-muted/50 text-muted-foreground my-2">
+          <div className="p-4 border border-gray-200 rounded-md bg-gray-50 text-gray-500 my-2">
             <div className="flex items-center gap-2 text-sm mb-2">
               <Info size={16} />
               <span>This component couldn't be loaded</span>

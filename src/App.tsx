@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
-import { AnimatePresence } from 'framer-motion';
-import PageTransitions from '@/components/animations/PageTransitions';
-import { LazyAnalytics, LazyImportTransactions, LazyImportTransactionsNER, LazyProcessSmsMessages, LazyReviewSmsTransactions, LazyVendorMapping, LazyTrainModel } from '@/components/performance/LazyComponents';
 import Home from './pages/Home';
 import Transactions from './pages/Transactions';
 import Profile from './pages/Profile';
@@ -233,43 +230,39 @@ function AppWrapper() {
 
   return (
     <>
-    <AnimatePresence mode="wait">
-      <PageTransitions>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/transactions" element={<Transactions />} />
-          <Route path="/analytics" element={<LazyAnalytics />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/import-transactions" element={<LazyImportTransactions />} />
-          <Route path="/import-transactions-ner" element={<LazyImportTransactionsNER />} />
-          <Route path="/edit-transaction" element={<EditTransaction />} />
-          <Route path="/edit-transaction/:id" element={<EditTransaction />} />
-          <Route path="/train-model" element={<LazyTrainModel />} />
-          <Route path="/build-template" element={<BuildTemplate />} />
-          <Route path="/keyword-bank" element={<KeywordBankManager />} />
-          {process.env.NODE_ENV === 'development' && (
-            <>
-              <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
-              <Route path="/dev/template-failures" element={<TemplateFailureLog />} />
-            </>
-          )}
-          <Route path="/custom-parsing-rules" element={<CustomParsingRules />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/process-sms" element={<LazyProcessSmsMessages />} />
-          <Route path="/sms/process-vendors" element={<ProcessVendors />} />
-          <Route path="/sms/vendors" element={<VendorCategorization />} />
-          <Route path="/vendor-mapping" element={<LazyVendorMapping />} />
-          <Route path="/review-sms-transactions" element={<LazyReviewSmsTransactions />} />
-          <Route path="/budget/accounts" element={<AccountsPage />} />
-          <Route path="/budget/set" element={<SetBudgetPage />} />
-          <Route path="/budget/report" element={<BudgetReportPage />} />
-          <Route path="/budget/insights" element={<BudgetInsightsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </PageTransitions>
-    </AnimatePresence>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/transactions" element={<Transactions />} />
+      <Route path="/analytics" element={<Analytics />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/import-transactions" element={<ImportTransactions />} />
+      <Route path="/import-transactions-ner" element={<ImportTransactionsNER />} />
+      <Route path="/edit-transaction" element={<EditTransaction />} />
+      <Route path="/edit-transaction/:id" element={<EditTransaction />} />
+      <Route path="/train-model" element={<TrainModel />} />
+      <Route path="/build-template" element={<BuildTemplate />} />
+      <Route path="/keyword-bank" element={<KeywordBankManager />} />
+      {process.env.NODE_ENV === 'development' && (
+        <>
+          <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
+          <Route path="/dev/template-failures" element={<TemplateFailureLog />} />
+        </>
+      )}
+      <Route path="/custom-parsing-rules" element={<CustomParsingRules />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/process-sms" element={<ProcessSmsMessages />} />
+      <Route path="/sms/process-vendors" element={<ProcessVendors />} />
+      <Route path="/sms/vendors" element={<VendorCategorization />} />
+      <Route path="/vendor-mapping" element={<VendorMapping />} />
+      <Route path="/review-sms-transactions" element={<ReviewSmsTransactions />} />
+      <Route path="/budget/accounts" element={<AccountsPage />} />
+      <Route path="/budget/set" element={<SetBudgetPage />} />
+      <Route path="/budget/report" element={<BudgetReportPage />} />
+      <Route path="/budget/insights" element={<BudgetInsightsPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
     <SmartPasteReviewQueueModal
       open={queueOpen}
       messages={queuedMessages}

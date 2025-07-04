@@ -5,10 +5,7 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
-import { FileQuestion, ArrowLeft, Home } from "lucide-react";
-import BrandTypography from "@/components/branding/BrandTypography";
-import EmptyState from "@/components/branding/EmptyState";
-import { COPY } from "@/components/copy/StandardizedCopy";
+import { FileQuestion } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -27,33 +24,19 @@ const NotFound = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <EmptyState
-            icon={FileQuestion}
-            title="Page Not Found"
-            description={COPY.EMPTY_STATES.NO_RESULTS + ". The page might have been removed or the link might be broken."}
-            action={{
-              label: "Return to Dashboard",
-              onClick: () => {},
-              variant: "default"
-            }}
-            className="border-dashed-0 bg-gradient-subtle"
-          />
-          
-          <div className="mt-6 flex justify-center gap-3">
-            <Button variant="outline" asChild>
-              <Link to="/" className="flex items-center gap-2">
-                <Home className="w-4 h-4" />
-                Home
-              </Link>
-            </Button>
-            <Button variant="ghost" onClick={() => window.history.back()}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
-            </Button>
-          </div>
-        </motion.div>
+          className="text-center max-w-md"
+      >
+        <div className="mx-auto h-24 w-24 rounded-full bg-muted flex items-center justify-center mb-6">
+          <FileQuestion className="h-12 w-12 text-muted-foreground" />
+        </div>
+        <h1 className="text-4xl font-bold mb-3">Page Not Found</h1>
+        <p className="text-muted-foreground mb-6">
+          We couldn't find the page you're looking for. The page might have been removed or the link might be broken.
+        </p>
+        <Button asChild size="lg">
+          <Link to="/">Return to Dashboard</Link>
+        </Button>
+      </motion.div>
       </div>
     </Layout>
   );

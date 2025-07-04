@@ -1,12 +1,10 @@
 
 import React from 'react';
 import TransactionGrid from '@/components/transactions/TransactionGrid';
-import { LazyTransactionTable } from '@/components/performance/LazyComponents';
+import TransactionTable from '@/components/TransactionTable';
 import EmptyTransactionState from '@/components/transactions/EmptyTransactionState';
 import PaginationInfo from '@/components/transactions/PaginationInfo';
 import { Transaction } from '@/types/transaction';
-import { VirtualizedList } from '@/components/performance/VirtualizedList';
-import { LazyWrapper } from '@/components/performance/LazyWrapper';
 
 interface TransactionsContentProps {
   paginatedTransactions: Transaction[];
@@ -57,18 +55,13 @@ const TransactionsContent: React.FC<TransactionsContentProps> = ({
             onDeleteTransaction={onDeleteTransaction}
           />
         ) : (
-          <LazyWrapper
-            fallback={<div className="p-4 text-center">Loading transactions...</div>}
-            skeletonVariant="table"
-          >
-            <LazyTransactionTable
-              transactions={paginatedTransactions}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              onSort={onSort}
-              onRowClick={onEditTransaction}
-            />
-          </LazyWrapper>
+          <TransactionTable
+            transactions={paginatedTransactions}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSort={onSort}
+            onRowClick={onEditTransaction}
+          />
         )
       ) : (
         <EmptyTransactionState
