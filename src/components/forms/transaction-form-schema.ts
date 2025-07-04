@@ -8,6 +8,8 @@ export const transactionFormSchema = z.object({
   }),
   amount: z.coerce.number().min(0.01, {
     message: "Amount must be greater than 0.",
+  }).max(999999.99, {
+    message: "Amount cannot exceed 999,999.99",
   }),
   type: z.enum(["expense", "income", "transfer"]),
   fromAccount: z.string().min(1, {
