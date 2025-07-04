@@ -1,0 +1,62 @@
+/* Consistent Spacing System */
+:root {
+  /* Base spacing units (mobile-first) */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem;  /* 8px */
+  --spacing-md: 0.75rem; /* 12px */
+  --spacing-lg: 1rem;    /* 16px */
+  --spacing-xl: 1.5rem;  /* 24px */
+  --spacing-2xl: 2rem;   /* 32px */
+  --spacing-3xl: 3rem;   /* 48px */
+  
+  /* Component-specific spacing */
+  --card-padding: var(--spacing-lg);
+  --form-gap: var(--spacing-md);
+  --section-gap: var(--spacing-xl);
+  --page-padding: var(--spacing-lg);
+  
+  /* Responsive breakpoint adjustments */
+  @media (min-width: 768px) {
+    --spacing-xl: 2rem;   /* 32px on tablet+ */
+    --spacing-2xl: 2.5rem; /* 40px on tablet+ */
+    --spacing-3xl: 4rem;   /* 64px on tablet+ */
+    --card-padding: var(--spacing-xl);
+    --page-padding: var(--spacing-xl);
+  }
+  
+  @media (min-width: 1024px) {
+    --spacing-2xl: 3rem;  /* 48px on desktop+ */
+    --spacing-3xl: 5rem;  /* 80px on desktop+ */
+    --page-padding: var(--spacing-2xl);
+  }
+  
+  /* Touch targets for mobile */
+  --touch-target: 44px;
+  --min-button-height: var(--touch-target);
+  
+  /* Animation timings */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 300ms ease-out;
+  --transition-slow: 500ms ease-out;
+}
+
+/* Utility classes for consistent spacing */
+.spacing-xs { margin: var(--spacing-xs); }
+.spacing-sm { margin: var(--spacing-sm); }
+.spacing-md { margin: var(--spacing-md); }
+.spacing-lg { margin: var(--spacing-lg); }
+.spacing-xl { margin: var(--spacing-xl); }
+
+.gap-system { gap: var(--form-gap); }
+.p-card { padding: var(--card-padding); }
+.p-page { padding: var(--page-padding); }
+
+/* Mobile-first responsive utilities */
+.touch-target {
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
+}

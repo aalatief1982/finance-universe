@@ -11,6 +11,8 @@ const Card = React.forwardRef<
     ref={ref}
     className={cn(
       "rounded-lg border bg-card text-card-foreground shadow-sm",
+      "p-[var(--card-padding)] transition-colors duration-200",
+      "hover:shadow-md active:scale-[0.98] md:active:scale-100",
       className
     )}
     {...props}

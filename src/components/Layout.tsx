@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './header/Header';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useResponsive } from '@/hooks/use-responsive';
 import { cn } from '@/lib/utils';
 import BottomNav from './BottomNav';
 
@@ -28,6 +29,7 @@ const Layout = ({
   showBack = false,
 }: LayoutProps) => {
   const isMobile = useIsMobile();
+  const { isMobile: isResponsiveMobile } = useResponsive();
   const location = useLocation();
   
   return (
@@ -54,8 +56,9 @@ const Layout = ({
           <div
             className={cn(
               "h-full",
-              withPadding && "px-[var(--page-padding-x)] py-[var(--page-padding-y)]",
-              !fullWidth && "max-w-[var(--content-max-width)] mx-auto"
+              withPadding && "p-page",
+              !fullWidth && "max-w-[var(--content-max-width)] mx-auto",
+              isResponsiveMobile && "pb-safe-bottom"
             )}
           >
             <AnimatePresence mode="wait" initial={false}>

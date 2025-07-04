@@ -84,7 +84,7 @@ export function saveTransactionWithLearning(
         if (!alreadyMapped) existing.mappings.push(mapping);
       });
     } else {
-      keywordBank.push({ keyword, mappings: newMappings });
+      keywordBank.push({ keyword, type: 'auto', mappings: newMappings });
     }
     saveKeywordBank(keywordBank);
 

@@ -24,7 +24,7 @@ import { useNavigate } from 'react-router-dom';
 import { updateSmsSenderImportDates } from '@/utils/storage-utils';
 import { learnVendorCategoryRule } from '@/lib/smart-paste-engine/senderCategoryRules';
 import { getCategoriesForType, getSubcategoriesForCategory} from '@/lib/categories-data';
-import { TransactionType } from '@/types/transaction';
+import { TransactionType, Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 import {
   AlertDialog,
@@ -156,7 +156,21 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
   }
 
   if (['amount', 'currency', 'subcategory', 'category'].includes(field)) {
-    txn.title = generateDefaultTitle(txn);
+    // Convert DraftTransaction to Transaction for title generation
+    const transactionForTitle: Transaction = {
+      id: txn.id || `temp-${Date.now()}`,
+      title: txn.title,
+      amount: typeof txn.amount === 'string' ? parseFloat(txn.amount) : (txn.amount || 0),
+      category: txn.category,
+      subcategory: txn.subcategory,
+      date: txn.date || new Date().toISOString().split('T')[0],
+      type: (txn.type as TransactionType) || 'expense',
+      source: 'sms-import',
+      currency: txn.currency,
+      vendor: txn.vendor,
+      fromAccount: txn.fromAccount
+    };
+    txn.title = generateDefaultTitle(transactionForTitle);
   }
 
   updated[index] = txn;
@@ -190,7 +204,7 @@ const toggleSkipAll = () => {
 };
 
   const handleSave = () => {
-    const valid: Array<{ txn: DraftTransaction; idx: number }> = [];
+    const valid: Array<{ txn: Transaction; idx: number }> = [];
     const incomplete: DraftTransaction[] = [];
     const skippedTxns: DraftTransaction[] = [];
 
@@ -200,9 +214,45 @@ const toggleSkipAll = () => {
         return;
       }
 
-      const title = generateDefaultTitle(txn);
+      // Convert DraftTransaction to Transaction for title generation
+      const transactionForTitle: Transaction = {
+        id: txn.id || `temp-${Date.now()}`,
+        title: txn.title,
+        amount: typeof txn.amount === 'string' ? parseFloat(txn.amount) : (txn.amount || 0),
+        category: txn.category,
+        subcategory: txn.subcategory,
+        date: txn.date || new Date().toISOString().split('T')[0],
+        type: (txn.type as TransactionType) || 'expense',
+        source: 'sms-import',
+        currency: txn.currency,
+        vendor: txn.vendor,
+        fromAccount: txn.fromAccount
+      };
+      const title = generateDefaultTitle(transactionForTitle);
+      
       if (txn.amount && txn.currency && txn.date && txn.category && txn.subcategory && title) {
-        valid.push({ txn: { ...txn, title }, idx });
+        const fullTransaction: Transaction = {
+          id: txn.id || `txn-${Date.now()}-${Math.random()}`,
+          title,
+          amount: typeof txn.amount === 'string' ? parseFloat(txn.amount) : txn.amount,
+          category: txn.category,
+          subcategory: txn.subcategory,
+          date: txn.date,
+          type: (txn.type as TransactionType) || 'expense',
+          source: 'sms-import',
+          currency: txn.currency,
+          vendor: txn.vendor,
+          fromAccount: txn.fromAccount,
+          details: {
+            sms: txn.sender ? {
+              sender: txn.sender,
+              message: txn.rawMessage,
+              timestamp: new Date().toISOString()
+            } : undefined,
+            rawMessage: txn.rawMessage
+          }
+        };
+        valid.push({ txn: fullTransaction, idx });
       } else {
         incomplete.push(txn);
       }
@@ -218,9 +268,9 @@ const toggleSkipAll = () => {
 
     if (valid.length === 0 && skippedTxns.length === 0) return;
 
-    valid.forEach(({ txn }) => {
+    valid.forEach(({ txn, idx }) => {
       const normalizedAmount =
-        txn.type === 'expense' ? -Math.abs(parseFloat(txn.amount!)) : Math.abs(parseFloat(txn.amount!));
+        txn.type === 'expense' ? -Math.abs(parseFloat(String(txn.amount!))) : Math.abs(parseFloat(String(txn.amount!)));
 
       const cleanTransaction = {
         ...txn,
@@ -228,8 +278,9 @@ const toggleSkipAll = () => {
         title: txn.title,
       };
 
+      const originalTxn = transactions[idx];
       saveTransactionWithLearning(cleanTransaction as any, {
-        rawMessage: txn.rawMessage,
+        rawMessage: originalTxn.rawMessage,
         senderHint: txn.fromAccount || '',
         isNew: true,
         addTransaction,
@@ -239,8 +290,8 @@ const toggleSkipAll = () => {
         silent: true,
       });
 
-      if (txn.alwaysApply && txn.sender) {
-        learnVendorCategoryRule(txn.sender, txn.category, txn.subcategory);
+      if (originalTxn.alwaysApply && originalTxn.sender) {
+        learnVendorCategoryRule(originalTxn.sender, txn.category, txn.subcategory);
       }
     });
 

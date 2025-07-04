@@ -120,7 +120,7 @@ const VendorMapping: React.FC = () => {
   const handleVendorChange = (index: number, field: keyof VendorMappingEntry, value: string) => {
     setVendors(prev => {
       const updated = [...prev];
-      updated[index][field] = value;
+      (updated[index] as any)[field] = value;
       return updated;
     });
   };

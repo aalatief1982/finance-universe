@@ -216,7 +216,7 @@ const handleReadSms = async () => {
           return null;
         }
       })
-      .filter((msg): msg is ProcessedSmsEntry => msg !== null);
+      .filter((msg: ProcessedSmsEntry | null): msg is ProcessedSmsEntry => msg !== null);
 
     // Save both valid and invalid messages to localStorage
     localStorage.setItem('uat_valid_sms', JSON.stringify(validMessages));

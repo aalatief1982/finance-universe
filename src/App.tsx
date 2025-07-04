@@ -74,7 +74,7 @@ function AppWrapper() {
       }
     });
     return () => {
-      resume.remove();
+      resume.then(listener => listener.remove());
     };
   }, []);
 

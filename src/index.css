@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import spacing system */
+@import './styles/spacing-system.css';
+
 @layer base {
   :root {
     --background: 210 20% 98%;

@@ -208,7 +208,7 @@ export function learnFromTransaction(
         if (!exists) existing.mappings.push(mapping);
       });
     } else {
-      bank.push({ keyword, mappings: newMappings });
+      bank.push({ keyword, type: 'auto', mappings: newMappings });
     }
 
     saveKeywordBank(bank);
