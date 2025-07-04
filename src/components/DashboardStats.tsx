@@ -33,90 +33,36 @@ const DashboardStats = ({
     );
   
   return (
-    <div className="grid grid-cols-3 gap-2 mb-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-      >
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-[var(--card-padding)]">
-                  <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
-                    <ArrowUpCircle className="text-green-600" size={20} />
-                  </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-green-500">{formatValue(income)}</h3>
-                  {renderSubtitle(income)}
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>Click to see transactions for this period</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </motion.div>
+    <div className="grid grid-cols-3 gap-4 mb-6">
+      <Card className="text-center">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center w-8 h-8 mx-auto mb-2 bg-green-100 rounded-full">
+            <ArrowUpCircle className="text-green-600" size={16} />
+          </div>
+          <p className="text-sm text-muted-foreground mb-1">Income</p>
+          <h3 className="text-xl font-bold text-green-600">{formatValue(income)}</h3>
+        </CardContent>
+      </Card>
       
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-      >
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-[var(--card-padding)]">
-                  <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
-                    <ArrowDownCircle className="text-red-600" size={20} />
-                  </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
-                  {renderSubtitle(expenses)}
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>Click to see transactions for this period</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </motion.div>
+      <Card className="text-center">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center w-8 h-8 mx-auto mb-2 bg-red-100 rounded-full">
+            <ArrowDownCircle className="text-red-600" size={16} />
+          </div>
+          <p className="text-sm text-muted-foreground mb-1">Expenses</p>
+          <h3 className="text-xl font-bold text-red-600">{formatValue(Math.abs(expenses))}</h3>
+        </CardContent>
+      </Card>
       
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.3 }}
-      >
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-[var(--card-padding)]">
-                  <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance</p>
-                    <div className={`${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                      {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
-                    </div>
-                  </div>
-                  <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatValue(balance)}</h3>
-                  {renderSubtitle(balance)}
-                  {previousBalance !== undefined && (
-                    <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
-                      {isPositiveChange ? (
-                        <TrendingUp size={14} className="mr-1" />
-                      ) : (
-                        <TrendingDown size={14} className="mr-1" />
-                      )}
-                      {Math.abs(balanceChange).toFixed(1)}% from last month
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </TooltipTrigger>
-            <TooltipContent>Click to see transactions for this period</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </motion.div>
+      <Card className="text-center">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center w-8 h-8 mx-auto mb-2 bg-blue-100 rounded-full">
+            {balance >= 0 ? <TrendingUp className="text-blue-600" size={16} /> : <TrendingDown className="text-red-600" size={16} />}
+          </div>
+          <p className="text-sm text-muted-foreground mb-1">Balance</p>
+          <h3 className={`text-xl font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>{formatValue(balance)}</h3>
+        </CardContent>
+      </Card>
     </div>
   );
 };
