@@ -43,12 +43,14 @@ const DashboardStats = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
+
                 <CardContent className="px-2 py-1">
                   <div className="flex items-center justify-center mb-1">
                     <ArrowUpCircle className="text-green-600 mr-2" size={18} strokeWidth={2.5} />
                     <p className="font-bold text-sm sm:text-base text-foreground">Income</p>
                   </div>
                   <h3 className="text-left text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-green-500 truncate leading-tight">
+
                     {formatValue(income)}
                   </h3>
                   {renderSubtitle(income)}
@@ -69,12 +71,14 @@ const DashboardStats = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
+
                 <CardContent className="px-2 py-1">
                   <div className="flex items-center justify-center mb-1">
                     <ArrowDownCircle className="text-red-600 mr-2" size={18} strokeWidth={2.5} />
                     <p className="font-bold text-sm sm:text-base text-foreground">Expenses</p>
                   </div>
                   <h3 className="text-left text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-red-500 truncate leading-tight">
+
                     {formatValue(Math.abs(expenses))}
                   </h3>
                   {renderSubtitle(expenses)}
@@ -95,6 +99,7 @@ const DashboardStats = ({
           <Tooltip>
             <TooltipTrigger asChild>
                 <Card className="overflow-hidden border border-border" role="button">
+
                   <CardContent className="px-2 py-1">
                     <div className="flex items-center justify-center mb-1">
                       <div className={`mr-2 ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
@@ -103,6 +108,7 @@ const DashboardStats = ({
                       <p className="font-bold text-sm sm:text-base text-foreground">Balance</p>
                     </div>
                     <h3 className={`text-left text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold ${balance >= 0 ? 'text-blue-600' : 'text-red-500'} truncate leading-tight`}>
+
                       {formatValue(balance)}
                     </h3>
                     {renderSubtitle(balance)}
