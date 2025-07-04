@@ -43,16 +43,12 @@ const DashboardStats = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
-
-                <CardContent className="px-1 py-1">
-                  <div className="flex items-center justify-center mb-1">
-                    <ArrowUpCircle className="text-green-600 mr-2" size={20} strokeWidth={3} />
-                    <p className="font-bold text-lg sm:text-base">Income</p>
+                <CardContent className="p-[var(--card-padding)]">
+                  <div className="flex justify-between items-start">
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
+                    <ArrowUpCircle className="text-green-600" size={20} />
                   </div>
-                  <h3 className="text-left text-xl sm:text-xl md:text-2xl lg:text-3xl font-semibold text-green-500 truncate leading-tight">
-
-                    {formatValue(income)}
-                  </h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-green-500">{formatValue(income)}</h3>
                   {renderSubtitle(income)}
                 </CardContent>
               </Card>
@@ -71,16 +67,12 @@ const DashboardStats = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
-
-                <CardContent className="px-1 py-1">
-                  <div className="flex items-center justify-center mb-1">
-                    <ArrowDownCircle className="text-red-600 mr-2" size={20} strokeWidth={3} />
-                    <p className="font-bold text-lg sm:text-base">Expenses</p>
+                <CardContent className="p-[var(--card-padding)]">
+                  <div className="flex justify-between items-start">
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
+                    <ArrowDownCircle className="text-red-600" size={20} />
                   </div>
-                  <h3 className="text-left text-xl sm:text-xl md:text-2xl lg:text-3xl font-semibold text-red-500 truncate leading-tight">
-
-                    {formatValue(Math.abs(expenses))}
-                  </h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
                   {renderSubtitle(expenses)}
                 </CardContent>
               </Card>
@@ -98,26 +90,22 @@ const DashboardStats = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-                <Card className="overflow-hidden border border-border" role="button">
-
-                  <CardContent className="px-1 py-1">
-                    <div className="flex items-center justify-center mb-1">
-                      <div className={`mr-2 ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                        {balance >= 0 ? <TrendingUp size={18} strokeWidth={2.5} /> : <TrendingDown size={20} strokeWidth={3} />}
-                      </div>
-                      <p className="font-bold text-lg sm:text-base">Balance</p>
+              <Card className="overflow-hidden border border-border" role="button">
+                <CardContent className="p-[var(--card-padding)]">
+                  <div className="flex justify-between items-start">
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance</p>
+                    <div className={`${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                      {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
-                    <h3 className={`text-left text-xl sm:text-xl md:text-2xl lg:text-3xl font-semibold ${balance >= 0 ? 'text-blue-600' : 'text-red-500'} truncate leading-tight`}>
-
-                      {formatValue(balance)}
-                    </h3>
-                    {renderSubtitle(balance)}
+                  </div>
+                  <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatValue(balance)}</h3>
+                  {renderSubtitle(balance)}
                   {previousBalance !== undefined && (
-                    <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'} truncate`}>
+                    <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
                       {isPositiveChange ? (
-                        <TrendingUp size={12} className="mr-1 flex-shrink-0" />
+                        <TrendingUp size={14} className="mr-1" />
                       ) : (
-                        <TrendingDown size={12} className="mr-1 flex-shrink-0" />
+                        <TrendingDown size={14} className="mr-1" />
                       )}
                       {Math.abs(balanceChange).toFixed(1)}% from last month
                     </p>

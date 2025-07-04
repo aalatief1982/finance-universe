@@ -1,10 +1,11 @@
 
 @import './styles/design-tokens.css';
-@import './styles/spacing-system.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import spacing system */
+@import './styles/spacing-system.css';
 
 @layer base {
   :root {
@@ -111,55 +112,6 @@
 /* Ensure containers get a dark background and text */
 .container {
   @apply dark:bg-black dark:text-white;
-}
-
-/* Enhanced focus styles */
-.focus-visible-enhanced {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-}
-
-/* Smooth scrolling for better UX */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Better spacing consistency */
-.content-spacing {
-  @apply space-y-[var(--section-gap)];
-}
-
-.form-spacing {
-  @apply space-y-[var(--form-gap)];
-}
-
-/* Brand animations */
-@keyframes brand-pulse {
-  0%, 100% { 
-    opacity: 1; 
-    transform: scale(1);
-  }
-  50% { 
-    opacity: 0.8; 
-    transform: scale(1.05);
-  }
-}
-
-.brand-pulse {
-  animation: brand-pulse 2s ease-in-out infinite;
-}
-
-/* Enhanced button interactions */
-.button-enhanced {
-  @apply transform transition-all duration-200 ease-out;
-  @apply hover:scale-[1.02] active:scale-[0.98];
-  @apply focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-}
-
-/* Card hover effects */
-.card-interactive {
-  @apply transition-all duration-200 ease-out;
-  @apply hover:shadow-md hover:-translate-y-1;
-  @apply active:translate-y-0 active:shadow-sm;
 }
 }
 

@@ -37,6 +37,11 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {/* Reduce top padding for better alignment */}
       <DialogContent className="sm:max-w-md pt-2">
+        {origin === 'ml' && (
+          <p className="text-yellow-600 text-xs mb-2">
+            AI-generated fields – please verify.
+          </p>
+        )}
         <ExpenseForm
           onSubmit={onSubmit}
           categories={categories}
