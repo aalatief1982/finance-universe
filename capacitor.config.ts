@@ -20,6 +20,9 @@ const config: CapacitorConfig = {
     BackgroundSmsListener: {
       android: true
     },
+    Updater: {
+      autoSync: false
+    },
     CapacitorHttp: {
       enabled: true
     }

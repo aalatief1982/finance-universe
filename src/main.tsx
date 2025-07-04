@@ -8,6 +8,8 @@ import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initi
 import './styles/app.css';
 import { initializeCapacitor } from './lib/capacitor-init';
 import { demoTransactionService } from './services/DemoTransactionService';
+import { Updater } from '@capgo/capacitor-updater';
+import { Capacitor } from '@capacitor/core';
 
 // Initialize Capacitor
 try {
@@ -104,6 +106,21 @@ setupGlobalErrorHandlers();
 try {
   const root = createRoot(document.getElementById("root")!);
   root.render(<App />);
+
+  if (Capacitor.isNativePlatform()) {
+    Updater.sync()
+      .then((result) => {
+        if (result.didUpdate) {
+          console.log('✅ App updated, reloading...');
+          location.reload();
+        } else {
+          console.log('ℹ️ No update found');
+        }
+      })
+      .catch((err) => {
+        console.error('❌ Update check failed', err);
+      });
+  }
 } catch (error) {
   // Handle fatal initialization errors
   handleError({
