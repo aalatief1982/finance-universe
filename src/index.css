@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /* Import spacing system */
-@import './styles/spacing-system.css';
+/* @import './styles/spacing-system.css'; */
 
 @layer base {
   :root {
@@ -37,6 +37,25 @@
     --destructive-foreground: 0 0% 100%;
     
     --ring: 183 100% 32%;
+    
+    /* Status colors */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 142 76% 96%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 45 93% 96%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --info-light: 217 91% 96%;
+    
+    /* Category-specific colors */
+    --category-food: 25 95% 53%;
+    --category-transport: 217 91% 60%;
+    --category-housing: 142 76% 36%;
+    --category-healthcare: 0 72% 51%;
+    --category-entertainment: 280 83% 57%;
+    --category-shopping: 320 91% 60%;
     
     --radius: 0.5rem;
     
@@ -81,6 +100,17 @@
     --destructive-foreground: 210 40% 98%;
     
     --ring: 183 70% 40%;
+    
+    /* Status colors - dark mode */
+    --success: 142 70% 45%;
+    --success-foreground: 222.2 47.4% 11.2%;
+    --success-light: 142 76% 15%;
+    --warning: 45 90% 55%;
+    --warning-foreground: 222.2 47.4% 11.2%;
+    --warning-light: 45 93% 15%;
+    --info: 217 85% 70%;
+    --info-foreground: 222.2 47.4% 11.2%;
+    --info-light: 217 91% 15%;
   }
 }
  
@@ -112,6 +142,31 @@
 /* Ensure containers get a dark background and text */
 .container {
   @apply dark:bg-black dark:text-white;
+}
+
+/* Status utility classes */
+.status-success { 
+  @apply bg-success/10 text-success border-success/20; 
+}
+.status-warning { 
+  @apply bg-warning/10 text-warning border-warning/20; 
+}
+.status-error { 
+  @apply bg-destructive/10 text-destructive border-destructive/20; 
+}
+.status-info { 
+  @apply bg-info/10 text-info border-info/20; 
+}
+
+/* Form state classes */
+.form-error {
+  @apply border-destructive focus-visible:ring-destructive;
+}
+.form-success {
+  @apply border-success focus-visible:ring-success;
+}
+.form-loading {
+  @apply opacity-75 cursor-not-allowed;
 }
 }
 

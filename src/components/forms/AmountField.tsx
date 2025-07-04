@@ -12,6 +12,15 @@ interface AmountFieldProps {
 const AmountField: React.FC<AmountFieldProps> = ({
   form
 }) => {
+  const amountError = form.formState.errors.amount;
+  const amountValue = form.watch('amount');
+  
+  const getFieldState = () => {
+    if (amountError) return 'error';
+    if (amountValue && amountValue > 0) return 'success';
+    return 'default';
+  };
+
   return (
     <FormField
       control={form.control}
@@ -24,6 +33,8 @@ const AmountField: React.FC<AmountFieldProps> = ({
               type="number"
               step="0.01"
               placeholder="0.00"
+              state={getFieldState()}
+              showStateIcon={true}
               {...field}
             />
           </FormControl>

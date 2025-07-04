@@ -84,9 +84,9 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
   // If not in a native environment, show a web fallback message
   if (!smsPermissionService.isNativeEnvironment()) {
     return (
-      <div className={`bg-yellow-50 border border-yellow-100 rounded-lg p-[var(--card-padding)] ${className}`}>
+      <div className={`status-warning rounded-lg p-[var(--card-padding)] ${className}`}>
         <div className="flex items-start gap-3">
-          <AlertTriangle className="text-yellow-500 flex-shrink-0" size={20} />
+          <AlertTriangle className="text-warning flex-shrink-0" size={20} />
           <div>
             <h3 className="font-medium">SMS Reading Not Available</h3>
             <p className="text-sm text-muted-foreground">
@@ -100,9 +100,9 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
 
   if (permissionGranted) {
     return (
-      <div className={`bg-green-50 border border-green-100 rounded-lg p-[var(--card-padding)] ${className}`}>
+      <div className={`status-success rounded-lg p-[var(--card-padding)] ${className}`}>
         <div className="flex items-start gap-3">
-          <Check className="text-green-600 flex-shrink-0" size={20} />
+          <Check className="text-success flex-shrink-0" size={20} />
           <div>
             <h3 className="font-medium">SMS Permission Granted</h3>
             <p className="text-sm text-muted-foreground">
@@ -126,7 +126,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
         </p>
         
         {error && (
-          <div className="mb-4 text-sm p-2 bg-red-50 text-red-600 rounded-md w-full">
+          <div className="mb-4 text-sm p-2 status-error rounded-md w-full">
             <AlertTriangle className="inline-block mr-1 h-4 w-4" />
             {error}
           </div>

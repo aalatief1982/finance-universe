@@ -70,9 +70,26 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				success: {
-					DEFAULT: '142 76% 36%',
-					foreground: '138 62% 47%'
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))',
+					light: 'hsl(var(--success-light))'
 				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))',
+					light: 'hsl(var(--warning-light))'
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					foreground: 'hsl(var(--info-foreground))',
+					light: 'hsl(var(--info-light))'
+				},
+				'category-food': 'hsl(var(--category-food))',
+				'category-transport': 'hsl(var(--category-transport))',
+				'category-housing': 'hsl(var(--category-housing))',
+				'category-healthcare': 'hsl(var(--category-healthcare))',
+				'category-entertainment': 'hsl(var(--category-entertainment))',
+				'category-shopping': 'hsl(var(--category-shopping))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

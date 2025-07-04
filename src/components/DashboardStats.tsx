@@ -46,9 +46,9 @@ const DashboardStats = ({
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
-                    <ArrowUpCircle className="text-green-600" size={20} />
+                    <ArrowUpCircle className="text-success" size={20} />
                   </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-green-500">{formatValue(income)}</h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-success">{formatValue(income)}</h3>
                   {renderSubtitle(income)}
                 </CardContent>
               </Card>
@@ -70,9 +70,9 @@ const DashboardStats = ({
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
-                    <ArrowDownCircle className="text-red-600" size={20} />
+                    <ArrowDownCircle className="text-destructive" size={20} />
                   </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-red-500">{formatValue(Math.abs(expenses))}</h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-destructive">{formatValue(Math.abs(expenses))}</h3>
                   {renderSubtitle(expenses)}
                 </CardContent>
               </Card>
@@ -94,14 +94,14 @@ const DashboardStats = ({
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance</p>
-                    <div className={`${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                    <div className={`${balance >= 0 ? 'text-info' : 'text-destructive'}`}>
                       {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
                   </div>
-                  <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-red-500'}`}>{formatValue(balance)}</h3>
+                  <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-destructive'}`}>{formatValue(balance)}</h3>
                   {renderSubtitle(balance)}
                   {previousBalance !== undefined && (
-                    <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-green-500' : 'text-red-500'}`}>
+                    <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-success' : 'text-destructive'}`}>
                       {isPositiveChange ? (
                         <TrendingUp size={14} className="mr-1" />
                       ) : (
