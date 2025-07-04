@@ -1,10 +1,11 @@
 
 @import './styles/design-tokens.css';
-/* Import spacing system */
-@import './styles/spacing-system.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import spacing system */
+@import './styles/spacing-system.css';
 
 @layer base {
   :root {
