@@ -44,12 +44,12 @@ const DashboardStats = ({
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
 
-                <CardContent className="px-2 py-1">
+                <CardContent className="px-1 py-1">
                   <div className="flex items-center justify-center mb-1">
-                    <ArrowUpCircle className="text-green-600 mr-2" size={18} strokeWidth={2.5} />
-                    <p className="font-bold text-sm sm:text-base text-foreground">Income</p>
+                    <ArrowUpCircle className="text-green-600 mr-2" size={20} strokeWidth={3} />
+                    <p className="font-bold text-lg sm:text-base">Income</p>
                   </div>
-                  <h3 className="text-left text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-green-500 truncate leading-tight">
+                  <h3 className="text-left text-xl sm:text-xl md:text-2xl lg:text-3xl font-semibold text-green-500 truncate leading-tight">
 
                     {formatValue(income)}
                   </h3>
@@ -72,12 +72,12 @@ const DashboardStats = ({
             <TooltipTrigger asChild>
               <Card className="overflow-hidden border border-border" role="button">
 
-                <CardContent className="px-2 py-1">
+                <CardContent className="px-1 py-1">
                   <div className="flex items-center justify-center mb-1">
-                    <ArrowDownCircle className="text-red-600 mr-2" size={18} strokeWidth={2.5} />
-                    <p className="font-bold text-sm sm:text-base text-foreground">Expenses</p>
+                    <ArrowDownCircle className="text-red-600 mr-2" size={20} strokeWidth={3} />
+                    <p className="font-bold text-lg sm:text-base">Expenses</p>
                   </div>
-                  <h3 className="text-left text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-red-500 truncate leading-tight">
+                  <h3 className="text-left text-xl sm:text-xl md:text-2xl lg:text-3xl font-semibold text-red-500 truncate leading-tight">
 
                     {formatValue(Math.abs(expenses))}
                   </h3>
@@ -100,14 +100,14 @@ const DashboardStats = ({
             <TooltipTrigger asChild>
                 <Card className="overflow-hidden border border-border" role="button">
 
-                  <CardContent className="px-2 py-1">
+                  <CardContent className="px-1 py-1">
                     <div className="flex items-center justify-center mb-1">
                       <div className={`mr-2 ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                        {balance >= 0 ? <TrendingUp size={18} strokeWidth={2.5} /> : <TrendingDown size={18} strokeWidth={2.5} />}
+                        {balance >= 0 ? <TrendingUp size={18} strokeWidth={2.5} /> : <TrendingDown size={20} strokeWidth={3} />}
                       </div>
-                      <p className="font-bold text-sm sm:text-base text-foreground">Balance</p>
+                      <p className="font-bold text-lg sm:text-base">Balance</p>
                     </div>
-                    <h3 className={`text-left text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold ${balance >= 0 ? 'text-blue-600' : 'text-red-500'} truncate leading-tight`}>
+                    <h3 className={`text-left text-xl sm:text-xl md:text-2xl lg:text-3xl font-semibold ${balance >= 0 ? 'text-blue-600' : 'text-red-500'} truncate leading-tight`}>
 
                       {formatValue(balance)}
                     </h3>
