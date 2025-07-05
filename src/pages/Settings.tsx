@@ -46,7 +46,6 @@ import {
   storeTransactions,
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
-import { useLocale } from "@/context/LocaleContext";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -54,12 +53,10 @@ const Settings = () => {
     user,
     updateTheme,
     updateCurrency,
-    updateLanguage,
     updateDisplayOptions,
     updateUserPreferences,
     getEffectiveTheme,
   } = useUser();
-  const { setLanguage: loadLanguage } = useLocale();
 
   // State for form values
   const [theme, setTheme] = useState<"light" | "dark" | "system">(
@@ -68,7 +65,6 @@ const Settings = () => {
   const [currency, setCurrency] = useState(
     user?.preferences?.currency || "USD",
   );
-  const [language, setLanguage] = useState(user?.preferences?.language || "en");
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
   );
@@ -84,7 +80,6 @@ const Settings = () => {
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
       setCurrency(user.preferences.currency || "USD");
-      setLanguage(user.preferences.language || "en");
       if (user.preferences.sms) {
         setBackgroundSmsEnabled(
           user.preferences.sms.backgroundSmsEnabled || false,
@@ -109,9 +104,6 @@ const Settings = () => {
     setCurrency(value);
   };
 
-  const handleLanguageChange = (value: string) => {
-    setLanguage(value);
-  };
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
     if (checked) {
@@ -130,8 +122,6 @@ const Settings = () => {
     updateTheme(theme);
     updateCurrency(currency);
     persistCurrency(currency);
-    updateLanguage(language);
-    loadLanguage(language);
     updateUserPreferences({
       sms: { ...user?.preferences?.sms, backgroundSmsEnabled, autoImport },
     });
@@ -311,18 +301,6 @@ const Settings = () => {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="language">Language</Label>
-            <Select value={language} onValueChange={handleLanguageChange}>
-              <SelectTrigger id="language" className="w-full">
-                <SelectValue placeholder="Select language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="ar">العربية</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </section>
 
         <section className="space-y-4">
