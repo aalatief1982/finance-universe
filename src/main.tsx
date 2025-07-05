@@ -1,33 +1,32 @@
-
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import './styles/app.css'
+
 import { handleError } from './utils/error-utils'
 import { ErrorType, ErrorSeverity } from './types/error'
-import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults';
-import './styles/app.css';
-import { initializeCapacitor } from './lib/capacitor-init';
-import { demoTransactionService } from './services/DemoTransactionService';
-import { Updater } from '@capgo/capacitor-updater';
-import { Capacitor } from '@capacitor/core';
+import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults'
+import { initializeCapacitor } from './lib/capacitor-init'
+import { demoTransactionService } from './services/DemoTransactionService'
 
-// Initialize Capacitor
+import { Capacitor } from '@capacitor/core'
+import { CapacitorUpdater } from '@capgo/capacitor-updater'
+
+declare const cordova: any
+
+// Global initialization
 try {
-  initializeCapacitor();
+  initializeCapacitor()
 } catch (err) {
-  console.error('[Capacitor] Initialization error:', err);
+  console.error('[Capacitor] Initialization error:', err)
 }
 
-initializeXpensiaStorageDefaults();
-demoTransactionService.seedDemoTransactions();
+initializeXpensiaStorageDefaults()
+demoTransactionService.seedDemoTransactions()
 
-
-// Setup global error handlers
+// Global error handlers
 const setupGlobalErrorHandlers = () => {
-  // Handle unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
-    console.warn('Unhandled Promise Rejection:', event.reason);
-    
     handleError({
       type: ErrorType.UNKNOWN,
       message: event.reason?.message || 'Unhandled Promise Rejection',
@@ -37,16 +36,11 @@ const setupGlobalErrorHandlers = () => {
         stack: event.reason?.stack,
       },
       originalError: event.reason
-    });
-    
-    // Prevent the default browser handling
-    event.preventDefault();
-  });
+    })
+    event.preventDefault()
+  })
 
-  // Handle uncaught exceptions
   window.addEventListener('error', (event) => {
-    console.error('Uncaught Error:', event.error);
-    
     handleError({
       type: ErrorType.UNKNOWN,
       message: event.error?.message || event.message || 'Uncaught Error',
@@ -59,82 +53,126 @@ const setupGlobalErrorHandlers = () => {
         stack: event.error?.stack
       },
       originalError: event.error
-    });
-    
-    // Prevent the default browser handling
-    event.preventDefault();
-  });
+    })
+    event.preventDefault()
+  })
 
-  // For React 18+ errors that occur during rendering
-  const originalConsoleError = console.error;
+  const originalConsoleError = console.error
   console.error = (...args) => {
-    // Log original error to maintain dev tools logging
-    originalConsoleError(...args);
-    
-    // Check if this is a React error
-    const errorText = args.join(' ');
+    originalConsoleError(...args)
+    const errorText = args.join(' ')
     if (
-      typeof errorText === 'string' && 
-      (errorText.includes('React will try to recreate this component tree') || 
-       errorText.includes('The above error occurred in the') ||
-       errorText.includes('Error: Uncaught'))
+      typeof errorText === 'string' &&
+      (errorText.includes('React will try to recreate this component tree') ||
+        errorText.includes('The above error occurred in the') ||
+        errorText.includes('Error: Uncaught'))
     ) {
-      // This is likely a React error, extract the actual error
-      const errorMatch = errorText.match(/Error: (.*?)(\\n|$)/);
-      const errorMessage = errorMatch ? errorMatch[1] : 'React rendering error';
-      
+      const errorMatch = errorText.match(/Error: (.*?)(\\n|$)/)
+      const errorMessage = errorMatch ? errorMatch[1] : 'React rendering error'
+
       handleError({
         type: ErrorType.UNKNOWN,
         message: errorMessage,
         severity: ErrorSeverity.ERROR,
-        details: {
-          source: 'react_error',
-          fullMessage: errorText
-        }
-      });
+        details: { source: 'react_error', fullMessage: errorText }
+      })
     }
-  };
+  }
 
-  // Log that error handlers are initialized
-  console.info('Global error handlers initialized');
+  console.info('Global error handlers initialized')
+}
+setupGlobalErrorHandlers()
+
+// OTA update logic (Capgo + Native)
+async function checkForUpdates() {
+  const currentAppVersion = '2.0.0' // Hardcoded or use native version API
+
+  try {
+    const res = await fetch('https://xpensia-505ac.web.app/manifest.json')
+    const manifest = await res.json()
+    const latestVersion = manifest.version
+    const minimumRequired = manifest.minimumVersion || '0.0.0'
+    const currentWebVersion = localStorage.getItem('app_version')
+
+    // Step 1 – Force update via app store if native app is too old
+    if (compareVersions(currentAppVersion, minimumRequired) < 0) {
+      console.warn('🔴 Native version outdated — store update required')
+      if (cordova?.plugins?.nativeAppUpdate) {
+        cordova.plugins.nativeAppUpdate.checkAppUpdate(
+          () => console.log('🟢 Native app up-to-date'),
+          (updateUrl: string) => {
+            alert('A new version of Xpensia is required.\nRedirecting to store...')
+            window.open(updateUrl, '_system', 'location=yes')
+          },
+          { url: 'https://xpensia-505ac.web.app/update.xml' }
+        )
+      }
+      return
+    }
+
+    // Step 2 – Hot update (Capgo)
+    if (!currentWebVersion) {
+      localStorage.setItem('app_version', latestVersion)
+      await CapacitorUpdater.notifyAppReady()
+      return
+    }
+
+    if (latestVersion !== currentWebVersion) {
+      console.log(`⬇️ Downloading hot update ${latestVersion}...`)
+      const downloaded = await CapacitorUpdater.download({
+        version: latestVersion,
+        url: manifest.url || 'https://xpensia-505ac.web.app/www.zip'
+      })
+      await CapacitorUpdater.set(downloaded) // reloads automatically
+       alert(`Xpensia Updated!\nYou're now on version ${latestVersion}`);
+      localStorage.setItem('app_version', latestVersion)
+    } else {
+      console.log('✅ Web bundle up-to-date')
+      await CapacitorUpdater.notifyAppReady()
+    }
+  } catch (err) {
+    console.warn('⚠️ OTA update failed:', err)
+    await CapacitorUpdater.notifyAppReady()
+  }
 }
 
-// Initialize error handlers
-setupGlobalErrorHandlers();
+// Compare 3-part version strings
+function compareVersions(a: string, b: string): number {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] ?? 0) > (pb[i] ?? 0)) return 1
+    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return -1
+  }
+  return 0
+}
 
-// Create root and render app
+// Launch app and update check
 try {
-  const root = createRoot(document.getElementById("root")!);
-  root.render(<App />);
+  const root = createRoot(document.getElementById("root")!)
+  root.render(<App />)
 
   if (Capacitor.isNativePlatform()) {
-    Updater.sync()
-      .then((result) => {
-        if (result.didUpdate) {
-          console.log('✅ App updated, reloading...');
-          location.reload();
-        } else {
-          console.log('ℹ️ No update found');
-        }
-      })
-      .catch((err) => {
-        console.error('❌ Update check failed', err);
-      });
+    // Ensure deviceready fires
+    if (window.cordova && document.readyState === 'complete') {
+      document.dispatchEvent(new Event('deviceready'))
+    }
+
+    document.addEventListener('deviceready', () => {
+      checkForUpdates()
+    })
   }
 } catch (error) {
-  // Handle fatal initialization errors
   handleError({
     type: ErrorType.UNKNOWN,
     message: 'Failed to initialize application',
     severity: ErrorSeverity.CRITICAL,
-    details: {
-      stage: 'initialization'
-    },
+    details: { stage: 'initialization' },
     originalError: error
-  });
-  
-  // Render a minimal error page for catastrophic errors
-  const errorContainer = document.createElement('div');
+  })
+
+  const rootElement = document.getElementById("root")
+  const errorContainer = document.createElement('div')
   errorContainer.innerHTML = `
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Lato-Black', sans-serif; color: #666;">
       <h1 style="margin-bottom: 1rem;">Unable to Load Application</h1>
@@ -146,13 +184,10 @@ try {
         Refresh
       </button>
     </div>
-  `;
-  
-  // Replace the root element with the error container
-  const rootElement = document.getElementById("root");
+  `
   if (rootElement && rootElement.parentNode) {
-    rootElement.parentNode.replaceChild(errorContainer, rootElement);
+    rootElement.parentNode.replaceChild(errorContainer, rootElement)
   } else {
-    document.body.appendChild(errorContainer);
+    document.body.appendChild(errorContainer)
   }
 }
