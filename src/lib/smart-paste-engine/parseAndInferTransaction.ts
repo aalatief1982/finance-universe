@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid';
 import { parseSmsMessage } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates, incrementTemplateFailure } from './templateUtils';
-import { classifySmsViaCloud } from './cloudClassifier';
 import { logParsingFailure } from '@/utils/parsingLogger';
 import {
   getFieldConfidence,
@@ -109,37 +108,6 @@ export async function parseAndInferTransaction(
     );
   }
 
-  if (!parsed.matched || finalConfidence < 0.5) {
-    try {
-      const cloud = await classifySmsViaCloud(rawMessage);
-      Object.assign(transaction, cloud);
-      origin = 'ml';
-      const cloudConfidence = cloud.confidence ?? finalConfidence;
-      const cloudStatus: ParsedTransactionResult['parsingStatus'] =
-        cloudConfidence >= 0.8
-          ? 'success'
-          : cloudConfidence >= 0.4
-            ? 'partial'
-            : 'failed';
-      if (cloudStatus === 'failed' && smsId) {
-        logParsingFailure(smsId);
-      }
-      return {
-        transaction,
-        confidence: cloudConfidence,
-        origin,
-        parsed,
-        fieldConfidences,
-        parsingStatus: cloudStatus,
-        matchedCount: matchedTemplates,
-        totalTemplates: templates.length,
-        fieldScore,
-        keywordScore,
-      };
-    } catch (err) {
-      console.warn('Cloud classifier failed:', err);
-    }
-  }
 
   if (parsingStatus === 'failed' && smsId) {
     logParsingFailure(smsId);
