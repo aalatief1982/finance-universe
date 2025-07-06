@@ -6,13 +6,13 @@ export function logTransactionsMissingCategory(transactions: any[]) {
   transactions.forEach((txn, index) => {
     const { type, category, subcategory, rawMessage } = txn;
     if (!category || category === 'undefined') {
-      console.warn(`❌ txn[${index}] is missing category:`, { type, subcategory, rawMessage });
+      if (process.env.NODE_ENV === 'development') console.warn(`❌ txn[${index}] is missing category:`, { type, subcategory, rawMessage });
       missingCategoryCount++;
     } else if (!subcategory || subcategory === 'undefined' || subcategory === 'none') {
-      console.warn(`⚠️ txn[${index}] is missing subcategory:`, { category, rawMessage });
+      if (process.env.NODE_ENV === 'development') console.warn(`⚠️ txn[${index}] is missing subcategory:`, { category, rawMessage });
     }
   });
 
-  console.log(`✅ Finished. ${missingCategoryCount} transactions missing category.`);
+  if (process.env.NODE_ENV === 'development') console.log(`✅ Finished. ${missingCategoryCount} transactions missing category.`);
   console.groupEnd();
 }

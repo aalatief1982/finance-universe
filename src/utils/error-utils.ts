@@ -123,7 +123,7 @@ export const handleValidationError = (
     isSilent
   );
   
-  console.warn('Validation error:', error);
+  if (process.env.NODE_ENV === 'development') console.warn('Validation error:', error);
   
   if (!isSilent) {
     toast({

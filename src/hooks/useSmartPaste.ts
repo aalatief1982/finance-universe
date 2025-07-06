@@ -34,17 +34,17 @@ export const useSmartPaste = (
   const [structureMatch, setStructureMatch] = useState<any>(null);
   const navigate = useNavigate();
 
-  console.log("[useSmartPaste] Hook initialized", { useHighAccuracy });
+  if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Hook initialized", { useHighAccuracy });
 
   /**
    * Handles pasting text from clipboard.
    * Retrieves clipboard text and initiates text processing.
    */
   const handlePaste = async () => {
-    console.log("[useSmartPaste] Attempting to read from clipboard");
+    if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Attempting to read from clipboard");
     try {
       const clipboardText = await navigator.clipboard.readText();
-      console.log("[useSmartPaste] Text retrieved from clipboard, length:", clipboardText.length);
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Text retrieved from clipboard, length:", clipboardText.length);
       setText(clipboardText);
       processText(clipboardText);
     } catch (err) {
@@ -66,9 +66,9 @@ export const useSmartPaste = (
    * 4. Basic fallback extraction
    */
   const processText = async (rawText: string) => {
-    console.log("[useSmartPaste] Starting text processing, text length:", rawText.length);
+    if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Starting text processing, text length:", rawText.length);
     if (!rawText.trim()) {
-      console.log("[useSmartPaste] Empty text, processing aborted");
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Empty text, processing aborted");
       return;
     }
     setIsProcessing(true);
@@ -76,12 +76,12 @@ export const useSmartPaste = (
 
     try {
       // 1. Try LearningEngine template match
-      console.log("[useSmartPaste] Step 1: Attempting template match");
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Step 1: Attempting template match");
       const match = learningEngineService.findBestMatch(rawText);
-      console.log("[useSmartPaste] Template match result:", { matched: match.matched, confidence: match.confidence });
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Template match result:", { matched: match.matched, confidence: match.confidence });
       
       if (match.matched && match.entry) {
-        console.log("[useSmartPaste] Template match successful", { 
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Template match successful", { 
           senderHint: match.entry.senderHint,
           amount: match.entry.confirmedFields.amount,
           vendor: match.entry.confirmedFields.vendor
@@ -107,7 +107,7 @@ export const useSmartPaste = (
           person: confirmedFields.person
         };
 
-        console.log("[useSmartPaste] Created transaction from template:", txn);
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Created transaction from template:", txn);
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
         setMatchOrigin("template");
@@ -116,9 +116,9 @@ export const useSmartPaste = (
       }
 
       // 2. Structure-based fallback
-      console.log("[useSmartPaste] Step 2: Attempting structure match");
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Step 2: Attempting structure match");
       const structureMatch = learningEngineService.matchUsingTemplateStructure(rawText);
-      console.log("[useSmartPaste] Structure match result:", { 
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Structure match result:", { 
         success: !!structureMatch, 
         confidence: structureMatch?.confidence 
       });
@@ -126,7 +126,7 @@ export const useSmartPaste = (
       setStructureMatch(structureMatch);
       
       if (structureMatch && structureMatch.inferredTransaction) {
-        console.log("[useSmartPaste] Structure match successful", { 
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Structure match successful", { 
           inference: structureMatch.inferredTransaction
         });
         
@@ -148,7 +148,7 @@ export const useSmartPaste = (
           source: 'smart-paste'
         };
 
-        console.log("[useSmartPaste] Created transaction from structure:", txn);
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Created transaction from structure:", txn);
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
         setMatchOrigin("structure");
@@ -157,12 +157,12 @@ export const useSmartPaste = (
       }
 
       // 3. ML fallback
-      console.log("[useSmartPaste] Step 3: Attempting ML-based extraction", { useHighAccuracy });
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Step 3: Attempting ML-based extraction", { useHighAccuracy });
       const parsed = await extractTransactionEntities(rawText, useHighAccuracy);
-      console.log("[useSmartPaste] ML extraction result:", parsed);
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] ML extraction result:", parsed);
       
       if (parsed.amount) {
-        console.log("[useSmartPaste] ML extraction successful", {
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] ML extraction successful", {
           amount: parsed.amount,
           vendor: parsed.vendor,
           type: parsed.type
@@ -185,7 +185,7 @@ export const useSmartPaste = (
           source: 'smart-paste'
         };
 
-        console.log("[useSmartPaste] Created transaction from ML:", txn);
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Created transaction from ML:", txn);
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
         setMatchOrigin("ml");
@@ -194,22 +194,22 @@ export const useSmartPaste = (
       }
 
       // 4. Final basic fallback
-      console.log("[useSmartPaste] Step 4: Attempting basic fallback extraction");
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Step 4: Attempting basic fallback extraction");
       // Check if fallback confidence is low (< 0.4) for fallback
       const fallbackTxn = createFallbackTransaction(rawText);
       if (fallbackTxn) {
-        console.log("[useSmartPaste] Fallback extraction created transaction:", fallbackTxn);
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Fallback extraction created transaction:", fallbackTxn);
         setDetectedTransactions([fallbackTxn]);
         setIsSmartMatch(false);
         setMatchOrigin("fallback");
         
         // Check if confidence is low (< 0.4) for fallback
         const fallbackConfidence = 0.3;
-        console.log("[useSmartPaste] Fallback confidence:", fallbackConfidence);
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Fallback confidence:", fallbackConfidence);
         
         // Redirect to Train Model page if confidence is low
         if (fallbackConfidence < 0.4) {
-          console.log("[useSmartPaste] Low confidence, redirecting to Train Model page");
+          if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Low confidence, redirecting to Train Model page");
           navigate(`/train-model?msg=${encodeURIComponent(rawText)}&sender=${encodeURIComponent(currentSenderHint || '')}`);
           setIsProcessing(false);
           return;
@@ -217,7 +217,7 @@ export const useSmartPaste = (
         
         onTransactionsDetected?.([fallbackTxn], rawText, undefined, fallbackConfidence, true, "fallback");
       } else {
-        console.log("[useSmartPaste] No transaction could be detected");
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] No transaction could be detected");
         setDetectedTransactions([]);
         toast({ title: 'No transaction detected', description: 'Message could not be parsed.' });
       }
@@ -228,7 +228,7 @@ export const useSmartPaste = (
       const fallbackTxn = createFallbackTransaction(rawText);
       setError('ML failed. Using fallback.');
       if (fallbackTxn) {
-        console.log("[useSmartPaste] Error recovery: created fallback transaction", fallbackTxn);
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Error recovery: created fallback transaction", fallbackTxn);
         setDetectedTransactions([fallbackTxn]);
         setMatchOrigin("fallback");
         
@@ -237,7 +237,7 @@ export const useSmartPaste = (
         
         // Redirect to Train Model page if confidence is low
         if (fallbackConfidence < 0.4) {
-          console.log("[useSmartPaste] Low confidence after error, redirecting to Train Model");
+          if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Low confidence after error, redirecting to Train Model");
           navigate(`/train-model?msg=${encodeURIComponent(rawText)}&sender=${encodeURIComponent(currentSenderHint || '')}`);
           setIsProcessing(false);
           return;
@@ -245,11 +245,11 @@ export const useSmartPaste = (
         
         onTransactionsDetected?.([fallbackTxn], rawText, undefined, fallbackConfidence, true, "fallback");
       } else {
-        console.log("[useSmartPaste] Error recovery failed, no transaction detected");
+        if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Error recovery failed, no transaction detected");
         setDetectedTransactions([]);
       }
     } finally {
-      console.log("[useSmartPaste] Text processing completed");
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Text processing completed");
       setIsProcessing(false);
     }
   };
@@ -260,19 +260,19 @@ export const useSmartPaste = (
    * Attempts to identify amounts, transaction types, and simple patterns.
    */
   const createFallbackTransaction = (text: string): Transaction | null => {
-    console.log("[useSmartPaste] Creating fallback transaction from text");
+    if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Creating fallback transaction from text");
     const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
     const amount = amountMatch ? parseFloat(amountMatch[0].replace(',', '.')) : 0;
     
     if (!amount) {
-      console.log("[useSmartPaste] Fallback failed: No amount found in text");
+      if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Fallback failed: No amount found in text");
       return null;
     }
 
     const lower = text.toLowerCase();
     const isExpense = lower.includes('شراء') || lower.includes('paid');
     const isIncome = lower.includes('راتب') || lower.includes('credited');
-    console.log("[useSmartPaste] Fallback analysis:", { amount, isExpense, isIncome });
+    if (process.env.NODE_ENV === 'development') console.log("[useSmartPaste] Fallback analysis:", { amount, isExpense, isIncome });
     
     setMatchOrigin("fallback");
 

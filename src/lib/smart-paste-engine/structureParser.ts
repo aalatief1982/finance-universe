@@ -37,7 +37,7 @@ export interface ParsedField {
 }
 
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
-  console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
+  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
 	if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
   }
@@ -58,8 +58,8 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     throw err; // Let upstream handler deal with it
   }
 
-  console.log('[SmartPaste] Step 2: Extracted Template:', structure);
-  console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
+  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 2: Extracted Template:', structure);
+  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
 
   const matchedTemplate = getTemplateByHash(
     templateHash,
@@ -79,7 +79,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
           source: 'direct',
         };
       } else {
-        console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
+        if (process.env.NODE_ENV === 'development') console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
       }
     });
 
@@ -111,7 +111,7 @@ if (directFields['date']) {
   const normalized = normalizeDate(directFields['date'].value);
   if (normalized) {
     directFields['date'].value = normalized;
-    console.log('[SmartPaste] Normalized date:', directFields['date'].value);
+    if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Normalized date:', directFields['date'].value);
   }
 }
 
@@ -129,8 +129,8 @@ if (directFields['date']) {
       };
     }
   });
-  console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
-  console.log('[SmartPaste] Final directFields:', directFields);
+  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
+  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Final directFields:', directFields);
 
   return {
     rawMessage,

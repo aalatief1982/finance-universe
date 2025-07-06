@@ -52,7 +52,7 @@ const DashboardContent = ({
       const txDate = new Date(tx.date);
       return txDate < firstDayOfMonth;
     } catch (error) {
-      console.warn('Invalid date format in transaction:', tx);
+      if (process.env.NODE_ENV === 'development') console.warn('Invalid date format in transaction:', tx);
       return false;
     }
   });

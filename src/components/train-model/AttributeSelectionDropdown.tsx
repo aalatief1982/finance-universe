@@ -34,14 +34,14 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
   const [selectedField, setSelectedField] = useState<string>('');
   const [inferValue, setInferValue] = useState<string>('');
   
-  console.log("[AttributeSelectionDropdown] Rendered with text:", selectedText?.substring(0, 20));
+  if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Rendered with text:", selectedText?.substring(0, 20));
   
   /**
    * Handles direct attribute selection for tagging text.
    * Immediately invokes the parent callback with the selected field.
    */
   const handleDirectAttributeSelect = (field: string) => {
-    console.log("[AttributeSelectionDropdown] Direct attribute selected:", field);
+    if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Direct attribute selected:", field);
     onSelect('direct', field);
   };
   
@@ -51,7 +51,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
    */
   const handleInferAttributeSelect = () => {
     if (selectedField && inferValue) {
-      console.log("[AttributeSelectionDropdown] Infer attribute selected:", { field: selectedField, value: inferValue });
+      if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Infer attribute selected:", { field: selectedField, value: inferValue });
       onSelect('infer', selectedField, inferValue);
     }
   };
@@ -61,7 +61,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
    * Invokes parent callback with the 'copy' type.
    */
   const handleCopy = () => {
-    console.log("[AttributeSelectionDropdown] Copy selected for text:", selectedText?.substring(0, 20));
+    if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Copy selected for text:", selectedText?.substring(0, 20));
     onSelect('copy', undefined, selectedText);
   };
   
@@ -83,7 +83,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-medium">Selection Options</p>
               <Button variant="ghost" size="sm" onClick={() => {
-                console.log("[AttributeSelectionDropdown] Close clicked");
+                if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Close clicked");
                 onClose();
               }} className="h-6 w-6 p-0">
                 <X size={14} />
@@ -95,7 +95,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               size="sm" 
               className="w-full justify-start gap-2"
               onClick={() => {
-                console.log("[AttributeSelectionDropdown] Direct mode selected");
+                if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Direct mode selected");
                 setMode('direct');
               }}
             >
@@ -108,7 +108,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               size="sm" 
               className="w-full justify-start gap-2"
               onClick={() => {
-                console.log("[AttributeSelectionDropdown] Infer mode selected");
+                if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Infer mode selected");
                 setMode('infer');
               }}
             >
@@ -121,7 +121,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               size="sm" 
               className="w-full justify-start gap-2"
               onClick={() => {
-                console.log("[AttributeSelectionDropdown] Ignore selected");
+                if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Ignore selected");
                 onSelect('ignore');
               }}
             >
@@ -146,7 +146,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-medium">Select Attribute</p>
               <Button variant="ghost" size="sm" onClick={() => {
-                console.log("[AttributeSelectionDropdown] Back to main");
+                if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Back to main");
                 setMode('main');
               }} className="h-6 w-6 p-0">
                 <X size={14} />
@@ -173,7 +173,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
             <div className="flex justify-between items-center mb-2">
               <p className="text-sm font-medium">Infer Attribute</p>
               <Button variant="ghost" size="sm" onClick={() => {
-                console.log("[AttributeSelectionDropdown] Back to main");
+                if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Back to main");
                 setMode('main');
               }} className="h-6 w-6 p-0">
                 <X size={14} />
@@ -184,7 +184,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               <Select 
                 value={selectedField} 
                 onValueChange={(value) => {
-                  console.log("[AttributeSelectionDropdown] Field selected for inference:", value);
+                  if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Field selected for inference:", value);
                   setSelectedField(value);
                 }}
               >
@@ -204,7 +204,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
                 placeholder="Value to infer" 
                 value={inferValue} 
                 onChange={(e) => {
-                  console.log("[AttributeSelectionDropdown] Infer value changed:", e.target.value);
+                  if (process.env.NODE_ENV === 'development') console.log("[AttributeSelectionDropdown] Infer value changed:", e.target.value);
                   setInferValue(e.target.value);
                 }}
                 className="h-8 text-xs"

@@ -48,14 +48,14 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
     
     // If in demo mode, skip actual Supabase API call
     if (verificationState.isInDemoMode) {
-      console.log('Demo mode: Simulating OTP verification send for:', phoneNumber);
+      if (process.env.NODE_ENV === 'development') console.log('Demo mode: Simulating OTP verification send for:', phoneNumber);
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
     }
     
     // Check if Supabase is enabled
     if (!ENABLE_SUPABASE_AUTH) {
-      console.warn('Supabase auth is disabled. Enable it in environment settings.');
+      if (process.env.NODE_ENV === 'development') console.warn('Supabase auth is disabled. Enable it in environment settings.');
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
     }
@@ -160,7 +160,7 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
     
     // If in demo mode, only check for the demo code "1234"
     if (verificationState.isInDemoMode) {
-      console.log('Demo mode: Verifying code:', code);
+      if (process.env.NODE_ENV === 'development') console.log('Demo mode: Verifying code:', code);
       
       const isValid = code === "1234";
       
@@ -185,7 +185,7 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
     
     // Check if Supabase is enabled
     if (!ENABLE_SUPABASE_AUTH) {
-      console.warn('Supabase auth is disabled. Enable it in environment settings.');
+      if (process.env.NODE_ENV === 'development') console.warn('Supabase auth is disabled. Enable it in environment settings.');
       const isValid = code === "1234";
       
       if (!isValid) {
@@ -279,7 +279,7 @@ export const updateUserProfileInSupabase = async (userId: string, userData: any)
     
     // If in demo mode or Supabase is disabled, simulate success
     if (verificationState.isInDemoMode || !ENABLE_SUPABASE_AUTH) {
-      console.log('Demo mode or Supabase disabled: Simulating profile update for:', userId);
+      if (process.env.NODE_ENV === 'development') console.log('Demo mode or Supabase disabled: Simulating profile update for:', userId);
       await new Promise(resolve => setTimeout(resolve, 500));
       return true;
     }
@@ -378,7 +378,7 @@ export const refreshSessionIfNeeded = async (): Promise<boolean> => {
       const { error: refreshError } = await supabase.auth.refreshSession();
       
       if (refreshError) {
-        console.warn('Failed to refresh session:', refreshError);
+        if (process.env.NODE_ENV === 'development') console.warn('Failed to refresh session:', refreshError);
         return false;
       }
       
@@ -401,7 +401,7 @@ export const signOutFromSupabase = async (): Promise<boolean> => {
   try {
     // If in demo mode or Supabase is disabled, just return true
     if (verificationState.isInDemoMode || !ENABLE_SUPABASE_AUTH) {
-      console.log('Demo mode or Supabase disabled: Simulating sign out');
+      if (process.env.NODE_ENV === 'development') console.log('Demo mode or Supabase disabled: Simulating sign out');
       return true;
     }
     

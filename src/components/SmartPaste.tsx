@@ -85,7 +85,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     });
     return;
   }
- console.log('[SmartPaste] Checking message:', text);
+ if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Checking message:', text);
   // 🚫 Check if message contains financial transaction pattern
   if (!isFinancialTransactionMessage(text)) {
     toast({
@@ -96,7 +96,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
-  console.log("[SmartPaste] Submitting message:", text);
+  if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Submitting message:", text);
   setIsProcessing(true);
   setError(null);
   setConfidence(null);
@@ -116,8 +116,8 @@ const handleSubmit = async (e: React.FormEvent) => {
       keywordScore
     } = await parseAndInferTransaction(text, senderHint);
 
-    console.log("[SmartPaste] Parsed result:", parsed);
-    console.log("[SmartPaste] Confidence Breakdown:", {
+    if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Parsed result:", parsed);
+    if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Confidence Breakdown:", {
       confidence,
       origin
     });
@@ -127,7 +127,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setMatchOrigin(origin);
 
     if (onTransactionsDetected) {
-      console.log("[SmartPaste] Final transaction inference:", transaction);
+      if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Final transaction inference:", transaction);
       onTransactionsDetected(
         [transaction],
         text,
@@ -167,7 +167,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   const handlePaste = async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
-      console.log("[SmartPaste] Clipboard text captured:", clipboardText);
+      if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Clipboard text captured:", clipboardText);
       setText(clipboardText);
     } catch (err) {
       toast({
@@ -179,7 +179,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-    console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
+    if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
       transaction,
       parsedFields: {
         amount: transaction.amount,
@@ -192,7 +192,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
     });  
     
-    console.log("[SmartPaste] Transaction added:", transaction);
+    if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Transaction added:", transaction);
     if (onTransactionsDetected) {
       onTransactionsDetected(
         [transaction],

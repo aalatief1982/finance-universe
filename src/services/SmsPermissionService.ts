@@ -23,7 +23,7 @@ class SmsPermissionService {
     try {
       const smsListener = await loadSmsListener();
       if (!smsListener) {
-        console.warn('[SMS] Failed to load SMS listener when checking permissions');
+        if (process.env.NODE_ENV === 'development') console.warn('[SMS] Failed to load SMS listener when checking permissions');
         return false;
       }
       
@@ -58,7 +58,7 @@ class SmsPermissionService {
       
       await smsListener.startListening();
       this.smsListenerInitialized = true;
-      console.log('[SMS] SMS listener initialized');
+      if (process.env.NODE_ENV === 'development') console.log('[SMS] SMS listener initialized');
     } catch (error) {
       console.error("[SMS] Error initializing SMS listener:", error);
     }
@@ -84,7 +84,7 @@ class SmsPermissionService {
     try {
       const smsListener = await loadSmsListener();
       if (!smsListener) {
-        console.warn('[SMS] Failed to load SMS listener when requesting permissions');
+        if (process.env.NODE_ENV === 'development') console.warn('[SMS] Failed to load SMS listener when requesting permissions');
         return false;
       }
       

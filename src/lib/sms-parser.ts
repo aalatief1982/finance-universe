@@ -598,7 +598,7 @@ function extractDateFromMessage(message: string): Date | null {
         return date;
       }
     } catch (error) {
-      console.warn('Error parsing date:', error);
+      if (process.env.NODE_ENV === 'development') console.warn('Error parsing date:', error);
     }
   }
   

@@ -19,16 +19,16 @@ export interface SmsEntry {
 
 export class SmsReaderService {
   static async hasPermission(): Promise<boolean> {
-    console.log("[SmsReaderService] hasPermission() called");
+    if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] hasPermission() called");
 
     if (!Capacitor.isNativePlatform()) {
-      console.warn("[SmsReaderService] Not a native platform");
+      if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Not a native platform");
       return false;
     }
 
     try {
       const result = await SmsReader.checkPermission();
-      console.log("[SmsReaderService] hasPermission result:", result);
+      if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] hasPermission result:", result);
       return result?.granted ?? false;
     } catch (error) {
       console.error("[SmsReaderService] Error checking permission:", error);
@@ -37,16 +37,16 @@ export class SmsReaderService {
   }
 
   static async requestPermission(): Promise<boolean> {
-    console.log("[SmsReaderService] requestPermission() called");
+    if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] requestPermission() called");
 
     if (!Capacitor.isNativePlatform()) {
-      console.warn("[SmsReaderService] Not a native platform");
+      if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Not a native platform");
       return false;
     }
 
     try {
       const result = await SmsReader.requestPermission();
-      console.log("[SmsReaderService] requestPermission result:", result);
+      if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] requestPermission result:", result);
       return result?.granted ?? false;
     } catch (error) {
       console.error("[SmsReaderService] Error requesting permission:", error);
@@ -63,10 +63,10 @@ export class SmsReaderService {
   }
 
   static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
-    console.log('AIS-01 readSmsMessages', options);
+    if (process.env.NODE_ENV === 'development') console.log('AIS-01 readSmsMessages', options);
 
     if (!Capacitor.isNativePlatform()) {
-      console.warn("[SmsReaderService] Not a native platform, returning empty list.");
+      if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Not a native platform, returning empty list.");
       return [];
     }
 
@@ -90,8 +90,8 @@ export class SmsReaderService {
     ).getTime();
     const endDate = (options.endDate ? options.endDate : new Date()).getTime();
 
-    console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
-    console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
+    if (process.env.NODE_ENV === 'development') console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
+    if (process.env.NODE_ENV === 'development') console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
 
     try {
       const { senders } = options;
@@ -103,7 +103,7 @@ export class SmsReaderService {
       });
       
       if (!result || !Array.isArray(result.messages)) {
-        console.warn("[SmsReaderService] Invalid SMS read result:", result);
+        if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Invalid SMS read result:", result);
         return [];
       }
 

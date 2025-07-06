@@ -63,7 +63,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
             <div className="space-y-[var(--card-gap)]">
               {groupedTransactions[date].map((transaction, index) => {
                 if (!transaction.id?.trim()) {
-                  console.warn(
+                  if (process.env.NODE_ENV === 'development') console.warn(
                     "⚠️ Empty or invalid transaction.id:",
                     transaction,
                   );

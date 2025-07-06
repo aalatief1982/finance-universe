@@ -62,7 +62,7 @@ export const safeSetItem = <T>(key: string, data: T): boolean => {
       // Fallback to sessionStorage when quota is exceeded
       try {
         sessionStorage.setItem(key, JSON.stringify(data));
-        console.warn(
+        if (process.env.NODE_ENV === 'development') console.warn(
           `[STORAGE] Stored '${key}' in sessionStorage due to localStorage quota.`
         );
         return true;
@@ -239,7 +239,7 @@ export function learnFromTransaction(
     }
   }
 
-  console.log('[Learned]', {
+  if (process.env.NODE_ENV === 'development') console.log('[Learned]', {
     templateHash,
     vendor: txn.vendor,
     category: txn.category,

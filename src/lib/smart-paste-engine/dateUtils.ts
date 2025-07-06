@@ -32,6 +32,6 @@ export function normalizeDate(input: string): string | null {
     }
   }
 
-  console.warn('[normalizeDate] Could not parse:', input);
+  if (process.env.NODE_ENV === 'development') console.warn('[normalizeDate] Could not parse:', input);
   return null;
 }

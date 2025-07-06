@@ -24,7 +24,7 @@ export async function extractTransactionEntities(text: string, useHighAccuracy =
     
     // Check if model is available
     if (!isNERModelReady()) {
-      console.log('NER model not ready, trying to load...');
+      if (process.env.NODE_ENV === 'development') console.log('NER model not ready, trying to load...');
       await loadNERModel(modelConfig);
     }
 
