@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const PROFILE_IMAGE_KEY = 'profileImagePath';
 
@@ -30,6 +31,7 @@ export function useProfileImage() {
 
     localStorage.setItem(PROFILE_IMAGE_KEY, fileName);
     setImage(`data:image/jpeg;base64,${base64Data}`);
+    FirebaseAnalytics.logEvent({ name: 'photo_added' });
   };
 
   const loadSavedImage = async () => {

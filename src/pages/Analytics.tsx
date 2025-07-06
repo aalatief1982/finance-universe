@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
 import { useTransactions } from '@/context/TransactionContext';
@@ -14,6 +14,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 import {
   BarChart,
   Bar,
@@ -41,6 +42,10 @@ const tips = [
 
 const Analytics: React.FC = () => {
   const { transactions } = useTransactions();
+
+  useEffect(() => {
+    FirebaseAnalytics.logEvent({ name: 'view_analytics' });
+  }, []);
 
   type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';
   const defaultEnd = React.useMemo(() => new Date(), []);

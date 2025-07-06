@@ -2,6 +2,7 @@ import React from "react";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { Button } from "@/components/ui/button";
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const GOOGLE_FORM_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZChMAQWHAcSsr-g/viewform?usp=dialog";
@@ -18,6 +19,7 @@ const FeedbackButton: React.FC<FeedbackButtonProps> = ({ className }) => {
       } else {
         window.open(GOOGLE_FORM_URL, "_blank");
       }
+      FirebaseAnalytics.logEvent({ name: 'send_feedback' });
     } catch (err) {
       console.error("Failed to open feedback form:", err);
     }

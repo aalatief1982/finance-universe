@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { useProfileImage } from '@/hooks/useProfileImage';
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const Profile = () => {
   const { user, updateUser } = useUser();
@@ -62,6 +63,7 @@ const Profile = () => {
       phone: editFormData.phone || undefined,
       avatar: editFormData.avatar,
     });
+    FirebaseAnalytics.logEvent({ name: 'profile_updated' });
     setIsEditing(false);
     toast({ title: 'Profile updated', description: 'Your profile has been saved.' });
   };

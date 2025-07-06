@@ -13,6 +13,7 @@ import TransactionEditForm from '@/components/TransactionEditForm';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { Transaction } from '@/types/transaction';
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const AddTransaction = () => {
       navigateBack: () => navigate(-1),
       combineToasts: true,
     });
+    FirebaseAnalytics.logEvent({ name: 'add_transaction' });
   };
 
   return (
