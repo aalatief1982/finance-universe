@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+       - run: npm ci       # Better for CI, ensures dependencies are cleanly installed
+       - run: npm install -g vite   # <-- Add this line to install vite globally
       - run: npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
