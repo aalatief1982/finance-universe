@@ -99,7 +99,9 @@ async function checkForUpdates() {
       if (process.env.NODE_ENV === 'development') console.warn('🔴 Native version outdated — store update required')
       if (cordova?.plugins?.nativeAppUpdate) {
         cordova.plugins.nativeAppUpdate.checkAppUpdate(
-          () => if (process.env.NODE_ENV === 'development') console.log('🟢 Native app up-to-date'),
+          () => {
+            if (process.env.NODE_ENV === 'development') console.log('🟢 Native app up-to-date')
+          },
           (updateUrl: string) => {
             alert('A new version of Xpensia is required.\nRedirecting to store...')
             window.open(updateUrl, '_system', 'location=yes')

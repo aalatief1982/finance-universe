@@ -190,5 +190,7 @@ export const learningEngineService = {
   extractVendorTokensWithPosition,
   extractAccountTokensWithPosition,
   matchUsingTemplateStructure,
-  saveUserTraining: (data: any) => if (process.env.NODE_ENV === 'development') console.log('Saving user training:', data)
+  saveUserTraining: (data: any) => {
+    if (process.env.NODE_ENV === 'development') console.log('Saving user training:', data)
+  }
 };
