@@ -4,7 +4,9 @@
 import { Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/utils/format-utils';
 import CategoryIcon from '@/components/CategoryIcon';
-		import { Transaction } from '@/types/transaction';
+import { Transaction } from '@/types/transaction';
+import { CATEGORY_ICON_MAP } from '@/constants/categoryIconMap';
+import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
 		import { Card, CardContent } from '@/components/ui/card';
 		import { Button } from '@/components/ui/button';
 		import { cn } from '@/lib/utils';
@@ -25,52 +27,21 @@ import CategoryIcon from '@/components/CategoryIcon';
     showActions = true,
     className,
   }) => {
-    const isIncome = transaction.amount > 0;
-
-		  
-		  // Get emoji based on category
-		  const getEmojiForCategory = (category: string) => {
-			const categoryMap: { [key: string]: string } = {
-			  'food': '🍔',
-			  'restaurant': '🍔',
-			  'dining': '🍔',
-			  'transportation': '🚕',
-			  'housing': '🏠',
-			  'rent': '🏠',
-			  'utilities': '💡',
-			  'groceries': '🛒',
-			  'shopping': '🛍️',
-			  'entertainment': '🎬',
-			  'health': '⚕️',
-			  'insurance': '🏥',
-			  'education': '📚',
-			  'personal': '👤',
-			  'travel': '✈️',
-			  'salary': '💼',
-			  'income': '💰',
-			  'investment': '📈'
-			};
-			
-			// Convert category to lowercase and look for matches
-			const lowerCategory = category.toLowerCase();
-			for (const [key, emoji] of Object.entries(categoryMap)) {
-			  if (lowerCategory.includes(key)) {
-				return emoji;
-			  }
-			}
-			
-			// Default emoji if no match found
-			return isIncome ? '💰' : '📝';
-		  };
+  const isIncome = transaction.amount > 0;
 		  
 		  // Format time from date
-		  const formatTime = (dateStr: string) => {
-			try {
-			  return format(new Date(dateStr), 'h:mm a');
-			} catch (error) {
-			  return '';
-			}
-		  };
+  const formatTime = (dateStr: string) => {
+        try {
+          return format(new Date(dateStr), 'h:mm a');
+        } catch (error) {
+          return '';
+        }
+  };
+
+  const iconInfo =
+    CATEGORY_ICON_MAP[transaction.category] || CATEGORY_ICON_MAP['Other'];
+  const Icon = iconInfo.icon;
+  const typeInfo = TYPE_ICON_MAP[transaction.type];
 		  
 		  return (
 			<motion.div
@@ -82,14 +53,14 @@ import CategoryIcon from '@/components/CategoryIcon';
                                 <CardContent className="p-[var(--card-padding)]">
 				  <div className="flex items-center justify-between">
 					<div className="flex items-center space-x-3">
-					  <div className={cn(
-						"w-10 h-10 rounded-full flex items-center justify-center",
-						isIncome ? "income-bg" : "expense-bg"
-					  )}>
-						<span className="text-base">
-						  {getEmojiForCategory(transaction.category)}
-						</span>
-					  </div>
+                                          <div
+                                            className={cn(
+                                              'w-10 h-10 rounded-full flex items-center justify-center',
+                                              iconInfo.background
+                                            )}
+                                          >
+                                            <Icon className={iconInfo.color} size={20} />
+                                          </div>
 					  
 					  <div className="space-y-1">
 						<h3 className="font-medium text-sm line-clamp-1">{transaction.title}</h3>
@@ -104,15 +75,12 @@ import CategoryIcon from '@/components/CategoryIcon';
 					  </div>
 					</div>
 					
-					<div className="text-right">
-					  <span className={cn(
-						"font-medium",
-						isIncome ? "income-text" : "expense-text"
-					  )}>
-						{isIncome ? "+" : "-"}
+                                        <div className="text-right">
+                                          <span className={cn('font-medium', typeInfo.color)}>
+                                                {isIncome ? '+' : '-'}
                                                 {formatCurrency(Math.abs(transaction.amount), transaction.currency || 'USD')}
-					  </span>
-					</div>
+                                          </span>
+                                        </div>
 				  </div>
 				  
 				  {showActions && (
