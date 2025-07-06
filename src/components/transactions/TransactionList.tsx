@@ -13,8 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { format } from 'date-fns';
-import { CATEGORY_ICON_MAP } from '@/constants/categoryIconMap';
 import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
+import CategoryIcon from '@/components/CategoryIcon';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -121,14 +121,12 @@ const TransactionList: React.FC<TransactionListProps> = ({
   };
 
   const renderCategory = (transaction: Transaction) => {
-    const catInfo = CATEGORY_ICON_MAP[transaction.category] || CATEGORY_ICON_MAP['Other'];
-    const CatIcon = catInfo.icon;
     const typeInfo = TYPE_ICON_MAP[transaction.type];
     const TypeIcon = typeInfo.icon;
 
     return (
       <div className="flex items-center gap-1">
-        <CatIcon className={`w-4 h-4 ${catInfo.color}`} />
+        <CategoryIcon category={transaction.category} size={16} />
         <TypeIcon className={`w-4 h-4 ${typeInfo.color}`} />
         <span className="text-sm">{transaction.category}</span>
       </div>
