@@ -103,6 +103,7 @@ async function checkForUpdates() {
   const pendingVersion = localStorage.getItem('pending_update')
   if (pendingVersion) {
     alert("Xpensia Updated! You're now on version " + pendingVersion)
+    localStorage.setItem('app_version', pendingVersion)
     localStorage.removeItem('pending_update')
   }
 
@@ -145,8 +146,8 @@ async function checkForUpdates() {
         url: manifest.url || 'https://xpensia-505ac.web.app/www.zip'
       })
       localStorage.setItem('pending_update', latestVersion)
-      await CapacitorUpdater.set(downloaded) // reloads automatically
       localStorage.setItem('app_version', latestVersion)
+      await CapacitorUpdater.set(downloaded) // reloads automatically
     } else {
       if (process.env.NODE_ENV === 'development') console.log('✅ Web bundle up-to-date')
       await CapacitorUpdater.notifyAppReady()
