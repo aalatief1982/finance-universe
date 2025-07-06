@@ -11,7 +11,7 @@ import { Transaction } from '@/types/transaction';
 const ImportTransactionsNER = () => {
   const navigate = useNavigate();
 
-  console.log('[ImportTransactionsNER] Page initialized');
+  if (process.env.NODE_ENV === 'development') console.log('[ImportTransactionsNER] Page initialized');
 
   const handleTransactionsDetected = (
     transactions: Transaction[],
@@ -24,7 +24,7 @@ const ImportTransactionsNER = () => {
     fieldScore?: number,
     keywordScore?: number
   ) => {
-    console.log('[ImportTransactionsNER] Transactions detected', {
+    if (process.env.NODE_ENV === 'development') console.log('[ImportTransactionsNER] Transactions detected', {
       count: transactions.length,
       transaction: transactions[0],
       rawMessageLength: rawMessage?.length,
@@ -37,10 +37,10 @@ const ImportTransactionsNER = () => {
     const transaction = transactions[0];
 
     if (!transaction.id?.trim()) {
-      console.warn('⚠️ Empty or invalid transaction.id:', transaction);
+      if (process.env.NODE_ENV === 'development') console.warn('⚠️ Empty or invalid transaction.id:', transaction);
     }
 
-    console.log('[ImportTransactionsNER] Navigate to edit with parameters:', {
+    if (process.env.NODE_ENV === 'development') console.log('[ImportTransactionsNER] Navigate to edit with parameters:', {
       //shouldTrain,
       matchOrigin,
       transaction,

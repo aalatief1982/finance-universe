@@ -81,16 +81,16 @@ function AppWrapper() {
     const platform = Capacitor.getPlatform();
     
     if (platform === 'web') {
-      console.log('[SMS] Web platform — skipping setupSmsListener entirely.');
+      if (process.env.NODE_ENV === 'development') console.log('[SMS] Web platform — skipping setupSmsListener entirely.');
       return;
     }
 
     const setupSmsListener = async () => {
       try {
-        console.log('[SMS] Setting up listener...');
+        if (process.env.NODE_ENV === 'development') console.log('[SMS] Setting up listener...');
         
         if (platform === 'android') {
-          console.log('[INIT] Native platform detected. Setting up status bar...');
+          if (process.env.NODE_ENV === 'development') console.log('[INIT] Native platform detected. Setting up status bar...');
           try {
             await StatusBar.setOverlaysWebView({ overlay: true });
             await StatusBar.setBackgroundColor({ color: '#00000000' });
@@ -103,35 +103,35 @@ function AppWrapper() {
         try {
           // Check permission first
           const permissionResult = await BackgroundSmsListener.checkPermission();
-          console.log('[SMS] Permission check result:', permissionResult);
+          if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission check result:', permissionResult);
           
           if (!permissionResult.granted) {
-            console.log('[SMS] Permission not granted. Requesting permission...');
+            if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission not granted. Requesting permission...');
             const requestResult = await BackgroundSmsListener.requestPermission();
-            console.log('[SMS] Permission request result:', requestResult);
+            if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission request result:', requestResult);
             
             if (!requestResult.granted) {
-              console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
+              if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
               return;
             }
           }
           
-          console.log('[SMS] Starting to listen for SMS...');
-          console.log('AIS-03 starting listener');
+          if (process.env.NODE_ENV === 'development') console.log('[SMS] Starting to listen for SMS...');
+          if (process.env.NODE_ENV === 'development') console.log('AIS-03 starting listener');
           try {
             await BackgroundSmsListener.startListening();
-            console.log('[SMS] Successfully started listening for SMS messages');
+            if (process.env.NODE_ENV === 'development') console.log('[SMS] Successfully started listening for SMS messages');
           } catch (err) {
-            console.warn('[SMS] Error starting SMS listener:', err);
+            if (process.env.NODE_ENV === 'development') console.warn('[SMS] Error starting SMS listener:', err);
           }
           
           // Add listener for SMS events with error handling
           try {
             const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
-              console.log('[Xpensia SMS] Received:', sender, body);
+              if (process.env.NODE_ENV === 'development') console.log('[Xpensia SMS] Received:', sender, body);
 
               if (!isFinancialTransactionMessage(body)) {
-                console.log('[Xpensia SMS] Not a financial message. Skipped.');
+                if (process.env.NODE_ENV === 'development') console.log('[Xpensia SMS] Not a financial message. Skipped.');
                 return;
               }
 
@@ -165,10 +165,10 @@ function AppWrapper() {
               // Handle background state
               const appState = await CapacitorApp.getState();
               if (appState.isActive) {
-                console.log('[NOTIFY] App active. Navigating to transaction.');
+                if (process.env.NODE_ENV === 'development') console.log('[NOTIFY] App active. Navigating to transaction.');
                 navigate('/edit-transaction', { state: { transaction: txn } });
               } else {
-                console.log('[NOTIFY] App backgrounded. Showing notification.');
+                if (process.env.NODE_ENV === 'development') console.log('[NOTIFY] App backgrounded. Showing notification.');
                 await LocalNotifications.schedule({
                   notifications: [
                     {
@@ -182,7 +182,7 @@ function AppWrapper() {
                 });
               }
             });
-            console.log('[SMS] Successfully added SMS listener');
+            if (process.env.NODE_ENV === 'development') console.log('[SMS] Successfully added SMS listener');
           } catch (err) {
             console.error('[SMS] Error adding SMS listener:', err);
           }
@@ -191,7 +191,7 @@ function AppWrapper() {
           LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
             const statePayload = event.notification.extra;
             if (statePayload?.transaction) {
-              console.log('[NOTIFICATION] Tapped. Redirecting to edit.');
+              if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] Tapped. Redirecting to edit.');
               navigate('/edit-transaction', { state: statePayload });
             }
           });
@@ -207,9 +207,9 @@ function AppWrapper() {
 
     setupSmsListener();
     return () => {
-      console.log('AIS-04 stopping listener');
+      if (process.env.NODE_ENV === 'development') console.log('AIS-04 stopping listener');
       BackgroundSmsListener.stopListening().catch(err => {
-        console.warn('[SMS] Error stopping SMS listener:', err);
+        if (process.env.NODE_ENV === 'development') console.warn('[SMS] Error stopping SMS listener:', err);
       });
     };
   }, [navigate]);

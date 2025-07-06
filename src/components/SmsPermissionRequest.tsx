@@ -46,9 +46,9 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
       const smsListener = await loadSmsListener();
       if (smsListener) {
         await smsListener.startListening().catch(err => {
-          console.warn('[SMS] Error starting SMS listener:', err);
+          if (process.env.NODE_ENV === 'development') console.warn('[SMS] Error starting SMS listener:', err);
         });
-        console.log('[SMS] SMS listener initialized');
+        if (process.env.NODE_ENV === 'development') console.log('[SMS] SMS listener initialized');
       }
     } catch (err) {
       console.error('[SMS] Error initializing SMS listener:', err);

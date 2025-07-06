@@ -19,7 +19,7 @@ export class SmsImportService {
     navigate: (path: string, options?: any) => void,
     opts?: { auto?: boolean }
   ): Promise<void> {
-    console.log('AIS-02 checkForNewMessages');
+    if (process.env.NODE_ENV === 'development') console.log('AIS-02 checkForNewMessages');
     try {
       const { auto = false } = opts || {};
 

@@ -212,7 +212,7 @@ const handleReadSms = async () => {
         } else {
           const skippedEntry = { ...msg, matchedKeyword };
           invalidMessages.push(skippedEntry);
-          console.warn("[SmartPaste] Skipped message:", msg.message);
+          if (process.env.NODE_ENV === 'development') console.warn("[SmartPaste] Skipped message:", msg.message);
           return null;
         }
       })

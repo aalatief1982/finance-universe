@@ -8,11 +8,11 @@ export function isFinancialTransactionMessage(text: string): boolean {
       if (Array.isArray(parsed)) {
         storedKeywords = parsed;
       } else {
-        console.warn('[MessageFilter] Invalid xpensia_type_keywords format:', parsed);
+        if (process.env.NODE_ENV === 'development') console.warn('[MessageFilter] Invalid xpensia_type_keywords format:', parsed);
       }
     }
   } catch (e) {
-    console.warn('Failed to parse xpensia_type_keywords:', e);
+    if (process.env.NODE_ENV === 'development') console.warn('Failed to parse xpensia_type_keywords:', e);
   }
 
   const fallbackKeywords = ["مبلغ", "حوالة", "رصيد", "بطاقة", "شراء", "تحويل", "دفع", "إيداع"];
@@ -48,15 +48,6 @@ export function isFinancialTransactionMessage(text: string): boolean {
   );
   const dateMatch = dateRegex.test(text);
 
-  // Diagnostics
-  console.log('[SmartPaste] Checking message:', text);
-  console.log('[SmartPaste] Keyword match:', keywordMatch);
-  console.log('[SmartPaste] Amount match:', amountMatch);
-  console.log('[SmartPaste] Date match:', dateMatch);
-
-  if (!keywordMatch) console.warn('[SmartPaste] Message rejected: missing financial keyword.');
-  if (!amountMatch) console.warn('[SmartPaste] Message rejected: missing currency/amount.');
-  if (!dateMatch) console.warn('[SmartPaste] Message rejected: missing recognizable date.');
 
   return keywordMatch && amountMatch && dateMatch;
 }

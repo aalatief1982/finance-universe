@@ -96,10 +96,10 @@ async function checkForUpdates() {
 
     // Step 1 – Force update via app store if native app is too old
     if (compareVersions(currentAppVersion, minimumRequired) < 0) {
-      console.warn('🔴 Native version outdated — store update required')
+      if (process.env.NODE_ENV === 'development') console.warn('🔴 Native version outdated — store update required')
       if (cordova?.plugins?.nativeAppUpdate) {
         cordova.plugins.nativeAppUpdate.checkAppUpdate(
-          () => console.log('🟢 Native app up-to-date'),
+          () => if (process.env.NODE_ENV === 'development') console.log('🟢 Native app up-to-date'),
           (updateUrl: string) => {
             alert('A new version of Xpensia is required.\nRedirecting to store...')
             window.open(updateUrl, '_system', 'location=yes')
@@ -118,7 +118,7 @@ async function checkForUpdates() {
     }
 
     if (latestVersion !== currentWebVersion) {
-      console.log(`⬇️ Downloading hot update ${latestVersion}...`)
+      if (process.env.NODE_ENV === 'development') console.log(`⬇️ Downloading hot update ${latestVersion}...`)
       const downloaded = await CapacitorUpdater.download({
         version: latestVersion,
         url: manifest.url || 'https://xpensia-505ac.web.app/www.zip'
@@ -127,11 +127,11 @@ async function checkForUpdates() {
        alert(`Xpensia Updated!\nYou're now on version ${latestVersion}`);
       localStorage.setItem('app_version', latestVersion)
     } else {
-      console.log('✅ Web bundle up-to-date')
+      if (process.env.NODE_ENV === 'development') console.log('✅ Web bundle up-to-date')
       await CapacitorUpdater.notifyAppReady()
     }
   } catch (err) {
-    console.warn('⚠️ OTA update failed:', err)
+    if (process.env.NODE_ENV === 'development') console.warn('⚠️ OTA update failed:', err)
     await CapacitorUpdater.notifyAppReady()
   }
 }

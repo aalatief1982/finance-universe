@@ -56,7 +56,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     });
     return;
   }
-  console.log('[NER] Submitting message:', text);
+  if (process.env.NODE_ENV === 'development') console.log('[NER] Submitting message:', text);
   setIsProcessing(true);
   setError(null);
   setConfidence(null);
@@ -64,7 +64,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
     const parsed = await extractTransactionEntities(text);
-    console.log('[NER] Extracted entities:', parsed);
+    if (process.env.NODE_ENV === 'development') console.log('[NER] Extracted entities:', parsed);
 
     const transaction: Transaction = {
       id: `ner-${Math.random().toString(36).substring(2, 9)}`,
@@ -82,7 +82,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setDetectedTransactions([transaction]);
 
     if (onTransactionsDetected) {
-      console.log('[NER] Final transaction:', transaction);
+      if (process.env.NODE_ENV === 'development') console.log('[NER] Final transaction:', transaction);
       onTransactionsDetected(
         [transaction],
         text,
@@ -108,7 +108,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   const handlePaste = async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
-      console.log('[NER] Clipboard text captured:', clipboardText);
+      if (process.env.NODE_ENV === 'development') console.log('[NER] Clipboard text captured:', clipboardText);
       setText(clipboardText);
     } catch (err) {
       toast({
@@ -120,7 +120,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-    console.log('[NER] Sending transaction to ImportTransactions:', {
+    if (process.env.NODE_ENV === 'development') console.log('[NER] Sending transaction to ImportTransactions:', {
       transaction,
       parsedFields: {
         amount: transaction.amount,
@@ -133,7 +133,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
     });  
     
-    console.log('[NER] Transaction added:', transaction);
+    if (process.env.NODE_ENV === 'development') console.log('[NER] Transaction added:', transaction);
     if (onTransactionsDetected) {
       onTransactionsDetected(
         [transaction],

@@ -119,7 +119,7 @@ export function suggestTransactionDetails(rawMessage: string): Partial<Transacti
 
 // Mock implementations of missing methods to fix the type errors
 function learnFromTransaction(rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: any): void {
-  console.log('Learning from transaction:', transaction);
+  if (process.env.NODE_ENV === 'development') console.log('Learning from transaction:', transaction);
 }
 
 function findBestMatch(message: string, senderHint?: string): MatchResult {
@@ -131,7 +131,7 @@ function inferFieldsFromText(message: string): Partial<Transaction> | null {
 }
 
 function saveConfig(config: Partial<LearningEngineConfig>): void {
-  console.log('Saving config:', config);
+  if (process.env.NODE_ENV === 'development') console.log('Saving config:', config);
 }
 
 function getLearnedEntries(): LearnedEntry[] {
@@ -139,7 +139,7 @@ function getLearnedEntries(): LearnedEntry[] {
 }
 
 function clearLearnedEntries(): void {
-  console.log('Clearing learned entries');
+  if (process.env.NODE_ENV === 'development') console.log('Clearing learned entries');
 }
 
 function tokenize(msg: string): string[] {
@@ -190,5 +190,5 @@ export const learningEngineService = {
   extractVendorTokensWithPosition,
   extractAccountTokensWithPosition,
   matchUsingTemplateStructure,
-  saveUserTraining: (data: any) => console.log('Saving user training:', data)
+  saveUserTraining: (data: any) => if (process.env.NODE_ENV === 'development') console.log('Saving user training:', data)
 };

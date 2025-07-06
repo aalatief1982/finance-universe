@@ -38,7 +38,7 @@ interface VendorMappingEntry {
 const VendorMapping: React.FC = () => {
   const [vendors, setVendors] = useState<VendorMappingEntry[]>([]);
   const location = useLocation();
-  console.log('VendorMapping state:', location.state);
+  if (process.env.NODE_ENV === 'development') console.log('VendorMapping state:', location.state);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -114,7 +114,7 @@ const VendorMapping: React.FC = () => {
     });
 
     setVendors(initialMappings);
-    console.log('VendorMapping vendors:', initialMappings);
+    if (process.env.NODE_ENV === 'development') console.log('VendorMapping vendors:', initialMappings);
   }, [location.state]);
 
   const handleVendorChange = (index: number, field: keyof VendorMappingEntry, value: string) => {
@@ -146,10 +146,10 @@ const VendorMapping: React.FC = () => {
   };
 
   const handleConfirm = () => {
-    console.log('VendorMapping: save clicked');
+    if (process.env.NODE_ENV === 'development') console.log('VendorMapping: save clicked');
 
     if (!hasRequiredState()) {
-      console.warn('Save attempted without required vendor data');
+      if (process.env.NODE_ENV === 'development') console.warn('Save attempted without required vendor data');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
@@ -176,7 +176,7 @@ const VendorMapping: React.FC = () => {
     }
 
     if (!hasValidData()) {
-      console.warn('Save attempted without valid vendor data or messages');
+      if (process.env.NODE_ENV === 'development') console.warn('Save attempted without valid vendor data or messages');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
@@ -237,10 +237,10 @@ const VendorMapping: React.FC = () => {
   };
 
 const handleRetry = () => {
-    console.log('VendorMapping: retry clicked');
+    if (process.env.NODE_ENV === 'development') console.log('VendorMapping: retry clicked');
 
     if (!hasRequiredState() || !hasValidData()) {
-      console.warn('Retry attempted without valid vendor data or messages');
+      if (process.env.NODE_ENV === 'development') console.warn('Retry attempted without valid vendor data or messages');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
@@ -254,9 +254,9 @@ const handleRetry = () => {
   };
 
   const handleBack = () => {
-    console.log('VendorMapping: back clicked');
+    if (process.env.NODE_ENV === 'development') console.log('VendorMapping: back clicked');
     if (!hasRequiredState()) {
-      console.warn('Back navigation attempted without valid vendor data or messages');
+      if (process.env.NODE_ENV === 'development') console.warn('Back navigation attempted without valid vendor data or messages');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
@@ -266,7 +266,7 @@ const handleRetry = () => {
       return;
     }
     if (!hasValidData()) {
-      console.warn('Back navigation attempted without valid vendor data or messages');
+      if (process.env.NODE_ENV === 'development') console.warn('Back navigation attempted without valid vendor data or messages');
       toast({
         variant: 'destructive',
         title: 'Missing vendor data',
