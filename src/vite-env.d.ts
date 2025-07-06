@@ -42,3 +42,52 @@ declare module '@capacitor/local-notifications' {
     addListener: (eventName: string, callback: (event: any) => void) => Promise<any>;
   };
 }
+
+declare module '@capacitor-firebase/analytics' {
+  export interface LogEventOptions {
+    name: string
+    params?: { [key: string]: any }
+  }
+
+  export interface SetUserIdOptions {
+    userId: string | null
+  }
+
+  export interface SetUserPropertyOptions {
+    key: string
+    value: string | null
+  }
+
+  export interface SetSessionTimeoutDurationOptions {
+    duration: number
+  }
+
+  export interface SetEnabledOptions {
+    enabled: boolean
+  }
+
+  export interface IsEnabledResult {
+    enabled: boolean
+  }
+
+  export interface GetAppInstanceIdResult {
+    appInstanceId?: string
+  }
+
+  export const FirebaseAnalytics: {
+    enable: () => Promise<void>
+    logEvent: (options: LogEventOptions) => Promise<void>
+    setUserId: (options: SetUserIdOptions) => Promise<void>
+    setUserProperty: (options: SetUserPropertyOptions) => Promise<void>
+    setCurrentScreen: (
+      options: { screenName: string | null; screenClassOverride?: string | null }
+    ) => Promise<void>
+    setSessionTimeoutDuration: (
+      options: SetSessionTimeoutDurationOptions
+    ) => Promise<void>
+    setEnabled: (options: SetEnabledOptions) => Promise<void>
+    isEnabled: () => Promise<IsEnabledResult>
+    getAppInstanceId: () => Promise<GetAppInstanceIdResult>
+    resetAnalyticsData: () => Promise<void>
+  }
+}

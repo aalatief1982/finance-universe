@@ -107,6 +107,32 @@ Firebase features such as Cloud Functions and push notifications require a `goog
 4. Place the file at `android/app/google-services.json`.
 5. Rebuild the project so the Google Services Gradle plugin picks up the new configuration.
 
+## Firebase Analytics plugin
+
+The app uses the `@capacitor-firebase/analytics` plugin to send usage events.
+
+1. Install the plugin and sync the native projects:
+
+   ```sh
+   npm install @capacitor-firebase/analytics
+   npx cap sync
+   ```
+
+2. Add the Firebase configuration files:
+   - `android/app/google-services.json`
+   - `ios/App/App/GoogleService-Info.plist`
+
+3. Rebuild the Android and iOS projects.
+
+4. To verify events while testing, enable DebugView with:
+
+   ```sh
+   adb shell setprop debug.firebase.analytics.app <appId>
+   ```
+
+   Use the application ID from `capacitor.config.ts` and check the Firebase
+   console's **DebugView** tab for incoming events.
+
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
