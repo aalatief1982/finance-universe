@@ -1,29 +1,8 @@
 
 		import React from 'react';
 		import { motion } from 'framer-motion';
-import {
-  Edit,
-  Trash2,
-  Receipt,
-  GraduationCap,
-  Gamepad2,
-  Utensils,
-  Gift,
-  HeartPulse,
-  Home,
-  Baby,
-  Bath,
-  ConciergeBell,
-  ShoppingBag,
-  ArrowLeftRight,
-  Car,
-  Plane,
-  Lightbulb,
-  CircleDollarSign,
-  Package,
-  LucideIcon,
-} from 'lucide-react';
-import { CATEGORY_COLOR_MAP } from '@/constants/categoryColors';
+import { Edit, Trash2 } from 'lucide-react';
+import { CATEGORY_ICON_MAP } from '@/constants/categoryIconMap';
 import { formatCurrency } from '@/utils/format-utils';
 		import { Transaction } from '@/types/transaction';
 		import { Card, CardContent } from '@/components/ui/card';
@@ -48,25 +27,6 @@ import { formatCurrency } from '@/utils/format-utils';
   }) => {
     const isIncome = transaction.amount > 0;
 
-    const iconMap: Record<string, LucideIcon> = {
-      Bills: Receipt,
-      Education: GraduationCap,
-      Entertainment: Gamepad2,
-      Food: Utensils,
-      'Gifts & Donations': Gift,
-      Health: HeartPulse,
-      Housing: Home,
-      Kids: Baby,
-      'Personal Care': Bath,
-      Services: ConciergeBell,
-      Shopping: ShoppingBag,
-      Transfer: ArrowLeftRight,
-      Transportation: Car,
-      Travel: Plane,
-      Utilities: Lightbulb,
-      Income: CircleDollarSign,
-      Other: Package,
-    };
 		  
 		  // Get emoji based on category
 		  const getEmojiForCategory = (category: string) => {
@@ -136,9 +96,13 @@ import { formatCurrency } from '@/utils/format-utils';
                                                 <div className="flex items-center text-xs text-muted-foreground">
                                                   <span className="flex items-center gap-1">
                                                     {(() => {
-                                                      const Icon = iconMap[transaction.category] || iconMap['Other'];
-                                                      const color = CATEGORY_COLOR_MAP[transaction.category] || CATEGORY_COLOR_MAP['Other'];
-                                                      return <Icon className={cn('w-6 h-6', color)} />;
+                                                      const info =
+                                                        CATEGORY_ICON_MAP[transaction.category] ||
+                                                        CATEGORY_ICON_MAP['Other'];
+                                                      const Icon = info.icon;
+                                                      return (
+                                                        <Icon className={cn('w-6 h-6', info.color)} />
+                                                      );
                                                     })()}
                                                     {transaction.category}
                                                   </span>
