@@ -28,6 +28,9 @@ const config: CapacitorConfig = {
     },
     CapacitorHttp: {
       enabled: true
+    },
+    FirebaseAnalytics: {
+      enableNative: true
     }
   },
   android: {
