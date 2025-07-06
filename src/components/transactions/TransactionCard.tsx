@@ -2,8 +2,8 @@
 		import React from 'react';
 		import { motion } from 'framer-motion';
 import { Edit, Trash2 } from 'lucide-react';
-import { CATEGORY_ICON_MAP } from '@/constants/categoryIconMap';
 import { formatCurrency } from '@/utils/format-utils';
+import CategoryIcon from '@/components/CategoryIcon';
 		import { Transaction } from '@/types/transaction';
 		import { Card, CardContent } from '@/components/ui/card';
 		import { Button } from '@/components/ui/button';
@@ -95,15 +95,7 @@ import { formatCurrency } from '@/utils/format-utils';
 						<h3 className="font-medium text-sm line-clamp-1">{transaction.title}</h3>
                                                 <div className="flex items-center text-xs text-muted-foreground">
                                                   <span className="flex items-center gap-1">
-                                                    {(() => {
-                                                      const info =
-                                                        CATEGORY_ICON_MAP[transaction.category] ||
-                                                        CATEGORY_ICON_MAP['Other'];
-                                                      const Icon = info.icon;
-                                                      return (
-                                                        <Icon className={cn('w-6 h-6', info.color)} />
-                                                      );
-                                                    })()}
+                                                    <CategoryIcon category={transaction.category} size={24} />
                                                     {transaction.category}
                                                   </span>
                                                   <span className="mx-1">•</span>
