@@ -11,24 +11,8 @@ import { useTransactions } from '@/context/TransactionContext';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
-  ShoppingBag,
-  Home as HomeIcon,
-  Car,
-  Utensils,
-  CircleDollarSign,
-  Receipt,
-  GraduationCap,
-  Gamepad2,
-  Lightbulb,
-  Package,
-  Gift,
-  Baby,
-  Bath,
-  ConciergeBell,
-  ArrowLeftRight,
-  Plane,
-  HeartPulse,
 } from 'lucide-react';
+import { CATEGORY_ICON_MAP } from '@/constants/categoryIconMap';
 import { format } from 'date-fns';
 
 import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
@@ -143,25 +127,6 @@ const Home = () => {
       return acc;
     }, {} as Record<string, number>);
 
-  const iconMap: Record<string, JSX.Element> = {
-    Bills: <Receipt className="w-6 h-6" />,
-    Education: <GraduationCap className="w-6 h-6" />,
-    Entertainment: <Gamepad2 className="w-6 h-6" />,
-    Food: <Utensils className="w-6 h-6" />,
-    'Gifts & Donations': <Gift className="w-6 h-6" />,
-    Health: <HeartPulse className="w-6 h-6" />,
-    Housing: <HomeIcon className="w-6 h-6" />,
-    Kids: <Baby className="w-6 h-6" />,
-    'Personal Care': <Bath className="w-6 h-6" />,
-    Services: <ConciergeBell className="w-6 h-6" />,
-    Shopping: <ShoppingBag className="w-6 h-6" />,
-    Transfer: <ArrowLeftRight className="w-6 h-6" />,
-    Transportation: <Car className="w-6 h-6" />,
-    Travel: <Plane className="w-6 h-6" />,
-    Utilities: <Lightbulb className="w-6 h-6" />,
-    Income: <CircleDollarSign className="w-6 h-6" />,
-    Other: <Package className="w-6 h-6" />,
-  };
 
   const formatDisplayTitle = (txn: Transaction) => {
     const base = txn.title?.trim() || 'Transaction';
@@ -298,7 +263,11 @@ const Home = () => {
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          {iconMap[transaction.category] || iconMap['Other']}
+                          {(() => {
+                            const { icon: Icon, color } =
+                              CATEGORY_ICON_MAP[transaction.category] || CATEGORY_ICON_MAP['Other'];
+                            return <Icon className={`w-6 h-6 ${color}`} />;
+                          })()}
                           <span className="font-medium line-clamp-1">{formatDisplayTitle(transaction)}</span>
                         </div>
                         <div
