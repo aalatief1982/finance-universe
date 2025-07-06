@@ -5,6 +5,7 @@ import {
   getSmsSenderImportMap,
   setSelectedSmsSenders
 } from '@/utils/storage-utils';
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 // Flags to ensure auto import prompts only appear once per session
 
@@ -21,6 +22,7 @@ export class SmsImportService {
   ): Promise<void> {
     if (process.env.NODE_ENV === 'development') console.log('AIS-02 checkForNewMessages');
     try {
+      await FirebaseAnalytics.logEvent({ name: 'sms_import_start' });
       const { auto = false } = opts || {};
 
       const senders = getSelectedSmsSenders();
@@ -99,6 +101,7 @@ export class SmsImportService {
         return;
       }
 
+      await FirebaseAnalytics.logEvent({ name: 'sms_import_complete' });
       navigate('/vendor-mapping', { state: { messages: filteredMessages, vendorMap, keywordMap } });
     } catch (error) {
       console.error('[SmsImportService] Failed to auto import SMS messages:', error);

@@ -11,6 +11,8 @@ import { demoTransactionService } from './services/DemoTransactionService'
 
 import { Capacitor } from '@capacitor/core'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
+import { Device } from '@capacitor/device'
 
 declare const cordova: any
 
@@ -23,6 +25,17 @@ try {
 
 initializeXpensiaStorageDefaults()
 demoTransactionService.seedDemoTransactions()
+
+if (Capacitor.isNativePlatform()) {
+  FirebaseAnalytics.enable()
+    .then(async () => {
+      console.log('[FirebaseAnalytics] enabled')
+      const { uuid } = await Device.getId()
+      await FirebaseAnalytics.setUserId({ userId: uuid })
+      await FirebaseAnalytics.logEvent({ name: 'app_launch' })
+    })
+    .catch(err => console.warn('[FirebaseAnalytics] failed', err))
+}
 
 // Global error handlers
 const setupGlobalErrorHandlers = () => {
