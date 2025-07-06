@@ -10,6 +10,7 @@ import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import ErrorAlert from './smart-paste/ErrorAlert';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 // Simplified SmartPaste component that only uses the NER model to
 // extract transaction entities. The learning engine will still learn
@@ -61,6 +62,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setError(null);
   setConfidence(null);
   setMatchOrigin(null);
+  FirebaseAnalytics.logEvent({ name: 'smart_paste_sms' });
 
   try {
     const parsed = await extractTransactionEntities(text);
@@ -147,6 +149,8 @@ const handleSubmit = async (e: React.FormEvent) => {
         undefined
       );
     }
+
+    FirebaseAnalytics.logEvent({ name: 'smart_paste_save' });
 
     toast({
       title: "Transaction added",
