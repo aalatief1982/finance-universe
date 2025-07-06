@@ -11,6 +11,7 @@ import { useTransactions } from '@/context/TransactionContext';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { CATEGORY_ICON_MAP } from '@/constants/categoryIconMap';
+import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
 import { format } from 'date-fns';
 
 import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
@@ -262,10 +263,16 @@ const Home = () => {
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           {(() => {
-                            const Icon =
+                            const CatIcon =
                               CATEGORY_ICON_MAP[transaction.category]?.icon ||
                               CATEGORY_ICON_MAP['Other'].icon;
-                            return <Icon className="w-6 h-6" />;
+                            const TypeIcon = TYPE_ICON_MAP[transaction.type].icon;
+                            return (
+                              <>
+                                <CatIcon className="w-5 h-5" />
+                                <TypeIcon className={`w-4 h-4 ${TYPE_ICON_MAP[transaction.type].color}`} />
+                              </>
+                            );
                           })()}
                           <span className="font-medium line-clamp-1">{formatDisplayTitle(transaction)}</span>
                         </div>

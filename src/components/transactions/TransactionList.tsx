@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { format } from 'date-fns';
+import { CATEGORY_ICON_MAP } from '@/constants/categoryIconMap';
+import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -119,8 +121,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
   };
 
   const renderCategory = (transaction: Transaction) => {
+    const catInfo = CATEGORY_ICON_MAP[transaction.category] || CATEGORY_ICON_MAP['Other'];
+    const CatIcon = catInfo.icon;
+    const typeInfo = TYPE_ICON_MAP[transaction.type];
+    const TypeIcon = typeInfo.icon;
+
     return (
-      <div className="flex items-center">
+      <div className="flex items-center gap-1">
+        <CatIcon className={`w-4 h-4 ${catInfo.color}`} />
+        <TypeIcon className={`w-4 h-4 ${typeInfo.color}`} />
         <span className="text-sm">{transaction.category}</span>
       </div>
     );
@@ -198,11 +207,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
               </div>
               
               <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  {renderType(transaction.type)}
-                  <span className="text-sm text-muted-foreground">
-                    {transaction.category}
-                  </span>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  {renderCategory(transaction)}
                 </div>
                 
                 <DropdownMenu>
