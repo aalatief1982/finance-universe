@@ -46,6 +46,7 @@ import {
   storeTransactions,
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
+import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -126,6 +127,8 @@ const Settings = () => {
       sms: { ...user?.preferences?.sms, backgroundSmsEnabled, autoImport },
     });
     updateDisplayOptions({ weekStartsOn });
+
+    FirebaseAnalytics.logEvent({ name: 'settings_saved' });
 
     toast({
       title: "Settings saved",
