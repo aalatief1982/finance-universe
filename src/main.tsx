@@ -100,6 +100,12 @@ setupGlobalErrorHandlers()
 async function checkForUpdates() {
   const currentAppVersion = '2.0.0' // Hardcoded or use native version API
 
+  const pendingVersion = localStorage.getItem('pending_update')
+  if (pendingVersion) {
+    alert("Xpensia Updated! You're now on version " + pendingVersion)
+    localStorage.removeItem('pending_update')
+  }
+
   try {
     const res = await fetch('https://xpensia-505ac.web.app/manifest.json')
     const manifest = await res.json()
@@ -138,8 +144,8 @@ async function checkForUpdates() {
         version: latestVersion,
         url: manifest.url || 'https://xpensia-505ac.web.app/www.zip'
       })
+      localStorage.setItem('pending_update', latestVersion)
       await CapacitorUpdater.set(downloaded) // reloads automatically
-       alert(`Xpensia Updated!\nYou're now on version ${latestVersion}`);
       localStorage.setItem('app_version', latestVersion)
     } else {
       if (process.env.NODE_ENV === 'development') console.log('✅ Web bundle up-to-date')
