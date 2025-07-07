@@ -24,6 +24,10 @@ allprojects {
         maven { url "https://jitpack.io" }
         maven { url "https://dl.cloudsmith.io/public/capacitor-community/plugins/maven/" } // ✅ Capacitor plugins
     }
+	   tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
 }
 
 task clean(type: Delete) {
