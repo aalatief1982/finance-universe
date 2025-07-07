@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 android {
+    namespace 'app.xpensia.com'
     // Fallback values in case rootProject.ext is not set
     compileSdk rootProject.ext.has('compileSdkVersion') ? rootProject.ext.compileSdkVersion : 35
 
