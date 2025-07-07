@@ -92,7 +92,11 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     private void checkStaticReceiver() {
         ComponentName cn = new ComponentName(getContext(), SmsBroadcastReceiver.class);
         try {
-            getContext().getPackageManager().getReceiverInfo(cn, PackageManager.ComponentInfoFlags.of(0));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                getContext().getPackageManager().getReceiverInfo(cn, PackageManager.ComponentInfoFlags.of(0));
+            } else {
+                getContext().getPackageManager().getReceiverInfo(cn, 0);
+            }
             Log.d(STATIC_TAG, "Static SMS receiver registered");
         } catch (PackageManager.NameNotFoundException e) {
             Log.w(STATIC_TAG, "SmsBroadcastReceiver not found in manifest");
