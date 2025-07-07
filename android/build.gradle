@@ -29,4 +29,8 @@ allprojects {
         targetCompatibility = JavaVersion.VERSION_17.toString()
         options.release = 17
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 4d9889b33f9009b3f766c430f9afa74230513ef7

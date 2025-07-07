@@ -2,6 +2,8 @@ ext {
     minSdkVersion = 23
     compileSdkVersion = 35
     targetSdkVersion = 35
+    // Build plugins require JDK 21
+    // Use Java 17 for Android compilation
     javaVersion = JavaVersion.VERSION_17
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17

@@ -2,8 +2,14 @@
 
 android {
   compileOptions {
+<<<<<<< HEAD
       sourceCompatibility JavaVersion.VERSION_21
       targetCompatibility JavaVersion.VERSION_21
+=======
+      // Use Java 17 for compiling capacitor modules
+      sourceCompatibility JavaVersion.VERSION_17
+      targetCompatibility JavaVersion.VERSION_17
+>>>>>>> 4d9889b33f9009b3f766c430f9afa74230513ef7
   }
 }
 

@@ -28,6 +28,7 @@ android {
 
     // ✅ Java version compatibility for Android
     compileOptions {
+        // Target Java 17 for the application module
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
