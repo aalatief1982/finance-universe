@@ -27,9 +27,9 @@ android {
     }
 
     compileOptions {
-        // Target Java 21 for the application module
-        sourceCompatibility JavaVersion.VERSION_21
-        targetCompatibility JavaVersion.VERSION_21
+        // Target Java 17 for the application module
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     // Optional: if you're using Kotlin in this module
@@ -40,7 +40,7 @@ android {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
