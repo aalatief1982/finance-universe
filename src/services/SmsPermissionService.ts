@@ -1,6 +1,7 @@
 
 import { Capacitor } from "@capacitor/core";
 import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
+import { SmsReaderService } from './SmsReaderService';
 
 /**
  * Service for handling SMS permission-related functionality
@@ -26,17 +27,22 @@ class SmsPermissionService {
         if (process.env.NODE_ENV === 'development') console.warn('[SMS] Failed to load SMS listener when checking permissions');
         return false;
       }
-      
-      const result = await smsListener.checkPermission();
-      
-      const granted = result?.granted ?? false;
+
+      // Check permission for both the reader and background listener
+      const [readerGranted, listenerResult] = await Promise.all([
+        SmsReaderService.hasPermission(),
+        smsListener.checkPermission(),
+      ]);
+
+      const listenerGranted = listenerResult?.granted ?? false;
+      const granted = readerGranted && listenerGranted;
       this.savePermissionStatus(granted);
-      
-      // Initialize listener if permission is granted
+
+      // Initialize listener only when both permissions are granted
       if (granted && !this.smsListenerInitialized) {
         this.initSmsListener();
       }
-      
+
       return granted;
     } catch (error) {
       console.error("[SMS] Error checking SMS permission:", error);
@@ -87,17 +93,22 @@ class SmsPermissionService {
         if (process.env.NODE_ENV === 'development') console.warn('[SMS] Failed to load SMS listener when requesting permissions');
         return false;
       }
-      
-      const result = await smsListener.requestPermission();
-      
-      const granted = result?.granted ?? false;
+
+      // Request permission from both plugins
+      const [readerGranted, listenerResult] = await Promise.all([
+        SmsReaderService.requestPermission(),
+        smsListener.requestPermission(),
+      ]);
+
+      const listenerGranted = listenerResult?.granted ?? false;
+      const granted = readerGranted && listenerGranted;
       this.savePermissionStatus(granted);
-      
-      // Initialize listener if permission is granted
+
+      // Initialize listener only when both permissions are granted
       if (granted) {
         this.initSmsListener();
       }
-      
+
       return granted;
     } catch (error) {
       console.error("[SMS] Error requesting SMS permission:", error);
