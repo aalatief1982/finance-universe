@@ -9,8 +9,9 @@ import { MainNavigation } from './MainNavigation';
 import { UserMenu } from './UserMenu';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
-import { Settings, ArrowLeft } from 'lucide-react';
+import { Settings, ArrowLeft, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { openFeedbackForm } from '@/components/FeedbackButton';
 
 interface HeaderProps {
   className?: string;
@@ -66,6 +67,16 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
           </div>
           <div className="flex items-center">
             <UserMenu isLandingPage={isLandingPage} />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={openFeedbackForm}
+              className="ml-2"
+              title="Feedback"
+              aria-label="Feedback"
+            >
+              <MessageSquare size={20} />
+            </Button>
             {showMobileIcons && (
               <>
                 <MobileNavigation currentPageTitle={currentPageTitle} />
