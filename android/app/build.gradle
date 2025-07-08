@@ -40,12 +40,6 @@ android {
     }
 }
 
-// ❌ REMOVE THIS — not valid in Groovy build.gradle
-// java {
-//     toolchain {
-//         languageVersion = JavaLanguageVersion.of(17)
-//     }
-// }
 
 repositories {
     flatDir {
