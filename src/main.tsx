@@ -40,8 +40,8 @@ if (Capacitor.isNativePlatform()) {
     }
 
     try {
-      const { uuid } = await Device.getId();
-      await FirebaseAnalytics.setUserId({ userId: uuid });
+      const { identifier } = await Device.getId();
+      await FirebaseAnalytics.setUserId({ userId: identifier });
 
       await FirebaseAnalytics.logEvent({ name: 'app_launch' });
       console.log('[FirebaseAnalytics] app_launch event logged');

@@ -16,7 +16,7 @@ const TestFirebaseAnalytics: React.FC = () => {
       await FirebaseAnalytics.setUserId({ userId: 'debug_user_001' })
 
       await FirebaseAnalytics.setUserProperty({
-        name: 'env',
+        key: 'env',
         value: 'xpensia_debug',
       })
 
