@@ -1,0 +1,11 @@
+
+<plugins>
+  <!-- Standard Capacitor plugins -->
+  <plugin name="App" value="com.capacitorjs.plugins.app.AppPlugin"/>
+  <plugin name="StatusBar" value="com.capacitorjs.plugins.statusbar.StatusBarPlugin"/>
+  <plugin name="LocalNotifications" value="com.capacitorjs.plugins.localnotifications.LocalNotificationsPlugin"/>
+  
+  <!-- Custom plugins -->
+  <plugin name="SmsReaderPlugin" value="com.xpensia.plugins.smsreader.SmsReaderPlugin"/>
+  <plugin name="BackgroundSmsListener" value="app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin"/>
+</plugins>
