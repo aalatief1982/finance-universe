@@ -76,15 +76,25 @@ const Settings = () => {
     "sunday" | "monday" | "saturday"
   >(user?.preferences?.displayOptions?.weekStartsOn || "sunday");
 
-  // Initialize values from user context on component mount
+  // Initialize values from user context and localStorage on component mount
   useEffect(() => {
+    // First check localStorage for backgroundSmsEnabled to ensure persistence
+    const savedBackgroundSms = localStorage.getItem('backgroundSmsEnabled');
+    if (savedBackgroundSms !== null) {
+      setBackgroundSmsEnabled(savedBackgroundSms === 'true');
+    }
+
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
       setCurrency(user.preferences.currency || "USD");
+      
       if (user.preferences.sms) {
-        setBackgroundSmsEnabled(
-          user.preferences.sms.backgroundSmsEnabled || false,
-        );
+        // Only use user preferences if localStorage doesn't have a value
+        if (savedBackgroundSms === null) {
+          setBackgroundSmsEnabled(
+            user.preferences.sms.backgroundSmsEnabled || false,
+          );
+        }
         setAutoImport(user.preferences.sms.autoImport || false);
       }
 
@@ -107,24 +117,48 @@ const Settings = () => {
 
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
+    console.log(`[Settings] Background SMS toggle changed to: ${checked}`);
 
     if (checked) {
-
+      console.log('[Settings] Requesting SMS permission...');
       let granted = await smsPermissionService.hasPermission();
+      console.log(`[Settings] Current permission status: ${granted}`);
+      
       if (!granted) {
         granted = await smsPermissionService.requestPermission();
+        console.log(`[Settings] Permission request result: ${granted}`);
       }
 
       if (!granted) {
-        alert("SMS permission is required to read messages in the background.");
+        console.log('[Settings] Permission denied, reverting toggle');
+        toast({
+          title: "Permission Required",
+          description: "SMS permission is required to read messages in the background.",
+          variant: "destructive"
+        });
         setBackgroundSmsEnabled(false);
         return;
       }
     }
 
     setBackgroundSmsEnabled(checked);
-    updateUserPreferences({
-      sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked },
+    
+    // Immediately save to user preferences and localStorage
+    const updatedPreferences = {
+      ...user?.preferences,
+      sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked }
+    };
+    
+    updateUserPreferences(updatedPreferences);
+    
+    // Also save directly to localStorage for persistence
+    localStorage.setItem('backgroundSmsEnabled', checked.toString());
+    
+    console.log(`[Settings] Background SMS setting saved: ${checked}`);
+    
+    toast({
+      title: checked ? "Background SMS Enabled" : "Background SMS Disabled",
+      description: checked ? "SMS messages will be read automatically" : "Automatic SMS reading is disabled"
     });
   };
 
