@@ -120,13 +120,16 @@ const Settings = () => {
   };
 
   const handleSaveSettings = () => {
-    updateTheme(theme);
-    updateCurrency(currency);
-    persistCurrency(currency);
+    // Consolidate all preference updates into a single call to prevent multiple toasts
     updateUserPreferences({
+      theme,
+      currency,
       sms: { ...user?.preferences?.sms, backgroundSmsEnabled, autoImport },
+      displayOptions: { ...user?.preferences?.displayOptions, weekStartsOn }
     });
-    updateDisplayOptions({ weekStartsOn });
+    
+    // Persist currency separately for compatibility
+    persistCurrency(currency);
 
     FirebaseAnalytics.logEvent({ name: 'settings_saved' });
 
