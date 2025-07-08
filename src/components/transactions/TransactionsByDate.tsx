@@ -3,9 +3,6 @@ import { format, parseISO } from "date-fns";
 import { Transaction } from "@/types/transaction";
 import { formatCurrency } from "@/utils/format-utils";
 import TransactionActions from "./TransactionActions";
-import CategoryIcon from "../CategoryIcon";
-import { CATEGORY_ICON_MAP } from "@/constants/categoryIconMap";
-import { TYPE_ICON_MAP } from "@/constants/typeIconMap";
 
 interface TransactionsByDateProps {
   transactions: Transaction[];
@@ -43,6 +40,14 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
     }
   };
 
+  const categoryEmoji = (category: string) => {
+    const map: Record<string, string> = {
+      Health: "💊",
+      Transportation: "🚗",
+      Earnings: "💼",
+    };
+    return map[category] || "🛒";
+  };
 
   return (
     <div className="space-y-[var(--card-gap)] px-[var(--page-padding-x)]">
@@ -70,24 +75,14 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
                     className="bg-card text-card-foreground dark:bg-black dark:text-white rounded-2xl shadow-sm border px-4 py-3"
                   >
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <CategoryIcon category={transaction.category} size={40} />
-                        {(() => {
-                          const TypeIcon = TYPE_ICON_MAP[transaction.type].icon;
-                          return (
-                            <TypeIcon
-                              className={`w-4 h-4 ${TYPE_ICON_MAP[transaction.type].color}`}
-                            />
-                          );
-                        })()}
-                        <div className="min-w-0">
-                          <h4 className="font-medium text-sm line-clamp-1">
-                            {transaction.title}
-                          </h4>
-                          <span className="text-xs text-muted-foreground">
-                            {transaction.category}
-                          </span>
-                        </div>
+                      <div>
+                        <h4 className="font-medium text-sm">
+                          {transaction.title}
+                        </h4>
+                        <span className="mt-0.5 inline-flex items-center gap-1 text-xs rounded px-2 py-0.5 bg-muted text-muted-foreground">
+                          {categoryEmoji(transaction.category)}{" "}
+                          {transaction.category}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-4">
