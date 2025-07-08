@@ -107,8 +107,14 @@ const Settings = () => {
 
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
+
     if (checked) {
-      const granted = await smsPermissionService.requestPermission();
+
+      let granted = await smsPermissionService.hasPermission();
+      if (!granted) {
+        granted = await smsPermissionService.requestPermission();
+      }
+
       if (!granted) {
         alert("SMS permission is required to read messages in the background.");
         setBackgroundSmsEnabled(false);
