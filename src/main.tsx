@@ -27,16 +27,29 @@ initializeXpensiaStorageDefaults()
 demoTransactionService.seedDemoTransactions()
 
 if (Capacitor.isNativePlatform()) {
-  FirebaseAnalytics.enable()
-    .then(async () => {
-      console.log('[FirebaseAnalytics] enabled')
-      const deviceId = await Device.getId()
-      await FirebaseAnalytics.setUserId({ userId: deviceId.identifier || 'unknown' })
-      await FirebaseAnalytics.logEvent({ name: 'app_launch' })
-    })
-    .catch(err => console.warn('[FirebaseAnalytics] failed', err))
-}
+  (async () => {
+    const platform = Capacitor.getPlatform();
 
+    if (platform === 'ios') {
+      try {
+        await FirebaseAnalytics.enable();
+        console.log('[FirebaseAnalytics] enabled on iOS');
+      } catch (err) {
+        console.warn('[FirebaseAnalytics] enable() failed on iOS:', err);
+      }
+    }
+
+    try {
+      const { uuid } = await Device.getId();
+      await FirebaseAnalytics.setUserId({ userId: uuid });
+
+      await FirebaseAnalytics.logEvent({ name: 'app_launch' });
+      console.log('[FirebaseAnalytics] app_launch event logged');
+    } catch (err) {
+      console.warn('[FirebaseAnalytics] logEvent/setUserId failed:', err);
+    }
+  })(); // 👈 THIS WRAPPING IS ESSENTIAL
+}
 // Global error handlers
 const setupGlobalErrorHandlers = () => {
   window.addEventListener('unhandledrejection', (event) => {

@@ -29,6 +29,8 @@ import AccountsPage from './pages/budget/AccountsPage';
 import SetBudgetPage from './pages/budget/SetBudgetPage';
 import BudgetReportPage from './pages/budget/BudgetReportPage';
 import BudgetInsightsPage from './pages/budget/BudgetInsightsPage';
+import TestFirebaseAnalytics from './pages/TestFirebaseAnalytics';
+
 
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
@@ -241,6 +243,7 @@ function AppWrapper() {
       <Route path="/edit-transaction" element={<EditTransaction />} />
       <Route path="/edit-transaction/:id" element={<EditTransaction />} />
       <Route path="/train-model" element={<TrainModel />} />
+      <Route path="/test-analytics" element={<TestFirebaseAnalytics />} />
       <Route path="/build-template" element={<BuildTemplate />} />
       <Route path="/keyword-bank" element={<KeywordBankManager />} />
       {process.env.NODE_ENV === 'development' && (
