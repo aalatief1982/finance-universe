@@ -10,7 +10,7 @@ import { initializeCapacitor } from './lib/capacitor-init'
 import { demoTransactionService } from './services/DemoTransactionService'
 
 import { Capacitor } from '@capacitor/core'
-import { CapacitorUpdater } from '@capgo/capacitor-updater'
+// import { CapacitorUpdater } from '@capgo/capacitor-updater'
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { Device } from '@capacitor/device'
 
@@ -96,66 +96,10 @@ const setupGlobalErrorHandlers = () => {
 }
 setupGlobalErrorHandlers()
 
-// OTA update logic (Capgo + Native)
+// OTA update logic disabled - CapacitorUpdater plugin removed for compatibility
 async function checkForUpdates() {
-  const currentAppVersion = '2.0.0' // Hardcoded or use native version API
-
-  const pendingVersion = localStorage.getItem('pending_update')
-  if (pendingVersion) {
-    alert("Xpensia Updated! You're now on version " + pendingVersion)
-    localStorage.setItem('app_version', pendingVersion)
-    localStorage.removeItem('pending_update')
-  }
-
-  try {
-    const res = await fetch('https://xpensia-505ac.web.app/manifest.json')
-    const manifest = await res.json()
-    const latestVersion = manifest.version
-    const minimumRequired = manifest.minimumVersion || '0.0.0'
-    const currentWebVersion = localStorage.getItem('app_version')
-
-    // Step 1 – Force update via app store if native app is too old
-    if (compareVersions(currentAppVersion, minimumRequired) < 0) {
-      if (process.env.NODE_ENV === 'development') console.warn('🔴 Native version outdated — store update required')
-      if (cordova?.plugins?.nativeAppUpdate) {
-        cordova.plugins.nativeAppUpdate.checkAppUpdate(
-          () => {
-            if (process.env.NODE_ENV === 'development') console.log('🟢 Native app up-to-date')
-          },
-          (updateUrl: string) => {
-            alert('A new version of Xpensia is required.\nRedirecting to store...')
-            window.open(updateUrl, '_system', 'location=yes')
-          },
-          { url: 'https://xpensia-505ac.web.app/update.xml' }
-        )
-      }
-      return
-    }
-
-    // Step 2 – Hot update (Capgo)
-    if (!currentWebVersion) {
-      localStorage.setItem('app_version', latestVersion)
-      await CapacitorUpdater.notifyAppReady()
-      return
-    }
-
-    if (latestVersion !== currentWebVersion) {
-      if (process.env.NODE_ENV === 'development') console.log(`⬇️ Downloading hot update ${latestVersion}...`)
-      const downloaded = await CapacitorUpdater.download({
-        version: latestVersion,
-        url: manifest.url || 'https://xpensia-505ac.web.app/www.zip'
-      })
-      localStorage.setItem('pending_update', latestVersion)
-      localStorage.setItem('app_version', latestVersion)
-      await CapacitorUpdater.set(downloaded) // reloads automatically
-    } else {
-      if (process.env.NODE_ENV === 'development') console.log('✅ Web bundle up-to-date')
-      await CapacitorUpdater.notifyAppReady()
-    }
-  } catch (err) {
-    if (process.env.NODE_ENV === 'development') console.warn('⚠️ OTA update failed:', err)
-    await CapacitorUpdater.notifyAppReady()
-  }
+  // Commented out due to plugin compatibility issues
+  console.log('OTA updates disabled - plugin removed for build compatibility')
 }
 
 // Compare 3-part version strings
