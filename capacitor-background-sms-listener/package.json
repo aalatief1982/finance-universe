@@ -13,10 +13,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@capacitor/core": "latest"
+    "@capacitor/core": "^6.0.0"
   },
   "peerDependencies": {
-    "@capacitor/core": "latest"
+    "@capacitor/core": "^6.0.0"
   },
   "files": [
     "dist/",
