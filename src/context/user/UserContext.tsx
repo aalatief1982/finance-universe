@@ -31,6 +31,27 @@ import {
   updateDataManagement as updateDataManagementUtil
 } from './preferences-utils';
 
+const DEFAULT_PREFERENCES = {
+  currency: 'USD',
+  theme: 'light' as const,
+  notifications: true,
+  language: 'en',
+  displayOptions: {
+    showCents: true,
+    weekStartsOn: 'sunday' as const,
+    defaultView: 'list' as const,
+    compactMode: false,
+    showCategories: true,
+    showTags: true
+  },
+  sms: {
+    autoDetectProviders: true,
+    showDetectionNotifications: true,
+    autoImport: false,
+    backgroundSmsEnabled: false
+  }
+};
+
 export const UserContext = createContext<UserContextType>({
   user: null,
   auth: {
@@ -249,9 +270,34 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user;
   }, [user]);
   
-  const updateUserPreferences = useCallback((preferences: Partial<User['preferences']>) => {
-    updateUserPreferencesUtil(user, setUser, preferences);
-  }, [user]);
+  const updateUserPreferences = useCallback(
+    (preferences: Partial<User['preferences']>) => {
+      if (!user) {
+        const merged = {
+          ...DEFAULT_PREFERENCES,
+          ...preferences,
+          displayOptions: {
+            ...DEFAULT_PREFERENCES.displayOptions,
+            ...(preferences.displayOptions || {})
+          },
+          sms: {
+            ...DEFAULT_PREFERENCES.sms,
+            ...(preferences.sms || {})
+          },
+          ...(preferences.privacy ? { privacy: { ...preferences.privacy } } : {}),
+          ...(preferences.dataManagement
+            ? { dataManagement: { ...preferences.dataManagement } }
+            : {})
+        } as User['preferences'];
+
+        updateUser({ preferences: merged });
+        return;
+      }
+
+      updateUserPreferencesUtil(user, setUser, preferences);
+    },
+    [user, updateUser]
+  );
   
   const updateTheme = useCallback((theme: 'light' | 'dark' | 'system') => {
     updateUserPreferences({ theme });
@@ -271,9 +317,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUserPreferences(notificationSettings);
   }, [updateUserPreferences]);
   
-  const updateDisplayOptions = useCallback((displayOptions: Partial<User['preferences']['displayOptions']>) => {
-    updateDisplayOptionsUtil(user, setUser, displayOptions);
-  }, [user]);
+  const updateDisplayOptions = useCallback(
+    (displayOptions: Partial<User['preferences']['displayOptions']>) => {
+      if (!user) {
+        const merged = {
+          ...DEFAULT_PREFERENCES,
+          displayOptions: {
+            ...DEFAULT_PREFERENCES.displayOptions,
+            ...displayOptions
+          }
+        } as User['preferences'];
+
+        updateUser({ preferences: merged });
+        return;
+      }
+
+      updateDisplayOptionsUtil(user, setUser, displayOptions);
+    },
+    [user, updateUser]
+  );
   
   const updatePrivacySettings = useCallback((privacySettings: Partial<User['preferences']['privacy']>) => {
     updatePrivacySettingsUtil(user, setUser, privacySettings);
