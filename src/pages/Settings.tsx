@@ -109,6 +109,7 @@ const Settings = () => {
   const handleBackgroundSmsChange = async (checked: boolean) => {
 
     if (checked) {
+
       let granted = await smsPermissionService.hasPermission();
       if (!granted) {
         granted = await smsPermissionService.requestPermission();
