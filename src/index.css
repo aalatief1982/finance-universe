@@ -71,7 +71,6 @@
     --content-max-width: 1200px;
     --header-height: 4rem; /* Adjusted header height */
     --safe-area-top: env(safe-area-inset-top, 0px); /* For mobile notches and status bars */
-    --sidebar-width: 14rem;
     --card-gap: 0.5rem;
     --section-gap: 0.75rem;
     --form-gap: 0.5rem;

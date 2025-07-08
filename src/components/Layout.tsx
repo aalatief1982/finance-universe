@@ -2,7 +2,6 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import Sidebar from './Sidebar';
 import Header from './header/Header';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -44,12 +43,9 @@ const Layout = ({
       {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} />}
 
       <div className="flex flex-1">
-        {!hideNavigation && !isMobile && <Sidebar />}
-
         <main
           className={cn(
             "flex-1 w-full",
-            !hideNavigation && !isMobile && "lg:ml-[var(--sidebar-width)]",
             !fullWidth && "container"
           )}
         >
