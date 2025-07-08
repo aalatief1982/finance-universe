@@ -30,8 +30,7 @@ if (Capacitor.isNativePlatform()) {
   FirebaseAnalytics.enable()
     .then(async () => {
       console.log('[FirebaseAnalytics] enabled')
-      const deviceInfo = await Device.getId()
-      const uuid = deviceInfo.identifier
+      const { uuid } = await Device.getId()
       await FirebaseAnalytics.setUserId({ userId: uuid })
       await FirebaseAnalytics.logEvent({ name: 'app_launch' })
     })
@@ -177,7 +176,7 @@ try {
 
   if (Capacitor.isNativePlatform()) {
     // Ensure deviceready fires
-    if ((window as any).cordova && document.readyState === 'complete') {
+    if (window.cordova && document.readyState === 'complete') {
       document.dispatchEvent(new Event('deviceready'))
     }
 

@@ -1,6 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 import TransactionCard from '../TransactionCard';
 import { formatCurrency } from '@/utils/format-utils';
 import type { Transaction } from '@/types/transaction';
