@@ -34,7 +34,7 @@ import {
   Database,
   Mail,
 } from "lucide-react";
-import { SmsReaderService } from "@/services/SmsReaderService";
+import { smsPermissionService } from "@/services/SmsPermissionService";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -107,8 +107,13 @@ const Settings = () => {
 
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
+
     if (checked) {
-      const granted = await SmsReaderService.checkOrRequestPermission();
+      let granted = await smsPermissionService.hasPermission();
+      if (!granted) {
+        granted = await smsPermissionService.requestPermission();
+      }
+
       if (!granted) {
         alert("SMS permission is required to read messages in the background.");
         setBackgroundSmsEnabled(false);
