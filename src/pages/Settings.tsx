@@ -123,6 +123,9 @@ const Settings = () => {
     }
 
     setBackgroundSmsEnabled(checked);
+    updateUserPreferences({
+      sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked },
+    });
   };
 
   const handleSaveSettings = () => {
@@ -354,7 +357,7 @@ const Settings = () => {
                 Enable Background SMS Reading
               </Label>
               <p className="text-sm text-muted-foreground">
-                Read incoming SMS in the background
+                Read incoming SMS in the background. Changes save automatically.
               </p>
             </div>
             <Switch
