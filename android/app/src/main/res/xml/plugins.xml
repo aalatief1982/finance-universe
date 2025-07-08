@@ -5,6 +5,9 @@
   <plugin name="StatusBar" value="com.capacitorjs.plugins.statusbar.StatusBarPlugin"/>
   <plugin name="LocalNotifications" value="com.capacitorjs.plugins.localnotifications.LocalNotificationsPlugin"/>
   
+  <!-- Firebase plugins -->
+  <plugin name="FirebaseAnalytics" value="io.capawesome.capacitorjs.plugins.firebase.analytics.FirebaseAnalyticsPlugin"/>
+  
   <!-- Custom plugins -->
   <plugin name="SmsReaderPlugin" value="com.xpensia.plugins.smsreader.SmsReaderPlugin"/>
   <plugin name="BackgroundSmsListener" value="app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin"/>
