@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useBlocker } from "react-router-dom";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -108,18 +108,13 @@ const Settings = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
 
-  // Note: useBlocker is not available in React Router v7, implementing a simple warning
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-      }
-    };
+  const blocker = useBlocker(isDirty);
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setShowUnsavedPrompt(true);
+    }
+  }, [blocker]);
 
   // Initialize values from user context on component mount
   useEffect(() => {
@@ -260,12 +255,13 @@ const Settings = () => {
 
   const handleSkipWithoutSave = () => {
     setShowUnsavedPrompt(false);
-    setIsDirty(false);
+    blocker.proceed();
   };
 
   const handleSaveAndProceed = () => {
     handleSaveSettings();
     setShowUnsavedPrompt(false);
+    blocker.proceed();
   };
 
   const updateWeekStartsOn = (value: "sunday" | "monday" | "saturday") => {
@@ -302,7 +298,7 @@ const Settings = () => {
           path: fileName,
           data: csv,
           directory: Directory.Documents,
-          encoding: 'utf8' as any
+          encoding: 'utf8'
         });
         toast({
           title: 'Export successful',
@@ -590,12 +586,12 @@ const Settings = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <Button variant="outline" onClick={handleSkipWithoutSave}>
+            <AlertDialogCancel onClick={handleSkipWithoutSave}>
               Skip without Save
-            </Button>
-            <Button onClick={handleSaveAndProceed}>
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndProceed}>
               Save and Proceed
-            </Button>
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
