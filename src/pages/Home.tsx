@@ -53,6 +53,7 @@ const Home = () => {
       title: "Sample Transaction",
       amount: -25.99,
       category: "Food",
+      subcategory: "Fast Food",
       date: new Date().toISOString().split("T")[0],
       type: "expense",
       notes: "Sample transaction for testing",
