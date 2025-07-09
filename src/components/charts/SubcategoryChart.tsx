@@ -55,6 +55,37 @@ const YAxisTick = ({ x, y, payload }: any) => {
   );
 };
 
+const SubcategoryBarChart = ({ items }: { items: Item[] }) => {
+  const total = items.reduce((sum, c) => sum + c.value, 0);
+
+  try {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={items} margin={CHART_MARGIN}>
+          <XAxis
+            type="number"
+            tickFormatter={(value) =>
+              formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')
+            }
+          />
+          <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
+          <Tooltip content={BarTooltip(total)} />
+          <Bar dataKey="value" radius={[4, 4, 4, 4]} isAnimationActive>
+            {items.map((_, index) => (
+              <Cell key={`cell-${index}`} fill={getChartColor(index)} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  } catch (err) {
+    console.warn('[SubcategoryChart] Failed to render chart', err);
+    return (
+      <p className="text-center text-muted-foreground py-12">Unable to render chart</p>
+    );
+  }
+};
+
 const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
   const [page, setPage] = React.useState(0);
   const chunks = React.useMemo(() => chunkSubcategoryData(data), [data]);
@@ -66,7 +97,6 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
     }
   }, [data]);
 
-  const total = current.reduce((sum, c) => sum + c.value, 0);
   const hasData = current.length > 0;
 
   return (
@@ -76,35 +106,16 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
       </CardHeader>
       <CardContent>
         {hasData ? (
-          <div className="h-[300px] w-full" role="img" aria-label="Expenses by subcategory bar chart">
-            {(() => {
-              try {
-                return (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={current} margin={CHART_MARGIN}>
-                      <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
-                      <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
-                      <Tooltip content={BarTooltip(total)} />
-                      <Bar dataKey="value" radius={[4, 4, 4, 4]} isAnimationActive>
-                        {current.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={getChartColor(index)} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                );
-              } catch (err) {
-                console.warn('[SubcategoryChart] Failed to render chart', err);
-                return <p className="text-center text-muted-foreground py-12">Unable to render chart</p>;
-              }
-            })()}
-          </div>
-          {chunks.length > 1 && (
-            <div className="flex justify-center items-center mt-2 space-x-2">
-              <button
-                aria-label="Previous"
-                disabled={page === 0}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
+          <>
+            <div className="h-[300px] w-full" role="img" aria-label="Expenses by subcategory bar chart">
+              <SubcategoryBarChart items={current} />
+            </div>
+            {chunks.length > 1 && (
+              <div className="flex justify-center items-center mt-2 space-x-2">
+                <button
+                  aria-label="Previous"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
                 className="p-1 disabled:opacity-50"
               >
                 ‹
@@ -133,6 +144,7 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
               </button>
             </div>
           )}
+        </>
         ) : (
           <p className="text-center text-muted-foreground py-12">No data available yet. Try adding a few transactions first.</p>
         )}
