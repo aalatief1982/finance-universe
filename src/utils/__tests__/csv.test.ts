@@ -42,4 +42,23 @@ describe('CSV utilities', () => {
     expect(parsed[0].id).toBe('1');
     expect(parsed[0].title).toBe('Item');
   });
+
+  it('handles newline characters in fields', () => {
+    const txns: Transaction[] = [
+      {
+        id: '3',
+        title: 'Note with newline',
+        amount: 10,
+        category: 'Misc',
+        date: '2024-07-01',
+        type: 'expense',
+        source: 'manual',
+        notes: 'line1\nline2',
+      },
+    ];
+
+    const csv = convertTransactionsToCsv(txns);
+    const parsed = parseCsvTransactions(csv);
+    expect(parsed).toEqual(txns);
+  });
 });

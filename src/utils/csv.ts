@@ -42,7 +42,9 @@ export const convertTransactionsToCsv = (
 
   const escape = (value: any) => {
     if (value === undefined || value === null) return '';
-    const str = String(value).replace(/"/g, '""');
+    const str = String(value)
+      .replace(/"/g, '""')
+      .replace(/\r?\n/g, '\\n');
     return `"${str}"`;
   };
 
@@ -61,19 +63,66 @@ export const convertTransactionsToCsv = (
 export const parseCsvTransactions = (fileData: string): Transaction[] => {
   if (!fileData) return [];
 
-  const lines = fileData.trim().split(/\r?\n/).filter(l => l.trim().length > 0);
-  if (lines.length < 2) return [];
+  const rows: string[] = [];
+  let current = '';
+  let inQuotes = false;
 
-  const splitRow = (row: string) =>
-    row
-      .split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
-      .map(v => v.replace(/^"|"$/g, '').trim());
+  for (let i = 0; i < fileData.length; i++) {
+    const ch = fileData[i];
+    if (ch === '"') {
+      if (inQuotes && fileData[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (current.trim().length > 0) rows.push(current);
+      current = '';
+      if (ch === '\r' && fileData[i + 1] === '\n') i++;
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim().length > 0) rows.push(current);
 
-  const headers = splitRow(lines[0]);
+  if (rows.length < 2) return [];
+
+  const splitRow = (row: string) => {
+    const values: string[] = [];
+    let field = '';
+    let quoted = false;
+    for (let i = 0; i < row.length; i++) {
+      const ch = row[i];
+      if (ch === '"') {
+        if (quoted && row[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          quoted = !quoted;
+        }
+      } else if (ch === ',' && !quoted) {
+        values.push(field);
+        field = '';
+      } else {
+        field += ch;
+      }
+    }
+    values.push(field);
+    return values.map(v =>
+      v
+        .replace(/^"|"$/g, '')
+        .replace(/""/g, '"')
+        .replace(/\\n/g, '\n')
+        .trim()
+    );
+  };
+
+  const headers = splitRow(rows[0]);
   const transactions: Transaction[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const values = splitRow(lines[i]);
+  for (let i = 1; i < rows.length; i++) {
+    const values = splitRow(rows[i]);
     if (values.length === 0) continue;
 
     const row: Record<string, string> = {};
