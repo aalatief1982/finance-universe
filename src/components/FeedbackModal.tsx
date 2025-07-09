@@ -55,10 +55,10 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         const [info, id, appInfo] = await Promise.all([
           Device.getInfo(),
           Device.getId().catch(() => ({ uuid: '' })),
-          App.getInfo().catch(() => ({ version: '' })),
+          App.getState().catch(() => ({ version: '' })),
         ]);
         const uuid = (id as any).uuid || (id as any).identifier || '';
-        const version = (appInfo as any).version || '';
+        const version = '1.0.0'; // Default version since getInfo is not available
         setDeviceInfo(`${info.model}, ${uuid}, ${version}, ${screenName}`);
       } catch {
         // ignore failures

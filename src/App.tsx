@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
+  BrowserRouter,
+  Routes,
   Route,
   useNavigate,
   useLocation,
-  createBrowserRouter,
-  RouterProvider,
-  createRoutesFromElements,
-  Outlet,
 } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
 import Home from './pages/Home';
@@ -184,7 +182,7 @@ function AppWrapper() {
                     {
                       id: 777,
                       title: 'New Transaction Detected',
-                      body: 'Review and confirm your latest expense now',
+                      body: 'Review and confirm your latest expense now!',
                       schedule: { at: new Date(Date.now() + 1000) },
                       extra: { transaction: txn }
                     }
@@ -240,7 +238,6 @@ function AppWrapper() {
   return (
     <>
       <ScrollToTop />
-      <Outlet />
       <SmartPasteReviewQueueModal
         open={queueOpen}
         messages={queuedMessages}
@@ -254,50 +251,55 @@ function AppWrapper() {
   );
 }
 
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<AppWrapper />}>
-      <Route index element={<Home />} />
-      <Route path="home" element={<Home />} />
-      <Route path="transactions" element={<Transactions />} />
-      <Route path="analytics" element={<Analytics />} />
-      <Route path="profile" element={<Profile />} />
-      <Route path="onboarding" element={<Onboarding />} />
-      <Route path="import-transactions" element={<ImportTransactions />} />
-      <Route path="import-transactions-ner" element={<ImportTransactionsNER />} />
-      <Route path="edit-transaction" element={<EditTransaction />} />
-      <Route path="edit-transaction/:id" element={<EditTransaction />} />
-      <Route path="train-model" element={<TrainModel />} />
-      <Route path="build-template" element={<BuildTemplate />} />
-      <Route path="keyword-bank" element={<KeywordBankManager />} />
-      {process.env.NODE_ENV === 'development' && (
-        <>
-          <Route path="dev/template-health" element={<TemplateHealthDashboard />} />
-          <Route path="dev/template-failures" element={<TemplateFailureLog />} />
-        </>
-      )}
-      <Route path="custom-parsing-rules" element={<CustomParsingRules />} />
-      <Route path="settings" element={<Settings />} />
-      <Route path="process-sms" element={<ProcessSmsMessages />} />
-      <Route path="sms/process-vendors" element={<ProcessVendors />} />
-      <Route path="sms/vendors" element={<VendorCategorization />} />
-      <Route path="vendor-mapping" element={<VendorMapping />} />
-      <Route path="review-sms-transactions" element={<ReviewSmsTransactions />} />
-      <Route path="budget/accounts" element={<AccountsPage />} />
-      <Route path="budget/set" element={<SetBudgetPage />} />
-      <Route path="budget/report" element={<BudgetReportPage />} />
-      <Route path="budget/insights" element={<BudgetInsightsPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Route>
-  )
-);
+function AppRoutes() {
+  return (
+    <>
+      <AppWrapper />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/transactions" element={<Transactions />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/import-transactions" element={<ImportTransactions />} />
+        <Route path="/import-transactions-ner" element={<ImportTransactionsNER />} />
+        <Route path="/edit-transaction" element={<EditTransaction />} />
+        <Route path="/edit-transaction/:id" element={<EditTransaction />} />
+        <Route path="/train-model" element={<TrainModel />} />
+        <Route path="/build-template" element={<BuildTemplate />} />
+        <Route path="/keyword-bank" element={<KeywordBankManager />} />
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
+            <Route path="/dev/template-failures" element={<TemplateFailureLog />} />
+          </>
+        )}
+        <Route path="/custom-parsing-rules" element={<CustomParsingRules />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/process-sms" element={<ProcessSmsMessages />} />
+        <Route path="/sms/process-vendors" element={<ProcessVendors />} />
+        <Route path="/sms/vendors" element={<VendorCategorization />} />
+        <Route path="/vendor-mapping" element={<VendorMapping />} />
+        <Route path="/review-sms-transactions" element={<ReviewSmsTransactions />} />
+        <Route path="/budget/accounts" element={<AccountsPage />} />
+        <Route path="/budget/set" element={<SetBudgetPage />} />
+        <Route path="/budget/report" element={<BudgetReportPage />} />
+        <Route path="/budget/insights" element={<BudgetInsightsPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
   return (
     <ThemeProvider defaultTheme="light" attribute="class">
       <UserProvider>
         <TransactionProvider>
-          <RouterProvider router={router} />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
           <Toaster />
         </TransactionProvider>
       </UserProvider>
