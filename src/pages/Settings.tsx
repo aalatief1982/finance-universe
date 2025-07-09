@@ -68,11 +68,21 @@ const Settings = () => {
   );
 
   useEffect(() => {
-    if (typeof Notification !== 'undefined') {
-      setNotificationsAllowed(Notification.permission === "granted");
-    } else {
-      setNotificationsAllowed(false);
-    }
+    const checkPermissions = async () => {
+      const platform = Capacitor.getPlatform();
+      if (platform === 'web' && typeof Notification !== 'undefined') {
+        setNotificationsAllowed(Notification.permission === 'granted');
+      } else {
+        try {
+          const status = await LocalNotifications.checkPermissions();
+          setNotificationsAllowed(status.display === 'granted');
+        } catch {
+          setNotificationsAllowed(false);
+        }
+      }
+    };
+
+    checkPermissions();
   }, []);
 
   // State for form values
