@@ -184,7 +184,7 @@ function AppWrapper() {
                     {
                       id: 777,
                       title: 'New Transaction Detected',
-                      body: 'Tap to review and confirm',
+                      body: 'Review and confirm your latest expense now',
                       schedule: { at: new Date(Date.now() + 1000) },
                       extra: { transaction: txn }
                     }
