@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Device } from '@capacitor/device';
 
 interface FeedbackModalProps {
   open: boolean;
@@ -26,35 +27,51 @@ interface FeedbackModalProps {
 }
 
 const GOOGLE_FORM_ACTION_URL =
-  'https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZChMAQWHAcSsr-g/formResponse';
+  'https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZhMAQWHAcSsr-g/formResponse';
 
-const FIELD_NAME = 'entry.1234567890';
-const FIELD_EMAIL = 'entry.2345678901';
-const FIELD_FEEDBACK = 'entry.3456789012';
-const FIELD_RATING = 'entry.4567890123';
+const FIELD_DEVICE_INFO = 'entry.1975365589';
+const FIELD_ISSUE = 'entry.1554778644';
+const FIELD_LIKED = 'entry.1065342006';
+const FIELD_IMPROVED = 'entry.856746959';
+const FIELD_EMAIL = 'entry.1757542942';
+const FIELD_RATING = 'entry.897318993';
 
 const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => {
   const { toast } = useToast();
-  const [name, setName] = useState('');
+  const [deviceInfo, setDeviceInfo] = useState('');
+  const [issue, setIssue] = useState('');
+  const [liked, setLiked] = useState('');
+  const [improved, setImproved] = useState('');
   const [email, setEmail] = useState('');
-  const [feedback, setFeedback] = useState('');
   const [rating, setRating] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    Device.getInfo()
+      .then((info) => {
+        setDeviceInfo(`${info.operatingSystem} ${info.osVersion} - ${info.model}`);
+      })
+      .catch(() => {
+        // ignore failures
+      });
+  }, []);
+
   const resetForm = () => {
-    setName('');
+    setDeviceInfo('');
+    setIssue('');
+    setLiked('');
+    setImproved('');
     setEmail('');
-    setFeedback('');
     setRating('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !email.trim() || !feedback.trim() || !rating) {
+    if (!rating) {
       toast({
-        title: 'Missing information',
-        description: 'Please fill in all required fields.',
+        title: 'Missing rating',
+        description: 'Please select a rating between 1 and 5.',
         variant: 'destructive',
       });
       return;
@@ -63,9 +80,11 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => 
     setLoading(true);
     try {
       const formData = new URLSearchParams();
-      formData.append(FIELD_NAME, name);
-      formData.append(FIELD_EMAIL, email);
-      formData.append(FIELD_FEEDBACK, feedback);
+      if (deviceInfo) formData.append(FIELD_DEVICE_INFO, deviceInfo);
+      if (issue) formData.append(FIELD_ISSUE, issue);
+      if (liked) formData.append(FIELD_LIKED, liked);
+      if (improved) formData.append(FIELD_IMPROVED, improved);
+      if (email) formData.append(FIELD_EMAIL, email);
       formData.append(FIELD_RATING, rating);
 
       await fetch(GOOGLE_FORM_ACTION_URL, {
@@ -99,42 +118,59 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => 
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="fb-name" className="text-sm font-medium">
-              Name
+            <label htmlFor="fb-device" className="text-sm font-medium">
+              Device Info
             </label>
             <Input
-              id="fb-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              id="fb-device"
+              value={deviceInfo}
+              onChange={(e) => setDeviceInfo(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="fb-issue" className="text-sm font-medium">
+              What issue are you facing?
+            </label>
+            <Textarea
+              id="fb-issue"
+              value={issue}
+              onChange={(e) => setIssue(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="fb-liked" className="text-sm font-medium">
+              What did you like?
+            </label>
+            <Textarea
+              id="fb-liked"
+              value={liked}
+              onChange={(e) => setLiked(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="fb-improved" className="text-sm font-medium">
+              What can be improved?
+            </label>
+            <Textarea
+              id="fb-improved"
+              value={improved}
+              onChange={(e) => setImproved(e.target.value)}
             />
           </div>
           <div className="space-y-2">
             <label htmlFor="fb-email" className="text-sm font-medium">
-              Email
+              Optional email/contact
             </label>
             <Input
               id="fb-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="fb-text" className="text-sm font-medium">
-              Feedback
-            </label>
-            <Textarea
-              id="fb-text"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              required
             />
           </div>
           <div className="space-y-2">
             <label htmlFor="fb-rating" className="text-sm font-medium">
-              Rating
+              Rate your experience
             </label>
             <Select value={rating} onValueChange={(v) => setRating(v)}>
               <SelectTrigger id="fb-rating">
