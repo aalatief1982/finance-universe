@@ -61,9 +61,10 @@ const SubcategoryBarChart = ({ items }: { items: Item[] }) => {
   try {
     return (
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={items} margin={CHART_MARGIN}>
+        <BarChart data={items} margin={CHART_MARGIN} layout="vertical">
           <XAxis
             type="number"
+            domain={[0, 'dataMax']}
             tickFormatter={(value) =>
               formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')
             }
