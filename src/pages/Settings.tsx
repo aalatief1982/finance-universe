@@ -95,6 +95,9 @@ const Settings = () => {
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
   );
+  const [baselineBackgroundSmsEnabled, setBaselineBackgroundSmsEnabled] = useState(
+    user?.preferences?.sms?.backgroundSmsEnabled || false,
+  );
   const [autoImport, setAutoImport] = useState(
     user?.preferences?.sms?.autoImport || false,
   );
@@ -119,9 +122,9 @@ const Settings = () => {
       setTheme(user.preferences.theme || "light");
       setCurrency(user.preferences.currency || "USD");
       if (user.preferences.sms) {
-        setBackgroundSmsEnabled(
-          user.preferences.sms.backgroundSmsEnabled || false,
-        );
+        const initialBg = user.preferences.sms.backgroundSmsEnabled || false;
+        setBackgroundSmsEnabled(initialBg);
+        setBaselineBackgroundSmsEnabled(initialBg);
         setAutoImport(user.preferences.sms.autoImport || false);
       }
 
@@ -134,10 +137,22 @@ const Settings = () => {
   }, [user]);
 
   useEffect(() => {
+    const checkSmsPermission = async () => {
+      const granted = await smsPermissionService.hasPermission();
+      if (granted) {
+        setBackgroundSmsEnabled(true);
+        setBaselineBackgroundSmsEnabled(true);
+      }
+    };
+
+    checkSmsPermission();
+  }, [user]);
+
+  useEffect(() => {
     const origTheme = user?.preferences?.theme || "light";
     const origCurrency = user?.preferences?.currency || "USD";
     const origAutoImport = user?.preferences?.sms?.autoImport || false;
-    const origBackground = user?.preferences?.sms?.backgroundSmsEnabled || false;
+    const origBackground = baselineBackgroundSmsEnabled;
     const origWeek = user?.preferences?.displayOptions?.weekStartsOn || "sunday";
 
     const changed =
@@ -148,7 +163,7 @@ const Settings = () => {
       weekStartsOn !== origWeek;
 
     setIsDirty(changed);
-  }, [theme, currency, autoImport, backgroundSmsEnabled, weekStartsOn, user]);
+  }, [theme, currency, autoImport, backgroundSmsEnabled, weekStartsOn, baselineBackgroundSmsEnabled, user]);
 
   // Handlers for settings changes
   const handleThemeChange = (value: "light" | "dark" | "system") => {
