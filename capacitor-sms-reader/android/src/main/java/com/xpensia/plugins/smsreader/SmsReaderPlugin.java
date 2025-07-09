@@ -14,6 +14,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+import com.getcapacitor.PermissionState;
 
 import org.json.JSONException;
 
@@ -158,5 +160,13 @@ public class SmsReaderPlugin extends Plugin {
         JSObject ret = new JSObject();
         ret.put("granted", true);
         savedCall.resolve(ret);
+    }
+
+    @PermissionCallback
+    private void permissionCallback(PluginCall call) {
+        PermissionState state = getPermissionState("read_sms");
+        JSObject ret = new JSObject();
+        ret.put("granted", state == PermissionState.GRANTED);
+        call.resolve(ret);
     }
 }
