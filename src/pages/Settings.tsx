@@ -384,7 +384,7 @@ const Settings = () => {
           Save Settings
         </Button>
         <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
             <Sun className="mr-2" size={20} />
             <span>Appearance</span>
           </h2>
@@ -450,7 +450,7 @@ const Settings = () => {
         </section>
 
         <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
             <Eye className="mr-2" size={20} />
             <span>Display Options</span>
           </h2>
@@ -475,7 +475,7 @@ const Settings = () => {
           </div>
         </section>
         <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
             <Bell className="mr-2" size={20} />
             <span>Notification Settings</span>
           </h2>
@@ -497,7 +497,7 @@ const Settings = () => {
           </div>
         </section>
         <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
             <MessageSquare className="mr-2" size={20} />
             <span>SMS Settings</span>
           </h2>
@@ -533,7 +533,7 @@ const Settings = () => {
         </section>
 
         <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
             <Database className="mr-2" size={20} />
             <span>Data Management</span>
           </h2>
