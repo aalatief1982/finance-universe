@@ -36,7 +36,6 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
 
   // Show mobile menu and settings on all pages except onboarding
   const showMobileIcons = !isAuthPage;
-  const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
   return (
     <header
       className={cn(
@@ -91,5 +90,4 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
     </header>
   );
 };
-
 export default Header;
