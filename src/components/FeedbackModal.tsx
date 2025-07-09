@@ -26,8 +26,8 @@ interface FeedbackModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const GOOGLE_FORM_ACTION_URL =
-  'https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZhMAQWHAcSsr-g/formResponse';
+const GOOGLE_FORM_ACTION_URL =  
+  'https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZChMAQWHAcSsr-g/formResponse';
 
 const FIELD_DEVICE_INFO = 'entry.1975365589';
 const FIELD_ISSUE = 'entry.1554778644';

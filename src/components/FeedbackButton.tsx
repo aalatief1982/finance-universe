@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const GOOGLE_FORM_URL =
-  "https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZChMAQWHAcSsr-g/viewform?usp=dialog";
+  "https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZChMAQWHAcSsr-g/formResponse";
 
 interface FeedbackButtonProps {
   className?: string;
