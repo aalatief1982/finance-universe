@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -9,8 +8,9 @@ import { MainNavigation } from './MainNavigation';
 import { UserMenu } from './UserMenu';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
-import { Settings, ArrowLeft } from 'lucide-react';
+import { Settings, ArrowLeft, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { openFeedbackForm } from '@/components/FeedbackButton';
 
 interface HeaderProps {
   className?: string;
@@ -36,11 +36,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
 
   // Show mobile menu and settings on all pages except onboarding
   const showMobileIcons = !isAuthPage;
-
-  if (isAuthPage) {
-    return <AuthHeader className={className} />;
-  }
-
+  const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
   return (
     <header
       className={cn(
@@ -66,6 +62,16 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
           </div>
           <div className="flex items-center">
             <UserMenu isLandingPage={isLandingPage} />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={openFeedbackForm}
+              className="ml-2"
+              title="Feedback"
+              aria-label="Feedback"
+            >
+              <MessageSquare size={20} />
+            </Button>
             {showMobileIcons && (
               <>
                 <MobileNavigation currentPageTitle={currentPageTitle} />

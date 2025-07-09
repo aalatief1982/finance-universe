@@ -13,9 +13,7 @@ vi.mock('@/services/SmsPermissionService', () => ({
   },
 }));
 
-vi.mock('@/components/FeedbackButton', () => ({
-  default: () => <div>Feedback</div>,
-}));
+
 
 vi.mock('@/components/Layout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

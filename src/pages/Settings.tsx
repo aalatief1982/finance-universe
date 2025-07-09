@@ -32,14 +32,13 @@ import {
   Download,
   UploadCloud,
   Database,
-  Mail,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
-import FeedbackButton from "@/components/FeedbackButton";
+
 import {
   updateCurrency as persistCurrency,
   getStoredTransactions,
@@ -431,16 +430,6 @@ const Settings = () => {
           </div>
         </section>
 
-        <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold">
-            <Mail className="mr-2" size={20} />
-            <span>Feedback</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Tell us what you think about the app
-          </p>
-          <FeedbackButton className="w-full" />
-        </section>
 
         <section className="space-y-4">
           <h2 className="flex items-center text-lg font-semibold text-destructive">
