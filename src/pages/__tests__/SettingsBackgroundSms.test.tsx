@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { UserProvider, useUser } from '@/context/UserContext';
 import Settings from '../Settings';
@@ -31,10 +31,10 @@ describe('Settings background SMS toggle', () => {
   it('persists preference when toggled', async () => {
     render(
       <UserProvider>
-        <MemoryRouter>
+        <BrowserRouter>
           <Settings />
           <StateViewer />
-        </MemoryRouter>
+        </BrowserRouter>
       </UserProvider>
     );
 
