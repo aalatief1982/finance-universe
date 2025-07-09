@@ -40,6 +40,8 @@ declare module '@capacitor/local-notifications' {
   export const LocalNotifications: {
     schedule: (options: { notifications: any[] }) => Promise<void>;
     addListener: (eventName: string, callback: (event: any) => void) => Promise<any>;
+    checkPermissions: () => Promise<{ display?: string }>;
+    requestPermissions: () => Promise<{ display?: string }>;
   };
 }
 

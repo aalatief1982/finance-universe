@@ -46,6 +46,9 @@ import {
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -164,19 +167,37 @@ const Settings = () => {
   };
 
   const handleNotificationToggle = async (checked: boolean) => {
-    if (typeof Notification === 'undefined') {
-      setNotificationsAllowed(false);
-      return;
-    }
+    const platform = Capacitor.getPlatform();
 
-    if (checked && Notification.permission !== "granted") {
-      const result = await Notification.requestPermission();
-      if (result !== "granted") {
-        setNotificationsAllowed(false);
+    if (checked) {
+      if (platform === 'web' && typeof Notification !== 'undefined') {
+        if (Notification.permission !== 'granted') {
+          const result = await Notification.requestPermission();
+          if (result !== 'granted') {
+            setNotificationsAllowed(false);
+            return;
+          }
+        }
+        setNotificationsAllowed(true);
         return;
       }
+
+      try {
+        const status = await LocalNotifications.checkPermissions();
+        if (status.display !== 'granted') {
+          const req = await LocalNotifications.requestPermissions();
+          if (req.display !== 'granted') {
+            setNotificationsAllowed(false);
+            return;
+          }
+        }
+        setNotificationsAllowed(true);
+      } catch {
+        setNotificationsAllowed(false);
+      }
+    } else {
+      setNotificationsAllowed(false);
     }
-    setNotificationsAllowed(checked);
   };
 
   const handleSaveSettings = () => {
@@ -222,7 +243,7 @@ const Settings = () => {
     setWeekStartsOn(value);
   };
 
-  const handleExportData = () => {
+  const handleExportData = async () => {
     try {
       const transactions = getStoredTransactions();
       if (!transactions.length) {
@@ -235,26 +256,41 @@ const Settings = () => {
       }
 
       const csv = convertTransactionsToCsv(transactions);
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
 
-      const downloadAnchorNode = document.createElement("a");
-      downloadAnchorNode.href = url;
-      downloadAnchorNode.download = "transactions.csv";
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
-      URL.revokeObjectURL(url);
+      if (Capacitor.getPlatform() === 'web') {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.href = url;
+        downloadAnchorNode.download = 'transactions.csv';
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        URL.revokeObjectURL(url);
+      } else {
+        const fileName = `transactions_${Date.now()}.csv`;
+        await Filesystem.writeFile({
+          path: fileName,
+          data: csv,
+          directory: Directory.Documents,
+          encoding: 'utf8'
+        });
+        toast({
+          title: 'Export successful',
+          description: `Saved to Documents/${fileName}`
+        });
+        return;
+      }
 
       toast({
-        title: "Export successful",
-        description: "Your data has been exported successfully.",
+        title: 'Export successful',
+        description: 'Your data has been exported successfully.',
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: "An error occurred while exporting your data.",
-        variant: "destructive",
+        title: 'Export failed',
+        description: 'An error occurred while exporting your data.',
+        variant: 'destructive',
       });
     }
   };
