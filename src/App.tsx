@@ -185,8 +185,8 @@ function AppWrapper() {
                       body: 'Review and confirm your latest expense now!',
                       schedule: { at: new Date(Date.now() + 1000) },
                       extra: { transaction: txn },
-                      iconColor: '#00ACC1',
-                      smallIcon: 'ic_notification'
+                      iconColor: '#0097a0',
+                      smallIcon: 'ic_launcher'
                     }
                   ]
                 });
