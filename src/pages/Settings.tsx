@@ -61,11 +61,15 @@ const Settings = () => {
   const navigate = useNavigate();
 
   const [notificationsAllowed, setNotificationsAllowed] = useState(
-    Notification.permission === "granted"
+    typeof Notification !== 'undefined' && Notification.permission === "granted"
   );
 
   useEffect(() => {
-    setNotificationsAllowed(Notification.permission === "granted");
+    if (typeof Notification !== 'undefined') {
+      setNotificationsAllowed(Notification.permission === "granted");
+    } else {
+      setNotificationsAllowed(false);
+    }
   }, []);
 
   // State for form values
@@ -160,6 +164,11 @@ const Settings = () => {
   };
 
   const handleNotificationToggle = async (checked: boolean) => {
+    if (typeof Notification === 'undefined') {
+      setNotificationsAllowed(false);
+      return;
+    }
+
     if (checked && Notification.permission !== "granted") {
       const result = await Notification.requestPermission();
       if (result !== "granted") {
