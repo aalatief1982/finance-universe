@@ -6,12 +6,11 @@ import { Download, UploadCloud, Database } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
-import { exportCsvViaShare } from '@/utils/export-utils';
 
 const DataManagementSettings = () => {
   const { toast } = useToast();
   
-  const handleExportData = async () => {
+  const handleExportData = () => {
     try {
       const transactions = getStoredTransactions();
       if (!transactions.length) {
@@ -24,33 +23,21 @@ const DataManagementSettings = () => {
       }
 
       const csv = convertTransactionsToCsv(transactions);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
 
-      try {
-        const didShare = await exportCsvViaShare(csv);
-        if (!didShare) {
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.href = url;
+      downloadAnchorNode.download = 'transactions.csv';
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      URL.revokeObjectURL(url);
 
-          const downloadAnchorNode = document.createElement('a');
-          downloadAnchorNode.href = url;
-          downloadAnchorNode.download = 'transactions.csv';
-          document.body.appendChild(downloadAnchorNode);
-          downloadAnchorNode.click();
-          downloadAnchorNode.remove();
-          URL.revokeObjectURL(url);
-        }
-
-        toast({
-          title: "Export successful",
-          description: "Your data has been exported successfully.",
-        });
-      } catch (err) {
-        toast({
-          title: "Export failed",
-          description: "An error occurred while exporting your data.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Export successful",
+        description: "Your data has been exported successfully.",
+      });
     } catch (error) {
       toast({
         title: "Export failed",

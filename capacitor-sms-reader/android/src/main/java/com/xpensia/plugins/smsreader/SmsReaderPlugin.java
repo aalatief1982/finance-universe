@@ -14,7 +14,6 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
-import com.getcapacitor.annotation.PermissionCallback;
 
 import org.json.JSONException;
 
@@ -136,15 +135,6 @@ public class SmsReaderPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("Failed to read SMS messages: " + e.getMessage(), e);
         }
-    }
-
-    
-    @PermissionCallback
-    private void permissionCallback(PluginCall call) {
-        boolean hasPermission = hasRequiredPermissions();
-        JSObject ret = new JSObject();
-        ret.put("granted", hasPermission);
-        call.resolve(ret);
     }
 
     @Override

@@ -32,19 +32,20 @@ import {
   Download,
   UploadCloud,
   Database,
+  Mail,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
+import FeedbackButton from "@/components/FeedbackButton";
 import {
   updateCurrency as persistCurrency,
   getStoredTransactions,
   storeTransactions,
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
-import { exportCsvViaShare } from "@/utils/export-utils";
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const Settings = () => {
@@ -75,25 +76,15 @@ const Settings = () => {
     "sunday" | "monday" | "saturday"
   >(user?.preferences?.displayOptions?.weekStartsOn || "sunday");
 
-  // Initialize values from user context and localStorage on component mount
+  // Initialize values from user context on component mount
   useEffect(() => {
-    // First check localStorage for backgroundSmsEnabled to ensure persistence
-    const savedBackgroundSms = localStorage.getItem('backgroundSmsEnabled');
-    if (savedBackgroundSms !== null) {
-      setBackgroundSmsEnabled(savedBackgroundSms === 'true');
-    }
-
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
       setCurrency(user.preferences.currency || "USD");
-      
       if (user.preferences.sms) {
-        // Only use user preferences if localStorage doesn't have a value
-        if (savedBackgroundSms === null) {
-          setBackgroundSmsEnabled(
-            user.preferences.sms.backgroundSmsEnabled || false,
-          );
-        }
+        setBackgroundSmsEnabled(
+          user.preferences.sms.backgroundSmsEnabled || false,
+        );
         setAutoImport(user.preferences.sms.autoImport || false);
       }
 
@@ -116,48 +107,24 @@ const Settings = () => {
 
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
-    console.log(`[Settings] Background SMS toggle changed to: ${checked}`);
 
     if (checked) {
-      console.log('[Settings] Requesting SMS permission...');
+
       let granted = await smsPermissionService.hasPermission();
-      console.log(`[Settings] Current permission status: ${granted}`);
-      
       if (!granted) {
         granted = await smsPermissionService.requestPermission();
-        console.log(`[Settings] Permission request result: ${granted}`);
       }
 
       if (!granted) {
-        console.log('[Settings] Permission denied, reverting toggle');
-        toast({
-          title: "Permission Required",
-          description: "SMS permission is required to read messages in the background.",
-          variant: "destructive"
-        });
+        alert("SMS permission is required to read messages in the background.");
         setBackgroundSmsEnabled(false);
         return;
       }
     }
 
     setBackgroundSmsEnabled(checked);
-    
-    // Immediately save to user preferences and localStorage
-    const updatedPreferences = {
-      ...user?.preferences,
-      sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked }
-    };
-    
-    updateUserPreferences(updatedPreferences);
-    
-    // Also save directly to localStorage for persistence
-    localStorage.setItem('backgroundSmsEnabled', checked.toString());
-    
-    console.log(`[Settings] Background SMS setting saved: ${checked}`);
-    
-    toast({
-      title: checked ? "Background SMS Enabled" : "Background SMS Disabled",
-      description: checked ? "SMS messages will be read automatically" : "Automatic SMS reading is disabled"
+    updateUserPreferences({
+      sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked },
     });
   };
 
@@ -185,7 +152,7 @@ const Settings = () => {
     setWeekStartsOn(value);
   };
 
-  const handleExportData = async () => {
+  const handleExportData = () => {
     try {
       const transactions = getStoredTransactions();
       if (!transactions.length) {
@@ -198,33 +165,21 @@ const Settings = () => {
       }
 
       const csv = convertTransactionsToCsv(transactions);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
 
-      try {
-        const didShare = await exportCsvViaShare(csv);
-        if (!didShare) {
-          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-          const url = URL.createObjectURL(blob);
+      const downloadAnchorNode = document.createElement("a");
+      downloadAnchorNode.href = url;
+      downloadAnchorNode.download = "transactions.csv";
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      URL.revokeObjectURL(url);
 
-          const downloadAnchorNode = document.createElement("a");
-          downloadAnchorNode.href = url;
-          downloadAnchorNode.download = "transactions.csv";
-          document.body.appendChild(downloadAnchorNode);
-          downloadAnchorNode.click();
-          downloadAnchorNode.remove();
-          URL.revokeObjectURL(url);
-        }
-
-        toast({
-          title: "Export successful",
-          description: "Your data has been exported successfully.",
-        });
-      } catch (err) {
-        toast({
-          title: "Export failed",
-          description: "An error occurred while exporting your data.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Export successful",
+        description: "Your data has been exported successfully.",
+      });
     } catch (error) {
       toast({
         title: "Export failed",
@@ -474,6 +429,17 @@ const Settings = () => {
               Import
             </Button>
           </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="flex items-center text-lg font-semibold">
+            <Mail className="mr-2" size={20} />
+            <span>Feedback</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Tell us what you think about the app
+          </p>
+          <FeedbackButton className="w-full" />
         </section>
 
         <section className="space-y-4">

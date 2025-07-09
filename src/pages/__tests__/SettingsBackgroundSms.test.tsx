@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { UserProvider, useUser } from '@/context/UserContext';
 import Settings from '../Settings';
@@ -13,6 +13,9 @@ vi.mock('@/services/SmsPermissionService', () => ({
   },
 }));
 
+vi.mock('@/components/FeedbackButton', () => ({
+  default: () => <div>Feedback</div>,
+}));
 
 vi.mock('@/components/Layout', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -28,10 +31,10 @@ describe('Settings background SMS toggle', () => {
   it('persists preference when toggled', async () => {
     render(
       <UserProvider>
-        <BrowserRouter>
+        <MemoryRouter>
           <Settings />
           <StateViewer />
-        </BrowserRouter>
+        </MemoryRouter>
       </UserProvider>
     );
 

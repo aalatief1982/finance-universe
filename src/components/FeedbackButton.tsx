@@ -11,23 +11,22 @@ interface FeedbackButtonProps {
   className?: string;
 }
 
-export const openFeedbackForm = async () => {
-  try {
-    if (Capacitor.isNativePlatform()) {
-      await Browser.open({ url: GOOGLE_FORM_URL });
-    } else {
-      window.open(GOOGLE_FORM_URL, "_blank");
-    }
-    FirebaseAnalytics.logEvent({ name: 'send_feedback' });
-  } catch (err) {
-    console.error("Failed to open feedback form:", err);
-  }
-};
-
 const FeedbackButton: React.FC<FeedbackButtonProps> = ({ className }) => {
+  const handleClick = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Browser.open({ url: GOOGLE_FORM_URL });
+      } else {
+        window.open(GOOGLE_FORM_URL, "_blank");
+      }
+      FirebaseAnalytics.logEvent({ name: 'send_feedback' });
+    } catch (err) {
+      console.error("Failed to open feedback form:", err);
+    }
+  };
 
   return (
-    <Button onClick={openFeedbackForm} className={className}>
+    <Button onClick={handleClick} className={className}>
       Send Feedback
     </Button>
   );

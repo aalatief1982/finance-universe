@@ -222,9 +222,3 @@ Additional log markers are emitted to help verify the SMS workflow:
 
 Use `adb logcat | grep AIS-` while testing to see these markers.
 
-## Exporting Data
-
-On Android and iOS the **Export Data** option saves the CSV to the Documents
-directory and then opens the native Share dialog so you can send or store the
-file using other apps.
-
