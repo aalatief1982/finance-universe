@@ -141,7 +141,7 @@ const Home = () => {
 
   const expensesBySubcategory = AnalyticsService.getSubcategoryData(
     filteredTransactions,
-  ).slice(0, 10);
+  );
 
   const expensesByCategory = Object.entries(categoryData).map(
     ([name, value]) => ({ name, value }),

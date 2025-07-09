@@ -374,11 +374,12 @@ const Settings = () => {
 
   return (
     <Layout showBack>
+      <div className="px-1">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="space-y-6 pb-24"
+        className="space-y-6 pb-24 mt-2"
       >
         <Button className="w-full mb-2" onClick={handleSaveSettings}>
           Save Settings
@@ -575,6 +576,7 @@ const Settings = () => {
 
 
       </motion.div>
+      </div>
       <AlertDialog open={showUnsavedPrompt} onOpenChange={setShowUnsavedPrompt}>
         <AlertDialogContent>
           <AlertDialogHeader>

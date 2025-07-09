@@ -202,18 +202,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
               })}
             </nav>
 
-            {user && (
-              <div className="mt-8 pt-4 border-t">
-                <Button
-                  variant="destructive"
-                  className="w-full justify-start"
-                  onClick={logOut}
-                >
-                  <LogOut size={18} className="mr-2" />
-                  Log out
-                </Button>
-              </div>
-            )}
           </div>
         </SheetContent>
       </Sheet>
