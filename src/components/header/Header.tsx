@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/context/UserContext';
@@ -10,7 +10,7 @@ import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
 import { Settings, ArrowLeft, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { openFeedbackForm } from '@/components/FeedbackButton';
+import FeedbackModal from '@/components/FeedbackModal';
 
 interface HeaderProps {
   className?: string;
@@ -22,6 +22,8 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
   const location = useLocation();
   const navigate = useNavigate();
   const { auth } = useUser();
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   
   const currentPageTitle =
     routeTitleMap[location.pathname] ||
@@ -37,6 +39,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
   // Show mobile menu and settings on all pages except onboarding
   const showMobileIcons = !isAuthPage;
   return (
+    <>
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 pt-[var(--safe-area-top)] bg-background/95 backdrop-blur-xl border-b border-border",
@@ -64,7 +67,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
             <Button
               variant="ghost"
               size="icon"
-              onClick={openFeedbackForm}
+              onClick={() => setFeedbackOpen(true)}
               className="ml-2"
               title="Feedback"
               aria-label="Feedback"
@@ -88,6 +91,8 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
         </div>
       </div>
     </header>
+    <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+    </>
   );
 };
 export default Header;
