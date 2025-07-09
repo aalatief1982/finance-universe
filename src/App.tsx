@@ -184,7 +184,9 @@ function AppWrapper() {
                       title: 'New Transaction Detected',
                       body: 'Review and confirm your latest expense now!',
                       schedule: { at: new Date(Date.now() + 1000) },
-                      extra: { transaction: txn }
+                      extra: { transaction: txn },
+                      iconColor: '#00ACC1',
+                      smallIcon: 'ic_notification'
                     }
                   ]
                 });
