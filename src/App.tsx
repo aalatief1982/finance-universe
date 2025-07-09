@@ -51,7 +51,7 @@ import SmsImportService from '@/services/SmsImportService';
 import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
 import { useUser } from './context/UserContext';
 import SmartPasteReviewQueueModal from '@/components/sms/SmartPasteReviewQueueModal';
-import { getQueuedMessages, clearQueuedMessages } from '@/services/smsQueueService';
+import { getQueuedMessages, clearQueuedMessages, addToQueue } from '@/services/smsQueueService';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -184,7 +184,10 @@ function AppWrapper() {
                       title: 'New Transaction Detected',
                       body: 'Review and confirm your latest expense now!',
                       schedule: { at: new Date(Date.now() + 1000) },
-                      extra: { transaction: txn },
+                      extra: { 
+                        transaction: txn,
+                        smsData: { sender, body }
+                      },
                       iconColor: '#0097a0',
                       smallIcon: 'ic_launcher'
                     }
@@ -198,11 +201,18 @@ function AppWrapper() {
           }
           
           // Handle notification taps
-          LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+          LocalNotifications.addListener('localNotificationActionPerformed', async (event) => {
             const statePayload = event.notification.extra;
-            if (statePayload?.transaction) {
-              if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] Tapped. Redirecting to edit.');
-              navigate('/edit-transaction', { state: statePayload });
+            if (statePayload?.smsData) {
+              if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] Tapped. Adding SMS to smart paste queue.');
+              
+              // Add SMS data to queue
+              await addToQueue(statePayload.smsData);
+              
+              // Trigger smart paste modal
+              const msgs = await getQueuedMessages();
+              setQueuedMessages(msgs);
+              setQueueOpen(true);
             }
           });
           

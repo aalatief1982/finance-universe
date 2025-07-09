@@ -25,3 +25,17 @@ export const clearQueuedMessages = async (): Promise<void> => {
   }
 };
 
+export const addToQueue = async (sms: QueuedSms): Promise<void> => {
+  const currentQueue = await getQueuedMessages();
+  const updatedQueue = [...currentQueue, sms];
+  
+  if (Capacitor.isNativePlatform()) {
+    await Preferences.set({ 
+      key: QUEUE_KEY, 
+      value: JSON.stringify(updatedQueue) 
+    });
+  } else {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
+  }
+};
+
