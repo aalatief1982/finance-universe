@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate, useBlocker } from "react-router-dom";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,6 @@ import {
 import {
   Sun,
   Moon,
-  Trash,
   Bell,
   Eye,
   MessageSquare,
@@ -54,9 +54,19 @@ const Settings = () => {
     updateTheme,
     updateCurrency,
     updateDisplayOptions,
-    updateUserPreferences,
+    updateUser,
     getEffectiveTheme,
   } = useUser();
+
+  const navigate = useNavigate();
+
+  const [notificationsAllowed, setNotificationsAllowed] = useState(
+    Notification.permission === "granted"
+  );
+
+  useEffect(() => {
+    setNotificationsAllowed(Notification.permission === "granted");
+  }, []);
 
   // State for form values
   const [theme, setTheme] = useState<"light" | "dark" | "system">(
@@ -74,6 +84,17 @@ const Settings = () => {
   const [weekStartsOn, setWeekStartsOn] = useState<
     "sunday" | "monday" | "saturday"
   >(user?.preferences?.displayOptions?.weekStartsOn || "sunday");
+
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
+
+  const blocker = useBlocker(isDirty);
+
+  useEffect(() => {
+    if (blocker.state === "blocked") {
+      setShowUnsavedPrompt(true);
+    }
+  }, [blocker]);
 
   // Initialize values from user context on component mount
   useEffect(() => {
@@ -95,6 +116,23 @@ const Settings = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    const origTheme = user?.preferences?.theme || "light";
+    const origCurrency = user?.preferences?.currency || "USD";
+    const origAutoImport = user?.preferences?.sms?.autoImport || false;
+    const origBackground = user?.preferences?.sms?.backgroundSmsEnabled || false;
+    const origWeek = user?.preferences?.displayOptions?.weekStartsOn || "sunday";
+
+    const changed =
+      theme !== origTheme ||
+      currency !== origCurrency ||
+      autoImport !== origAutoImport ||
+      backgroundSmsEnabled !== origBackground ||
+      weekStartsOn !== origWeek;
+
+    setIsDirty(changed);
+  }, [theme, currency, autoImport, backgroundSmsEnabled, weekStartsOn, user]);
+
   // Handlers for settings changes
   const handleThemeChange = (value: "light" | "dark" | "system") => {
     setTheme(value);
@@ -106,14 +144,11 @@ const Settings = () => {
 
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
-
     if (checked) {
-
       let granted = await smsPermissionService.hasPermission();
       if (!granted) {
         granted = await smsPermissionService.requestPermission();
       }
-
       if (!granted) {
         alert("SMS permission is required to read messages in the background.");
         setBackgroundSmsEnabled(false);
@@ -122,29 +157,56 @@ const Settings = () => {
     }
 
     setBackgroundSmsEnabled(checked);
-    updateUserPreferences({
-      sms: { ...user?.preferences?.sms, backgroundSmsEnabled: checked },
-    });
+  };
+
+  const handleNotificationToggle = async (checked: boolean) => {
+    if (checked && Notification.permission !== "granted") {
+      const result = await Notification.requestPermission();
+      if (result !== "granted") {
+        setNotificationsAllowed(false);
+        return;
+      }
+    }
+    setNotificationsAllowed(checked);
   };
 
   const handleSaveSettings = () => {
-    // Consolidate all preference updates into a single call to prevent multiple toasts
-    updateUserPreferences({
+    const updated = {
       theme,
       currency,
-      sms: { ...user?.preferences?.sms, backgroundSmsEnabled, autoImport },
-      displayOptions: { ...user?.preferences?.displayOptions, weekStartsOn }
-    });
-    
-    // Persist currency separately for compatibility
+      sms: {
+        ...user?.preferences?.sms,
+        backgroundSmsEnabled,
+        autoImport,
+      },
+      displayOptions: {
+        ...user?.preferences?.displayOptions,
+        weekStartsOn,
+      },
+    } as any;
+
+    updateUser({ preferences: { ...user?.preferences, ...updated } });
+
     persistCurrency(currency);
 
     FirebaseAnalytics.logEvent({ name: 'settings_saved' });
 
     toast({
-      title: "Settings saved",
-      description: "Your preferences have been updated.",
+      title: "Settings saved successfully",
     });
+
+    setIsDirty(false);
+  };
+
+  const handleSkipWithoutSave = () => {
+    setShowUnsavedPrompt(false);
+    blocker.proceed();
+  };
+
+  const handleSaveAndProceed = () => {
+    handleSaveSettings();
+    setShowUnsavedPrompt(false);
+    blocker.proceed();
   };
 
   const updateWeekStartsOn = (value: "sunday" | "monday" | "saturday") => {
@@ -352,11 +414,31 @@ const Settings = () => {
           </p>
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="background-sms">
-                Enable Background SMS Reading
-              </Label>
+              <Label htmlFor="allow-notifications">Enable Notifications</Label>
               <p className="text-sm text-muted-foreground">
-                Read incoming SMS in the background. Changes save automatically.
+                Allow this app to send you notifications
+              </p>
+            </div>
+            <Switch
+              id="allow-notifications"
+              checked={notificationsAllowed}
+              onCheckedChange={handleNotificationToggle}
+            />
+          </div>
+        </section>
+        <section className="space-y-4">
+          <h2 className="flex items-center text-lg font-semibold">
+            <MessageSquare className="mr-2" size={20} />
+            <span>SMS Settings</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Manage SMS related options
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
+              <p className="text-sm text-muted-foreground">
+                Read incoming SMS in the background
               </p>
             </div>
             <Switch
@@ -365,16 +447,7 @@ const Settings = () => {
               onCheckedChange={handleBackgroundSmsChange}
             />
           </div>
-        </section>
-        <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold">
-            <MessageSquare className="mr-2" size={20} />
-            <span>SMS Import</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Automatically import new SMS messages
-          </p>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-2">
             <div className="space-y-0.5">
               <Label htmlFor="auto-sms-import">Automatic SMS import</Label>
               <p className="text-sm text-muted-foreground">
@@ -431,38 +504,25 @@ const Settings = () => {
         </section>
 
 
-        <section className="space-y-4">
-          <h2 className="flex items-center text-lg font-semibold text-destructive">
-            <Trash className="mr-2" size={20} />
-            <span>Danger Zone</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Irreversible actions that affect your data
-          </p>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full">
-                Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  your account and remove all your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  Delete Account
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </section>
       </motion.div>
+      <AlertDialog open={showUnsavedPrompt} onOpenChange={setShowUnsavedPrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. What would you like to do?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleSkipWithoutSave}>
+              Skip without Save
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndProceed}>
+              Save and Proceed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
