@@ -30,14 +30,14 @@ if (Capacitor.isNativePlatform()) {
   (async () => {
     const platform = Capacitor.getPlatform();
 
-    if (platform === 'ios') {
+    //if (platform === 'ios') {
       try {
         await FirebaseAnalytics.enable();
         console.log('[FirebaseAnalytics] enabled on iOS');
       } catch (err) {
         console.warn('[FirebaseAnalytics] enable() failed on iOS:', err);
       }
-    }
+    //}
 
     try {
       const { identifier } = await Device.getId();
