@@ -50,8 +50,7 @@ import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import SmsImportService from '@/services/SmsImportService';
 import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
 import { useUser } from './context/UserContext';
-import SmartPasteReviewQueueModal from '@/components/sms/SmartPasteReviewQueueModal';
-import { getQueuedMessages, clearQueuedMessages, addToQueue } from '@/services/smsQueueService';
+import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -62,28 +61,8 @@ function AppWrapper() {
     navigateRef.current = navigate;
   }, [navigate]);
   const { user } = useUser();
-  const [queueOpen, setQueueOpen] = useState(false);
-  const [queuedMessages, setQueuedMessages] = useState<{ sender: string; body: string }[]>([]);
 
-  useEffect(() => {
-    const checkQueue = async () => {
-      const msgs = await getQueuedMessages();
-      if (msgs.length > 0) {
-        setQueuedMessages(msgs);
-        setQueueOpen(true);
-      }
-    };
-
-    checkQueue();
-    const resume = CapacitorApp.addListener('appStateChange', (state) => {
-      if (state.isActive) {
-        checkQueue();
-      }
-    });
-    return () => {
-      resume.then(listener => listener.remove());
-    };
-  }, []);
+  // SMS Auto-Import functionality - placeholder for future queue functionality if needed
 
   useEffect(() => {
     const platform = Capacitor.getPlatform();
@@ -185,7 +164,6 @@ function AppWrapper() {
                       body: 'Review and confirm your latest expense now!',
                       schedule: { at: new Date(Date.now() + 1000) },
                       extra: { 
-                        transaction: txn,
                         smsData: { sender, body }
                       },
                       iconColor: '#0097a0',
@@ -204,15 +182,39 @@ function AppWrapper() {
           LocalNotifications.addListener('localNotificationActionPerformed', async (event) => {
             const statePayload = event.notification.extra;
             if (statePayload?.smsData) {
-              if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] Tapped. Adding SMS to smart paste queue.');
+              if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] Tapped. Processing SMS directly.');
               
-              // Add SMS data to queue
-              await addToQueue(statePayload.smsData);
+              const { sender, body } = statePayload.smsData;
               
-              // Trigger smart paste modal
-              const msgs = await getQueuedMessages();
-              setQueuedMessages(msgs);
-              setQueueOpen(true);
+              try {
+                // Process SMS using the same backend function as SmartPaste
+                const result = await parseAndInferTransaction(body, sender);
+                
+                if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] SMS processed:', result);
+                
+                // Navigate to edit-transaction with the same state structure as ImportTransactions
+                navigate('/edit-transaction', {
+                  state: {
+                    transaction: {
+                      ...result.transaction,
+                      rawMessage: body,
+                    },
+                    rawMessage: body,
+                    senderHint: sender,
+                    confidence: result.confidence,
+                    matchedCount: result.matchedCount,
+                    totalTemplates: result.totalTemplates,
+                    fieldScore: result.fieldScore,
+                    keywordScore: result.keywordScore,
+                    isSuggested: true,
+                    matchOrigin: result.origin,
+                  },
+                });
+              } catch (error) {
+                console.error('[NOTIFICATION] Error processing SMS:', error);
+                // Fallback to import transactions page if processing fails
+                navigate('/import-transactions');
+              }
             }
           });
           
@@ -250,15 +252,6 @@ function AppWrapper() {
   return (
     <>
       <ScrollToTop />
-      <SmartPasteReviewQueueModal
-        open={queueOpen}
-        messages={queuedMessages}
-        onClose={() => {
-          clearQueuedMessages();
-          setQueueOpen(false);
-          setQueuedMessages([]);
-        }}
-      />
     </>
   );
 }
