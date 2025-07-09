@@ -13,7 +13,7 @@
     "prepare:plugins": "bash scripts/build-plugins.sh"
   },
   "dependencies": {
-    "@capacitor-firebase/analytics": "^6.0.0",
+    "@capacitor-firebase/analytics": "^6.3.1",
     "@capacitor/android": "^6.0.0",
     "@capacitor/app": "^6.0.0",
     "@capacitor/browser": "^6.0.0",
@@ -70,7 +70,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
-    "firebase": "^11.10.0",
+    "firebase": "^10.14.1",
     "framer-motion": "^12.5.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.487.0",
