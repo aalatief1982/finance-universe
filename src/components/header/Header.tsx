@@ -91,7 +91,11 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
         </div>
       </div>
     </header>
-    <FeedbackModal open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+    <FeedbackModal
+      open={feedbackOpen}
+      onOpenChange={setFeedbackOpen}
+      screenName={currentPageTitle}
+    />
     </>
   );
 };

@@ -10,20 +10,18 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+// Rating dropdown replaced with stars - select no longer used
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Star } from 'lucide-react';
 import { Device } from '@capacitor/device';
+import { App } from '@capacitor/app';
+import { cn } from '@/lib/utils';
 
 interface FeedbackModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Name of the screen/component where modal is opened */
+  screenName: string;
 }
 
 const GOOGLE_FORM_ACTION_URL =  
@@ -36,7 +34,11 @@ const FIELD_IMPROVED = 'entry.856746959';
 const FIELD_EMAIL = 'entry.1757542942';
 const FIELD_RATING = 'entry.897318993';
 
-const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => {
+const FeedbackModal: React.FC<FeedbackModalProps> = ({
+  open,
+  onOpenChange,
+  screenName,
+}) => {
   const { toast } = useToast();
   const [deviceInfo, setDeviceInfo] = useState('');
   const [issue, setIssue] = useState('');
@@ -45,16 +47,39 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => 
   const [email, setEmail] = useState('');
   const [rating, setRating] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showEmailInput, setShowEmailInput] = useState(true);
 
   useEffect(() => {
-    Device.getInfo()
-      .then((info) => {
-        setDeviceInfo(`${info.operatingSystem} ${info.osVersion} - ${info.model}`);
-      })
-      .catch(() => {
+    const loadInfo = async () => {
+      try {
+        const [info, id, appInfo] = await Promise.all([
+          Device.getInfo(),
+          Device.getId().catch(() => ({ uuid: '' })),
+          App.getInfo().catch(() => ({ version: '' })),
+        ]);
+        const uuid = (id as any).uuid || (id as any).identifier || '';
+        const version = (appInfo as any).version || '';
+        setDeviceInfo(`${info.model}, ${uuid}, ${version}, ${screenName}`);
+      } catch {
         // ignore failures
-      });
-  }, []);
+      }
+
+      try {
+        const stored = localStorage.getItem('profile');
+        if (stored) {
+          const profile = JSON.parse(stored);
+          if (profile?.email) {
+            setEmail(profile.email);
+            setShowEmailInput(false);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    loadInfo();
+  }, [screenName]);
 
   const resetForm = () => {
     setDeviceInfo('');
@@ -63,6 +88,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => 
     setImproved('');
     setEmail('');
     setRating('');
+    setShowEmailInput(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,16 +144,6 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => 
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="fb-device" className="text-sm font-medium">
-              Device Info
-            </label>
-            <Input
-              id="fb-device"
-              value={deviceInfo}
-              onChange={(e) => setDeviceInfo(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
             <label htmlFor="fb-issue" className="text-sm font-medium">
               What issue are you facing?
             </label>
@@ -157,33 +173,38 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => 
               onChange={(e) => setImproved(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <label htmlFor="fb-email" className="text-sm font-medium">
-              Optional email/contact
-            </label>
-            <Input
-              id="fb-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+          {showEmailInput && (
+            <div className="space-y-2">
+              <label htmlFor="fb-email" className="text-sm font-medium">
+                Optional email/contact
+              </label>
+              <Input
+                id="fb-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <label htmlFor="fb-rating" className="text-sm font-medium">
               Rate your experience
             </label>
-            <Select value={rating} onValueChange={(v) => setRating(v)}>
-              <SelectTrigger id="fb-rating">
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1</SelectItem>
-                <SelectItem value="2">2</SelectItem>
-                <SelectItem value="3">3</SelectItem>
-                <SelectItem value="4">4</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-              </SelectContent>
-            </Select>
+            <div id="fb-rating" className="flex space-x-1">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <Star
+                  key={num}
+                  onClick={() => setRating(num.toString())}
+                  className={cn(
+                    'h-6 w-6 cursor-pointer',
+                    parseInt(rating) >= num
+                      ? 'text-yellow-500 fill-yellow-500'
+                      : 'text-gray-400'
+                  )}
+                  fill={parseInt(rating) >= num ? 'currentColor' : 'none'}
+                />
+              ))}
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
@@ -191,7 +212,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ open, onOpenChange }) => 
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !rating}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Submit
             </Button>
           </DialogFooter>
