@@ -239,16 +239,17 @@ function AppWrapper() {
 
   return (
     <>
-    <Outlet />
-    <SmartPasteReviewQueueModal
-      open={queueOpen}
-      messages={queuedMessages}
-      onClose={() => {
-        clearQueuedMessages();
-        setQueueOpen(false);
-        setQueuedMessages([]);
-      }}
-    />
+      <ScrollToTop />
+      <Outlet />
+      <SmartPasteReviewQueueModal
+        open={queueOpen}
+        messages={queuedMessages}
+        onClose={() => {
+          clearQueuedMessages();
+          setQueueOpen(false);
+          setQueuedMessages([]);
+        }}
+      />
     </>
   );
 }
@@ -296,7 +297,6 @@ function App() {
     <ThemeProvider defaultTheme="light" attribute="class">
       <UserProvider>
         <TransactionProvider>
-          <ScrollToTop />
           <RouterProvider router={router} />
           <Toaster />
         </TransactionProvider>
