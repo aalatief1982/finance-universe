@@ -26,6 +26,20 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
     setTransactions(storedTransactions);
   }, []);
 
+  // Listen for storage changes from other tabs or manual dispatch
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'xpensia_transactions') {
+        setTransactions(getStoredTransactions());
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   const addTransactions = (newTransactions: Transaction[]) => {
     // Ensure all transactions have required fields
     const validTransactions = newTransactions.map(transaction => ({

@@ -87,6 +87,14 @@ export const getStoredTransactions = (): Transaction[] => {
 
 export const storeTransactions = (transactions: Transaction[]): void => {
   setInStorage(TRANSACTIONS_STORAGE_KEY, transactions);
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: TRANSACTIONS_STORAGE_KEY,
+        newValue: JSON.stringify(transactions)
+      })
+    );
+  }
 };
 
 export const saveStructureTemplate = (template: StructureTemplateEntry) => {
@@ -134,6 +142,14 @@ export function updateTransaction(txn: Transaction) {
   const existing = JSON.parse(localStorage.getItem('xpensia_transactions') || '[]');
   const updated = existing.map((t: Transaction) => t.id === txn.id ? txn : t);
   localStorage.setItem('xpensia_transactions', JSON.stringify(updated));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: TRANSACTIONS_STORAGE_KEY,
+        newValue: JSON.stringify(updated)
+      })
+    );
+  }
 }
 
 export function learnFromTransaction(
