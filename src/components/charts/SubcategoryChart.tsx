@@ -13,6 +13,16 @@ interface SubcategoryChartProps {
   data: Item[];
 }
 
+export const MAX_SUBCATEGORIES = 6;
+
+export const chunkSubcategoryData = (items: Item[], size: number = MAX_SUBCATEGORIES) => {
+  const chunks: Item[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+};
+
 const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
 
 const BarTooltip = (total: number) => ({ active, payload }: any) => {
@@ -46,8 +56,18 @@ const YAxisTick = ({ x, y, payload }: any) => {
 };
 
 const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
-  const total = data.reduce((sum, c) => sum + c.value, 0);
-  const hasData = data.length > 0;
+  const [page, setPage] = React.useState(0);
+  const chunks = React.useMemo(() => chunkSubcategoryData(data), [data]);
+  const current = chunks[page] || [];
+
+  React.useEffect(() => {
+    if (data.length === 0) {
+      console.warn('[SubcategoryChart] No subcategory data provided');
+    }
+  }, [data]);
+
+  const total = current.reduce((sum, c) => sum + c.value, 0);
+  const hasData = current.length > 0;
 
   return (
     <Card className="border border-border shadow-sm overflow-hidden">
@@ -57,19 +77,62 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
       <CardContent>
         {hasData ? (
           <div className="h-[300px] w-full" role="img" aria-label="Expenses by subcategory bar chart">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} margin={CHART_MARGIN}>
-                <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
-                <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
-                <Tooltip content={BarTooltip(total)} />
-                <Bar dataKey="value" radius={[4, 4, 4, 4]} isAnimationActive>
-                  {data.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={getChartColor(index)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {(() => {
+              try {
+                return (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={current} margin={CHART_MARGIN}>
+                      <XAxis type="number" tickFormatter={(value) => formatCurrency(Math.abs(value)).replace(/[^0-9.]/g, '')} />
+                      <YAxis type="category" dataKey="name" width={100} tick={YAxisTick} />
+                      <Tooltip content={BarTooltip(total)} />
+                      <Bar dataKey="value" radius={[4, 4, 4, 4]} isAnimationActive>
+                        {current.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={getChartColor(index)} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                );
+              } catch (err) {
+                console.warn('[SubcategoryChart] Failed to render chart', err);
+                return <p className="text-center text-muted-foreground py-12">Unable to render chart</p>;
+              }
+            })()}
           </div>
+          {chunks.length > 1 && (
+            <div className="flex justify-center items-center mt-2 space-x-2">
+              <button
+                aria-label="Previous"
+                disabled={page === 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                className="p-1 disabled:opacity-50"
+              >
+                ‹
+              </button>
+              <div className="flex space-x-1">
+                {chunks.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i)}
+                    className={
+                      i === page
+                        ? 'w-2 h-2 rounded-full bg-primary'
+                        : 'w-2 h-2 rounded-full bg-border'
+                    }
+                    aria-label={`Page ${i + 1}`}
+                  />
+                ))}
+              </div>
+              <button
+                aria-label="Next"
+                disabled={page === chunks.length - 1}
+                onClick={() => setPage((p) => Math.min(chunks.length - 1, p + 1))}
+                className="p-1 disabled:opacity-50"
+              >
+                ›
+              </button>
+            </div>
+          )}
         ) : (
           <p className="text-center text-muted-foreground py-12">No data available yet. Try adding a few transactions first.</p>
         )}

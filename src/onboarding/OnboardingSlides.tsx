@@ -58,7 +58,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   }, []);
 
   return (
-    <div className="relative w-full h-screen bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
+    <div className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
       

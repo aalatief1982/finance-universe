@@ -25,7 +25,6 @@ export const routeTitleMap: Record<string, string> = {
   "/budget/insights": "Suggestions & Insights",
   "/dev/template-health": "Template Health",
   "/dev/template-failures": "Template Failures",
-  "/test-analytics": "Test Analytics"
 };
 
 // Navigation items that appear in the header
@@ -79,12 +78,6 @@ export const getNavItems = () => {
       path: "/profile",
       icon: "User",
       description: "Manage your profile",
-    },
-    {
-      title: "test-analytics",
-      path: "/test-analytics",
-      icon: "User",
-      description: "Manage your analytics",
     },
   ];
 
