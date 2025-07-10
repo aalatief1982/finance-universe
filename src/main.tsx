@@ -10,57 +10,90 @@ import { initializeCapacitor } from './lib/capacitor-init'
 import { demoTransactionService } from './services/DemoTransactionService'
 
 import { Capacitor } from '@capacitor/core'
-// import { CapacitorUpdater } from '@capgo/capacitor-updater'
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { Device } from '@capacitor/device'
+import { Filesystem, Directory } from '@capacitor/filesystem'
 
-declare const cordova: any
-
-// Global initialization
-try {
-  initializeCapacitor()
-} catch (err) {
-  console.error('[Capacitor] Initialization error:', err)
+// For cordova-plugin-zip
+declare global {
+  interface Window {
+    zip: any;
+  }
 }
 
-initializeXpensiaStorageDefaults()
-demoTransactionService.seedDemoTransactions()
+const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json'
+const ZIP_URL = 'https://xpensia-505ac.web.app/www.zip'
+const LOCAL_VERSION_KEY = 'app_version'
 
-if (Capacitor.isNativePlatform()) {
-  (async () => {
-    const platform = Capacitor.getPlatform();
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve((reader.result as string).split(',')[1])
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
 
-    //if (platform === 'ios') {
-      try {
-        await FirebaseAnalytics.enable();
-        console.log('[FirebaseAnalytics] enabled on iOS');
-      } catch (err) {
-        console.warn('[FirebaseAnalytics] enable() failed on iOS:', err);
-      }
-    //}
+async function checkAndUpdateIfNeeded() {
+  try {
+    const localManifest = await fetch('/manifest.json').then(res => res.json())
+    const currentVersion = localStorage.getItem(LOCAL_VERSION_KEY) || localManifest.version
 
-    try {
-      const { identifier } = await Device.getId();
-      await FirebaseAnalytics.setUserId({ userId: identifier });
-
-      await FirebaseAnalytics.logEvent({ name: 'app_launch' });
-      console.log('[FirebaseAnalytics] app_launch event logged');
-    } catch (err) {
-      console.warn('[FirebaseAnalytics] logEvent/setUserId failed:', err);
+    const remoteManifest = await fetch(MANIFEST_URL).then(res => res.json())
+    if (compareVersions(remoteManifest.version, currentVersion) <= 0) {
+      console.log('No update needed')
+      return
     }
-  })(); // 👈 THIS WRAPPING IS ESSENTIAL
+
+    console.log(`Update available: ${remoteManifest.version}`)
+    const zipBlob = await fetch(ZIP_URL).then(res => res.blob())
+    const base64 = await blobToBase64(zipBlob)
+
+    await Filesystem.writeFile({
+      path: 'update.zip',
+      directory: Directory.Cache,
+      data: base64,
+    })
+
+    await new Promise((resolve, reject) => {
+      window.zip.unzip(
+        'cache/update.zip',
+        'document/www',
+        (status: number) => {
+          if (status === 0) reject(new Error('Unzip failed'))
+          else resolve(true)
+        },
+        (progress: any) => {
+          console.log('Unzipping progress', progress)
+        }
+      )
+    })
+
+    localStorage.setItem(LOCAL_VERSION_KEY, remoteManifest.version)
+    alert(`Xpensia Updated!\nYou're now on version ${remoteManifest.version}`)
+    window.location.reload()
+  } catch (err) {
+    console.warn('Update check failed:', err)
+  }
 }
-// Global error handlers
+
+function compareVersions(a: string, b: string): number {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    if ((pa[i] ?? 0) > (pb[i] ?? 0)) return 1
+    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return -1
+  }
+  return 0
+}
+
 const setupGlobalErrorHandlers = () => {
   window.addEventListener('unhandledrejection', (event) => {
     handleError({
       type: ErrorType.UNKNOWN,
       message: event.reason?.message || 'Unhandled Promise Rejection',
       severity: ErrorSeverity.ERROR,
-      details: {
-        source: 'unhandledrejection',
-        stack: event.reason?.stack,
-      },
+      details: { source: 'unhandledrejection', stack: event.reason?.stack },
       originalError: event.reason
     })
     event.preventDefault()
@@ -87,144 +120,44 @@ const setupGlobalErrorHandlers = () => {
   console.error = (...args) => {
     originalConsoleError(...args)
     const errorText = args.join(' ')
-    if (
-      typeof errorText === 'string' &&
-      (errorText.includes('React will try to recreate this component tree') ||
-        errorText.includes('The above error occurred in the') ||
-        errorText.includes('Error: Uncaught'))
-    ) {
-      const errorMatch = errorText.match(/Error: (.*?)(\\n|$)/)
-      const errorMessage = errorMatch ? errorMatch[1] : 'React rendering error'
-
+    if (typeof errorText === 'string' && errorText.includes('React')) {
       handleError({
         type: ErrorType.UNKNOWN,
-        message: errorMessage,
+        message: 'React error',
         severity: ErrorSeverity.ERROR,
         details: { source: 'react_error', fullMessage: errorText }
       })
     }
   }
-
   console.info('Global error handlers initialized')
 }
+
+try {
+  initializeCapacitor()
+} catch (err) {
+  console.error('[Capacitor] Initialization error:', err)
+}
+
+initializeXpensiaStorageDefaults()
+demoTransactionService.seedDemoTransactions()
 setupGlobalErrorHandlers()
 
-// Update checking using cordova-plugin-native-app-update
-async function checkForUpdates() {
-  if (!Capacitor.isNativePlatform() || typeof cordova === 'undefined') {
-    console.log('Updates only available on native platform with cordova')
-    return
-  }
+const root = createRoot(document.getElementById("root")!)
+root.render(<App />)
 
-  try {
-    // Get current version from localStorage or from local manifest
-    let currentVersion = localStorage.getItem('app_version')
-
-    if (!currentVersion) {
-      const res = await fetch('/manifest.json')
-      const localManifest = await res.json()
-      currentVersion = localManifest.version
-      localStorage.setItem('app_version', currentVersion)
-      console.log(`Set initial app_version to: ${currentVersion}`)
-    }
-
-    console.log(`Checking for updates. Current version: ${currentVersion}`)
-
-    const updateUrl = 'https://xpensia-505ac.web.app/manifest.json'
-
-    if (cordova?.plugins?.nativeAppUpdate) {
-      try {
-        const success: any = await new Promise((resolve, reject) => {
-          cordova.plugins.nativeAppUpdate.checkUpdate(updateUrl, resolve, reject)
-        })
-
-        console.log('Update check successful:', success)
-        if (success.available && compareVersions(success.version, currentVersion) > 0) {
-          console.log(`Update available: ${success.version} (current: ${currentVersion})`)
-
-          await new Promise((resolve, reject) => {
-            cordova.plugins.nativeAppUpdate.downloadUpdate(resolve, reject)
-          })
-          console.log('Update downloaded successfully')
-
-          // Update the stored version
-          localStorage.setItem('app_version', success.version)
-          console.log(`Updated app_version to: ${success.version}`)
-
-          await new Promise((resolve, reject) => {
-            cordova.plugins.nativeAppUpdate.installUpdate(resolve, reject)
-          })
-          console.log('Update installed successfully')
-
-          alert(`Xpensia Updated!\nYou're now on version ${success.version}`)
-        } else {
-          console.log('No update available')
-        }
-      } catch (pluginError) {
-        console.error('Update failed:', pluginError)
-        alert('Update failed to download or install.')
-      }
-    } else {
-      console.warn('cordova-plugin-native-app-update not available')
-    }
-  } catch (error) {
-    console.error('Update check error:', error)
-    alert('Failed to check for updates.')
-  }
-}
-
-// Compare 3-part version strings
-function compareVersions(a: string, b: string): number {
-  const pa = a.split('.').map(Number)
-  const pb = b.split('.').map(Number)
-  for (let i = 0; i < 3; i++) {
-    if ((pa[i] ?? 0) > (pb[i] ?? 0)) return 1
-    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return -1
-  }
-  return 0
-}
-
-// Launch app and update check
-try {
-  const root = createRoot(document.getElementById("root")!)
-  root.render(<App />)
-
-  if (Capacitor.isNativePlatform()) {
-    // Ensure deviceready fires
-    if ((window as any).cordova && document.readyState === 'complete') {
-      document.dispatchEvent(new Event('deviceready'))
+if (Capacitor.isNativePlatform()) {
+  (async () => {
+    try {
+      await FirebaseAnalytics.enable()
+      const { identifier } = await Device.getId()
+      await FirebaseAnalytics.setUserId({ userId: identifier })
+      await FirebaseAnalytics.logEvent({ name: 'app_launch' })
+    } catch (err) {
+      console.warn('[FirebaseAnalytics] error:', err)
     }
 
     document.addEventListener('deviceready', () => {
-      checkForUpdates()
+      checkAndUpdateIfNeeded()
     })
-  }
-} catch (error) {
-  handleError({
-    type: ErrorType.UNKNOWN,
-    message: 'Failed to initialize application',
-    severity: ErrorSeverity.CRITICAL,
-    details: { stage: 'initialization' },
-    originalError: error
-  })
-
-  const rootElement = document.getElementById("root")
-  const errorContainer = document.createElement('div')
-  errorContainer.innerHTML = `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: 'Lato-Black', sans-serif; color: #666;">
-      <h1 style="margin-bottom: 1rem;">Unable to Load Application</h1>
-      <p>We're sorry, but the application couldn't be loaded. Please try refreshing the page.</p>
-      <button 
-        style="margin-top: 1rem; padding: 0.5rem 1rem; background: #3b82f6; color: white; border: none; border-radius: 0.25rem; cursor: pointer;"
-        onclick="window.location.reload()"
-      >
-        Refresh
-      </button>
-    </div>
-  `
-  if (rootElement && rootElement.parentNode) {
-    rootElement.parentNode.replaceChild(errorContainer, rootElement)
-  } else {
-    document.body.appendChild(errorContainer)
-  }
+  })()
 }

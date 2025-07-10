@@ -8,6 +8,7 @@ import com.getcapacitor.BridgeActivity;
 import com.xpensia.plugins.smsreader.SmsReaderPlugin;
 import app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin;
 
+
 public class MainActivity extends BridgeActivity {
   private static final String TAG = "XpensiaMainActivity";
   
@@ -33,6 +34,14 @@ public class MainActivity extends BridgeActivity {
     } catch (Exception e) {
       Log.e(TAG, "Error registering BackgroundSmsListenerPlugin", e);
     }
+	
+	try {
+	 
+	  Log.d(TAG, "ZipPlugin registered");
+	} catch (Exception e) {
+	  Log.e(TAG, "Error registering ZipPlugin", e);
+	}
+
     
     Log.d(TAG, "MainActivity onCreate - Plugins registered");
     Log.d(TAG, "MainActivity.onCreate() - END");
