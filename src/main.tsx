@@ -117,12 +117,13 @@ async function checkForUpdates() {
   }
 
   try {
-    // Get current version from localStorage or set to manifest version
+    // Get current version from localStorage or from local manifest
     let currentVersion = localStorage.getItem('app_version')
-    const manifestVersion = '1.0.7' // Current manifest version
-    
+
     if (!currentVersion) {
-      currentVersion = manifestVersion
+      const res = await fetch('/manifest.json')
+      const localManifest = await res.json()
+      currentVersion = localManifest.version
       localStorage.setItem('app_version', currentVersion)
       console.log(`Set initial app_version to: ${currentVersion}`)
     }
@@ -130,48 +131,45 @@ async function checkForUpdates() {
     console.log(`Checking for updates. Current version: ${currentVersion}`)
 
     const updateUrl = 'https://xpensia-505ac.web.app/manifest.json'
-    
+
     if (cordova?.plugins?.nativeAppUpdate) {
-      cordova.plugins.nativeAppUpdate.checkUpdate(
-        updateUrl,
-        (success: any) => {
-          console.log('Update check successful:', success)
-          if (success.available) {
-            console.log(`Update available: ${success.version} (current: ${currentVersion})`)
-            
-            // Download and apply update
-            cordova.plugins.nativeAppUpdate.downloadUpdate(
-              (downloadSuccess: any) => {
-                console.log('Update downloaded successfully:', downloadSuccess)
-                
-                // Update the stored version
-                localStorage.setItem('app_version', success.version)
-                console.log(`Updated app_version to: ${success.version}`)
-                
-                // Install update
-                cordova.plugins.nativeAppUpdate.installUpdate(() => {
-                  console.log('Update installed successfully')
-                }, (installError: any) => {
-                  console.error('Update installation failed:', installError)
-                })
-              },
-              (downloadError: any) => {
-                console.error('Update download failed:', downloadError)
-              }
-            )
-          } else {
-            console.log('No update available')
-          }
-        },
-        (error: any) => {
-          console.error('Update check failed:', error)
+      try {
+        const success: any = await new Promise((resolve, reject) => {
+          cordova.plugins.nativeAppUpdate.checkUpdate(updateUrl, resolve, reject)
+        })
+
+        console.log('Update check successful:', success)
+        if (success.available && compareVersions(success.version, currentVersion) > 0) {
+          console.log(`Update available: ${success.version} (current: ${currentVersion})`)
+
+          await new Promise((resolve, reject) => {
+            cordova.plugins.nativeAppUpdate.downloadUpdate(resolve, reject)
+          })
+          console.log('Update downloaded successfully')
+
+          // Update the stored version
+          localStorage.setItem('app_version', success.version)
+          console.log(`Updated app_version to: ${success.version}`)
+
+          await new Promise((resolve, reject) => {
+            cordova.plugins.nativeAppUpdate.installUpdate(resolve, reject)
+          })
+          console.log('Update installed successfully')
+
+          alert(`Xpensia Updated!\nYou're now on version ${success.version}`)
+        } else {
+          console.log('No update available')
         }
-      )
+      } catch (pluginError) {
+        console.error('Update failed:', pluginError)
+        alert('Update failed to download or install.')
+      }
     } else {
       console.warn('cordova-plugin-native-app-update not available')
     }
   } catch (error) {
     console.error('Update check error:', error)
+    alert('Failed to check for updates.')
   }
 }
 
