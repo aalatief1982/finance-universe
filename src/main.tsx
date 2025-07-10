@@ -45,7 +45,6 @@ function blobToBase64(blob: Blob): Promise<string> {
 }
 
 async function checkAndUpdateIfNeeded() {
-  showUpdateOverlay()
   try {
     const localManifest = await fetch('/manifest.json').then(res => res.json())
     const currentVersion = localStorage.getItem(LOCAL_VERSION_KEY) || localManifest.version
@@ -170,6 +169,7 @@ if (Capacitor.isNativePlatform()) {
     }
 
     document.addEventListener('deviceready', () => {
+      showUpdateOverlay()
       checkAndUpdateIfNeeded()
     })
   })()
