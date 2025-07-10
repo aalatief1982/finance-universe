@@ -50,21 +50,25 @@
 /* ===== Update Spinner Overlay ===== */
 #update-overlay {
   position: fixed;
-  inset: 0;
-  background-color: rgba(255, 255, 255, 0.8);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.75);
   display: none;
   justify-content: center;
   align-items: center;
   z-index: 9999;
 }
 
-#update-overlay .update-spinner {
-  width: 96px;
-  height: 96px;
-  animation: update-spin 1.5s linear infinite;
+#update-overlay .spinner-icon {
+  width: 80px;
+  height: 80px;
+  opacity: 0.75;
+  animation: rotate 1s linear infinite;
 }
 
-@keyframes update-spin {
+@keyframes rotate {
   from {
     transform: rotate(0deg);
   }
