@@ -25,6 +25,16 @@ const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json'
 const ZIP_URL = 'https://xpensia-505ac.web.app/www.zip'
 const LOCAL_VERSION_KEY = 'app_version'
 
+function showUpdateOverlay() {
+  const el = document.getElementById('update-overlay')
+  if (el) el.style.display = 'flex'
+}
+
+function hideUpdateOverlay() {
+  const el = document.getElementById('update-overlay')
+  if (el) el.style.display = 'none'
+}
+
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -35,6 +45,7 @@ function blobToBase64(blob: Blob): Promise<string> {
 }
 
 async function checkAndUpdateIfNeeded() {
+  showUpdateOverlay()
   try {
     const localManifest = await fetch('/manifest.json').then(res => res.json())
     const currentVersion = localStorage.getItem(LOCAL_VERSION_KEY) || localManifest.version
@@ -74,6 +85,8 @@ async function checkAndUpdateIfNeeded() {
     window.location.reload()
   } catch (err) {
     console.warn('Update check failed:', err)
+  } finally {
+    hideUpdateOverlay()
   }
 }
 
