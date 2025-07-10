@@ -109,10 +109,70 @@ const setupGlobalErrorHandlers = () => {
 }
 setupGlobalErrorHandlers()
 
-// OTA update logic disabled - CapacitorUpdater plugin removed for compatibility
+// Update checking using cordova-plugin-native-app-update
 async function checkForUpdates() {
-  // Commented out due to plugin compatibility issues
-  console.log('OTA updates disabled - plugin removed for build compatibility')
+  if (!Capacitor.isNativePlatform() || typeof cordova === 'undefined') {
+    console.log('Updates only available on native platform with cordova')
+    return
+  }
+
+  try {
+    // Get current version from localStorage or set to manifest version
+    let currentVersion = localStorage.getItem('app_version')
+    const manifestVersion = '1.0.7' // Current manifest version
+    
+    if (!currentVersion) {
+      currentVersion = manifestVersion
+      localStorage.setItem('app_version', currentVersion)
+      console.log(`Set initial app_version to: ${currentVersion}`)
+    }
+
+    console.log(`Checking for updates. Current version: ${currentVersion}`)
+
+    const updateUrl = 'https://xpensia-505ac.web.app/manifest.json'
+    
+    if (cordova?.plugins?.nativeAppUpdate) {
+      cordova.plugins.nativeAppUpdate.checkUpdate(
+        updateUrl,
+        (success: any) => {
+          console.log('Update check successful:', success)
+          if (success.available) {
+            console.log(`Update available: ${success.version} (current: ${currentVersion})`)
+            
+            // Download and apply update
+            cordova.plugins.nativeAppUpdate.downloadUpdate(
+              (downloadSuccess: any) => {
+                console.log('Update downloaded successfully:', downloadSuccess)
+                
+                // Update the stored version
+                localStorage.setItem('app_version', success.version)
+                console.log(`Updated app_version to: ${success.version}`)
+                
+                // Install update
+                cordova.plugins.nativeAppUpdate.installUpdate(() => {
+                  console.log('Update installed successfully')
+                }, (installError: any) => {
+                  console.error('Update installation failed:', installError)
+                })
+              },
+              (downloadError: any) => {
+                console.error('Update download failed:', downloadError)
+              }
+            )
+          } else {
+            console.log('No update available')
+          }
+        },
+        (error: any) => {
+          console.error('Update check failed:', error)
+        }
+      )
+    } else {
+      console.warn('cordova-plugin-native-app-update not available')
+    }
+  } catch (error) {
+    console.error('Update check error:', error)
+  }
 }
 
 // Compare 3-part version strings
