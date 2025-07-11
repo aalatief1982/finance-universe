@@ -25,16 +25,6 @@ const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json'
 const ZIP_URL = 'https://xpensia-505ac.web.app/www.zip'
 const LOCAL_VERSION_KEY = 'app_version'
 
-function showUpdateOverlay() {
-  const el = document.getElementById('update-overlay')
-  if (el) el.style.display = 'flex'
-}
-
-function hideUpdateOverlay() {
-  const el = document.getElementById('update-overlay')
-  if (el) el.style.display = 'none'
-}
-
 function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -84,8 +74,6 @@ async function checkAndUpdateIfNeeded() {
     window.location.reload()
   } catch (err) {
     console.warn('Update check failed:', err)
-  } finally {
-    hideUpdateOverlay()
   }
 }
 
@@ -169,7 +157,6 @@ if (Capacitor.isNativePlatform()) {
     }
 
     document.addEventListener('deviceready', () => {
-      showUpdateOverlay()
       checkAndUpdateIfNeeded()
     })
   })()
