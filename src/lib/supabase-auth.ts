@@ -2,6 +2,7 @@ import { safeStorage } from "@/utils/safe-storage";
 import { supabase } from './supabase';
 import { ErrorType, AppError, ErrorSeverity } from '@/types/error';
 import { handleError, createError } from '@/utils/error-utils';
+import { getFriendlyMessage } from '@/utils/errorMapper';
 import { ENABLE_SUPABASE_AUTH } from './env';
 
 // Session timeout in milliseconds (30 minutes instead of 15)
@@ -74,8 +75,8 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
       return {
         success: false,
         error: createError(
-          ErrorType.AUTH, 
-          error.message || 'Failed to send verification code',
+          ErrorType.AUTH,
+          getFriendlyMessage(error) || 'Failed to send verification code',
           { phoneNumber, statusCode: error.status },
           error,
           ErrorSeverity.ERROR
@@ -230,8 +231,8 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
       return {
         success: false,
         error: createError(
-          ErrorType.AUTH, 
-          `${error.message || 'Invalid verification code'}. ${attemptsLeft} attempts remaining.`,
+          ErrorType.AUTH,
+          `${getFriendlyMessage(error) || 'Invalid verification code'}. ${attemptsLeft} attempts remaining.`,
           { attemptsLeft, attempts: verificationState.attempts, phoneNumber: verificationState.phoneNumber },
           error
         )
@@ -473,3 +474,4 @@ export const getMaxVerificationAttempts = (): number => {
 export const getVerificationAttemptsRemaining = (): number => {
   return MAX_VERIFICATION_ATTEMPTS - verificationState.attempts;
 };
+

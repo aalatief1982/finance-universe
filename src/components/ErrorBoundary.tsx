@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { getFriendlyMessage } from '@/utils/errorMapper';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -34,7 +35,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       return (
         <div className="p-4 text-center space-y-2">
           <p className="text-destructive">
-            {this.state.error?.message || 'Something went wrong.'}
+            {this.state.error ? getFriendlyMessage(this.state.error) : 'Something went wrong.'}
           </p>
           <Button variant="outline" onClick={this.handleRetry}>
             Retry
@@ -47,3 +48,4 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 export default ErrorBoundary;
+

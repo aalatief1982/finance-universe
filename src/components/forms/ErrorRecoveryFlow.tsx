@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RotateCcw, FileText, HelpCircle } from 'lucide-react';
 import { getBrandMessage } from '@/constants/brandGuidelines';
+import { getFriendlyMessage } from '@/utils/errorMapper';
 
 interface ErrorRecoveryFlowProps {
   error: Error;
@@ -52,7 +53,8 @@ const ErrorRecoveryFlow: React.FC<ErrorRecoveryFlowProps> = ({
     ];
   };
 
-  const errorSuggestions = getErrorSuggestions(error.message);
+  const friendlyMessage = getFriendlyMessage(error);
+  const errorSuggestions = getErrorSuggestions(friendlyMessage);
 
   return (
     <Card className="w-full border-destructive/20">
@@ -126,7 +128,7 @@ const ErrorRecoveryFlow: React.FC<ErrorRecoveryFlowProps> = ({
         {showDetails && (
           <div className="space-y-3 pt-3 border-t">
             <div className="bg-muted p-3 rounded-md text-xs font-mono">
-              <strong>Error:</strong> {error.message}
+              <strong>Error:</strong> {friendlyMessage}
               {error.stack && (
                 <>
                   <br />

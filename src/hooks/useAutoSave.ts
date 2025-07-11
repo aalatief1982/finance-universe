@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
+import { getFriendlyMessage } from '@/utils/errorMapper';
 
 interface UseAutoSaveOptions {
   delay?: number;
@@ -39,7 +40,7 @@ export const useAutoSave = (
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       setSaveStatus('error');
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save';
+      const errorMessage = getFriendlyMessage(error);
       
       if (onError) {
         onError(error as Error);
