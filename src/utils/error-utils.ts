@@ -123,7 +123,9 @@ export const handleValidationError = (
     isSilent
   );
   
-  if (process.env.NODE_ENV === 'development') console.warn('Validation error:', error);
+  if (import.meta.env.MODE === 'development') {
+    console.warn('Validation error:', error);
+  }
   
   if (!isSilent) {
     toast({

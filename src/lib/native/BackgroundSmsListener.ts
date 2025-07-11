@@ -12,12 +12,16 @@ let backgroundSmsListener: BackgroundSmsListenerPlugin | null = null;
 export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | null> {
   // Web platform gets a simulated implementation
   if (Capacitor.getPlatform() === 'web') {
-    if (process.env.NODE_ENV === 'development') console.log('[SMS] Web platform — Using web implementation');
+    if (import.meta.env.MODE === 'development') {
+      console.log('[SMS] Web platform — Using web implementation');
+    }
     try {
       const { default: webListener } = await import('@/native/backgroundSms.web');
       return webListener;
     } catch (err) {
-      console.error('[SMS] Failed to load web SMS listener:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SMS] Failed to load web SMS listener:', err);
+      }
       return null;
     }
   }
@@ -25,25 +29,35 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
   // Native platform
   try {
     if (!backgroundSmsListener) {
-      if (process.env.NODE_ENV === 'development') console.log('[SMS] Loading native SMS listener plugin');
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SMS] Loading native SMS listener plugin');
+      }
       try {
         const { default: nativeListener } = await import('@/native/backgroundSms.native');
         backgroundSmsListener = nativeListener;
         
         if (!backgroundSmsListener) {
-          console.error('[SMS] Failed to load native SMS listener');
+          if (import.meta.env.MODE === 'development') {
+            console.error('[SMS] Failed to load native SMS listener');
+          }
           return null;
         }
         
-        if (process.env.NODE_ENV === 'development') console.log('[SMS] SMS listener plugin loaded successfully');
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SMS] SMS listener plugin loaded successfully');
+        }
       } catch (err) {
-        console.error('[SMS] Error loading SMS listener module:', err);
+        if (import.meta.env.MODE === 'development') {
+          console.error('[SMS] Error loading SMS listener module:', err);
+        }
         return null;
       }
     }
     return backgroundSmsListener;
   } catch (err) {
-    console.error('[SMS] Failed to load SMS listener:', err);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[SMS] Failed to load SMS listener:', err);
+    }
     return null;
   }
 }

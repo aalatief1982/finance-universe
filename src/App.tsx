@@ -68,57 +68,85 @@ function AppWrapper() {
     const platform = Capacitor.getPlatform();
     
     if (platform === 'web') {
-      if (process.env.NODE_ENV === 'development') console.log('[SMS] Web platform — skipping setupSmsListener entirely.');
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SMS] Web platform — skipping setupSmsListener entirely.');
+      }
       return;
     }
 
     const setupSmsListener = async () => {
       try {
-        if (process.env.NODE_ENV === 'development') console.log('[SMS] Setting up listener...');
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SMS] Setting up listener...');
+        }
         
         if (platform === 'android') {
-          if (process.env.NODE_ENV === 'development') console.log('[INIT] Native platform detected. Setting up status bar...');
+          if (import.meta.env.MODE === 'development') {
+            console.log('[INIT] Native platform detected. Setting up status bar...');
+          }
           try {
             await StatusBar.setOverlaysWebView({ overlay: true });
             await StatusBar.setBackgroundColor({ color: '#00000000' });
             await StatusBar.setStyle({ style: Style.Light });
           } catch (err) {
-            console.error('[STATUS] Error setting up status bar:', err);
+            if (import.meta.env.MODE === 'development') {
+              console.error('[STATUS] Error setting up status bar:', err);
+            }
           }
         }
         
         try {
           // Check permission first
           const permissionResult = await BackgroundSmsListener.checkPermission();
-          if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission check result:', permissionResult);
+          if (import.meta.env.MODE === 'development') {
+            console.log('[SMS] Permission check result:', permissionResult);
+          }
           
           if (!permissionResult.granted) {
-            if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission not granted. Requesting permission...');
+            if (import.meta.env.MODE === 'development') {
+              console.log('[SMS] Permission not granted. Requesting permission...');
+            }
             const requestResult = await BackgroundSmsListener.requestPermission();
-            if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission request result:', requestResult);
+            if (import.meta.env.MODE === 'development') {
+              console.log('[SMS] Permission request result:', requestResult);
+            }
             
             if (!requestResult.granted) {
-              if (process.env.NODE_ENV === 'development') console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
+              if (import.meta.env.MODE === 'development') {
+                console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
+              }
               return;
             }
           }
           
-          if (process.env.NODE_ENV === 'development') console.log('[SMS] Starting to listen for SMS...');
-          if (process.env.NODE_ENV === 'development') console.log('AIS-03 starting listener');
+          if (import.meta.env.MODE === 'development') {
+            console.log('[SMS] Starting to listen for SMS...');
+          }
+          if (import.meta.env.MODE === 'development') {
+            console.log('AIS-03 starting listener');
+          }
           try {
             await BackgroundSmsListener.startListening();
-            if (process.env.NODE_ENV === 'development') console.log('[SMS] Successfully started listening for SMS messages');
+            if (import.meta.env.MODE === 'development') {
+              console.log('[SMS] Successfully started listening for SMS messages');
+            }
           } catch (err) {
-            if (process.env.NODE_ENV === 'development') console.warn('[SMS] Error starting SMS listener:', err);
+            if (import.meta.env.MODE === 'development') {
+              console.warn('[SMS] Error starting SMS listener:', err);
+            }
           }
           
           // Add listener for SMS events with error handling
           try {
             const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
-              if (process.env.NODE_ENV === 'development') console.log('[Xpensia SMS] Received:', sender, body);
+              if (import.meta.env.MODE === 'development') {
+                console.log('[Xpensia SMS] Received:', sender, body);
+              }
 
               if (!isFinancialTransactionMessage(body)) {
-                if (process.env.NODE_ENV === 'development') console.log('[Xpensia SMS] Not a financial message. Skipped.');
+                if (import.meta.env.MODE === 'development') {
+                  console.log('[Xpensia SMS] Not a financial message. Skipped.');
+                }
                 return;
               }
 
@@ -152,10 +180,14 @@ function AppWrapper() {
               // Handle background state
               const appState = await CapacitorApp.getState();
               if (appState.isActive) {
-                if (process.env.NODE_ENV === 'development') console.log('[NOTIFY] App active. Navigating to transaction.');
+                if (import.meta.env.MODE === 'development') {
+                  console.log('[NOTIFY] App active. Navigating to transaction.');
+                }
                 navigate('/edit-transaction', { state: { transaction: txn } });
               } else {
-                if (process.env.NODE_ENV === 'development') console.log('[NOTIFY] App backgrounded. Showing notification.');
+                if (import.meta.env.MODE === 'development') {
+                  console.log('[NOTIFY] App backgrounded. Showing notification.');
+                }
                 await LocalNotifications.schedule({
                   notifications: [
                     {
@@ -173,16 +205,22 @@ function AppWrapper() {
                 });
               }
             });
-            if (process.env.NODE_ENV === 'development') console.log('[SMS] Successfully added SMS listener');
+            if (import.meta.env.MODE === 'development') {
+              console.log('[SMS] Successfully added SMS listener');
+            }
           } catch (err) {
-            console.error('[SMS] Error adding SMS listener:', err);
+            if (import.meta.env.MODE === 'development') {
+              console.error('[SMS] Error adding SMS listener:', err);
+            }
           }
           
           // Handle notification taps
           LocalNotifications.addListener('localNotificationActionPerformed', async (event) => {
             const statePayload = event.notification.extra;
             if (statePayload?.smsData) {
-              if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] Tapped. Processing SMS directly.');
+              if (import.meta.env.MODE === 'development') {
+                console.log('[NOTIFICATION] Tapped. Processing SMS directly.');
+              }
               
               const { sender, body } = statePayload.smsData;
               
@@ -190,7 +228,9 @@ function AppWrapper() {
                 // Process SMS using the same backend function as SmartPaste
                 const result = await parseAndInferTransaction(body, sender);
                 
-                if (process.env.NODE_ENV === 'development') console.log('[NOTIFICATION] SMS processed:', result);
+                if (import.meta.env.MODE === 'development') {
+                  console.log('[NOTIFICATION] SMS processed:', result);
+                }
                 
                 // Navigate to edit-transaction with the same state structure as ImportTransactions
                 navigate('/edit-transaction', {
@@ -211,7 +251,9 @@ function AppWrapper() {
                   },
                 });
               } catch (error) {
-                console.error('[NOTIFICATION] Error processing SMS:', error);
+                if (import.meta.env.MODE === 'development') {
+                  console.error('[NOTIFICATION] Error processing SMS:', error);
+                }
                 // Fallback to import transactions page if processing fails
                 navigate('/import-transactions');
               }
@@ -219,19 +261,27 @@ function AppWrapper() {
           });
           
         } catch (err) {
-          console.error('[SMS] Error in SMS listener setup:', err);
+          if (import.meta.env.MODE === 'development') {
+            console.error('[SMS] Error in SMS listener setup:', err);
+          }
         }
         
       } catch (error) {
-        console.error('[SMS] Error setting up listener:', error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('[SMS] Error setting up listener:', error);
+        }
       }
     };
 
     setupSmsListener();
     return () => {
-      if (process.env.NODE_ENV === 'development') console.log('AIS-04 stopping listener');
+      if (import.meta.env.MODE === 'development') {
+        console.log('AIS-04 stopping listener');
+      }
       BackgroundSmsListener.stopListening().catch(err => {
-        if (process.env.NODE_ENV === 'development') console.warn('[SMS] Error stopping SMS listener:', err);
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] Error stopping SMS listener:', err);
+        }
       });
     };
   }, [navigate]);
@@ -274,7 +324,7 @@ function AppRoutes() {
         <Route path="/train-model" element={<TrainModel />} />
         <Route path="/build-template" element={<BuildTemplate />} />
         <Route path="/keyword-bank" element={<KeywordBankManager />} />
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.MODE === 'development' && (
           <>
             <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
             <Route path="/dev/template-failures" element={<TemplateFailureLog />} />

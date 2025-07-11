@@ -52,7 +52,9 @@ const DashboardContent = ({
       const txDate = new Date(tx.date);
       return txDate < firstDayOfMonth;
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') console.warn('Invalid date format in transaction:', tx);
+      if (import.meta.env.MODE === 'development') {
+        console.warn('Invalid date format in transaction:', tx);
+      }
       return false;
     }
   });
@@ -76,7 +78,9 @@ const DashboardContent = ({
     categoryData = chartData.categoryData || [];
     subcategoryData = AnalyticsService.getSubcategoryData(safeTransactions).slice(0, 10);
   } catch (error) {
-    console.error('Error generating chart data:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error generating chart data:', error);
+    }
     // Provide empty arrays as fallback
     categoryData = [];
     subcategoryData = [];

@@ -64,7 +64,7 @@ export function parseSmsMessage(message: string): TransactionDraft | null {
 	if (dates && dates.length > 0) {
 	  const normalized = normalizeDate(dates[0]);
 	  if (normalized) date = normalized;
-	  else if (process.env.NODE_ENV === 'development') console.warn('[SmsParser] Invalid date format after normalization:', dates[0]);
+	  else if (import.meta.env.MODE === 'development') console.warn('[SmsParser] Invalid date format after normalization:', dates[0]);
 	}
 
 
@@ -106,11 +106,15 @@ export function parseSmsMessage(message: string): TransactionDraft | null {
       description: message,
     };
 
-    if (process.env.NODE_ENV === 'development') console.log('[SmsParser] Parsed transaction draft:', transaction);
+    if (import.meta.env.MODE === 'development') {
+      console.log('[SmsParser] Parsed transaction draft:', transaction);
+    }
 
     return transaction;
   } catch (error) {
-    console.error('[SmsParser] Failed to parse SMS:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[SmsParser] Failed to parse SMS:', error);
+    }
     return null;
   }
 }

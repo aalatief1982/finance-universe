@@ -371,7 +371,9 @@ class TransactionService {
           const regex = new RegExp(rule.pattern, 'i');
           isMatch = regex.test(transactionText);
         } catch (err) {
-          console.error('Invalid regex pattern in category rule:', rule.pattern);
+          if (import.meta.env.MODE === 'development') {
+            console.error('Invalid regex pattern in category rule:', rule.pattern);
+          }
         }
       } else {
         isMatch = transactionText.includes(rule.pattern.toLowerCase());

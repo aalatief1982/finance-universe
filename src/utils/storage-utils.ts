@@ -25,7 +25,9 @@ const getFromStorage = <T>(key: string, defaultValue: T): T => {
       localStorage.getItem(key) ?? sessionStorage.getItem(key);
     return storedData ? JSON.parse(storedData) : defaultValue;
   } catch (error) {
-    console.error(`Error retrieving ${key} from storage:`, error);
+    if (import.meta.env.MODE === 'development') {
+      console.error(`Error retrieving ${key} from storage:`, error);
+    }
     return defaultValue;
   }
 };
@@ -35,7 +37,9 @@ const setInStorage = <T>(key: string, data: T): void => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
-    console.error(`Error storing ${key} in storage:`, error);
+    if (import.meta.env.MODE === 'development') {
+      console.error(`Error storing ${key} in storage:`, error);
+    }
   }
 };
 
@@ -54,7 +58,9 @@ export const safeSetItem = <T>(key: string, data: T): boolean => {
       (error.name === 'QuotaExceededError' || error.code === 22 || error.code === 1014);
 
     if (isQuotaExceeded) {
-      console.error(
+      if (import.meta.env.MODE === 'development') {
+        console.error(
+      }
         `[CRITICAL] Failed to set '${key}' in localStorage due to quota limitations.`,
         error
       );
@@ -62,18 +68,22 @@ export const safeSetItem = <T>(key: string, data: T): boolean => {
       // Fallback to sessionStorage when quota is exceeded
       try {
         sessionStorage.setItem(key, JSON.stringify(data));
-        if (process.env.NODE_ENV === 'development') console.warn(
+        if (import.meta.env.MODE === 'development') console.warn(
           `[STORAGE] Stored '${key}' in sessionStorage due to localStorage quota.`
         );
         return true;
       } catch (sessionError) {
-        console.error(
+        if (import.meta.env.MODE === 'development') {
+          console.error(
+        }
           `[CRITICAL] Failed to set '${key}' in sessionStorage after localStorage quota exceeded.`,
           sessionError
         );
       }
     } else {
-      console.error(`Error storing ${key} in storage:`, error);
+      if (import.meta.env.MODE === 'development') {
+        console.error(`Error storing ${key} in storage:`, error);
+      }
     }
 
     return false;
@@ -132,7 +142,9 @@ export const storeTransaction = (transaction: any): void => {
     
     storeTransactions(transactions);
   } catch (error) {
-    console.error('Error storing transaction:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error storing transaction:', error);
+    }
     throw error;
   }
 };
@@ -255,7 +267,7 @@ export function learnFromTransaction(
     }
   }
 
-  if (process.env.NODE_ENV === 'development') console.log('[Learned]', {
+  if (import.meta.env.MODE === 'development') console.log('[Learned]', {
     templateHash,
     vendor: txn.vendor,
     category: txn.category,
@@ -276,7 +288,9 @@ export function addTransaction(txn: Transaction): void {
       storeTransactions(transactions);
     }
   } catch (error) {
-    console.error('[StorageUtils] Failed to add transaction:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[StorageUtils] Failed to add transaction:', error);
+    }
   }
 }
 
@@ -315,7 +329,9 @@ export const storeCategory = (category: any): void => {
     
     storeCategories(categories);
   } catch (error) {
-    console.error('Error storing category:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error storing category:', error);
+    }
     throw error;
   }
 };
@@ -355,7 +371,9 @@ export const storeCategoryRule = (rule: any): void => {
     
     storeCategoryRules(rules);
   } catch (error) {
-    console.error('Error storing category rule:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error storing category rule:', error);
+    }
     throw error;
   }
 };
@@ -384,7 +402,9 @@ export const addCategoryChange = (change: any): void => {
     changes.push(validatedChange);
     storeCategoryChanges(changes);
   } catch (error) {
-    console.error('Error storing category change:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error storing category change:', error);
+    }
     throw error;
   }
 };

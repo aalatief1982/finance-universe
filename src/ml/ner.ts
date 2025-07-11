@@ -37,7 +37,9 @@ export async function loadNERModel(config?: ModelConfig) {
   currentConfig = modelConfig;
   
   try {
-    if (process.env.NODE_ENV === 'development') console.log(`Loading NER model: ${modelConfig.modelId}`);
+    if (import.meta.env.MODE === 'development') {
+      console.log(`Loading NER model: ${modelConfig.modelId}`);
+    }
     
     // Load the model using the config
     extractor = await pipeline(
@@ -47,10 +49,14 @@ export async function loadNERModel(config?: ModelConfig) {
     );
     
     isLoading = false;
-    if (process.env.NODE_ENV === 'development') console.log('NER model loaded successfully');
+    if (import.meta.env.MODE === 'development') {
+      console.log('NER model loaded successfully');
+    }
     return extractor;
   } catch (error) {
-    console.error('Error loading NER model:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error loading NER model:', error);
+    }
     loadError = error as Error;
     isLoading = false;
     throw error;

@@ -14,7 +14,9 @@ export function loadVendorFallbacks(): Record<string, VendorFallbackData> {
   try {
     return JSON.parse(raw) as Record<string, VendorFallbackData>;
   } catch (e) {
-    console.error('[VendorFallbackUtils] Failed to parse stored vendor data:', e);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[VendorFallbackUtils] Failed to parse stored vendor data:', e);
+    }
     return {};
   }
 }

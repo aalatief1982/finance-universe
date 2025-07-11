@@ -33,7 +33,9 @@ const ExpenseTrackerWireframes = () => {
       try {
         setUserData(JSON.parse(storedUserData));
       } catch (error) {
-        console.error('Failed to parse stored user data', error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Failed to parse stored user data', error);
+        }
       }
     }
   }, []);

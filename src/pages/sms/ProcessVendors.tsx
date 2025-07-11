@@ -23,7 +23,9 @@ const ProcessVendors: React.FC = () => {
         const parsed: VendorEntry[] = JSON.parse(stored);
         setVendors(parsed);
       } catch (error) {
-        console.error('Failed to parse xpensia_sms_vendors:', error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Failed to parse xpensia_sms_vendors:', error);
+        }
       }
     }
   }, []);

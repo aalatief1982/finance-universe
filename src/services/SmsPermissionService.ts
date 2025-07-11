@@ -24,7 +24,9 @@ class SmsPermissionService {
     try {
       const smsListener = await loadSmsListener();
       if (!smsListener) {
-        if (process.env.NODE_ENV === 'development') console.warn('[SMS] Failed to load SMS listener when checking permissions');
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] Failed to load SMS listener when checking permissions');
+        }
         return false;
       }
 
@@ -45,7 +47,9 @@ class SmsPermissionService {
 
       return granted;
     } catch (error) {
-      console.error("[SMS] Error checking SMS permission:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SMS] Error checking SMS permission:", error);
+      }
       return false;
     }
   }
@@ -64,9 +68,13 @@ class SmsPermissionService {
       
       await smsListener.startListening();
       this.smsListenerInitialized = true;
-      if (process.env.NODE_ENV === 'development') console.log('[SMS] SMS listener initialized');
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SMS] SMS listener initialized');
+      }
     } catch (error) {
-      console.error("[SMS] Error initializing SMS listener:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SMS] Error initializing SMS listener:", error);
+      }
     }
   }
 
@@ -90,7 +98,9 @@ class SmsPermissionService {
     try {
       const smsListener = await loadSmsListener();
       if (!smsListener) {
-        if (process.env.NODE_ENV === 'development') console.warn('[SMS] Failed to load SMS listener when requesting permissions');
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] Failed to load SMS listener when requesting permissions');
+        }
         return false;
       }
 
@@ -111,7 +121,9 @@ class SmsPermissionService {
 
       return granted;
     } catch (error) {
-      console.error("[SMS] Error requesting SMS permission:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SMS] Error requesting SMS permission:", error);
+      }
       this.savePermissionStatus(false);
       return false;
     }

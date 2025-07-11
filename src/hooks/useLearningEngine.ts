@@ -22,7 +22,9 @@ export const useLearningEngine = () => {
       try {
         learningEngineService.learnFromTransaction(rawMessage, transaction, senderHint, customFieldTokenMap);
       } catch (error) {
-        console.error('Error learning from transaction:', error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Error learning from transaction:', error);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -38,7 +40,9 @@ export const useLearningEngine = () => {
       try {
         return learningEngineService.findBestMatch(message, senderHint);
       } catch (error) {
-        console.error('Error finding best match:', error);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Error finding best match:', error);
+        }
         return { entry: null, confidence: 0, matched: false };
       }
     },
@@ -54,7 +58,9 @@ export const useLearningEngine = () => {
     try {
       return learningEngineService.inferFieldsFromText(message);
     } catch (error) {
-      console.error('Error inferring fields from text:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error inferring fields from text:', error);
+      }
       return null;
     }
   }, []);
@@ -67,7 +73,9 @@ export const useLearningEngine = () => {
       learningEngineService.saveConfig(newConfig);
       setConfig({ ...config, ...newConfig });
     } catch (error) {
-      console.error('Error updating learning engine config:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error updating learning engine config:', error);
+      }
     }
   }, [config]);
 
@@ -78,7 +86,9 @@ export const useLearningEngine = () => {
     try {
       return learningEngineService.getLearnedEntries();
     } catch (error) {
-      console.error('Error getting learned entries:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error getting learned entries:', error);
+      }
       return [];
     }
   }, []);
@@ -90,7 +100,9 @@ export const useLearningEngine = () => {
     try {
       learningEngineService.clearLearnedEntries();
     } catch (error) {
-      console.error('Error clearing learned entries:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error clearing learned entries:', error);
+      }
     }
   }, []);
 

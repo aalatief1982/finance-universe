@@ -8,7 +8,9 @@ import { Transaction } from '@/types/transaction';
 const ImportTransactions = () => {
   const navigate = useNavigate();
 
-  if (process.env.NODE_ENV === 'development') console.log('[ImportTransactions] Page initialized');
+  if (import.meta.env.MODE === 'development') {
+    console.log('[ImportTransactions] Page initialized');
+  }
 
   const handleTransactionsDetected = (
     transactions: Transaction[],
@@ -21,7 +23,7 @@ const ImportTransactions = () => {
     fieldScore?: number,
     keywordScore?: number
   ) => {
-    if (process.env.NODE_ENV === 'development') console.log('[ImportTransactions] Transactions detected', {
+    if (import.meta.env.MODE === 'development') console.log('[ImportTransactions] Transactions detected', {
       count: transactions.length,
       transaction: transactions[0],
       rawMessageLength: rawMessage?.length,
@@ -34,10 +36,12 @@ const ImportTransactions = () => {
     const transaction = transactions[0];
 
     if (!transaction.id?.trim()) {
-      if (process.env.NODE_ENV === 'development') console.warn('⚠️ Empty or invalid transaction.id:', transaction);
+      if (import.meta.env.MODE === 'development') {
+        console.warn('⚠️ Empty or invalid transaction.id:', transaction);
+      }
     }
 
-    if (process.env.NODE_ENV === 'development') console.log('[ImportTransactions] Navigate to edit with parameters:', {
+    if (import.meta.env.MODE === 'development') console.log('[ImportTransactions] Navigate to edit with parameters:', {
       //shouldTrain,
       matchOrigin,
       transaction,

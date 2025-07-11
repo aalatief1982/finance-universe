@@ -190,7 +190,9 @@ function getUserPreferredCurrency(): SupportedCurrency {
     // Default to SAR for Saudi Arabia context
     return 'SAR' as SupportedCurrency;
   } catch (error) {
-    console.error('Error getting user currency:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error getting user currency:', error);
+    }
     return 'SAR' as SupportedCurrency;
   }
 }
@@ -598,7 +600,9 @@ function extractDateFromMessage(message: string): Date | null {
         return date;
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') console.warn('Error parsing date:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.warn('Error parsing date:', error);
+      }
     }
   }
   
@@ -630,7 +634,9 @@ function applyCategoryRules(description: string, amount: number, rawMessage: str
         const regex = new RegExp(rule.pattern, 'i');
         isMatch = regex.test(textToMatch);
       } catch (err) {
-        console.error('Invalid regex pattern in category rule:', rule.pattern);
+        if (import.meta.env.MODE === 'development') {
+          console.error('Invalid regex pattern in category rule:', rule.pattern);
+        }
       }
     } else {
       isMatch = textToMatch.includes(rule.pattern.toLowerCase());

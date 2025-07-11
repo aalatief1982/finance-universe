@@ -137,16 +137,24 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 
 		if (field === 'type') {
 		  const validCategories = getCategoriesForType(value as TransactionType);  // ⬅️ Already names!
-		  if (process.env.NODE_ENV === 'development') console.log('[TYPE CHANGE] Valid Categories:', validCategories);
+		  if (import.meta.env.MODE === 'development') {
+		    console.log('[TYPE CHANGE] Valid Categories:', validCategories);
+		  }
 
 		  txn.category = validCategories[0] || 'Uncategorized';
-		  if (process.env.NODE_ENV === 'development') console.log('[TYPE CHANGE] Selected Category:', txn.category);
+		  if (import.meta.env.MODE === 'development') {
+		    console.log('[TYPE CHANGE] Selected Category:', txn.category);
+		  }
 
                   const validSubcategories = getSubcategoriesForCategory(txn.category);
-		  if (process.env.NODE_ENV === 'development') console.log('[TYPE CHANGE] Valid Subcategories for Category:', txn.category, validSubcategories);
+		  if (import.meta.env.MODE === 'development') {
+		    console.log('[TYPE CHANGE] Valid Subcategories for Category:', txn.category, validSubcategories);
+		  }
 
 		  txn.subcategory = validSubcategories[0] || 'none';
-		  if (process.env.NODE_ENV === 'development') console.log('[TYPE CHANGE] Selected Subcategory:', txn.subcategory);
+		  if (import.meta.env.MODE === 'development') {
+		    console.log('[TYPE CHANGE] Selected Subcategory:', txn.subcategory);
+		  }
 		}
 
 

@@ -11,6 +11,8 @@ export function logParsingFailure(smsId: string) {
     existing.push({ smsId, timestamp: Date.now() });
     localStorage.setItem(LOG_KEY, JSON.stringify(existing.slice(-100)));
   } catch (err) {
-    console.error('[ParsingLogger] Failed to log parsing failure', err);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[ParsingLogger] Failed to log parsing failure', err);
+    }
   }
 }

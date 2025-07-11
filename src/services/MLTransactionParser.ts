@@ -24,7 +24,9 @@ export async function extractTransactionEntities(text: string, useHighAccuracy =
     
     // Check if model is available
     if (!isNERModelReady()) {
-      if (process.env.NODE_ENV === 'development') console.log('NER model not ready, trying to load...');
+      if (import.meta.env.MODE === 'development') {
+        console.log('NER model not ready, trying to load...');
+      }
       await loadNERModel(modelConfig);
     }
 
@@ -43,7 +45,9 @@ export async function extractTransactionEntities(text: string, useHighAccuracy =
 
     return entities;
   } catch (error) {
-    console.error('ML Transaction parsing error:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('ML Transaction parsing error:', error);
+    }
     handleError({
       type: ErrorType.PARSING,
       message: 'Failed to process transaction with ML model. Using fallback instead.',

@@ -80,7 +80,9 @@ const SubcategoryBarChart = ({ items }: { items: Item[] }) => {
       </ResponsiveContainer>
     );
   } catch (err) {
-    console.warn('[SubcategoryChart] Failed to render chart', err);
+    if (import.meta.env.MODE === 'development') {
+      console.warn('[SubcategoryChart] Failed to render chart', err);
+    }
     return (
       <p className="text-center text-muted-foreground py-12">Unable to render chart</p>
     );
@@ -94,7 +96,9 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
 
   React.useEffect(() => {
     if (data.length === 0) {
-      console.warn('[SubcategoryChart] No subcategory data provided');
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[SubcategoryChart] No subcategory data provided');
+      }
     }
   }, [data]);
 

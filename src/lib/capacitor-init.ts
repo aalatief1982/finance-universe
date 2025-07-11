@@ -5,11 +5,15 @@ import { Capacitor } from '@capacitor/core';
 export const initializeCapacitor = () => {
   // Log the platform we're running on
   const platform = Capacitor.getPlatform();
-  if (process.env.NODE_ENV === 'development') console.log(`[Capacitor] Running on: ${platform}`);
+  if (import.meta.env.MODE === 'development') {
+    console.log(`[Capacitor] Running on: ${platform}`);
+  }
   
   // Initialize any platform-specific code here
   if (platform === 'web') {
-    if (process.env.NODE_ENV === 'development') console.log('[Capacitor] Using web compatibility mode');
+    if (import.meta.env.MODE === 'development') {
+      console.log('[Capacitor] Using web compatibility mode');
+    }
     // Web-specific initialization
   }
   
