@@ -12,7 +12,6 @@ import { demoTransactionService } from './services/DemoTransactionService'
 import { Capacitor } from '@capacitor/core'
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { Device } from '@capacitor/device'
-import { Filesystem, Directory } from '@capacitor/filesystem'
 
 // For cordova-plugin-zip
 declare global {
@@ -83,11 +82,6 @@ async function checkAndUpdateIfNeeded() {
     const localManifest = await fetch('/manifest.json').then(res => res.json())
     const currentVersion = localStorage.getItem(LOCAL_VERSION_KEY) || localManifest.version
 
-    const remoteManifest = await fetch(MANIFEST_URL).then(res => res.json())
-    if (compareVersions(remoteManifest.version, currentVersion) <= 0) {
-      console.log('No update needed')
-      return
-    }
 
     console.log(`Update available: ${remoteManifest.version}`)
     showUpdateSpinner()
