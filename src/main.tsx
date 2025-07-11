@@ -17,7 +17,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem'
 // For cordova-plugin-zip
 declare global {
   interface Window {
-    zip: any;
+    zip?: any
   }
 }
 
@@ -34,6 +34,50 @@ function blobToBase64(blob: Blob): Promise<string> {
   })
 }
 
+function injectSpinnerCSS() {
+  if (document.getElementById('xpensia-spinner-style')) return
+  const style = document.createElement('style')
+  style.id = 'xpensia-spinner-style'
+  style.innerHTML = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `
+  document.head.appendChild(style)
+}
+
+function showUpdateSpinner() {
+  injectSpinnerCSS()
+  const spinnerOverlay = document.createElement('div')
+  spinnerOverlay.id = 'xpensia-update-spinner'
+  spinnerOverlay.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    ">
+      <img src="/assets/app-icon.png" alt="Updating..." style="
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        animation: spin 1.2s linear infinite;
+        filter: drop-shadow(0 0 5px #00ffff);
+      " />
+    </div>
+  `
+  document.body.appendChild(spinnerOverlay)
+}
+
+function removeUpdateSpinner() {
+  const el = document.getElementById('xpensia-update-spinner')
+  if (el) el.remove()
+}
+
 async function checkAndUpdateIfNeeded() {
   try {
     const localManifest = await fetch('/manifest.json').then(res => res.json())
@@ -46,6 +90,8 @@ async function checkAndUpdateIfNeeded() {
     }
 
     console.log(`Update available: ${remoteManifest.version}`)
+    showUpdateSpinner()
+
     const zipBlob = await fetch(ZIP_URL).then(res => res.blob())
     const base64 = await blobToBase64(zipBlob)
 
@@ -55,6 +101,8 @@ async function checkAndUpdateIfNeeded() {
       data: base64,
     })
 
+    if (!window.zip?.unzip) throw new Error('cordova-plugin-zip is not available')
+
     await new Promise((resolve, reject) => {
       window.zip.unzip(
         'cache/update.zip',
@@ -63,17 +111,17 @@ async function checkAndUpdateIfNeeded() {
           if (status === 0) reject(new Error('Unzip failed'))
           else resolve(true)
         },
-        (progress: any) => {
-          console.log('Unzipping progress', progress)
-        }
+        (progress: any) => console.log('Unzipping progress', progress)
       )
     })
 
     localStorage.setItem(LOCAL_VERSION_KEY, remoteManifest.version)
-    alert(`Xpensia Updated!\nYou're now on version ${remoteManifest.version}`)
+    alert(`Xpensia Updated!!\nYou are now on version ${remoteManifest.version}`)
     window.location.reload()
   } catch (err) {
     console.warn('Update check failed:', err)
+  } finally {
+    removeUpdateSpinner()
   }
 }
 
@@ -87,7 +135,7 @@ function compareVersions(a: string, b: string): number {
   return 0
 }
 
-const setupGlobalErrorHandlers = () => {
+function setupGlobalErrorHandlers() {
   window.addEventListener('unhandledrejection', (event) => {
     handleError({
       type: ErrorType.UNKNOWN,
@@ -132,6 +180,7 @@ const setupGlobalErrorHandlers = () => {
   console.info('Global error handlers initialized')
 }
 
+// Init
 try {
   initializeCapacitor()
 } catch (err) {
@@ -146,7 +195,11 @@ const root = createRoot(document.getElementById("root")!)
 root.render(<App />)
 
 if (Capacitor.isNativePlatform()) {
-  (async () => {
+  document.addEventListener('deviceready', () => {
+    checkAndUpdateIfNeeded()
+  })
+
+  ;(async () => {
     try {
       await FirebaseAnalytics.enable()
       const { identifier } = await Device.getId()
@@ -155,9 +208,5 @@ if (Capacitor.isNativePlatform()) {
     } catch (err) {
       console.warn('[FirebaseAnalytics] error:', err)
     }
-
-    document.addEventListener('deviceready', () => {
-      checkAndUpdateIfNeeded()
-    })
   })()
 }

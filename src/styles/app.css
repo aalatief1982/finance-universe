@@ -46,3 +46,7 @@
   padding: var(--space-md) var(--space-sm);
   margin-bottom: var(--space-md);
 }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
