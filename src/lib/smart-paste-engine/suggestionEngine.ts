@@ -112,7 +112,9 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
     }
   }
 
-  if (process.env.NODE_ENV === 'development') console.warn('[SmartPaste] No fallback match found for vendor:', vendorName);
+  if (import.meta.env.MODE === 'development') {
+    console.warn('[SmartPaste] No fallback match found for vendor:', vendorName);
+  }
   return null;
 }
 
@@ -126,18 +128,26 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   // ⬇️ Load keyword bank
   const keywordBank: KeywordMapping[] = JSON.parse(localStorage.getItem(BANK_KEY) || '[]') || [];
   if (!Array.isArray(keywordBank)) {
-    console.error('[ERROR] Invalid keyword bank data:', keywordBank);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[ERROR] Invalid keyword bank data:', keywordBank);
+    }
   }
 
-  if (process.env.NODE_ENV === 'development') console.log('[DEBUG] keywordBank:', keywordBank);
-  if (process.env.NODE_ENV === 'development') console.log('[DEBUG] fallbackVendors:', getFallbackVendors());
+  if (import.meta.env.MODE === 'development') {
+    console.log('[DEBUG] keywordBank:', keywordBank);
+  }
+  if (import.meta.env.MODE === 'development') {
+    console.log('[DEBUG] fallbackVendors:', getFallbackVendors());
+  }
 
   // ⬇️ Keyword-based inference
   keywordBank.forEach(({ keyword, mappings }) => {
     if (rawText.includes(keyword.toLowerCase())) {
       mappings.forEach(({ field, value }) => {
         if (typeof value !== 'string' || !value) {
-          if (process.env.NODE_ENV === 'development') console.warn(`[KeywordMapping] Skipping invalid value for field "${field}":`, value);
+          if (import.meta.env.MODE === 'development') {
+            console.warn(`[KeywordMapping] Skipping invalid value for field "${field}":`, value);
+          }
           return;
         }
         if (!inferred[field] && !knowns[field]) {
@@ -163,8 +173,12 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   if (needsCategoryFallback) {
 	const vendorText = knowns.vendor || extractVendorName(text);
 	const fallback = findClosestFallbackMatch(vendorText);
-	if (process.env.NODE_ENV === 'development') console.log("Fallback vendorText used:", vendorText);
-	if (process.env.NODE_ENV === 'development') console.log("Fallback result:", fallback);
+	if (import.meta.env.MODE === 'development') {
+	  console.log("Fallback vendorText used:", vendorText);
+	}
+	if (import.meta.env.MODE === 'development') {
+	  console.log("Fallback result:", fallback);
+	}
 
 	const finalType = inferred['type'] || knowns['type'];
 
@@ -189,7 +203,9 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
 	}
   }
 
-  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Inferred indirect fields:', inferred);
+  if (import.meta.env.MODE === 'development') {
+    console.log('[SmartPaste] Inferred indirect fields:', inferred);
+  }
   return inferred;
 } */
 
@@ -204,7 +220,9 @@ export function inferIndirectFields(
   // Step 1: Load keyword bank
   const keywordBank: KeywordMapping[] = JSON.parse(localStorage.getItem('xpensia_keyword_bank') || '[]') || [];
   if (!Array.isArray(keywordBank)) {
-    console.error('[SmartPaste] Invalid keyword bank format:', keywordBank);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[SmartPaste] Invalid keyword bank format:', keywordBank);
+    }
   }
 
   // Step 2: Keyword-based mapping
@@ -237,8 +255,12 @@ export function inferIndirectFields(
   if (needsCategory || needsSubcategory) {
     const vendorText = knowns.vendor || extractVendorName(text);
     const fallback = findClosestFallbackMatch(vendorText);
-    if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Fallback vendorText used:', vendorText);
-    if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Fallback result:', fallback);
+    if (import.meta.env.MODE === 'development') {
+      console.log('[SmartPaste] Fallback vendorText used:', vendorText);
+    }
+    if (import.meta.env.MODE === 'development') {
+      console.log('[SmartPaste] Fallback result:', fallback);
+    }
 
     const finalType = inferred['type'] || knowns['type'];
 
@@ -256,7 +278,9 @@ export function inferIndirectFields(
     }
   }
 
-  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Final inferred fields before return:', inferred);
+  if (import.meta.env.MODE === 'development') {
+    console.log('[SmartPaste] Final inferred fields before return:', inferred);
+  }
   return inferred;
 }
 
@@ -289,7 +313,9 @@ export function extractVendorName(message: string): string {
     return "Company";
   }
 
-  if (process.env.NODE_ENV === 'development') console.warn("[extractVendorName] No valid vendor found for message:", message);
+  if (import.meta.env.MODE === 'development') {
+    console.warn("[extractVendorName] No valid vendor found for message:", message);
+  }
   return "";
 }
 

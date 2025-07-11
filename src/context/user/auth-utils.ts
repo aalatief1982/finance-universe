@@ -33,7 +33,9 @@ export const checkUserExists = async (phoneNumber: string): Promise<boolean> => 
         return true;
       }
     } catch (error) {
-      console.error('Error parsing stored user', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error parsing stored user', error);
+      }
     }
   }
   
@@ -47,13 +49,17 @@ export const checkUserExists = async (phoneNumber: string): Promise<boolean> => 
         .limit(1);
         
       if (error) {
-        console.error("Error checking if user exists:", error);
+        if (import.meta.env.MODE === 'development') {
+          console.error("Error checking if user exists:", error);
+        }
         return false;
       }
       
       return data && data.length > 0;
     } catch (error) {
-      console.error("Error checking if user exists:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("Error checking if user exists:", error);
+      }
       return false;
     }
   }
@@ -106,7 +112,9 @@ export const getUserFromLocalStorage = (): User | null => {
       
       return parsedUser;
     } catch (error) {
-      console.error('Failed to parse stored user data', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Failed to parse stored user data', error);
+      }
     }
   }
   return null;
@@ -165,7 +173,9 @@ export const checkSupabaseAuth = async (
         }
       }
     } catch (error) {
-      console.error("Error checking Supabase auth:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("Error checking Supabase auth:", error);
+      }
     }
   }
   
@@ -218,7 +228,9 @@ export const startPhoneVerification = async (
         return true;
       } else {
         // Handle verification failure
-        console.error('Failed to start phone verification');
+        if (import.meta.env.MODE === 'development') {
+          console.error('Failed to start phone verification');
+        }
         setIsLoading(false);
         updateAuthState();
         return false;
@@ -239,7 +251,9 @@ export const startPhoneVerification = async (
       return true;
     }
   } catch (error) {
-    console.error('Error starting phone verification', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error starting phone verification', error);
+    }
     setIsLoading(false);
     updateAuthState();
     return false;
@@ -310,7 +324,9 @@ export const confirmPhoneVerification = async (
       return isValid;
     }
   } catch (error) {
-    console.error('Error confirming verification code', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error confirming verification code', error);
+    }
     setIsLoading(false);
     updateAuthState();
     return false;
@@ -382,7 +398,9 @@ export const logOut = async (
       description: "You have been successfully signed out."
     });
   } catch (error) {
-    console.error('Error signing out', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error signing out', error);
+    }
   }
 };
 

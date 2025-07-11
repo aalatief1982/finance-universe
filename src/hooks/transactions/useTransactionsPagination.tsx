@@ -21,7 +21,9 @@ export function useTransactionsPagination({ sortedTransactions }: UseTransaction
       const endIndex = startIndex + itemsPerPage;
       setPaginatedTransactions(sortedTransactions.slice(startIndex, endIndex));
     } catch (error) {
-      console.error('Error updating paginated transactions:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error updating paginated transactions:', error);
+      }
       setPaginatedTransactions([]);
     }
   }, [sortedTransactions, currentPage, itemsPerPage]);

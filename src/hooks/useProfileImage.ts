@@ -45,7 +45,9 @@ export function useProfileImage() {
       });
       setImage(`data:image/jpeg;base64,${result.data}`);
     } catch (err) {
-      console.error('Failed to load profile image:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Failed to load profile image:', err);
+      }
       setImage(null);
     }
   };

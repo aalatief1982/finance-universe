@@ -19,37 +19,53 @@ export interface SmsEntry {
 
 export class SmsReaderService {
   static async hasPermission(): Promise<boolean> {
-    if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] hasPermission() called");
+    if (import.meta.env.MODE === 'development') {
+      console.log("[SmsReaderService] hasPermission() called");
+    }
 
     if (!Capacitor.isNativePlatform()) {
-      if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Not a native platform");
+      if (import.meta.env.MODE === 'development') {
+        console.warn("[SmsReaderService] Not a native platform");
+      }
       return false;
     }
 
     try {
       const result = await SmsReader.checkPermission();
-      if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] hasPermission result:", result);
+      if (import.meta.env.MODE === 'development') {
+        console.log("[SmsReaderService] hasPermission result:", result);
+      }
       return result?.granted ?? false;
     } catch (error) {
-      console.error("[SmsReaderService] Error checking permission:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SmsReaderService] Error checking permission:", error);
+      }
       return false;
     }
   }
 
   static async requestPermission(): Promise<boolean> {
-    if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] requestPermission() called");
+    if (import.meta.env.MODE === 'development') {
+      console.log("[SmsReaderService] requestPermission() called");
+    }
 
     if (!Capacitor.isNativePlatform()) {
-      if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Not a native platform");
+      if (import.meta.env.MODE === 'development') {
+        console.warn("[SmsReaderService] Not a native platform");
+      }
       return false;
     }
 
     try {
       const result = await SmsReader.requestPermission();
-      if (process.env.NODE_ENV === 'development') console.log("[SmsReaderService] requestPermission result:", result);
+      if (import.meta.env.MODE === 'development') {
+        console.log("[SmsReaderService] requestPermission result:", result);
+      }
       return result?.granted ?? false;
     } catch (error) {
-      console.error("[SmsReaderService] Error requesting permission:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SmsReaderService] Error requesting permission:", error);
+      }
       return false;
     }
   }
@@ -63,10 +79,14 @@ export class SmsReaderService {
   }
 
   static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
-    if (process.env.NODE_ENV === 'development') console.log('AIS-01 readSmsMessages', options);
+    if (import.meta.env.MODE === 'development') {
+      console.log('AIS-01 readSmsMessages', options);
+    }
 
     if (!Capacitor.isNativePlatform()) {
-      if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Not a native platform, returning empty list.");
+      if (import.meta.env.MODE === 'development') {
+        console.warn("[SmsReaderService] Not a native platform, returning empty list.");
+      }
       return [];
     }
 
@@ -90,8 +110,12 @@ export class SmsReaderService {
     ).getTime();
     const endDate = (options.endDate ? options.endDate : new Date()).getTime();
 
-    if (process.env.NODE_ENV === 'development') console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
-    if (process.env.NODE_ENV === 'development') console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
+    if (import.meta.env.MODE === 'development') {
+      console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
+    }
+    if (import.meta.env.MODE === 'development') {
+      console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
+    }
 
     try {
       const { senders } = options;
@@ -103,13 +127,17 @@ export class SmsReaderService {
       });
       
       if (!result || !Array.isArray(result.messages)) {
-        if (process.env.NODE_ENV === 'development') console.warn("[SmsReaderService] Invalid SMS read result:", result);
+        if (import.meta.env.MODE === 'development') {
+          console.warn("[SmsReaderService] Invalid SMS read result:", result);
+        }
         return [];
       }
 
       return result.messages;
     } catch (error) {
-      console.error("[SmsReaderService] Error reading SMS messages:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SmsReaderService] Error reading SMS messages:", error);
+      }
       return [];
     }
   }

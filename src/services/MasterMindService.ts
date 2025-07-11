@@ -33,7 +33,9 @@ class MasterMindService {
       const stored = localStorage.getItem(MASTER_MIND_KEY);
       return stored ? JSON.parse(stored) : {};
     } catch (e) {
-      console.error('Failed to load MasterMind map:', e);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Failed to load MasterMind map:', e);
+      }
       return {};
     }
   }

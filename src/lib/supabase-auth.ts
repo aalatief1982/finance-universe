@@ -48,14 +48,18 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
     
     // If in demo mode, skip actual Supabase API call
     if (verificationState.isInDemoMode) {
-      if (process.env.NODE_ENV === 'development') console.log('Demo mode: Simulating OTP verification send for:', phoneNumber);
+      if (import.meta.env.MODE === 'development') {
+        console.log('Demo mode: Simulating OTP verification send for:', phoneNumber);
+      }
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
     }
     
     // Check if Supabase is enabled
     if (!ENABLE_SUPABASE_AUTH) {
-      if (process.env.NODE_ENV === 'development') console.warn('Supabase auth is disabled. Enable it in environment settings.');
+      if (import.meta.env.MODE === 'development') {
+        console.warn('Supabase auth is disabled. Enable it in environment settings.');
+      }
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
     }
@@ -91,7 +95,9 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
       error
     );
     
-    console.error(appError);
+    if (import.meta.env.MODE === 'development') {
+      console.error(appError);
+    }
     return { success: false, error: appError };
   }
 };
@@ -160,7 +166,9 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
     
     // If in demo mode, only check for the demo code "1234"
     if (verificationState.isInDemoMode) {
-      if (process.env.NODE_ENV === 'development') console.log('Demo mode: Verifying code:', code);
+      if (import.meta.env.MODE === 'development') {
+        console.log('Demo mode: Verifying code:', code);
+      }
       
       const isValid = code === "1234";
       
@@ -185,7 +193,9 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
     
     // Check if Supabase is enabled
     if (!ENABLE_SUPABASE_AUTH) {
-      if (process.env.NODE_ENV === 'development') console.warn('Supabase auth is disabled. Enable it in environment settings.');
+      if (import.meta.env.MODE === 'development') {
+        console.warn('Supabase auth is disabled. Enable it in environment settings.');
+      }
       const isValid = code === "1234";
       
       if (!isValid) {
@@ -240,7 +250,9 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
       error
     );
     
-    console.error(appError);
+    if (import.meta.env.MODE === 'development') {
+      console.error(appError);
+    }
     return { success: false, error: appError };
   }
 };
@@ -279,7 +291,9 @@ export const updateUserProfileInSupabase = async (userId: string, userData: any)
     
     // If in demo mode or Supabase is disabled, simulate success
     if (verificationState.isInDemoMode || !ENABLE_SUPABASE_AUTH) {
-      if (process.env.NODE_ENV === 'development') console.log('Demo mode or Supabase disabled: Simulating profile update for:', userId);
+      if (import.meta.env.MODE === 'development') {
+        console.log('Demo mode or Supabase disabled: Simulating profile update for:', userId);
+      }
       await new Promise(resolve => setTimeout(resolve, 500));
       return true;
     }
@@ -378,7 +392,9 @@ export const refreshSessionIfNeeded = async (): Promise<boolean> => {
       const { error: refreshError } = await supabase.auth.refreshSession();
       
       if (refreshError) {
-        if (process.env.NODE_ENV === 'development') console.warn('Failed to refresh session:', refreshError);
+        if (import.meta.env.MODE === 'development') {
+          console.warn('Failed to refresh session:', refreshError);
+        }
         return false;
       }
       
@@ -388,7 +404,9 @@ export const refreshSessionIfNeeded = async (): Promise<boolean> => {
     // Session is valid and not expiring soon
     return true;
   } catch (error) {
-    console.error('Error refreshing session:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error refreshing session:', error);
+    }
     return false;
   }
 };
@@ -401,7 +419,9 @@ export const signOutFromSupabase = async (): Promise<boolean> => {
   try {
     // If in demo mode or Supabase is disabled, just return true
     if (verificationState.isInDemoMode || !ENABLE_SUPABASE_AUTH) {
-      if (process.env.NODE_ENV === 'development') console.log('Demo mode or Supabase disabled: Simulating sign out');
+      if (import.meta.env.MODE === 'development') {
+        console.log('Demo mode or Supabase disabled: Simulating sign out');
+      }
       return true;
     }
     

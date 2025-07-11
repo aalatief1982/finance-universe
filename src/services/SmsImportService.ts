@@ -20,7 +20,9 @@ export class SmsImportService {
     navigate: (path: string, options?: any) => void,
     opts?: { auto?: boolean }
   ): Promise<void> {
-    if (process.env.NODE_ENV === 'development') console.log('AIS-02 checkForNewMessages');
+    if (import.meta.env.MODE === 'development') {
+      console.log('AIS-02 checkForNewMessages');
+    }
     try {
       await FirebaseAnalytics.logEvent({ name: 'sms_import_start' });
       const { auto = false } = opts || {};
@@ -104,7 +106,9 @@ export class SmsImportService {
       await FirebaseAnalytics.logEvent({ name: 'sms_import_complete' });
       navigate('/vendor-mapping', { state: { messages: filteredMessages, vendorMap, keywordMap } });
     } catch (error) {
-      console.error('[SmsImportService] Failed to auto import SMS messages:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SmsImportService] Failed to auto import SMS messages:', error);
+      }
     }
   }
 }

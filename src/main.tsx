@@ -63,7 +63,9 @@ function setupGlobalErrorHandlers() {
 try {
   initializeCapacitor()
 } catch (err) {
-  console.error('[Capacitor] Initialization error:', err)
+  if (import.meta.env.MODE === 'development') {
+    console.error('[Capacitor] Initialization error:', err)
+  }
 }
 
 initializeXpensiaStorageDefaults()
@@ -81,7 +83,9 @@ if (Capacitor.isNativePlatform()) {
       await FirebaseAnalytics.setUserId({ userId: identifier })
       await FirebaseAnalytics.logEvent({ name: 'app_launch' })
     } catch (err) {
-      console.warn('[FirebaseAnalytics] error:', err)
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[FirebaseAnalytics] error:', err)
+      }
     }
   })()
 }

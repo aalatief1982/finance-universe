@@ -20,7 +20,9 @@ export const openFeedbackForm = async () => {
     }
     FirebaseAnalytics.logEvent({ name: 'send_feedback' });
   } catch (err) {
-    console.error("Failed to open feedback form:", err);
+    if (import.meta.env.MODE === 'development') {
+      console.error("Failed to open feedback form:", err);
+    }
   }
 };
 

@@ -16,7 +16,9 @@ export async function requestSmsPermission(): Promise<boolean> {
       buttonPositive: 'Allow'
     }
   );
-  if (process.env.NODE_ENV === 'development') console.log('[Xpensia] SMS permission:', granted);
+  if (import.meta.env.MODE === 'development') {
+    console.log('[Xpensia] SMS permission:', granted);
+  }
 
   return granted === PermissionsAndroid.RESULTS.GRANTED;
 }

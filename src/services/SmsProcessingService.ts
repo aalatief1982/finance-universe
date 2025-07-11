@@ -52,7 +52,9 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
 
       return transaction;
     } catch (error) {
-      console.error('Error processing SMS entry:', entry, error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error processing SMS entry:', entry, error);
+      }
       return null; // Or handle the error as needed
     }
   }).filter(transaction => transaction !== null) as Transaction[];

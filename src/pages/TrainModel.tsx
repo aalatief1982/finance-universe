@@ -48,7 +48,7 @@ const TrainModel = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { learnFromTransaction, inferFieldsFromText } = useLearningEngine();
   
-  if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Component initialized", {
+  if (import.meta.env.MODE === 'development') console.log("[TrainModel] Component initialized", {
     locationState: !!location.state,
     hasSearchParams: searchParams.has('msg')
   });
@@ -88,7 +88,7 @@ const TrainModel = () => {
     title: []
   });
   
-  if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Initial state set", { 
+  if (import.meta.env.MODE === 'development') console.log("[TrainModel] Initial state set", { 
     messageLength: message.length, 
     senderHint 
   });
@@ -96,23 +96,29 @@ const TrainModel = () => {
   // Initialize transaction data from passed message if available
   useEffect(() => {
     if (message) {
-      if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Processing message for initial inference", { 
+      if (import.meta.env.MODE === 'development') console.log("[TrainModel] Processing message for initial inference", { 
         messageLength: message.length 
       });
       
       // Try to infer fields from the message
       const inferredFields = inferFieldsFromText(message);
       if (inferredFields) {
-        if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Inferred fields from message:", inferredFields);
+        if (import.meta.env.MODE === 'development') {
+          console.log("[TrainModel] Inferred fields from message:", inferredFields);
+        }
         setTransaction(prev => ({ ...prev, ...inferredFields }));
       }
       
       // Use template structure service to try extracting structured data
       try {
-        if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Attempting template structure match");
+        if (import.meta.env.MODE === 'development') {
+          console.log("[TrainModel] Attempting template structure match");
+        }
         const structureMatch = learningEngineService.matchUsingTemplateStructure?.(message);
         if (structureMatch && structureMatch.inferredTransaction) {
-          if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Structure match found:", structureMatch);
+          if (import.meta.env.MODE === 'development') {
+            console.log("[TrainModel] Structure match found:", structureMatch);
+          }
           // Apply structured data on top of inferred fields
           setTransaction(prev => ({ 
             ...prev, 
@@ -124,7 +130,9 @@ const TrainModel = () => {
           }));
         }
       } catch (error) {
-        console.error("[TrainModel] Error extracting structure:", error);
+        if (import.meta.env.MODE === 'development') {
+          console.error("[TrainModel] Error extracting structure:", error);
+        }
       }
     }
   }, [message, inferFieldsFromText]);
@@ -134,7 +142,7 @@ const TrainModel = () => {
    * Creates mappings between text tokens and transaction fields.
    */
   const handleSaveTraining = () => {
-    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Saving training data", {
+    if (import.meta.env.MODE === 'development') console.log("[TrainModel] Saving training data", {
       messageLength: message.length,
       senderHint,
       selections: selections.length
@@ -162,7 +170,7 @@ const TrainModel = () => {
       
       if (start !== end) {
         const selectedText = message.substring(start, end);
-        if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Text selected:", { 
+        if (import.meta.env.MODE === 'development') console.log("[TrainModel] Text selected:", { 
           start, 
           end, 
           text: selectedText 
@@ -178,7 +186,7 @@ const TrainModel = () => {
           const range = selection.getRangeAt(0);
           const rect = range.getBoundingClientRect();
           
-          if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Positioning dropdown at", { 
+          if (import.meta.env.MODE === 'development') console.log("[TrainModel] Positioning dropdown at", { 
             top: rect.bottom + window.scrollY, 
             left: rect.left + window.scrollX 
           });
@@ -201,11 +209,15 @@ const TrainModel = () => {
    * Updates selections and transaction data based on the selected attribute.
    */
   const handleAttributeSelect = (type: 'direct' | 'infer' | 'ignore' | 'copy', field?: string, value?: string) => {
-    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Attribute selected", { type, field, value });
+    if (import.meta.env.MODE === 'development') {
+      console.log("[TrainModel] Attribute selected", { type, field, value });
+    }
     
     if (type === 'copy' && currentSelection) {
       // Handle copy operation
-      if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Copying text to clipboard:", currentSelection.text);
+      if (import.meta.env.MODE === 'development') {
+        console.log("[TrainModel] Copying text to clipboard:", currentSelection.text);
+      }
       navigator.clipboard.writeText(currentSelection.text)
         .then(() => {
           toast({ 
@@ -214,7 +226,9 @@ const TrainModel = () => {
           });
         })
         .catch(err => {
-          console.error('[TrainModel] Failed to copy text: ', err);
+          if (import.meta.env.MODE === 'development') {
+            console.error('[TrainModel] Failed to copy text: ', err);
+          }
           toast({ 
             title: "Copy failed", 
             description: "Failed to copy text to clipboard", 
@@ -237,12 +251,16 @@ const TrainModel = () => {
         inferValue: value
       };
       
-      if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Creating new selection:", newSelection);
+      if (import.meta.env.MODE === 'development') {
+        console.log("[TrainModel] Creating new selection:", newSelection);
+      }
       setSelections(prev => [...prev, newSelection]);
       
       // Update transaction data if direct attribute
       if (type === 'direct' && field) {
-        if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Updating transaction with direct attribute");
+        if (import.meta.env.MODE === 'development') {
+          console.log("[TrainModel] Updating transaction with direct attribute");
+        }
         const updatedTransaction = { ...transaction };
         
         if (field === 'amount') {
@@ -263,13 +281,17 @@ const TrainModel = () => {
           updatedTransaction.title = currentSelection.text;
         }
         
-        if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Updated transaction:", updatedTransaction);
+        if (import.meta.env.MODE === 'development') {
+          console.log("[TrainModel] Updated transaction:", updatedTransaction);
+        }
         setTransaction(updatedTransaction);
       }
 
       // Register with MasterMind if it's a direct attribute
       if (type === 'direct' && field) {
-        if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Registering token with MasterMind");
+        if (import.meta.env.MODE === 'development') {
+          console.log("[TrainModel] Registering token with MasterMind");
+        }
         masterMindService.registerTokenWithPosition(
           currentSelection.text,
           field,
@@ -290,7 +312,9 @@ const TrainModel = () => {
    * Used for learning the structure of transaction messages.
    */
   const createFieldTokenMap = (): FieldTokenMap => {
-    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Creating field token map from selections");
+    if (import.meta.env.MODE === 'development') {
+      console.log("[TrainModel] Creating field token map from selections");
+    }
     const fieldTokenMap: FieldTokenMap = {
       amount: [],
       currency: [],
@@ -317,7 +341,9 @@ const TrainModel = () => {
       }
     });
     
-    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Generated field token map:", fieldTokenMap);
+    if (import.meta.env.MODE === 'development') {
+      console.log("[TrainModel] Generated field token map:", fieldTokenMap);
+    }
     return fieldTokenMap;
   };
 
@@ -326,10 +352,14 @@ const TrainModel = () => {
    * Creates a transaction and passes it to the learning engine.
    */
   const handleSaveLearning = () => {
-    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Saving learning data");
+    if (import.meta.env.MODE === 'development') {
+      console.log("[TrainModel] Saving learning data");
+    }
     
     if (!message.trim()) {
-      if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Error: Empty message");
+      if (import.meta.env.MODE === 'development') {
+        console.log("[TrainModel] Error: Empty message");
+      }
       toast({
         title: "Error",
         description: "Message cannot be empty",
@@ -339,7 +369,9 @@ const TrainModel = () => {
     }
     
     try {
-      if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Creating field token map");
+      if (import.meta.env.MODE === 'development') {
+        console.log("[TrainModel] Creating field token map");
+      }
       const fieldTokenMap = createFieldTokenMap();
       
       // Create transaction object with a generated ID
@@ -357,7 +389,9 @@ const TrainModel = () => {
         source: 'manual'
       };
       
-      if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Learning from transaction:", txn);
+      if (import.meta.env.MODE === 'development') {
+        console.log("[TrainModel] Learning from transaction:", txn);
+      }
       
       // Learn from transaction
       learnFromTransaction(message, txn, senderHint, fieldTokenMap);
@@ -368,10 +402,14 @@ const TrainModel = () => {
       });
       
       // Navigate back
-      if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Navigation back after successful save");
+      if (import.meta.env.MODE === 'development') {
+        console.log("[TrainModel] Navigation back after successful save");
+      }
       navigate(-1);
     } catch (error) {
-      console.error("[TrainModel] Error saving learning data:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("[TrainModel] Error saving learning data:", error);
+      }
       toast({
         title: "Error",
         description: "Failed to save learning data",
@@ -385,7 +423,9 @@ const TrainModel = () => {
    * Navigates back to the previous page.
    */
   const handleCancel = () => {
-    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Canceling training");
+    if (import.meta.env.MODE === 'development') {
+      console.log("[TrainModel] Canceling training");
+    }
     navigate(-1);
   };
 
@@ -393,7 +433,9 @@ const TrainModel = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Clicking outside dropdown, closing it");
+        if (import.meta.env.MODE === 'development') {
+          console.log("[TrainModel] Clicking outside dropdown, closing it");
+        }
         setShowDropdown(false);
       }
     };
@@ -409,7 +451,9 @@ const TrainModel = () => {
    * Helps manage custom selection UI on mobile devices.
    */
   const preventDefaultTextSelectionBehavior = (e: React.TouchEvent<HTMLTextAreaElement>) => {
-    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Handling touch end on textarea");
+    if (import.meta.env.MODE === 'development') {
+      console.log("[TrainModel] Handling touch end on textarea");
+    }
     // We don't prevent default completely as we still want the selection to work
     // But this helps suppress the native selection menu on some devices
     setTimeout(() => {
@@ -456,7 +500,9 @@ const TrainModel = () => {
                   ref={textareaRef}
                   value={message}
                   onChange={(e) => {
-                    if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Message changed, new length:", e.target.value.length);
+                    if (import.meta.env.MODE === 'development') {
+                      console.log("[TrainModel] Message changed, new length:", e.target.value.length);
+                    }
                     setMessage(e.target.value);
                   }}
                   onMouseUp={handleTextSelection}
@@ -495,7 +541,9 @@ const TrainModel = () => {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => {
-                            if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Removing selection:", selection.id);
+                            if (import.meta.env.MODE === 'development') {
+                              console.log("[TrainModel] Removing selection:", selection.id);
+                            }
                             setSelections(prev => prev.filter(s => s.id !== selection.id));
                           }}
                         >
@@ -513,7 +561,9 @@ const TrainModel = () => {
             <TransactionAttributesForm 
               transaction={transaction}
               onChange={(newTransaction) => {
-                if (process.env.NODE_ENV === 'development') console.log("[TrainModel] Transaction form updated:", newTransaction);
+                if (import.meta.env.MODE === 'development') {
+                  console.log("[TrainModel] Transaction form updated:", newTransaction);
+                }
                 setTransaction(newTransaction);
               }}
             />

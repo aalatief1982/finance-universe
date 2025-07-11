@@ -81,7 +81,7 @@ export const getNavItems = () => {
     },
   ];
 
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.MODE === 'development') {
     items.push({
       title: "Template Health",
       path: "/dev/template-health",

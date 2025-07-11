@@ -193,7 +193,9 @@ const PhoneVerification = ({
         throw new Error('Failed to send verification code');
       }
     } catch (err) {
-      console.error('Error sending code:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error sending code:', err);
+      }
       setError('Failed to send code. Please check your phone number and try again.');
       setErrorType('network');
       toast({
@@ -255,7 +257,9 @@ const PhoneVerification = ({
         throw new Error(`Invalid verification code. ${attemptsRemaining} attempts remaining.`);
       }
     } catch (err) {
-      console.error('Verification error:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Verification error:', err);
+      }
       setVerificationCode('');
       setError(`Invalid code. ${attemptsRemaining} attempts remaining.`);
       setErrorType('validation');

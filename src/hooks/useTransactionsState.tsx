@@ -311,7 +311,9 @@ export function useTransactionsState() {
               const regex = new RegExp(pattern, 'i');
               isMatch = regex.test(transaction.title);
             } catch (error) {
-              console.error('Invalid regex pattern:', pattern, error);
+              if (import.meta.env.MODE === 'development') {
+                console.error('Invalid regex pattern:', pattern, error);
+              }
             }
           } else {
             isMatch = transaction.title.toLowerCase().includes(pattern.toLowerCase());

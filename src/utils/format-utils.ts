@@ -34,7 +34,9 @@ export const formatDate = (dateString: string): string => {
       day: 'numeric',
     });
   } catch (e) {
-    console.error('Invalid date string:', dateString);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Invalid date string:', dateString);
+    }
     return dateString;
   }
 };
@@ -52,7 +54,9 @@ export const formatMonthYear = (dateString: string): string => {
       month: 'short',
     });
   } catch (e) {
-    console.error('Invalid date string:', dateString);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Invalid date string:', dateString);
+    }
     return dateString;
   }
 };

@@ -187,7 +187,9 @@ export function validateData<T>(
       return { success: false, error: `Validation Error: ${errorMessages}` };
     } else {
       // Handle non-Zod errors
-      console.error("Unexpected validation error:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("Unexpected validation error:", error);
+      }
       return { success: false, error: "Unexpected validation error" };
     }
   }
@@ -247,7 +249,9 @@ export function validateNewTransaction(transaction: Omit<ValidatedTransaction, '
       const errorMessages = error.errors.map(e => e.message).join(', ');
       return { success: false, error: `Validation Error: ${errorMessages}` };
     } else {
-      console.error("Unexpected validation error:", error);
+      if (import.meta.env.MODE === 'development') {
+        console.error("Unexpected validation error:", error);
+      }
       return { success: false, error: "Unexpected validation error" };
     }
   }

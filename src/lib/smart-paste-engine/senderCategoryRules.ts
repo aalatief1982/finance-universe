@@ -10,7 +10,9 @@ export function loadSenderCategoryRules(): Record<string, SenderCategoryRule> {
     const raw = localStorage.getItem(KEY);
     return raw ? JSON.parse(raw) : {};
   } catch (err) {
-    console.error('[SenderCategoryRules] Failed to load rules', err);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[SenderCategoryRules] Failed to load rules', err);
+    }
     return {};
   }
 }

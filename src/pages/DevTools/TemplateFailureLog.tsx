@@ -47,7 +47,9 @@ const TemplateFailureLog: React.FC = () => {
       }
       setGroups(Object.values(map));
     } catch (err) {
-      console.error('Failed to load template failures', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Failed to load template failures', err);
+      }
     }
   }, []);
 

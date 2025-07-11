@@ -41,7 +41,9 @@ const loadImportProgress = (): ImportProgress | null => {
     const stored = localStorage.getItem(IMPORT_PROGRESS_KEY);
     return stored ? (JSON.parse(stored) as ImportProgress) : null;
   } catch (err) {
-    console.error('Failed to load import progress', err);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Failed to load import progress', err);
+    }
     return null;
   }
 };
@@ -99,7 +101,9 @@ const ProcessSmsMessages: React.FC = () => {
       setSenders(allSenders);
       setSelectedSenders(allSenders);
     } catch (err) {
-      console.error('Failed to resume import', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Failed to resume import', err);
+      }
       clearImportProgress();
     }
   };
@@ -212,7 +216,9 @@ const handleReadSms = async () => {
         } else {
           const skippedEntry = { ...msg, matchedKeyword };
           invalidMessages.push(skippedEntry);
-          if (process.env.NODE_ENV === 'development') console.warn("[SmartPaste] Skipped message:", msg.message);
+          if (import.meta.env.MODE === 'development') {
+            console.warn("[SmartPaste] Skipped message:", msg.message);
+          }
           return null;
         }
       })
@@ -230,7 +236,9 @@ const handleReadSms = async () => {
 
     toast({ title: 'Success', description: `Fetched and filtered ${filtered.length} SMS messages` });
   } catch (error) {
-    console.error('Error reading SMS:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error reading SMS:', error);
+    }
     toast({ variant: 'destructive', title: 'Error', description: 'Failed to read SMS messages' });
   } finally {
     setLoading(false);

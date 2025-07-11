@@ -131,7 +131,9 @@ class MessageProcessingService {
       
       return null;
     } catch (error) {
-      console.error('Error extracting amount:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error extracting amount:', error);
+      }
       return null;
     }
   }
@@ -401,7 +403,9 @@ class MessageProcessingService {
       // No date found, return today
       return new Date().toISOString().split('T')[0];
     } catch (error) {
-      console.error('Error extracting date:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error extracting date:', error);
+      }
       return null;
     }
   }

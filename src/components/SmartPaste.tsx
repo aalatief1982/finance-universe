@@ -86,7 +86,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     });
     return;
   }
- if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Checking message:', text);
+ if (import.meta.env.MODE === 'development') {
+   console.log('[SmartPaste] Checking message:', text);
+ }
   // 🚫 Check if message contains financial transaction pattern
   if (!isFinancialTransactionMessage(text)) {
     toast({
@@ -97,7 +99,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
-  if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Submitting message:", text);
+  if (import.meta.env.MODE === 'development') {
+    console.log("[SmartPaste] Submitting message:", text);
+  }
   setIsProcessing(true);
   setError(null);
   setConfidence(null);
@@ -118,8 +122,10 @@ const handleSubmit = async (e: React.FormEvent) => {
       keywordScore
     } = await parseAndInferTransaction(text, senderHint);
 
-    if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Parsed result:", parsed);
-    if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Confidence Breakdown:", {
+    if (import.meta.env.MODE === 'development') {
+      console.log("[SmartPaste] Parsed result:", parsed);
+    }
+    if (import.meta.env.MODE === 'development') console.log("[SmartPaste] Confidence Breakdown:", {
       confidence,
       origin
     });
@@ -129,7 +135,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     setMatchOrigin(origin);
 
     if (onTransactionsDetected) {
-      if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Final transaction inference:", transaction);
+      if (import.meta.env.MODE === 'development') {
+        console.log("[SmartPaste] Final transaction inference:", transaction);
+      }
       onTransactionsDetected(
         [transaction],
         text,
@@ -157,7 +165,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
     }
   } catch (err: any) {
-    console.error("[SmartPaste] Error in structure parsing:", err);
+    if (import.meta.env.MODE === 'development') {
+      console.error("[SmartPaste] Error in structure parsing:", err);
+    }
     setError("Could not parse the message. Try again or report.");
     setConfidence(null);
     setMatchOrigin(null);
@@ -169,7 +179,9 @@ const handleSubmit = async (e: React.FormEvent) => {
   const handlePaste = async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
-      if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Clipboard text captured:", clipboardText);
+      if (import.meta.env.MODE === 'development') {
+        console.log("[SmartPaste] Clipboard text captured:", clipboardText);
+      }
       setText(clipboardText);
     } catch (err) {
       toast({
@@ -181,7 +193,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-    if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
+    if (import.meta.env.MODE === 'development') console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
       transaction,
       parsedFields: {
         amount: transaction.amount,
@@ -194,7 +206,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
     });  
     
-    if (process.env.NODE_ENV === 'development') console.log("[SmartPaste] Transaction added:", transaction);
+    if (import.meta.env.MODE === 'development') {
+      console.log("[SmartPaste] Transaction added:", transaction);
+    }
     if (onTransactionsDetected) {
       onTransactionsDetected(
         [transaction],

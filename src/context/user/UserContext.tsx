@@ -179,7 +179,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           completed_onboarding: user.completedOnboarding,
           last_active: new Date().toISOString()
         }).catch(error => {
-          console.error("Error updating user profile in Supabase:", error);
+          if (import.meta.env.MODE === 'development') {
+            console.error("Error updating user profile in Supabase:", error);
+          }
         });
       }
     }

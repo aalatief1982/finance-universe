@@ -37,7 +37,9 @@ export interface ParsedField {
 }
 
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
-  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
+  if (import.meta.env.MODE === 'development') {
+    console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
+  }
 	if (!rawMessage) {
     throw new Error('Empty message passed to extractTemplateStructure');
   }
@@ -54,12 +56,18 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
         if (!placeholders) throw new Error('Extracted placeholders are missing');
 	
   } catch (err) {
-    console.error('[SmartPaste] ❌ extractTemplateStructure failed:', err);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[SmartPaste] ❌ extractTemplateStructure failed:', err);
+    }
     throw err; // Let upstream handler deal with it
   }
 
-  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 2: Extracted Template:', structure);
-  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
+  if (import.meta.env.MODE === 'development') {
+    console.log('[SmartPaste] Step 2: Extracted Template:', structure);
+  }
+  if (import.meta.env.MODE === 'development') {
+    console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
+  }
 
   const matchedTemplate = getTemplateByHash(
     templateHash,
@@ -79,7 +87,9 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
           source: 'direct',
         };
       } else {
-        if (process.env.NODE_ENV === 'development') console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
+        if (import.meta.env.MODE === 'development') {
+          console.warn(`[SmartPaste] Missing placeholder value for ${field}`);
+        }
       }
     });
 
@@ -111,7 +121,9 @@ if (directFields['date']) {
   const normalized = normalizeDate(directFields['date'].value);
   if (normalized) {
     directFields['date'].value = normalized;
-    if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Normalized date:', directFields['date'].value);
+    if (import.meta.env.MODE === 'development') {
+      console.log('[SmartPaste] Normalized date:', directFields['date'].value);
+    }
   }
 }
 
@@ -129,8 +141,12 @@ if (directFields['date']) {
       };
     }
   });
-  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
-  if (process.env.NODE_ENV === 'development') console.log('[SmartPaste] Final directFields:', directFields);
+  if (import.meta.env.MODE === 'development') {
+    console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
+  }
+  if (import.meta.env.MODE === 'development') {
+    console.log('[SmartPaste] Final directFields:', directFields);
+  }
 
   return {
     rawMessage,

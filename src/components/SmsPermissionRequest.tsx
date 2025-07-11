@@ -33,7 +33,9 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
           }
         }
       } catch (err) {
-        console.error('[SMS] Error checking permissions:', err);
+        if (import.meta.env.MODE === 'development') {
+          console.error('[SMS] Error checking permissions:', err);
+        }
         setError('Failed to check SMS permission status. Please try again.');
       }
     };
@@ -46,12 +48,18 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
       const smsListener = await loadSmsListener();
       if (smsListener) {
         await smsListener.startListening().catch(err => {
-          if (process.env.NODE_ENV === 'development') console.warn('[SMS] Error starting SMS listener:', err);
+          if (import.meta.env.MODE === 'development') {
+            console.warn('[SMS] Error starting SMS listener:', err);
+          }
         });
-        if (process.env.NODE_ENV === 'development') console.log('[SMS] SMS listener initialized');
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SMS] SMS listener initialized');
+        }
       }
     } catch (err) {
-      console.error('[SMS] Error initializing SMS listener:', err);
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SMS] Error initializing SMS listener:', err);
+      }
     }
   };
 
@@ -74,7 +82,9 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
         setError('Permission was denied. SMS features will not work without permission.');
       }
     } catch (error) {
-      console.error('Error requesting SMS permission:', error);
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error requesting SMS permission:', error);
+      }
       setError('Failed to request permission. Please try again.');
     } finally {
       setLoading(false);

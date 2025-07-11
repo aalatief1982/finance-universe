@@ -207,19 +207,25 @@ export function initializeXpensiaStorageDefaults() {
   // Ensure structure templates store exists
   if (!localStorage.getItem('xpensia_structure_templates')) {
     localStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
-    if (process.env.NODE_ENV === 'development') console.log('[Init] xpensia_structure_templates initialized');
+    if (import.meta.env.MODE === 'development') {
+      console.log('[Init] xpensia_structure_templates initialized');
+    }
   }
 
   // Ensure vendor map store exists
   if (!localStorage.getItem('xpensia_vendor_map')) {
     localStorage.setItem('xpensia_vendor_map', JSON.stringify({}));
-    if (process.env.NODE_ENV === 'development') console.log('[Init] xpensia_vendor_map initialized');
+    if (import.meta.env.MODE === 'development') {
+      console.log('[Init] xpensia_vendor_map initialized');
+    }
   }
 
   // Ensure vendor fallback data exists
   if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
     saveVendorFallbacks((vendorFallbackData as any).default ?? vendorFallbackData);
-    if (process.env.NODE_ENV === 'development') console.log('[Init] xpensia_vendor_fallbacks initialized');
+    if (import.meta.env.MODE === 'development') {
+      console.log('[Init] xpensia_vendor_fallbacks initialized');
+    }
   }
 
   // Ensure type keyword bank exists
@@ -263,7 +269,9 @@ export function initializeXpensiaStorageDefaults() {
       { "keyword": "iban", "type": "transfer" },
 	  { "keyword": "سحب", "type": "transfer" }
     ]));
-    if (process.env.NODE_ENV === 'development') console.log('[Init] xpensia_type_keywords initialized');
+    if (import.meta.env.MODE === 'development') {
+      console.log('[Init] xpensia_type_keywords initialized');
+    }
   }
   
 
