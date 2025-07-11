@@ -1,5 +1,6 @@
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
+import { IonLoading } from '@ionic/react';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -156,13 +157,12 @@ const handleReadSms = async () => {
   try {
     const granted = await SmsReaderService.requestPermission();
     if (!granted) {
-      toast({
-        variant: 'destructive',
-        title: 'Permission denied',
-        description: 'SMS Permission was not granted',
-      });
-      setLoading(false);
-      return;
+    toast({
+      variant: 'destructive',
+      title: 'Permission denied',
+      description: 'SMS Permission was not granted',
+    });
+    return;
     }
 
     const keywordObjects = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
@@ -295,6 +295,8 @@ const handleReadSms = async () => {
   };
 
   return (
+    <>
+      <IonLoading isOpen={loading} message="Reading SMS..." />
     <Layout showBack>
       <div className="pt-4 pb-4">
         <div className="px-2 mb-4">
@@ -441,6 +443,7 @@ const handleReadSms = async () => {
         </DialogContent>
       </Dialog>
     </Layout>
+    </>
   );
 };
 
