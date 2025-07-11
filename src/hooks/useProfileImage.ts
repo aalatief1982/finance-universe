@@ -8,38 +8,45 @@ const PROFILE_IMAGE_KEY = 'profileImagePath';
 
 export function useProfileImage() {
   const [image, setImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadSavedImage();
   }, []);
 
   const takeOrSelectPhoto = async () => {
-    const photo = await Camera.getPhoto({
-      resultType: CameraResultType.Uri,
-      source: CameraSource.Prompt,
-      quality: 80
-    });
+    setLoading(true);
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+        quality: 80
+      });
 
-    const base64Data = await convertWebPathToBase64(photo.webPath!);
+      const base64Data = await convertWebPathToBase64(photo.webPath!);
 
-    const fileName = 'profile.jpg';
+      const fileName = 'profile.jpg';
 
-    await Filesystem.writeFile({
-      path: fileName,
-      data: base64Data,
-      directory: Directory.Data
-    });
+      await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Data
+      });
 
-    safeStorage.setItem(PROFILE_IMAGE_KEY, fileName);
-    setImage(`data:image/jpeg;base64,${base64Data}`);
-    FirebaseAnalytics.logEvent({ name: 'photo_added' });
+      safeStorage.setItem(PROFILE_IMAGE_KEY, fileName);
+      setImage(`data:image/jpeg;base64,${base64Data}`);
+      FirebaseAnalytics.logEvent({ name: 'photo_added' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadSavedImage = async () => {
-    const fileName = safeStorage.getItem(PROFILE_IMAGE_KEY);
-    if (!fileName) return;
-
+    setLoading(true);
     try {
+      const fileName = safeStorage.getItem(PROFILE_IMAGE_KEY);
+      if (!fileName) return;
+
       const result = await Filesystem.readFile({
         path: fileName,
         directory: Directory.Data
@@ -50,12 +57,15 @@ export function useProfileImage() {
         console.error('Failed to load profile image:', err);
       }
       setImage(null);
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
     image,              // base64 string to be used as <img src={image} />
-    takeOrSelectPhoto   // call this to update profile image
+    takeOrSelectPhoto,  // call this to update profile image
+    loading
   };
 }
 

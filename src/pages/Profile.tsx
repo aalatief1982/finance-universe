@@ -31,12 +31,13 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { useProfileImage } from '@/hooks/useProfileImage';
+import { IonLoading } from '@ionic/react';
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 
 const Profile = () => {
   const { user, updateUser } = useUser();
   const { toast } = useToast();
-  const { image, takeOrSelectPhoto } = useProfileImage();
+  const { image, takeOrSelectPhoto, loading } = useProfileImage();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     fullName: user?.fullName || '',
@@ -85,6 +86,7 @@ const Profile = () => {
 
   return (
     <Layout>
+      <IonLoading isOpen={loading} message="Loading image..." />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
