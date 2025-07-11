@@ -22,7 +22,7 @@ dependencies {
     implementation project(':capacitor-sms-reader')
     implementation "androidx.webkit:webkit:1.4.0"
 }
-apply from: "../../node_modules/cordova-plugin-native-app-update/src/android/build.gradle"
+
 
 if (hasProperty('postBuildExtras')) {
   postBuildExtras()
