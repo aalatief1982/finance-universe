@@ -60,25 +60,26 @@ export const safeSetItem = <T>(key: string, data: T): boolean => {
     if (isQuotaExceeded) {
       if (import.meta.env.MODE === 'development') {
         console.error(
+          `[CRITICAL] Failed to set '${key}' in localStorage due to quota limitations.`,
+          error
+        );
       }
-        `[CRITICAL] Failed to set '${key}' in localStorage due to quota limitations.`,
-        error
-      );
 
-      // Fallback to sessionStorage when quota is exceeded
       try {
         sessionStorage.setItem(key, JSON.stringify(data));
-        if (import.meta.env.MODE === 'development') console.warn(
-          `[STORAGE] Stored '${key}' in sessionStorage due to localStorage quota.`
-        );
+        if (import.meta.env.MODE === 'development') {
+          console.warn(
+            `[STORAGE] Stored '${key}' in sessionStorage due to localStorage quota.`
+          );
+        }
         return true;
       } catch (sessionError) {
         if (import.meta.env.MODE === 'development') {
           console.error(
+            `[CRITICAL] Failed to set '${key}' in sessionStorage after localStorage quota exceeded.`,
+            sessionError
+          );
         }
-          `[CRITICAL] Failed to set '${key}' in sessionStorage after localStorage quota exceeded.`,
-          sessionError
-        );
       }
     } else {
       if (import.meta.env.MODE === 'development') {
