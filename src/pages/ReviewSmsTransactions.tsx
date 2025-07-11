@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { IonLoading } from '@ionic/react';
 import { Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -66,6 +67,7 @@ interface DraftTransaction {
 
 const ReviewSmsTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<DraftTransaction[]>([]);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
   const { addTransaction, updateTransaction } = useTransactions();
@@ -116,8 +118,10 @@ const ReviewSmsTransactions: React.FC = () => {
 
       setTransactions(parsed);
     };
-
-    parseAll();
+    setLoading(true);
+    parseAll()
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [] );
 
 
@@ -338,13 +342,15 @@ const toggleSkipAll = () => {
   const navigate = useNavigate();
 
   return (
-    <Layout showBack>
-      <div className="flex justify-end mb-4 gap-2">
-        <Button variant="outline" onClick={toggleSkipAll}>
-          {transactions.every(t => t.skipped) ? 'Unskip All' : 'Skip All'}
-        </Button>
-        <Button onClick={handleSave}>Save All</Button>
-      </div>
+    <>
+      <IonLoading isOpen={loading} message="Parsing messages..." />
+      <Layout showBack>
+        <div className="flex justify-end mb-4 gap-2">
+          <Button variant="outline" onClick={toggleSkipAll}>
+            {transactions.every(t => t.skipped) ? 'Unskip All' : 'Skip All'}
+          </Button>
+          <Button onClick={handleSave}>Save All</Button>
+        </div>
 
       {transactions.map((txn, index) => {
         const borderColor =
@@ -564,7 +570,8 @@ const toggleSkipAll = () => {
         </AlertDialog>
       )}
 
-    </Layout>
+      </Layout>
+    </>
   );
 };
 
