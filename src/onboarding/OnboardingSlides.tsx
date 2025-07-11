@@ -126,8 +126,10 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                       alt={slide.title}
                       className="w-full h-auto object-contain rounded-lg animate-scale-in"
                       style={{ animationDelay: '0.3s' }}
-                      if (import.meta.env.MODE === 'development') {
-                        onError={() => console.error(`Failed to load image: ${slide.image}`)}
+                      onError={
+                        import.meta.env.MODE === 'development'
+                          ? () => console.error(`Failed to load image: ${slide.image}`)
+                          : undefined
                       }
                     />
                   </div>
