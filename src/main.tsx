@@ -4,6 +4,7 @@ import './index.css'
 import './styles/app.css'
 
 import { handleError } from './utils/error-utils'
+import { getFriendlyMessage } from './utils/errorMapper'
 import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults'
 import { initializeCapacitor } from './lib/capacitor-init'
@@ -18,7 +19,7 @@ function setupGlobalErrorHandlers() {
   window.addEventListener('unhandledrejection', (event) => {
     handleError({
       type: ErrorType.UNKNOWN,
-      message: event.reason?.message || 'Unhandled Promise Rejection',
+      message: getFriendlyMessage(event.reason) || 'Unhandled Promise Rejection',
       severity: ErrorSeverity.ERROR,
       details: { source: 'unhandledrejection', stack: event.reason?.stack },
       originalError: event.reason
@@ -29,7 +30,7 @@ function setupGlobalErrorHandlers() {
   window.addEventListener('error', (event) => {
     handleError({
       type: ErrorType.UNKNOWN,
-      message: event.error?.message || event.message || 'Uncaught Error',
+      message: getFriendlyMessage(event.error) || 'Uncaught Error',
       severity: ErrorSeverity.CRITICAL,
       details: {
         source: 'window.onerror',

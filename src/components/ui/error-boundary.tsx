@@ -5,6 +5,7 @@ import { RefreshCw, Info } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { handleError } from "@/utils/error-utils";
 import { ErrorType, ErrorSeverity } from "@/types/error";
+import { getFriendlyMessage } from "@/utils/errorMapper";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -49,9 +50,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     }
     
     // Use our global error handler
+    const friendly = getFriendlyMessage(error);
     handleError({
       type: ErrorType.UNKNOWN,
-      message: `Error in ${this.props.name || 'component'}: ${error.message}`,
+      message: `Error in ${this.props.name || 'component'}: ${friendly}`,
       severity: ErrorSeverity.ERROR,
       details: {
         componentStack: errorInfo.componentStack,
@@ -64,7 +66,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       toast({
         variant: 'destructive',
         title: `Error: ${this.props.name || 'Component'} failed to load`,
-        description: `${error.message || 'An unexpected error occurred.'} Please try again using the Retry button.`
+        description: `${friendly} Please try again using the Retry button.`
       });
     }
   }
