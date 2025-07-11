@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import {
@@ -84,7 +85,7 @@ function toISOFormat(input: string): string {
 
 function remapVendor(vendor?: string): string {
   if (!vendor) return '';
-  const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+  const map = JSON.parse(safeStorage.getItem('xpensia_vendor_map') || '{}');
   return map[vendor] && map[vendor].trim() !== '' ? map[vendor] : vendor;
 }
 
@@ -110,7 +111,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const loadCurrencies = (): string[] => {
     const base = [...CURRENCIES];
     try {
-      const raw = localStorage.getItem(CUSTOM_CURRENCIES_KEY);
+      const raw = safeStorage.getItem(CUSTOM_CURRENCIES_KEY);
       if (raw) {
         const custom: CustomCurrency[] = JSON.parse(raw);
         base.push(...custom.map(c => c.code));
@@ -250,10 +251,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       isCustom: true,
     };
     try {
-      const raw = localStorage.getItem(CUSTOM_CURRENCIES_KEY);
+      const raw = safeStorage.getItem(CUSTOM_CURRENCIES_KEY);
       const arr: CustomCurrency[] = raw ? JSON.parse(raw) : [];
       arr.push(currencyObj);
-      localStorage.setItem(CUSTOM_CURRENCIES_KEY, JSON.stringify(arr));
+      safeStorage.setItem(CUSTOM_CURRENCIES_KEY, JSON.stringify(arr));
     } catch {
       // ignore
     }
@@ -306,7 +307,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       }
     }
 
-    localStorage.setItem('xpensia_category_hierarchy', JSON.stringify(hierarchy));
+    safeStorage.setItem('xpensia_category_hierarchy', JSON.stringify(hierarchy));
 
     setAvailableCategories(getCategoriesForType(editedTransaction.type));
     setAvailableSubcategories(getSubcategoriesForCategory(editedTransaction.category));

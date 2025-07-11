@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -103,7 +104,7 @@ const SmsProviderSelection = () => {
 
     // In a real app, this would save the selection to state/local storage
     // Already saving through service, but we'll also save to localStorage for backward compatibility
-    localStorage.setItem('smsProviders', JSON.stringify(
+    safeStorage.setItem('smsProviders', JSON.stringify(
       selectedProviders.map(p => ({ id: p.id, name: p.name }))
     ));
     

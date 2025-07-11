@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import {
@@ -31,7 +32,7 @@ const TemplateFailureLog: React.FC = () => {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = safeStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const entries: FailureEntry[] = JSON.parse(raw);
       const map: Record<string, GroupedFailure> = {};

@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,7 @@ const ProcessVendors: React.FC = () => {
   const [vendors, setVendors] = useState<VendorEntry[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('xpensia_sms_vendors');
+    const stored = safeStorage.getItem('xpensia_sms_vendors');
     if (stored) {
       try {
         const parsed: VendorEntry[] = JSON.parse(stored);
@@ -44,7 +45,7 @@ const ProcessVendors: React.FC = () => {
   };
 
   const handleSave = () => {
-    localStorage.setItem('xpensia_sms_vendors', JSON.stringify(vendors));
+    safeStorage.setItem('xpensia_sms_vendors', JSON.stringify(vendors));
     toast({
       title: 'Vendors Saved',
       description: 'Vendor categorization saved successfully.',

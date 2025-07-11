@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { ErrorType } from '@/types/error';
 import { handleError } from '@/utils/error-utils';
 import { Capacitor } from '@capacitor/core';
@@ -33,7 +34,7 @@ class SmsProviderSelectionService {
   // Get all available SMS providers
   getSmsProviders(): SmsProvider[] {
     try {
-      const storedProviders = localStorage.getItem(SMS_PROVIDERS_STORAGE_KEY);
+      const storedProviders = safeStorage.getItem(SMS_PROVIDERS_STORAGE_KEY);
       if (!storedProviders) {
         return this.defaultProviders;
       }
@@ -60,7 +61,7 @@ class SmsProviderSelectionService {
   // Save selected SMS providers
   saveSelectedProviders(providers: SmsProvider[]): void {
     try {
-      localStorage.setItem(SMS_PROVIDERS_STORAGE_KEY, JSON.stringify(providers));
+      safeStorage.setItem(SMS_PROVIDERS_STORAGE_KEY, JSON.stringify(providers));
     } catch (error) {
       handleError({
         type: ErrorType.STORAGE,
@@ -92,7 +93,7 @@ class SmsProviderSelectionService {
   // Save SMS start date
   saveSmsStartDate(date: string): void {
     try {
-      localStorage.setItem(SMS_START_DATE_STORAGE_KEY, date);
+      safeStorage.setItem(SMS_START_DATE_STORAGE_KEY, date);
     } catch (error) {
       handleError({
         type: ErrorType.STORAGE,
@@ -105,7 +106,7 @@ class SmsProviderSelectionService {
   // Get SMS start date
   getSmsStartDate(): string | null {
     try {
-      return localStorage.getItem(SMS_START_DATE_STORAGE_KEY);
+      return safeStorage.getItem(SMS_START_DATE_STORAGE_KEY);
     } catch (error) {
       handleError({
         type: ErrorType.STORAGE,
@@ -119,7 +120,7 @@ class SmsProviderSelectionService {
   // Check if SMS permissions have been granted
   hasSmsPermission(): boolean {
     try {
-      return localStorage.getItem('smsPermissionGranted') === 'true';
+      return safeStorage.getItem('smsPermissionGranted') === 'true';
     } catch (error) {
       return false;
     }
@@ -128,7 +129,7 @@ class SmsProviderSelectionService {
   // Save SMS permission status
   saveSmsPermissionStatus(granted: boolean): void {
     try {
-      localStorage.setItem('smsPermissionGranted', granted ? 'true' : 'false');
+      safeStorage.setItem('smsPermissionGranted', granted ? 'true' : 'false');
     } catch (error) {
       handleError({
         type: ErrorType.STORAGE,
@@ -149,7 +150,7 @@ class SmsProviderSelectionService {
   // Save detected providers
   saveDetectedProviders(detectedProviders: DetectedProvider[]): void {
     try {
-      localStorage.setItem(DETECTED_PROVIDERS_STORAGE_KEY, JSON.stringify(detectedProviders));
+      safeStorage.setItem(DETECTED_PROVIDERS_STORAGE_KEY, JSON.stringify(detectedProviders));
     } catch (error) {
       handleError({
         type: ErrorType.STORAGE,
@@ -162,7 +163,7 @@ class SmsProviderSelectionService {
   // Get detected providers
   getDetectedProviders(): DetectedProvider[] {
     try {
-      const storedDetectedProviders = localStorage.getItem(DETECTED_PROVIDERS_STORAGE_KEY);
+      const storedDetectedProviders = safeStorage.getItem(DETECTED_PROVIDERS_STORAGE_KEY);
       if (!storedDetectedProviders) {
         return [];
       }

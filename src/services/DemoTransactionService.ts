@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { Transaction, TransactionType } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { getCategoryHierarchy, CURRENCIES } from '@/lib/categories-data';
@@ -30,13 +31,13 @@ const INIT_FLAG_KEY = 'xpensia_demo_transactions_initialized';
 
 class DemoTransactionService {
   seedDemoTransactions(): void {
-    if (localStorage.getItem(INIT_FLAG_KEY)) {
+    if (safeStorage.getItem(INIT_FLAG_KEY)) {
       return;
     }
 
     const existing = getStoredTransactions();
     if (existing.length > 0) {
-      localStorage.setItem(INIT_FLAG_KEY, 'true');
+      safeStorage.setItem(INIT_FLAG_KEY, 'true');
       return;
     }
 
@@ -85,7 +86,7 @@ class DemoTransactionService {
     });
 
     storeTransactions([...existing, ...newTransactions]);
-    localStorage.setItem(INIT_FLAG_KEY, 'true');
+    safeStorage.setItem(INIT_FLAG_KEY, 'true');
   }
 }
 

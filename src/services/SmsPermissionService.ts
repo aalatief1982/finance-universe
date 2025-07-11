@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 import { Capacitor } from "@capacitor/core";
 import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
@@ -18,7 +19,7 @@ class SmsPermissionService {
   async hasPermission(): Promise<boolean> {
     if (!this.isNativeEnvironment()) {
       // For web environments, check local storage
-      return localStorage.getItem('sms_permission_simulation') === 'granted';
+      return safeStorage.getItem('sms_permission_simulation') === 'granted';
     }
 
     try {
@@ -81,9 +82,9 @@ class SmsPermissionService {
   // Save permission status to local storage
   savePermissionStatus(granted: boolean): void {
     if (this.isNativeEnvironment()) {
-      localStorage.setItem('sms_permission', granted ? 'granted' : 'denied');
+      safeStorage.setItem('sms_permission', granted ? 'granted' : 'denied');
     } else {
-      localStorage.setItem('sms_permission_simulation', granted ? 'granted' : 'denied');
+      safeStorage.setItem('sms_permission_simulation', granted ? 'granted' : 'denied');
     }
   }
 
@@ -132,11 +133,11 @@ class SmsPermissionService {
   // Check if app can read SMS messages
   canReadSms(): boolean {
     if (!this.isNativeEnvironment()) {
-      return localStorage.getItem('sms_permission_simulation') === 'granted';
+      return safeStorage.getItem('sms_permission_simulation') === 'granted';
     }
     
     // For native environments, we'll use the cached value
-    return localStorage.getItem('sms_permission') === 'granted';
+    return safeStorage.getItem('sms_permission') === 'granted';
   }
 }
 

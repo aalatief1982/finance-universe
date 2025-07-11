@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 export interface VendorFallbackData {
   type: 'expense' | 'income' | 'transfer';
   category: string;
@@ -9,7 +10,7 @@ export interface VendorFallbackData {
 const KEY = 'xpensia_vendor_fallbacks';
 
 export function loadVendorFallbacks(): Record<string, VendorFallbackData> {
-  const raw = localStorage.getItem(KEY);
+  const raw = safeStorage.getItem(KEY);
   if (!raw) return {};
   try {
     return JSON.parse(raw) as Record<string, VendorFallbackData>;
@@ -22,7 +23,7 @@ export function loadVendorFallbacks(): Record<string, VendorFallbackData> {
 }
 
 export function saveVendorFallbacks(data: Record<string, VendorFallbackData>): void {
-  localStorage.setItem(KEY, JSON.stringify(data));
+  safeStorage.setItem(KEY, JSON.stringify(data));
 }
 
 export function getVendorNames(): string[] {

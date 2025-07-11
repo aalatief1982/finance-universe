@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 // This module contains the SMS parsing logic for the expense tracker app
 import { transactionService } from '@/services/TransactionService';
@@ -33,7 +34,7 @@ interface CustomParsingRule {
 
 function loadCustomRules(): CustomParsingRule[] {
   try {
-    const raw = localStorage.getItem('xpensia_custom_rules');
+    const raw = safeStorage.getItem('xpensia_custom_rules');
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -176,13 +177,13 @@ const TRANSACTION_PATTERNS = [
 function getUserPreferredCurrency(): SupportedCurrency {
   try {
     // Try to get from local storage or another source
-    const storedCurrency = localStorage.getItem('user_currency');
+    const storedCurrency = safeStorage.getItem('user_currency');
     if (storedCurrency) {
       return storedCurrency as SupportedCurrency;
     }
     
     // Try to get from user settings if available
-    const userSettings = JSON.parse(localStorage.getItem('user_settings') || '{}');
+    const userSettings = JSON.parse(safeStorage.getItem('user_settings') || '{}');
     if (userSettings && userSettings.currency) {
       return userSettings.currency as SupportedCurrency;
     }

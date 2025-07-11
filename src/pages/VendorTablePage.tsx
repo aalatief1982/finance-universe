@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ const VendorTablePage: React.FC = () => {
 
   useEffect(() => {
     // Load extracted vendors from localStorage
-    const rawVendors = JSON.parse(localStorage.getItem('xpensia_extracted_vendors') || '[]') as string[];
+    const rawVendors = JSON.parse(safeStorage.getItem('xpensia_extracted_vendors') || '[]') as string[];
 
     const vendorEntries = rawVendors.map((vendor) => ({
       vendor,
@@ -41,7 +42,7 @@ const VendorTablePage: React.FC = () => {
   };
 
   const handleSave = () => {
-    localStorage.setItem('xpensia_vendor_mappings', JSON.stringify(vendors));
+    safeStorage.setItem('xpensia_vendor_mappings', JSON.stringify(vendors));
     toast({
       title: "Vendor mappings saved",
       description: "Your vendor mappings were stored successfully.",

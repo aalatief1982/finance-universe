@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 /**
  * Suggests indirect transaction fields using keyword mappings.
  * Reads from localStorage['xpensia_keyword_bank'].
@@ -29,7 +30,7 @@ export interface KeywordEntry {
 }
 
 export function getKeywordMatches(keyword: string): KeywordEntry[] {
-  const raw = localStorage.getItem(BANK_KEY)
+  const raw = safeStorage.getItem(BANK_KEY)
   const bank: KeywordEntry[] = raw ? JSON.parse(raw) : []
   const lower = keyword.toLowerCase()
   return bank
@@ -126,7 +127,7 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   const inferred: Record<string, string> = {};
 
   // ⬇️ Load keyword bank
-  const keywordBank: KeywordMapping[] = JSON.parse(localStorage.getItem(BANK_KEY) || '[]') || [];
+  const keywordBank: KeywordMapping[] = JSON.parse(safeStorage.getItem(BANK_KEY) || '[]') || [];
   if (!Array.isArray(keywordBank)) {
     if (import.meta.env.MODE === 'development') {
       console.error('[ERROR] Invalid keyword bank data:', keywordBank);
@@ -159,7 +160,7 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
 
   // ⬇️ Type keywords (fallback)
   if (!inferred['type']) {
-    const typeKeywords = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]');
+    const typeKeywords = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '[]');
     for (const entry of typeKeywords) {
       if (rawText.includes(entry.keyword.toLowerCase())) {
         inferred['type'] = entry.type;
@@ -218,7 +219,7 @@ export function inferIndirectFields(
   const inferred: Record<string, string> = {};
 
   // Step 1: Load keyword bank
-  const keywordBank: KeywordMapping[] = JSON.parse(localStorage.getItem('xpensia_keyword_bank') || '[]') || [];
+  const keywordBank: KeywordMapping[] = JSON.parse(safeStorage.getItem('xpensia_keyword_bank') || '[]') || [];
   if (!Array.isArray(keywordBank)) {
     if (import.meta.env.MODE === 'development') {
       console.error('[SmartPaste] Invalid keyword bank format:', keywordBank);
@@ -239,7 +240,7 @@ export function inferIndirectFields(
 
   // Step 3: Type keyword inference
   if (!inferred['type']) {
-    const typeKeywords = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') || [];
+    const typeKeywords = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '[]') || [];
     for (const entry of typeKeywords) {
       if (rawText.includes(entry.keyword.toLowerCase())) {
         inferred['type'] = entry.type;

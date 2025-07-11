@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 import React, { useState, useEffect } from 'react';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
@@ -28,7 +29,7 @@ const ExpenseTrackerWireframes = () => {
 
   // Load userData from localStorage on initial render
   useEffect(() => {
-    const storedUserData = localStorage.getItem('userData');
+    const storedUserData = safeStorage.getItem('userData');
     if (storedUserData) {
       try {
         setUserData(JSON.parse(storedUserData));
@@ -43,7 +44,7 @@ const ExpenseTrackerWireframes = () => {
   // Save userData to localStorage whenever it changes
   useEffect(() => {
     if (Object.keys(userData).length > 0) {
-      localStorage.setItem('userData', JSON.stringify(userData));
+      safeStorage.setItem('userData', JSON.stringify(userData));
     }
   }, [userData]);
 

@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -7,7 +8,7 @@ const Onboarding = () => {
   const navigate = useNavigate();
 
   const handleComplete = () => {
-    localStorage.setItem('xpensia_onb_done', 'true');
+    safeStorage.setItem('xpensia_onb_done', 'true');
     navigate('/home');
   };
 

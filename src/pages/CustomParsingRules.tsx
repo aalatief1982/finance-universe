@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,7 @@ const STORAGE_KEY = 'xpensia_custom_rules';
 
 const loadRules = (): Rule[] => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -27,7 +28,7 @@ const loadRules = (): Rule[] => {
 };
 
 const saveRules = (rules: Rule[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
+  safeStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
 };
 
 const CustomParsingRules = () => {

@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 export interface SenderCategoryRule {
   category: string;
   subcategory: string;
@@ -7,7 +8,7 @@ const KEY = 'xpensia_sender_category_rules';
 
 export function loadSenderCategoryRules(): Record<string, SenderCategoryRule> {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = safeStorage.getItem(KEY);
     return raw ? JSON.parse(raw) : {};
   } catch (err) {
     if (import.meta.env.MODE === 'development') {
@@ -18,7 +19,7 @@ export function loadSenderCategoryRules(): Record<string, SenderCategoryRule> {
 }
 
 export function saveSenderCategoryRules(rules: Record<string, SenderCategoryRule>): void {
-  localStorage.setItem(KEY, JSON.stringify(rules));
+  safeStorage.setItem(KEY, JSON.stringify(rules));
 }
 
 export function learnVendorCategoryRule(sender: string, category: string, subcategory: string): void {
