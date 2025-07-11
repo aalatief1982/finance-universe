@@ -16,6 +16,7 @@ import SmartPasteSummary from '@/components/SmartPasteSummary';
 import { LearnedEntry } from '@/types/learning';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { IonLoading } from '@ionic/react';
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -23,6 +24,7 @@ const EditTransaction = () => {
   const { addTransaction, updateTransaction } = useTransactions();
   const { toast } = useToast();
   const { learnFromTransaction } = useLearningEngine();
+  const [saving, setSaving] = useState(false);
 
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
@@ -40,17 +42,22 @@ const EditTransaction = () => {
   const isNewTransaction = !transaction;
 
   const handleSave = (editedTransaction: Transaction) => {
-    saveTransactionWithLearning(editedTransaction, {
-      rawMessage,
-      isNew: isNewTransaction,
-      senderHint,
-      addTransaction,
-      updateTransaction,
-      learnFromTransaction,
-      navigateBack: () => navigate(-1),
-      combineToasts: true,
-    });
-    FirebaseAnalytics.logEvent({ name: 'edit_transaction' });
+    setSaving(true);
+    try {
+      saveTransactionWithLearning(editedTransaction, {
+        rawMessage,
+        isNew: isNewTransaction,
+        senderHint,
+        addTransaction,
+        updateTransaction,
+        learnFromTransaction,
+        navigateBack: () => navigate(-1),
+        combineToasts: true,
+      });
+      FirebaseAnalytics.logEvent({ name: 'edit_transaction' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   useEffect(() => {
@@ -73,6 +80,7 @@ const EditTransaction = () => {
 
   return (
     <Layout showBack withPadding={false} fullWidth>
+      <IonLoading isOpen={saving} message="Saving..." />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

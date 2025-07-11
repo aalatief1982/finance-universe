@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -14,26 +14,34 @@ import { useLearningEngine } from '@/hooks/useLearningEngine';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { Transaction } from '@/types/transaction';
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { IonLoading } from '@ionic/react';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
   const { addTransaction, updateTransaction } = useTransactions();
   const { learnFromTransaction } = useLearningEngine();
+  const [saving, setSaving] = useState(false);
 
   const handleSave = (txn: Transaction) => {
-    saveTransactionWithLearning(txn, {
-      isNew: true,
-      addTransaction,
-      updateTransaction,
-      learnFromTransaction,
-      navigateBack: () => navigate(-1),
-      combineToasts: true,
-    });
-    FirebaseAnalytics.logEvent({ name: 'add_transaction' });
+    setSaving(true);
+    try {
+      saveTransactionWithLearning(txn, {
+        isNew: true,
+        addTransaction,
+        updateTransaction,
+        learnFromTransaction,
+        navigateBack: () => navigate(-1),
+        combineToasts: true,
+      });
+      FirebaseAnalytics.logEvent({ name: 'add_transaction' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <Layout showBack withPadding={false} fullWidth>
+      <IonLoading isOpen={saving} message="Saving..." />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
