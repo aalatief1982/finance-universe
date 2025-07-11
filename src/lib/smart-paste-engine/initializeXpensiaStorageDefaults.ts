@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { TransactionType } from '@/types/transaction';
 import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
 import { saveVendorFallbacks } from './vendorFallbackUtils';
@@ -205,23 +206,23 @@ import { saveVendorFallbacks } from './vendorFallbackUtils';
 
 export function initializeXpensiaStorageDefaults() {
   // Ensure structure templates store exists
-  if (!localStorage.getItem('xpensia_structure_templates')) {
-    localStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
+  if (!safeStorage.getItem('xpensia_structure_templates')) {
+    safeStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
     if (import.meta.env.MODE === 'development') {
       console.log('[Init] xpensia_structure_templates initialized');
     }
   }
 
   // Ensure vendor map store exists
-  if (!localStorage.getItem('xpensia_vendor_map')) {
-    localStorage.setItem('xpensia_vendor_map', JSON.stringify({}));
+  if (!safeStorage.getItem('xpensia_vendor_map')) {
+    safeStorage.setItem('xpensia_vendor_map', JSON.stringify({}));
     if (import.meta.env.MODE === 'development') {
       console.log('[Init] xpensia_vendor_map initialized');
     }
   }
 
   // Ensure vendor fallback data exists
-  if (!localStorage.getItem('xpensia_vendor_fallbacks')) {
+  if (!safeStorage.getItem('xpensia_vendor_fallbacks')) {
     saveVendorFallbacks((vendorFallbackData as any).default ?? vendorFallbackData);
     if (import.meta.env.MODE === 'development') {
       console.log('[Init] xpensia_vendor_fallbacks initialized');
@@ -229,8 +230,8 @@ export function initializeXpensiaStorageDefaults() {
   }
 
   // Ensure type keyword bank exists
-  if (!localStorage.getItem('xpensia_type_keywords')) {
-    localStorage.setItem('xpensia_type_keywords', JSON.stringify([
+  if (!safeStorage.getItem('xpensia_type_keywords')) {
+    safeStorage.setItem('xpensia_type_keywords', JSON.stringify([
       { "keyword": "purchase", "type": "expense" },
       { "keyword": "pos", "type": "expense" },
       { "keyword": "mada", "type": "expense" },
@@ -276,8 +277,8 @@ export function initializeXpensiaStorageDefaults() {
   
 
    // Ensure type keyword bank exists
-if (!localStorage.getItem('xpensia_category_hierarchy')) {
-  localStorage.setItem('xpensia_category_hierarchy', JSON.stringify(CATEGORY_HIERARCHY));
+if (!safeStorage.getItem('xpensia_category_hierarchy')) {
+  safeStorage.setItem('xpensia_category_hierarchy', JSON.stringify(CATEGORY_HIERARCHY));
 }
   
   

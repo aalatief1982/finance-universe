@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -65,7 +66,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       }
 
       try {
-        const stored = localStorage.getItem('profile');
+        const stored = safeStorage.getItem('profile');
         if (stored) {
           const profile = JSON.parse(stored);
           if (profile?.email) {

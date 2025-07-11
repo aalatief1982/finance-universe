@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 // keywordBankUtils.ts
 
 /**
@@ -20,12 +21,12 @@ export interface KeywordEntry {
 }
 
 export function loadKeywordBank(): KeywordEntry[] {
-  const raw = localStorage.getItem(KEY);
+  const raw = safeStorage.getItem(KEY);
   return raw ? JSON.parse(raw) : [];
 }
 
 export function saveKeywordBank(bank: KeywordEntry[]) {
-  localStorage.setItem(KEY, JSON.stringify(bank));
+  safeStorage.setItem(KEY, JSON.stringify(bank));
 }
 
 export function deleteKeyword(keyword: string) {

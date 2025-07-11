@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 // MasterMindService.ts - Global Field-Token Learning Store with Position Awareness
 
 import { PositionedToken } from '@/types/learning';
@@ -30,7 +31,7 @@ class MasterMindService {
 
   private load(): MasterTokenMap {
     try {
-      const stored = localStorage.getItem(MASTER_MIND_KEY);
+      const stored = safeStorage.getItem(MASTER_MIND_KEY);
       return stored ? JSON.parse(stored) : {};
     } catch (e) {
       if (import.meta.env.MODE === 'development') {
@@ -41,7 +42,7 @@ class MasterMindService {
   }
 
   private save(): void {
-    localStorage.setItem(MASTER_MIND_KEY, JSON.stringify(this.map));
+    safeStorage.setItem(MASTER_MIND_KEY, JSON.stringify(this.map));
   }
 
   public registerToken(token: string, field: string, category?: string, subcategory?: string) {

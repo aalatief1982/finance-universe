@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,7 @@ const IMPORT_PROGRESS_KEY = 'importProgress';
 
 const loadImportProgress = (): ImportProgress | null => {
   try {
-    const stored = localStorage.getItem(IMPORT_PROGRESS_KEY);
+    const stored = safeStorage.getItem(IMPORT_PROGRESS_KEY);
     return stored ? (JSON.parse(stored) as ImportProgress) : null;
   } catch (err) {
     if (import.meta.env.MODE === 'development') {
@@ -49,11 +50,11 @@ const loadImportProgress = (): ImportProgress | null => {
 };
 
 const saveImportProgress = (progress: ImportProgress) => {
-  localStorage.setItem(IMPORT_PROGRESS_KEY, JSON.stringify(progress));
+  safeStorage.setItem(IMPORT_PROGRESS_KEY, JSON.stringify(progress));
 };
 
 const clearImportProgress = () => {
-  localStorage.removeItem(IMPORT_PROGRESS_KEY);
+  safeStorage.removeItem(IMPORT_PROGRESS_KEY);
 };
 
 const ProcessSmsMessages: React.FC = () => {
@@ -82,7 +83,7 @@ const ProcessSmsMessages: React.FC = () => {
     }
 
     try {
-      const stored = localStorage.getItem('uat_valid_sms');
+      const stored = safeStorage.getItem('uat_valid_sms');
       if (!stored) {
         clearImportProgress();
         return;
@@ -164,7 +165,7 @@ const handleReadSms = async () => {
       return;
     }
 
-    const keywordObjects = JSON.parse(localStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
+    const keywordObjects = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '[]') as { keyword: string, type: string }[];
     const keywords = keywordObjects.map(obj => obj.keyword.toLowerCase());
 
     // Determine the start date for reading messages. We consult the
@@ -225,8 +226,8 @@ const handleReadSms = async () => {
       .filter((msg: ProcessedSmsEntry | null): msg is ProcessedSmsEntry => msg !== null);
 
     // Save both valid and invalid messages to localStorage
-    localStorage.setItem('uat_valid_sms', JSON.stringify(validMessages));
-    localStorage.setItem('uat_invalid_sms', JSON.stringify(invalidMessages));
+    safeStorage.setItem('uat_valid_sms', JSON.stringify(validMessages));
+    safeStorage.setItem('uat_invalid_sms', JSON.stringify(invalidMessages));
 
     saveImportProgress({ index: 0, total: smsMessages.length, vendorMappings: {} });
 

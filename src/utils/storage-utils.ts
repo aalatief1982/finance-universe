@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { Transaction, TransactionSummary, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { validateTransactionForStorage, validateCategoryForStorage, validateCategoryRuleForStorage, validateCategoryChangeForStorage } from './storage-utils-fixes';
@@ -18,11 +19,10 @@ const SMS_SENDER_IMPORT_MAP_KEY = 'xpensia_sms_sender_import_map';
 
 
 // Helper function to safely get data from storage
-// Falls back to sessionStorage if the item is not found in localStorage
+// Fallbacks to in-memory storage handled by safeStorage
 const getFromStorage = <T>(key: string, defaultValue: T): T => {
   try {
-    const storedData =
-      localStorage.getItem(key) ?? sessionStorage.getItem(key);
+    const storedData = safeStorage.getItem(key);
     return storedData ? JSON.parse(storedData) : defaultValue;
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
@@ -35,7 +35,7 @@ const getFromStorage = <T>(key: string, defaultValue: T): T => {
 // Helper function to safely set data in localStorage
 const setInStorage = <T>(key: string, data: T): void => {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    safeStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
       console.error(`Error storing ${key} in storage:`, error);
@@ -50,43 +50,12 @@ const setInStorage = <T>(key: string, data: T): void => {
  */
 export const safeSetItem = <T>(key: string, data: T): boolean => {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    safeStorage.setItem(key, JSON.stringify(data));
     return true;
   } catch (error: any) {
-    const isQuotaExceeded =
-      error instanceof DOMException &&
-      (error.name === 'QuotaExceededError' || error.code === 22 || error.code === 1014);
-
-    if (isQuotaExceeded) {
-      if (import.meta.env.MODE === 'development') {
-        console.error(
-          `[CRITICAL] Failed to set '${key}' in localStorage due to quota limitations.`,
-          error
-        );
-      }
-
-      try {
-        sessionStorage.setItem(key, JSON.stringify(data));
-        if (import.meta.env.MODE === 'development') {
-          console.warn(
-            `[STORAGE] Stored '${key}' in sessionStorage due to localStorage quota.`
-          );
-        }
-        return true;
-      } catch (sessionError) {
-        if (import.meta.env.MODE === 'development') {
-          console.error(
-            `[CRITICAL] Failed to set '${key}' in sessionStorage after localStorage quota exceeded.`,
-            sessionError
-          );
-        }
-      }
-    } else {
-      if (import.meta.env.MODE === 'development') {
-        console.error(`Error storing ${key} in storage:`, error);
-      }
+    if (import.meta.env.MODE === 'development') {
+      console.error(`Error storing ${key} in storage:`, error);
     }
-
     return false;
   }
 };
@@ -111,12 +80,12 @@ export const storeTransactions = (transactions: Transaction[]): void => {
 export const saveStructureTemplate = (template: StructureTemplateEntry) => {
   const current = getStructureTemplates();
   current.unshift(template);
-  localStorage.setItem(STRUCTURE_KEY, JSON.stringify(current.slice(0, 50)));
+  safeStorage.setItem(STRUCTURE_KEY, JSON.stringify(current.slice(0, 50)));
 };
 
 export const getStructureTemplates = (): StructureTemplateEntry[] => {
   try {
-    const stored = localStorage.getItem(STRUCTURE_KEY);
+    const stored = safeStorage.getItem(STRUCTURE_KEY);
     return stored ? JSON.parse(stored) : [];
   } catch (e) {
     return [];
@@ -152,9 +121,9 @@ export const storeTransaction = (transaction: any): void => {
 
 
 export function updateTransaction(txn: Transaction) {
-  const existing = JSON.parse(localStorage.getItem('xpensia_transactions') || '[]');
+  const existing = JSON.parse(safeStorage.getItem('xpensia_transactions') || '[]');
   const updated = existing.map((t: Transaction) => t.id === txn.id ? txn : t);
-  localStorage.setItem('xpensia_transactions', JSON.stringify(updated));
+  safeStorage.setItem('xpensia_transactions', JSON.stringify(updated));
   if (typeof window !== 'undefined') {
     window.dispatchEvent(
       new StorageEvent('storage', {
@@ -249,9 +218,9 @@ export function learnFromTransaction(
     txn.vendor &&
     placeholders.vendor !== txn.vendor
   ) {
-    const vendorMap = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+    const vendorMap = JSON.parse(safeStorage.getItem('xpensia_vendor_map') || '{}');
     vendorMap[placeholders.vendor] = txn.vendor;
-    localStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
+    safeStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
   }
 
   // Save Template Hash → From Account mapping

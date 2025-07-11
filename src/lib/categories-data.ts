@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 import { TransactionType } from '@/types/transaction';
 import { getPeopleNames } from './people-utils';
@@ -29,7 +30,7 @@ export const CATEGORY_HIERARCHY = fallbackHierarchy;
 // Dynamically load from localStorage
 export const getCategoryHierarchy = (): typeof fallbackHierarchy => {
   try {
-    const raw = localStorage.getItem('xpensia_category_hierarchy');
+    const raw = safeStorage.getItem('xpensia_category_hierarchy');
     return raw ? JSON.parse(raw) : fallbackHierarchy;
   } catch {
     return fallbackHierarchy;

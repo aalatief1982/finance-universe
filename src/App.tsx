@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter,
@@ -56,7 +57,7 @@ import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInfer
 function AppWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
-  const showOnboarding = localStorage.getItem('xpensia_onb_done') !== 'true';
+  const showOnboarding = safeStorage.getItem('xpensia_onb_done') !== 'true';
   const navigateRef = React.useRef(navigate);
   useEffect(() => {
     navigateRef.current = navigate;

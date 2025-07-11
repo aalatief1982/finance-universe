@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 export interface SuggestionEntry {
   type: string;
   category: string;
@@ -8,7 +9,7 @@ const KEY = 'xpensia_vendor_suggestions';
 
 export function listSuggestions(): Record<string, SuggestionEntry> {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = safeStorage.getItem(KEY);
     return raw ? JSON.parse(raw) : {};
   } catch {
     return {};
@@ -16,5 +17,5 @@ export function listSuggestions(): Record<string, SuggestionEntry> {
 }
 
 export function clearSuggestions() {
-  localStorage.removeItem(KEY);
+  safeStorage.removeItem(KEY);
 }

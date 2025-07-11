@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 // structureParser.ts
 
 /**
@@ -162,6 +163,6 @@ if (directFields['date']) {
 
 
 function applyVendorMapping(vendor: string): string {
-  const map = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+  const map = JSON.parse(safeStorage.getItem('xpensia_vendor_map') || '{}');
   return map[vendor] || vendor;
 }

@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { ENABLE_SUPABASE_AUTH, ENABLE_DEMO_MODE } from '@/lib/env';
 import { User } from './types';
@@ -25,7 +26,7 @@ import { safeSetItem } from '@/utils/storage-utils';
  */
 export const checkUserExists = async (phoneNumber: string): Promise<boolean> => {
   // First check local storage
-  const storedUser = localStorage.getItem('user');
+  const storedUser = safeStorage.getItem('user');
   if (storedUser) {
     try {
       const parsedUser = JSON.parse(storedUser);
@@ -72,7 +73,7 @@ export const checkUserExists = async (phoneNumber: string): Promise<boolean> => 
  * @returns The user data from local storage or null if not found
  */
 export const getUserFromLocalStorage = (): User | null => {
-  const storedUser = localStorage.getItem('user');
+  const storedUser = safeStorage.getItem('user');
   if (storedUser) {
     try {
       const parsedUser = JSON.parse(storedUser);
@@ -246,8 +247,8 @@ export const startPhoneVerification = async (
       updateAuthState();
       // Make sure we're storing the session expiry time in localStorage
       const sessionExpiryTime = Date.now() + getVerificationSessionTimeout();
-      localStorage.setItem('verificationSessionExpiry', sessionExpiryTime.toString());
-      localStorage.setItem('verificationPhoneNumber', phoneNumber);
+      safeStorage.setItem('verificationSessionExpiry', sessionExpiryTime.toString());
+      safeStorage.setItem('verificationPhoneNumber', phoneNumber);
       return true;
     }
   } catch (error) {
@@ -391,7 +392,7 @@ export const logOut = async (
       isDemoMode: isDemoMode()
     }));
     setUser(null);
-    localStorage.removeItem('user');
+    safeStorage.removeItem('user');
     
     toast({
       title: "Signed out",

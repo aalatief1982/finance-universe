@@ -1,5 +1,5 @@
+import { safeStorage, safePreferences } from "@/utils/safe-storage";
 import { Capacitor } from '@capacitor/core';
-import { Preferences } from '@capacitor/preferences';
 
 export interface QueuedSms {
   sender: string;
@@ -10,18 +10,18 @@ const QUEUE_KEY = 'newIncomingBuffer';
 
 export const getQueuedMessages = async (): Promise<QueuedSms[]> => {
   if (Capacitor.isNativePlatform()) {
-    const { value } = await Preferences.get({ key: QUEUE_KEY });
+    const { value } = await safePreferences.get({ key: QUEUE_KEY });
     return value ? JSON.parse(value) : [];
   }
-  const stored = localStorage.getItem(QUEUE_KEY);
+  const stored = safeStorage.getItem(QUEUE_KEY);
   return stored ? JSON.parse(stored) : [];
 };
 
 export const clearQueuedMessages = async (): Promise<void> => {
   if (Capacitor.isNativePlatform()) {
-    await Preferences.remove({ key: QUEUE_KEY });
+    await safePreferences.remove({ key: QUEUE_KEY });
   } else {
-    localStorage.removeItem(QUEUE_KEY);
+    safeStorage.removeItem(QUEUE_KEY);
   }
 };
 
@@ -30,12 +30,12 @@ export const addToQueue = async (sms: QueuedSms): Promise<void> => {
   const updatedQueue = [...currentQueue, sms];
   
   if (Capacitor.isNativePlatform()) {
-    await Preferences.set({ 
-      key: QUEUE_KEY, 
-      value: JSON.stringify(updatedQueue) 
+    await safePreferences.set({
+      key: QUEUE_KEY,
+      value: JSON.stringify(updatedQueue)
     });
   } else {
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
+    safeStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
   }
 };
 

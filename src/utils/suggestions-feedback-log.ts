@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 export interface SuggestionsFeedbackEntry {
   field: string;
   positive: boolean;
@@ -9,7 +10,7 @@ const KEY = 'suggestionsFeedbackLog';
 
 export const getSuggestionsFeedbackLog = (): SuggestionsFeedbackEntry[] => {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = safeStorage.getItem(KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -20,7 +21,7 @@ export const addSuggestionsFeedbackEntry = (entry: SuggestionsFeedbackEntry) => 
   const log = getSuggestionsFeedbackLog();
   log.push(entry);
   try {
-    localStorage.setItem(KEY, JSON.stringify(log));
+    safeStorage.setItem(KEY, JSON.stringify(log));
   } catch {
     // ignore write errors
   }

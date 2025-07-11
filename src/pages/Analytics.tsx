@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
@@ -147,7 +148,7 @@ const Analytics: React.FC = () => {
   const randomTip = React.useMemo(() => tips[Math.floor(Math.random() * tips.length)], []);
 
   const handleExport = () => {
-    const data = localStorage.getItem('xpensia_transactions');
+    const data = safeStorage.getItem('xpensia_transactions');
     const transactions = data ? JSON.parse(data) : [];
     if (!transactions.length) {
       toast({ title: 'No data to export' });

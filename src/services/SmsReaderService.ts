@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 import { Capacitor } from "@capacitor/core";
 import { SmsReader } from "../plugins/SmsReaderPlugin";
@@ -102,7 +103,7 @@ export class SmsReaderService {
     // Fetch limit to pass to the native plugin. Allows overriding via
     // localStorage. Defaults to a large value which is higher than the
     // plugin's default.
-    const limit = parseInt(localStorage.getItem('xpensia_sms_fetch_limit') || '500000');
+    const limit = parseInt(safeStorage.getItem('xpensia_sms_fetch_limit') || '500000');
 
     const startDate = (options.startDate
       ? options.startDate

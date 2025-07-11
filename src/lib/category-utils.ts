@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { TransactionType } from '@/types/transaction';
 import { getPeopleNames } from './people-utils';
 
@@ -20,7 +21,7 @@ export const getAllCategories = (): { category: string; type: string }[] => {
 
 export const getCategoryHierarchy = (): TransactionCategory[] => {
   try {
-    const raw = localStorage.getItem('xpensia_category_hierarchy');
+    const raw = safeStorage.getItem('xpensia_category_hierarchy');
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];

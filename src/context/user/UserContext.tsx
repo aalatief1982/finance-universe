@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { User, UserContextType } from './types';

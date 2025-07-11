@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { supabase } from './supabase';
 import { ErrorType, AppError, ErrorSeverity } from '@/types/error';
 import { handleError, createError } from '@/utils/error-utils';
@@ -83,8 +84,8 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
     }
     
     // Store the session expiry time in localStorage to persist across page reloads
-    localStorage.setItem('verificationSessionExpiry', verificationState.sessionExpiryTime.toString());
-    localStorage.setItem('verificationPhoneNumber', phoneNumber);
+    safeStorage.setItem('verificationSessionExpiry', verificationState.sessionExpiryTime.toString());
+    safeStorage.setItem('verificationPhoneNumber', phoneNumber);
     
     return { success: true };
   } catch (error) {
@@ -108,12 +109,12 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
  */
 export const isVerificationSessionValid = (): boolean => {
   // Check if there's a stored session expiry time
-  const storedExpiryTime = localStorage.getItem('verificationSessionExpiry');
+  const storedExpiryTime = safeStorage.getItem('verificationSessionExpiry');
   if (storedExpiryTime) {
     verificationState.sessionExpiryTime = parseInt(storedExpiryTime, 10);
     
     // Also restore the phone number if available
-    const storedPhoneNumber = localStorage.getItem('verificationPhoneNumber');
+    const storedPhoneNumber = safeStorage.getItem('verificationPhoneNumber');
     if (storedPhoneNumber) {
       verificationState.phoneNumber = storedPhoneNumber;
     }
@@ -185,8 +186,8 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
       }
       
       // Clear session data on successful verification
-      localStorage.removeItem('verificationSessionExpiry');
-      localStorage.removeItem('verificationPhoneNumber');
+      safeStorage.removeItem('verificationSessionExpiry');
+      safeStorage.removeItem('verificationPhoneNumber');
       
       return { success: true };
     }
@@ -211,8 +212,8 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
       }
       
       // Clear session data on successful verification
-      localStorage.removeItem('verificationSessionExpiry');
-      localStorage.removeItem('verificationPhoneNumber');
+      safeStorage.removeItem('verificationSessionExpiry');
+      safeStorage.removeItem('verificationPhoneNumber');
       
       return { success: true };
     }
@@ -238,8 +239,8 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
     }
     
     // Clear session data on successful verification
-    localStorage.removeItem('verificationSessionExpiry');
-    localStorage.removeItem('verificationPhoneNumber');
+    safeStorage.removeItem('verificationSessionExpiry');
+    safeStorage.removeItem('verificationPhoneNumber');
     
     return { success: true };
   } catch (error) {
@@ -266,9 +267,9 @@ export const resetVerificationSession = (): void => {
   verificationState.sessionExpiryTime = Date.now() + SESSION_TIMEOUT;
   
   // Update localStorage
-  localStorage.setItem('verificationSessionExpiry', verificationState.sessionExpiryTime.toString());
+  safeStorage.setItem('verificationSessionExpiry', verificationState.sessionExpiryTime.toString());
   if (verificationState.phoneNumber) {
-    localStorage.setItem('verificationPhoneNumber', verificationState.phoneNumber);
+    safeStorage.setItem('verificationPhoneNumber', verificationState.phoneNumber);
   }
 };
 
@@ -333,7 +334,7 @@ export const isAuthenticatedWithSupabase = async (): Promise<boolean> => {
   try {
     // If in demo mode or Supabase is disabled, return based on local storage
     if (verificationState.isInDemoMode || !ENABLE_SUPABASE_AUTH) {
-      const hasLocalUser = localStorage.getItem('user') !== null;
+      const hasLocalUser = safeStorage.getItem('user') !== null;
       return hasLocalUser;
     }
     

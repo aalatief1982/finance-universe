@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate, TemplateMeta } from '@/types/template';
 import { normalizeTemplateStructure } from './templateNormalizer';
@@ -36,11 +37,11 @@ export function parseTemplateKey(key: string): { sender: string; hash: string } 
 }
 
 export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
-  let raw = localStorage.getItem(TEMPLATE_BANK_KEY);
+  let raw = safeStorage.getItem(TEMPLATE_BANK_KEY);
   let bank: any = raw ? JSON.parse(raw) : null;
 
   if (!bank) {
-    const legacy = localStorage.getItem('xpensia_structure_templates');
+    const legacy = safeStorage.getItem('xpensia_structure_templates');
     if (legacy) {
       const arr = JSON.parse(legacy) as SmartPasteTemplate[];
       bank = {} as Record<string, SmartPasteTemplate>;
@@ -50,7 +51,7 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
           bank[key] = t;
         });
       }
-      localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
+      safeStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
     } else {
       bank = {};
     }
@@ -63,7 +64,7 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
       converted[key] = t;
     });
     bank = converted;
-    localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
+    safeStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
   }
 
   // Flag legacy templates without version/hashAlgorithm
@@ -77,13 +78,13 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
   Object.values(bank).forEach((t: SmartPasteTemplate) => {
     ensureTemplateMeta(t);
   });
-  localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
+  safeStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
 
   return bank as Record<string, SmartPasteTemplate>;
 }
 
 export function saveTemplateBank(templates: Record<string, SmartPasteTemplate>) {
-  localStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(templates));
+  safeStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(templates));
 }
 
 export function getTemplateByHash(
@@ -292,7 +293,7 @@ export function incrementTemplateFailure(
   templateFailureMap[key] = (templateFailureMap[key] || 0) + 1;
   if (templateFailureMap[key] >= FAILURE_THRESHOLD) {
     const existing: TemplateFailureRecord[] = JSON.parse(
-      localStorage.getItem(TEMPLATE_FAILURE_KEY) || '[]'
+      safeStorage.getItem(TEMPLATE_FAILURE_KEY) || '[]'
     );
     existing.push({
       hash,
@@ -301,7 +302,7 @@ export function incrementTemplateFailure(
       expectedStructure,
       timestamp: Date.now(),
     });
-    localStorage.setItem(TEMPLATE_FAILURE_KEY, JSON.stringify(existing));
+    safeStorage.setItem(TEMPLATE_FAILURE_KEY, JSON.stringify(existing));
   }
 }
 

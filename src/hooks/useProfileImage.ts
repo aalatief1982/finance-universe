@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { useEffect, useState } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -29,13 +30,13 @@ export function useProfileImage() {
       directory: Directory.Data
     });
 
-    localStorage.setItem(PROFILE_IMAGE_KEY, fileName);
+    safeStorage.setItem(PROFILE_IMAGE_KEY, fileName);
     setImage(`data:image/jpeg;base64,${base64Data}`);
     FirebaseAnalytics.logEvent({ name: 'photo_added' });
   };
 
   const loadSavedImage = async () => {
-    const fileName = localStorage.getItem(PROFILE_IMAGE_KEY);
+    const fileName = safeStorage.getItem(PROFILE_IMAGE_KEY);
     if (!fileName) return;
 
     try {

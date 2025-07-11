@@ -1,8 +1,9 @@
+import { safeStorage } from "@/utils/safe-storage";
 export function isFinancialTransactionMessage(text: string): boolean {
   let storedKeywords: string[] = [];
 
   try {
-    const raw = localStorage.getItem('xpensia_type_keywords');
+    const raw = safeStorage.getItem('xpensia_type_keywords');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {

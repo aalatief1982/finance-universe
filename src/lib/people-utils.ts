@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 export interface Person {
   name: string;
   relation?: string;
@@ -16,7 +17,7 @@ export const DEFAULT_PEOPLE: Person[] = [
 
 export function getStoredPeople(): Person[] {
   try {
-    const raw = localStorage.getItem(PEOPLE_KEY);
+    const raw = safeStorage.getItem(PEOPLE_KEY);
     const userPeople: Person[] = raw ? JSON.parse(raw) : [];
     return [...DEFAULT_PEOPLE, ...userPeople];
   } catch {
@@ -31,11 +32,11 @@ export function getPeopleNames(): string[] {
 export function addUserPerson(person: Person, user = true) {
   if (!person.name.trim()) return;
   try {
-    const raw = localStorage.getItem(PEOPLE_KEY);
+    const raw = safeStorage.getItem(PEOPLE_KEY);
     const arr: Person[] = raw ? JSON.parse(raw) : [];
     if (!arr.some(p => p.name.toLowerCase() === person.name.toLowerCase())) {
       arr.push({ ...person, ...(user ? { user: true } : {}) });
-      localStorage.setItem(PEOPLE_KEY, JSON.stringify(arr));
+      safeStorage.setItem(PEOPLE_KEY, JSON.stringify(arr));
     }
   } catch {
     // ignore

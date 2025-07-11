@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from './templateUtils';
@@ -95,9 +96,9 @@ export function saveTransactionWithLearning(
       placeholders?.vendor &&
       transaction.vendor !== placeholders.vendor
     ) {
-      const vendorMap = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+      const vendorMap = JSON.parse(safeStorage.getItem('xpensia_vendor_map') || '{}');
       vendorMap[placeholders.vendor] = transaction.vendor;
-      localStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
+      safeStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
     }
 
     // Default From Account Mapping

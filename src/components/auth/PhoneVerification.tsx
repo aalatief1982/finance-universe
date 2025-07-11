@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +46,7 @@ const PhoneVerification = ({
     }
     
     // Check if there's an active verification session
-    const sessionExpiry = localStorage.getItem('verificationSessionExpiry');
+    const sessionExpiry = safeStorage.getItem('verificationSessionExpiry');
     if (sessionExpiry) {
       const expiry = parseInt(sessionExpiry, 10);
       // If session is still valid, show verification code input
@@ -53,7 +54,7 @@ const PhoneVerification = ({
         setIsVerificationSent(true);
         
         // If we have a phone from localStorage and none from user
-        const storedPhone = localStorage.getItem('verificationPhoneNumber');
+        const storedPhone = safeStorage.getItem('verificationPhoneNumber');
         if (storedPhone && !phoneNumber) {
           setPhoneNumber(storedPhone);
         }

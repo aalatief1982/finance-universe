@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
 import type { PluginListenerHandle } from '@capacitor/core';
@@ -24,7 +25,7 @@ const BackgroundSmsListenerWebMock: BackgroundSmsListenerPlugin = {
       console.log('[SMS-Web] Checking permission (simulation)');
     }
     // In web environment, always return permission as granted for testing
-    const simulatedGranted = localStorage.getItem('sms_permission_simulation') === 'granted';
+    const simulatedGranted = safeStorage.getItem('sms_permission_simulation') === 'granted';
     return { granted: simulatedGranted };
   },
   
@@ -33,7 +34,7 @@ const BackgroundSmsListenerWebMock: BackgroundSmsListenerPlugin = {
       console.log('[SMS-Web] Requesting permission (simulation)');
     }
     // Simulate a permission grant
-    localStorage.setItem('sms_permission_simulation', 'granted');
+    safeStorage.setItem('sms_permission_simulation', 'granted');
     return { granted: true };
   },
   

@@ -1,3 +1,4 @@
+import { safeStorage } from "@/utils/safe-storage";
 
 /**
  * This file provides a unified interface for accessing environment variables
@@ -60,14 +61,14 @@ export const VITE_SMS_LOOKBACK_MONTHS = parseInt(
  */
 export const getSmsLookbackMonths = (): number => {
   try {
-    const stored = localStorage.getItem('xpensia_sms_period_months');
+    const stored = safeStorage.getItem('xpensia_sms_period_months');
     if (stored !== null) {
       const parsed = parseInt(stored, 10);
       if (!isNaN(parsed)) {
         return parsed;
       }
     } else {
-      localStorage.setItem('xpensia_sms_period_months', String(VITE_SMS_LOOKBACK_MONTHS));
+      safeStorage.setItem('xpensia_sms_period_months', String(VITE_SMS_LOOKBACK_MONTHS));
     }
   } catch {
     // Ignore storage errors and fall back to env default
