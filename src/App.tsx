@@ -53,6 +53,7 @@ import SmsImportService from '@/services/SmsImportService';
 import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
 import { useUser } from './context/UserContext';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { toast } from '@/components/ui/use-toast';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -152,7 +153,19 @@ function AppWrapper() {
                 return;
               }
 
-              const parsed = parseSmsMessage(body, sender);
+              let parsed;
+              try {
+                parsed = parseSmsMessage(body, sender);
+              } catch (err) {
+                if (import.meta.env.MODE === 'development') {
+                  console.error('[SMS] Error parsing message:', err)
+                }
+                toast({
+                  title: 'Unable to auto-parse. Please review manually.'
+                });
+                navigate('/edit-transaction', { state: { rawMessage: body } });
+                return;
+              }
 
               const txn: Transaction = {
                 id: uuidv4(),
@@ -177,7 +190,7 @@ function AppWrapper() {
                 currency: parsed?.currency || 'SAR',
                 country: parsed?.country,
                 description: parsed?.description
-              };
+              }
 
               // Handle background state
               const appState = await CapacitorApp.getState();
