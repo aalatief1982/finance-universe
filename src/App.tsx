@@ -36,6 +36,7 @@ import SetBudgetPage from './pages/budget/SetBudgetPage';
 import BudgetReportPage from './pages/budget/BudgetReportPage';
 import BudgetInsightsPage from './pages/budget/BudgetInsightsPage';
 import ScrollToTop from './components/layout/ScrollToTop';
+import ErrorBoundary from './components/ErrorBoundary';
 
 
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -311,10 +312,38 @@ function AppRoutes() {
     <>
       <AppWrapper />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/transactions" element={<Transactions />} />
-        <Route path="/analytics" element={<Analytics />} />
+        <Route
+          path="/"
+          element={
+            <ErrorBoundary name="Home Page">
+              <Home />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/home"
+          element={
+            <ErrorBoundary name="Home Page">
+              <Home />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ErrorBoundary name="Transactions Page">
+              <Transactions />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ErrorBoundary name="Analytics Page">
+              <Analytics />
+            </ErrorBoundary>
+          }
+        />
         <Route path="/profile" element={<Profile />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/import-transactions" element={<ImportTransactions />} />
