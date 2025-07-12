@@ -44,19 +44,30 @@ function setupGlobalErrorHandlers() {
     event.preventDefault()
   })
 
-  const originalConsoleError = console.error
+  const originalConsoleError = console.error;
+  let isHandlingError = false; // Prevent infinite recursion
+  
   console.error = (...args) => {
-    originalConsoleError(...args)
-    const errorText = args.join(' ')
+    originalConsoleError(...args);
+    
+    // Prevent recursive calls
+    if (isHandlingError) return;
+    
+    const errorText = args.join(' ');
     if (typeof errorText === 'string' && errorText.includes('React')) {
-      handleError({
-        type: ErrorType.UNKNOWN,
-        message: 'React error',
-        severity: ErrorSeverity.ERROR,
-        details: { source: 'react_error', fullMessage: errorText }
-      })
+      isHandlingError = true;
+      try {
+        handleError({
+          type: ErrorType.UNKNOWN,
+          message: 'React error',
+          severity: ErrorSeverity.ERROR,
+          details: { source: 'react_error', fullMessage: errorText }
+        });
+      } finally {
+        isHandlingError = false;
+      }
     }
-  }
+  };
   console.info('Global error handlers initialized')
 }
 

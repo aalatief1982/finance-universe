@@ -78,16 +78,25 @@ export const handleError = (
       ? 'warn' 
       : 'info';
   
-  const logMethod = console[logLevel as keyof typeof console] as (...args: any[]) => void;
+  // Store original console methods to prevent recursion
+  const originalConsole = {
+    error: console.error,
+    warn: console.warn,
+    info: console.info
+  };
   
-  logMethod(
-    `[${appError.severity?.toUpperCase() || 'ERROR'}] [${appError.type}] ${appError.message}`,
-    {
-      details: appError.details,
-      timestamp: new Date(appError.timestamp || Date.now()).toISOString(),
-      originalError: appError.originalError
-    }
-  );
+  const logMethod = originalConsole[logLevel as keyof typeof originalConsole] as (...args: any[]) => void;
+  
+  if (import.meta.env.MODE === 'development') {
+    logMethod(
+      `[${appError.severity?.toUpperCase() || 'ERROR'}] [${appError.type}] ${appError.message}`,
+      {
+        details: appError.details,
+        timestamp: new Date(appError.timestamp || Date.now()).toISOString(),
+        originalError: appError.originalError
+      }
+    );
+  }
   
   // Show toast if requested and error is not silent
   if (showToast && !appError.isSilent) {
