@@ -1,5 +1,6 @@
 import { safeStorage } from "@/utils/safe-storage";
 import { Transaction } from '@/types/transaction';
+import { validateTransactionInput } from '../transaction-validator';
 import { v4 as uuidv4 } from 'uuid';
 import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from './templateUtils';
 import { loadKeywordBank, saveKeywordBank, KeywordEntry } from './keywordBankUtils';
@@ -33,8 +34,12 @@ export function saveTransactionWithLearning(
     navigateBack,
     silent = false,
     showPatternToast = true,
-    combineToasts = false,
+  combineToasts = false,
   } = options;
+
+  if (!validateTransactionInput(transaction)) {
+    return;
+  }
 
   const newTransaction: Transaction = {
     ...transaction,
