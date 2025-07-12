@@ -13,6 +13,9 @@
     "prepare:plugins": "bash scripts/build-plugins.sh"
   },
   "dependencies": {
+    "@ionic/react": "^7.1.0",
+	"@ionic/react-router": "^7.1.0",
+	"@ionic/core": "^7.1.0",
     "@capacitor-firebase/analytics": "^6.3.1",
     "@capacitor/android": "^6.0.0",
     "@capacitor/app": "^6.0.0",
