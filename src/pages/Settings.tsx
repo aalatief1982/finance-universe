@@ -149,6 +149,17 @@ const Settings = () => {
       if (granted) {
         setBackgroundSmsEnabled(true);
         setBaselineBackgroundSmsEnabled(true);
+        if (!user?.preferences?.sms?.backgroundSmsEnabled) {
+          updateUser({
+            preferences: {
+              ...user?.preferences,
+              sms: {
+                ...user?.preferences?.sms,
+                backgroundSmsEnabled: true,
+              },
+            },
+          });
+        }
       }
     };
 
@@ -193,6 +204,16 @@ const Settings = () => {
         setBackgroundSmsEnabled(false);
         return;
       }
+      // Persist preference when permission is granted
+      updateUser({
+        preferences: {
+          ...user?.preferences,
+          sms: {
+            ...user?.preferences?.sms,
+            backgroundSmsEnabled: true,
+          },
+        },
+      });
     }
 
     setBackgroundSmsEnabled(checked);
