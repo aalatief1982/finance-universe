@@ -10,7 +10,10 @@ export const validateTransactionForStorage = (transaction: any): Transaction => 
     // Required fields with defaults
     id: transaction.id || '',
     title: transaction.title || 'Untitled Transaction',
-    amount: typeof transaction.amount === 'number' ? transaction.amount : 0,
+    amount:
+      typeof transaction.amount === 'number' && !isNaN(transaction.amount)
+        ? transaction.amount
+        : 0,
     category: transaction.category || 'Uncategorized',
     date: transaction.date || new Date().toISOString(),
     type: transaction.type === 'income' || transaction.type === 'expense' || transaction.type === 'transfer' 
