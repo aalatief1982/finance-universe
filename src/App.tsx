@@ -358,23 +358,114 @@ function AppRoutes() {
             </ErrorBoundary>
           }
         />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/import-transactions" element={<ImportTransactions />} />
-        <Route path="/import-transactions-ner" element={<ImportTransactionsNER />} />
-        <Route path="/edit-transaction" element={<EditTransaction />} />
-        <Route path="/edit-transaction/:id" element={<EditTransaction />} />
-        <Route path="/train-model" element={<TrainModel />} />
-        <Route path="/build-template" element={<BuildTemplate />} />
-        <Route path="/keyword-bank" element={<KeywordBankManager />} />
+        <Route
+          path="/profile"
+          element={
+            <ErrorBoundary name="Profile Page">
+              <Profile />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/onboarding"
+          element={
+            <ErrorBoundary name="Onboarding Page">
+              <Onboarding />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/import-transactions"
+          element={
+            <ErrorBoundary name="Import Transactions Page">
+              <ImportTransactions />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/import-transactions-ner"
+          element={
+            <ErrorBoundary name="Import Transactions NER Page">
+              <ImportTransactionsNER />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/edit-transaction"
+          element={
+            <ErrorBoundary name="Edit Transaction Page">
+              <EditTransaction />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/edit-transaction/:id"
+          element={
+            <ErrorBoundary name="Edit Transaction Page">
+              <EditTransaction />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/train-model"
+          element={
+            <ErrorBoundary name="Train Model Page">
+              <TrainModel />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/build-template"
+          element={
+            <ErrorBoundary name="Build Template Page">
+              <BuildTemplate />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/keyword-bank"
+          element={
+            <ErrorBoundary name="Keyword Bank Page">
+              <KeywordBankManager />
+            </ErrorBoundary>
+          }
+        />
         {import.meta.env.MODE === 'development' && (
           <>
-            <Route path="/dev/template-health" element={<TemplateHealthDashboard />} />
-            <Route path="/dev/template-failures" element={<TemplateFailureLog />} />
+            <Route
+              path="/dev/template-health"
+              element={
+                <ErrorBoundary name="Template Health Dashboard">
+                  <TemplateHealthDashboard />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/dev/template-failures"
+              element={
+                <ErrorBoundary name="Template Failure Log">
+                  <TemplateFailureLog />
+                </ErrorBoundary>
+              }
+            />
           </>
         )}
-        <Route path="/custom-parsing-rules" element={<CustomParsingRules />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route
+          path="/custom-parsing-rules"
+          element={
+            <ErrorBoundary name="Custom Parsing Rules Page">
+              <CustomParsingRules />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ErrorBoundary name="Settings Page">
+              <Settings />
+            </ErrorBoundary>
+          }
+        />
         <Route path="/process-sms" element={<ProcessSmsMessages />} />
         <Route path="/sms/process-vendors" element={<ProcessVendors />} />
         <Route path="/sms/vendors" element={<VendorCategorization />} />

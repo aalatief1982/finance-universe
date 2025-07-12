@@ -125,10 +125,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (import.meta.env.MODE === 'development') {
       console.log("[SmartPaste] Parsed result:", parsed);
     }
-    if (import.meta.env.MODE === 'development') console.log("[SmartPaste] Confidence Breakdown:", {
-      confidence,
-      origin
-    });
+    if (import.meta.env.MODE === 'development') {
+      console.log("[SmartPaste] Confidence Breakdown:", {
+        confidence,
+        origin
+      });
+    }
 
     setDetectedTransactions([transaction]);
     setConfidence(confidence);
@@ -193,18 +195,20 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-    if (import.meta.env.MODE === 'development') console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
-      transaction,
-      parsedFields: {
-        amount: transaction.amount,
-        currency: transaction.currency,
-        date: transaction.date,
-        type: transaction.type,
-        category: transaction.category,
-        vendor: transaction.vendor,
-        fromAccount: transaction.fromAccount,
-      }
-    });  
+    if (import.meta.env.MODE === 'development') {
+      console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
+        transaction,
+        parsedFields: {
+          amount: transaction.amount,
+          currency: transaction.currency,
+          date: transaction.date,
+          type: transaction.type,
+          category: transaction.category,
+          vendor: transaction.vendor,
+          fromAccount: transaction.fromAccount,
+        }
+      });
+    }
     
     if (import.meta.env.MODE === 'development') {
       console.log("[SmartPaste] Transaction added:", transaction);

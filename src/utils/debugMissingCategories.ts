@@ -1,6 +1,8 @@
 // utils/debugMissingCategories.ts
 export function logTransactionsMissingCategory(transactions: any[]) {
-  console.group(`[Validation] Scanning ${transactions.length} transactions for missing category/subcategory...`);
+  if (import.meta.env.MODE === 'development') {
+    console.group(`[Validation] Scanning ${transactions.length} transactions for missing category/subcategory...`);
+  }
 
   let missingCategoryCount = 0;
   transactions.forEach((txn, index) => {
@@ -20,5 +22,7 @@ export function logTransactionsMissingCategory(transactions: any[]) {
   if (import.meta.env.MODE === 'development') {
     console.log(`✅ Finished. ${missingCategoryCount} transactions missing category.`);
   }
-  console.groupEnd();
+  if (import.meta.env.MODE === 'development') {
+    console.groupEnd();
+  }
 }

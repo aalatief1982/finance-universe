@@ -61,7 +61,7 @@ const SubcategoryBarChart = ({ items }: { items: Item[] }) => {
   try {
     return (
       <ResponsiveContainer width="100%" height="100%">
-         <BarChart data={items} margin={CHART_MARGIN} layout="vertical">
+         <BarChart data={items} margin={CHART_MARGIN}>
           <XAxis
             type="number"
             domain={[0, 'dataMax']}

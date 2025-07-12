@@ -23,7 +23,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error(`Error in ${this.props.name || 'component'}:`, error, info);
+    if (import.meta.env.MODE === 'development') {
+      console.error(`Error in ${this.props.name || 'component'}:`, error, info);
+    }
   }
 
   handleRetry = (): void => {
