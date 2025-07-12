@@ -90,6 +90,13 @@ class DemoTransactionService {
     storeTransactions([...existing, ...newTransactions]);
     safeStorage.setItem(INIT_FLAG_KEY, 'true');
   }
+
+  clearDemoTransactions(): void {
+    const existing = getStoredTransactions();
+    const filtered = existing.filter(t => !t.isSample);
+    storeTransactions(filtered);
+    safeStorage.removeItem(INIT_FLAG_KEY);
+  }
 }
 
 export const demoTransactionService = new DemoTransactionService();
