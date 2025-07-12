@@ -45,4 +45,18 @@ describe('Settings background SMS toggle', () => {
 
     expect(screen.getByTestId('sms-state')).toHaveTextContent('true');
   });
+
+  it('reflects existing permission on mount', async () => {
+    render(
+      <UserProvider>
+        <BrowserRouter>
+          <Settings />
+          <StateViewer />
+        </BrowserRouter>
+      </UserProvider>
+    );
+
+    expect(await screen.findByLabelText(/enable background sms reading/i)).toBeChecked();
+    expect(screen.getByTestId('sms-state')).toHaveTextContent('true');
+  });
 });
