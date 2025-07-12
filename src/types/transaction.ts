@@ -33,6 +33,8 @@ export interface Transaction {
   vendor?: string;
   account?: string;
   createdAt?: string;
+  /** Indicates whether the transaction was seeded as a demo sample */
+  isSample?: boolean;
 }
 
 // Category related types

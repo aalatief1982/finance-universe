@@ -63,27 +63,29 @@ class DemoTransactionService {
 
     const randomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-    categories.forEach(cat => {
-      const subs = cat.subcategories.length > 0 ? cat.subcategories.map(s => s.name) : [cat.name];
-      subs.forEach(sub => {
-        for (let i = 0; i < 4; i++) {
-          newTransactions.push({
-            id: uuidv4(),
-            title: sub,
-            amount: randomAmount(cat.type as TransactionType),
-            category: cat.name,
-            subcategory: sub !== cat.name ? sub : undefined,
-            date: randomDate(),
-            type: cat.type as TransactionType,
-            notes: 'Demo seed transaction',
-            source: 'manual',
-            currency: randomItem(CURRENCIES),
-            fromAccount: randomItem(FROM_ACCOUNTS),
-            vendor: randomItem(VENDORS)
-          });
-        }
+    const sampleCount = 5 + Math.floor(Math.random() * 6);
+    for (let i = 0; i < sampleCount; i++) {
+      const cat = randomItem(categories);
+      const sub = cat.subcategories.length > 0
+        ? randomItem(cat.subcategories).name
+        : cat.name;
+
+      newTransactions.push({
+        id: uuidv4(),
+        title: sub,
+        amount: randomAmount(cat.type as TransactionType),
+        category: cat.name,
+        subcategory: sub !== cat.name ? sub : undefined,
+        date: randomDate(),
+        type: cat.type as TransactionType,
+        notes: 'Demo seed transaction',
+        source: 'manual',
+        currency: randomItem(CURRENCIES),
+        fromAccount: randomItem(FROM_ACCOUNTS),
+        vendor: randomItem(VENDORS),
+        isSample: true
       });
-    });
+    }
 
     storeTransactions([...existing, ...newTransactions]);
     safeStorage.setItem(INIT_FLAG_KEY, 'true');
