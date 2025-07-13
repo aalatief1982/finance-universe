@@ -95,7 +95,9 @@ class DemoTransactionService {
     const existing = getStoredTransactions();
     const filtered = existing.filter(t => !t.isSample);
     storeTransactions(filtered);
-    safeStorage.removeItem(INIT_FLAG_KEY);
+    // Maintain the initialization flag so that demo data is not reseeded
+    // when the application reloads after clearing sample transactions.
+    safeStorage.setItem(INIT_FLAG_KEY, 'true');
   }
 }
 
