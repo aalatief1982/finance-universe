@@ -47,6 +47,10 @@ describe('TransactionList', () => {
     expect(handleEdit).toHaveBeenCalledWith(transaction);
 
     fireEvent.click(buttons[1]);
+    expect(
+      screen.getByText('Are you sure you want to delete this transaction?')
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
     expect(handleDelete).toHaveBeenCalledWith(transaction.id);
   });
 
