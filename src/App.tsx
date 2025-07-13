@@ -16,11 +16,9 @@ import { UserProvider } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
 import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
-import ImportTransactionsNER from './pages/ImportTransactionsNER';
 import EditTransaction from './pages/EditTransaction';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
-import KeywordBankManager from '@/pages/KeywordBankManager';
 import TemplateHealthDashboard from '@/pages/DevTools/TemplateHealthDashboard';
 import TemplateFailureLog from '@/pages/DevTools/TemplateFailureLog';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
@@ -383,14 +381,6 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/import-transactions-ner"
-          element={
-            <ErrorBoundary name="Import Transactions NER Page">
-              <ImportTransactionsNER />
-            </ErrorBoundary>
-          }
-        />
-        <Route
           path="/edit-transaction"
           element={
             <ErrorBoundary name="Edit Transaction Page">
@@ -419,14 +409,6 @@ function AppRoutes() {
           element={
             <ErrorBoundary name="Build Template Page">
               <BuildTemplate />
-            </ErrorBoundary>
-          }
-        />
-        <Route
-          path="/keyword-bank"
-          element={
-            <ErrorBoundary name="Keyword Bank Page">
-              <KeywordBankManager />
             </ErrorBoundary>
           }
         />
