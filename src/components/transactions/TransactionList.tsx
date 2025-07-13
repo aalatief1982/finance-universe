@@ -1,11 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { MoreHorizontal, ChevronDown, ChevronUp, Edit, Trash, ArrowUpRight, ArrowDownRight, List, Grid } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronUp, Edit, ArrowUpRight, ArrowDownRight, List, Grid, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/components/ui/use-toast';
+import { useTransactions } from '@/context/TransactionContext';
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/utils/format-utils';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +65,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
 }) => {
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [transactionPendingDelete, setTransactionPendingDelete] = useState<Transaction | null>(null);
+  let contextDeleteTransaction: ((id: string) => void) | undefined;
+  try {
+    contextDeleteTransaction = useTransactions().deleteTransaction;
+  } catch {
+    contextDeleteTransaction = undefined;
+  }
+  const { toast } = useToast();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Reset selection when transactions change
@@ -155,6 +175,17 @@ const TransactionList: React.FC<TransactionListProps> = ({
     }
   };
 
+  const handleConfirmDelete = () => {
+    if (!transactionPendingDelete) return;
+    if (onDelete) {
+      onDelete(transactionPendingDelete.id);
+    } else if (contextDeleteTransaction) {
+      contextDeleteTransaction(transactionPendingDelete.id);
+    }
+    toast({ description: 'Transaction deleted successfully' });
+    setTransactionPendingDelete(null);
+  };
+
   // Render loading skeletons
   if (isLoading) {
     return (
@@ -187,9 +218,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
     );
   }
 
-  // Render mobile view
-  if (isMobile) {
-    return (
+  // Prepare mobile view
+  const mobileView = (
       <div className="space-y-3">
         {transactions.map((transaction, idx) => (
           <Card key={transaction.id || idx} className="overflow-hidden">
@@ -223,13 +253,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
                       </DropdownMenuItem>
                     )}
                     {onDelete && (
-                      <DropdownMenuItem 
-                        onClick={() => onDelete(transaction.id)}
-                        className="text-destructive"
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
+                      <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                          onClick={() => setTransactionPendingDelete(transaction)}
+                          className="text-destructive justify-center"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </DropdownMenuItem>
+                      </AlertDialogTrigger>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -271,10 +302,10 @@ const TransactionList: React.FC<TransactionListProps> = ({
         )}
       </div>
     );
-  }
 
-  // Render desktop view
-  return (
+
+  // Prepare desktop view
+  const desktopView = (
     <Card>
       <ScrollArea className="h-[calc(100vh-300px)]">
         <Table>
@@ -378,14 +409,16 @@ const TransactionList: React.FC<TransactionListProps> = ({
                           </Button>
                         )}
                         {onDelete && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDelete(transaction.id)}
-                            className="text-destructive"
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setTransactionPendingDelete(transaction)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
                         )}
                       </div>
                     </TableCell>
@@ -463,6 +496,28 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </div>
       )}
     </Card>
+  );
+
+  return (
+    <AlertDialog
+      open={!!transactionPendingDelete}
+      onOpenChange={(open) => {
+        if (!open) setTransactionPendingDelete(null);
+      }}
+    >
+      {isMobile ? mobileView : desktopView}
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            Are you sure you want to delete this transaction?
+          </AlertDialogTitle>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmDelete}>OK</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 
