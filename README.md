@@ -222,3 +222,32 @@ Additional log markers are emitted to help verify the SMS workflow:
 
 Use `adb logcat | grep AIS-` while testing to see these markers.
 
+
+## Deletion confirmation with AlertDialog
+
+Use `AlertDialog` from shadcn-ui to confirm destructive actions such as deleting a transaction. The dialog should wrap a delete button and ask the user for confirmation before proceeding. A typical structure is:
+
+```tsx
+<AlertDialog>
+  <AlertDialogTrigger asChild>
+    <Button variant="ghost" size="icon" className="text-destructive">
+      <Trash2 size={16} />
+    </Button>
+  </AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Delete transaction</AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to delete this item? This action cannot be undone.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+See [`TransactionGrid.tsx`](src/components/transactions/TransactionGrid.tsx) for a concrete example of integrating an `AlertDialog` into a list of transactions.
+
