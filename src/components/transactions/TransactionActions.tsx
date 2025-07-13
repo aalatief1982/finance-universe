@@ -12,7 +12,6 @@ import { useNavigate } from 'react-router-dom';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
-import { removeTransaction } from '@/utils/storage-utils';
 
 interface TransactionActionsProps {
   transaction: Transaction;
@@ -34,13 +33,10 @@ const TransactionActions = ({
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // Delete from context
     deleteTransaction(transaction.id);
-    
-    // Also delete from local storage directly
-    removeTransaction(transaction.id);
-    
+
     toast({
       title: "Transaction deleted",
       description: "The transaction has been successfully deleted",
