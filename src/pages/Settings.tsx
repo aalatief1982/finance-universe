@@ -195,16 +195,20 @@ const Settings = () => {
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
     if (checked) {
-      let granted = await smsPermissionService.hasPermission();
+      // Always request permission when turning on
+      const granted = await smsPermissionService.requestPermission();
+      
       if (!granted) {
-        granted = await smsPermissionService.requestPermission();
-      }
-      if (!granted) {
-        alert("SMS permission is required to read messages in the background.");
+        toast({
+          title: "Permission Required",
+          description: "SMS permission is required to read messages in the background.",
+          variant: "destructive",
+        });
         setBackgroundSmsEnabled(false);
         return;
       }
-      // Persist preference when permission is granted
+      
+      // Update stored preference when permission is granted
       updateUser({
         preferences: {
           ...user?.preferences,
@@ -214,9 +218,31 @@ const Settings = () => {
           },
         },
       });
+      setBackgroundSmsEnabled(true);
+    } else {
+      // Prevent turning off if permission is already granted
+      const hasPermission = await smsPermissionService.hasPermission();
+      if (hasPermission) {
+        toast({
+          title: "Cannot Disable",
+          description: "SMS permission is already granted. You cannot turn off this setting.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Only allow turning off if permission is not granted
+      setBackgroundSmsEnabled(false);
+      updateUser({
+        preferences: {
+          ...user?.preferences,
+          sms: {
+            ...user?.preferences?.sms,
+            backgroundSmsEnabled: false,
+          },
+        },
+      });
     }
-
-    setBackgroundSmsEnabled(checked);
   };
 
   const handleNotificationToggle = async (checked: boolean) => {
