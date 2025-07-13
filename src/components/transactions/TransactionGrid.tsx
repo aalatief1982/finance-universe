@@ -3,6 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Edit, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import ExpenseCard from '@/components/ExpenseCard';
 import { Transaction } from '@/types/transaction';
@@ -19,6 +20,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
   onEditTransaction,
   onDeleteTransaction
 }) => {
+  const { toast } = useToast();
   // Animation variants for the container
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -92,9 +94,12 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
+                    <AlertDialogAction
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={() => onDeleteTransaction(transaction.id)}
+                      onClick={() => {
+                        onDeleteTransaction(transaction.id);
+                        toast({ description: 'Transaction deleted successfully' });
+                      }}
                     >
                       Delete
                     </AlertDialogAction>
