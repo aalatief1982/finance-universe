@@ -16,6 +16,11 @@ interface LayoutProps {
   showHeader?: boolean;
   fullWidth?: boolean;
   showBack?: boolean;
+  /**
+   * Apply safe area padding to the top and bottom of the layout.
+   * Useful for pages that need to manage safe areas themselves.
+   */
+  safeAreaPadding?: boolean;
 }
 
 const Layout = ({
@@ -26,6 +31,7 @@ const Layout = ({
   showHeader = true,
   fullWidth = false,
   showBack = false,
+  safeAreaPadding = true,
 }: LayoutProps) => {
   const isMobile = useIsMobile();
   const { isMobile: isResponsiveMobile } = useResponsive();
@@ -36,7 +42,7 @@ const Layout = ({
       className={cn(
         "min-h-screen flex flex-col",
         showHeader && "pt-[var(--header-height)]",
-        !showHeader && "pt-[var(--safe-area-top)]",
+        !showHeader && safeAreaPadding && "pt-[var(--safe-area-top)]",
         className
       )}
     >
@@ -54,7 +60,7 @@ const Layout = ({
               "h-full",
               withPadding && "p-page",
               !fullWidth && "max-w-[var(--content-max-width)] mx-auto",
-              isResponsiveMobile && "pb-safe-bottom"
+              isResponsiveMobile && safeAreaPadding && "pb-safe-bottom"
             )}
           >
             <AnimatePresence mode="wait" initial={false}>
