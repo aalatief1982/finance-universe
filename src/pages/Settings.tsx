@@ -195,7 +195,7 @@ const Settings = () => {
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
     if (checked) {
-      // Always request permission when turning on
+      // Request permission when turning on
       const granted = await smsPermissionService.requestPermission();
       
       if (!granted) {
@@ -219,29 +219,40 @@ const Settings = () => {
         },
       });
       setBackgroundSmsEnabled(true);
+      setBaselineBackgroundSmsEnabled(true);
     } else {
-      // Prevent turning off if permission is already granted
-      const hasPermission = await smsPermissionService.hasPermission();
-      if (hasPermission) {
+      // Attempt to revoke permission when turning off
+      const result = await smsPermissionService.revokePermission();
+      
+      if (result.requiresManualAction) {
+        // Show instructions for manual revocation on native platforms
         toast({
-          title: "Cannot Disable",
-          description: "SMS permission is already granted. You cannot turn off this setting.",
-          variant: "destructive",
+          title: "Manual Action Required",
+          description: result.message,
+          variant: "default",
         });
-        return;
+        return; // Keep toggle on since permission is still granted
       }
       
-      // Only allow turning off if permission is not granted
-      setBackgroundSmsEnabled(false);
-      updateUser({
-        preferences: {
-          ...user?.preferences,
-          sms: {
-            ...user?.preferences?.sms,
-            backgroundSmsEnabled: false,
+      if (result.success) {
+        // Successfully revoked (web only)
+        setBackgroundSmsEnabled(false);
+        setBaselineBackgroundSmsEnabled(false);
+        updateUser({
+          preferences: {
+            ...user?.preferences,
+            sms: {
+              ...user?.preferences?.sms,
+              backgroundSmsEnabled: false,
+            },
           },
-        },
-      });
+        });
+        
+        toast({
+          title: "Permission Revoked",
+          description: result.message,
+        });
+      }
     }
   };
 

@@ -139,6 +139,26 @@ class SmsPermissionService {
     // For native environments, we'll use the cached value
     return safeStorage.getItem('sms_permission') === 'granted';
   }
+
+  // Revoke SMS permissions (web only - native requires manual action)
+  async revokePermission(): Promise<{ success: boolean; requiresManualAction: boolean; message: string }> {
+    if (!this.isNativeEnvironment()) {
+      // For web environments, simulate revoking permission
+      this.savePermissionStatus(false);
+      return {
+        success: true,
+        requiresManualAction: false,
+        message: 'SMS permission revoked successfully'
+      };
+    }
+
+    // For native platforms, permissions cannot be revoked programmatically
+    return {
+      success: false,
+      requiresManualAction: true,
+      message: 'To disable SMS permissions, please go to your device Settings > Apps > Xpensia > Permissions and disable SMS access manually.'
+    };
+  }
 }
 
 export const smsPermissionService = new SmsPermissionService();
