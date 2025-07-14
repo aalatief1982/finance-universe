@@ -24,6 +24,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
   Sun,
   Moon,
   Bell,
@@ -33,6 +41,8 @@ import {
   UploadCloud,
   Database,
   Trash2,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 import { demoTransactionService } from "@/services/DemoTransactionService";
@@ -109,6 +119,13 @@ const Settings = () => {
 
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
+  
+  // Beta features state
+  const [betaDialogOpen, setBetaDialogOpen] = useState(false);
+  const [betaCode, setBetaCode] = useState('');
+  const [isBetaActive, setIsBetaActive] = useState(() => {
+    return localStorage.getItem('betaFeaturesActive') === 'true';
+  });
 
   // Note: useBlocker is not available in React Router v7, implementing a simple warning
   useEffect(() => {
@@ -457,6 +474,27 @@ const Settings = () => {
     }
   };
 
+  const handleBetaCodeSubmit = () => {
+    if (betaCode === '0599572215') {
+      localStorage.setItem('betaFeaturesActive', 'true');
+      setIsBetaActive(true);
+      setBetaDialogOpen(false);
+      setBetaCode('');
+      toast({
+        title: "🎉 Beta Features Activated!",
+        description: "You now have access to all beta features including Budget and Import SMS.",
+      });
+    } else {
+      toast({
+        title: "❌ Invalid Beta Code",
+        description: "Please enter a valid beta code to activate premium features.",
+        variant: "destructive",
+      });
+      setBetaDialogOpen(false);
+      setBetaCode('');
+    }
+  };
+
   return (
     <Layout showBack>
       <div className="px-1">
@@ -673,6 +711,48 @@ const Settings = () => {
               <Trash2 size={16} />
               Clear Sample Data
             </Button>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Beta Features</p>
+              <p className="text-sm text-muted-foreground">
+                {isBetaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
+              </p>
+            </div>
+            {isBetaActive ? (
+              <div className="flex items-center text-green-600">
+                <Unlock className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">Active</span>
+              </div>
+            ) : (
+              <Dialog open={betaDialogOpen} onOpenChange={setBetaDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    Activate Beta Features
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Enter Beta Code</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="betaCode">Beta Code</Label>
+                      <Input
+                        id="betaCode"
+                        value={betaCode}
+                        onChange={(e) => setBetaCode(e.target.value)}
+                        placeholder="Enter your beta code"
+                      />
+                    </div>
+                    <Button onClick={handleBetaCodeSubmit} className="w-full">
+                      Activate Features
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </section>
 
