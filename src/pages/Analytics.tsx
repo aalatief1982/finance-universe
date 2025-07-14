@@ -15,7 +15,7 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import {
   BarChart,
   Bar,
@@ -45,7 +45,7 @@ const Analytics: React.FC = () => {
   const { transactions } = useTransactions();
 
   useEffect(() => {
-    FirebaseAnalytics.logEvent({ name: 'view_analytics' });
+    logAnalyticsEvent('view_analytics');
   }, []);
 
   type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';

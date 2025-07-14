@@ -47,7 +47,7 @@ import {
   storeTransactions,
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
-import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -309,7 +309,7 @@ const Settings = () => {
 
     persistCurrency(currency);
 
-    FirebaseAnalytics.logEvent({ name: 'settings_saved' });
+    logAnalyticsEvent('settings_saved');
 
     toast({
       title: "Settings saved successfully",

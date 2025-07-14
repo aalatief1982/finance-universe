@@ -32,7 +32,7 @@ import {
 
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { IonLoading } from '@ionic/react';
-import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 const Profile = () => {
   const { user, updateUser } = useUser();
@@ -64,7 +64,7 @@ const Profile = () => {
       phone: editFormData.phone || undefined,
       avatar: editFormData.avatar,
     });
-    FirebaseAnalytics.logEvent({ name: 'profile_updated' });
+    logAnalyticsEvent('profile_updated');
     setIsEditing(false);
     toast({ title: 'Profile updated', description: 'Your profile has been saved.' });
   };
