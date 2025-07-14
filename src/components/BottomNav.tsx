@@ -5,7 +5,7 @@ import { Home, Upload, MessageSquare, LineChart } from 'lucide-react';
 const navItems = [
   { name: 'Home', path: '/home', icon: Home, color: 'text-primary' },
   { name: 'Paste SMS', path: '/import-transactions', icon: Upload, color: 'text-success' },
-  { name: 'Import SMS', path: '/process-sms', icon: MessageSquare, color: 'text-secondary' },
+  { name: 'Transactions', path: '/transactions', icon: MessageSquare, color: 'text-secondary' },
   { name: 'Analytics', path: '/analytics', icon: LineChart, color: 'text-accent' }
 ];
 
