@@ -14,7 +14,7 @@ import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInfer
 import { getTemplateFailureCount } from '@/lib/smart-paste-engine/templateUtils';
 import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
-import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 
 
@@ -106,7 +106,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   setError(null);
   setConfidence(null);
   setMatchOrigin(null);
-  FirebaseAnalytics.logEvent({ name: 'smart_paste_sms' });
+  logAnalyticsEvent('smart_paste_sms');
 
   try {
     const {
@@ -227,7 +227,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       );
     }
 
-    FirebaseAnalytics.logEvent({ name: 'smart_paste_save' });
+    logAnalyticsEvent('smart_paste_save');
 
     toast({
       title: "Transaction added",

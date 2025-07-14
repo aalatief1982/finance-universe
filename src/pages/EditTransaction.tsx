@@ -15,7 +15,7 @@ import { useLearningEngine } from '@/hooks/useLearningEngine';
 import SmartPasteSummary from '@/components/SmartPasteSummary';
 import { LearnedEntry } from '@/types/learning';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
-import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { IonLoading } from '@ionic/react';
 
 const EditTransaction = () => {
@@ -54,7 +54,7 @@ const EditTransaction = () => {
         navigateBack: () => navigate(-1),
         combineToasts: true,
       });
-      FirebaseAnalytics.logEvent({ name: 'edit_transaction' });
+      logAnalyticsEvent('edit_transaction');
     } finally {
       setSaving(false);
     }

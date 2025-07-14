@@ -12,6 +12,7 @@ import { demoTransactionService } from './services/DemoTransactionService'
 
 import { Capacitor } from '@capacitor/core'
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
+import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 
 
@@ -93,7 +94,7 @@ if (Capacitor.isNativePlatform()) {
       await FirebaseAnalytics.enable()
       const { identifier } = await Device.getId()
       await FirebaseAnalytics.setUserId({ userId: identifier })
-      await FirebaseAnalytics.logEvent({ name: 'app_launch' })
+      await logAnalyticsEvent('app_launch')
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
         console.warn('[FirebaseAnalytics] error:', err)
