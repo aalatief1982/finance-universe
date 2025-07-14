@@ -1,11 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Upload, MessageSquare, LineChart } from 'lucide-react';
+import { Home, Upload, List, LineChart } from 'lucide-react';
 
 const navItems = [
   { name: 'Home', path: '/home', icon: Home, color: 'text-primary' },
   { name: 'Paste SMS', path: '/import-transactions', icon: Upload, color: 'text-success' },
-  { name: 'Transactions', path: '/transactions', icon: MessageSquare, color: 'text-secondary' },
+  { name: 'Transactions', path: '/transactions', icon: List, color: 'text-secondary' },
   { name: 'Analytics', path: '/analytics', icon: LineChart, color: 'text-accent' }
 ];
 

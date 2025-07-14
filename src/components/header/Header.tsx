@@ -8,7 +8,7 @@ import { MainNavigation } from './MainNavigation';
 import { UserMenu } from './UserMenu';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
-import { Settings, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Settings, ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FeedbackModal from '@/components/FeedbackModal';
 
@@ -72,7 +72,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
               title="Feedback"
               aria-label="Feedback"
             >
-              <MessageSquare size={20} />
+              <Mail size={20} />
             </Button>
             {showMobileIcons && (
               <>
