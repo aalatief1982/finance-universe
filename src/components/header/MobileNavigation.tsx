@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Target,
   TrendingDown,
+  Lock,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { getNavItems } from "./route-constants";
+import { useToast } from "@/hooks/use-toast";
 
 // Map of icon names to their components
 const iconMap = {
@@ -55,6 +57,10 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   const { user, logOut } = useUser();
   const navItems = getNavItems();
   const [budgetOpen, setBudgetOpen] = React.useState(false);
+  const { toast } = useToast();
+  const [isBetaActive, setIsBetaActive] = React.useState(() => {
+    return localStorage.getItem('betaFeaturesActive') === 'true';
+  });
 
   const budgetItems = [
     {
@@ -70,6 +76,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
       icon: <TrendingDown size={18} />,
     },
   ];
+
+  const handleLockedFeatureClick = (featureName: string) => {
+    toast({
+      title: `🚧 ${featureName} Coming Soon!`,
+      description: "This feature is currently under development. Stay tuned for exciting updates!",
+    });
+  };
 
   return (
     <div className="md:hidden">
@@ -127,7 +140,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                     <div key={item.title}>
                       <button
                         type="button"
-                        onClick={() => setBudgetOpen(!budgetOpen)}
+                        onClick={() => {
+                          if (!isBetaActive) {
+                            handleLockedFeatureClick('Budget');
+                          } else {
+                            setBudgetOpen(!budgetOpen);
+                          }
+                        }}
                         className={cn(
                           "flex w-full items-center px-4 py-3 rounded-md transition-colors",
                           location.pathname.startsWith("/budget")
@@ -139,15 +158,20 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                           <IconComponent size={20} className="mr-3" />
                         )}
                         <div className="flex-1 text-left">
-                          <p className="font-medium">{item.title}</p>
+                          <p className="font-medium flex items-center">
+                            {item.title}
+                            {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {item.description}
                           </p>
                         </div>
-                        <span className="ml-auto">{budgetOpen ? "▾" : "▸"}</span>
+                        {isBetaActive && (
+                          <span className="ml-auto">{budgetOpen ? "▾" : "▸"}</span>
+                        )}
                       </button>
 
-                      {budgetOpen && (
+                      {isBetaActive && budgetOpen && (
                         <ul className="mt-1 ml-6 space-y-1">
                           {budgetItems.map((b) => (
                             <li key={b.path}>
@@ -170,6 +194,42 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                         </ul>
                       )}
                     </div>
+                  );
+                }
+
+                // Check if this is Import SMS and handle lock
+                if (item.title === "Import SMS") {
+                  return (
+                    <button
+                      key={item.title}
+                      type="button"
+                      onClick={() => {
+                        if (!isBetaActive) {
+                          handleLockedFeatureClick('Import SMS');
+                        } else {
+                          window.location.href = item.path;
+                        }
+                      }}
+                      className={cn(
+                        "flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors w-full",
+                        location.pathname === item.path
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground",
+                      )}
+                    >
+                      {IconComponent && (
+                        <IconComponent size={20} className="mr-3" />
+                      )}
+                      <div>
+                        <p className="font-medium flex items-center">
+                          {item.title}
+                          {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.description}
+                        </p>
+                      </div>
+                    </button>
                   );
                 }
 

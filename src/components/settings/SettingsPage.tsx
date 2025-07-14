@@ -32,22 +32,24 @@ const SettingsPage = () => {
       setBetaDialogOpen(false);
       setBetaCode('');
       toast({
-        title: "Beta Features Activated! 🎉",
+        title: "🎉 Beta Features Activated!",
         description: "You now have access to all beta features including Budget and Import SMS.",
       });
     } else {
       toast({
-        title: "Invalid Beta Code",
+        title: "❌ Invalid Beta Code",
         description: "Please enter a valid beta code to activate premium features.",
         variant: "destructive",
       });
+      setBetaDialogOpen(false);
+      setBetaCode('');
     }
   };
 
   const handleLockedFeatureClick = (featureName: string) => {
     toast({
-      title: `${featureName} Coming Soon! 🚧`,
-      description: "This feature is currently under development. Stay tuned for updates!",
+      title: `🚧 ${featureName} Coming Soon!`,
+      description: "This feature is currently under development. Stay tuned for exciting updates!",
     });
   };
 
@@ -151,7 +153,7 @@ const SettingsPage = () => {
               {!isBetaActive && (
                 <div 
                   className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-lg"
-                  onClick={() => handleLockedFeatureClick('Import SMS')}
+                  onClick={() => handleLockedFeatureClick('Learning Engine')}
                 >
                   <div className="text-center">
                     <Lock className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />

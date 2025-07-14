@@ -17,6 +17,7 @@ import {
   ClipboardList,
   Target,
   TrendingDown,
+  Lock,
 } from "lucide-react";
 import {
   Dialog,
@@ -26,6 +27,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 // Map of icon names to their components
 const iconMap = {
@@ -44,6 +46,10 @@ export const MainNavigation: React.FC = () => {
   const location = useLocation();
   const navItems = getNavItems();
   const [budgetOpen, setBudgetOpen] = React.useState(false);
+  const { toast } = useToast();
+  const [isBetaActive, setIsBetaActive] = React.useState(() => {
+    return localStorage.getItem('betaFeaturesActive') === 'true';
+  });
 
   const budgetItems = [
     {
@@ -59,6 +65,13 @@ export const MainNavigation: React.FC = () => {
       icon: <TrendingDown size={18} />,
     },
   ];
+
+  const handleLockedFeatureClick = (featureName: string) => {
+    toast({
+      title: `🚧 ${featureName} Coming Soon!`,
+      description: "This feature is currently under development. Stay tuned for exciting updates!",
+    });
+  };
 
   return (
     <motion.nav
@@ -77,7 +90,13 @@ export const MainNavigation: React.FC = () => {
               <li key={item.title}>
                 <button
                   type="button"
-                  onClick={() => setBudgetOpen(true)}
+                  onClick={() => {
+                    if (!isBetaActive) {
+                      handleLockedFeatureClick('Budget');
+                    } else {
+                      setBudgetOpen(true);
+                    }
+                  }}
                   className={cn(
                     "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     location.pathname.startsWith("/budget")
@@ -90,34 +109,66 @@ export const MainNavigation: React.FC = () => {
                     <IconComponent size={18} className="mr-2" />
                   )}
                   {item.title}
+                  {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
                 </button>
 
-                <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
-                  <DialogContent className="sm:max-w-xs">
-                    <DialogHeader>
-                      <DialogTitle>Select Budget Page</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-2 py-2">
-                      {budgetItems.map((b) => (
-                        <DialogClose asChild key={b.path}>
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="justify-start"
-                          >
-                            <Link
-                              to={b.path}
-                              className="flex items-center gap-2"
+                {isBetaActive && (
+                  <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
+                    <DialogContent className="sm:max-w-xs">
+                      <DialogHeader>
+                        <DialogTitle>Select Budget Page</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid gap-2 py-2">
+                        {budgetItems.map((b) => (
+                          <DialogClose asChild key={b.path}>
+                            <Button
+                              asChild
+                              variant="outline"
+                              className="justify-start"
                             >
-                              {b.icon}
-                              {b.name}
-                            </Link>
-                          </Button>
-                        </DialogClose>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                              <Link
+                                to={b.path}
+                                className="flex items-center gap-2"
+                              >
+                                {b.icon}
+                                {b.name}
+                              </Link>
+                            </Button>
+                          </DialogClose>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </li>
+            );
+          }
+
+          // Check if this is Import SMS and handle lock
+          if (item.title === "Import SMS") {
+            return (
+              <li key={item.title}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isBetaActive) {
+                      handleLockedFeatureClick('Import SMS');
+                    } else {
+                      window.location.href = item.path ?? "";
+                    }
+                  }}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    location.pathname === item.path
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                  )}
+                  title={item.title}
+                >
+                  {IconComponent && <IconComponent size={18} className="mr-2" />}
+                  {item.title}
+                  {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+                </button>
               </li>
             );
           }
