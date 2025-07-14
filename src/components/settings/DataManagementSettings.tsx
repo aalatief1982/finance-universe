@@ -1,15 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, UploadCloud, Database, Trash2 } from 'lucide-react';
+import { Download, UploadCloud, Database, Trash2, Lock, Unlock } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { demoTransactionService } from '@/services/DemoTransactionService';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
 
 const DataManagementSettings = () => {
   const { toast } = useToast();
+  const [betaDialogOpen, setBetaDialogOpen] = useState(false);
+  const [betaCode, setBetaCode] = useState('');
+  const [isBetaActive, setIsBetaActive] = useState(() => {
+    return localStorage.getItem('betaFeaturesActive') === 'true';
+  });
   
   const handleExportData = () => {
     try {
@@ -119,6 +127,27 @@ const DataManagementSettings = () => {
       });
     }
   };
+
+  const handleBetaCodeSubmit = () => {
+    if (betaCode === '0599572215') {
+      localStorage.setItem('betaFeaturesActive', 'true');
+      setIsBetaActive(true);
+      setBetaDialogOpen(false);
+      setBetaCode('');
+      toast({
+        title: "🎉 Beta Features Activated!",
+        description: "You now have access to all beta features including Budget and Import SMS.",
+      });
+    } else {
+      toast({
+        title: "❌ Invalid Beta Code",
+        description: "Please enter a valid beta code to activate premium features.",
+        variant: "destructive",
+      });
+      setBetaDialogOpen(false);
+      setBetaCode('');
+    }
+  };
   
   return (
     <Card className="border border-border shadow-sm">
@@ -162,6 +191,48 @@ const DataManagementSettings = () => {
               <Trash2 size={16} />
               Clear Sample Data
             </Button>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Beta Features</p>
+              <p className="text-sm text-muted-foreground">
+                {isBetaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
+              </p>
+            </div>
+            {isBetaActive ? (
+              <div className="flex items-center text-green-600">
+                <Unlock className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">Active</span>
+              </div>
+            ) : (
+              <Dialog open={betaDialogOpen} onOpenChange={setBetaDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    Activate Beta Features
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Enter Beta Code</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="betaCode">Beta Code</Label>
+                      <Input
+                        id="betaCode"
+                        value={betaCode}
+                        onChange={(e) => setBetaCode(e.target.value)}
+                        placeholder="Enter your beta code"
+                      />
+                    </div>
+                    <Button onClick={handleBetaCodeSubmit} className="w-full">
+                      Activate Features
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </CardContent>
