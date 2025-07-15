@@ -126,6 +126,9 @@ const Settings = () => {
   const [isBetaActive, setIsBetaActive] = useState(() => {
     return localStorage.getItem('betaFeaturesActive') === 'true';
   });
+  
+  // App version state
+  const [appVersion, setAppVersion] = useState<string>('');
 
   // Note: useBlocker is not available in React Router v7, implementing a simple warning
   useEffect(() => {
@@ -182,6 +185,22 @@ const Settings = () => {
 
     checkSmsPermission();
   }, [user]);
+
+  // Fetch app version from manifest.json
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const response = await fetch('/manifest.json');
+        const manifest = await response.json();
+        setAppVersion(manifest.version || '1.0.0');
+      } catch (error) {
+        console.error('Failed to fetch app version:', error);
+        setAppVersion('1.0.0');
+      }
+    };
+    
+    fetchVersion();
+  }, []);
 
   useEffect(() => {
     const origTheme = user?.preferences?.theme || "light";
@@ -766,6 +785,14 @@ const Settings = () => {
           </div>
         </section>
 
+        {/* App Version */}
+        <section className="bg-card rounded-lg p-4 mt-6">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Version {appVersion}
+            </p>
+          </div>
+        </section>
 
       </motion.div>
       </div>
