@@ -97,7 +97,7 @@ function AppWrapper() {
         }
         
         try {
-          // Check permission first
+          // Check permission first - only proceed if already granted
           const permissionResult = await BackgroundSmsListener.checkPermission();
           if (import.meta.env.MODE === 'development') {
             console.log('[SMS] Permission check result:', permissionResult);
@@ -105,19 +105,13 @@ function AppWrapper() {
           
           if (!permissionResult.granted) {
             if (import.meta.env.MODE === 'development') {
-              console.log('[SMS] Permission not granted. Requesting permission...');
+              console.log('[SMS] Permission not granted. SMS listener will not be set up. User can enable via Settings.');
             }
-            const requestResult = await BackgroundSmsListener.requestPermission();
-            if (import.meta.env.MODE === 'development') {
-              console.log('[SMS] Permission request result:', requestResult);
-            }
-            
-            if (!requestResult.granted) {
-              if (import.meta.env.MODE === 'development') {
-                console.log('[SMS] Permission denied. Cannot proceed with SMS listener.');
-              }
-              return;
-            }
+            return;
+          }
+          
+          if (import.meta.env.MODE === 'development') {
+            console.log('[SMS] Permission already granted. Setting up SMS listener.');
           }
           
           if (import.meta.env.MODE === 'development') {
