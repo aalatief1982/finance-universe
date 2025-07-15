@@ -155,13 +155,14 @@ const handleReadSms = async () => {
   }
 
   try {
-    const granted = await SmsReaderService.requestPermission();
+    const granted = await SmsReaderService.hasPermission();
     if (!granted) {
     toast({
       variant: 'destructive',
-      title: 'Permission denied',
-      description: 'SMS Permission was not granted',
+      title: 'Permission required',
+      description: 'Please enable SMS permissions in Settings first',
     });
+    setLoading(false);
     return;
     }
 

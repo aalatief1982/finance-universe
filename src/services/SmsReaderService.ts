@@ -72,11 +72,8 @@ export class SmsReaderService {
   }
 
   static async checkOrRequestPermission(): Promise<boolean> {
-    const hasPermission = await SmsReaderService.hasPermission();
-    if (hasPermission) {
-      return true;
-    }
-    return SmsReaderService.requestPermission();
+    // Only check permission, do not auto-request
+    return SmsReaderService.hasPermission();
   }
 
   static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
