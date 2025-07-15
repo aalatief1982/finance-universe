@@ -1,7 +1,5 @@
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
-import { logEvent } from 'firebase/analytics';
-import { analytics } from '../firebase-config';
 
 /**
  * Safely log a Firebase Analytics event on both native and web platforms.
@@ -16,11 +14,8 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, an
         console.log('[FirebaseAnalytics] Native event logged:', name, params);
       
     } else {
-      // Use web Firebase for web platform
-      logEvent(analytics, name, params);
-     
-        console.log('[FirebaseAnalytics] Web event logged:', name, params);
-      
+      // For web platform, use native console logging only
+      console.log('[FirebaseAnalytics] Web platform - event would be:', name, params);
     }
   } catch (err) {
    
