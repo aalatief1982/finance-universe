@@ -8,11 +8,7 @@ export interface Person {
 const PEOPLE_KEY = 'xpensia_people';
 
 export const DEFAULT_PEOPLE: Person[] = [
-  { name: 'Ahmed' },
-  { name: 'Marwa' },
-  { name: 'Youssef' },
-  { name: 'Salma' },
-  { name: 'Mazen' }
+  { name: 'None' }
 ];
 
 export function getStoredPeople(): Person[] {

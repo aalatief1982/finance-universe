@@ -45,7 +45,10 @@ const Analytics: React.FC = () => {
   const { transactions } = useTransactions();
 
   useEffect(() => {
-    logAnalyticsEvent('view_analytics');
+    logAnalyticsEvent('view_analytics',{
+  screen: 'view_analytics',
+  timestamp: Date.now()
+});
   }, []);
 
   type Range = '' | 'day' | 'week' | 'month' | 'year' | 'custom';

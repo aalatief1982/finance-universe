@@ -293,9 +293,7 @@ const AddTransactionScreen = ({ onCancel }) => {
           </select>
           <select className="w-full p-2 border rounded-lg">
             <option>Select Person (Optional)</option>
-            <option>Ahmed</option>
-            <option>Marwa</option>
-            <option>Youssef</option>
+            
           </select>
           <input 
             type="text" 

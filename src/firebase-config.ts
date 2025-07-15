@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBk_6hPIlrmynRs1LY1gmHO2SSlVIYuwPQ",
+  apiKey: "AIzaSyAl0ikuXTAw_3u3GHVLRXcLANL9s3MBcxk",
   authDomain: "xpensia-505ac.firebaseapp.com",
   projectId: "xpensia-505ac",
   storageBucket: "xpensia-505ac.firebasestorage.app",
   messagingSenderId: "495648821355",
-  appId: "1:495648821355:web:YOUR_WEB_APP_ID", // Replace with actual web app ID from Firebase console
-  measurementId: "G-XXXXXXXXXX" // Replace with actual measurement ID from Firebase console
+  appId: "1:495648821355:web:fe5e00798f7fd290cb212e",
+  measurementId: "G-0LG7960PW8"
 };
 
 // Initialize Firebase

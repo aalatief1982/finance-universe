@@ -24,7 +24,7 @@ export interface Transaction {
     rawMessage?: string;
   };
   currency?: string;
-  person?: string | 'none' | 'Ahmed' | 'Marwa' | 'Youssef' | 'Salma' | 'Mazen';
+  person?: string ;
   fromAccount?: string;
   toAccount?: string;
   country?: string;

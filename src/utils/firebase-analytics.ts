@@ -12,19 +12,19 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, an
     if (Capacitor.isNativePlatform()) {
       // Use Capacitor plugin for native platforms
       await FirebaseAnalytics.logEvent({ name, params });
-      if (import.meta.env.MODE === 'development') {
+      
         console.log('[FirebaseAnalytics] Native event logged:', name, params);
-      }
+      
     } else {
       // Use web Firebase for web platform
       logEvent(analytics, name, params);
-      if (import.meta.env.MODE === 'development') {
+     
         console.log('[FirebaseAnalytics] Web event logged:', name, params);
-      }
+      
     }
   } catch (err) {
-    if (import.meta.env.MODE === 'development') {
+   
       console.warn('[FirebaseAnalytics] logEvent failed:', err);
-    }
+    
   }
 }
