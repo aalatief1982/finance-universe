@@ -11,9 +11,14 @@ import app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin
 
 
 
+
 public class MainActivity extends BridgeActivity {
   private static final String TAG = "XpensiaMainActivity";
-  
+
+
+
+
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
     Log.d(TAG, "MainActivity.onCreate() - START");
