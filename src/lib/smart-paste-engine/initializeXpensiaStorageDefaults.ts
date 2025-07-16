@@ -2,6 +2,7 @@ import { safeStorage } from "@/utils/safe-storage";
 import { TransactionType } from '@/types/transaction';
 import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
 import { saveVendorFallbacks } from './vendorFallbackUtils';
+import { checkForVendorUpdates, getVendorData } from '@/services/VendorSyncService';
 
 
 
@@ -204,7 +205,7 @@ import { saveVendorFallbacks } from './vendorFallbackUtils';
   
 
 
-export function initializeXpensiaStorageDefaults() {
+export async function initializeXpensiaStorageDefaults() {
   // Ensure structure templates store exists
   if (!safeStorage.getItem('xpensia_structure_templates')) {
     safeStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
@@ -221,9 +222,16 @@ export function initializeXpensiaStorageDefaults() {
     }
   }
 
+  // Check for vendor updates before initializing fallback data
+  await checkForVendorUpdates();
+  
   // Ensure vendor fallback data exists
   if (!safeStorage.getItem('xpensia_vendor_fallbacks')) {
-    saveVendorFallbacks((vendorFallbackData as any).default ?? vendorFallbackData);
+    // Use updated data if available, otherwise fallback to imported data
+    const updatedData = getVendorData();
+    const dataToUse = updatedData || ((vendorFallbackData as any).default ?? vendorFallbackData);
+    
+    saveVendorFallbacks(dataToUse);
     if (import.meta.env.MODE === 'development') {
       console.log('[Init] xpensia_vendor_fallbacks initialized');
     }

@@ -81,12 +81,25 @@ try {
   }
 }
 
-initializeXpensiaStorageDefaults()
-demoTransactionService.seedDemoTransactions()
-setupGlobalErrorHandlers()
+;(async () => {
+  try {
+    await initializeXpensiaStorageDefaults()
+    demoTransactionService.seedDemoTransactions()
+    setupGlobalErrorHandlers()
 
-const root = createRoot(document.getElementById("root")!)
-root.render(<App />)
+    const root = createRoot(document.getElementById("root")!)
+    root.render(<App />)
+  } catch (err) {
+    if (import.meta.env.MODE === 'development') {
+      console.error('[Init] Initialization error:', err)
+    }
+    // Fallback initialization without vendor sync
+    demoTransactionService.seedDemoTransactions()
+    setupGlobalErrorHandlers()
+    const root = createRoot(document.getElementById("root")!)
+    root.render(<App />)
+  }
+})()
 
 if (Capacitor.isNativePlatform()) {
   ;(async () => {
