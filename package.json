@@ -75,6 +75,7 @@
     "embla-carousel-react": "^8.3.0",
     "firebase": "^11.10.0",
     "framer-motion": "^12.5.0",
+    "googleapis": "^153.0.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.487.0",
     "nanoid": "^4.0.2",
