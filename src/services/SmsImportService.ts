@@ -24,7 +24,7 @@ export class SmsImportService {
       console.log('AIS-02 checkForNewMessages');
     }
     try {
-      await logAnalyticsEvent('sms_import_start');
+      await logAnalyticsEvent('app_start');
       const { auto = false } = opts || {};
 
       const senders = getSelectedSmsSenders();

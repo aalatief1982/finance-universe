@@ -36,7 +36,7 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, an
     };
 
     // For transaction saves, include keyword bank data
-    if (name === 'transaction_add' || name === 'transaction_update') {
+    if (name === 'transaction_add' || name === 'edit_transaction') {
       const keywordBank = localStorage.getItem('xpensia_keyword_bank');
       logEntry.keywordBank = keywordBank || '';
     }
