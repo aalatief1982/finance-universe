@@ -222,8 +222,8 @@ export async function initializeXpensiaStorageDefaults() {
     }
   }
 
-  // Check for vendor updates before initializing fallback data
-  await checkForVendorUpdates();
+  // Note: Vendor sync is now handled by BackgroundVendorSyncService
+  // This removes the blocking wait during app initialization
   
   // Ensure vendor fallback data exists
   if (!safeStorage.getItem('xpensia_vendor_fallbacks')) {

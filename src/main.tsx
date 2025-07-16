@@ -9,11 +9,14 @@ import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults'
 import { initializeCapacitor } from './lib/capacitor-init'
 import { demoTransactionService } from './services/DemoTransactionService'
+import { backgroundVendorSyncService } from './services/BackgroundVendorSyncService'
+import { AppLoader } from './components/AppLoader'
 
 import { Capacitor } from '@capacitor/core'
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
+import React, { useState, useEffect } from 'react'
 
 
 function setupGlobalErrorHandlers() {
@@ -82,23 +85,48 @@ try {
 }
 
 ;(async () => {
-  try {
-    await initializeXpensiaStorageDefaults()
-    demoTransactionService.seedDemoTransactions()
-    setupGlobalErrorHandlers()
-
-    const root = createRoot(document.getElementById("root")!)
-    root.render(<App />)
-  } catch (err) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[Init] Initialization error:', err)
-    }
-    // Fallback initialization without vendor sync
-    demoTransactionService.seedDemoTransactions()
-    setupGlobalErrorHandlers()
-    const root = createRoot(document.getElementById("root")!)
-    root.render(<App />)
+  let isInitializing = true;
+  
+  // Render loading screen immediately
+  const root = createRoot(document.getElementById("root")!)
+  
+  const AppWithLoader = () => {
+    const [initializing, setInitializing] = useState(true);
+    
+    useEffect(() => {
+      const initialize = async () => {
+        try {
+          await initializeXpensiaStorageDefaults()
+          demoTransactionService.seedDemoTransactions()
+          setupGlobalErrorHandlers()
+          
+          // Start background vendor sync
+          backgroundVendorSyncService.initialize()
+          
+        } catch (err) {
+          if (import.meta.env.MODE === 'development') {
+            console.error('[Init] Initialization error:', err)
+          }
+          // Fallback initialization
+          demoTransactionService.seedDemoTransactions()
+          setupGlobalErrorHandlers()
+          backgroundVendorSyncService.initialize()
+        } finally {
+          setInitializing(false)
+        }
+      }
+      
+      initialize()
+    }, [])
+    
+    return (
+      <AppLoader isInitializing={initializing}>
+        <App />
+      </AppLoader>
+    )
   }
+  
+  root.render(<AppWithLoader />)
 })()
 
 if (Capacitor.isNativePlatform()) {
