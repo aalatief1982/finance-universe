@@ -3,6 +3,7 @@ import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '
 import { getStoredTransactions, storeTransactions, getStoredCategories, storeCategories, getStoredCategoryRules, storeCategoryRules, getStoredCategoryChanges, storeCategoryChanges } from '@/utils/storage-utils';
 import { transactionAnalyticsService } from './TransactionAnalyticsService';
 import { processSmsEntries } from './SmsProcessingService';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 class TransactionService {
   // Basic Transaction CRUD Operations
@@ -32,6 +33,13 @@ class TransactionService {
     const transactions = this.getAllTransactions();
     transactions.push(newTransaction);
     this.saveTransactions(transactions);
+    
+    // Log analytics event
+    logAnalyticsEvent('transaction_add', {
+      category: newTransaction.category,
+      amount: newTransaction.amount,
+      currency: newTransaction.currency
+    });
     
     return newTransaction;
   }
@@ -66,6 +74,12 @@ class TransactionService {
     }
     
     this.saveTransactions(filteredTransactions);
+    
+    // Log analytics event
+    logAnalyticsEvent('transaction_delete', {
+      transaction_id: id
+    });
+    
     return true;
   }
 

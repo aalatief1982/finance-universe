@@ -27,13 +27,21 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, an
     }
 
     // Log to Google Sheets
-    await logToGoogleSheets({
-      deviceId: deviceId.identifier,
+    const logEntry: any = {
+      deviceName: deviceInfo.name || 'Unknown Device',
       event: name,
       parameters: JSON.stringify(params || {}),
       date: new Date().toISOString(),
       osVersion: `${deviceInfo.platform} ${deviceInfo.osVersion}`
-    });
+    };
+
+    // For transaction saves, include keyword bank data
+    if (name === 'transaction_add' || name === 'transaction_update') {
+      const keywordBank = localStorage.getItem('xpensia_keyword_bank');
+      logEntry.keywordBank = keywordBank || '';
+    }
+
+    await logToGoogleSheets(logEntry);
     
   } catch (err) {
    

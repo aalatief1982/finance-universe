@@ -10,6 +10,7 @@ import { demoTransactionService } from '@/services/DemoTransactionService';
 import { useToast } from '@/hooks/use-toast';
 import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 const DataManagementSettings = () => {
   const { toast } = useToast();
@@ -115,12 +116,23 @@ const DataManagementSettings = () => {
 
     try {
       demoTransactionService.clearDemoTransactions();
+      
+      // Log clear sample data event
+      logAnalyticsEvent('clear_sample_data', {
+        success: true
+      });
+      
       toast({
         title: 'Sample data cleared',
         description: 'Demo transactions have been removed.',
       });
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
+      logAnalyticsEvent('clear_sample_data', {
+        success: false,
+        error: error.message
+      });
+      
       toast({
         title: 'Failed to clear sample data',
         variant: 'destructive',
@@ -134,11 +146,22 @@ const DataManagementSettings = () => {
       setIsBetaActive(true);
       setBetaDialogOpen(false);
       setBetaCode('');
+      
+      // Log beta activation event
+      logAnalyticsEvent('activate_beta', {
+        success: true
+      });
+      
       toast({
         title: "🎉 Beta Features Activated!",
         description: "You now have access to all beta features including Budget and Import SMS.",
       });
     } else {
+      logAnalyticsEvent('activate_beta', {
+        success: false,
+        invalid_code: true
+      });
+      
       toast({
         title: "❌ Invalid Beta Code",
         description: "Please enter a valid beta code to activate premium features.",
