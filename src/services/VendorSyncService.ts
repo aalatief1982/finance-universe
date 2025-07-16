@@ -43,22 +43,25 @@ async function hasInternetConnection(): Promise<boolean> {
 
 /**
  * Extract document name from Google Docs content
- * Since the document requires authentication, we'll return the expected document name
  */
 async function fetchDocumentName(): Promise<string | null> {
   try {
-    // Since the Google Docs document requires authentication and we can't access it directly,
-    // we'll return the known document name for now
-    // In a production environment, you would need to:
-    // 1. Use Google Docs API with proper OAuth authentication
-    // 2. Or make the document publicly readable
-    // 3. Or use a service account with appropriate permissions
-    
-    if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Using fallback document name due to authentication requirements');
+    const response = await fetch(GOOGLE_DOCS_URL);
+    if (!response.ok) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[VendorSync] Cannot access Google Docs:', response.status);
+      }
+      return null;
     }
     
-    return DOCUMENT_NAME;
+    const html = await response.text();
+    // Parse the HTML to extract the document title
+    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
+    if (titleMatch) {
+      return titleMatch[1].replace(' - Google Docs', '').trim();
+    }
+    
+    return null;
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
       console.error('[VendorSync] Error fetching document name:', error);
@@ -68,16 +71,84 @@ async function fetchDocumentName(): Promise<string | null> {
 }
 
 /**
+ * Fetch vendor data from Google Docs
+ */
+async function fetchVendorDataFromDocs(): Promise<VendorData | null> {
+  try {
+    const response = await fetch(GOOGLE_DOCS_URL);
+    if (!response.ok) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[VendorSync] Cannot access Google Docs content:', response.status);
+      }
+      return null;
+    }
+    
+    const html = await response.text();
+    return parseVendorDataFromDocs(html);
+  } catch (error) {
+    if (import.meta.env.MODE === 'development') {
+      console.error('[VendorSync] Error fetching vendor data from docs:', error);
+    }
+    return null;
+  }
+}
+
+/**
  * Parse vendor data from Google Docs content
- * This is a placeholder for the actual parsing logic
  */
 function parseVendorDataFromDocs(content: string): VendorData | null {
   try {
-    // This would need to be implemented based on the actual format in the Google Doc
-    // For now, we'll return null to indicate no data could be parsed
+    // Look for JSON data in the document content
+    // The content might be wrapped in <pre> tags or code blocks
     
-    // Expected format in the document might be JSON or structured text
-    // You would need to implement the parsing logic based on the actual document format
+    // Try to find JSON data between code blocks or pre tags
+    let jsonMatch = content.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+    if (!jsonMatch) {
+      // Try to find content between code tags
+      jsonMatch = content.match(/<code[^>]*>([\s\S]*?)<\/code>/i);
+    }
+    
+    if (!jsonMatch) {
+      // Try to find JSON-like content directly
+      // Look for patterns that start with { and contain vendor mappings
+      const jsonPattern = /\{[\s\S]*?"type":\s*"[^"]*"[\s\S]*?\}/;
+      jsonMatch = content.match(jsonPattern);
+    }
+    
+    if (!jsonMatch) {
+      // As a fallback, try to parse the entire content as JSON
+      const cleanContent = content
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&quot;/g, '"') // Replace HTML entities
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .trim();
+      
+      // Try to find the start and end of JSON object
+      const startIndex = cleanContent.indexOf('{');
+      const lastIndex = cleanContent.lastIndexOf('}');
+      
+      if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
+        const jsonString = cleanContent.substring(startIndex, lastIndex + 1);
+        return JSON.parse(jsonString);
+      }
+    } else {
+      // Clean and parse the matched JSON
+      const jsonString = jsonMatch[1] || jsonMatch[0];
+      const cleanedJson = jsonString
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .trim();
+      
+      return JSON.parse(cleanedJson);
+    }
+    
+    if (import.meta.env.MODE === 'development') {
+      console.warn('[VendorSync] No valid JSON found in document content');
+    }
     
     return null;
   } catch (error) {
@@ -147,11 +218,16 @@ export async function checkForVendorUpdates(): Promise<boolean> {
       safeStorage.setItem(VENDOR_SOURCE_KEY, currentName);
       
       // Fetch and update vendor data
-      // This would require implementing the actual Google Docs data fetching
-      // For now, we'll just log the update
-      
-      if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] Vendor data sync needed but not implemented yet');
+      const newVendorData = await fetchVendorDataFromDocs();
+      if (newVendorData) {
+        await updateVendorDataFile(newVendorData);
+        if (import.meta.env.MODE === 'development') {
+          console.log('[VendorSync] Vendor data successfully synced from Google Docs');
+        }
+      } else {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[VendorSync] Could not parse vendor data from Google Docs');
+        }
       }
       
       return true;
