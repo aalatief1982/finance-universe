@@ -20,7 +20,7 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
     // For mobile apps, we'll use a simple HTTP request approach
     // This requires setting up a Google Apps Script Web App endpoint
     
-    const webAppUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // You'll need to replace this
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycby8oPsalrougUXkUjTuEclWKOKECRT48p9Mqaq6VXwbzJsJ270Wvk57wqfGq4CeELWPrQ/exec'; // You'll need to replace this
     
     const payload = {
       action: 'addRow',
@@ -39,7 +39,7 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
     console.log('[GoogleSheets] Would log to sheet:', payload);
     
     // Uncomment this when you have the Google Apps Script set up:
-    /*
+    
     const response = await fetch(webAppUrl, {
       method: 'POST',
       headers: {
@@ -54,7 +54,7 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
 
     const result = await response.json();
     console.log('[GoogleSheets] Successfully logged to sheet:', result);
-    */
+  
     
   } catch (error) {
     console.error('[GoogleSheets] Failed to log to sheet:', error);
