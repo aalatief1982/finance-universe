@@ -138,21 +138,27 @@ function replaceVendorDataToFallbacks(vendorData: VendorData): void {
     // Start with user vendors and add all sync data (complete replacement of sync data)
     const newFallbacks = { ...userVendors };
     
-    // Add all vendor data from sync source
+    // Add vendor data from sync source only if not user-added
     Object.entries(vendorData).forEach(([vendorName, vendorInfo]) => {
-      newFallbacks[vendorName] = {
-        type: vendorInfo.type as 'expense' | 'income' | 'transfer',
-        category: vendorInfo.category,
-        subcategory: vendorInfo.subcategory
-        // Note: user-added vendors already preserved above, sync data has no 'user' flag
-      };
+      // Only add if this vendor is not already preserved as user-added
+      if (!userVendors[vendorName]) {
+        newFallbacks[vendorName] = {
+          type: vendorInfo.type as 'expense' | 'income' | 'transfer',
+          category: vendorInfo.category,
+          subcategory: vendorInfo.subcategory
+          // Note: sync data has no 'user' flag, user-added vendors already preserved above
+        };
+      }
     });
     
     // Save the updated fallbacks
     saveVendorFallbacks(newFallbacks);
     
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Successfully replaced vendor data in fallbacks (preserved user-added vendors)');
+      const userVendorCount = Object.keys(userVendors).length;
+      const syncVendorCount = Object.keys(vendorData).length;
+      const totalVendorCount = Object.keys(newFallbacks).length;
+      console.log(`[VendorSync] Successfully replaced vendor data: preserved ${userVendorCount} user vendors, processed ${syncVendorCount} sync vendors, total ${totalVendorCount} vendors`);
     }
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
@@ -169,6 +175,8 @@ async function updateVendorDataFile(newData: VendorData, version: string): Promi
     // Store the updated data in localStorage override
     safeStorage.setItem('xpensia_vendor_data_override', JSON.stringify(newData));
     safeStorage.setItem(VENDOR_VERSION_KEY, version);
+    // Update the vendor source name to reflect the current document
+    safeStorage.setItem(VENDOR_SOURCE_KEY, DOCUMENT_NAME);
     
     // Replace vendor fallbacks with new data (preserving user-added vendors)
     replaceVendorDataToFallbacks(newData);
