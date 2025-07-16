@@ -9,6 +9,7 @@ import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from './transaction-form-schema';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
+import { getVendorData } from '@/services/VendorSyncService';
 
 interface VendorSelectorProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -25,10 +26,28 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
   });
 
   useEffect(() => {
-    const builtIn = Object.keys((vendorData as any) || {});
-    const stored = Object.keys(loadVendorFallbacks());
-    const all = Array.from(new Set([...builtIn, ...stored]));
-    setVendors(all);
+    const loadVendorList = () => {
+      // Prioritize synced vendor data, fallback to built-in data
+      const syncedVendors = getVendorData();
+      const builtIn = Object.keys(syncedVendors || (vendorData as any) || {});
+      const stored = Object.keys(loadVendorFallbacks());
+      const all = Array.from(new Set([...builtIn, ...stored]));
+      setVendors(all);
+    };
+
+    // Initial load
+    loadVendorList();
+
+    // Listen for vendor data updates
+    const handleVendorUpdate = () => {
+      loadVendorList();
+    };
+
+    window.addEventListener('vendorDataUpdated', handleVendorUpdate);
+    
+    return () => {
+      window.removeEventListener('vendorDataUpdated', handleVendorUpdate);
+    };
   }, []);
 
   const handleSave = () => {

@@ -1,8 +1,15 @@
 import { safeStorage } from '@/utils/safe-storage';
+import { saveVendorFallbacks, loadVendorFallbacks, type VendorFallbackData } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 
 const VENDOR_SOURCE_KEY = 'xpensia_vendor_source';
+const VENDOR_VERSION_KEY = 'xpensia_vendor_version';
 const DOCUMENT_NAME = 'xpensia_vendor_mapping_v1.0';
-const GOOGLE_DOCS_URL = 'https://docs.google.com/document/d/1r4RKGBJWkEq_J3IiqvEbW_v_0XfAnPUzJAnPg3hZb5o/edit?usp=sharing';
+const GOOGLE_DRIVE_FILE_ID = '1QD_3mysr8gxMB_HQ88ZYI9ip7HSnosd-';
+const GOOGLE_DRIVE_URL = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_FILE_ID}`;
+
+// Callback type for sync completion notifications
+type SyncCompletionCallback = (success: boolean, updatedData?: VendorData) => void;
+const syncCallbacks: SyncCompletionCallback[] = [];
 
 interface VendorData {
   [key: string]: {
@@ -42,139 +49,150 @@ async function hasInternetConnection(): Promise<boolean> {
 }
 
 /**
- * Extract document name from Google Docs content
+ * Extract version/timestamp from JSON file to detect changes
  */
-async function fetchDocumentName(): Promise<string | null> {
+async function fetchVendorDataVersion(): Promise<string | null> {
   try {
-    const response = await fetch(GOOGLE_DOCS_URL);
+    const response = await fetch(GOOGLE_DRIVE_URL, {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
+    
     if (!response.ok) {
       if (import.meta.env.MODE === 'development') {
-        console.warn('[VendorSync] Cannot access Google Docs:', response.status);
+        console.warn('[VendorSync] Cannot access Google Drive file:', response.status);
       }
       return null;
     }
     
-    const html = await response.text();
-    // Parse the HTML to extract the document title
-    const titleMatch = html.match(/<title>(.*?)<\/title>/i);
-    if (titleMatch) {
-      return titleMatch[1].replace(' - Google Docs', '').trim();
-    }
-    
-    return null;
+    const jsonData = await response.json();
+    // Use timestamp or version field, fallback to stringified data hash
+    return jsonData.version || jsonData.timestamp || JSON.stringify(jsonData).length.toString();
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error fetching document name:', error);
+      console.error('[VendorSync] Error fetching vendor data version:', error);
     }
     return null;
   }
 }
 
 /**
- * Fetch vendor data from Google Docs
+ * Fetch vendor data from Google Drive JSON file
  */
-async function fetchVendorDataFromDocs(): Promise<VendorData | null> {
+async function fetchVendorDataFromDrive(): Promise<VendorData | null> {
   try {
-    const response = await fetch(GOOGLE_DOCS_URL);
+    const response = await fetch(GOOGLE_DRIVE_URL, {
+      cache: 'no-cache',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      }
+    });
+    
     if (!response.ok) {
       if (import.meta.env.MODE === 'development') {
-        console.warn('[VendorSync] Cannot access Google Docs content:', response.status);
+        console.warn('[VendorSync] Cannot access Google Drive file:', response.status);
       }
       return null;
     }
     
-    const html = await response.text();
-    return parseVendorDataFromDocs(html);
+    const jsonData = await response.json();
+    
+    // Validate the data structure
+    if (typeof jsonData === 'object' && jsonData !== null) {
+      return jsonData as VendorData;
+    }
+    
+    if (import.meta.env.MODE === 'development') {
+      console.warn('[VendorSync] Invalid vendor data format received from Google Drive');
+    }
+    return null;
+    
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error fetching vendor data from docs:', error);
+      console.error('[VendorSync] Error fetching vendor data from Google Drive:', error);
     }
     return null;
   }
 }
 
 /**
- * Parse vendor data from Google Docs content
+ * Convert VendorData to VendorFallbackData format and merge with existing vendor fallbacks
  */
-function parseVendorDataFromDocs(content: string): VendorData | null {
+function mergeVendorDataToFallbacks(vendorData: VendorData): void {
   try {
-    // Look for JSON data in the document content
-    // The content might be wrapped in <pre> tags or code blocks
+    const existingFallbacks = loadVendorFallbacks();
+    const newFallbacks = { ...existingFallbacks };
     
-    // Try to find JSON data between code blocks or pre tags
-    let jsonMatch = content.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
-    if (!jsonMatch) {
-      // Try to find content between code tags
-      jsonMatch = content.match(/<code[^>]*>([\s\S]*?)<\/code>/i);
-    }
-    
-    if (!jsonMatch) {
-      // Try to find JSON-like content directly
-      // Look for patterns that start with { and contain vendor mappings
-      const jsonPattern = /\{[\s\S]*?"type":\s*"[^"]*"[\s\S]*?\}/;
-      jsonMatch = content.match(jsonPattern);
-    }
-    
-    if (!jsonMatch) {
-      // As a fallback, try to parse the entire content as JSON
-      const cleanContent = content
-        .replace(/<[^>]*>/g, '') // Remove HTML tags
-        .replace(/&quot;/g, '"') // Replace HTML entities
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .trim();
-      
-      // Try to find the start and end of JSON object
-      const startIndex = cleanContent.indexOf('{');
-      const lastIndex = cleanContent.lastIndexOf('}');
-      
-      if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
-        const jsonString = cleanContent.substring(startIndex, lastIndex + 1);
-        return JSON.parse(jsonString);
+    // Convert and merge vendor data
+    Object.entries(vendorData).forEach(([vendorName, vendorInfo]) => {
+      // Only update if this vendor doesn't exist or is not user-added
+      if (!newFallbacks[vendorName] || !newFallbacks[vendorName].user) {
+        newFallbacks[vendorName] = {
+          type: vendorInfo.type as 'expense' | 'income' | 'transfer',
+          category: vendorInfo.category,
+          subcategory: vendorInfo.subcategory
+        };
       }
-    } else {
-      // Clean and parse the matched JSON
-      const jsonString = jsonMatch[1] || jsonMatch[0];
-      const cleanedJson = jsonString
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .trim();
-      
-      return JSON.parse(cleanedJson);
-    }
+    });
+    
+    // Save the updated fallbacks
+    saveVendorFallbacks(newFallbacks);
     
     if (import.meta.env.MODE === 'development') {
-      console.warn('[VendorSync] No valid JSON found in document content');
+      console.log('[VendorSync] Successfully merged vendor data to fallbacks');
     }
-    
-    return null;
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error parsing vendor data:', error);
+      console.error('[VendorSync] Error merging vendor data to fallbacks:', error);
     }
-    return null;
   }
 }
 
 /**
- * Update the local JSON file with new vendor data
+ * Update the local vendor data and merge with vendor fallbacks
  */
-async function updateVendorDataFile(newData: VendorData): Promise<void> {
+async function updateVendorDataFile(newData: VendorData, version: string): Promise<void> {
   try {
-    // Since we can't directly write to the JSON file in the browser,
-    // we'll store the updated data in localStorage instead
+    // Store the updated data in localStorage override
     safeStorage.setItem('xpensia_vendor_data_override', JSON.stringify(newData));
+    safeStorage.setItem(VENDOR_VERSION_KEY, version);
+    
+    // Merge the new data into vendor fallbacks
+    mergeVendorDataToFallbacks(newData);
+    
+    // Notify all registered callbacks
+    syncCallbacks.forEach(callback => {
+      try {
+        callback(true, newData);
+      } catch (error) {
+        if (import.meta.env.MODE === 'development') {
+          console.error('[VendorSync] Error in sync callback:', error);
+        }
+      }
+    });
     
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Vendor data updated in localStorage');
+      console.log('[VendorSync] Vendor data updated and merged successfully');
     }
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
       console.error('[VendorSync] Error updating vendor data:', error);
     }
+    
+    // Notify callbacks of failure
+    syncCallbacks.forEach(callback => {
+      try {
+        callback(false);
+      } catch (callbackError) {
+        if (import.meta.env.MODE === 'development') {
+          console.error('[VendorSync] Error in sync failure callback:', callbackError);
+        }
+      }
+    });
   }
 }
 
@@ -195,42 +213,48 @@ export async function checkForVendorUpdates(): Promise<boolean> {
       return false;
     }
     
-    // Get stored document name
-    const storedName = safeStorage.getItem(VENDOR_SOURCE_KEY);
+    // Get stored version
+    const storedVersion = safeStorage.getItem(VENDOR_VERSION_KEY);
     
-    // Fetch current document name
-    const currentName = await fetchDocumentName();
+    // Fetch current version
+    const currentVersion = await fetchVendorDataVersion();
     
-    if (!currentName) {
+    if (!currentVersion) {
       if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] Could not fetch document name');
+        console.log('[VendorSync] Could not fetch vendor data version');
       }
       return false;
     }
     
-    // Check if name has changed
-    if (storedName !== currentName) {
+    // Check if version has changed or no stored version exists
+    if (storedVersion !== currentVersion) {
       if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] Document name changed:', storedName, '->', currentName);
+        console.log('[VendorSync] Vendor data version changed:', storedVersion, '->', currentVersion);
       }
-      
-      // Update stored name
-      safeStorage.setItem(VENDOR_SOURCE_KEY, currentName);
       
       // Fetch and update vendor data
-      const newVendorData = await fetchVendorDataFromDocs();
+      const newVendorData = await fetchVendorDataFromDrive();
       if (newVendorData) {
-        await updateVendorDataFile(newVendorData);
+        await updateVendorDataFile(newVendorData, currentVersion);
         if (import.meta.env.MODE === 'development') {
-          console.log('[VendorSync] Vendor data successfully synced from Google Docs');
+          console.log('[VendorSync] Vendor data successfully synced from Google Drive');
         }
+        return true;
       } else {
         if (import.meta.env.MODE === 'development') {
-          console.warn('[VendorSync] Could not parse vendor data from Google Docs');
+          console.warn('[VendorSync] Could not fetch vendor data from Google Drive');
         }
+        // Notify callbacks of failure
+        syncCallbacks.forEach(callback => {
+          try {
+            callback(false);
+          } catch (error) {
+            if (import.meta.env.MODE === 'development') {
+              console.error('[VendorSync] Error in sync failure callback:', error);
+            }
+          }
+        });
       }
-      
-      return true;
     }
     
     return false;
@@ -239,6 +263,18 @@ export async function checkForVendorUpdates(): Promise<boolean> {
     if (import.meta.env.MODE === 'development') {
       console.error('[VendorSync] Error checking for updates:', error);
     }
+    
+    // Notify callbacks of error
+    syncCallbacks.forEach(callback => {
+      try {
+        callback(false);
+      } catch (callbackError) {
+        if (import.meta.env.MODE === 'development') {
+          console.error('[VendorSync] Error in sync error callback:', callbackError);
+        }
+      }
+    });
+    
     return false;
   }
 }
@@ -262,5 +298,39 @@ export function getVendorData(): VendorData | null {
       console.error('[VendorSync] Error getting vendor data:', error);
     }
     return null;
+  }
+}
+
+/**
+ * Register a callback to be notified when vendor sync completes
+ */
+export function onSyncComplete(callback: SyncCompletionCallback): () => void {
+  syncCallbacks.push(callback);
+  
+  // Return unsubscribe function
+  return () => {
+    const index = syncCallbacks.indexOf(callback);
+    if (index > -1) {
+      syncCallbacks.splice(index, 1);
+    }
+  };
+}
+
+/**
+ * Force a vendor fallback refresh from current data
+ */
+export function refreshVendorFallbacks(): void {
+  try {
+    const vendorData = getVendorData();
+    if (vendorData) {
+      mergeVendorDataToFallbacks(vendorData);
+      if (import.meta.env.MODE === 'development') {
+        console.log('[VendorSync] Vendor fallbacks refreshed from current data');
+      }
+    }
+  } catch (error) {
+    if (import.meta.env.MODE === 'development') {
+      console.error('[VendorSync] Error refreshing vendor fallbacks:', error);
+    }
   }
 }

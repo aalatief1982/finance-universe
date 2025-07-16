@@ -1,13 +1,27 @@
-import { checkForVendorUpdates } from './VendorSyncService';
+import { checkForVendorUpdates, onSyncComplete } from './VendorSyncService';
 
 class BackgroundVendorSyncService {
   private syncInterval: NodeJS.Timeout | null = null;
   private isInitialized = false;
+  private unsubscribeFromSync: (() => void) | null = null;
 
   async initialize() {
     if (this.isInitialized) return;
     
     this.isInitialized = true;
+    
+    // Subscribe to sync completion events
+    this.unsubscribeFromSync = onSyncComplete((success, updatedData) => {
+      if (success && updatedData) {
+        if (import.meta.env.MODE === 'development') {
+          console.log('[BackgroundSync] Vendor data updated successfully');
+        }
+        // Dispatch custom event for real-time UI updates
+        window.dispatchEvent(new CustomEvent('vendorDataUpdated', { 
+          detail: { vendorData: updatedData } 
+        }));
+      }
+    });
     
     // Run initial sync in background (non-blocking)
     setTimeout(() => {
@@ -37,6 +51,10 @@ class BackgroundVendorSyncService {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
       this.syncInterval = null;
+    }
+    if (this.unsubscribeFromSync) {
+      this.unsubscribeFromSync();
+      this.unsubscribeFromSync = null;
     }
     this.isInitialized = false;
   }
