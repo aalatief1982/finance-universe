@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { logAnalyticsEvent } from "@/utils/firebase-analytics";
 
 // Map of icon names to their components
 const iconMap = {
@@ -91,6 +92,9 @@ export const MainNavigation: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    logAnalyticsEvent('budget_menu_click', {
+                      beta_active: isBetaActive
+                    });
                     if (!isBetaActive) {
                       handleLockedFeatureClick('Budget');
                     } else {
@@ -151,6 +155,9 @@ export const MainNavigation: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    logAnalyticsEvent('import_menu_click', {
+                      beta_active: isBetaActive
+                    });
                     if (!isBetaActive) {
                       handleLockedFeatureClick('Import SMS');
                     } else {

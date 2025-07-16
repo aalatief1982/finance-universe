@@ -17,6 +17,7 @@ import { Loader2, Star } from 'lucide-react';
 import { Device } from '@capacitor/device';
 import { App } from '@capacitor/app';
 import { cn } from '@/lib/utils';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 interface FeedbackModalProps {
   open: boolean;
@@ -41,6 +42,15 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
   screenName,
 }) => {
   const { toast } = useToast();
+  
+  // Log when feedback modal opens
+  useEffect(() => {
+    if (open) {
+      logAnalyticsEvent('feedback_open', {
+        screen_name: screenName
+      });
+    }
+  }, [open, screenName]);
   const [deviceInfo, setDeviceInfo] = useState('');
   const [issue, setIssue] = useState('');
   const [liked, setLiked] = useState('');
@@ -124,6 +134,17 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       });
 
       toast({ title: 'Feedback sent', description: 'Thank you for your feedback!' });
+      
+      // Log feedback send event
+      logAnalyticsEvent('feedback_send', {
+        screen_name: screenName,
+        rating: rating,
+        has_issue: !!issue,
+        has_liked: !!liked,
+        has_improved: !!improved,
+        has_email: !!email
+      });
+      
       resetForm();
       onOpenChange(false);
     } catch (err) {
