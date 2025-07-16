@@ -8,11 +8,12 @@ const SHEET_NAME = 'App';
 // For now, this will attempt to use the public Google Sheets API
 
 interface AnalyticsLogEntry {
-  deviceId: string;
+  deviceName: string;
   event: string;
   parameters: string;
   date: string;
   osVersion: string;
+  keywordBank?: string;
 }
 
 export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
@@ -27,11 +28,12 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
       spreadsheetId: SPREADSHEET_ID,
       sheetName: SHEET_NAME,
       data: [
-        entry.deviceId,
+        entry.deviceName,
         entry.event,
         entry.parameters,
         entry.date,
-        entry.osVersion
+        entry.osVersion,
+         entry.keywordBank || ''
       ]
     };
 
