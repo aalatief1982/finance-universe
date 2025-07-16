@@ -3,7 +3,7 @@ import { saveVendorFallbacks, loadVendorFallbacks, type VendorFallbackData } fro
 
 const VENDOR_SOURCE_KEY = 'xpensia_vendor_source';
 const VENDOR_VERSION_KEY = 'xpensia_vendor_version';
-const DOCUMENT_NAME = 'xpensia_vendor_mapping_v1.0';
+const DOCUMENT_NAME = 'xpensia_vendor_mapping_v1.2.json';
 const GOOGLE_DRIVE_FILE_ID = '1QD_3mysr8gxMB_HQ88ZYI9ip7HSnosd-';
 const GOOGLE_DRIVE_URL = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_FILE_ID}`;
 
@@ -120,34 +120,43 @@ async function fetchVendorDataFromDrive(): Promise<VendorData | null> {
 }
 
 /**
- * Convert VendorData to VendorFallbackData format and merge with existing vendor fallbacks
+ * Convert VendorData to VendorFallbackData format and replace existing vendor fallbacks
+ * Preserves user-added vendors while completely replacing sync data
  */
-function mergeVendorDataToFallbacks(vendorData: VendorData): void {
+function replaceVendorDataToFallbacks(vendorData: VendorData): void {
   try {
     const existingFallbacks = loadVendorFallbacks();
-    const newFallbacks = { ...existingFallbacks };
     
-    // Convert and merge vendor data
-    Object.entries(vendorData).forEach(([vendorName, vendorInfo]) => {
-      // Only update if this vendor doesn't exist or is not user-added
-      if (!newFallbacks[vendorName] || !newFallbacks[vendorName].user) {
-        newFallbacks[vendorName] = {
-          type: vendorInfo.type as 'expense' | 'income' | 'transfer',
-          category: vendorInfo.category,
-          subcategory: vendorInfo.subcategory
-        };
+    // Keep only user-added vendors
+    const userVendors: Record<string, VendorFallbackData> = {};
+    Object.entries(existingFallbacks).forEach(([vendorName, vendorInfo]) => {
+      if (vendorInfo.user) {
+        userVendors[vendorName] = vendorInfo;
       }
+    });
+    
+    // Start with user vendors and add all sync data (complete replacement of sync data)
+    const newFallbacks = { ...userVendors };
+    
+    // Add all vendor data from sync source
+    Object.entries(vendorData).forEach(([vendorName, vendorInfo]) => {
+      newFallbacks[vendorName] = {
+        type: vendorInfo.type as 'expense' | 'income' | 'transfer',
+        category: vendorInfo.category,
+        subcategory: vendorInfo.subcategory
+        // Note: user-added vendors already preserved above, sync data has no 'user' flag
+      };
     });
     
     // Save the updated fallbacks
     saveVendorFallbacks(newFallbacks);
     
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Successfully merged vendor data to fallbacks');
+      console.log('[VendorSync] Successfully replaced vendor data in fallbacks (preserved user-added vendors)');
     }
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error merging vendor data to fallbacks:', error);
+      console.error('[VendorSync] Error replacing vendor data in fallbacks:', error);
     }
   }
 }
@@ -161,8 +170,8 @@ async function updateVendorDataFile(newData: VendorData, version: string): Promi
     safeStorage.setItem('xpensia_vendor_data_override', JSON.stringify(newData));
     safeStorage.setItem(VENDOR_VERSION_KEY, version);
     
-    // Merge the new data into vendor fallbacks
-    mergeVendorDataToFallbacks(newData);
+    // Replace vendor fallbacks with new data (preserving user-added vendors)
+    replaceVendorDataToFallbacks(newData);
     
     // Notify all registered callbacks
     syncCallbacks.forEach(callback => {
@@ -323,7 +332,7 @@ export function refreshVendorFallbacks(): void {
   try {
     const vendorData = getVendorData();
     if (vendorData) {
-      mergeVendorDataToFallbacks(vendorData);
+      replaceVendorDataToFallbacks(vendorData);
       if (import.meta.env.MODE === 'development') {
         console.log('[VendorSync] Vendor fallbacks refreshed from current data');
       }
