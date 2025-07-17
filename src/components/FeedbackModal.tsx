@@ -27,8 +27,8 @@ interface FeedbackModalProps {
 }
 
 const GOOGLE_FORM_ACTION_URL =  
-  'https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZChMAQWHAcSsr-g/formResponse';
-
+  //'https://docs.google.com/forms/d/e/1FAIpQLSf7y12I4Un25LCbJFvkx-NM9UeSB1abFzqZChMAQWHAcSsr-g/formResponse';
+  'https://docs.google.com/forms/d/e/1FAIpQLSed8vWDyDHZ372FAvD7sn4PC0vP7Hj7DKP8fDW2h4_l8HW1ng/formResponse';
 const FIELD_DEVICE_INFO = 'entry.1975365589';
 const FIELD_ISSUE = 'entry.1554778644';
 const FIELD_LIKED = 'entry.1065342006';
