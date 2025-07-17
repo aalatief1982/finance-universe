@@ -157,40 +157,118 @@ function replaceVendorDataToFallbacks(vendorData: VendorData): void {
 }
 
 /**
- * Sync vendor data if the filename from registry differs
+ * Sync vendor data following the specified flow:
+ * 1. Check if no internet - use localStorage 
+ * 2. Check if localStorage not initialized - fall back to local JSON
+ * 3. Check latest filename from registry
+ * 4. Compare with stored source
+ * 5. Update if different or uninitialized
+ * 6. Handle uninitialized source by direct sync
  */
 export async function checkForVendorUpdates(): Promise<boolean> {
   try {
-    const hasInternet = await hasInternetConnection();
-    if (!hasInternet) {
-      console.log('[VendorSync] Offline – skipping update');
+    if (import.meta.env.MODE === 'development') {
+      console.log('[VendorSync] Starting vendor update check');
+    }
+
+    // Step 1: Check if vendor fallbacks exist, if not load from local JSON
+    const existingFallbacks = safeStorage.getItem('xpensia_vendor_fallbacks');
+    if (!existingFallbacks) {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[VendorSync] No existing fallbacks, should load from local JSON first');
+      }
+      // This will be handled by initializeXpensiaStorageDefaults
       return false;
     }
 
-    const registry = await fetchVendorRegistry();
-    if (!registry) return false;
-
-    const { filename, fileId } = registry.latest;
-    const storedFilename = getStoredDocumentName();
-
-    if (storedFilename !== filename) {
-      console.log(`[VendorSync] New vendor file detected: ${storedFilename} → ${filename}`);
-      const vendorData = await fetchVendorDataFromDrive(fileId);
-      if (vendorData) {
-        replaceVendorDataToFallbacks(vendorData);
-        safeStorage.setItem(VENDOR_SOURCE_KEY, filename);
-        syncCallbacks.forEach((cb) => cb(true, vendorData));
-        return true;
-      } else {
-        syncCallbacks.forEach((cb) => cb(false));
+    // Step 2: Check internet connectivity
+    const hasInternet = await hasInternetConnection();
+    if (!hasInternet) {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[VendorSync] No internet connection - using local data');
       }
-    } else {
-      console.log('[VendorSync] Vendor file unchanged – no sync needed');
+      return false;
     }
 
-    return false;
+    // Step 3: Fetch the latest registry information
+    const registry = await fetchVendorRegistry();
+    if (!registry?.latest) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[VendorSync] No registry data available');
+      }
+      return false;
+    }
+
+    const latestFilename = registry.latest.filename;
+    const latestVersion = registry.latest.version;
+    const latestFileId = registry.latest.fileId;
+
+    if (import.meta.env.MODE === 'development') {
+      console.log('[VendorSync] Latest from registry:', {
+        filename: latestFilename,
+        version: latestVersion,
+        fileId: latestFileId
+      });
+    }
+
+    // Extract the base filename without extension for comparison
+    const latestDocumentName = latestFilename.replace('.json', '');
+    const storedDocumentName = getStoredDocumentName();
+
+    if (import.meta.env.MODE === 'development') {
+      console.log('[VendorSync] Comparing versions:', {
+        stored: storedDocumentName,
+        latest: latestDocumentName
+      });
+    }
+
+    // Step 4 & 6: Handle uninitialized source or version comparison
+    if (storedDocumentName === null || storedDocumentName === undefined) {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[VendorSync] No stored source - performing initial sync');
+      }
+    } else if (storedDocumentName === latestDocumentName) {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[VendorSync] Already up to date');
+      }
+      return false;
+    }
+
+    // Step 5: Update needed - fetch and replace vendor data
+    if (import.meta.env.MODE === 'development') {
+      console.log('[VendorSync] Updating vendor data from:', latestFilename);
+    }
+
+    const vendorData = await fetchVendorDataFromDrive(latestFileId);
+    if (!vendorData) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[VendorSync] Failed to fetch vendor data');
+      }
+      syncCallbacks.forEach((cb) => cb(false));
+      return false;
+    }
+
+    // Step 5i: Replace vendor data (preserving user-added vendors)
+    replaceVendorDataToFallbacks(vendorData);
+    
+    // Step 5ii: Update stored filename (document name without extension)
+    safeStorage.setItem(VENDOR_SOURCE_KEY, latestDocumentName);
+
+    if (import.meta.env.MODE === 'development') {
+      console.log('[VendorSync] Vendor data updated successfully');
+      console.log('[VendorSync] Updated vendor source to:', latestDocumentName);
+    }
+
+    // Notify subscribers of success
+    syncCallbacks.forEach((cb) => cb(true, vendorData));
+    return true;
+
   } catch (error) {
-    console.error('[VendorSync] Sync error:', error);
+    if (import.meta.env.MODE === 'development') {
+      console.error('[VendorSync] Error checking for updates:', error);
+    }
+    
+    // Notify subscribers of failure
     syncCallbacks.forEach((cb) => cb(false));
     return false;
   }

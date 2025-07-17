@@ -222,18 +222,14 @@ export async function initializeXpensiaStorageDefaults() {
     }
   }
 
-  // Note: Vendor sync is now handled by BackgroundVendorSyncService
-  // This removes the blocking wait during app initialization
-  
-  // Ensure vendor fallback data exists
+  // Step 2: Ensure vendor fallback data exists - load from local JSON if not initialized
   if (!safeStorage.getItem('xpensia_vendor_fallbacks')) {
-    // Use updated data if available, otherwise fallback to imported data
-    const updatedData = getVendorData();
-    const dataToUse = updatedData || ((vendorFallbackData as any).default ?? vendorFallbackData);
+    // Always use local JSON file as fallback during initialization
+    const dataToUse = (vendorFallbackData as any).default ?? vendorFallbackData;
     
     saveVendorFallbacks(dataToUse);
     if (import.meta.env.MODE === 'development') {
-      console.log('[Init] xpensia_vendor_fallbacks initialized');
+      console.log('[Init] xpensia_vendor_fallbacks initialized from local JSON');
     }
   }
 
