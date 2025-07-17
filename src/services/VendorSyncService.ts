@@ -1,11 +1,13 @@
 import { safeStorage } from '@/utils/safe-storage';
-import { saveVendorFallbacks, loadVendorFallbacks, type VendorFallbackData } from '@/lib/smart-paste-engine/vendorFallbackUtils';
+import {
+  saveVendorFallbacks,
+  loadVendorFallbacks,
+  type VendorFallbackData,
+} from '@/lib/smart-paste-engine/vendorFallbackUtils';
 
 const VENDOR_SOURCE_KEY = 'xpensia_vendor_source';
-const VENDOR_VERSION_KEY = 'xpensia_vendor_version';
-const DOCUMENT_NAME = 'xpensia_vendor_mapping_v1.2.json';
-const GOOGLE_DRIVE_FILE_ID = '1QD_3mysr8gxMB_HQ88ZYI9ip7HSnosd-';
-const GOOGLE_DRIVE_URL = `https://drive.google.com/uc?export=download&id=${GOOGLE_DRIVE_FILE_ID}`;
+const REGISTRY_FILE_ID = '1J5mCbNoYeJd-KE_dz15W2c40L53r0K2A';
+const REGISTRY_URL = `https://drive.google.com/uc?export=download&id=${REGISTRY_FILE_ID}`;
 
 // Callback type for sync completion notifications
 type SyncCompletionCallback = (success: boolean, updatedData?: VendorData) => void;
@@ -19,17 +21,21 @@ interface VendorData {
   };
 }
 
-/**
- * Initialize the vendor source name in localStorage
- */
-export function initializeVendorSource(): void {
-  const stored = safeStorage.getItem(VENDOR_SOURCE_KEY);
-  if (!stored) {
-    safeStorage.setItem(VENDOR_SOURCE_KEY, DOCUMENT_NAME);
-    if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Initialized vendor source:', DOCUMENT_NAME);
-    }
-  }
+interface VendorRegistry {
+  latest: {
+    filename: string;
+    version: string;
+    fileId: string;
+  };
+  history?: {
+    filename: string;
+    version: string;
+    fileId: string;
+  }[];
+}
+
+function getStoredDocumentName(): string | null {
+  return safeStorage.getItem(VENDOR_SOURCE_KEY);
 }
 
 /**
@@ -40,7 +46,7 @@ async function hasInternetConnection(): Promise<boolean> {
     const response = await fetch('https://www.google.com/favicon.ico', {
       method: 'HEAD',
       mode: 'no-cors',
-      cache: 'no-cache'
+      cache: 'no-cache',
     });
     return true;
   } catch {
@@ -49,305 +55,180 @@ async function hasInternetConnection(): Promise<boolean> {
 }
 
 /**
- * Extract version/timestamp from JSON file to detect changes
+ * Fetch the vendor registry metadata from Google Drive
  */
-async function fetchVendorDataVersion(): Promise<string | null> {
+async function fetchVendorRegistry(): Promise<VendorRegistry | null> {
   try {
-    const response = await fetch(GOOGLE_DRIVE_URL, {
+    const response = await fetch(REGISTRY_URL, {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
+        Pragma: 'no-cache',
+      },
     });
-    
+
     if (!response.ok) {
-      if (import.meta.env.MODE === 'development') {
-        console.warn('[VendorSync] Cannot access Google Drive file:', response.status);
-      }
+      console.warn('[VendorSync] Cannot fetch registry file:', response.status);
       return null;
     }
-    
-    const jsonData = await response.json();
-    // Use timestamp or version field, fallback to stringified data hash
-    return jsonData.version || jsonData.timestamp || JSON.stringify(jsonData).length.toString();
-  } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error fetching vendor data version:', error);
+
+    const registry = await response.json();
+    if (registry?.latest?.fileId && registry?.latest?.filename) {
+      return registry as VendorRegistry;
     }
+
+    console.warn('[VendorSync] Registry file is malformed');
+    return null;
+  } catch (error) {
+    console.error('[VendorSync] Error fetching registry:', error);
     return null;
   }
 }
 
 /**
- * Fetch vendor data from Google Drive JSON file
+ * Fetch vendor data from a specific fileId
  */
-async function fetchVendorDataFromDrive(): Promise<VendorData | null> {
+async function fetchVendorDataFromDrive(fileId: string): Promise<VendorData | null> {
   try {
-    const response = await fetch(GOOGLE_DRIVE_URL, {
+    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    const response = await fetch(url, {
       cache: 'no-cache',
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
-      }
+        Pragma: 'no-cache',
+      },
     });
-    
+
     if (!response.ok) {
-      if (import.meta.env.MODE === 'development') {
-        console.warn('[VendorSync] Cannot access Google Drive file:', response.status);
-      }
+      console.warn('[VendorSync] Cannot fetch vendor data file:', response.status);
       return null;
     }
-    
+
     const jsonData = await response.json();
-    
-    // Validate the data structure
+
     if (typeof jsonData === 'object' && jsonData !== null) {
       return jsonData as VendorData;
     }
-    
-    if (import.meta.env.MODE === 'development') {
-      console.warn('[VendorSync] Invalid vendor data format received from Google Drive');
-    }
+
+    console.warn('[VendorSync] Invalid vendor data structure');
     return null;
-    
   } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error fetching vendor data from Google Drive:', error);
-    }
+    console.error('[VendorSync] Error fetching vendor data:', error);
     return null;
   }
 }
 
 /**
- * Convert VendorData to VendorFallbackData format and replace existing vendor fallbacks
- * Preserves user-added vendors while completely replacing sync data
+ * Replace fallback data with new vendor mappings
  */
 function replaceVendorDataToFallbacks(vendorData: VendorData): void {
   try {
     const existingFallbacks = loadVendorFallbacks();
-    
-    // Keep only user-added vendors
+
     const userVendors: Record<string, VendorFallbackData> = {};
     Object.entries(existingFallbacks).forEach(([vendorName, vendorInfo]) => {
       if (vendorInfo.user) {
         userVendors[vendorName] = vendorInfo;
       }
     });
-    
-    // Start with user vendors and add all sync data (complete replacement of sync data)
+
     const newFallbacks = { ...userVendors };
-    
-    // Add vendor data from sync source only if not user-added
+
     Object.entries(vendorData).forEach(([vendorName, vendorInfo]) => {
-      // Only add if this vendor is not already preserved as user-added
       if (!userVendors[vendorName]) {
         newFallbacks[vendorName] = {
           type: vendorInfo.type as 'expense' | 'income' | 'transfer',
           category: vendorInfo.category,
-          subcategory: vendorInfo.subcategory
-          // Note: sync data has no 'user' flag, user-added vendors already preserved above
+          subcategory: vendorInfo.subcategory,
         };
       }
     });
-    
-    // Save the updated fallbacks
+
     saveVendorFallbacks(newFallbacks);
-    
+
     if (import.meta.env.MODE === 'development') {
-      const userVendorCount = Object.keys(userVendors).length;
-      const syncVendorCount = Object.keys(vendorData).length;
-      const totalVendorCount = Object.keys(newFallbacks).length;
-      console.log(`[VendorSync] Successfully replaced vendor data: preserved ${userVendorCount} user vendors, processed ${syncVendorCount} sync vendors, total ${totalVendorCount} vendors`);
+      console.log(
+        `[VendorSync] Fallbacks replaced: preserved ${Object.keys(userVendors).length} user vendors, added ${Object.keys(vendorData).length} new.`
+      );
     }
   } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error replacing vendor data in fallbacks:', error);
-    }
+    console.error('[VendorSync] Error replacing fallbacks:', error);
   }
 }
 
 /**
- * Update the local vendor data and merge with vendor fallbacks
- */
-async function updateVendorDataFile(newData: VendorData, version: string): Promise<void> {
-  try {
-    // Store the updated data in localStorage override
-    safeStorage.setItem('xpensia_vendor_data_override', JSON.stringify(newData));
-    safeStorage.setItem(VENDOR_VERSION_KEY, version);
-    // Update the vendor source name to reflect the current document
-    safeStorage.setItem(VENDOR_SOURCE_KEY, DOCUMENT_NAME);
-    
-    // Replace vendor fallbacks with new data (preserving user-added vendors)
-    replaceVendorDataToFallbacks(newData);
-    
-    // Notify all registered callbacks
-    syncCallbacks.forEach(callback => {
-      try {
-        callback(true, newData);
-      } catch (error) {
-        if (import.meta.env.MODE === 'development') {
-          console.error('[VendorSync] Error in sync callback:', error);
-        }
-      }
-    });
-    
-    if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Vendor data updated and merged successfully');
-    }
-  } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error updating vendor data:', error);
-    }
-    
-    // Notify callbacks of failure
-    syncCallbacks.forEach(callback => {
-      try {
-        callback(false);
-      } catch (callbackError) {
-        if (import.meta.env.MODE === 'development') {
-          console.error('[VendorSync] Error in sync failure callback:', callbackError);
-        }
-      }
-    });
-  }
-}
-
-/**
- * Check for vendor mapping updates and sync if needed
+ * Sync vendor data if the filename from registry differs
  */
 export async function checkForVendorUpdates(): Promise<boolean> {
   try {
-    // Initialize if not exists
-    initializeVendorSource();
-    
-    // Check internet connection
     const hasInternet = await hasInternetConnection();
     if (!hasInternet) {
-      if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] No internet connection, skipping update check');
-      }
+      console.log('[VendorSync] Offline – skipping update');
       return false;
     }
-    
-    // Get stored version
-    const storedVersion = safeStorage.getItem(VENDOR_VERSION_KEY);
-    
-    // Fetch current version
-    const currentVersion = await fetchVendorDataVersion();
-    
-    if (!currentVersion) {
-      if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] Could not fetch vendor data version');
-      }
-      return false;
-    }
-    
-    // Check if version has changed or no stored version exists
-    if (storedVersion !== currentVersion) {
-      if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] Vendor data version changed:', storedVersion, '->', currentVersion);
-      }
-      
-      // Fetch and update vendor data
-      const newVendorData = await fetchVendorDataFromDrive();
-      if (newVendorData) {
-        await updateVendorDataFile(newVendorData, currentVersion);
-        if (import.meta.env.MODE === 'development') {
-          console.log('[VendorSync] Vendor data successfully synced from Google Drive');
-        }
+
+    const registry = await fetchVendorRegistry();
+    if (!registry) return false;
+
+    const { filename, fileId } = registry.latest;
+    const storedFilename = getStoredDocumentName();
+
+    if (storedFilename !== filename) {
+      console.log(`[VendorSync] New vendor file detected: ${storedFilename} → ${filename}`);
+      const vendorData = await fetchVendorDataFromDrive(fileId);
+      if (vendorData) {
+        replaceVendorDataToFallbacks(vendorData);
+        safeStorage.setItem(VENDOR_SOURCE_KEY, filename);
+        syncCallbacks.forEach((cb) => cb(true, vendorData));
         return true;
       } else {
-        if (import.meta.env.MODE === 'development') {
-          console.warn('[VendorSync] Could not fetch vendor data from Google Drive');
-        }
-        // Notify callbacks of failure
-        syncCallbacks.forEach(callback => {
-          try {
-            callback(false);
-          } catch (error) {
-            if (import.meta.env.MODE === 'development') {
-              console.error('[VendorSync] Error in sync failure callback:', error);
-            }
-          }
-        });
+        syncCallbacks.forEach((cb) => cb(false));
       }
+    } else {
+      console.log('[VendorSync] Vendor file unchanged – no sync needed');
     }
-    
+
     return false;
-    
   } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error checking for updates:', error);
-    }
-    
-    // Notify callbacks of error
-    syncCallbacks.forEach(callback => {
-      try {
-        callback(false);
-      } catch (callbackError) {
-        if (import.meta.env.MODE === 'development') {
-          console.error('[VendorSync] Error in sync error callback:', callbackError);
-        }
-      }
-    });
-    
+    console.error('[VendorSync] Sync error:', error);
+    syncCallbacks.forEach((cb) => cb(false));
     return false;
   }
 }
 
 /**
- * Get vendor data from local storage override or fallback to imported data
+ * Refresh from current fileId (manual use)
  */
-export function getVendorData(): VendorData | null {
-  try {
-    // First check if we have updated data in localStorage
-    const override = safeStorage.getItem('xpensia_vendor_data_override');
-    if (override) {
-      return JSON.parse(override);
+export function refreshVendorFallbacks(): void {
+  fetchVendorRegistry().then((registry) => {
+    if (registry?.latest?.fileId) {
+      fetchVendorDataFromDrive(registry.latest.fileId).then((data) => {
+        if (data) {
+          replaceVendorDataToFallbacks(data);
+          console.log('[VendorSync] Fallbacks refreshed manually.');
+        }
+      });
     }
-    
-    // If no override, the calling code should use the imported JSON file
-    return null;
-    
-  } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error getting vendor data:', error);
-    }
-    return null;
-  }
+  });
 }
 
 /**
- * Register a callback to be notified when vendor sync completes
+ * Register a callback to listen for sync result
  */
 export function onSyncComplete(callback: SyncCompletionCallback): () => void {
   syncCallbacks.push(callback);
-  
-  // Return unsubscribe function
   return () => {
     const index = syncCallbacks.indexOf(callback);
-    if (index > -1) {
-      syncCallbacks.splice(index, 1);
-    }
+    if (index > -1) syncCallbacks.splice(index, 1);
   };
 }
 
-/**
- * Force a vendor fallback refresh from current data
- */
-export function refreshVendorFallbacks(): void {
+export function getVendorData(): VendorData | null {
   try {
-    const vendorData = getVendorData();
-    if (vendorData) {
-      replaceVendorDataToFallbacks(vendorData);
-      if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] Vendor fallbacks refreshed from current data');
-      }
-    }
+    return loadVendorFallbacks();
   } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[VendorSync] Error refreshing vendor fallbacks:', error);
-    }
+    console.error('[VendorSync] Error loading vendor data:', error);
+    return null;
   }
 }
+
