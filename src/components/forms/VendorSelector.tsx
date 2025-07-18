@@ -10,6 +10,8 @@ import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from './transaction-form-schema';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import { getVendorData } from '@/services/VendorSyncService';
+import { getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
+import { TransactionType } from '@/types/transaction';
 
 interface VendorSelectorProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -20,10 +22,11 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
   const [addOpen, setAddOpen] = useState(false);
   const [newVendor, setNewVendor] = useState({
     name: '',
-    type: 'expense',
+    type: 'expense' as TransactionType,
     category: '',
     subcategory: '',
   });
+  const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
 
   useEffect(() => {
     const loadVendorList = () => {
@@ -50,16 +53,33 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
     };
   }, []);
 
+  // Update subcategories when category changes
+  useEffect(() => {
+    if (newVendor.category) {
+      const subcategories = getSubcategoriesForCategory(newVendor.category);
+      setAvailableSubcategories(subcategories);
+      
+      // Reset subcategory if it's no longer valid
+      if (newVendor.subcategory && !subcategories.includes(newVendor.subcategory)) {
+        setNewVendor(prev => ({ ...prev, subcategory: '' }));
+      }
+    } else {
+      setAvailableSubcategories([]);
+      setNewVendor(prev => ({ ...prev, subcategory: '' }));
+    }
+  }, [newVendor.category]);
+
   const handleSave = () => {
     if (!newVendor.name.trim()) return;
     addUserVendor(newVendor.name.trim(), {
-      type: newVendor.type as any,
+      type: newVendor.type,
       category: newVendor.category.trim(),
       subcategory: newVendor.subcategory.trim(),
     });
     setVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
     form.setValue('vendor', newVendor.name.trim());
     setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
+    setAvailableSubcategories([]);
     setAddOpen(false);
   };
 
@@ -101,7 +121,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Type*</label>
-              <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val }))}>
+              <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType, category: '', subcategory: '' }))}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -114,12 +134,37 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium">Category*</label>
-              <Input value={newVendor.category} onChange={e => setNewVendor(prev => ({ ...prev, category: e.target.value }))} />
+              <Select value={newVendor.category} onValueChange={val => setNewVendor(prev => ({ ...prev, category: val, subcategory: '' }))}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {getCategoriesForType(newVendor.type).map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Subcategory</label>
-              <Input value={newVendor.subcategory} onChange={e => setNewVendor(prev => ({ ...prev, subcategory: e.target.value }))} />
-            </div>
+            {availableSubcategories.length > 0 && (
+              <div>
+                <label className="mb-1 block text-sm font-medium">Subcategory</label>
+                <Select value={newVendor.subcategory} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val }))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    <SelectItem value="">None</SelectItem>
+                    {availableSubcategories.map(subcategory => (
+                      <SelectItem key={subcategory} value={subcategory}>
+                        {subcategory}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>
