@@ -56,18 +56,23 @@ export class AnalyticsService {
   // Generate data for the subcategory breakdown chart
   static getSubcategoryData(transactions: Transaction[]): CategoryData[] {
     const expensesBySubcategory = transactions
-      .filter(t => t.amount < 0 && t.subcategory)
+      .filter(t => t.amount < 0 && t.subcategory && !isNaN(t.amount))
       .reduce((acc: Record<string, number>, transaction) => {
         const sub = transaction.subcategory as string;
         if (!acc[sub]) {
           acc[sub] = 0;
         }
-        acc[sub] += Math.abs(transaction.amount);
+        const amount = Math.abs(transaction.amount);
+        // Only add if the amount is a valid number
+        if (!isNaN(amount) && isFinite(amount)) {
+          acc[sub] += amount;
+        }
         return acc;
       }, {});
 
     return Object.entries(expensesBySubcategory)
       .map(([name, value]) => ({ name, value }))
+      .filter(({ value }) => !isNaN(value) && isFinite(value) && value > 0)
       .sort((a, b) => b.value - a.value);
   }
 
