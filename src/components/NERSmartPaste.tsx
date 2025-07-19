@@ -7,7 +7,6 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { Loader2 } from 'lucide-react';
 import { Label } from './ui/label';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
-import ErrorAlert from './smart-paste/ErrorAlert';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
@@ -108,6 +107,11 @@ const handleSubmit = async (e: React.FormEvent) => {
       console.error('[NER] Extraction error:', err);
     }
     setError("Could not parse the message. Try again or report.");
+    toast({
+      title: "Error",
+      description: "Could not parse the message. Try again or report.",
+      variant: "destructive",
+    });
     setConfidence(null);
     setMatchOrigin(null);
   } finally {
@@ -218,7 +222,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         )}
       </form>
 
-      <ErrorAlert error={error} />
 
       {detectedTransactions.length > 0 && (
         <div className="space-y-3 mt-2">
