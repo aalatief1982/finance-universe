@@ -735,12 +735,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             {vendorAvailableSubcategories.length > 0 && (
               <div>
                 <label className="mb-1 block text-sm font-medium dark:text-white">Subcategory</label>
-                <Select value={newVendor.subcategory} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val }))}>
+                <Select value={newVendor.subcategory || "none"} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val === "none" ? "" : val }))}>
                   <SelectTrigger className={cn('w-full', darkFieldClass)}>
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {vendorAvailableSubcategories.map(subcategory => (
                       <SelectItem key={subcategory} value={subcategory}>
                         {subcategory}
