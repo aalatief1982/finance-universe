@@ -500,7 +500,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               'w-full text-sm',
               inputPadding,
               'rounded-md border-border focus:ring-ring',
-              darkFieldClass
+              darkFieldClass,
+              
             )}
             isAutoFilled={isDriven('type', drivenFields)}
           >
