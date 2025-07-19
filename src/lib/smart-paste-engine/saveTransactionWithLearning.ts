@@ -106,6 +106,18 @@ export function saveTransactionWithLearning(
       safeStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
     }
 
+    // FromAccount Remapping
+    if (
+      rawMessage &&
+      transaction.fromAccount &&
+      placeholders?.account &&
+      transaction.fromAccount !== placeholders.account
+    ) {
+      const fromAccountMap = JSON.parse(safeStorage.getItem('xpensia_fromaccount_map') || '{}');
+      fromAccountMap[placeholders.account] = transaction.fromAccount;
+      safeStorage.setItem('xpensia_fromaccount_map', JSON.stringify(fromAccountMap));
+    }
+
     // Default From Account Mapping
     if (templateHash && newTransaction.fromAccount) {
       const templates = loadTemplateBank();

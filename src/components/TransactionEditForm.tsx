@@ -84,6 +84,12 @@ function remapVendor(vendor?: string): string {
   return map[vendor] && map[vendor].trim() !== '' ? map[vendor] : vendor;
 }
 
+function remapFromAccount(fromAccount?: string): string {
+  if (!fromAccount) return '';
+  const map = JSON.parse(safeStorage.getItem('xpensia_fromaccount_map') || '{}');
+  return map[fromAccount] && map[fromAccount].trim() !== '' ? map[fromAccount] : fromAccount;
+}
+
 const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   transaction,
   onSave,
@@ -154,12 +160,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
       const mappedVendor = remapVendor(transaction.vendor);
+      const mappedFromAccount = remapFromAccount(transaction.fromAccount);
       const displayDate = transaction.date ? toISOFormat(transaction.date) : '';
       const rawMessage = (transaction as any).rawMessage || transaction.details?.rawMessage || '';
 
       return {
         ...transaction,
         vendor: mappedVendor,
+        fromAccount: mappedFromAccount,
         title: transaction.title?.trim() || generateDefaultTitle(transaction),
         date: displayDate,
         description: transaction.description?.trim() || rawMessage,
