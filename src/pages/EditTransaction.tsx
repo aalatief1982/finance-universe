@@ -25,6 +25,7 @@ const EditTransaction = () => {
   const { toast } = useToast();
   const { learnFromTransaction } = useLearningEngine();
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
@@ -96,7 +97,7 @@ const EditTransaction = () => {
           </div>
         )}
 
-        {confidenceScore !== undefined &&
+        {!isEditing && confidenceScore !== undefined &&
           location.state?.matchedCount !== undefined &&
           location.state?.totalTemplates !== undefined && (
             <SmartPasteSummary
@@ -145,6 +146,7 @@ const EditTransaction = () => {
               compact
               showNotes={false}
               fieldConfidences={fieldConfidences}
+              onEditStart={() => setIsEditing(true)}
             />
           </CardContent>
         </Card>

@@ -31,6 +31,8 @@ interface TransactionEditFormProps {
   showNotes?: boolean;
   /** Optional confidence scores for fields */
   fieldConfidences?: Partial<Record<keyof Transaction, number>>;
+  /** Called when user starts editing any field */
+  onEditStart?: () => void;
 }
 
 function isDriven(
@@ -88,6 +90,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   compact = false,
   showNotes = true,
   fieldConfidences = {},
+  onEditStart,
 }) => {
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
@@ -223,6 +226,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   }, [newVendor.category]);
 
   const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
+    // Call onEditStart when user starts editing
+    onEditStart?.();
+
     setEditedTransaction(prev => {
       const updated = { ...prev, [field]: value };
 
