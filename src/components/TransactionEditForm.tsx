@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
+import VendorAutocomplete from './VendorAutocomplete';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -31,7 +32,6 @@ interface TransactionEditFormProps {
   /** Optional confidence scores for fields */
   fieldConfidences?: Partial<Record<keyof Transaction, number>>;
 }
-
 
 function isDriven(
   field: keyof Transaction,
@@ -48,14 +48,7 @@ function hasLowConfidence(
   return score !== undefined && score < 0.6
 }
 
-/* export function generateDefaultTitle(txn: Transaction): string {
-  const subcategory = txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '';
-  const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
-  const currency = txn.currency ? txn.currency.toUpperCase() : '';
-  return subcategory && amount && currency ? `${subcategory} (${amount} ${currency})` : '';
-} */
-
-  export function generateDefaultTitle(txn: Transaction): string {
+export function generateDefaultTitle(txn: Transaction): string {
   const label = txn.vendor?.trim() || (txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '');
   const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
   const currency = txn.currency?.toUpperCase() || '';
@@ -431,7 +424,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     onSave(finalTransaction);
     setShowFeedback(true);
   };
-
 
   const rowClass = cn('flex items-center', compact ? 'gap-1' : 'gap-2');
   const labelClass = cn(
@@ -1005,29 +997,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <label className={labelClass}>Vendor</label>
 
         <div className="flex w-full items-center gap-1">
-          <Input
-            list="vendors-list"
+          <VendorAutocomplete
             value={editedTransaction.vendor || ''}
+            onChange={(value) => handleChange('vendor', value)}
+            vendors={vendors}
+            onAddClick={() => setAddVendorOpen(true)}
             isAutoFilled={isDriven('vendor', drivenFields)}
-            onChange={(e) => handleChange('vendor', e.target.value)}
-            placeholder="e.g., Netflix"
-            title={hasLowConfidence('vendor', fieldConfidences) ? 'Low confidence' : undefined}
+            hasLowConfidence={hasLowConfidence('vendor', fieldConfidences)}
             className={cn(
               'w-full text-sm',
               inputPadding,
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass,
-              hasLowConfidence('vendor', fieldConfidences) && 'border-amber-500'
+              darkFieldClass
             )}
           />
-          <Button type="button" variant="outline" size="icon" onClick={() => setAddVendorOpen(true)}>
-            <Plus className="size-4" />
-          </Button>
-          <datalist id="vendors-list">
-            {vendors.map(v => (
-              <option key={v} value={v} />
-            ))}
-          </datalist>
           {renderFeedbackIcons('vendor')}
         </div>
       </div>
