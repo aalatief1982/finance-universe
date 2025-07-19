@@ -283,7 +283,9 @@ export function refreshVendorFallbacks(): void {
       fetchVendorDataFromDrive(registry.latest.fileId).then((data) => {
         if (data) {
           replaceVendorDataToFallbacks(data);
-          console.log('[VendorSync] Fallbacks refreshed manually.');
+          if (import.meta.env.MODE === 'development') {
+            console.log('[VendorSync] Fallbacks refreshed manually.');
+          }
         }
       });
     }

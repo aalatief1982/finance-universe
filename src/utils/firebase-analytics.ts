@@ -18,12 +18,16 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, an
     if (Capacitor.isNativePlatform()) {
       // Use Capacitor plugin for native platforms
       await FirebaseAnalytics.logEvent({ name, params });
-      
-        console.log('[FirebaseAnalytics] Native event logged:', name, params);
+
+        if (import.meta.env.MODE === 'development') {
+          console.log('[FirebaseAnalytics] Native event logged:', name, params);
+        }
       
     } else {
       // For web platform, use native console logging only
-      console.log('[FirebaseAnalytics] Web platform - event would be:', name, params);
+      if (import.meta.env.MODE === 'development') {
+        console.log('[FirebaseAnalytics] Web platform - event would be:', name, params);
+      }
     }
 
     // Log to Google Sheets
