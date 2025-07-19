@@ -18,6 +18,42 @@ import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 import React, { useState, useEffect } from 'react'
 
+// AppWithLoader component definition
+const AppWithLoader: React.FC = () => {
+  const [initializing, setInitializing] = useState(true);
+  
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await initializeXpensiaStorageDefaults()
+        demoTransactionService.seedDemoTransactions()
+        setupGlobalErrorHandlers()
+        
+        // Start background vendor sync
+        backgroundVendorSyncService.initialize()
+        
+      } catch (err) {
+        if (import.meta.env.MODE === 'development') {
+          console.error('[Init] Initialization error:', err)
+        }
+        // Fallback initialization
+        demoTransactionService.seedDemoTransactions()
+        setupGlobalErrorHandlers()
+        backgroundVendorSyncService.initialize()
+      } finally {
+        setInitializing(false)
+      }
+    }
+    
+    initialize()
+  }, [])
+  
+  return (
+    <AppLoader isInitializing={initializing}>
+      <App />
+    </AppLoader>
+  )
+}
 
 function setupGlobalErrorHandlers() {
   window.addEventListener('unhandledrejection', (event) => {
@@ -75,57 +111,17 @@ function setupGlobalErrorHandlers() {
   console.info('Global error handlers initialized')
 }
 
-// Init
-try {
-  initializeCapacitor()
-} catch (err) {
-  if (import.meta.env.MODE === 'development') {
-    console.error('[Capacitor] Initialization error:', err)
-  }
-}
-
+// Initialize and render the app
 ;(async () => {
-  let isInitializing = true;
-  
-  // Render loading screen immediately
-  const root = createRoot(document.getElementById("root")!)
-  
-  const AppWithLoader = () => {
-    const [initializing, setInitializing] = useState(true);
-    
-    useEffect(() => {
-      const initialize = async () => {
-        try {
-          await initializeXpensiaStorageDefaults()
-          demoTransactionService.seedDemoTransactions()
-          setupGlobalErrorHandlers()
-          
-          // Start background vendor sync
-          backgroundVendorSyncService.initialize()
-          
-        } catch (err) {
-          if (import.meta.env.MODE === 'development') {
-            console.error('[Init] Initialization error:', err)
-          }
-          // Fallback initialization
-          demoTransactionService.seedDemoTransactions()
-          setupGlobalErrorHandlers()
-          backgroundVendorSyncService.initialize()
-        } finally {
-          setInitializing(false)
-        }
-      }
-      
-      initialize()
-    }, [])
-    
-    return (
-      <AppLoader isInitializing={initializing}>
-        <App />
-      </AppLoader>
-    )
+  try {
+    await initializeCapacitor()
+  } catch (err) {
+    if (import.meta.env.MODE === 'development') {
+      console.error('[Capacitor] Initialization error:', err)
+    }
   }
-  
+
+  const root = createRoot(document.getElementById("root")!)
   root.render(<AppWithLoader />)
 })()
 
