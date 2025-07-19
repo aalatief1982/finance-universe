@@ -40,6 +40,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [hasMatch, setHasMatch] = useState(false);
   const [confidence, setConfidence] = useState<number | null>(null);
   const [matchOrigin, setMatchOrigin] = useState<'template' | 'structure' | 'ml' | 'fallback' | null>(null);
+  const [fieldConfidences, setFieldConfidences] = useState<Record<string, number>>({});
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -134,6 +135,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setDetectedTransactions([transaction]);
     setConfidence(confidence);
     setMatchOrigin(origin);
+    setFieldConfidences(fieldConfidences || {});
 
     if (onTransactionsDetected) {
       if (import.meta.env.MODE === 'development') {
@@ -219,13 +221,13 @@ const handleSubmit = async (e: React.FormEvent) => {
         [transaction],
         text,
         senderHint,
-        0.95,
-        'structure',
+        confidence || 0.95,
+        matchOrigin || 'structure',
         0,
         0,
         undefined,
         undefined,
-        {}
+        fieldConfidences
       );
     }
 
