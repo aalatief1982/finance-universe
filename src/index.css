@@ -178,6 +178,13 @@
 }
 }
 
+/* Highlight fields driven by Smart Paste */
+@layer components {
+  [data-driven='true'] {
+    background-color: #dfffe0;
+  }
+}
+
 /* Mobile-specific optimizations */
 @media (max-width: 640px) {
   .card {
