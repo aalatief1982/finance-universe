@@ -25,7 +25,7 @@ const ImportTransactions = () => {
     keywordScore?: number,
     fieldConfidences?: Record<string, number>
   ) => {
-    if (import.meta.env.MODE === 'development') console.log('[ImportTransactions] Transactions detected', {
+    if (import.meta.env.MODE === 'development') console.log('[ImportTransactions] onTransactionsDetected called with:', {
       count: transactions.length,
       transaction: transactions[0],
       rawMessageLength: rawMessage?.length,
@@ -33,6 +33,8 @@ const ImportTransactions = () => {
       confidence,
       matchOrigin,
       fieldConfidences,
+      fieldConfidencesKeys: fieldConfidences ? Object.keys(fieldConfidences) : [],
+      fieldConfidencesValues: fieldConfidences ? Object.values(fieldConfidences) : []
     });
 
     const transaction = transactions[0];
@@ -47,6 +49,23 @@ const ImportTransactions = () => {
       matchOrigin,
       transaction,
       fieldConfidences,
+      fieldConfidencesStringified: JSON.stringify(fieldConfidences),
+      navigationState: {
+        transaction: {
+          ...transaction,
+          rawMessage: rawMessage ?? '',
+        },
+        rawMessage,
+        senderHint,
+        confidence,
+        matchedCount,
+        totalTemplates,
+        fieldScore,
+        keywordScore,
+        fieldConfidences,
+        isSuggested: true,
+        matchOrigin,
+      }
     });
 
     navigate('/edit-transaction', {

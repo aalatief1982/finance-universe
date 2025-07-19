@@ -44,7 +44,18 @@ const EditTransaction = () => {
   const isNewTransaction = !transaction;
 
   if (import.meta.env.MODE === 'development') {
-    console.log('[EditTransaction] Received fieldConfidences:', fieldConfidences);
+    console.log('[EditTransaction] Component initialized with state:', {
+      transaction,
+      fieldConfidences,
+      fieldConfidencesKeys: fieldConfidences ? Object.keys(fieldConfidences) : [],
+      fieldConfidencesValues: fieldConfidences ? Object.values(fieldConfidences) : [],
+      fieldConfidencesStringified: JSON.stringify(fieldConfidences),
+      rawMessage: rawMessage?.substring(0, 100),
+      senderHint,
+      isSuggested,
+      confidenceScore,
+      fullLocationState: location.state
+    });
   }
 
   const handleSave = (editedTransaction: Transaction) => {

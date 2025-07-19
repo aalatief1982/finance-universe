@@ -136,6 +136,10 @@ const handleSubmit = async (e: React.FormEvent) => {
     setConfidence(confidence);
     setMatchOrigin(origin);
     setFieldConfidences(fieldConfidences || {});
+    
+    if (import.meta.env.MODE === 'development') {
+      console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
+    }
 
     if (onTransactionsDetected) {
       if (import.meta.env.MODE === 'development') {
@@ -199,8 +203,11 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   const handleAddTransaction = (transaction: Transaction) => {
     if (import.meta.env.MODE === 'development') {
-      console.log('[SmartPaste] Sending transaction to ImportTransactions:', {
+      console.log('[SmartPaste] handleAddTransaction called with:', {
         transaction,
+        currentFieldConfidences: fieldConfidences,
+        currentConfidence: confidence,
+        currentMatchOrigin: matchOrigin,
         parsedFields: {
           amount: transaction.amount,
           currency: transaction.currency,
@@ -217,6 +224,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       console.log("[SmartPaste] Transaction added:", transaction);
     }
     if (onTransactionsDetected) {
+      if (import.meta.env.MODE === 'development') {
+        console.log("[SmartPaste] Calling onTransactionsDetected with fieldConfidences:", fieldConfidences);
+      }
       onTransactionsDetected(
         [transaction],
         text,
