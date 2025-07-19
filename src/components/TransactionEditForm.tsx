@@ -283,8 +283,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const handleSaveAccount = () => {
     if (!newAccount.name.trim()) return;
-    addUserAccount({ name: newAccount.name.trim(), iban: newAccount.iban.trim() || undefined });
+    const accountName = newAccount.name.trim();
+    addUserAccount({ name: accountName, iban: newAccount.iban.trim() || undefined });
     setAccounts(getStoredAccounts());
+    handleChange('fromAccount', accountName);
     setNewAccount({ name: '', iban: '' });
     setAddAccountOpen(false);
   };
