@@ -1020,6 +1020,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass
               )}
+              isAutoFilled={isDriven('person', drivenFields)}
             >
               <SelectValue placeholder="Select person" />
             </SelectTrigger>
