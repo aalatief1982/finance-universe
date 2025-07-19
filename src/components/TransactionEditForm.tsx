@@ -188,19 +188,25 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     if (transaction) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
       if (transaction.source === 'smart-paste' || transaction.details?.rawMessage) {
-        ['type', 'title', 'amount', 'currency', 'vendor', 'fromAccount', 'toAccount', 'date', 'category', 'subcategory'].forEach((field) => {
+        // Use fieldConfidences to determine which fields were actually driven by smart paste
+        Object.keys(fieldConfidences || {}).forEach((field) => {
+          const confidence = fieldConfidences![field as keyof Transaction];
           const value = transaction[field as keyof Transaction];
-          const isDriven =
-            value != null &&
+          
+          // Field is driven if it has confidence score and a non-empty value
+          const hasValue = value != null &&
             ((typeof value === 'string' && value.trim() !== '') || typeof value === 'number') &&
             !(field === 'category' && value === 'Uncategorized') &&
             !(field === 'subcategory' && value === 'none');
-          if (isDriven) driven[field as keyof Transaction] = true;
+            
+          if (confidence !== undefined && hasValue) {
+            driven[field as keyof Transaction] = true;
+          }
         });
       }
       setDrivenFields(driven);
     }
-  }, [transaction]);
+  }, [transaction, fieldConfidences]);
 
   useEffect(() => {
     const categories = getCategoriesForType(editedTransaction.type) || [];
