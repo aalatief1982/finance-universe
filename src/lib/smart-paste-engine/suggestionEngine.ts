@@ -160,11 +160,19 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
 
   // ⬇️ Type keywords (fallback)
   if (!inferred['type']) {
-    const typeKeywords = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '[]');
-    for (const entry of typeKeywords) {
-      if (rawText.includes(entry.keyword.toLowerCase())) {
-        inferred['type'] = entry.type;
-        break;
+    const typeKeywordsData = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '{}');
+    const rawTextLower = rawText.toLowerCase();
+    
+    // Handle object format: {expense: [...], income: [...], transfer: [...]}
+    for (const [transactionType, keywords] of Object.entries(typeKeywordsData)) {
+      if (Array.isArray(keywords)) {
+        for (const keyword of keywords) {
+          if (rawTextLower.includes(keyword.toLowerCase())) {
+            inferred['type'] = transactionType;
+            break;
+          }
+        }
+        if (inferred['type']) break;
       }
     }
   }
@@ -240,11 +248,19 @@ export function inferIndirectFields(
 
   // Step 3: Type keyword inference
   if (!inferred['type']) {
-    const typeKeywords = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '[]') || [];
-    for (const entry of typeKeywords) {
-      if (rawText.includes(entry.keyword.toLowerCase())) {
-        inferred['type'] = entry.type;
-        break;
+    const typeKeywordsData = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '{}');
+    const rawTextLower = rawText.toLowerCase();
+    
+    // Handle object format: {expense: [...], income: [...], transfer: [...]}
+    for (const [transactionType, keywords] of Object.entries(typeKeywordsData)) {
+      if (Array.isArray(keywords)) {
+        for (const keyword of keywords) {
+          if (rawTextLower.includes(keyword.toLowerCase())) {
+            inferred['type'] = transactionType;
+            break;
+          }
+        }
+        if (inferred['type']) break;
       }
     }
   }
