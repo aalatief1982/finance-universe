@@ -48,6 +48,7 @@ export async function parseAndInferTransaction(
       '',
     fromAccount:
       parsed.directFields.fromAccount?.value ||
+      parsed.directFields.account?.value ||
       parsed.inferredFields.fromAccount?.value ||
       parsed.defaultValues?.fromAccount?.value ||
       senderHint || '',
@@ -83,6 +84,7 @@ export async function parseAndInferTransaction(
   const fieldConfidences: Record<string, number> = {};
   fields.forEach((f) => {
     if (parsed.directFields?.[f]) fieldConfidences[f] = parsed.directFields[f].confidenceScore;
+    else if (f === 'fromAccount' && parsed.directFields?.account) fieldConfidences[f] = parsed.directFields.account.confidenceScore;
     else if (parsed.inferredFields?.[f]) fieldConfidences[f] = parsed.inferredFields[f].confidenceScore;
     else if (parsed.defaultValues?.[f]) fieldConfidences[f] = parsed.defaultValues[f].confidenceScore;
     else fieldConfidences[f] = 0;
