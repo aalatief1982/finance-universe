@@ -153,6 +153,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [newVendor, setNewVendor] = useState<{ name: string; type: TransactionType; category: string; subcategory: string }>(
     { name: '', type: 'expense', category: '', subcategory: '' }
   );
+  const [vendorAvailableSubcategories, setVendorAvailableSubcategories] = useState<string[]>([]);
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -211,6 +212,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const subcategories = getSubcategoriesForCategory(editedTransaction.category) || [];
     setAvailableSubcategories(subcategories);
   }, [editedTransaction.type, editedTransaction.category]);
+
+  // Update vendor subcategories when vendor category changes
+  useEffect(() => {
+    if (newVendor.category) {
+      const subcategories = getSubcategoriesForCategory(newVendor.category);
+      setVendorAvailableSubcategories(subcategories);
+      
+      // Reset subcategory if it's no longer valid
+      if (newVendor.subcategory && !subcategories.includes(newVendor.subcategory)) {
+        setNewVendor(prev => ({ ...prev, subcategory: '' }));
+      }
+    } else {
+      setVendorAvailableSubcategories([]);
+      setNewVendor(prev => ({ ...prev, subcategory: '' }));
+    }
+  }, [newVendor.category]);
 
   const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
     setEditedTransaction(prev => {
@@ -689,7 +706,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium dark:text-white">Type*</label>
-              <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType }))}>
+              <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType, category: '', subcategory: '' }))}>
                 <SelectTrigger className={cn('w-full', darkFieldClass)}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -702,20 +719,37 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium dark:text-white">Category*</label>
-              <Input
-                value={newVendor.category}
-                onChange={e => setNewVendor(prev => ({ ...prev, category: e.target.value }))}
-                className={darkFieldClass}
-              />
+              <Select value={newVendor.category} onValueChange={val => setNewVendor(prev => ({ ...prev, category: val, subcategory: '' }))}>
+                <SelectTrigger className={cn('w-full', darkFieldClass)}>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {getCategoriesForType(newVendor.type).map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Subcategory</label>
-              <Input
-                value={newVendor.subcategory}
-                onChange={e => setNewVendor(prev => ({ ...prev, subcategory: e.target.value }))}
-                className={darkFieldClass}
-              />
-            </div>
+            {vendorAvailableSubcategories.length > 0 && (
+              <div>
+                <label className="mb-1 block text-sm font-medium dark:text-white">Subcategory</label>
+                <Select value={newVendor.subcategory} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val }))}>
+                  <SelectTrigger className={cn('w-full', darkFieldClass)}>
+                    <SelectValue placeholder="Select subcategory" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    <SelectItem value="">None</SelectItem>
+                    {vendorAvailableSubcategories.map(subcategory => (
+                      <SelectItem key={subcategory} value={subcategory}>
+                        {subcategory}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setAddVendorOpen(false)}>Cancel</Button>
