@@ -14,6 +14,7 @@ interface VendorAutocompleteProps {
   hasLowConfidence?: boolean;
   placeholder?: string;
   className?: string;
+  userHasInteracted?: boolean;
 }
 
 const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
@@ -25,6 +26,7 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   hasLowConfidence = false,
   placeholder = "e.g., Netflix",
   className,
+  userHasInteracted = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filteredVendors, setFilteredVendors] = useState<string[]>([]);
@@ -44,12 +46,12 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
         )
         .slice(0, 4); // Limit to 4 results
       setFilteredVendors(filtered);
-      setIsOpen(filtered.length > 0);
+      setIsOpen(userHasInteracted && filtered.length > 0);
     } else {
       setFilteredVendors([]);
       setIsOpen(false);
     }
-  }, [searchTerm, vendors]);
+  }, [searchTerm, vendors, userHasInteracted]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

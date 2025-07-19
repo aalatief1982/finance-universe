@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import VendorAutocomplete from './VendorAutocomplete';
+import AccountAutocomplete from './AccountAutocomplete';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -156,6 +157,17 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     { name: '', type: 'expense', category: '', subcategory: '' }
   );
   const [vendorAvailableSubcategories, setVendorAvailableSubcategories] = useState<string[]>([]);
+
+  // Track user interactions to prevent auto-opening dropdowns
+  const [userInteractions, setUserInteractions] = useState<{
+    vendor: boolean;
+    fromAccount: boolean;
+    toAccount: boolean;
+  }>({
+    vendor: false,
+    fromAccount: false,
+    toAccount: false
+  });
 
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
     if (transaction) {
@@ -366,6 +378,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     });
     setVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
     handleChange('vendor', newVendor.name.trim());
+    
+    // Set the category and subcategory from the new vendor
+    if (newVendor.category.trim()) {
+      handleChange('category', newVendor.category.trim());
+      if (newVendor.subcategory.trim()) {
+        handleChange('subcategory', newVendor.subcategory.trim());
+      }
+    }
+    
     setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
     setAddVendorOpen(false);
   };
@@ -837,14 +858,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <label className={labelClass}>From Account*</label>
 
         <div className="flex w-full items-center gap-1">
-            <Input
-              list="accounts-list"
-              value={editedTransaction.fromAccount || ''}
-              onChange={(e) => handleChange('fromAccount', e.target.value)}
-              isAutoFilled={isDriven('fromAccount', drivenFields)}
-            title={hasLowConfidence('fromAccount', fieldConfidences) ? 'Low confidence' : undefined}
-            placeholder="Source account"
+          <AccountAutocomplete
+            value={editedTransaction.fromAccount || ''}
+            onChange={(value) => {
+              setUserInteractions(prev => ({ ...prev, fromAccount: true }));
+              handleChange('fromAccount', value);
+            }}
+            accounts={accounts}
+            onAddClick={() => setAddAccountOpen(true)}
+            isAutoFilled={isDriven('fromAccount', drivenFields)}
+            hasLowConfidence={hasLowConfidence('fromAccount', fieldConfidences)}
+            placeholder="Start typing account name..."
             required
+            userHasInteracted={userInteractions.fromAccount}
             className={cn(
               'w-full text-sm',
               inputPadding,
@@ -853,14 +879,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               hasLowConfidence('fromAccount', fieldConfidences) && 'border-amber-500'
             )}
           />
-          <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
-            <Plus className="size-4" />
-          </Button>
-          <datalist id="accounts-list">
-            {accounts.map(acc => (
-              <option key={acc.name} value={acc.name} />
-            ))}
-          </datalist>
           {renderFeedbackIcons('fromAccount')}
         </div>
       </div>
@@ -870,13 +888,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <label className={labelClass}>To Account*</label>
 
           <div className="flex w-full items-center gap-1">
-            <Input
-              list="accounts-list"
+            <AccountAutocomplete
               value={editedTransaction.toAccount || ''}
-              onChange={(e) => handleChange('toAccount', e.target.value)}
+              onChange={(value) => {
+                setUserInteractions(prev => ({ ...prev, toAccount: true }));
+                handleChange('toAccount', value);
+              }}
+              accounts={accounts}
+              onAddClick={() => setAddAccountOpen(true)}
               isAutoFilled={isDriven('toAccount', drivenFields)}
-              placeholder="Destination account"
+              placeholder="Start typing destination account..."
               required
+              userHasInteracted={userInteractions.toAccount}
               className={cn(
                 'w-full text-sm',
                 inputPadding,
@@ -884,9 +907,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 darkFieldClass
               )}
             />
-            <Button type="button" variant="outline" size="icon" onClick={() => setAddAccountOpen(true)}>
-              <Plus className="size-4" />
-            </Button>
             {renderFeedbackIcons('toAccount')}
           </div>
         </div>
@@ -1019,11 +1039,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <div className="flex w-full items-center gap-1">
           <VendorAutocomplete
             value={editedTransaction.vendor || ''}
-            onChange={(value) => handleChange('vendor', value)}
+            onChange={(value) => {
+              setUserInteractions(prev => ({ ...prev, vendor: true }));
+              handleChange('vendor', value);
+            }}
             vendors={vendors}
             onAddClick={() => setAddVendorOpen(true)}
             isAutoFilled={isDriven('vendor', drivenFields)}
             hasLowConfidence={hasLowConfidence('vendor', fieldConfidences)}
+            userHasInteracted={userInteractions.vendor}
             className={cn(
               'w-full text-sm',
               inputPadding,
