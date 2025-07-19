@@ -57,14 +57,26 @@ export async function parseAndInferTransaction(
     title: '', // editable in form later
   };
 
-  // Confidence scoring
   const keywordBank = loadKeywordBank();
   const templates = getAllTemplates();
-  const matchedTemplates = templates.filter(t => t.template.includes(transaction.vendor)).length;
+  
+  // Template confidence should be based on whether THIS message matched a template, not vendor name matching
+  const templateMatched = parsed.matched ? 1 : 0;
+  const totalTemplates = templates.length;
+
+  console.log('[SmartPaste] Debug confidence calculation:');
+  console.log('  - Template matched:', templateMatched, '(parsed.matched:', parsed.matched, ')');
+  console.log('  - Total templates:', totalTemplates);
+  console.log('  - Transaction vendor:', transaction.vendor);
 
   const fieldScore = getFieldConfidence(parsed);
-  const templateScore = getTemplateConfidence(matchedTemplates, templates.length);
+  const templateScore = getTemplateConfidence(templateMatched, totalTemplates);
   const keywordScore = getKeywordConfidence(transaction, keywordBank);
+  
+  console.log('  - Field score:', fieldScore);
+  console.log('  - Template score:', templateScore); 
+  console.log('  - Keyword score:', keywordScore);
+  
   const finalConfidence = computeOverallConfidence(
     fieldScore,
     templateScore,
@@ -122,7 +134,7 @@ export async function parseAndInferTransaction(
     parsed,
     fieldConfidences,
     parsingStatus,
-    matchedCount: matchedTemplates,
+    matchedCount: templateMatched,
     totalTemplates: templates.length,
     fieldScore,
     keywordScore,

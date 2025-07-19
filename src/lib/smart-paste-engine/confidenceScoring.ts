@@ -9,9 +9,11 @@ export function getFieldConfidence(parsed: any): number {
   return filledFields.length / totalFields.length; // e.g., 7/8 = 0.875
 }
 
-export function getTemplateConfidence(matchedCount: number, totalTemplates: number): number {
+export function getTemplateConfidence(templateMatched: number, totalTemplates: number): number {
+  // templateMatched should be 1 if matched, 0 if not
+  // If we have templates and this one matched, give high confidence
   if (totalTemplates === 0) return 0;
-  return matchedCount / totalTemplates;
+  return templateMatched; // Simply return 1 if matched, 0 if not
 }
 
 export function getKeywordConfidence(transaction: any, keywordBank: any[]): number {
