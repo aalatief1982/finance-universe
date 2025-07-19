@@ -181,7 +181,7 @@
 /* Highlight fields driven by Smart Paste */
 @layer components {
   [data-driven='true'] {
-    background-color: #dfffe0;
+    background-color: #dfffe0 !important;
   }
 }
 
