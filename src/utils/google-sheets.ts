@@ -38,8 +38,10 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
       ]
     };
 
-    // For now, we'll just console.log the data since setting up the full Google Apps Script is needed
-    console.log('[GoogleSheets] Would log to sheet:', payload);
+    // For now, log the data only during development since setting up the full Google Apps Script is needed
+    if (import.meta.env.MODE === 'development') {
+      console.log('[GoogleSheets] Would log to sheet:', payload);
+    }
     
     // Uncomment this when you have the Google Apps Script set up:
     
@@ -56,7 +58,9 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
     }
 
     const result = await response.json();
-    console.log('[GoogleSheets] Successfully logged to sheet:', result);
+    if (import.meta.env.MODE === 'development') {
+      console.log('[GoogleSheets] Successfully logged to sheet:', result);
+    }
   
     
   } catch (error) {
@@ -69,8 +73,10 @@ export async function logToGoogleSheetsAPI(entry: AnalyticsLogEntry) {
   try {
     // This would require setting up service account credentials
     // For mobile apps, it's better to use the Google Apps Script approach above
-    
-    console.log('[GoogleSheets] Direct API approach - would log:', entry);
+
+    if (import.meta.env.MODE === 'development') {
+      console.log('[GoogleSheets] Direct API approach - would log:', entry);
+    }
     
   } catch (error) {
     console.error('[GoogleSheets] Direct API failed:', error);
