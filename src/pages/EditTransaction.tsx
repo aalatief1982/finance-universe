@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -41,6 +42,10 @@ const EditTransaction = () => {
     | Record<string, number>
     | undefined;
   const isNewTransaction = !transaction;
+
+  if (import.meta.env.MODE === 'development') {
+    console.log('[EditTransaction] Received fieldConfidences:', fieldConfidences);
+  }
 
   const handleSave = (editedTransaction: Transaction) => {
     setSaving(true);

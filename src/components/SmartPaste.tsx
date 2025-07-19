@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
@@ -16,8 +15,6 @@ import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
-
-
 interface SmartPasteProps {
   senderHint?: string;
   onTransactionsDetected?: (
@@ -29,7 +26,8 @@ interface SmartPasteProps {
     matchedCount?: number,
     totalTemplates?: number,
     fieldScore?: number,
-    keywordScore?: number
+    keywordScore?: number,
+    fieldConfidences?: Record<string, number>
   ) => void;
 }
 
@@ -128,7 +126,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (import.meta.env.MODE === 'development') {
       console.log("[SmartPaste] Confidence Breakdown:", {
         confidence,
-        origin
+        origin,
+        fieldConfidences
       });
     }
 
@@ -139,6 +138,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (onTransactionsDetected) {
       if (import.meta.env.MODE === 'development') {
         console.log("[SmartPaste] Final transaction inference:", transaction);
+        console.log("[SmartPaste] Passing fieldConfidences:", fieldConfidences);
       }
       onTransactionsDetected(
         [transaction],
@@ -149,7 +149,8 @@ const handleSubmit = async (e: React.FormEvent) => {
         matchedCount,
         totalTemplates,
         fieldScore,
-        keywordScore
+        keywordScore,
+        fieldConfidences
       );
     }
 
@@ -223,7 +224,8 @@ const handleSubmit = async (e: React.FormEvent) => {
         0,
         0,
         undefined,
-        undefined
+        undefined,
+        {}
       );
     }
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -24,7 +25,8 @@ const ImportTransactionsNER = () => {
     matchedCount?: number,
     totalTemplates?: number,
     fieldScore?: number,
-    keywordScore?: number
+    keywordScore?: number,
+    fieldConfidences?: Record<string, number>
   ) => {
     if (import.meta.env.MODE === 'development') console.log('[ImportTransactionsNER] Transactions detected', {
       count: transactions.length,
@@ -32,8 +34,8 @@ const ImportTransactionsNER = () => {
       rawMessageLength: rawMessage?.length,
       senderHint,
       confidence,
-      //shouldTrain,
       matchOrigin,
+      fieldConfidences,
     });
 
     const transaction = transactions[0];
@@ -45,28 +47,29 @@ const ImportTransactionsNER = () => {
     }
 
     if (import.meta.env.MODE === 'development') console.log('[ImportTransactionsNER] Navigate to edit with parameters:', {
-      //shouldTrain,
       matchOrigin,
       transaction,
+      fieldConfidences,
     });
 
     navigate('/edit-transaction', {
-  state: {
-	transaction: {
-	  ...transaction,
-	  rawMessage: rawMessage ?? '',
-	},
-    rawMessage,
-    senderHint,
-    confidence,
-    matchedCount,
-    totalTemplates,
-    fieldScore,
-    keywordScore,
-    isSuggested: true,
-    matchOrigin,
-  },
-});
+      state: {
+        transaction: {
+          ...transaction,
+          rawMessage: rawMessage ?? '',
+        },
+        rawMessage,
+        senderHint,
+        confidence,
+        matchedCount,
+        totalTemplates,
+        fieldScore,
+        keywordScore,
+        fieldConfidences,
+        isSuggested: true,
+        matchOrigin,
+      },
+    });
   };
 
   return (
