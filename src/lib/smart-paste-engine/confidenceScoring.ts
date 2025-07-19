@@ -19,15 +19,30 @@ export function getTemplateConfidence(templateMatched: number, totalTemplates: n
 export function getKeywordConfidence(transaction: any, keywordBank: any[]): number {
   if (!transaction.vendor) return 0;
 
+  let totalScore = 0;
+  let sourceCount = 0;
+
+  // Check keyword bank confidence
   const keyword = transaction.vendor.toLowerCase().split(' ')[0];
   const entry = keywordBank.find(k => k.keyword === keyword);
-  if (!entry || !entry.mappings) return 0;
+  if (entry && entry.mappings) {
+    const fieldsMatched = entry.mappings.filter(m =>
+      m.value === transaction[m.field]
+    ).length;
+    totalScore += fieldsMatched / entry.mappings.length;
+    sourceCount++;
+  }
 
-  const fieldsMatched = entry.mappings.filter(m =>
-    m.value === transaction[m.field]
-  ).length;
+  // Check user vendor mapping confidence
+  const vendorMap = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+  const isUserMappedVendor = Object.values(vendorMap).includes(transaction.vendor);
+  if (isUserMappedVendor) {
+    // If vendor came from user mapping, give it high confidence
+    totalScore += 0.8; // 80% confidence for user-mapped vendors
+    sourceCount++;
+  }
 
-  return fieldsMatched / entry.mappings.length;
+  return sourceCount > 0 ? totalScore / sourceCount : 0;
 }
 
 export function computeOverallConfidence(

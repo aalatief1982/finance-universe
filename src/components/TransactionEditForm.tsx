@@ -195,9 +195,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   useEffect(() => {
     if (transaction) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
-      console.log('[TransactionEditForm] Debug - transaction source:', transaction.source);
-      console.log('[TransactionEditForm] Debug - fieldConfidences:', fieldConfidences);
-      
       if (transaction.source === 'smart-paste' || transaction.details?.rawMessage) {
         // Use fieldConfidences to determine which fields were actually driven by smart paste
         Object.keys(fieldConfidences || {}).forEach((field) => {
@@ -210,15 +207,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             !(field === 'category' && value === 'Uncategorized') &&
             !(field === 'subcategory' && value === 'none');
             
-          console.log(`[TransactionEditForm] Field ${field}:`, { confidence, value, hasValue });
-            
           if (confidence !== undefined && hasValue) {
             driven[field as keyof Transaction] = true;
-            console.log(`[TransactionEditForm] Setting ${field} as driven`);
           }
         });
       }
-      console.log('[TransactionEditForm] Final driven fields:', driven);
       setDrivenFields(driven);
     }
   }, [transaction, fieldConfidences]);
