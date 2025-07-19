@@ -205,25 +205,31 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   });
 
   useEffect(() => {
-    if (transaction) {
+    if (transaction && fieldConfidences) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
-      if (transaction.source === 'smart-paste' || transaction.details?.rawMessage) {
-        // Use fieldConfidences to determine which fields were actually driven by smart paste
-        Object.keys(fieldConfidences || {}).forEach((field) => {
-          const confidence = fieldConfidences![field as keyof Transaction];
-          const value = transaction[field as keyof Transaction];
-          
-          // Field is driven if it has confidence score and a non-empty value
-          const hasValue = value != null &&
-            ((typeof value === 'string' && value.trim() !== '') || typeof value === 'number') &&
-            !(field === 'category' && value === 'Uncategorized') &&
-            !(field === 'subcategory' && value === 'none');
-            
-          if (confidence !== undefined && hasValue) {
-            driven[field as keyof Transaction] = true;
-          }
-        });
+      
+      if (import.meta.env.MODE === 'development') {
+        console.log('[TransactionEditForm] Processing fieldConfidences:', fieldConfidences);
       }
+      
+      // Use fieldConfidences to determine which fields were driven by smart paste
+      Object.keys(fieldConfidences).forEach((field) => {
+        const confidence = fieldConfidences[field as keyof Transaction];
+        
+        // Field is driven if it has a confidence score (regardless of value)
+        if (confidence !== undefined && confidence > 0) {
+          driven[field as keyof Transaction] = true;
+          
+          if (import.meta.env.MODE === 'development') {
+            console.log(`[TransactionEditForm] Field "${field}" marked as driven with confidence:`, confidence);
+          }
+        }
+      });
+      
+      if (import.meta.env.MODE === 'development') {
+        console.log('[TransactionEditForm] Final drivenFields map:', driven);
+      }
+      
       setDrivenFields(driven);
     }
   }, [transaction, fieldConfidences]);
