@@ -18,6 +18,7 @@ interface DatePickerProps {
   setDate: (date: Date | null) => void;
   placeholder?: string;
   className?: string;
+  isAutoFilled?: boolean;
 }
 
 export function DatePicker({
@@ -25,6 +26,7 @@ export function DatePicker({
   setDate,
   placeholder = "Pick a date",
   className,
+  isAutoFilled,
 }: DatePickerProps) {
   const isNative = Capacitor.isNativePlatform();
 
@@ -44,8 +46,10 @@ export function DatePicker({
           className={cn(
             "w-full pl-10 pr-3 py-2 font-normal",
             !date && "text-muted-foreground",
+            isAutoFilled ? "bg-[#dfffe0]" : "bg-background",
             "dark:bg-white dark:text-black"
           )}
+          data-driven={isAutoFilled || undefined}
           value={date ? format(date, "yyyy-MM-dd") : ""}
           onChange={handleNativeDateSelect}
           placeholder={placeholder}
@@ -63,11 +67,17 @@ export function DatePicker({
           className={cn(
             "w-full justify-start text-left font-normal dark:bg-black dark:text-white",
             !date && "text-muted-foreground",
+            isAutoFilled ? "bg-[#dfffe0]" : "bg-background",
             className
           )}
+          data-driven={isAutoFilled || undefined}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>{placeholder}</span>}
+          {date ? (
+            format(date, "PPP")
+          ) : (
+            <span className={cn(isAutoFilled && "bg-[#dfffe0] rounded-md px-1 py-0.5")}>{placeholder}</span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent
