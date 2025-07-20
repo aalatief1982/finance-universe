@@ -111,14 +111,6 @@ const Settings = () => {
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
   );
-  
-  // Debug logging
-  console.log('SMS Permission Debug:', { 
-    deviceHasPermission, 
-    isCheckingPermission, 
-    backgroundSmsEnabled,
-    userPreference: user?.preferences?.sms?.backgroundSmsEnabled
-  });
   const [baselineBackgroundSmsEnabled, setBaselineBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
   );
@@ -685,7 +677,6 @@ const Settings = () => {
               id="background-sms"
               checked={backgroundSmsEnabled}
               onCheckedChange={handleBackgroundSmsChange}
-              disabled={isCheckingPermission}
             />
           </div>
           <div className="flex items-center justify-between mt-2">
