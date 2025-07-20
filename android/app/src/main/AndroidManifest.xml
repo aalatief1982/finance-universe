@@ -1,5 +1,5 @@
-
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -21,7 +21,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <provider
@@ -36,14 +35,17 @@
 
         <receiver
             android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsBroadcastReceiver"
-            android:exported="true">
+            android:exported="true"
+            tools:replace="android:exported">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
         <receiver
             android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsBootReceiver"
-            android:exported="true">
+            android:exported="true"
+            tools:replace="android:exported">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
@@ -53,13 +55,9 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
-    
-    <!-- SMS permissions with high priority -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-    
-    <!-- Network state monitoring -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 </manifest>
