@@ -11,6 +11,7 @@ declare module 'recharts' {
       left?: number;
     };
     children?: React.ReactNode;
+    layout?: 'horizontal' | 'vertical';
   }
 
   export function ResponsiveContainer(props: {
