@@ -1,5 +1,6 @@
 import { SmsReaderService, SmsEntry } from './SmsReaderService';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
+import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import {
   getSelectedSmsSenders,
   getSmsSenderImportMap,
@@ -27,8 +28,17 @@ export class SmsImportService {
       await logAnalyticsEvent('app_start');
       const { auto = false } = opts || {};
 
-      const senders = getSelectedSmsSenders();
-      if (senders.length === 0) return;
+      // For automatic import, check all senders. For manual, use selected senders only.
+      let senders: string[] = getSelectedSmsSenders();
+      if (auto && senders.length === 0) {
+        // Auto mode: read from all senders, then filter by financial content
+        senders = [];
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SMS Auto Import] No selected senders. Will check all senders for financial messages.');
+        }
+      } else if (!auto && senders.length === 0) {
+        return;
+      }
 
       const senderMap = getSmsSenderImportMap();
 
@@ -49,7 +59,15 @@ export class SmsImportService {
       const messages: SmsEntry[] = await SmsReaderService.readSmsMessages({ startDate, senders });
       if (!messages || messages.length === 0) return;
 
+      // Filter messages by date and financial content
       const filteredMessages = messages.filter(msg => {
+        // For auto mode, accept all financial messages regardless of sender selection
+        if (auto) {
+          // Import financial messages from any sender
+          return isFinancialTransactionMessage(msg.message);
+        }
+        
+        // For manual mode, use existing date filtering
         const lastForSender = senderMap[msg.sender];
         const senderDate = lastForSender ? new Date(lastForSender) : defaultStart;
         return new Date(msg.date).getTime() > senderDate.getTime();

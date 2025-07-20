@@ -135,7 +135,7 @@ function AppWrapper() {
           try {
             const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
               if (import.meta.env.MODE === 'development') {
-                console.log('[Xpensia SMS] Received:', sender, body);
+                console.log('[Xpensia SMS] Received from', sender, ':', body);
               }
 
               if (!isFinancialTransactionMessage(body)) {
@@ -143,6 +143,10 @@ function AppWrapper() {
                   console.log('[Xpensia SMS] Not a financial message. Skipped.');
                 }
                 return;
+              }
+
+              if (import.meta.env.MODE === 'development') {
+                console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
               }
 
               let parsed;
