@@ -239,75 +239,27 @@ const Settings = () => {
 
 
   const handleBackgroundSmsChange = async (checked: boolean) => {
+    const platform = Capacitor.getPlatform();
+
     if (checked) {
+      if (platform === 'web') {
+        // On web, just enable the preference
+        setBackgroundSmsEnabled(true);
+        return;
+      }
+
       try {
-        // Request permission when turning on
         const granted = await requestPermission();
-        
         if (!granted) {
-          toast({
-            title: "Permission Required",
-            description: "SMS permission is required to read messages in the background.",
-            variant: "destructive",
-          });
           setBackgroundSmsEnabled(false);
           return;
         }
-        
-        // Update stored preference when permission is granted
-        updateUser({
-          preferences: {
-            ...user?.preferences,
-            sms: {
-              ...user?.preferences?.sms,
-              backgroundSmsEnabled: true,
-            },
-          },
-        });
         setBackgroundSmsEnabled(true);
-        setBaselineBackgroundSmsEnabled(true);
-      } catch (error) {
-        console.error('Error requesting SMS permission:', error);
-        toast({
-          title: "Error",
-          description: "Failed to request SMS permission. Please try again.",
-          variant: "destructive",
-        });
+      } catch {
         setBackgroundSmsEnabled(false);
       }
     } else {
-      // Attempt to revoke permission when turning off
-      const result = await revokePermission();
-      
-      if (result.requiresManualAction) {
-        // Show instructions for manual revocation on native platforms
-        toast({
-          title: "Manual Action Required",
-          description: result.message,
-          variant: "default",
-        });
-        return; // Keep toggle on since permission is still granted
-      }
-      
-      if (result.success) {
-        // Successfully revoked (web only)
-        setBackgroundSmsEnabled(false);
-        setBaselineBackgroundSmsEnabled(false);
-        updateUser({
-          preferences: {
-            ...user?.preferences,
-            sms: {
-              ...user?.preferences?.sms,
-              backgroundSmsEnabled: false,
-            },
-          },
-        });
-        
-        toast({
-          title: "Permission Revoked",
-          description: result.message,
-        });
-      }
+      setBackgroundSmsEnabled(false);
     }
   };
 
