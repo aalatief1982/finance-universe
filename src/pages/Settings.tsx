@@ -45,6 +45,7 @@ import {
   Unlock,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
+import { useSmsPermission } from "@/hooks/useSmsPermission";
 import { demoTransactionService } from "@/services/DemoTransactionService";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
@@ -104,6 +105,9 @@ const Settings = () => {
   const [currency, setCurrency] = useState(
     user?.preferences?.currency || "USD",
   );
+  // Use centralized SMS permission management
+  const { hasPermission: deviceHasPermission, isChecking: isCheckingPermission, requestPermission, revokePermission } = useSmsPermission();
+  
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
   );
@@ -163,28 +167,33 @@ const Settings = () => {
     }
   }, [user]);
 
+  // Sync toggle state with actual device permission and user preferences
   useEffect(() => {
-    const checkSmsPermission = async () => {
-      const granted = await smsPermissionService.hasPermission();
-      if (granted) {
-        setBackgroundSmsEnabled(true);
-        setBaselineBackgroundSmsEnabled(true);
-        if (!user?.preferences?.sms?.backgroundSmsEnabled) {
-          updateUser({
-            preferences: {
-              ...user?.preferences,
-              sms: {
-                ...user?.preferences?.sms,
-                backgroundSmsEnabled: true,
-              },
+    if (user?.preferences?.sms) {
+      const userPreference = user.preferences.sms.backgroundSmsEnabled || false;
+      
+      // If user has enabled it in preferences but device doesn't have permission,
+      // reset the preference to match reality
+      if (userPreference && !deviceHasPermission && !isCheckingPermission) {
+        updateUser({
+          preferences: {
+            ...user?.preferences,
+            sms: {
+              ...user?.preferences?.sms,
+              backgroundSmsEnabled: false,
             },
-          });
-        }
+          },
+        });
+        setBackgroundSmsEnabled(false);
+        setBaselineBackgroundSmsEnabled(false);
+      } else {
+        // Set toggle to user preference (only enable if both user wants it AND device has permission)
+        const shouldBeEnabled = userPreference && deviceHasPermission;
+        setBackgroundSmsEnabled(shouldBeEnabled);
+        setBaselineBackgroundSmsEnabled(shouldBeEnabled);
       }
-    };
-
-    checkSmsPermission();
-  }, [user]);
+    }
+  }, [user?.preferences?.sms, deviceHasPermission, isCheckingPermission, updateUser]);
 
   // Fetch app version from manifest.json
   useEffect(() => {
@@ -233,7 +242,7 @@ const Settings = () => {
     if (checked) {
       try {
         // Request permission when turning on
-        const granted = await smsPermissionService.requestPermission();
+        const granted = await requestPermission();
         
         if (!granted) {
           toast({
@@ -268,7 +277,7 @@ const Settings = () => {
       }
     } else {
       // Attempt to revoke permission when turning off
-      const result = await smsPermissionService.revokePermission();
+      const result = await revokePermission();
       
       if (result.requiresManualAction) {
         // Show instructions for manual revocation on native platforms
@@ -668,6 +677,7 @@ const Settings = () => {
               id="background-sms"
               checked={backgroundSmsEnabled}
               onCheckedChange={handleBackgroundSmsChange}
+              disabled={isCheckingPermission}
             />
           </div>
           <div className="flex items-center justify-between mt-2">
