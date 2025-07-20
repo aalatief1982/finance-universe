@@ -45,7 +45,6 @@ import {
   Unlock,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
-import { useSmsPermission } from "@/hooks/useSmsPermission";
 import { demoTransactionService } from "@/services/DemoTransactionService";
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
@@ -105,8 +104,7 @@ const Settings = () => {
   const [currency, setCurrency] = useState(
     user?.preferences?.currency || "USD",
   );
-  // Use centralized SMS permission management
-  const { hasPermission: deviceHasPermission, isChecking: isCheckingPermission, requestPermission, revokePermission } = useSmsPermission();
+  // SMS permission state - handled directly like notifications
   
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
@@ -167,33 +165,28 @@ const Settings = () => {
     }
   }, [user]);
 
-  // Sync toggle state with actual device permission and user preferences
+  // Check SMS permission on mount - similar to notifications
   useEffect(() => {
-    if (user?.preferences?.sms) {
-      const userPreference = user.preferences.sms.backgroundSmsEnabled || false;
-      
-      // If user has enabled it in preferences but device doesn't have permission,
-      // reset the preference to match reality
-      if (userPreference && !deviceHasPermission && !isCheckingPermission) {
-        updateUser({
-          preferences: {
-            ...user?.preferences,
-            sms: {
-              ...user?.preferences?.sms,
-              backgroundSmsEnabled: false,
-            },
-          },
-        });
-        setBackgroundSmsEnabled(false);
-        setBaselineBackgroundSmsEnabled(false);
+    const checkSmsPermissions = async () => {
+      const platform = Capacitor.getPlatform();
+      if (platform === 'web') {
+        // On web, just use the user preference
+        return;
       } else {
-        // Set toggle to user preference (only enable if both user wants it AND device has permission)
-        const shouldBeEnabled = userPreference && deviceHasPermission;
-        setBackgroundSmsEnabled(shouldBeEnabled);
-        setBaselineBackgroundSmsEnabled(shouldBeEnabled);
+        try {
+          const hasPermission = await smsPermissionService.hasPermission();
+          if (!hasPermission && backgroundSmsEnabled) {
+            // User preference says enabled but no permission - reset it
+            setBackgroundSmsEnabled(false);
+          }
+        } catch {
+          setBackgroundSmsEnabled(false);
+        }
       }
-    }
-  }, [user?.preferences?.sms, deviceHasPermission, isCheckingPermission, updateUser]);
+    };
+
+    checkSmsPermissions();
+  }, []);
 
   // Fetch app version from manifest.json
   useEffect(() => {
@@ -249,7 +242,7 @@ const Settings = () => {
       }
 
       try {
-        const granted = await requestPermission();
+        const granted = await smsPermissionService.requestPermission();
         if (!granted) {
           setBackgroundSmsEnabled(false);
           return;
