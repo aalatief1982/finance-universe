@@ -6,10 +6,10 @@ import {
   getSmsSenderImportMap,
   setSelectedSmsSenders
 } from '@/utils/storage-utils';
+import { getAutoImportStartDate, setLastAutoImportDate } from '@/utils/sms-permission-storage';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 // Flags to ensure auto import prompts only appear once per session
-
 // and track whether the user accepted the auto import prompt
 let autoPromptShown = false;
 let autoPromptAccepted: boolean | null = null;
@@ -19,15 +19,22 @@ let autoAlertShown = false;
 export class SmsImportService {
   static async checkForNewMessages(
     navigate: (path: string, options?: any) => void,
-    opts?: { auto?: boolean }
+    opts?: { auto?: boolean; usePermissionDate?: boolean }
   ): Promise<void> {
     if (import.meta.env.MODE === 'development') {
-      console.log('AIS-02 checkForNewMessages');
+      console.log('AIS-02 checkForNewMessages', opts);
     }
     try {
       await logAnalyticsEvent('app_start');
-      const { auto = false } = opts || {};
+      const { auto = false, usePermissionDate = false } = opts || {};
 
+      // For automatic import with permission date, use different logic
+      if (auto && usePermissionDate) {
+        await this.handleAutoImportWithPermissionDate(navigate);
+        return;
+      }
+
+      // Original logic for manual import (unchanged)
       // For automatic import, check all senders. For manual, use selected senders only.
       let senders: string[] = getSelectedSmsSenders();
       if (auto && senders.length === 0) {
@@ -126,6 +133,99 @@ export class SmsImportService {
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
         console.error('[SmsImportService] Failed to auto import SMS messages:', error);
+      }
+    }
+  }
+
+  /**
+   * Handle automatic import using permission grant date
+   */
+  private static async handleAutoImportWithPermissionDate(
+    navigate: (path: string, options?: any) => void
+  ): Promise<void> {
+    try {
+      const startDate = getAutoImportStartDate();
+      
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SMS Auto Import] Using permission-based start date:', startDate.toISOString());
+      }
+
+      // Read messages from all senders since the permission grant date
+      const messages: SmsEntry[] = await SmsReaderService.readSmsMessages({ 
+        startDate, 
+        senders: [] // Empty array means all senders
+      });
+
+      if (!messages || messages.length === 0) {
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SMS Auto Import] No messages found since permission grant date');
+        }
+        return;
+      }
+
+      // Filter for financial messages only
+      const filteredMessages = messages.filter(msg => 
+        isFinancialTransactionMessage(msg.message)
+      );
+
+      if (filteredMessages.length === 0) {
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SMS Auto Import] No financial messages found');
+        }
+        return;
+      }
+
+      if (import.meta.env.MODE === 'development') {
+        console.log(`[SMS Auto Import] Found ${filteredMessages.length} financial messages since ${startDate.toLocaleDateString()}`);
+      }
+
+      // Show user confirmation for auto import
+      if (!autoPromptShown) {
+        autoPromptShown = true;
+        autoPromptAccepted = window.confirm(
+          `Found ${filteredMessages.length} new financial SMS messages. Import them automatically?`
+        );
+
+        if (!autoPromptAccepted) return;
+      } else if (autoPromptShown && autoPromptAccepted === false) {
+        return;
+      }
+
+      // Process vendor mapping
+      const vendorMap: Record<string, string> = {};
+      const keywordMap: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
+
+      filteredMessages.forEach(msg => {
+        const rawVendor = extractVendorName(msg.message);
+        const inferred = inferIndirectFields(msg.message, { vendor: rawVendor });
+        if (rawVendor && !vendorMap[rawVendor]) {
+          vendorMap[rawVendor] = rawVendor;
+          const mappings = [] as { field: string; value: string }[];
+          if (inferred.category) mappings.push({ field: 'category', value: inferred.category });
+          if (inferred.subcategory) mappings.push({ field: 'subcategory', value: inferred.subcategory });
+          if (inferred.type) mappings.push({ field: 'type', value: inferred.type });
+          if (mappings.length > 0) {
+            keywordMap.push({ keyword: rawVendor, mappings });
+          }
+        }
+      });
+
+      // Update the last auto import date to now
+      setLastAutoImportDate(new Date().toISOString());
+
+      await logAnalyticsEvent('sms_auto_import_complete');
+      navigate('/vendor-mapping', { 
+        state: { 
+          messages: filteredMessages, 
+          vendorMap, 
+          keywordMap,
+          isAutoImport: true 
+        } 
+      });
+
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SmsImportService] Failed to handle auto import with permission date:', error);
       }
     }
   }

@@ -1,4 +1,6 @@
+
 import { safeStorage } from "@/utils/safe-storage";
+import { setSmsPermissionGrantDate } from "@/utils/sms-permission-storage";
 
 import { Capacitor } from "@capacitor/core";
 import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
@@ -93,6 +95,8 @@ class SmsPermissionService {
     if (!this.isNativeEnvironment()) {
       // For web testing, simulate granting permission
       this.savePermissionStatus(true);
+      // Record the grant date for web simulation
+      setSmsPermissionGrantDate(new Date().toISOString());
       return true;
     }
 
@@ -105,6 +109,9 @@ class SmsPermissionService {
         return false;
       }
 
+      // Check if permission was already granted before
+      const wasAlreadyGranted = await this.hasPermission();
+
       // Request permission from both plugins
       const [readerGranted, listenerResult] = await Promise.all([
         SmsReaderService.requestPermission(),
@@ -114,6 +121,11 @@ class SmsPermissionService {
       const listenerGranted = listenerResult?.granted ?? false;
       const granted = readerGranted && listenerGranted;
       this.savePermissionStatus(granted);
+
+      // Record the grant date only if this is a new grant (not already granted)
+      if (granted && !wasAlreadyGranted) {
+        setSmsPermissionGrantDate(new Date().toISOString());
+      }
 
       // Initialize listener only when both permissions are granted
       if (granted) {

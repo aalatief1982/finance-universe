@@ -300,7 +300,11 @@ function AppWrapper() {
   useEffect(() => {
     if (!ENABLE_SMS_INTEGRATION) return;
     if (user?.preferences?.sms?.autoImport) {
-      SmsImportService.checkForNewMessages(navigateRef.current, { auto: true });
+      // Use permission-based date for automatic import
+      SmsImportService.checkForNewMessages(navigateRef.current, { 
+        auto: true, 
+        usePermissionDate: true 
+      });
     }
   }, [user]);
 
