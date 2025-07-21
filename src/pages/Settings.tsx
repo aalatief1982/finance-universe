@@ -62,11 +62,13 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
+
 const handleLockedFeatureClick = (featureName: string) => {
   toast({
     title: `🚧 ${featureName} Coming Soon!`,
     description:
       "This feature is currently under development. Stay tuned for exciting updates!",
+
   });
 };
 
@@ -601,7 +603,9 @@ const Settings = () => {
             className="flex items-center justify-between opacity-50 cursor-not-allowed"
             onClick={(e) => {
               e.preventDefault();
+
               handleLockedFeatureClick('Enable Notifications');
+
             }}
           >
             <div className="space-y-0.5">
@@ -619,7 +623,9 @@ const Settings = () => {
               id="allow-notifications"
               checked={false}
               disabled
+
               onClick={() => handleLockedFeatureClick('Enable Notifications')}
+
             />
           </div>
         </section>
@@ -635,7 +641,9 @@ const Settings = () => {
             className="flex items-center justify-between opacity-50 cursor-not-allowed"
             onClick={(e) => {
               e.preventDefault();
+
               handleLockedFeatureClick('Enable Background SMS Reading');
+
             }}
           >
             <div className="space-y-0.5">
@@ -653,14 +661,18 @@ const Settings = () => {
               id="background-sms"
               checked={false}
               disabled
+
               onClick={() => handleLockedFeatureClick('Enable Background SMS Reading')}
+
             />
           </div>
           <div
             className="flex items-center justify-between mt-2 opacity-50 cursor-not-allowed"
             onClick={(e) => {
               e.preventDefault();
+
               handleLockedFeatureClick('Automatic SMS import');
+
             }}
           >
             <div className="space-y-0.5">
@@ -678,7 +690,9 @@ const Settings = () => {
               id="auto-sms-import"
               checked={false}
               disabled
+
               onClick={() => handleLockedFeatureClick('Automatic SMS import')}
+
             />
           </div>
         </section>
@@ -710,7 +724,9 @@ const Settings = () => {
             className="flex items-center justify-between opacity-50 cursor-not-allowed"
             onClick={(e) => {
               e.preventDefault();
+
               handleLockedFeatureClick('Import Data');
+
             }}
           >
             <div>
@@ -726,7 +742,9 @@ const Settings = () => {
               variant="outline"
               className="gap-2"
               disabled
+
               onClick={() => handleLockedFeatureClick('Import Data')}
+
             >
               <UploadCloud size={16} />
               Import
