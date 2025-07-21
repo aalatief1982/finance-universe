@@ -7,16 +7,18 @@ interface SmsPermissionState {
   hasPermission: boolean;
   isChecking: boolean;
   lastChecked: number;
+  status: string;
 }
 
 const PERMISSION_CHECK_INTERVAL = 5000; // 5 seconds
-const PERMISSION_CACHE_DURATION = 30000; // 30 seconds
+const PERMISSION_CACHE_DURATION = 10000; // 10 seconds (reduced for more responsive updates)
 
 export function useSmsPermission() {
   const [state, setState] = useState<SmsPermissionState>({
     hasPermission: false,
     isChecking: false,
     lastChecked: 0,
+    status: 'not-requested',
   });
 
   const checkPermission = useCallback(async (force: boolean = false) => {
@@ -31,10 +33,13 @@ export function useSmsPermission() {
     
     try {
       const hasPermission = await smsPermissionService.hasPermission();
+      const status = smsPermissionService.getPermissionStatus();
+      
       setState({
         hasPermission,
         isChecking: false,
         lastChecked: now,
+        status,
       });
       return hasPermission;
     } catch (error) {
@@ -49,13 +54,13 @@ export function useSmsPermission() {
     
     try {
       const granted = await smsPermissionService.requestPermission();
+      const status = smsPermissionService.getPermissionStatus();
       
-      // The permission state will be updated via the event listener
-      // but we also update it here to ensure immediate UI feedback
       setState({
         hasPermission: granted,
         isChecking: false,
         lastChecked: Date.now(),
+        status,
       });
       
       return granted;
@@ -77,6 +82,7 @@ export function useSmsPermission() {
           hasPermission: false,
           isChecking: false,
           lastChecked: Date.now(),
+          status: 'denied',
         });
       } else {
         setState(prev => ({ ...prev, isChecking: false }));
@@ -105,7 +111,8 @@ export function useSmsPermission() {
         ...prev,
         hasPermission: event.granted,
         lastChecked: event.timestamp,
-        isChecking: false, // Clear loading state when permission event is received
+        isChecking: false,
+        status: event.status,
       }));
     });
 
@@ -156,6 +163,7 @@ export function useSmsPermission() {
   return {
     hasPermission: state.hasPermission,
     isChecking: state.isChecking,
+    status: state.status,
     checkPermission,
     requestPermission,
     revokePermission,

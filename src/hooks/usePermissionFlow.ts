@@ -38,19 +38,21 @@ export const usePermissionFlow = () => {
 
   // Listen for permission events to update state
   useEffect(() => {
-    const unsubscribeSms = permissionEventManager.subscribe('sms-permission-changed', () => {
-      setState(prev => ({
-        ...prev,
-        permissionState: getPermissionState(),
-        isLoading: false, // Clear loading when permission event is received
-      }));
-    });
-
-    const unsubscribeNotifications = permissionEventManager.subscribe('notifications-permission-changed', () => {
+    const unsubscribeSms = permissionEventManager.subscribe('sms-permission-changed', (event) => {
       setState(prev => ({
         ...prev,
         permissionState: getPermissionState(),
         isLoading: false,
+        error: event.status === 'never-ask-again' ? 'Permission permanently denied' : null,
+      }));
+    });
+
+    const unsubscribeNotifications = permissionEventManager.subscribe('notifications-permission-changed', (event) => {
+      setState(prev => ({
+        ...prev,
+        permissionState: getPermissionState(),
+        isLoading: false,
+        error: event.status === 'never-ask-again' ? 'Permission permanently denied' : null,
       }));
     });
 
@@ -94,6 +96,23 @@ export const usePermissionFlow = () => {
         requestedAt: new Date().toISOString() 
       });
 
+      // Check if we can request permission
+      const canRequest = await smsPermissionService.canRequestPermission();
+      if (!canRequest) {
+        setState(prev => ({ 
+          ...prev, 
+          isLoading: false, 
+          error: 'SMS permission was permanently denied. Please enable it manually in device settings.' 
+        }));
+        updatePermissionStatus('sms', { granted: false });
+        
+        // Still move to next step after showing error
+        setTimeout(() => {
+          nextStep();
+        }, 2000);
+        return;
+      }
+
       const granted = await smsPermissionService.requestPermission();
       
       updatePermissionStatus('sms', { 
@@ -101,22 +120,42 @@ export const usePermissionFlow = () => {
         grantedAt: granted ? new Date().toISOString() : undefined 
       });
 
-      // State will be updated via permission event listener
-      // Just move to next step after a brief delay to allow event to process
+      if (!granted) {
+        const status = smsPermissionService.getPermissionStatus();
+        if (status === 'never-ask-again') {
+          setState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: 'SMS permission was permanently denied. You can enable it manually in device settings.' 
+          }));
+        } else {
+          setState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: 'SMS permission was denied. You can try again later.' 
+          }));
+        }
+      }
+
+      // Move to next step after a brief delay
       setTimeout(() => {
         nextStep();
-      }, 100);
+      }, granted ? 100 : 2000);
 
     } catch (error) {
       console.error('SMS permission request failed:', error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
-        error: 'Failed to request SMS permission' 
+        error: 'Failed to request SMS permission. Please try again.' 
       }));
       
       updatePermissionStatus('sms', { granted: false });
-      nextStep();
+      
+      // Still move to next step after error
+      setTimeout(() => {
+        nextStep();
+      }, 2000);
     }
   };
 
@@ -143,11 +182,19 @@ export const usePermissionFlow = () => {
       });
 
       // Emit notification permission event
-      permissionEventManager.emit('notifications-permission-changed', granted);
+      permissionEventManager.emit('notifications-permission-changed', granted, granted ? 'granted' : 'denied');
+
+      if (!granted) {
+        setState(prev => ({ 
+          ...prev, 
+          isLoading: false, 
+          error: 'Notification permission was denied.' 
+        }));
+      }
 
       setTimeout(() => {
         nextStep();
-      }, 100);
+      }, granted ? 100 : 2000);
 
     } catch (error) {
       console.error('Notification permission request failed:', error);
@@ -158,7 +205,9 @@ export const usePermissionFlow = () => {
       }));
       
       updatePermissionStatus('notifications', { granted: false });
-      nextStep();
+      setTimeout(() => {
+        nextStep();
+      }, 2000);
     }
   };
 

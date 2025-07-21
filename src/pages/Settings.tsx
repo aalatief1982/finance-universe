@@ -84,7 +84,12 @@ const Settings = () => {
   const navigate = useNavigate();
 
   // Use the SMS permission hook
-  const { hasPermission: smsPermissionGranted, isChecking: smsPermissionLoading, requestPermission: requestSmsPermission } = useSmsPermission();
+  const { 
+    hasPermission: smsPermissionGranted, 
+    isChecking: smsPermissionLoading, 
+    requestPermission: requestSmsPermission,
+    refreshPermission 
+  } = useSmsPermission();
 
   const [notificationsAllowed, setNotificationsAllowed] = useState(
     typeof Notification !== 'undefined' && Notification.permission === "granted"
@@ -105,6 +110,9 @@ const Settings = () => {
   
   // App version state
   const [appVersion, setAppVersion] = useState<string>('');
+
+  const [permissionStatus, setPermissionStatus] = useState<string>('not-requested');
+  const [canRequestPermission, setCanRequestPermission] = useState(true);
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -252,16 +260,30 @@ const Settings = () => {
     try {
       const granted = await requestSmsPermission();
       if (granted) {
+        setPermissionStatus('granted');
         toast({
           title: "SMS Permission Granted",
           description: "You can now automatically track expenses from SMS messages.",
         });
       } else {
-        toast({
-          title: "SMS Permission Denied",
-          description: "You can enable SMS permission manually in your device settings.",
-          variant: "destructive",
-        });
+        // Check if it's "never ask again"
+        const canRequest = await smsPermissionService.canRequestPermission();
+        if (!canRequest) {
+          setPermissionStatus('never-ask-again');
+          setCanRequestPermission(false);
+          toast({
+            title: "Permission Permanently Denied",
+            description: "Please enable SMS permission manually in your device settings.",
+            variant: "destructive",
+          });
+        } else {
+          setPermissionStatus('denied');
+          toast({
+            title: "SMS Permission Denied",
+            description: "You can try again or enable permission manually in your device settings.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -270,6 +292,113 @@ const Settings = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleOpenAppSettings = async () => {
+    const success = await smsPermissionService.openAppSettings();
+    if (!success) {
+      toast({
+        title: "Manual Setup Required",
+        description: "Please go to Settings > Apps > Xpensia > Permissions and enable SMS access manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const renderPermissionStatus = () => {
+    if (smsPermissionLoading) {
+      return (
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Checking...</span>
+        </div>
+      );
+    }
+
+    switch (permissionStatus) {
+      case 'granted':
+        return (
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <span className="text-sm text-green-600">Granted</span>
+          </div>
+        );
+      case 'denied':
+        return (
+          <div className="flex items-center gap-2">
+            <XCircle className="h-4 w-4 text-red-500" />
+            <span className="text-sm text-red-600">Denied</span>
+          </div>
+        );
+      case 'never-ask-again':
+        return (
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-orange-500" />
+            <span className="text-sm text-orange-600">Permanently Denied</span>
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Not Requested</span>
+          </div>
+        );
+    }
+  };
+
+  const renderPermissionActions = () => {
+    if (smsPermissionLoading) {
+      return null;
+    }
+
+    if (smsPermissionGranted) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={refreshPermission}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      );
+    }
+
+    if (permissionStatus === 'never-ask-again' || !canRequestPermission) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleOpenAppSettings}
+        >
+          <SettingsIcon className="h-4 w-4 mr-2" />
+          Open Settings
+        </Button>
+      );
+    }
+
+    return (
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSmsPermissionRequest}
+          disabled={smsPermissionLoading}
+        >
+          <MessageSquare className="h-4 w-4 mr-2" />
+          Request Permission
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowPermissionFlow(true)}
+        >
+          <SettingsIcon className="h-4 w-4 mr-2" />
+          Manage
+        </Button>
+      </div>
+    );
   };
 
   const handlePermissionFlowComplete = () => {
@@ -621,51 +750,34 @@ const Settings = () => {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>SMS Reading Permission</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Current status: {smsPermissionGranted ? 'Granted' : 'Not granted'}
-                    {smsPermissionLoading && ' (Checking...)'}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Status:</span>
+                    {renderPermissionStatus()}
+                  </div>
+                  {permissionStatus === 'never-ask-again' && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      Permission was permanently denied. Please enable it manually in device settings.
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {smsPermissionLoading ? (
-                    <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
-                  ) : smsPermissionGranted ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                  
-                  {!smsPermissionGranted && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSmsPermissionRequest}
-                      disabled={smsPermissionLoading}
-                    >
-                      {smsPermissionLoading ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Requesting...
-                        </>
-                      ) : (
-                        <>
-                          <MessageSquare className="h-4 w-4 mr-2" />
-                          Request Permission
-                        </>
-                      )}
-                    </Button>
-                  )}
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowPermissionFlow(true)}
-                  >
-                    <SettingsIcon className="h-4 w-4 mr-2" />
-                    Manage
-                  </Button>
+                  {renderPermissionActions()}
                 </div>
               </div>
+              
+              {/* Troubleshooting guide for denied permissions */}
+              {(permissionStatus === 'denied' || permissionStatus === 'never-ask-again') && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Need help enabling SMS permission?</h4>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>1. Go to your device Settings</p>
+                    <p>2. Find "Apps" or "Application Manager"</p>
+                    <p>3. Find and tap "Xpensia"</p>
+                    <p>4. Tap "Permissions"</p>
+                    <p>5. Enable "SMS" or "Messages" permission</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
