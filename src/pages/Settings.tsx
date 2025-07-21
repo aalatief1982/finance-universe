@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -5,6 +6,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -43,6 +45,9 @@ import {
   Trash2,
   Lock,
   Unlock,
+  CheckCircle,
+  XCircle,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 import { demoTransactionService } from "@/services/DemoTransactionService";
@@ -50,6 +55,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
+import { getPermissionState, updatePermissionStatus } from "@/utils/permission-flow-storage";
+import PermissionsOnboarding from "@/components/onboarding/PermissionsOnboarding";
 
 import {
   updateCurrency as persistCurrency,
@@ -79,6 +86,9 @@ const Settings = () => {
     typeof Notification !== 'undefined' && Notification.permission === "granted"
   );
 
+  const [permissionState, setPermissionState] = useState(() => getPermissionState());
+  const [showPermissionFlow, setShowPermissionFlow] = useState(false);
+
   useEffect(() => {
     const checkPermissions = async () => {
       const platform = Capacitor.getPlatform();
@@ -104,14 +114,7 @@ const Settings = () => {
   const [currency, setCurrency] = useState(
     user?.preferences?.currency || "USD",
   );
-  // SMS permission state - handled directly like notifications
   
-  const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
-    user?.preferences?.sms?.backgroundSmsEnabled || false,
-  );
-  const [baselineBackgroundSmsEnabled, setBaselineBackgroundSmsEnabled] = useState(
-    user?.preferences?.sms?.backgroundSmsEnabled || false,
-  );
   const [autoImport, setAutoImport] = useState(
     user?.preferences?.sms?.autoImport || false,
   );
@@ -151,9 +154,6 @@ const Settings = () => {
       setTheme(user.preferences.theme || "light");
       setCurrency(user.preferences.currency || "USD");
       if (user.preferences.sms) {
-        const initialBg = user.preferences.sms.backgroundSmsEnabled || false;
-        setBackgroundSmsEnabled(initialBg);
-        setBaselineBackgroundSmsEnabled(initialBg);
         setAutoImport(user.preferences.sms.autoImport || false);
       }
 
@@ -165,28 +165,16 @@ const Settings = () => {
     }
   }, [user]);
 
-  // Check SMS permission on mount - similar to notifications
+  // Refresh permission state when returning from permission flow
   useEffect(() => {
-    const checkSmsPermissions = async () => {
-      const platform = Capacitor.getPlatform();
-      if (platform === 'web') {
-        // On web, just use the user preference
-        return;
-      } else {
-        try {
-          const hasPermission = await smsPermissionService.hasPermission();
-          if (!hasPermission && backgroundSmsEnabled) {
-            // User preference says enabled but no permission - reset it
-            setBackgroundSmsEnabled(false);
-          }
-        } catch {
-          setBackgroundSmsEnabled(false);
-        }
-      }
+    const refreshPermissionState = () => {
+      setPermissionState(getPermissionState());
     };
-
-    checkSmsPermissions();
-  }, []);
+    
+    if (!showPermissionFlow) {
+      refreshPermissionState();
+    }
+  }, [showPermissionFlow]);
 
   // Fetch app version from manifest.json
   useEffect(() => {
@@ -208,18 +196,16 @@ const Settings = () => {
     const origTheme = user?.preferences?.theme || "light";
     const origCurrency = user?.preferences?.currency || "USD";
     const origAutoImport = user?.preferences?.sms?.autoImport || false;
-    const origBackground = baselineBackgroundSmsEnabled;
     const origWeek = user?.preferences?.displayOptions?.weekStartsOn || "sunday";
 
     const changed =
       theme !== origTheme ||
       currency !== origCurrency ||
       autoImport !== origAutoImport ||
-      backgroundSmsEnabled !== origBackground ||
       weekStartsOn !== origWeek;
 
     setIsDirty(changed);
-  }, [theme, currency, autoImport, backgroundSmsEnabled, weekStartsOn, baselineBackgroundSmsEnabled, user]);
+  }, [theme, currency, autoImport, weekStartsOn, user]);
 
   // Handlers for settings changes
   const handleThemeChange = (value: "light" | "dark" | "system") => {
@@ -228,32 +214,6 @@ const Settings = () => {
 
   const handleCurrencyChange = (value: string) => {
     setCurrency(value);
-  };
-
-
-  const handleBackgroundSmsChange = async (checked: boolean) => {
-    const platform = Capacitor.getPlatform();
-
-    if (checked) {
-      if (platform === 'web') {
-        // On web, just enable the preference
-        setBackgroundSmsEnabled(true);
-        return;
-      }
-
-      try {
-        const granted = await smsPermissionService.requestPermission();
-        if (!granted) {
-          setBackgroundSmsEnabled(false);
-          return;
-        }
-        setBackgroundSmsEnabled(true);
-      } catch {
-        setBackgroundSmsEnabled(false);
-      }
-    } else {
-      setBackgroundSmsEnabled(false);
-    }
   };
 
   const handleNotificationToggle = async (checked: boolean) => {
@@ -290,13 +250,21 @@ const Settings = () => {
     }
   };
 
+  const handlePermissionFlowComplete = () => {
+    setShowPermissionFlow(false);
+    setPermissionState(getPermissionState());
+    toast({
+      title: "Permissions Updated",
+      description: "Your permission settings have been updated successfully.",
+    });
+  };
+
   const handleSaveSettings = () => {
     const updated = {
       theme,
       currency,
       sms: {
         ...user?.preferences?.sms,
-        backgroundSmsEnabled,
         autoImport,
       },
       displayOptions: {
@@ -478,6 +446,18 @@ const Settings = () => {
     }
   };
 
+  const isAndroid = Capacitor.getPlatform() === 'android';
+
+  if (showPermissionFlow) {
+    return (
+      <Layout showBack>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+          <PermissionsOnboarding onComplete={handlePermissionFlowComplete} />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout showBack>
       <div className="px-1">
@@ -581,6 +561,7 @@ const Settings = () => {
             </ToggleGroup>
           </div>
         </section>
+
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <Bell className="mr-2" size={20} />
@@ -603,27 +584,52 @@ const Settings = () => {
             />
           </div>
         </section>
+
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <MessageSquare className="mr-2" size={20} />
             <span>SMS Settings</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage SMS related options
+            Manage SMS related permissions and options
           </p>
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
-              <p className="text-sm text-muted-foreground">
-                Read incoming SMS in the background
+          
+          {isAndroid && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>SMS Reading Permission</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Current status: {permissionState.sms.granted ? 'Granted' : 'Not granted'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {permissionState.sms.granted ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPermissionFlow(true)}
+                  >
+                    <SettingsIcon className="h-4 w-4 mr-2" />
+                    Manage
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isAndroid && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">
+                SMS permission management is only available on Android devices. You're using a {Capacitor.getPlatform()} platform.
               </p>
             </div>
-            <Switch
-              id="background-sms"
-              checked={backgroundSmsEnabled}
-              onCheckedChange={handleBackgroundSmsChange}
-            />
-          </div>
+          )}
+
           <div className="flex items-center justify-between mt-2">
             <div className="space-y-0.5">
               <Label htmlFor="auto-sms-import">Automatic SMS import</Label>

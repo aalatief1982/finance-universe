@@ -1,169 +1,141 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, EffectFade } from 'swiper/modules';
-import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { TrendingUp, MessageSquare, PieChart, Shield, Smartphone, Target } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { isPermissionOnboardingNeeded } from '@/utils/permission-flow-storage';
+import PermissionsOnboarding from '@/components/onboarding/PermissionsOnboarding';
 
-import 'swiper/css';
-import 'swiper/css/pagination';
-import 'swiper/css/effect-fade';
-
-interface Slide {
-  image: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  icon: React.ReactNode;
-  gradient: string;
-}
-
-const slides: Slide[] = [
-  {
-    image: '/assets/onboarding1-1.png',
-    title: 'Track Expenses Instantly',
-    subtitle: 'Smart parsing of SMS in seconds',
-    description: 'Never miss a transaction. Our AI automatically reads your SMS notifications and tracks every expense.',
-    icon: <Zap className="w-8 h-8" />,
-    gradient: 'from-primary/20 via-primary/10 to-transparent'
-  },
-  {
-    image: '/assets/onboarding2-2.png',
-    title: 'Auto-Categorized for You',
-    subtitle: 'No setup needed, we learn as you go!',
-    description: 'Intelligent categorization that gets smarter with every transaction. Spend time living, not organizing.',
-    icon: <Brain className="w-8 h-8" />,
-    gradient: 'from-secondary/20 via-secondary/10 to-transparent'
-  },
-  {
-    image: '/assets/onboarding3-3.png',
-    title: 'See Where Your Money Goes',
-    subtitle: 'Real-time dashboards & easy reports',
-    description: 'Beautiful insights and reports that help you make informed financial decisions instantly.',
-    icon: <PieChart className="w-8 h-8" />,
-    gradient: 'from-accent/20 via-accent/10 to-transparent'
-  }
-];
-
-interface Props {
+interface OnboardingSlidesProps {
   onComplete: () => void;
 }
 
-const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
-  const [index, setIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [showPermissions, setShowPermissions] = useState(false);
 
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  const slides = [
+    {
+      icon: TrendingUp,
+      title: "Track Your Expenses",
+      description: "Automatically categorize and track your spending with AI-powered insights",
+      gradient: "from-blue-500 to-purple-600"
+    },
+    {
+      icon: MessageSquare,
+      title: "SMS Integration",
+      description: "Automatically detect expenses from your bank SMS messages",
+      gradient: "from-green-500 to-teal-600"
+    },
+    {
+      icon: PieChart,
+      title: "Visual Analytics",
+      description: "Beautiful charts and graphs to understand your spending patterns",
+      gradient: "from-orange-500 to-red-600"
+    },
+    {
+      icon: Shield,
+      title: "Privacy First",
+      description: "Your data stays on your device. We never send your personal information to our servers.",
+      gradient: "from-purple-500 to-pink-600"
+    }
+  ];
+
+  const nextSlide = () => {
+    if (currentSlide < slides.length - 1) {
+      setCurrentSlide(currentSlide + 1);
+    } else {
+      handleSlidesComplete();
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(currentSlide - 1);
+    }
+  };
+
+  const handleSlidesComplete = () => {
+    // Check if we need to show permissions flow
+    const isAndroid = Capacitor.getPlatform() === 'android';
+    const needsPermissions = isPermissionOnboardingNeeded();
+    
+    if (isAndroid && needsPermissions) {
+      setShowPermissions(true);
+    } else {
+      onComplete();
+    }
+  };
+
+  if (showPermissions) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <PermissionsOnboarding onComplete={onComplete} />
+      </div>
+    );
+  }
 
   return (
-    <div className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      
-      {/* Progress indicator */}
-      <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2 pt-4 safe-area-inset-top">
-        <div className="flex space-x-2 pt-2">
-          {slides.map((_, i) => (
-            <div
-              key={i}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === index 
-                  ? 'w-8 bg-primary' 
-                  : i < index 
-                    ? 'w-2 bg-primary/60' 
-                    : 'w-2 bg-muted'
-              }`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <Swiper
-        onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
-        pagination={{ 
-          clickable: true,
-          bulletClass: 'swiper-pagination-bullet opacity-60',
-          bulletActiveClass: 'swiper-pagination-bullet-active opacity-100 !bg-primary'
-        }}
-        modules={[Pagination, EffectFade]}
-        effect="fade"
-        fadeEffect={{ crossFade: true }}
-        className="h-full"
-        speed={600}
-      >
-        {slides.map((slide, i) => (
-          <SwiperSlide key={i}>
-            <div className={`flex flex-col h-full min-h-0 transition-all duration-700 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
-              {/* Header with icon and gradient */}
-              <div className={`relative pt-16 pb-4 bg-gradient-to-b ${slide.gradient} shrink-0`}>
-                <div className="flex flex-col items-center text-center px-4">
-                  <div className="mb-3 p-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
-                    <div className="text-primary">
-                      {slide.icon}
-                    </div>
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 animate-slide-up">
-                    {slide.title}
-                  </h1>
-                  <p className="text-base sm:text-lg font-medium text-primary mb-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                    {slide.subtitle}
-                  </p>
-                  <p className="text-sm text-muted-foreground max-w-sm leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                    {slide.description}
-                  </p>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md mx-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="relative overflow-hidden">
+              <div className={`h-48 bg-gradient-to-r ${slides[currentSlide].gradient} flex items-center justify-center`}>
+                <slides[currentSlide].icon className="h-16 w-16 text-white" />
               </div>
-
-              {/* Image section */}
-              <div className="flex-1 flex items-center justify-center px-4 min-h-0">
-                <div className="relative w-full max-w-xs h-full max-h-[40vh] flex items-center justify-center">
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-2xl transform rotate-1" />
-                  <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit">
-                    <img
-                      src={slide.image.trim()}
-                      alt={slide.title}
-                      className="w-full h-auto max-h-[35vh] object-contain rounded-lg animate-scale-in"
-                      style={{ animationDelay: '0.3s' }}
-                      onError={
-                        import.meta.env.MODE === 'development'
-                          ? () => console.error(`Failed to load image: ${slide.image}`)
-                          : undefined
-                      }
+              <CardContent className="p-8 text-center">
+                <h2 className="text-2xl font-bold mb-4 text-gray-900">
+                  {slides[currentSlide].title}
+                </h2>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  {slides[currentSlide].description}
+                </p>
+                
+                <div className="flex items-center justify-center gap-2 mb-8">
+                  {slides.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === currentSlide ? 'bg-blue-500' : 'bg-gray-300'
+                      }`}
                     />
-                  </div>
+                  ))}
                 </div>
-              </div>
 
-              {/* Action section */}
-              <div className="px-4 pb-4 safe-area-inset-bottom pt-2 shrink-0">
-                {i === slides.length - 1 ? (
-                  <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-                    <Button 
-                      className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 group" 
-                      onClick={onComplete}
-                    >
-                      Start Your Journey
-                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center pb-2">
-                      Join thousands who are already in control of their finances
-                    </p>
-                  </div>
-                ) : (
-                  <div className="h-16 flex items-center justify-center pb-4">
-                    <p className="text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                      Swipe to continue
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-
+                <div className="flex gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={prevSlide}
+                    disabled={currentSlide === 0}
+                    className="flex-1"
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button
+                    onClick={nextSlide}
+                    className="flex-1"
+                  >
+                    {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
