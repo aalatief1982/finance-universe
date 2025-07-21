@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { TrendingUp, MessageSquare, PieChart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, MessageSquare, PieChart } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselApi } from '@/components/ui/carousel';
 import { Capacitor } from '@capacitor/core';
 import { isPermissionOnboardingNeeded } from '@/utils/permission-flow-storage';
 import PermissionsOnboarding from '@/components/onboarding/PermissionsOnboarding';
@@ -14,7 +13,9 @@ interface OnboardingSlidesProps {
 }
 
 const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
   const [showPermissions, setShowPermissions] = useState(false);
 
   const slides = [
@@ -23,35 +24,45 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
       title: "Track Your Expenses",
       description: "Automatically categorize and track your spending with AI-powered insights",
       image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop&crop=center",
-      gradient: "from-blue-500/80 to-purple-600/80"
     },
     {
       icon: MessageSquare,
       title: "SMS Integration",
       description: "Automatically detect expenses from your bank SMS messages",
       image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=600&fit=crop&crop=center",
-      gradient: "from-green-500/80 to-teal-600/80"
     },
     {
       icon: PieChart,
       title: "Visual Analytics",
       description: "Beautiful charts and graphs to understand your spending patterns",
       image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop&crop=center",
-      gradient: "from-orange-500/80 to-red-600/80"
     }
   ];
 
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap());
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
+
   const nextSlide = () => {
-    if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
+    if (current < slides.length - 1) {
+      api?.scrollTo(current + 1);
     } else {
       handleSlidesComplete();
     }
   };
 
   const prevSlide = () => {
-    if (currentSlide > 0) {
-      setCurrentSlide(currentSlide - 1);
+    if (current > 0) {
+      api?.scrollTo(current - 1);
     }
   };
 
@@ -69,16 +80,23 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
 
   if (showPermissions) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
         <PermissionsOnboarding onComplete={onComplete} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md mx-auto">
-        <Carousel className="w-full">
+        <Carousel 
+          className="w-full"
+          setApi={setApi}
+          opts={{
+            align: "start",
+            loop: false,
+          }}
+        >
           <CarouselContent>
             {slides.map((slide, index) => (
               <CarouselItem key={index}>
@@ -86,7 +104,7 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="relative overflow-hidden rounded-2xl bg-white shadow-2xl"
+                  className="relative overflow-hidden rounded-2xl bg-card shadow-xl"
                 >
                   {/* Image Background with Overlay */}
                   <div className="relative h-80 overflow-hidden">
@@ -95,23 +113,23 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
                       alt={slide.title}
                       className="w-full h-full object-cover"
                     />
-                    <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient}`} />
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/60 to-secondary/60" />
                     
                     {/* Icon Overlay */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       {(() => {
                         const IconComponent = slide.icon;
-                        return <IconComponent className="h-20 w-20 text-white drop-shadow-lg" />;
+                        return <IconComponent className="h-20 w-20 text-primary-foreground drop-shadow-lg" />;
                       })()}
                     </div>
                   </div>
 
                   {/* Content */}
                   <div className="p-8 text-center">
-                    <h2 className="text-3xl font-bold mb-4 text-gray-900">
+                    <h2 className="text-3xl font-bold mb-4 text-foreground">
                       {slide.title}
                     </h2>
-                    <p className="text-gray-600 mb-8 leading-relaxed text-lg">
+                    <p className="text-muted-foreground mb-8 leading-relaxed text-lg">
                       {slide.description}
                     </p>
                     
@@ -121,7 +139,7 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
                         <div
                           key={idx}
                           className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                            idx === currentSlide ? 'bg-blue-500 scale-125' : 'bg-gray-300'
+                            idx === current ? 'bg-primary scale-125' : 'bg-muted-foreground/30'
                           }`}
                         />
                       ))}
@@ -132,7 +150,7 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
                       <Button
                         variant="outline"
                         onClick={prevSlide}
-                        disabled={currentSlide === 0}
+                        disabled={current === 0}
                         className="flex-1 h-12"
                       >
                         <ChevronLeft className="h-4 w-4 mr-2" />
@@ -140,9 +158,9 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
                       </Button>
                       <Button
                         onClick={nextSlide}
-                        className="flex-1 h-12 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                        className="flex-1 h-12"
                       >
-                        {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
+                        {current === slides.length - 1 ? 'Get Started' : 'Next'}
                         <ChevronRight className="h-4 w-4 ml-2" />
                       </Button>
                     </div>
@@ -151,10 +169,6 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          
-          {/* Carousel Navigation - Hidden by default, controlled by our custom buttons */}
-          <CarouselPrevious className="hidden" />
-          <CarouselNext className="hidden" />
         </Carousel>
       </div>
     </div>

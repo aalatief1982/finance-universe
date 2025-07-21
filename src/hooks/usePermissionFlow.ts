@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { smsPermissionService } from '@/services/SmsPermissionService';
+import { permissionEventManager } from '@/utils/permission-events';
 import {
   getPermissionState,
   updatePermissionStatus,
@@ -35,6 +36,30 @@ export const usePermissionFlow = () => {
     }));
   }, []);
 
+  // Listen for permission events to update state
+  useEffect(() => {
+    const unsubscribeSms = permissionEventManager.subscribe('sms-permission-changed', () => {
+      setState(prev => ({
+        ...prev,
+        permissionState: getPermissionState(),
+        isLoading: false, // Clear loading when permission event is received
+      }));
+    });
+
+    const unsubscribeNotifications = permissionEventManager.subscribe('notifications-permission-changed', () => {
+      setState(prev => ({
+        ...prev,
+        permissionState: getPermissionState(),
+        isLoading: false,
+      }));
+    });
+
+    return () => {
+      unsubscribeSms();
+      unsubscribeNotifications();
+    };
+  }, []);
+
   const nextStep = () => {
     setState(prev => {
       const steps = ['intro', 'sms', 'notifications', 'complete'] as const;
@@ -46,7 +71,12 @@ export const usePermissionFlow = () => {
 
   const skipStep = (permission: string) => {
     addSkippedPermission(permission);
-    setState(prev => ({ ...prev, permissionState: getPermissionState() }));
+    setState(prev => ({ 
+      ...prev, 
+      permissionState: getPermissionState(),
+      isLoading: false,
+      error: null 
+    }));
     nextStep();
   };
 
@@ -71,13 +101,12 @@ export const usePermissionFlow = () => {
         grantedAt: granted ? new Date().toISOString() : undefined 
       });
 
-      setState(prev => ({ 
-        ...prev, 
-        permissionState: getPermissionState(),
-        isLoading: false 
-      }));
+      // State will be updated via permission event listener
+      // Just move to next step after a brief delay to allow event to process
+      setTimeout(() => {
+        nextStep();
+      }, 100);
 
-      nextStep();
     } catch (error) {
       console.error('SMS permission request failed:', error);
       setState(prev => ({ 
@@ -113,13 +142,13 @@ export const usePermissionFlow = () => {
         grantedAt: granted ? new Date().toISOString() : undefined 
       });
 
-      setState(prev => ({ 
-        ...prev, 
-        permissionState: getPermissionState(),
-        isLoading: false 
-      }));
+      // Emit notification permission event
+      permissionEventManager.emit('notifications-permission-changed', granted);
 
-      nextStep();
+      setTimeout(() => {
+        nextStep();
+      }, 100);
+
     } catch (error) {
       console.error('Notification permission request failed:', error);
       setState(prev => ({ 

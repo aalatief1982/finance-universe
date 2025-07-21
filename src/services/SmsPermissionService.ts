@@ -1,6 +1,7 @@
 
 import { safeStorage } from "@/utils/safe-storage";
 import { setSmsPermissionGrantDate } from "@/utils/sms-permission-storage";
+import { permissionEventManager } from "@/utils/permission-events";
 
 import { Capacitor } from "@capacitor/core";
 import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
@@ -21,7 +22,8 @@ class SmsPermissionService {
   async hasPermission(): Promise<boolean> {
     if (!this.isNativeEnvironment()) {
       // For web environments, check local storage
-      return safeStorage.getItem('sms_permission_simulation') === 'granted';
+      const granted = safeStorage.getItem('sms_permission_simulation') === 'granted';
+      return granted;
     }
 
     try {
@@ -88,6 +90,9 @@ class SmsPermissionService {
     } else {
       safeStorage.setItem('sms_permission_simulation', granted ? 'granted' : 'denied');
     }
+    
+    // Emit permission change event
+    permissionEventManager.emit('sms-permission-changed', granted);
   }
 
   // Request SMS permissions
@@ -106,6 +111,8 @@ class SmsPermissionService {
         if (import.meta.env.MODE === 'development') {
           console.warn('[SMS] Failed to load SMS listener when requesting permissions');
         }
+        // Emit denied event and save status
+        this.savePermissionStatus(false);
         return false;
       }
 
@@ -120,6 +127,12 @@ class SmsPermissionService {
 
       const listenerGranted = listenerResult?.granted ?? false;
       const granted = readerGranted && listenerGranted;
+      
+      if (import.meta.env.MODE === 'development') {
+        console.log("[SMS] Permission request result:", { readerGranted, listenerGranted, granted });
+      }
+      
+      // Always save and emit the permission status
       this.savePermissionStatus(granted);
 
       // Record the grant date only if this is a new grant (not already granted)
@@ -137,6 +150,7 @@ class SmsPermissionService {
       if (import.meta.env.MODE === 'development') {
         console.error("[SMS] Error requesting SMS permission:", error);
       }
+      // Emit denied event and save status
       this.savePermissionStatus(false);
       return false;
     }

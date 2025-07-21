@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -48,6 +47,7 @@ import {
   CheckCircle,
   XCircle,
   Settings as SettingsIcon,
+  RefreshCw,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 import { demoTransactionService } from "@/services/DemoTransactionService";
@@ -56,6 +56,7 @@ import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
 import { getPermissionState, updatePermissionStatus } from "@/utils/permission-flow-storage";
+import { useSmsPermission } from "@/hooks/useSmsPermission";
 import PermissionsOnboarding from "@/components/onboarding/PermissionsOnboarding";
 
 import {
@@ -82,12 +83,28 @@ const Settings = () => {
 
   const navigate = useNavigate();
 
+  // Use the SMS permission hook
+  const { hasPermission: smsPermissionGranted, isChecking: smsPermissionLoading, requestPermission: requestSmsPermission } = useSmsPermission();
+
   const [notificationsAllowed, setNotificationsAllowed] = useState(
     typeof Notification !== 'undefined' && Notification.permission === "granted"
   );
 
   const [permissionState, setPermissionState] = useState(() => getPermissionState());
   const [showPermissionFlow, setShowPermissionFlow] = useState(false);
+
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
+  
+  // Beta features state
+  const [betaDialogOpen, setBetaDialogOpen] = useState(false);
+  const [betaCode, setBetaCode] = useState('');
+  const [isBetaActive, setIsBetaActive] = useState(() => {
+    return localStorage.getItem('betaFeaturesActive') === 'true';
+  });
+  
+  // App version state
+  const [appVersion, setAppVersion] = useState<string>('');
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -107,7 +124,6 @@ const Settings = () => {
     checkPermissions();
   }, []);
 
-  // State for form values
   const [theme, setTheme] = useState<"light" | "dark" | "system">(
     user?.preferences?.theme || "light",
   );
@@ -122,20 +138,6 @@ const Settings = () => {
     "sunday" | "monday" | "saturday"
   >(user?.preferences?.displayOptions?.weekStartsOn || "sunday");
 
-  const [isDirty, setIsDirty] = useState(false);
-  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
-  
-  // Beta features state
-  const [betaDialogOpen, setBetaDialogOpen] = useState(false);
-  const [betaCode, setBetaCode] = useState('');
-  const [isBetaActive, setIsBetaActive] = useState(() => {
-    return localStorage.getItem('betaFeaturesActive') === 'true';
-  });
-  
-  // App version state
-  const [appVersion, setAppVersion] = useState<string>('');
-
-  // Note: useBlocker is not available in React Router v7, implementing a simple warning
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
@@ -148,7 +150,6 @@ const Settings = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // Initialize values from user context on component mount
   useEffect(() => {
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
@@ -165,7 +166,6 @@ const Settings = () => {
     }
   }, [user]);
 
-  // Refresh permission state when returning from permission flow
   useEffect(() => {
     const refreshPermissionState = () => {
       setPermissionState(getPermissionState());
@@ -176,7 +176,6 @@ const Settings = () => {
     }
   }, [showPermissionFlow]);
 
-  // Fetch app version from manifest.json
   useEffect(() => {
     const fetchVersion = async () => {
       try {
@@ -207,7 +206,6 @@ const Settings = () => {
     setIsDirty(changed);
   }, [theme, currency, autoImport, weekStartsOn, user]);
 
-  // Handlers for settings changes
   const handleThemeChange = (value: "light" | "dark" | "system") => {
     setTheme(value);
   };
@@ -247,6 +245,30 @@ const Settings = () => {
       }
     } else {
       setNotificationsAllowed(false);
+    }
+  };
+
+  const handleSmsPermissionRequest = async () => {
+    try {
+      const granted = await requestSmsPermission();
+      if (granted) {
+        toast({
+          title: "SMS Permission Granted",
+          description: "You can now automatically track expenses from SMS messages.",
+        });
+      } else {
+        toast({
+          title: "SMS Permission Denied",
+          description: "You can enable SMS permission manually in your device settings.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Permission Request Failed",
+        description: "There was an error requesting SMS permission.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -600,15 +622,40 @@ const Settings = () => {
                 <div className="space-y-0.5">
                   <Label>SMS Reading Permission</Label>
                   <p className="text-sm text-muted-foreground">
-                    Current status: {permissionState.sms.granted ? 'Granted' : 'Not granted'}
+                    Current status: {smsPermissionGranted ? 'Granted' : 'Not granted'}
+                    {smsPermissionLoading && ' (Checking...)'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {permissionState.sms.granted ? (
+                  {smsPermissionLoading ? (
+                    <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : smsPermissionGranted ? (
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   ) : (
                     <XCircle className="h-5 w-5 text-red-500" />
                   )}
+                  
+                  {!smsPermissionGranted && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSmsPermissionRequest}
+                      disabled={smsPermissionLoading}
+                    >
+                      {smsPermissionLoading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Requesting...
+                        </>
+                      ) : (
+                        <>
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Request Permission
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  
                   <Button
                     variant="outline"
                     size="sm"
@@ -623,8 +670,8 @@ const Settings = () => {
           )}
 
           {!isAndroid && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground">
                 SMS permission management is only available on Android devices. You're using a {Capacitor.getPlatform()} platform.
               </p>
             </div>
