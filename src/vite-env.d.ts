@@ -27,12 +27,20 @@ declare module '@capacitor/status-bar' {
 }
 
 declare module '@capacitor/app' {
+  export interface AppInfo {
+    name: string
+    id: string
+    build: string
+    version: string
+  }
+
   export const App: {
-    getState: () => Promise<{ isActive: boolean }>;
+    getInfo: () => Promise<AppInfo>
+    getState: () => Promise<{ isActive: boolean }>
     addListener: (
       event: string,
       callback: (state: { isActive: boolean }) => void
-    ) => Promise<PluginListenerHandle>;
+    ) => Promise<PluginListenerHandle>
   };
 }
 
