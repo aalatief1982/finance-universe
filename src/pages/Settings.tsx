@@ -59,6 +59,7 @@ import {
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 
@@ -198,19 +199,24 @@ const Settings = () => {
     checkSmsPermissions();
   }, []);
 
-  // Fetch app version from manifest.json
+  // Fetch app version from native info or manifest.json
   useEffect(() => {
     const fetchVersion = async () => {
       try {
-        const response = await fetch('/manifest.json');
-        const manifest = await response.json();
-        setAppVersion(manifest.version || '1.0.0');
+        if (Capacitor.isNativePlatform()) {
+          const info = await App.getInfo();
+          setAppVersion(info.version || '1.0.0');
+        } else {
+          const response = await fetch('/manifest.json');
+          const manifest = await response.json();
+          setAppVersion(manifest.version || '1.0.0');
+        }
       } catch (error) {
         console.error('Failed to fetch app version:', error);
         setAppVersion('1.0.0');
       }
     };
-    
+
     fetchVersion();
   }, []);
 
