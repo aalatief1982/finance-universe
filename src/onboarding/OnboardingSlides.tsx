@@ -1,176 +1,169 @@
-
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, TrendingUp, MessageSquare, PieChart } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem, CarouselApi } from '@/components/ui/carousel';
-import { Capacitor } from '@capacitor/core';
-import { isPermissionOnboardingNeeded } from '@/utils/permission-flow-storage';
-import PermissionsOnboarding from '@/components/onboarding/PermissionsOnboarding';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, EffectFade } from 'swiper/modules';
+import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 
-interface OnboardingSlidesProps {
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
+
+interface Slide {
+  image: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: React.ReactNode;
+  gradient: string;
+}
+
+const slides: Slide[] = [
+  {
+    image: '/assets/onboarding1-1.png',
+    title: 'Track Expenses Instantly',
+    subtitle: 'Smart parsing of SMS in seconds',
+    description: 'Never miss a transaction. Our AI automatically reads your SMS notifications and tracks every expense.',
+    icon: <Zap className="w-8 h-8" />,
+    gradient: 'from-primary/20 via-primary/10 to-transparent'
+  },
+  {
+    image: '/assets/onboarding2-2.png',
+    title: 'Auto-Categorized for You',
+    subtitle: 'No setup needed, we learn as you go!',
+    description: 'Intelligent categorization that gets smarter with every transaction. Spend time living, not organizing.',
+    icon: <Brain className="w-8 h-8" />,
+    gradient: 'from-secondary/20 via-secondary/10 to-transparent'
+  },
+  {
+    image: '/assets/onboarding3-3.png',
+    title: 'See Where Your Money Goes',
+    subtitle: 'Real-time dashboards & easy reports',
+    description: 'Beautiful insights and reports that help you make informed financial decisions instantly.',
+    icon: <PieChart className="w-8 h-8" />,
+    gradient: 'from-accent/20 via-accent/10 to-transparent'
+  }
+];
+
+interface Props {
   onComplete: () => void;
 }
 
-const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const [count, setCount] = useState(0);
-  const [showPermissions, setShowPermissions] = useState(false);
-
-  const slides = [
-    {
-      icon: TrendingUp,
-      title: "Track Your Expenses",
-      description: "Automatically categorize and track your spending with AI-powered insights",
-      image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=800&h=600&fit=crop&crop=center",
-    },
-    {
-      icon: MessageSquare,
-      title: "SMS Integration",
-      description: "Automatically detect expenses from your bank SMS messages",
-      image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=600&fit=crop&crop=center",
-    },
-    {
-      icon: PieChart,
-      title: "Visual Analytics",
-      description: "Beautiful charts and graphs to understand your spending patterns",
-      image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&h=600&fit=crop&crop=center",
-    }
-  ];
+const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
+  const [index, setIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    setCount(api.scrollSnapList().length);
-    setCurrent(api.selectedScrollSnap());
-
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-    });
-  }, [api]);
-
-  const nextSlide = () => {
-    if (current < slides.length - 1) {
-      api?.scrollTo(current + 1);
-    } else {
-      handleSlidesComplete();
-    }
-  };
-
-  const prevSlide = () => {
-    if (current > 0) {
-      api?.scrollTo(current - 1);
-    }
-  };
-
-  const handleSlidesComplete = () => {
-    // Check if we need to show permissions flow
-    const isAndroid = Capacitor.getPlatform() === 'android';
-    const needsPermissions = isPermissionOnboardingNeeded();
-    
-    if (isAndroid && needsPermissions) {
-      setShowPermissions(true);
-    } else {
-      onComplete();
-    }
-  };
-
-  if (showPermissions) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-        <PermissionsOnboarding onComplete={onComplete} />
-      </div>
-    );
-  }
+    setIsVisible(true);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
-      <div className="w-full max-w-md mx-auto">
-        <Carousel 
-          className="w-full"
-          setApi={setApi}
-          opts={{
-            align: "start",
-            loop: false,
-          }}
-        >
-          <CarouselContent>
-            {slides.map((slide, index) => (
-              <CarouselItem key={index}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className="relative overflow-hidden rounded-2xl bg-card shadow-xl"
-                >
-                  {/* Image Background with Overlay */}
-                  <div className="relative h-80 overflow-hidden">
-                    <img
-                      src={slide.image}
-                      alt={slide.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/60 to-secondary/60" />
-                    
-                    {/* Icon Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {(() => {
-                        const IconComponent = slide.icon;
-                        return <IconComponent className="h-20 w-20 text-primary-foreground drop-shadow-lg" />;
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-8 text-center">
-                    <h2 className="text-3xl font-bold mb-4 text-foreground">
-                      {slide.title}
-                    </h2>
-                    <p className="text-muted-foreground mb-8 leading-relaxed text-lg">
-                      {slide.description}
-                    </p>
-                    
-                    {/* Progress Indicators */}
-                    <div className="flex items-center justify-center gap-2 mb-8">
-                      {slides.map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                            idx === current ? 'bg-primary scale-125' : 'bg-muted-foreground/30'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Navigation Buttons */}
-                    <div className="flex gap-4">
-                      <Button
-                        variant="outline"
-                        onClick={prevSlide}
-                        disabled={current === 0}
-                        className="flex-1 h-12"
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-2" />
-                        Back
-                      </Button>
-                      <Button
-                        onClick={nextSlide}
-                        className="flex-1 h-12"
-                      >
-                        {current === slides.length - 1 ? 'Get Started' : 'Next'}
-                        <ChevronRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+    <div className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+      
+      {/* Progress indicator */}
+      <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2 pt-4 safe-area-inset-top">
+        <div className="flex space-x-2 pt-2">
+          {slides.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all duration-300 ${
+                i === index 
+                  ? 'w-8 bg-primary' 
+                  : i < index 
+                    ? 'w-2 bg-primary/60' 
+                    : 'w-2 bg-muted'
+              }`}
+            />
+          ))}
+        </div>
       </div>
+
+      <Swiper
+        onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
+        pagination={{ 
+          clickable: true,
+          bulletClass: 'swiper-pagination-bullet opacity-60',
+          bulletActiveClass: 'swiper-pagination-bullet-active opacity-100 !bg-primary'
+        }}
+        modules={[Pagination, EffectFade]}
+        effect="fade"
+        fadeEffect={{ crossFade: true }}
+        className="h-full"
+        speed={600}
+      >
+        {slides.map((slide, i) => (
+          <SwiperSlide key={i}>
+            <div className={`flex flex-col h-full min-h-0 transition-all duration-700 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+              {/* Header with icon and gradient */}
+              <div className={`relative pt-16 pb-4 bg-gradient-to-b ${slide.gradient} shrink-0`}>
+                <div className="flex flex-col items-center text-center px-4">
+                  <div className="mb-3 p-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
+                    <div className="text-primary">
+                      {slide.icon}
+                    </div>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 animate-slide-up">
+                    {slide.title}
+                  </h1>
+                  <p className="text-base sm:text-lg font-medium text-primary mb-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    {slide.subtitle}
+                  </p>
+                  <p className="text-sm text-muted-foreground max-w-sm leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                    {slide.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Image section */}
+              <div className="flex-1 flex items-center justify-center px-4 min-h-0">
+                <div className="relative w-full max-w-xs h-full max-h-[40vh] flex items-center justify-center">
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-2xl transform rotate-1" />
+                  <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit">
+                    <img
+                      src={slide.image.trim()}
+                      alt={slide.title}
+                      className="w-full h-auto max-h-[35vh] object-contain rounded-lg animate-scale-in"
+                      style={{ animationDelay: '0.3s' }}
+                      onError={
+                        import.meta.env.MODE === 'development'
+                          ? () => console.error(`Failed to load image: ${slide.image}`)
+                          : undefined
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action section */}
+              <div className="px-4 pb-4 safe-area-inset-bottom pt-2 shrink-0">
+                {i === slides.length - 1 ? (
+                  <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                    <Button 
+                      className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 group" 
+                      onClick={onComplete}
+                    >
+                      Start Your Journey
+                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center pb-2">
+                      Join thousands who are already in control of their finances
+                    </p>
+                  </div>
+                ) : (
+                  <div className="h-16 flex items-center justify-center pb-4">
+                    <p className="text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                      Swipe to continue
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
     </div>
   );
 };

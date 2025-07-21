@@ -1,7 +1,6 @@
 
 import { safeStorage } from "@/utils/safe-storage";
 import { setSmsPermissionGrantDate } from "@/utils/sms-permission-storage";
-import { permissionEventManager, type PermissionStatus } from "@/utils/permission-events";
 
 import { Capacitor } from "@capacitor/core";
 import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
@@ -20,14 +19,9 @@ class SmsPermissionService {
 
   // Check if SMS permissions are granted
   async hasPermission(): Promise<boolean> {
-    if (import.meta.env.MODE === 'development') {
-      console.log('[SmsPermissionService]: checking permission...');
-    }
-
     if (!this.isNativeEnvironment()) {
       // For web environments, check local storage
-      const granted = safeStorage.getItem('sms_permission_simulation') === 'granted';
-      return granted;
+      return safeStorage.getItem('sms_permission_simulation') === 'granted';
     }
 
     try {
@@ -47,11 +41,6 @@ class SmsPermissionService {
 
       const listenerGranted = listenerResult?.granted ?? false;
       const granted = readerGranted && listenerGranted;
-      
-      if (import.meta.env.MODE === 'development') {
-        console.log(`[SmsPermissionService]: permission granted: ${granted}`);
-      }
-
       this.savePermissionStatus(granted);
 
       // Initialize listener only when both permissions are granted
@@ -66,22 +55,6 @@ class SmsPermissionService {
       }
       return false;
     }
-  }
-
-  // Check if we can request permission (not in "never ask again" state)
-  async canRequestPermission(): Promise<boolean> {
-    if (!this.isNativeEnvironment()) {
-      return true;
-    }
-
-    // Check if permission was previously denied with "never ask again"
-    const permissionState = permissionEventManager.getPermissionState('sms');
-    if (permissionState?.status === 'never-ask-again') {
-      return false;
-    }
-
-    // For Android, we need to check if we can show the permission dialog
-    return true; // This would need native implementation to check shouldShowRequestPermissionRationale
   }
   
   // Initialize SMS listener
@@ -109,42 +82,22 @@ class SmsPermissionService {
   }
 
   // Save permission status to local storage
-  savePermissionStatus(granted: boolean, status?: PermissionStatus): void {
-    const permissionStatus: PermissionStatus = status || (granted ? 'granted' : 'denied');
-    
-    if (import.meta.env.MODE === 'development') {
-      console.log(`[SmsPermissionService]: setPermissionState(${permissionStatus})`);
-    }
-
+  savePermissionStatus(granted: boolean): void {
     if (this.isNativeEnvironment()) {
       safeStorage.setItem('sms_permission', granted ? 'granted' : 'denied');
-      safeStorage.setItem('sms_permission_status', permissionStatus);
     } else {
       safeStorage.setItem('sms_permission_simulation', granted ? 'granted' : 'denied');
     }
-    
-    // Emit permission change event with detailed status
-    permissionEventManager.emit('sms-permission-changed', granted, permissionStatus);
   }
 
   // Request SMS permissions
   async requestPermission(): Promise<boolean> {
-    if (import.meta.env.MODE === 'development') {
-      console.log('[SmsPermissionService]: requestPermission() called');
-    }
-
     if (!this.isNativeEnvironment()) {
       // For web testing, simulate granting permission
-      this.savePermissionStatus(true, 'granted');
+      this.savePermissionStatus(true);
+      // Record the grant date for web simulation
       setSmsPermissionGrantDate(new Date().toISOString());
       return true;
-    }
-
-    // Check if we can request permission
-    const canRequest = await this.canRequestPermission();
-    if (!canRequest) {
-      this.savePermissionStatus(false, 'never-ask-again');
-      return false;
     }
 
     try {
@@ -153,44 +106,23 @@ class SmsPermissionService {
         if (import.meta.env.MODE === 'development') {
           console.warn('[SMS] Failed to load SMS listener when requesting permissions');
         }
-        this.savePermissionStatus(false, 'denied');
         return false;
       }
 
       // Check if permission was already granted before
       const wasAlreadyGranted = await this.hasPermission();
-      if (wasAlreadyGranted) {
-        return true;
-      }
 
-      // Request permission sequentially to avoid conflicts
-      const readerGranted = await SmsReaderService.requestPermission();
-      if (!readerGranted) {
-        this.savePermissionStatus(false, 'denied');
-        return false;
-      }
+      // Request permission from both plugins
+      const [readerGranted, listenerResult] = await Promise.all([
+        SmsReaderService.requestPermission(),
+        smsListener.requestPermission(),
+      ]);
 
-      const listenerResult = await smsListener.requestPermission();
       const listenerGranted = listenerResult?.granted ?? false;
-      
       const granted = readerGranted && listenerGranted;
-      
-      if (import.meta.env.MODE === 'development') {
-        console.log("[SMS] Permission request result:", { readerGranted, listenerGranted, granted });
-      }
-      
-      // Determine the permission status
-      let status: PermissionStatus = 'denied';
-      if (granted) {
-        status = 'granted';
-      } else {
-        // This is where we'd check if it's "never ask again" - for now, assume it's just denied
-        status = 'denied';
-      }
+      this.savePermissionStatus(granted);
 
-      this.savePermissionStatus(granted, status);
-
-      // Record the grant date only if this is a new grant
+      // Record the grant date only if this is a new grant (not already granted)
       if (granted && !wasAlreadyGranted) {
         setSmsPermissionGrantDate(new Date().toISOString());
       }
@@ -205,7 +137,7 @@ class SmsPermissionService {
       if (import.meta.env.MODE === 'development') {
         console.error("[SMS] Error requesting SMS permission:", error);
       }
-      this.savePermissionStatus(false, 'denied');
+      this.savePermissionStatus(false);
       return false;
     }
   }
@@ -216,42 +148,15 @@ class SmsPermissionService {
       return safeStorage.getItem('sms_permission_simulation') === 'granted';
     }
     
+    // For native environments, we'll use the cached value
     return safeStorage.getItem('sms_permission') === 'granted';
-  }
-
-  // Get current permission status
-  getPermissionStatus(): PermissionStatus {
-    if (!this.isNativeEnvironment()) {
-      const granted = safeStorage.getItem('sms_permission_simulation') === 'granted';
-      return granted ? 'granted' : 'not-requested';
-    }
-
-    const status = safeStorage.getItem('sms_permission_status') as PermissionStatus;
-    return status || 'not-requested';
-  }
-
-  // Open app settings for manual permission enabling
-  async openAppSettings(): Promise<boolean> {
-    if (!this.isNativeEnvironment()) {
-      return false;
-    }
-
-    try {
-      // This would need a native implementation
-      // For now, just return false
-      return false;
-    } catch (error) {
-      if (import.meta.env.MODE === 'development') {
-        console.error("[SMS] Error opening app settings:", error);
-      }
-      return false;
-    }
   }
 
   // Revoke SMS permissions (web only - native requires manual action)
   async revokePermission(): Promise<{ success: boolean; requiresManualAction: boolean; message: string }> {
     if (!this.isNativeEnvironment()) {
-      this.savePermissionStatus(false, 'denied');
+      // For web environments, simulate revoking permission
+      this.savePermissionStatus(false);
       return {
         success: true,
         requiresManualAction: false,

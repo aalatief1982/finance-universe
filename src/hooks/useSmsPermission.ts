@@ -1,24 +1,20 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { smsPermissionService } from '@/services/SmsPermissionService';
-import { permissionEventManager } from '@/utils/permission-events';
 
 interface SmsPermissionState {
   hasPermission: boolean;
   isChecking: boolean;
   lastChecked: number;
-  status: string;
 }
 
 const PERMISSION_CHECK_INTERVAL = 5000; // 5 seconds
-const PERMISSION_CACHE_DURATION = 10000; // 10 seconds (reduced for more responsive updates)
+const PERMISSION_CACHE_DURATION = 30000; // 30 seconds
 
 export function useSmsPermission() {
   const [state, setState] = useState<SmsPermissionState>({
     hasPermission: false,
     isChecking: false,
     lastChecked: 0,
-    status: 'not-requested',
   });
 
   const checkPermission = useCallback(async (force: boolean = false) => {
@@ -33,13 +29,10 @@ export function useSmsPermission() {
     
     try {
       const hasPermission = await smsPermissionService.hasPermission();
-      const status = smsPermissionService.getPermissionStatus();
-      
       setState({
         hasPermission,
         isChecking: false,
         lastChecked: now,
-        status,
       });
       return hasPermission;
     } catch (error) {
@@ -54,15 +47,11 @@ export function useSmsPermission() {
     
     try {
       const granted = await smsPermissionService.requestPermission();
-      const status = smsPermissionService.getPermissionStatus();
-      
       setState({
         hasPermission: granted,
         isChecking: false,
         lastChecked: Date.now(),
-        status,
       });
-      
       return granted;
     } catch (error) {
       console.error('Error requesting SMS permission:', error);
@@ -82,7 +71,6 @@ export function useSmsPermission() {
           hasPermission: false,
           isChecking: false,
           lastChecked: Date.now(),
-          status: 'denied',
         });
       } else {
         setState(prev => ({ ...prev, isChecking: false }));
@@ -103,21 +91,6 @@ export function useSmsPermission() {
   const refreshPermission = useCallback(() => {
     return checkPermission(true);
   }, [checkPermission]);
-
-  // Listen for permission change events
-  useEffect(() => {
-    const unsubscribe = permissionEventManager.subscribe('sms-permission-changed', (event) => {
-      setState(prev => ({
-        ...prev,
-        hasPermission: event.granted,
-        lastChecked: event.timestamp,
-        isChecking: false,
-        status: event.status,
-      }));
-    });
-
-    return unsubscribe;
-  }, []);
 
   // Initial permission check
   useEffect(() => {
@@ -163,7 +136,6 @@ export function useSmsPermission() {
   return {
     hasPermission: state.hasPermission,
     isChecking: state.isChecking,
-    status: state.status,
     checkPermission,
     requestPermission,
     revokePermission,
