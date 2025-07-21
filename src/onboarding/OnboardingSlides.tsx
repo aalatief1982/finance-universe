@@ -92,7 +92,10 @@ const OnboardingSlides: React.FC<OnboardingSlidesProps> = ({ onComplete }) => {
           >
             <Card className="relative overflow-hidden">
               <div className={`h-48 bg-gradient-to-r ${slides[currentSlide].gradient} flex items-center justify-center`}>
-                <slides[currentSlide].icon className="h-16 w-16 text-white" />
+                {(() => {
+                  const IconComponent = slides[currentSlide].icon;
+                  return <IconComponent className="h-16 w-16 text-white" />;
+                })()}
               </div>
               <CardContent className="p-8 text-center">
                 <h2 className="text-2xl font-bold mb-4 text-gray-900">
