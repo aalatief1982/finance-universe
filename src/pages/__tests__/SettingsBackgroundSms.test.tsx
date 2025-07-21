@@ -26,7 +26,7 @@ const StateViewer = () => {
 };
 
 describe('Settings background SMS toggle', () => {
-  it('persists preference when toggled', async () => {
+  it('is disabled when feature is locked', () => {
     render(
       <UserProvider>
         <BrowserRouter>
@@ -37,26 +37,6 @@ describe('Settings background SMS toggle', () => {
     );
 
     const toggle = screen.getByLabelText(/enable background sms reading/i);
-    expect(screen.getByTestId('sms-state')).toHaveTextContent('undefined');
-
-    await act(async () => {
-      fireEvent.click(toggle);
-    });
-
-    expect(screen.getByTestId('sms-state')).toHaveTextContent('true');
-  });
-
-  it('reflects existing permission on mount', async () => {
-    render(
-      <UserProvider>
-        <BrowserRouter>
-          <Settings />
-          <StateViewer />
-        </BrowserRouter>
-      </UserProvider>
-    );
-
-    expect(await screen.findByLabelText(/enable background sms reading/i)).toBeChecked();
-    expect(screen.getByTestId('sms-state')).toHaveTextContent('true');
+    expect(toggle).toBeDisabled();
   });
 });
