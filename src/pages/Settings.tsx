@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 import { demoTransactionService } from "@/services/DemoTransactionService";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast, toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
@@ -61,6 +61,16 @@ import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+
+const showFeatureLockedToast = () => {
+  toast({
+    title: "Feature Locked",
+    description:
+      "This feature is under development. Stay tuned for amazing update!",
+    status: "info",
+    duration: 3000,
+  });
+};
 
 const Settings = () => {
   const { toast } = useToast();
@@ -589,17 +599,29 @@ const Settings = () => {
           <p className="text-sm text-muted-foreground">
             Manage notification preferences
           </p>
-          <div className="flex items-center justify-between">
+          <div
+            className="flex items-center justify-between opacity-50 cursor-not-allowed"
+            onClick={(e) => {
+              e.preventDefault();
+              showFeatureLockedToast();
+            }}
+          >
             <div className="space-y-0.5">
-              <Label htmlFor="allow-notifications">Enable Notifications</Label>
+              <Label htmlFor="allow-notifications">
+                <span className="flex items-center space-x-1">
+                  <span>Enable Notifications</span>
+                  <Lock className="ml-2 text-gray-400" size={20} />
+                </span>
+              </Label>
               <p className="text-sm text-muted-foreground">
                 Allow this app to send you notifications
               </p>
             </div>
             <Switch
               id="allow-notifications"
-              checked={notificationsAllowed}
-              onCheckedChange={handleNotificationToggle}
+              checked={false}
+              disabled
+              onClick={showFeatureLockedToast}
             />
           </div>
         </section>
@@ -611,30 +633,54 @@ const Settings = () => {
           <p className="text-sm text-muted-foreground">
             Manage SMS related options
           </p>
-          <div className="flex items-center justify-between">
+          <div
+            className="flex items-center justify-between opacity-50 cursor-not-allowed"
+            onClick={(e) => {
+              e.preventDefault();
+              showFeatureLockedToast();
+            }}
+          >
             <div className="space-y-0.5">
-              <Label htmlFor="background-sms">Enable Background SMS Reading</Label>
+              <Label htmlFor="background-sms">
+                <span className="flex items-center space-x-1">
+                  <span>Enable Background SMS Reading</span>
+                  <Lock className="ml-2 text-gray-400" size={20} />
+                </span>
+              </Label>
               <p className="text-sm text-muted-foreground">
                 Read incoming SMS in the background
               </p>
             </div>
             <Switch
               id="background-sms"
-              checked={backgroundSmsEnabled}
-              onCheckedChange={handleBackgroundSmsChange}
+              checked={false}
+              disabled
+              onClick={showFeatureLockedToast}
             />
           </div>
-          <div className="flex items-center justify-between mt-2">
+          <div
+            className="flex items-center justify-between mt-2 opacity-50 cursor-not-allowed"
+            onClick={(e) => {
+              e.preventDefault();
+              showFeatureLockedToast();
+            }}
+          >
             <div className="space-y-0.5">
-              <Label htmlFor="auto-sms-import">Automatic SMS import</Label>
+              <Label htmlFor="auto-sms-import">
+                <span className="flex items-center space-x-1">
+                  <span>Automatic SMS import</span>
+                  <Lock className="ml-2 text-gray-400" size={20} />
+                </span>
+              </Label>
               <p className="text-sm text-muted-foreground">
                 Check for new SMS on startup
               </p>
             </div>
             <Switch
               id="auto-sms-import"
-              checked={autoImport}
-              onCheckedChange={setAutoImport}
+              checked={false}
+              disabled
+              onClick={showFeatureLockedToast}
             />
           </div>
         </section>
@@ -662,17 +708,27 @@ const Settings = () => {
             </Button>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div
+            className="flex items-center justify-between opacity-50 cursor-not-allowed"
+            onClick={(e) => {
+              e.preventDefault();
+              showFeatureLockedToast();
+            }}
+          >
             <div>
-              <p className="font-medium">Import Data</p>
+              <p className="font-medium flex items-center space-x-1">
+                <span>Import Data</span>
+                <Lock className="ml-2 text-gray-400" size={20} />
+              </p>
               <p className="text-sm text-muted-foreground">
                 Import transactions from a file
               </p>
             </div>
             <Button
               variant="outline"
-              onClick={handleImportData}
               className="gap-2"
+              disabled
+              onClick={showFeatureLockedToast}
             >
               <UploadCloud size={16} />
               Import
