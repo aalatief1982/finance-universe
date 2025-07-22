@@ -50,6 +50,12 @@ import { useToast, toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
+import { LockedFeature } from "@/components/ui/locked-feature";
+import {
+  isBetaActive,
+  handleLockedFeatureClick,
+  handleBetaCodeSubmit
+} from "@/utils/beta-utils";
 
 import {
   updateCurrency as persistCurrency,
@@ -62,16 +68,6 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-
-
-const handleLockedFeatureClick = (featureName: string) => {
-  toast({
-    title: `🚧 ${featureName} Coming Soon!`,
-    description:
-      "This feature is currently under development. Stay tuned for exciting updates!",
-
-  });
-};
 
 const Settings = () => {
   const { toast } = useToast();
@@ -90,32 +86,12 @@ const Settings = () => {
     typeof Notification !== 'undefined' && Notification.permission === "granted"
   );
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      const platform = Capacitor.getPlatform();
-      if (platform === 'web' && typeof Notification !== 'undefined') {
-        setNotificationsAllowed(Notification.permission === 'granted');
-      } else {
-        try {
-          const status = await LocalNotifications.checkPermissions();
-          setNotificationsAllowed(status.display === 'granted');
-        } catch {
-          setNotificationsAllowed(false);
-        }
-      }
-    };
-
-    checkPermissions();
-  }, []);
-
-  // State for form values
   const [theme, setTheme] = useState<"light" | "dark" | "system">(
     user?.preferences?.theme || "light",
   );
   const [currency, setCurrency] = useState(
     user?.preferences?.currency || "USD",
   );
-  // SMS permission state - handled directly like notifications
   
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
@@ -136,14 +112,29 @@ const Settings = () => {
   // Beta features state
   const [betaDialogOpen, setBetaDialogOpen] = useState(false);
   const [betaCode, setBetaCode] = useState('');
-  const [isBetaActive, setIsBetaActive] = useState(() => {
-    return localStorage.getItem('betaFeaturesActive') === 'true';
-  });
+  const [betaActive, setBetaActive] = useState(() => isBetaActive());
   
   // App version state
   const [appVersion, setAppVersion] = useState<string>('');
 
-  // Note: useBlocker is not available in React Router v7, implementing a simple warning
+  useEffect(() => {
+    const checkPermissions = async () => {
+      const platform = Capacitor.getPlatform();
+      if (platform === 'web' && typeof Notification !== 'undefined') {
+        setNotificationsAllowed(Notification.permission === 'granted');
+      } else {
+        try {
+          const status = await LocalNotifications.checkPermissions();
+          setNotificationsAllowed(status.display === 'granted');
+        } catch {
+          setNotificationsAllowed(false);
+        }
+      }
+    };
+
+    checkPermissions();
+  }, []);
+
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
@@ -156,7 +147,6 @@ const Settings = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isDirty]);
 
-  // Initialize values from user context on component mount
   useEffect(() => {
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
@@ -176,18 +166,15 @@ const Settings = () => {
     }
   }, [user]);
 
-  // Check SMS permission on mount - similar to notifications
   useEffect(() => {
     const checkSmsPermissions = async () => {
       const platform = Capacitor.getPlatform();
       if (platform === 'web') {
-        // On web, just use the user preference
         return;
       } else {
         try {
           const hasPermission = await smsPermissionService.hasPermission();
           if (!hasPermission && backgroundSmsEnabled) {
-            // User preference says enabled but no permission - reset it
             setBackgroundSmsEnabled(false);
           }
         } catch {
@@ -199,7 +186,6 @@ const Settings = () => {
     checkSmsPermissions();
   }, []);
 
-  // Fetch app version from native info or manifest.json
   useEffect(() => {
     const fetchVersion = async () => {
       try {
@@ -237,7 +223,6 @@ const Settings = () => {
     setIsDirty(changed);
   }, [theme, currency, autoImport, backgroundSmsEnabled, weekStartsOn, baselineBackgroundSmsEnabled, user]);
 
-  // Handlers for settings changes
   const handleThemeChange = (value: "light" | "dark" | "system") => {
     setTheme(value);
   };
@@ -246,13 +231,11 @@ const Settings = () => {
     setCurrency(value);
   };
 
-
   const handleBackgroundSmsChange = async (checked: boolean) => {
     const platform = Capacitor.getPlatform();
 
     if (checked) {
       if (platform === 'web') {
-        // On web, just enable the preference
         setBackgroundSmsEnabled(true);
         return;
       }
@@ -473,25 +456,19 @@ const Settings = () => {
     }
   };
 
-  const handleBetaCodeSubmit = () => {
-    if (betaCode === '0599572215') {
-      localStorage.setItem('betaFeaturesActive', 'true');
-      setIsBetaActive(true);
-      setBetaDialogOpen(false);
-      setBetaCode('');
-      toast({
-        title: "🎉 Beta Features Activated!",
-        description: "You now have access to all beta features including Budget and Import SMS.",
-      });
-    } else {
-      toast({
-        title: "❌ Invalid Beta Code",
-        description: "Please enter a valid beta code to activate premium features.",
-        variant: "destructive",
-      });
-      setBetaDialogOpen(false);
-      setBetaCode('');
-    }
+  const handleBetaSubmit = () => {
+    handleBetaCodeSubmit(
+      betaCode,
+      () => {
+        setBetaActive(true);
+        setBetaDialogOpen(false);
+        setBetaCode('');
+      },
+      () => {
+        setBetaDialogOpen(false);
+        setBetaCode('');
+      }
+    );
   };
 
   return (
@@ -506,6 +483,7 @@ const Settings = () => {
         <Button className="w-full mb-2" onClick={handleSaveSettings}>
           Save Settings
         </Button>
+        
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <Sun className="mr-2" size={20} />
@@ -597,6 +575,7 @@ const Settings = () => {
             </ToggleGroup>
           </div>
         </section>
+
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <Bell className="mr-2" size={20} />
@@ -605,36 +584,30 @@ const Settings = () => {
           <p className="text-sm text-muted-foreground">
             Manage notification preferences
           </p>
-          <div
-            className="flex items-center justify-between opacity-50 cursor-not-allowed"
-            onClick={(e) => {
-              e.preventDefault();
-
-              handleLockedFeatureClick('Enable Notifications');
-
-            }}
+          
+          <LockedFeature
+            isLocked={!betaActive}
+            featureName="Enable Notifications"
+            onLockedClick={() => handleLockedFeatureClick('Enable Notifications')}
           >
-            <div className="space-y-0.5">
-              <Label htmlFor="allow-notifications">
-                <span className="flex items-center space-x-1">
-                  <span>Enable Notifications</span>
-                  <Lock className="ml-2 text-gray-400" size={20} />
-                </span>
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Allow this app to send you notifications
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="allow-notifications">
+                  Enable Notifications
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Allow this app to send you notifications
+                </p>
+              </div>
+              <Switch
+                id="allow-notifications"
+                checked={notificationsAllowed}
+                onCheckedChange={handleNotificationToggle}
+              />
             </div>
-            <Switch
-              id="allow-notifications"
-              checked={false}
-              disabled
-
-              onClick={() => handleLockedFeatureClick('Enable Notifications')}
-
-            />
-          </div>
+          </LockedFeature>
         </section>
+
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <MessageSquare className="mr-2" size={20} />
@@ -643,64 +616,50 @@ const Settings = () => {
           <p className="text-sm text-muted-foreground">
             Manage SMS related options
           </p>
-          <div
-            className="flex items-center justify-between opacity-50 cursor-not-allowed"
-            onClick={(e) => {
-              e.preventDefault();
-
-              handleLockedFeatureClick('Enable Background SMS Reading');
-
-            }}
+          
+          <LockedFeature
+            isLocked={!betaActive}
+            featureName="Enable Background SMS Reading"
+            onLockedClick={() => handleLockedFeatureClick('Enable Background SMS Reading')}
           >
-            <div className="space-y-0.5">
-              <Label htmlFor="background-sms">
-                <span className="flex items-center space-x-1">
-                  <span>Enable Background SMS Reading</span>
-                  <Lock className="ml-2 text-gray-400" size={20} />
-                </span>
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Read incoming SMS in the background
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="background-sms">
+                  Enable Background SMS Reading
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Read incoming SMS in the background
+                </p>
+              </div>
+              <Switch
+                id="background-sms"
+                checked={backgroundSmsEnabled}
+                onCheckedChange={handleBackgroundSmsChange}
+              />
             </div>
-            <Switch
-              id="background-sms"
-              checked={false}
-              disabled
+          </LockedFeature>
 
-              onClick={() => handleLockedFeatureClick('Enable Background SMS Reading')}
-
-            />
-          </div>
-          <div
-            className="flex items-center justify-between mt-2 opacity-50 cursor-not-allowed"
-            onClick={(e) => {
-              e.preventDefault();
-
-              handleLockedFeatureClick('Automatic SMS import');
-
-            }}
+          <LockedFeature
+            isLocked={!betaActive}
+            featureName="Automatic SMS import"
+            onLockedClick={() => handleLockedFeatureClick('Automatic SMS import')}
           >
-            <div className="space-y-0.5">
-              <Label htmlFor="auto-sms-import">
-                <span className="flex items-center space-x-1">
-                  <span>Automatic SMS import</span>
-                  <Lock className="ml-2 text-gray-400" size={20} />
-                </span>
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Check for new SMS on startup
-              </p>
+            <div className="flex items-center justify-between mt-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="auto-sms-import">
+                  Automatic SMS import
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Check for new SMS on startup
+                </p>
+              </div>
+              <Switch
+                id="auto-sms-import"
+                checked={autoImport}
+                onCheckedChange={setAutoImport}
+              />
             </div>
-            <Switch
-              id="auto-sms-import"
-              checked={false}
-              disabled
-
-              onClick={() => handleLockedFeatureClick('Automatic SMS import')}
-
-            />
-          </div>
+          </LockedFeature>
         </section>
 
         <section className="space-y-4">
@@ -709,6 +668,7 @@ const Settings = () => {
             <span>Data Management</span>
           </h2>
           <p className="text-sm text-muted-foreground">Manage your data</p>
+          
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">Export Data</p>
@@ -726,36 +686,28 @@ const Settings = () => {
             </Button>
           </div>
 
-          <div
-            className="flex items-center justify-between opacity-50 cursor-not-allowed"
-            onClick={(e) => {
-              e.preventDefault();
-
-              handleLockedFeatureClick('Import Data');
-
-            }}
+          <LockedFeature
+            isLocked={!betaActive}
+            featureName="Import Data"
+            onLockedClick={() => handleLockedFeatureClick('Import Data')}
           >
-            <div>
-              <p className="font-medium flex items-center space-x-1">
-                <span>Import Data</span>
-                <Lock className="ml-2 text-gray-400" size={20} />
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Import transactions from a file
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Import Data</p>
+                <p className="text-sm text-muted-foreground">
+                  Import transactions from a file
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleImportData}
+                className="gap-2"
+              >
+                <UploadCloud size={16} />
+                Import
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              className="gap-2"
-              disabled
-
-              onClick={() => handleLockedFeatureClick('Import Data')}
-
-            >
-              <UploadCloud size={16} />
-              Import
-            </Button>
-          </div>
+          </LockedFeature>
 
           <div className="flex items-center justify-between">
             <div>
@@ -778,10 +730,10 @@ const Settings = () => {
             <div>
               <p className="font-medium">Beta Features</p>
               <p className="text-sm text-muted-foreground">
-                {isBetaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
+                {betaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
               </p>
             </div>
-            {isBetaActive ? (
+            {betaActive ? (
               <div className="flex items-center text-green-600">
                 <Unlock className="h-4 w-4 mr-2" />
                 <span className="text-sm font-medium">Active</span>
@@ -807,7 +759,7 @@ const Settings = () => {
                         placeholder="Enter your beta code"
                       />
                     </div>
-                    <Button onClick={handleBetaCodeSubmit} className="w-full">
+                    <Button onClick={handleBetaSubmit} className="w-full">
                       Activate Features
                     </Button>
                   </div>
@@ -817,7 +769,6 @@ const Settings = () => {
           </div>
         </section>
 
-        {/* App Version */}
         <section className="bg-card rounded-lg p-4 mt-6">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
@@ -828,6 +779,7 @@ const Settings = () => {
 
       </motion.div>
       </div>
+      
       <AlertDialog open={showUnsavedPrompt} onOpenChange={setShowUnsavedPrompt}>
         <AlertDialogContent>
           <AlertDialogHeader>

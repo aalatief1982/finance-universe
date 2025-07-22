@@ -32,6 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getNavItems } from "./route-constants";
 import { useToast } from "@/hooks/use-toast";
+import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
 // Map of icon names to their components
 const iconMap = {
@@ -58,9 +59,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   const navItems = getNavItems();
   const [budgetOpen, setBudgetOpen] = React.useState(false);
   const { toast } = useToast();
-  const [isBetaActive, setIsBetaActive] = React.useState(() => {
-    return localStorage.getItem('betaFeaturesActive') === 'true';
-  });
+  const [betaActive, setBetaActive] = React.useState(() => isBetaActive());
 
   const budgetItems = [
     {
@@ -76,13 +75,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
       icon: <TrendingDown size={18} />,
     },
   ];
-
-  const handleLockedFeatureClick = (featureName: string) => {
-    toast({
-      title: `🚧 ${featureName} Coming Soon!`,
-      description: "This feature is currently under development. Stay tuned for exciting updates!",
-    });
-  };
 
   return (
     <div className="md:hidden">
@@ -131,7 +123,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
             <nav className="space-y-1">
               {navItems.map((item) => {
-                // Get the icon component from our icon map
                 const IconComponent =
                   iconMap[item.icon as keyof typeof iconMap];
 
@@ -141,7 +132,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          if (!isBetaActive) {
+                          if (!betaActive) {
                             handleLockedFeatureClick('Budget');
                           } else {
                             setBudgetOpen(!budgetOpen);
@@ -160,18 +151,18 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                         <div className="flex-1 text-left">
                           <p className="font-medium flex items-center">
                             {item.title}
-                            {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+                            {!betaActive && <Lock className="h-3 w-3 ml-1" />}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {item.description}
                           </p>
                         </div>
-                        {isBetaActive && (
+                        {betaActive && (
                           <span className="ml-auto">{budgetOpen ? "▾" : "▸"}</span>
                         )}
                       </button>
 
-                      {isBetaActive && budgetOpen && (
+                      {betaActive && budgetOpen && (
                         <ul className="mt-1 ml-6 space-y-1">
                           {budgetItems.map((b) => (
                             <li key={b.path}>
@@ -197,14 +188,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   );
                 }
 
-                // Check if this is Import SMS and handle lock
                 if (item.title === "Import SMS") {
                   return (
                     <button
                       key={item.title}
                       type="button"
                       onClick={() => {
-                        if (!isBetaActive) {
+                        if (!betaActive) {
                           handleLockedFeatureClick('Import SMS');
                         } else {
                           window.location.href = item.path;
@@ -223,7 +213,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                       <div>
                         <p className="font-medium flex items-center">
                           {item.title}
-                          {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+                          {!betaActive && <Lock className="h-3 w-3 ml-1" />}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {item.description}

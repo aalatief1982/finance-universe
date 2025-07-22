@@ -29,6 +29,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { logAnalyticsEvent } from "@/utils/firebase-analytics";
+import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
 // Map of icon names to their components
 const iconMap = {
@@ -48,9 +49,7 @@ export const MainNavigation: React.FC = () => {
   const navItems = getNavItems();
   const [budgetOpen, setBudgetOpen] = React.useState(false);
   const { toast } = useToast();
-  const [isBetaActive, setIsBetaActive] = React.useState(() => {
-    return localStorage.getItem('betaFeaturesActive') === 'true';
-  });
+  const [betaActive, setBetaActive] = React.useState(() => isBetaActive());
 
   const budgetItems = [
     {
@@ -67,13 +66,6 @@ export const MainNavigation: React.FC = () => {
     },
   ];
 
-  const handleLockedFeatureClick = (featureName: string) => {
-    toast({
-      title: `🚧 ${featureName} Coming Soon!`,
-      description: "This feature is currently under development. Stay tuned for exciting updates!",
-    });
-  };
-
   return (
     <motion.nav
       initial={{ opacity: 0, y: -10 }}
@@ -83,7 +75,6 @@ export const MainNavigation: React.FC = () => {
     >
       <ul className="flex items-center space-x-1">
         {navItems.map((item) => {
-          // Get the icon component from our icon map
           const IconComponent = iconMap[item.icon as keyof typeof iconMap];
 
           if (item.modal === "budget") {
@@ -93,9 +84,9 @@ export const MainNavigation: React.FC = () => {
                   type="button"
                   onClick={() => {
                     logAnalyticsEvent('budget_menu_click', {
-                      beta_active: isBetaActive
+                      beta_active: betaActive
                     });
-                    if (!isBetaActive) {
+                    if (!betaActive) {
                       handleLockedFeatureClick('Budget');
                     } else {
                       setBudgetOpen(true);
@@ -113,10 +104,10 @@ export const MainNavigation: React.FC = () => {
                     <IconComponent size={18} className="mr-2" />
                   )}
                   {item.title}
-                  {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+                  {!betaActive && <Lock className="h-3 w-3 ml-1" />}
                 </button>
 
-                {isBetaActive && (
+                {betaActive && (
                   <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
                     <DialogContent className="sm:max-w-xs">
                       <DialogHeader>
@@ -148,7 +139,6 @@ export const MainNavigation: React.FC = () => {
             );
           }
 
-          // Check if this is Import SMS and handle lock
           if (item.title === "Import SMS") {
             return (
               <li key={item.title}>
@@ -156,9 +146,9 @@ export const MainNavigation: React.FC = () => {
                   type="button"
                   onClick={() => {
                     logAnalyticsEvent('import_menu_click', {
-                      beta_active: isBetaActive
+                      beta_active: betaActive
                     });
-                    if (!isBetaActive) {
+                    if (!betaActive) {
                       handleLockedFeatureClick('Import SMS');
                     } else {
                       window.location.href = item.path ?? "";
@@ -174,7 +164,7 @@ export const MainNavigation: React.FC = () => {
                 >
                   {IconComponent && <IconComponent size={18} className="mr-2" />}
                   {item.title}
-                  {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+                  {!betaActive && <Lock className="h-3 w-3 ml-1" />}
                 </button>
               </li>
             );

@@ -16,41 +16,35 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  isBetaActive, 
+  handleLockedFeatureClick as handleLockedClick, 
+  handleBetaCodeSubmit 
+} from '@/utils/beta-utils';
 
 const SettingsPage = () => {
   const [betaDialogOpen, setBetaDialogOpen] = useState(false);
   const [betaCode, setBetaCode] = useState('');
-  const [isBetaActive, setIsBetaActive] = useState(() => {
-    return localStorage.getItem('betaFeaturesActive') === 'true';
-  });
+  const [betaActive, setBetaActive] = useState(() => isBetaActive());
   const { toast } = useToast();
 
-  const handleBetaCodeSubmit = () => {
-    if (betaCode === '0599572215') {
-      localStorage.setItem('betaFeaturesActive', 'true');
-      setIsBetaActive(true);
-      setBetaDialogOpen(false);
-      setBetaCode('');
-      toast({
-        title: "🎉 Beta Features Activated!",
-        description: "You now have access to all beta features including Budget and Import SMS.",
-      });
-    } else {
-      toast({
-        title: "❌ Invalid Beta Code",
-        description: "Please enter a valid beta code to activate premium features.",
-        variant: "destructive",
-      });
-      setBetaDialogOpen(false);
-      setBetaCode('');
-    }
+  const handleBetaSubmit = () => {
+    handleBetaCodeSubmit(
+      betaCode,
+      () => {
+        setBetaActive(true);
+        setBetaDialogOpen(false);
+        setBetaCode('');
+      },
+      () => {
+        setBetaDialogOpen(false);
+        setBetaCode('');
+      }
+    );
   };
 
   const handleLockedFeatureClick = (featureName: string) => {
-    toast({
-      title: `🚧 ${featureName} Coming Soon!`,
-      description: "This feature is currently under development. Stay tuned for exciting updates!",
-    });
+    handleLockedClick(featureName);
   };
 
   return (
@@ -74,14 +68,14 @@ const SettingsPage = () => {
               value="budget" 
               className="relative"
               onClick={(e) => {
-                if (!isBetaActive) {
+                if (!betaActive) {
                   e.preventDefault();
                   handleLockedFeatureClick('Budget');
                 }
               }}
             >
               Budget 
-              {!isBetaActive && <Lock className="h-3 w-3 ml-1" />}
+              {!betaActive && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
           </TabsList>
           
@@ -98,10 +92,10 @@ const SettingsPage = () => {
                   <div>
                     <h3 className="text-lg font-semibold">Beta Features</h3>
                     <p className="text-sm text-muted-foreground">
-                      {isBetaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
+                      {betaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
                     </p>
                   </div>
-                  {isBetaActive ? (
+                  {betaActive ? (
                     <div className="flex items-center text-green-600">
                       <Unlock className="h-4 w-4 mr-2" />
                       <span className="text-sm font-medium">Active</span>
@@ -127,7 +121,7 @@ const SettingsPage = () => {
                               placeholder="Enter your beta code"
                             />
                           </div>
-                          <Button onClick={handleBetaCodeSubmit} className="w-full">
+                          <Button onClick={handleBetaSubmit} className="w-full">
                             Activate Features
                           </Button>
                         </div>
@@ -147,10 +141,9 @@ const SettingsPage = () => {
             <NotificationSettings />
           </TabsContent>
           
-          
           <TabsContent value="learning">
             <div className="relative">
-              {!isBetaActive && (
+              {!betaActive && (
                 <div 
                   className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-lg"
                   onClick={() => handleLockedFeatureClick('Learning Engine')}
@@ -165,7 +158,7 @@ const SettingsPage = () => {
             </div>
           </TabsContent>
 
-          {isBetaActive && (
+          {betaActive && (
             <TabsContent value="budget">
               <div className="text-center py-12">
                 <h3 className="text-lg font-semibold mb-2">Budget Management</h3>
