@@ -211,7 +211,7 @@ const SetBudgetPage = () => {
 
   return (
     <Layout showBack>
-      <div className="container px-4 py-6 space-y-6 max-w-lg mx-auto">
+      <div className="container px-4 py-6 pb-24 space-y-6 max-w-lg mx-auto">
         <div>
           <h1 className="text-2xl font-bold">
             {isEditMode ? 'Edit Budget' : 'Create Budget'}
