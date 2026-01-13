@@ -9,6 +9,7 @@ export interface BackgroundSmsListenerPlugin {
   ): Promise<PluginListenerHandle>;
   
   checkPermission(): Promise<{ granted: boolean }>;
+  checkPermissionWithRationale(): Promise<{ granted: boolean; shouldShowRationale: boolean }>;
   requestPermission(): Promise<{ granted: boolean }>;
   startListening(): Promise<void>;
   stopListening(): Promise<void>;

@@ -68,10 +68,10 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
     setError(null);
     
     try {
-      const granted = await smsPermissionService.requestPermission();
-      setPermissionGranted(granted);
+      const result = await smsPermissionService.requestPermission();
+      setPermissionGranted(result.granted);
       
-      if (granted) {
+      if (result.granted) {
         // Initialize SMS listener when permission is granted
         initializeListener();
         
@@ -79,7 +79,11 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
           onPermissionGranted();
         }
       } else {
-        setError('Permission was denied. SMS features will not work without permission.');
+        setError(
+          result.permanentlyDenied
+            ? 'SMS permission was permanently denied. Please enable it in your device Settings.'
+            : 'Permission was denied. SMS features will not work without permission.'
+        );
       }
     } catch (error) {
       if (import.meta.env.MODE === 'development') {

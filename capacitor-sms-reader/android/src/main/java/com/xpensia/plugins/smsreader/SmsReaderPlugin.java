@@ -43,6 +43,19 @@ public class SmsReaderPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void checkPermissionWithRationale(PluginCall call) {
+        boolean hasPermission = hasRequiredPermissions();
+        boolean shouldShowRationale = false;
+        if (!hasPermission && getActivity() != null) {
+            shouldShowRationale = getActivity().shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS);
+        }
+        JSObject ret = new JSObject();
+        ret.put("granted", hasPermission);
+        ret.put("shouldShowRationale", shouldShowRationale);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void requestPermission(PluginCall call) {
         if (hasRequiredPermissions()) {
             JSObject ret = new JSObject();
