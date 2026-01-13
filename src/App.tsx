@@ -34,6 +34,7 @@ import AccountsPage from './pages/budget/AccountsPage';
 import SetBudgetPage from './pages/budget/SetBudgetPage';
 import BudgetReportPage from './pages/budget/BudgetReportPage';
 import BudgetInsightsPage from './pages/budget/BudgetInsightsPage';
+import BudgetHubPage from './pages/budget/BudgetHubPage';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -455,6 +456,7 @@ function AppRoutes() {
         <Route path="/sms/vendors" element={<VendorCategorization />} />
         <Route path="/vendor-mapping" element={<VendorMapping />} />
         <Route path="/review-sms-transactions" element={<ReviewSmsTransactions />} />
+        <Route path="/budget" element={<BudgetHubPage />} />
         <Route path="/budget/accounts" element={<AccountsPage />} />
         <Route path="/budget/set" element={<SetBudgetPage />} />
         <Route path="/budget/report" element={<BudgetReportPage />} />
