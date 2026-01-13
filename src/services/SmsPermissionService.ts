@@ -109,8 +109,10 @@ class SmsPermissionService {
         return false;
       }
 
-      // Check if permission was already granted before
-      const wasAlreadyGranted = await this.hasPermission();
+      // Check if permission was already granted before (lightweight cached check)
+      const cachedPermissionGranted = safeStorage.getItem('sms_permission') === 'granted';
+      const readerPermissionGranted = await SmsReaderService.hasPermission();
+      const wasAlreadyGranted = cachedPermissionGranted || readerPermissionGranted;
 
       // Request permissions sequentially to avoid Android dialog collisions.
       const readerGranted = await SmsReaderService.requestPermission();
