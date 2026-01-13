@@ -1,5 +1,5 @@
-// Budget scope types (removed 'overall' - yearly serves this purpose)
-export type BudgetScope = 'account' | 'category' | 'subcategory';
+// Budget scope types - includes 'overall' as top-level scope
+export type BudgetScope = 'overall' | 'category' | 'subcategory' | 'account';
 
 // Budget period types (removed 'custom' - all periods are calendar-based)
 export type BudgetPeriod = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
@@ -10,7 +10,7 @@ export const DEFAULT_ALERT_THRESHOLDS = [50, 80, 100] as const;
 export interface Budget {
   id: string;
   scope: BudgetScope;
-  targetId: string;
+  targetId: string;              // Empty for 'overall', category/subcategory/account ID otherwise
   amount: number;
   currency: string;
   period: BudgetPeriod;
@@ -19,9 +19,16 @@ export interface Budget {
   year: number;                    // e.g., 2025
   periodIndex?: number;            // Q1=1, Jan=1, Week 34=34, etc. (undefined for yearly)
   
-  // Hierarchy and override tracking
+  // Period hierarchy tracking
   isOverride: boolean;             // True if user manually set, false if auto-calculated
   parentBudgetId?: string;         // Links to parent period budget
+  
+  // Scope hierarchy tracking
+  parentScopeBudgetId?: string;    // Links to parent scope budget (e.g., Category links to Overall)
+  
+  // Allocation tracking for scope hierarchy
+  allocatedAmount?: number;        // How much of this budget is allocated to child scopes
+  unallocatedAmount?: number;      // Remaining unallocated (amount - allocatedAmount)
   
   // Legacy fields (kept for backward compatibility during migration)
   startDate?: string;
@@ -51,11 +58,16 @@ export function migrateBudget(raw: Partial<Budget> & { scope?: string; period?: 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   
-  // Handle scope migration: 'overall' becomes 'category' with empty targetId
-  // Use string comparison since raw.scope may contain legacy values
+  // Handle scope - 'overall' is now valid again
   const rawScope = raw.scope as string;
-  let scope: BudgetScope = rawScope === 'overall' ? 'category' : (rawScope as BudgetScope) || 'category';
-  let targetId = raw.targetId || (rawScope === 'overall' ? '_overall_legacy' : '');
+  let scope: BudgetScope;
+  if (rawScope === 'overall' || rawScope === 'category' || rawScope === 'subcategory' || rawScope === 'account') {
+    scope = rawScope as BudgetScope;
+  } else {
+    scope = 'category'; // Default fallback
+  }
+  
+  let targetId = raw.targetId || (scope === 'overall' ? '' : '');
   
   // Handle period migration: 'custom' becomes 'monthly'
   let period = raw.period as BudgetPeriod;
@@ -109,6 +121,9 @@ export function migrateBudget(raw: Partial<Budget> & { scope?: string; period?: 
     periodIndex,
     isOverride: raw.isOverride ?? true, // Existing budgets are treated as overrides
     parentBudgetId: raw.parentBudgetId,
+    parentScopeBudgetId: raw.parentScopeBudgetId,
+    allocatedAmount: raw.allocatedAmount,
+    unallocatedAmount: raw.unallocatedAmount,
     startDate: raw.startDate,
     endDate: raw.endDate,
     rollover: raw.rollover ?? false,
@@ -139,4 +154,24 @@ export function isBudgetForPeriod(
   if (budget.period !== period || budget.year !== year) return false;
   if (period === 'yearly') return true;
   return budget.periodIndex === periodIndex;
+}
+
+/**
+ * Get scope hierarchy level (0 = overall, 1 = category, 2 = subcategory, 3 = account)
+ */
+export function getScopeLevel(scope: BudgetScope): number {
+  const levels: Record<BudgetScope, number> = {
+    overall: 0,
+    category: 1,
+    subcategory: 2,
+    account: 3
+  };
+  return levels[scope];
+}
+
+/**
+ * Check if a scope is a parent of another scope
+ */
+export function isScopeParentOf(parentScope: BudgetScope, childScope: BudgetScope): boolean {
+  return getScopeLevel(parentScope) < getScopeLevel(childScope);
 }

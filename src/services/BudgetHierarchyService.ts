@@ -1,14 +1,20 @@
-import { Budget, BudgetPeriod, BudgetScope } from '@/models/budget';
+import { Budget, BudgetPeriod, BudgetScope, getScopeLevel } from '@/models/budget';
 import { getWeeksInMonth, getMonthsInQuarter, getWeeksInYear } from '@/utils/budget-period-utils';
 
 /**
  * Service for managing budget hierarchy and distribution/aggregation
+ * Supports both period hierarchy (yearly → quarterly → monthly → weekly)
+ * and scope hierarchy (overall → category → subcategory → account)
  */
 
 export interface DistributionResult {
   amounts: number[];
   indices: number[];
 }
+
+// ==========================================
+// PERIOD DISTRIBUTION FUNCTIONS
+// ==========================================
 
 /**
  * Distribute a yearly budget amount to quarters
@@ -44,11 +50,9 @@ export function distributeMonthlyToWeeks(
   const weeksInMonth = getWeeksInMonth(year, month);
   const weekAmount = monthlyAmount / weeksInMonth;
   
-  // Generate week indices for this month (approximate)
-  // This is simplified - in reality we'd need to track which weeks fall in this month
   const indices: number[] = [];
   for (let i = 0; i < weeksInMonth; i++) {
-    indices.push(i + 1); // These are relative week indices within the month
+    indices.push(i + 1);
   }
   
   return {
@@ -56,6 +60,10 @@ export function distributeMonthlyToWeeks(
     indices,
   };
 }
+
+// ==========================================
+// PERIOD AGGREGATION FUNCTIONS
+// ==========================================
 
 /**
  * Aggregate week budgets to monthly total
@@ -80,6 +88,10 @@ export function aggregateMonthsToQuarter(monthBudgets: Budget[], quarter: number
 export function aggregateQuartersToYear(quarterBudgets: Budget[]): number {
   return quarterBudgets.reduce((sum, b) => sum + b.amount, 0);
 }
+
+// ==========================================
+// PERIOD HIERARCHY UTILITIES
+// ==========================================
 
 /**
  * Get the parent period type for a given period
@@ -152,7 +164,6 @@ export function getChildPeriodIndices(
       return getMonthsInQuarter(parentPeriodIndex || 1);
     
     case 'monthly':
-      // Get week numbers for this month
       const weeksInMonth = getWeeksInMonth(year, parentPeriodIndex || 1);
       return Array.from({ length: weeksInMonth }, (_, i) => i + 1);
     
@@ -189,7 +200,6 @@ export function calculateDerivedBudgetAmount(
         return parentBudget.amount / 3;
       }
       if (targetPeriod === 'weekly') {
-        // Approximate weeks in quarter
         return parentBudget.amount / 13;
       }
       break;
@@ -207,6 +217,136 @@ export function calculateDerivedBudgetAmount(
   return parentBudget.amount;
 }
 
+// ==========================================
+// SCOPE HIERARCHY FUNCTIONS
+// ==========================================
+
+/**
+ * Get the parent scope type
+ */
+export function getParentScope(scope: BudgetScope): BudgetScope | null {
+  switch (scope) {
+    case 'account':
+      return 'subcategory'; // Could also be 'category' if no subcategory
+    case 'subcategory':
+      return 'category';
+    case 'category':
+      return 'overall';
+    case 'overall':
+      return null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Get the child scope type
+ */
+export function getChildScope(scope: BudgetScope): BudgetScope | null {
+  switch (scope) {
+    case 'overall':
+      return 'category';
+    case 'category':
+      return 'subcategory';
+    case 'subcategory':
+      return 'account';
+    case 'account':
+      return null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Check if two budgets are in the same period
+ */
+export function isSamePeriod(a: Budget, b: Budget): boolean {
+  return a.period === b.period && 
+         a.year === b.year && 
+         a.periodIndex === b.periodIndex;
+}
+
+/**
+ * Distribute an overall/parent budget amount to child scopes
+ * @param parentAmount The total parent budget
+ * @param childCount Number of children to distribute to
+ * @param weights Optional weights for each child (default: equal distribution)
+ */
+export function distributeScopeAmount(
+  parentAmount: number,
+  childCount: number,
+  weights?: number[]
+): number[] {
+  if (childCount === 0) return [];
+  
+  if (weights && weights.length === childCount) {
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    return weights.map(w => Math.round((parentAmount * w / totalWeight) * 100) / 100);
+  }
+  
+  // Equal distribution
+  const amount = Math.round((parentAmount / childCount) * 100) / 100;
+  return Array(childCount).fill(amount);
+}
+
+/**
+ * Aggregate child scope budgets to parent scope total
+ */
+export function aggregateChildScopeBudgets(childBudgets: Budget[]): number {
+  return childBudgets.reduce((sum, b) => sum + b.amount, 0);
+}
+
+// ==========================================
+// ALLOCATION VALIDATION
+// ==========================================
+
+export interface AllocationResult {
+  allocated: number;
+  unallocated: number;
+  isOverAllocated: boolean;
+  percentAllocated: number;
+}
+
+/**
+ * Calculate the allocated amount for a parent budget from its children
+ */
+export function calculateAllocatedAmount(
+  parentBudget: Budget,
+  childBudgets: Budget[]
+): AllocationResult {
+  const allocated = childBudgets.reduce((sum, b) => sum + b.amount, 0);
+  const unallocated = parentBudget.amount - allocated;
+  const isOverAllocated = allocated > parentBudget.amount;
+  const percentAllocated = parentBudget.amount > 0 ? (allocated / parentBudget.amount) * 100 : 0;
+  
+  return { allocated, unallocated, isOverAllocated, percentAllocated };
+}
+
+/**
+ * Validate that child scope budgets don't exceed parent scope budget
+ */
+export function validateScopeAllocation(
+  parentBudget: Budget,
+  childBudgets: Budget[]
+): { isValid: boolean; overage: number; message?: string } {
+  const { allocated, isOverAllocated } = calculateAllocatedAmount(parentBudget, childBudgets);
+  
+  if (isOverAllocated) {
+    const overage = allocated - parentBudget.amount;
+    return {
+      isValid: false,
+      overage,
+      message: `Child budgets exceed parent by ${overage.toFixed(2)}`
+    };
+  }
+  
+  return { isValid: true, overage: 0 };
+}
+
+// ==========================================
+// AFFECTED BUDGETS FINDER
+// ==========================================
+
 /**
  * Find budgets that need to be updated when a budget changes
  */
@@ -217,11 +357,14 @@ export function findAffectedBudgets(
   parentBudgets: Budget[];
   childBudgets: Budget[];
   siblingBudgets: Budget[];
+  parentScopeBudgets: Budget[];
+  childScopeBudgets: Budget[];
 } {
   const parentBudgets: Budget[] = [];
   const childBudgets: Budget[] = [];
   const siblingBudgets: Budget[] = [];
   
+  // Period hierarchy - same scope and target
   const matchingBudgets = allBudgets.filter(
     b => b.scope === changedBudget.scope && 
          b.targetId === changedBudget.targetId &&
@@ -234,13 +377,11 @@ export function findAffectedBudgets(
   
   matchingBudgets.forEach(budget => {
     if (budget.period === parentPeriod) {
-      // Check if this is the correct parent
       const parentIndex = getParentPeriodIndex(changedBudget.period, changedBudget.periodIndex || 1);
       if (budget.periodIndex === parentIndex || (budget.period === 'yearly' && parentPeriod === 'yearly')) {
         parentBudgets.push(budget);
       }
     } else if (budget.period === childPeriod) {
-      // Check if this child belongs to the changed budget
       const childParentIndex = getParentPeriodIndex(budget.period, budget.periodIndex || 1);
       if (childParentIndex === changedBudget.periodIndex || changedBudget.period === 'yearly') {
         childBudgets.push(budget);
@@ -250,20 +391,50 @@ export function findAffectedBudgets(
     }
   });
   
-  return { parentBudgets, childBudgets, siblingBudgets };
+  // Scope hierarchy - same period but different scope levels
+  const parentScope = getParentScope(changedBudget.scope);
+  const childScope = getChildScope(changedBudget.scope);
+  
+  const parentScopeBudgets = allBudgets.filter(
+    b => parentScope && b.scope === parentScope && isSamePeriod(b, changedBudget)
+  );
+  
+  const childScopeBudgets = allBudgets.filter(
+    b => childScope && b.scope === childScope && isSamePeriod(b, changedBudget)
+  );
+  
+  return { parentBudgets, childBudgets, siblingBudgets, parentScopeBudgets, childScopeBudgets };
 }
 
 export const budgetHierarchyService = {
+  // Period distribution
   distributeYearlyToQuarters,
   distributeQuarterlyToMonths,
   distributeMonthlyToWeeks,
+  
+  // Period aggregation
   aggregateWeeksToMonth,
   aggregateMonthsToQuarter,
   aggregateQuartersToYear,
+  
+  // Period hierarchy
   getParentPeriod,
   getChildPeriod,
   getParentPeriodIndex,
   getChildPeriodIndices,
   calculateDerivedBudgetAmount,
+  
+  // Scope hierarchy
+  getParentScope,
+  getChildScope,
+  isSamePeriod,
+  distributeScopeAmount,
+  aggregateChildScopeBudgets,
+  
+  // Validation
+  calculateAllocatedAmount,
+  validateScopeAllocation,
+  
+  // Affected budgets
   findAffectedBudgets,
 };
