@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.Telephony;
+import android.os.Build;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -46,8 +47,9 @@ public class SmsReaderPlugin extends Plugin {
     public void checkPermissionWithRationale(PluginCall call) {
         boolean hasPermission = hasRequiredPermissions();
         boolean shouldShowRationale = false;
-        if (!hasPermission && getActivity() != null) {
-            shouldShowRationale = getActivity().shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS);
+        if (!hasPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity() != null) {
+            shouldShowRationale = getActivity()
+                    .shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS);
         }
         JSObject ret = new JSObject();
         ret.put("granted", hasPermission);
