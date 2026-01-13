@@ -51,13 +51,12 @@ const BudgetHubPage = () => {
   }, []);
 
   const getTargetName = (budget: typeof budgetsWithProgress[0]): string => {
-    if (budget.scope === 'overall') return 'Overall Budget';
     return targetNames[budget.targetId] || budget.targetId;
   };
 
-  // Separate overall budget from others
-  const overallBudget = budgetsWithProgress.find(b => b.scope === 'overall');
-  const otherBudgets = budgetsWithProgress.filter(b => b.scope !== 'overall');
+  // Get yearly budgets (replaces overall)
+  const yearlyBudgets = budgetsWithProgress.filter(b => b.period === 'yearly');
+  const otherBudgets = budgetsWithProgress.filter(b => b.period !== 'yearly');
 
   // Group by scope for better organization
   const groupedBudgets = useMemo(() => {
@@ -157,15 +156,15 @@ const BudgetHubPage = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Overall Budget Ring */}
-            {(overallBudget || overallProgress) && (
+            {/* Yearly Budget Ring */}
+            {(yearlyBudgets.length > 0 || overallProgress) && (
               <div className="bg-card rounded-xl p-6 border">
                 <h2 className="text-sm font-medium text-muted-foreground mb-4 text-center">
-                  Overall Spending
+                  Yearly Spending
                 </h2>
                 <OverallBudgetRing
-                  progress={overallBudget?.progress || overallProgress}
-                  currency={overallBudget?.currency || 'USD'}
+                  progress={yearlyBudgets[0]?.progress || overallProgress}
+                  currency={yearlyBudgets[0]?.currency || 'USD'}
                   size="lg"
                 />
               </div>

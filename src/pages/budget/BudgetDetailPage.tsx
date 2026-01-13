@@ -66,7 +66,6 @@ const BudgetDetailPage = () => {
   // Get target name
   const targetName = React.useMemo(() => {
     if (!budget) return '';
-    if (budget.scope === 'overall') return 'Overall Budget';
     
     const accounts = accountService.getAccounts();
     const categories = transactionService.getCategories();

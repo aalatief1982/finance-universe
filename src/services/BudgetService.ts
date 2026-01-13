@@ -1,16 +1,20 @@
 import { safeStorage } from "@/utils/safe-storage";
 import { v4 as uuidv4 } from 'uuid';
-import { Budget, CreateBudgetInput, UpdateBudgetInput, migrateBudget, DEFAULT_ALERT_THRESHOLDS } from '@/models/budget';
+import { Budget, CreateBudgetInput, UpdateBudgetInput, migrateBudget, DEFAULT_ALERT_THRESHOLDS, getBudgetKey } from '@/models/budget';
 import { BudgetProgress, BudgetAlert } from '@/models/budget-period';
-import { getCurrentPeriodDates, getDaysRemainingInPeriod, isWithinPeriod } from '@/utils/budget-period-utils';
+import { getCurrentPeriodDates, getPeriodDates, getDaysRemainingInPeriod, isWithinPeriod, getCurrentPeriodInfo } from '@/utils/budget-period-utils';
 import { transactionService } from './TransactionService';
 import { Transaction, Category } from '@/types/transaction';
+import { initBudgetMigrations } from '@/utils/budget-migration';
 
 const STORAGE_KEY = 'xpensia_budgets';
 const ALERTS_STORAGE_KEY = 'xpensia_budget_alerts';
 
 // Cache for category tree traversal (invalidated on category changes)
 let categoryTreeCache: Map<string, string[]> | null = null;
+
+// Run migrations on module load
+initBudgetMigrations();
 
 export class BudgetService {
   /**
@@ -69,6 +73,17 @@ export class BudgetService {
   }
 
   /**
+   * Get budgets for a specific year and period type
+   */
+  getBudgetsForPeriod(period: Budget['period'], year: number, periodIndex?: number): Budget[] {
+    return this.getBudgets().filter(b => {
+      if (b.period !== period || b.year !== year) return false;
+      if (period === 'yearly') return true;
+      return b.periodIndex === periodIndex;
+    });
+  }
+
+  /**
    * Add a new budget
    */
   addBudget(input: CreateBudgetInput): Budget {
@@ -83,6 +98,19 @@ export class BudgetService {
     };
     
     const budgets = this.getAllBudgets();
+    
+    // Check for existing budget with same key
+    const existingIndex = budgets.findIndex(b => 
+      getBudgetKey(b) === getBudgetKey(budget) && b.isActive
+    );
+    
+    if (existingIndex !== -1) {
+      // Update existing instead of creating duplicate
+      budgets[existingIndex] = { ...budgets[existingIndex], ...budget, id: budgets[existingIndex].id };
+      this.saveBudgets(budgets);
+      return budgets[existingIndex];
+    }
+    
     budgets.push(budget);
     this.saveBudgets(budgets);
     
@@ -144,7 +172,9 @@ export class BudgetService {
    */
   getTransactionsForBudget(budget: Budget): Transaction[] {
     const transactions = transactionService.getAllTransactions();
-    const { start, end } = getCurrentPeriodDates(budget.period, budget.startDate);
+    
+    // Use calendar-based period dates
+    const { start, end } = getPeriodDates(budget.period, budget.year, budget.periodIndex);
     
     return transactions.filter(tx => {
       // Filter by date within period
@@ -152,10 +182,6 @@ export class BudgetService {
       
       // Filter by scope
       switch (budget.scope) {
-        case 'overall':
-          // Include all expense transactions
-          return tx.type === 'expense' || tx.amount < 0;
-        
         case 'account':
           return tx.fromAccount === budget.targetId || tx.account === budget.targetId;
         
@@ -195,7 +221,7 @@ export class BudgetService {
    */
   getBudgetProgress(budget: Budget): BudgetProgress {
     const spent = this.getSpentAmount(budget);
-    const { start, end } = getCurrentPeriodDates(budget.period, budget.startDate);
+    const { start, end } = getPeriodDates(budget.period, budget.year, budget.periodIndex);
     const daysRemaining = getDaysRemainingInPeriod(end);
     const remaining = Math.max(0, budget.amount - spent);
     const percentUsed = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
@@ -234,14 +260,38 @@ export class BudgetService {
   }
 
   /**
-   * Get overall spending progress (sum of all budgets)
+   * Get yearly budget progress (replaces overall progress)
    */
-  getOverallProgress(): BudgetProgress | null {
-    const overallBudget = this.getBudgets().find(b => b.scope === 'overall');
-    if (overallBudget) {
-      return this.getBudgetProgress(overallBudget);
-    }
-    return null;
+  getYearlyProgress(year?: number): BudgetProgress | null {
+    const targetYear = year || new Date().getFullYear();
+    const yearlyBudgets = this.getBudgets().filter(
+      b => b.period === 'yearly' && b.year === targetYear
+    );
+    
+    if (yearlyBudgets.length === 0) return null;
+    
+    // Aggregate all yearly budgets
+    const totalBudgeted = yearlyBudgets.reduce((sum, b) => sum + b.amount, 0);
+    const totalSpent = yearlyBudgets.reduce((sum, b) => sum + this.getSpentAmount(b), 0);
+    
+    const { start, end } = getPeriodDates('yearly', targetYear);
+    const daysRemaining = getDaysRemainingInPeriod(end);
+    const remaining = Math.max(0, totalBudgeted - totalSpent);
+    const percentUsed = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
+    
+    return {
+      budgetId: 'yearly-aggregate',
+      budgeted: totalBudgeted,
+      spent: totalSpent,
+      remaining,
+      percentUsed,
+      periodStart: start,
+      periodEnd: end,
+      isOverBudget: totalSpent > totalBudgeted,
+      daysRemaining,
+      dailyBudgetRemaining: daysRemaining > 0 ? remaining / daysRemaining : 0,
+      triggeredAlerts: [],
+    };
   }
 
   /**
@@ -452,6 +502,13 @@ export class BudgetService {
    */
   getBudgetSummary(period: string) {
     return this.getBudgetsByPeriod(period as Budget['period']);
+  }
+
+  /**
+   * @deprecated Use getYearlyProgress instead
+   */
+  getOverallProgress(): BudgetProgress | null {
+    return this.getYearlyProgress();
   }
 }
 

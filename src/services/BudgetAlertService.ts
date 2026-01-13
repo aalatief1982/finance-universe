@@ -30,13 +30,9 @@ export class BudgetAlertService {
 
       // Get target name
       let budgetName = 'Unknown Budget';
-      if (budget.scope === 'overall') {
-        budgetName = 'Overall Budget';
-      } else {
-        const allTargets = [...accounts, ...categories];
-        const target = allTargets.find((t: any) => t.id === budget.targetId);
-        budgetName = target ? (target as any).name : budget.targetId;
-      }
+      const allTargets = [...accounts, ...categories];
+      const target = allTargets.find((t: any) => t.id === budget.targetId);
+      budgetName = target ? (target as any).name : budget.targetId;
 
       // Determine severity
       let severity: 'warning' | 'danger' | 'critical' = 'warning';
@@ -158,9 +154,6 @@ export class BudgetAlertService {
       let isAffected = false;
 
       switch (budget.scope) {
-        case 'overall':
-          isAffected = true;
-          break;
         case 'account':
           isAffected = budget.targetId === accountId;
           break;
