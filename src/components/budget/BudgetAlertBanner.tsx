@@ -18,6 +18,7 @@ export function BudgetAlertBanner({ alert, onDismiss, className }: BudgetAlertBa
   if (!budget) return null;
 
   const getTargetName = (budget: Budget): string => {
+    if (budget.scope === 'overall') return 'Overall';
     // For all scopes, return the target ID (simplified)
     // In production, you'd look up the name from the appropriate service
     return budget.targetId || 'Budget';
