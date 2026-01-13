@@ -9,7 +9,8 @@ import {
   Tag, 
   Tags, 
   ChevronRight,
-  AlertTriangle
+  AlertTriangle,
+  PiggyBank
 } from 'lucide-react';
 import { getPeriodLabel } from '@/utils/budget-period-utils';
 
@@ -23,6 +24,7 @@ interface BudgetProgressCardProps {
 }
 
 const scopeIcons: Record<BudgetScope, React.ElementType> = {
+  overall: PiggyBank,
   account: Wallet,
   category: Tag,
   subcategory: Tags,

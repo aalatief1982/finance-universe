@@ -182,6 +182,10 @@ export class BudgetService {
       
       // Filter by scope
       switch (budget.scope) {
+        case 'overall':
+          // Include all expense transactions
+          return tx.type === 'expense' || tx.amount < 0;
+        
         case 'account':
           return tx.fromAccount === budget.targetId || tx.account === budget.targetId;
         
