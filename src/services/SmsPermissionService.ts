@@ -112,14 +112,21 @@ class SmsPermissionService {
       // Check if permission was already granted before
       const wasAlreadyGranted = await this.hasPermission();
 
-      // Request permission from both plugins
-      const [readerGranted, listenerResult] = await Promise.all([
-        SmsReaderService.requestPermission(),
-        smsListener.requestPermission(),
-      ]);
+      // Request permissions sequentially to avoid Android dialog collisions.
+      const readerGranted = await SmsReaderService.requestPermission();
+      if (!readerGranted) {
+        this.savePermissionStatus(false);
+        return false;
+      }
 
+      const listenerResult = await smsListener.requestPermission();
       const listenerGranted = listenerResult?.granted ?? false;
-      const granted = readerGranted && listenerGranted;
+      if (!listenerGranted) {
+        this.savePermissionStatus(false);
+        return false;
+      }
+
+      const granted = true;
       this.savePermissionStatus(granted);
 
       // Record the grant date only if this is a new grant (not already granted)
