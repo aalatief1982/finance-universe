@@ -19,6 +19,35 @@ export interface SmsEntry {
 }
 
 export class SmsReaderService {
+  static async checkPermissionWithRationale(): Promise<{ granted: boolean; shouldShowRationale: boolean }> {
+    if (import.meta.env.MODE === 'development') {
+      console.log("[SmsReaderService] checkPermissionWithRationale() called");
+    }
+
+    if (!Capacitor.isNativePlatform()) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn("[SmsReaderService] Not a native platform");
+      }
+      return { granted: false, shouldShowRationale: true };
+    }
+
+    try {
+      const result = await SmsReader.checkPermissionWithRationale();
+      if (import.meta.env.MODE === 'development') {
+        console.log("[SmsReaderService] permission rationale result:", result);
+      }
+      return {
+        granted: result?.granted ?? false,
+        shouldShowRationale: result?.shouldShowRationale ?? false,
+      };
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SmsReaderService] Error checking permission rationale:", error);
+      }
+      return { granted: false, shouldShowRationale: true };
+    }
+  }
+
   static async hasPermission(): Promise<boolean> {
     if (import.meta.env.MODE === 'development') {
       console.log("[SmsReaderService] hasPermission() called");

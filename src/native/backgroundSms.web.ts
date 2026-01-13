@@ -28,6 +28,14 @@ const BackgroundSmsListenerWebMock: BackgroundSmsListenerPlugin = {
     const simulatedGranted = safeStorage.getItem('sms_permission_simulation') === 'granted';
     return { granted: simulatedGranted };
   },
+
+  checkPermissionWithRationale: async () => {
+    if (import.meta.env.MODE === 'development') {
+      console.log('[SMS-Web] Checking permission with rationale (simulation)');
+    }
+    const simulatedGranted = safeStorage.getItem('sms_permission_simulation') === 'granted';
+    return { granted: simulatedGranted, shouldShowRationale: !simulatedGranted };
+  },
   
   requestPermission: async () => {
     if (import.meta.env.MODE === 'development') {

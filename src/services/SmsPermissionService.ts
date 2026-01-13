@@ -9,12 +9,78 @@ import { SmsReaderService } from './SmsReaderService';
 /**
  * Service for handling SMS permission-related functionality
  */
+export interface SmsPermissionCheckResult {
+  granted: boolean;
+  shouldShowRationale: boolean;
+  permanentlyDenied: boolean;
+}
+
+export interface SmsPermissionRequestResult {
+  granted: boolean;
+  permanentlyDenied: boolean;
+}
+
 class SmsPermissionService {
   private smsListenerInitialized = false;
+
+  private combinePermissionStatuses(
+    readerStatus: { granted: boolean; shouldShowRationale: boolean },
+    listenerStatus: { granted: boolean; shouldShowRationale: boolean }
+  ): SmsPermissionCheckResult {
+    const granted = readerStatus.granted && listenerStatus.granted;
+    const shouldShowRationale =
+      readerStatus.shouldShowRationale || listenerStatus.shouldShowRationale;
+    return {
+      granted,
+      shouldShowRationale,
+      permanentlyDenied: !granted && !shouldShowRationale,
+    };
+  }
   
   // Check if we're in a native mobile environment
   isNativeEnvironment(): boolean {
     return Capacitor.isNativePlatform();
+  }
+
+  async checkPermissionStatus(): Promise<SmsPermissionCheckResult> {
+    if (!this.isNativeEnvironment()) {
+      const granted = safeStorage.getItem('sms_permission_simulation') === 'granted';
+      return {
+        granted,
+        shouldShowRationale: !granted,
+        permanentlyDenied: false,
+      };
+    }
+
+    try {
+      const smsListener = await loadSmsListener();
+      if (!smsListener) {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] Failed to load SMS listener when checking permissions');
+        }
+        return {
+          granted: false,
+          shouldShowRationale: true,
+          permanentlyDenied: false,
+        };
+      }
+
+      const [readerStatus, listenerStatus] = await Promise.all([
+        SmsReaderService.checkPermissionWithRationale(),
+        smsListener.checkPermissionWithRationale(),
+      ]);
+
+      return this.combinePermissionStatuses(readerStatus, listenerStatus);
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SMS] Error checking SMS permission:", error);
+      }
+      return {
+        granted: false,
+        shouldShowRationale: true,
+        permanentlyDenied: false,
+      };
+    }
   }
 
   // Check if SMS permissions are granted
@@ -25,30 +91,15 @@ class SmsPermissionService {
     }
 
     try {
-      const smsListener = await loadSmsListener();
-      if (!smsListener) {
-        if (import.meta.env.MODE === 'development') {
-          console.warn('[SMS] Failed to load SMS listener when checking permissions');
-        }
-        return false;
-      }
-
-      // Check permission for both the reader and background listener
-      const [readerGranted, listenerResult] = await Promise.all([
-        SmsReaderService.hasPermission(),
-        smsListener.checkPermission(),
-      ]);
-
-      const listenerGranted = listenerResult?.granted ?? false;
-      const granted = readerGranted && listenerGranted;
-      this.savePermissionStatus(granted);
+      const status = await this.checkPermissionStatus();
+      this.savePermissionStatus(status.granted);
 
       // Initialize listener only when both permissions are granted
-      if (granted && !this.smsListenerInitialized) {
+      if (status.granted && !this.smsListenerInitialized) {
         this.initSmsListener();
       }
 
-      return granted;
+      return status.granted;
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
         console.error("[SMS] Error checking SMS permission:", error);
@@ -91,13 +142,13 @@ class SmsPermissionService {
   }
 
   // Request SMS permissions
-  async requestPermission(): Promise<boolean> {
+  async requestPermission(): Promise<SmsPermissionRequestResult> {
     if (!this.isNativeEnvironment()) {
       // For web testing, simulate granting permission
       this.savePermissionStatus(true);
       // Record the grant date for web simulation
       setSmsPermissionGrantDate(new Date().toISOString());
-      return true;
+      return { granted: true, permanentlyDenied: false };
     }
 
     try {
@@ -106,7 +157,7 @@ class SmsPermissionService {
         if (import.meta.env.MODE === 'development') {
           console.warn('[SMS] Failed to load SMS listener when requesting permissions');
         }
-        return false;
+        return { granted: false, permanentlyDenied: false };
       }
 
       // Check if permission was already granted before (lightweight cached check)
@@ -118,14 +169,22 @@ class SmsPermissionService {
       const readerGranted = await SmsReaderService.requestPermission();
       if (!readerGranted) {
         this.savePermissionStatus(false);
-        return false;
+        const readerStatus = await SmsReaderService.checkPermissionWithRationale();
+        return {
+          granted: false,
+          permanentlyDenied: !readerStatus.granted && !readerStatus.shouldShowRationale,
+        };
       }
 
       const listenerResult = await smsListener.requestPermission();
       const listenerGranted = listenerResult?.granted ?? false;
       if (!listenerGranted) {
         this.savePermissionStatus(false);
-        return false;
+        const listenerStatus = await smsListener.checkPermissionWithRationale();
+        return {
+          granted: false,
+          permanentlyDenied: !listenerStatus.granted && !listenerStatus.shouldShowRationale,
+        };
       }
 
       const granted = true;
@@ -141,13 +200,13 @@ class SmsPermissionService {
         this.initSmsListener();
       }
 
-      return granted;
+      return { granted, permanentlyDenied: false };
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
         console.error("[SMS] Error requesting SMS permission:", error);
       }
       this.savePermissionStatus(false);
-      return false;
+      return { granted: false, permanentlyDenied: false };
     }
   }
 

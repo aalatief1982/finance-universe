@@ -37,6 +37,24 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       return { granted: false };
     }
   },
+
+  checkPermissionWithRationale: async () => {
+    try {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SMS] Checking permission with rationale');
+      }
+      const result = await BackgroundSmsListener.checkPermissionWithRationale();
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SMS] Permission rationale check result:', result);
+      }
+      return result;
+    } catch (err) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[SMS] Error checking permission rationale:', err);
+      }
+      return { granted: false, shouldShowRationale: true };
+    }
+  },
   
   requestPermission: async () => {
     try {

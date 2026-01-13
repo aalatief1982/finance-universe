@@ -14,6 +14,7 @@ declare module 'capacitor-background-sms-listener' {
       listenerFunc: (data: { sender: string; body: string }) => void
     ): Promise<PluginListenerHandle>;
     checkPermission(): Promise<{ granted: boolean }>;
+    checkPermissionWithRationale(): Promise<{ granted: boolean; shouldShowRationale: boolean }>;
     requestPermission(): Promise<{ granted: boolean }>;
     startListening(): Promise<void>;
     stopListening(): Promise<void>;

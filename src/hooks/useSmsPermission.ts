@@ -46,7 +46,8 @@ export function useSmsPermission() {
     setState(prev => ({ ...prev, isChecking: true }));
     
     try {
-      const granted = await smsPermissionService.requestPermission();
+      const result = await smsPermissionService.requestPermission();
+      const granted = result.granted;
       setState({
         hasPermission: granted,
         isChecking: false,

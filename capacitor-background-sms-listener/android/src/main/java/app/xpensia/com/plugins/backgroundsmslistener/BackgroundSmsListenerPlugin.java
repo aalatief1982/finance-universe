@@ -168,6 +168,26 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void checkPermissionWithRationale(PluginCall call) {
+        Log.d(TAG, "checkPermissionWithRationale called");
+        try {
+            boolean hasPermission = hasRequiredPermissions();
+            boolean shouldShowRationale = false;
+            if (!hasPermission && getActivity() != null) {
+                shouldShowRationale = getActivity().shouldShowRequestPermissionRationale(Manifest.permission.RECEIVE_SMS);
+            }
+            JSObject ret = new JSObject();
+            ret.put("granted", hasPermission);
+            ret.put("shouldShowRationale", shouldShowRationale);
+            call.resolve(ret);
+            Log.d(TAG, "checkPermissionWithRationale result: " + hasPermission);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in checkPermissionWithRationale", e);
+            call.reject("Error checking permission: " + e.getMessage(), e);
+        }
+    }
+
     /**
      * Request SMS permission
      */

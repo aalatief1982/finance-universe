@@ -20,6 +20,7 @@ export interface SmsResult {
 
 export interface SmsReaderPlugin {
   checkPermission(): Promise<{ granted: boolean }>;
+  checkPermissionWithRationale(): Promise<{ granted: boolean; shouldShowRationale: boolean }>;
   requestPermission(): Promise<{ granted: boolean }>;
   readSmsMessages(options?: SmsFilterOptions): Promise<SmsResult>;
 }

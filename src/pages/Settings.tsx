@@ -241,9 +241,17 @@ const Settings = () => {
       }
 
       try {
-        const granted = await smsPermissionService.requestPermission();
-        if (!granted) {
+        const result = await smsPermissionService.requestPermission();
+        if (!result.granted) {
           setBackgroundSmsEnabled(false);
+          if (result.permanentlyDenied) {
+            toast({
+              title: 'SMS permission permanently denied',
+              description:
+                'Enable SMS permissions in your device Settings > Apps > Xpensia > Permissions to use background SMS reading.',
+              variant: 'destructive',
+            });
+          }
           return;
         }
         setBackgroundSmsEnabled(true);

@@ -13,13 +13,14 @@ describe('SmsPermissionService.requestPermission', () => {
     (loadSmsListener as jest.Mock).mockResolvedValue({
       requestPermission,
       checkPermission: jest.fn(),
+      checkPermissionWithRationale: jest.fn().mockResolvedValue({ granted: true, shouldShowRationale: false }),
       startListening: jest.fn(),
     });
 
-    const granted = await smsPermissionService.requestPermission();
+    const result = await smsPermissionService.requestPermission();
 
     expect(SmsReaderService.requestPermission).toHaveBeenCalled();
     expect(requestPermission).toHaveBeenCalled();
-    expect(granted).toBe(true);
+    expect(result.granted).toBe(true);
   });
 });
