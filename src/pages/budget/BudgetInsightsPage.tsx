@@ -44,7 +44,6 @@ const BudgetInsightsPage = () => {
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
   const getTargetName = (b: Budget) => {
-    if (b.scope === 'overall') return 'Overall';
     const all = [...accounts, ...categories];
     const t = all.find((a: any) => a.id === b.targetId);
     return t ? (t as any).name : b.targetId;
@@ -57,7 +56,7 @@ const BudgetInsightsPage = () => {
     budgets.forEach(budget => {
       const progress = budgetService.getBudgetProgress(budget);
       const targetName = getTargetName(budget);
-      const periodDates = getCurrentPeriodDates(budget.period, budget.startDate);
+      const periodDates = getCurrentPeriodDates(budget.period);
       const totalDays = getTotalDaysInPeriod(periodDates.start, periodDates.end);
       const daysPassed = totalDays - progress.daysRemaining;
       const expectedPercent = (daysPassed / totalDays) * 100;
@@ -146,15 +145,15 @@ const BudgetInsightsPage = () => {
       });
     }
 
-    // Overall budget missing
-    const hasOverall = budgets.some(b => b.scope === 'overall');
-    if (budgets.length > 0 && !hasOverall) {
+    // Yearly budget missing
+    const hasYearly = budgets.some(b => b.period === 'yearly');
+    if (budgets.length > 0 && !hasYearly) {
       result.push({
-        id: 'no_overall',
+        id: 'no_yearly',
         type: 'info',
-        title: 'Consider an Overall Budget',
-        description: 'You have category budgets but no overall spending limit. An overall budget helps track total spending across all categories.',
-        action: { label: 'Add Overall Budget', path: '/budget/set?scope=overall' },
+        title: 'Consider a Yearly Budget',
+        description: 'You have period budgets but no yearly spending limit. A yearly budget helps track total spending across the year.',
+        action: { label: 'Add Yearly Budget', path: '/budget/set?period=yearly' },
       });
     }
 

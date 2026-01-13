@@ -18,7 +18,14 @@ import {
   isWithinInterval,
   differenceInDays,
   parseISO,
-  format
+  format,
+  getWeek,
+  getQuarter,
+  setWeek,
+  getYear,
+  setYear,
+  getDaysInMonth,
+  eachWeekOfInterval,
 } from 'date-fns';
 import { BudgetPeriod } from '@/models/budget';
 
@@ -27,50 +34,205 @@ export interface PeriodDates {
   end: Date;
 }
 
+// Get user's preferred week start (0 = Sunday, 1 = Monday)
+// This will eventually come from settings
+export function getWeekStartSetting(): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
+  try {
+    const settings = localStorage.getItem('xpensia_settings');
+    if (settings) {
+      const parsed = JSON.parse(settings);
+      return parsed.weekStartsOn ?? 1; // Default to Monday
+    }
+  } catch {
+    // ignore
+  }
+  return 1; // Monday default
+}
+
 /**
- * Get the current period dates based on budget period type and optional custom start date.
- * Handles edge cases like mid-month starts and DST boundaries.
+ * Get ISO week number for a date (1-53)
  */
-export function getCurrentPeriodDates(
+export function getWeekNumber(date: Date): number {
+  return getWeek(date, { weekStartsOn: getWeekStartSetting() });
+}
+
+/**
+ * Get the year that a week belongs to (handles year boundaries)
+ */
+export function getWeekYear(date: Date): number {
+  const weekStart = startOfWeek(date, { weekStartsOn: getWeekStartSetting() });
+  return getYear(weekStart);
+}
+
+/**
+ * Get start and end dates for a specific week of a year
+ */
+export function getWeekDates(year: number, weekNumber: number): PeriodDates {
+  const weekStartsOn = getWeekStartSetting();
+  
+  // Get the first day of the year
+  const firstDayOfYear = new Date(year, 0, 1);
+  
+  // Find the first week's start
+  const firstWeekStart = startOfWeek(firstDayOfYear, { weekStartsOn });
+  
+  // Calculate the target week start (weekNumber - 1 because week 1 is at index 0)
+  const targetWeekStart = addWeeks(firstWeekStart, weekNumber - 1);
+  const targetWeekEnd = endOfWeek(targetWeekStart, { weekStartsOn });
+  
+  return {
+    start: targetWeekStart,
+    end: targetWeekEnd,
+  };
+}
+
+/**
+ * Get start and end dates for a specific month of a year
+ */
+export function getMonthDates(year: number, month: number): PeriodDates {
+  const date = new Date(year, month - 1, 1); // month is 1-indexed
+  return {
+    start: startOfMonth(date),
+    end: endOfMonth(date),
+  };
+}
+
+/**
+ * Get start and end dates for a specific quarter of a year
+ */
+export function getQuarterDates(year: number, quarter: number): PeriodDates {
+  // Quarter is 1-4
+  const monthStart = (quarter - 1) * 3; // Q1 = month 0-2, Q2 = month 3-5, etc.
+  const date = new Date(year, monthStart, 1);
+  return {
+    start: startOfQuarter(date),
+    end: endOfQuarter(date),
+  };
+}
+
+/**
+ * Get start and end dates for a specific year
+ */
+export function getYearDates(year: number): PeriodDates {
+  const date = new Date(year, 0, 1);
+  return {
+    start: startOfYear(date),
+    end: endOfYear(date),
+  };
+}
+
+/**
+ * Get number of weeks in a month
+ */
+export function getWeeksInMonth(year: number, month: number): number {
+  const { start, end } = getMonthDates(year, month);
+  const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: getWeekStartSetting() });
+  return weeks.length;
+}
+
+/**
+ * Get months in a quarter
+ */
+export function getMonthsInQuarter(quarter: number): number[] {
+  const startMonth = (quarter - 1) * 3 + 1;
+  return [startMonth, startMonth + 1, startMonth + 2];
+}
+
+/**
+ * Get total weeks in a year
+ */
+export function getWeeksInYear(year: number): number {
+  const lastDay = new Date(year, 11, 31);
+  return getWeek(lastDay, { weekStartsOn: getWeekStartSetting() });
+}
+
+/**
+ * Format a period label for display
+ */
+export function formatPeriodLabel(
   period: BudgetPeriod, 
-  customStartDate?: string
+  year: number, 
+  periodIndex?: number
+): string {
+  switch (period) {
+    case 'weekly':
+      return `Week ${periodIndex}, ${year}`;
+    
+    case 'monthly':
+      const monthDate = new Date(year, (periodIndex || 1) - 1, 1);
+      return format(monthDate, 'MMM yyyy');
+    
+    case 'quarterly':
+      return `Q${periodIndex} ${year}`;
+    
+    case 'yearly':
+      return `${year}`;
+    
+    default:
+      return `${year}`;
+  }
+}
+
+/**
+ * Get short period label (for tabs/chips)
+ */
+export function getShortPeriodLabel(
+  period: BudgetPeriod, 
+  periodIndex?: number
+): string {
+  switch (period) {
+    case 'weekly':
+      return `W${periodIndex}`;
+    case 'monthly':
+      const monthDate = new Date(2024, (periodIndex || 1) - 1, 1);
+      return format(monthDate, 'MMM');
+    case 'quarterly':
+      return `Q${periodIndex}`;
+    case 'yearly':
+      return 'Year';
+    default:
+      return '';
+  }
+}
+
+/**
+ * Get period dates for a budget based on its period type, year, and index
+ */
+export function getPeriodDates(
+  period: BudgetPeriod,
+  year: number,
+  periodIndex?: number
 ): PeriodDates {
+  switch (period) {
+    case 'weekly':
+      return getWeekDates(year, periodIndex || 1);
+    case 'monthly':
+      return getMonthDates(year, periodIndex || 1);
+    case 'quarterly':
+      return getQuarterDates(year, periodIndex || 1);
+    case 'yearly':
+      return getYearDates(year);
+    default:
+      return getMonthDates(year, periodIndex || 1);
+  }
+}
+
+/**
+ * Get the current period dates based on budget period type.
+ * Uses calendar-based periods (no custom dates).
+ */
+export function getCurrentPeriodDates(period: BudgetPeriod): PeriodDates {
   const now = new Date();
-  const startDate = customStartDate ? parseISO(customStartDate) : now;
+  const weekStartsOn = getWeekStartSetting();
   
   switch (period) {
     case 'weekly':
       return {
-        start: startOfWeek(now, { weekStartsOn: 1 }), // Monday start
-        end: endOfWeek(now, { weekStartsOn: 1 }),
+        start: startOfWeek(now, { weekStartsOn }),
+        end: endOfWeek(now, { weekStartsOn }),
       };
     
     case 'monthly':
-      // If custom start date is mid-month, calculate accordingly
-      if (customStartDate) {
-        const dayOfMonth = startDate.getDate();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        
-        // Determine if we're past the custom start day this month
-        let periodStart: Date;
-        let periodEnd: Date;
-        
-        if (now.getDate() >= dayOfMonth) {
-          // We're in the current custom month
-          periodStart = new Date(currentYear, currentMonth, dayOfMonth);
-          periodEnd = new Date(currentYear, currentMonth + 1, dayOfMonth - 1);
-        } else {
-          // We're in the previous custom month period
-          periodStart = new Date(currentYear, currentMonth - 1, dayOfMonth);
-          periodEnd = new Date(currentYear, currentMonth, dayOfMonth - 1);
-        }
-        
-        // Handle end of day
-        periodEnd.setHours(23, 59, 59, 999);
-        
-        return { start: periodStart, end: periodEnd };
-      }
       return {
         start: startOfMonth(now),
         end: endOfMonth(now),
@@ -88,20 +250,6 @@ export function getCurrentPeriodDates(
         end: endOfYear(now),
       };
     
-    case 'custom':
-      // For custom periods, use the provided start and calculate end
-      if (customStartDate) {
-        return {
-          start: startDate,
-          end: now, // Custom periods run from start to now
-        };
-      }
-      // Fallback to monthly if no custom date provided
-      return {
-        start: startOfMonth(now),
-        end: endOfMonth(now),
-      };
-    
     default:
       return {
         start: startOfMonth(now),
@@ -113,11 +261,8 @@ export function getCurrentPeriodDates(
 /**
  * Get the previous period dates for rollover calculations.
  */
-export function getPreviousPeriodDates(
-  period: BudgetPeriod, 
-  customStartDate?: string
-): PeriodDates {
-  const current = getCurrentPeriodDates(period, customStartDate);
+export function getPreviousPeriodDates(period: BudgetPeriod): PeriodDates {
+  const current = getCurrentPeriodDates(period);
   
   switch (period) {
     case 'weekly':
@@ -155,11 +300,8 @@ export function getPreviousPeriodDates(
 /**
  * Get the next period dates for projections.
  */
-export function getNextPeriodDates(
-  period: BudgetPeriod,
-  customStartDate?: string
-): PeriodDates {
-  const current = getCurrentPeriodDates(period, customStartDate);
+export function getNextPeriodDates(period: BudgetPeriod): PeriodDates {
+  const current = getCurrentPeriodDates(period);
   
   switch (period) {
     case 'weekly':
@@ -192,6 +334,47 @@ export function getNextPeriodDates(
         end: addMonths(current.end, 1),
       };
   }
+}
+
+/**
+ * Get current period info (year, index, dates)
+ */
+export function getCurrentPeriodInfo(period: BudgetPeriod): {
+  year: number;
+  periodIndex: number;
+  dates: PeriodDates;
+  label: string;
+} {
+  const now = new Date();
+  const dates = getCurrentPeriodDates(period);
+  
+  let periodIndex: number;
+  
+  switch (period) {
+    case 'weekly':
+      periodIndex = getWeekNumber(now);
+      break;
+    case 'monthly':
+      periodIndex = now.getMonth() + 1;
+      break;
+    case 'quarterly':
+      periodIndex = getQuarter(now);
+      break;
+    case 'yearly':
+      periodIndex = 1; // Not used for yearly
+      break;
+    default:
+      periodIndex = now.getMonth() + 1;
+  }
+  
+  const year = period === 'weekly' ? getWeekYear(now) : now.getFullYear();
+  
+  return {
+    year,
+    periodIndex,
+    dates,
+    label: formatPeriodLabel(period, year, periodIndex),
+  };
 }
 
 /**
@@ -249,7 +432,7 @@ export function formatPeriodRange(start: Date, end: Date): string {
 }
 
 /**
- * Get period label for display.
+ * Get period label for display (legacy - current period).
  */
 export function getPeriodLabel(period: BudgetPeriod): string {
   const labels: Record<BudgetPeriod, string> = {
@@ -257,8 +440,88 @@ export function getPeriodLabel(period: BudgetPeriod): string {
     monthly: 'This Month',
     quarterly: 'This Quarter',
     yearly: 'This Year',
-    custom: 'Custom Period',
   };
   
   return labels[period] || 'This Month';
+}
+
+/**
+ * Get period type label
+ */
+export function getPeriodTypeLabel(period: BudgetPeriod): string {
+  const labels: Record<BudgetPeriod, string> = {
+    weekly: 'Weekly',
+    monthly: 'Monthly',
+    quarterly: 'Quarterly',
+    yearly: 'Yearly',
+  };
+  
+  return labels[period] || 'Monthly';
+}
+
+/**
+ * Navigate to previous/next period
+ */
+export function navigatePeriod(
+  period: BudgetPeriod,
+  year: number,
+  periodIndex: number,
+  direction: 'prev' | 'next'
+): { year: number; periodIndex: number } {
+  const delta = direction === 'next' ? 1 : -1;
+  
+  switch (period) {
+    case 'weekly': {
+      const weeksInYear = getWeeksInYear(year);
+      let newIndex = periodIndex + delta;
+      let newYear = year;
+      
+      if (newIndex < 1) {
+        newYear = year - 1;
+        newIndex = getWeeksInYear(newYear);
+      } else if (newIndex > weeksInYear) {
+        newYear = year + 1;
+        newIndex = 1;
+      }
+      
+      return { year: newYear, periodIndex: newIndex };
+    }
+    
+    case 'monthly': {
+      let newIndex = periodIndex + delta;
+      let newYear = year;
+      
+      if (newIndex < 1) {
+        newYear = year - 1;
+        newIndex = 12;
+      } else if (newIndex > 12) {
+        newYear = year + 1;
+        newIndex = 1;
+      }
+      
+      return { year: newYear, periodIndex: newIndex };
+    }
+    
+    case 'quarterly': {
+      let newIndex = periodIndex + delta;
+      let newYear = year;
+      
+      if (newIndex < 1) {
+        newYear = year - 1;
+        newIndex = 4;
+      } else if (newIndex > 4) {
+        newYear = year + 1;
+        newIndex = 1;
+      }
+      
+      return { year: newYear, periodIndex: newIndex };
+    }
+    
+    case 'yearly': {
+      return { year: year + delta, periodIndex: 1 };
+    }
+    
+    default:
+      return { year, periodIndex };
+  }
 }

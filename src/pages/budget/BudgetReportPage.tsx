@@ -47,7 +47,6 @@ const BudgetReportPage = () => {
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
   const getTargetName = (b: Budget) => {
-    if (b.scope === 'overall') return 'Overall';
     const all = [...accounts, ...categories];
     const t = all.find((a: any) => a.id === b.targetId);
     return t ? (t as any).name : b.targetId;

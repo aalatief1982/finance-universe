@@ -4,9 +4,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/date-picker';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -17,10 +15,10 @@ import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { Budget, BudgetScope, BudgetPeriod, DEFAULT_ALERT_THRESHOLDS, CreateBudgetInput } from '@/models/budget';
+import { getCurrentPeriodInfo, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
 import { 
-  Globe, 
   Wallet, 
   Tag, 
   Tags, 
@@ -28,7 +26,8 @@ import {
   Bell,
   RotateCcw,
   Check,
-  Trash2
+  Trash2,
+  Calendar
 } from 'lucide-react';
 
 const PERIODS: { value: BudgetPeriod; label: string }[] = [
@@ -36,11 +35,9 @@ const PERIODS: { value: BudgetPeriod; label: string }[] = [
   { value: 'monthly', label: 'Monthly' },
   { value: 'quarterly', label: 'Quarterly' },
   { value: 'yearly', label: 'Yearly' },
-  { value: 'custom', label: 'Custom' },
 ];
 
 const SCOPES: { value: BudgetScope; label: string; description: string; icon: React.ElementType }[] = [
-  { value: 'overall', label: 'Overall', description: 'Total spending limit across all categories', icon: Globe },
   { value: 'category', label: 'Category', description: 'Budget for a specific category', icon: Tag },
   { value: 'subcategory', label: 'Subcategory', description: 'Budget for a specific subcategory', icon: Tags },
   { value: 'account', label: 'Account', description: 'Budget for a specific account', icon: Wallet },
@@ -48,12 +45,41 @@ const SCOPES: { value: BudgetScope; label: string; description: string; icon: Re
 
 const ALERT_THRESHOLDS = [50, 75, 80, 90, 100];
 
+// Generate year options (current year +/- 2 years)
+const currentYear = new Date().getFullYear();
+const YEAR_OPTIONS = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
+
+// Month options
+const MONTH_OPTIONS = [
+  { value: 1, label: 'January' },
+  { value: 2, label: 'February' },
+  { value: 3, label: 'March' },
+  { value: 4, label: 'April' },
+  { value: 5, label: 'May' },
+  { value: 6, label: 'June' },
+  { value: 7, label: 'July' },
+  { value: 8, label: 'August' },
+  { value: 9, label: 'September' },
+  { value: 10, label: 'October' },
+  { value: 11, label: 'November' },
+  { value: 12, label: 'December' },
+];
+
+// Quarter options
+const QUARTER_OPTIONS = [
+  { value: 1, label: 'Q1 (Jan-Mar)' },
+  { value: 2, label: 'Q2 (Apr-Jun)' },
+  { value: 3, label: 'Q3 (Jul-Sep)' },
+  { value: 4, label: 'Q4 (Oct-Dec)' },
+];
+
 const SetBudgetPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const prefillScope = searchParams.get('scope') as BudgetScope | null;
   const prefillTarget = searchParams.get('target');
+  const prefillPeriod = searchParams.get('period') as BudgetPeriod | null;
 
   // Load existing budget if editing
   const existingBudget = React.useMemo(() => {
@@ -62,6 +88,9 @@ const SetBudgetPage = () => {
   }, [editId]);
 
   const isEditMode = !!existingBudget;
+
+  // Get current period info for defaults
+  const currentPeriodInfo = React.useMemo(() => getCurrentPeriodInfo('monthly'), []);
 
   // Form state
   const [scope, setScope] = React.useState<BudgetScope>(
@@ -73,10 +102,11 @@ const SetBudgetPage = () => {
   const [amount, setAmount] = React.useState(existingBudget?.amount || 0);
   const [currency, setCurrency] = React.useState(existingBudget?.currency || 'USD');
   const [period, setPeriod] = React.useState<BudgetPeriod>(
-    existingBudget?.period || 'monthly'
+    existingBudget?.period || prefillPeriod || 'monthly'
   );
-  const [startDate, setStartDate] = React.useState(
-    existingBudget?.startDate || new Date().toISOString().split('T')[0]
+  const [year, setYear] = React.useState(existingBudget?.year || currentPeriodInfo.year);
+  const [periodIndex, setPeriodIndex] = React.useState<number>(
+    existingBudget?.periodIndex || currentPeriodInfo.periodIndex
   );
   const [rollover, setRollover] = React.useState(existingBudget?.rollover || false);
   const [notes, setNotes] = React.useState(existingBudget?.notes || '');
@@ -102,14 +132,11 @@ const SetBudgetPage = () => {
   // Get targets based on scope
   const targets = React.useMemo(() => {
     switch (scope) {
-      case 'overall':
-        return []; // No target needed for overall
       case 'account':
         return accounts.map(a => ({ id: a.id, name: a.name, parentId: null }));
       case 'category':
         return parentCategories.map(c => ({ id: c.id, name: c.name, parentId: null }));
       case 'subcategory':
-        // Group subcategories by parent
         return subcategories.map(c => {
           const parent = parentCategories.find(p => p.id === c.parentId);
           return { 
@@ -126,16 +153,16 @@ const SetBudgetPage = () => {
 
   // Check for existing budget conflict
   const existingBudgetConflict = React.useMemo(() => {
-    if (scope === 'overall') {
-      return existingBudgets.find(
-        b => b.scope === 'overall' && b.id !== editId
-      );
-    }
     if (!targetId) return null;
     return existingBudgets.find(
-      b => b.scope === scope && b.targetId === targetId && b.id !== editId
+      b => b.scope === scope && 
+           b.targetId === targetId && 
+           b.period === period &&
+           b.year === year &&
+           (period === 'yearly' || b.periodIndex === periodIndex) &&
+           b.id !== editId
     );
-  }, [scope, targetId, existingBudgets, editId]);
+  }, [scope, targetId, period, year, periodIndex, existingBudgets, editId]);
 
   // Get target name for display
   const getTargetName = (id: string) => {
@@ -146,7 +173,14 @@ const SetBudgetPage = () => {
   // Handle scope change
   const handleScopeChange = (newScope: BudgetScope) => {
     setScope(newScope);
-    setTargetId(''); // Reset target when scope changes
+    setTargetId('');
+  };
+
+  // Handle period change - reset periodIndex to current
+  const handlePeriodChange = (newPeriod: BudgetPeriod) => {
+    setPeriod(newPeriod);
+    const info = getCurrentPeriodInfo(newPeriod);
+    setPeriodIndex(info.periodIndex);
   };
 
   // Handle alert threshold toggle
@@ -160,8 +194,7 @@ const SetBudgetPage = () => {
 
   // Handle save
   const handleSave = () => {
-    // Validation
-    if (scope !== 'overall' && !targetId) {
+    if (!targetId) {
       toast({ title: 'Please select a target', variant: 'destructive' });
       return;
     }
@@ -170,17 +203,19 @@ const SetBudgetPage = () => {
       return;
     }
     if (existingBudgetConflict) {
-      toast({ title: 'A budget already exists for this target', variant: 'destructive' });
+      toast({ title: 'A budget already exists for this target and period', variant: 'destructive' });
       return;
     }
 
     const budgetData: CreateBudgetInput = {
       scope,
-      targetId: scope === 'overall' ? '' : targetId,
+      targetId,
       amount,
       currency,
       period,
-      startDate,
+      year,
+      periodIndex: period === 'yearly' ? undefined : periodIndex,
+      isOverride: true,
       rollover,
       notes,
       alertThresholds,
@@ -208,6 +243,9 @@ const SetBudgetPage = () => {
       navigate('/budget');
     }
   };
+
+  // Period label for display
+  const periodLabel = formatPeriodLabel(period, year, periodIndex);
 
   return (
     <Layout showBack>
@@ -260,93 +298,148 @@ const SetBudgetPage = () => {
           </CardContent>
         </Card>
 
-        {/* Target Selection (not for overall) */}
-        {scope !== 'overall' && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">
-                Select {scope === 'account' ? 'Account' : scope === 'category' ? 'Category' : 'Subcategory'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Select value={targetId} onValueChange={setTargetId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={`Select ${scope}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {scope === 'subcategory' ? (
-                    // Group subcategories by parent
-                    parentCategories.map(parent => {
-                      const children = targets.filter(t => t.parentId === parent.id);
-                      if (children.length === 0) return null;
-                      return (
-                        <React.Fragment key={parent.id}>
-                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                            {parent.name}
-                          </div>
-                          {children.map(child => {
-                            const hasBudget = existingBudgets.some(
-                              b => b.scope === 'subcategory' && b.targetId === child.id && b.id !== editId
-                            );
-                            return (
-                              <SelectItem 
-                                key={child.id} 
-                                value={child.id}
-                                disabled={hasBudget}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className="pl-2">{child.name}</span>
-                                  {hasBudget && (
-                                    <Badge variant="outline" className="text-xs">
-                                      Has budget
-                                    </Badge>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </React.Fragment>
-                      );
-                    })
-                  ) : (
-                    targets.map(target => {
-                      const hasBudget = existingBudgets.some(
-                        b => b.scope === scope && b.targetId === target.id && b.id !== editId
-                      );
-                      return (
-                        <SelectItem 
-                          key={target.id} 
-                          value={target.id}
-                          disabled={hasBudget}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span>{target.name}</span>
-                            {hasBudget && (
-                              <Badge variant="outline" className="text-xs">
-                                Has budget
-                              </Badge>
-                            )}
-                          </div>
-                        </SelectItem>
-                      );
-                    })
-                  )}
-                </SelectContent>
-              </Select>
+        {/* Target Selection */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
+              Select {scope === 'account' ? 'Account' : scope === 'category' ? 'Category' : 'Subcategory'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={targetId} onValueChange={setTargetId}>
+              <SelectTrigger>
+                <SelectValue placeholder={`Select ${scope}`} />
+              </SelectTrigger>
+              <SelectContent>
+                {scope === 'subcategory' ? (
+                  parentCategories.map(parent => {
+                    const children = targets.filter(t => t.parentId === parent.id);
+                    if (children.length === 0) return null;
+                    return (
+                      <React.Fragment key={parent.id}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                          {parent.name}
+                        </div>
+                        {children.map(child => (
+                          <SelectItem key={child.id} value={child.id}>
+                            <span className="pl-2">{child.name}</span>
+                          </SelectItem>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })
+                ) : (
+                  targets.map(target => (
+                    <SelectItem key={target.id} value={target.id}>
+                      {target.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
 
-              {existingBudgetConflict && (
-                <Alert className="mt-3" variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    A budget already exists for{' '}
-                    <strong>{getTargetName(existingBudgetConflict.targetId)}</strong>.
-                    Edit the existing budget instead.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        )}
+            {existingBudgetConflict && (
+              <Alert className="mt-3" variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  A budget already exists for{' '}
+                  <strong>{getTargetName(existingBudgetConflict.targetId)}</strong>{' '}
+                  for {formatPeriodLabel(existingBudgetConflict.period, existingBudgetConflict.year, existingBudgetConflict.periodIndex)}.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Period Selection */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Budget Period
+            </CardTitle>
+            <CardDescription>
+              Select the time period for this budget
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Period Type</Label>
+                <Select value={period} onValueChange={val => handlePeriodChange(val as BudgetPeriod)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PERIODS.map(p => (
+                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Year</Label>
+                <Select value={year.toString()} onValueChange={val => setYear(parseInt(val))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEAR_OPTIONS.map(y => (
+                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Period Index Selection (not shown for yearly) */}
+            {period !== 'yearly' && (
+              <div>
+                <Label className="text-xs text-muted-foreground">
+                  {period === 'weekly' ? 'Week' : period === 'monthly' ? 'Month' : 'Quarter'}
+                </Label>
+                {period === 'monthly' && (
+                  <Select value={periodIndex.toString()} onValueChange={val => setPeriodIndex(parseInt(val))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTH_OPTIONS.map(m => (
+                        <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {period === 'quarterly' && (
+                  <Select value={periodIndex.toString()} onValueChange={val => setPeriodIndex(parseInt(val))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QUARTER_OPTIONS.map(q => (
+                        <SelectItem key={q.value} value={q.value.toString()}>{q.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {period === 'weekly' && (
+                  <Input
+                    type="number"
+                    min={1}
+                    max={53}
+                    value={periodIndex}
+                    onChange={e => setPeriodIndex(parseInt(e.target.value) || 1)}
+                    placeholder="Week number (1-53)"
+                  />
+                )}
+              </div>
+            )}
+
+            <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+              Budget for: <strong>{periodLabel}</strong>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Budget Amount */}
         <Card>
@@ -376,24 +469,6 @@ const SetBudgetPage = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Select value={period} onValueChange={val => setPeriod(val as BudgetPeriod)}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PERIODS.map(p => (
-                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <DatePicker 
-                date={new Date(startDate)} 
-                setDate={d => setStartDate(d?.toISOString().split('T')[0] || startDate)}
-              />
             </div>
           </CardContent>
         </Card>
@@ -481,7 +556,7 @@ const SetBudgetPage = () => {
           <Button 
             className="flex-1"
             onClick={handleSave}
-            disabled={!!existingBudgetConflict || (scope !== 'overall' && !targetId) || amount <= 0}
+            disabled={!!existingBudgetConflict || !targetId || amount <= 0}
           >
             {isEditMode ? 'Update' : 'Create'} Budget
           </Button>

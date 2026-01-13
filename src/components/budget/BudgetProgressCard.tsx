@@ -8,7 +8,6 @@ import {
   Wallet, 
   Tag, 
   Tags, 
-  Globe,
   ChevronRight,
   AlertTriangle
 } from 'lucide-react';
@@ -24,7 +23,6 @@ interface BudgetProgressCardProps {
 }
 
 const scopeIcons: Record<BudgetScope, React.ElementType> = {
-  overall: Globe,
   account: Wallet,
   category: Tag,
   subcategory: Tags,
