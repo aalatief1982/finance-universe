@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Settings, BarChart3, Lightbulb } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Plus, Settings, BarChart3, Lightbulb, ChevronRight, PiggyBank, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useBudgetsWithProgress, useBudgetAlerts, useOverallBudgetProgress } from '@/hooks/useBudgets';
 import { BudgetPeriod } from '@/models/budget';
@@ -12,6 +13,7 @@ import { BudgetAlertBanner } from '@/components/budget/BudgetAlertBanner';
 import { formatCurrency } from '@/utils/format-utils';
 import { transactionService } from '@/services/TransactionService';
 import { accountService } from '@/services/AccountService';
+import { budgetService } from '@/services/BudgetService';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = 'all' | BudgetPeriod;
@@ -51,12 +53,18 @@ const BudgetHubPage = () => {
   }, []);
 
   const getTargetName = (budget: typeof budgetsWithProgress[0]): string => {
+    if (budget.scope === 'overall') return 'Overall Budget';
     return targetNames[budget.targetId] || budget.targetId;
   };
 
-  // Get yearly budgets (replaces overall)
-  const yearlyBudgets = budgetsWithProgress.filter(b => b.period === 'yearly');
-  const otherBudgets = budgetsWithProgress.filter(b => b.period !== 'yearly');
+  // Get overall budget for the current period
+  const overallBudget = useMemo(() => {
+    return budgetsWithProgress.find(b => b.scope === 'overall');
+  }, [budgetsWithProgress]);
+
+  // Get yearly budgets (excluding overall)
+  const yearlyBudgets = budgetsWithProgress.filter(b => b.period === 'yearly' && b.scope !== 'overall');
+  const otherBudgets = budgetsWithProgress.filter(b => b.period !== 'yearly' && b.scope !== 'overall');
 
   // Group by scope for better organization
   const groupedBudgets = useMemo(() => {
@@ -74,6 +82,31 @@ const BudgetHubPage = () => {
     
     return groups;
   }, [otherBudgets]);
+
+  // Calculate allocation status for overall budget
+  const allocationStatus = useMemo(() => {
+    if (!overallBudget) return null;
+    
+    // Get all category budgets for the same period
+    const categoryBudgets = budgetsWithProgress.filter(
+      b => b.scope === 'category' && 
+           b.period === overallBudget.period && 
+           b.year === overallBudget.year &&
+           (overallBudget.period === 'yearly' || b.periodIndex === overallBudget.periodIndex)
+    );
+    
+    const allocatedAmount = categoryBudgets.reduce((sum, b) => sum + b.amount, 0);
+    const unallocatedAmount = overallBudget.amount - allocatedAmount;
+    const allocationPercent = overallBudget.amount > 0 ? (allocatedAmount / overallBudget.amount) * 100 : 0;
+    
+    return {
+      allocatedAmount,
+      unallocatedAmount,
+      allocationPercent,
+      isOverAllocated: allocatedAmount > overallBudget.amount,
+      categoryCount: categoryBudgets.length,
+    };
+  }, [overallBudget, budgetsWithProgress]);
 
   const hasAnyBudgets = budgetsWithProgress.length > 0;
 
@@ -156,8 +189,71 @@ const BudgetHubPage = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Yearly Budget Ring */}
-            {(yearlyBudgets.length > 0 || overallProgress) && (
+            {/* Overall Budget Card - Top Level */}
+            {overallBudget && (
+              <div 
+                className="bg-card rounded-xl p-6 border cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => navigate(`/budget/set?edit=${overallBudget.id}`)}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <PiggyBank className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold">Overall Budget</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {overallBudget.period.charAt(0).toUpperCase() + overallBudget.period.slice(1)} spending limit
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                </div>
+                
+                <OverallBudgetRing
+                  progress={overallBudget.progress}
+                  currency={overallBudget.currency}
+                  size="lg"
+                />
+
+                {/* Allocation Status */}
+                {allocationStatus && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Allocated to categories</span>
+                      <span className={cn(
+                        "font-medium",
+                        allocationStatus.isOverAllocated && "text-destructive"
+                      )}>
+                        {formatCurrency(allocationStatus.allocatedAmount, overallBudget.currency)}
+                        {' / '}
+                        {formatCurrency(overallBudget.amount, overallBudget.currency)}
+                      </span>
+                    </div>
+                    <Progress 
+                      value={Math.min(allocationStatus.allocationPercent, 100)} 
+                      className={cn(
+                        "h-2",
+                        allocationStatus.isOverAllocated && "[&>div]:bg-destructive"
+                      )}
+                    />
+                    {allocationStatus.isOverAllocated ? (
+                      <div className="flex items-center gap-1 mt-2 text-xs text-destructive">
+                        <AlertTriangle className="h-3 w-3" />
+                        <span>Over-allocated by {formatCurrency(Math.abs(allocationStatus.unallocatedAmount), overallBudget.currency)}</span>
+                      </div>
+                    ) : allocationStatus.unallocatedAmount > 0 ? (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {formatCurrency(allocationStatus.unallocatedAmount, overallBudget.currency)} unallocated
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Yearly Budget Ring (for non-overall yearly budgets) */}
+            {(yearlyBudgets.length > 0 || (overallProgress && !overallBudget)) && (
               <div className="bg-card rounded-xl p-6 border">
                 <h2 className="text-sm font-medium text-muted-foreground mb-4 text-center">
                   Yearly Spending

@@ -27,7 +27,9 @@ import {
   RotateCcw,
   Check,
   Trash2,
-  Calendar
+  Calendar,
+  PiggyBank,
+  Info
 } from 'lucide-react';
 
 const PERIODS: { value: BudgetPeriod; label: string }[] = [
@@ -38,6 +40,7 @@ const PERIODS: { value: BudgetPeriod; label: string }[] = [
 ];
 
 const SCOPES: { value: BudgetScope; label: string; description: string; icon: React.ElementType }[] = [
+  { value: 'overall', label: 'Overall', description: 'Total budget for all spending', icon: PiggyBank },
   { value: 'category', label: 'Category', description: 'Budget for a specific category', icon: Tag },
   { value: 'subcategory', label: 'Subcategory', description: 'Budget for a specific subcategory', icon: Tags },
   { value: 'account', label: 'Account', description: 'Budget for a specific account', icon: Wallet },
@@ -132,6 +135,8 @@ const SetBudgetPage = () => {
   // Get targets based on scope
   const targets = React.useMemo(() => {
     switch (scope) {
+      case 'overall':
+        return []; // No target needed for overall
       case 'account':
         return accounts.map(a => ({ id: a.id, name: a.name, parentId: null }));
       case 'category':
@@ -150,6 +155,22 @@ const SetBudgetPage = () => {
         return [];
     }
   }, [scope, accounts, parentCategories, subcategories]);
+
+  // Calculate cascade preview for overall scope
+  const cascadePreview = React.useMemo(() => {
+    if (scope !== 'overall' || amount <= 0) return null;
+    
+    const categoryCount = parentCategories.length;
+    const perCategory = categoryCount > 0 ? amount / categoryCount : 0;
+    
+    return {
+      categoryCount,
+      perCategory,
+      message: categoryCount > 0 
+        ? `Will distribute ~${formatCurrency(perCategory, currency)} equally to ${categoryCount} categories`
+        : 'No categories found to distribute to'
+    };
+  }, [scope, amount, parentCategories.length, currency]);
 
   // Check for existing budget conflict
   const existingBudgetConflict = React.useMemo(() => {
@@ -173,7 +194,8 @@ const SetBudgetPage = () => {
   // Handle scope change
   const handleScopeChange = (newScope: BudgetScope) => {
     setScope(newScope);
-    setTargetId('');
+    // For overall scope, set a special targetId
+    setTargetId(newScope === 'overall' ? '_overall' : '');
   };
 
   // Handle period change - reset periodIndex to current
@@ -194,7 +216,8 @@ const SetBudgetPage = () => {
 
   // Handle save
   const handleSave = () => {
-    if (!targetId) {
+    // For overall scope, targetId is '_overall', for others require selection
+    if (!targetId && scope !== 'overall') {
       toast({ title: 'Please select a target', variant: 'destructive' });
       return;
     }
@@ -209,7 +232,7 @@ const SetBudgetPage = () => {
 
     const budgetData: CreateBudgetInput = {
       scope,
-      targetId,
+      targetId: scope === 'overall' ? '_overall' : targetId,
       amount,
       currency,
       period,
@@ -298,58 +321,77 @@ const SetBudgetPage = () => {
           </CardContent>
         </Card>
 
-        {/* Target Selection */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">
-              Select {scope === 'account' ? 'Account' : scope === 'category' ? 'Category' : 'Subcategory'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Select value={targetId} onValueChange={setTargetId}>
-              <SelectTrigger>
-                <SelectValue placeholder={`Select ${scope}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {scope === 'subcategory' ? (
-                  parentCategories.map(parent => {
-                    const children = targets.filter(t => t.parentId === parent.id);
-                    if (children.length === 0) return null;
-                    return (
-                      <React.Fragment key={parent.id}>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                          {parent.name}
-                        </div>
-                        {children.map(child => (
-                          <SelectItem key={child.id} value={child.id}>
-                            <span className="pl-2">{child.name}</span>
-                          </SelectItem>
-                        ))}
-                      </React.Fragment>
-                    );
-                  })
-                ) : (
-                  targets.map(target => (
-                    <SelectItem key={target.id} value={target.id}>
-                      {target.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+        {/* Target Selection - Hidden for Overall scope */}
+        {scope !== 'overall' && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                Select {scope === 'account' ? 'Account' : scope === 'category' ? 'Category' : 'Subcategory'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select value={targetId} onValueChange={setTargetId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={`Select ${scope}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {scope === 'subcategory' ? (
+                    parentCategories.map(parent => {
+                      const children = targets.filter(t => t.parentId === parent.id);
+                      if (children.length === 0) return null;
+                      return (
+                        <React.Fragment key={parent.id}>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                            {parent.name}
+                          </div>
+                          {children.map(child => (
+                            <SelectItem key={child.id} value={child.id}>
+                              <span className="pl-2">{child.name}</span>
+                            </SelectItem>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    targets.map(target => (
+                      <SelectItem key={target.id} value={target.id}>
+                        {target.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
 
-            {existingBudgetConflict && (
-              <Alert className="mt-3" variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  A budget already exists for{' '}
-                  <strong>{getTargetName(existingBudgetConflict.targetId)}</strong>{' '}
-                  for {formatPeriodLabel(existingBudgetConflict.period, existingBudgetConflict.year, existingBudgetConflict.periodIndex)}.
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+              {existingBudgetConflict && (
+                <Alert className="mt-3" variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    A budget already exists for{' '}
+                    <strong>{getTargetName(existingBudgetConflict.targetId)}</strong>{' '}
+                    for {formatPeriodLabel(existingBudgetConflict.period, existingBudgetConflict.year, existingBudgetConflict.periodIndex)}.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Overall Scope Info Card */}
+        {scope === 'overall' && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-primary">Overall Budget</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    This budget covers all your spending. Category budgets will be validated against this total.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Period Selection */}
         <Card>
@@ -470,6 +512,20 @@ const SetBudgetPage = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Cascade Preview for Overall scope */}
+            {cascadePreview && (
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {cascadePreview.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -556,7 +612,7 @@ const SetBudgetPage = () => {
           <Button 
             className="flex-1"
             onClick={handleSave}
-            disabled={!!existingBudgetConflict || !targetId || amount <= 0}
+            disabled={!!existingBudgetConflict || (!targetId && scope !== 'overall') || amount <= 0}
           >
             {isEditMode ? 'Update' : 'Create'} Budget
           </Button>

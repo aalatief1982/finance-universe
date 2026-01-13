@@ -2,13 +2,23 @@ import { budgetService } from './BudgetService';
 import { transactionService } from './TransactionService';
 import { accountService } from './AccountService';
 import { BudgetAlert } from '@/models/budget-period';
-import { Budget } from '@/models/budget';
+import { Budget, BudgetScope } from '@/models/budget';
 
 export interface AlertWithContext extends BudgetAlert {
   budgetName: string;
   budget: Budget;
   message: string;
   severity: 'warning' | 'danger' | 'critical';
+}
+
+export interface AllocationAlert {
+  type: 'over-allocation' | 'under-allocation';
+  parentBudget: Budget;
+  totalAllocated: number;
+  difference: number;
+  childBudgets: Budget[];
+  severity: 'warning' | 'danger';
+  message: string;
 }
 
 /**
@@ -30,9 +40,13 @@ export class BudgetAlertService {
 
       // Get target name
       let budgetName = 'Unknown Budget';
-      const allTargets = [...accounts, ...categories];
-      const target = allTargets.find((t: any) => t.id === budget.targetId);
-      budgetName = target ? (target as any).name : budget.targetId;
+      if (budget.scope === 'overall') {
+        budgetName = 'Overall Budget';
+      } else {
+        const allTargets = [...accounts, ...categories];
+        const target = allTargets.find((t: any) => t.id === budget.targetId);
+        budgetName = target ? (target as any).name : budget.targetId;
+      }
 
       // Determine severity
       let severity: 'warning' | 'danger' | 'critical' = 'warning';
@@ -127,6 +141,87 @@ export class BudgetAlertService {
   }
 
   /**
+   * Get allocation alerts for scope hierarchy
+   */
+  getAllocationAlerts(): AllocationAlert[] {
+    const budgets = budgetService.getBudgets();
+    const alerts: AllocationAlert[] = [];
+
+    // Find overall budgets and check allocation to categories
+    const overallBudgets = budgets.filter(b => b.scope === 'overall' && b.isActive);
+    
+    for (const overallBudget of overallBudgets) {
+      // Find category budgets for the same period
+      const categoryBudgets = budgets.filter(
+        b => b.scope === 'category' && 
+             b.period === overallBudget.period &&
+             b.year === overallBudget.year &&
+             (overallBudget.period === 'yearly' || b.periodIndex === overallBudget.periodIndex) &&
+             b.isActive
+      );
+
+      const totalAllocated = categoryBudgets.reduce((sum, b) => sum + b.amount, 0);
+      const difference = totalAllocated - overallBudget.amount;
+
+      if (difference > 0) {
+        // Over-allocation
+        alerts.push({
+          type: 'over-allocation',
+          parentBudget: overallBudget,
+          totalAllocated,
+          difference,
+          childBudgets: categoryBudgets,
+          severity: 'danger',
+          message: `Category budgets exceed Overall budget by ${Math.abs(difference).toFixed(2)} ${overallBudget.currency}`,
+        });
+      } else if (difference < -overallBudget.amount * 0.2) {
+        // Under-allocation (more than 20% unallocated)
+        alerts.push({
+          type: 'under-allocation',
+          parentBudget: overallBudget,
+          totalAllocated,
+          difference: Math.abs(difference),
+          childBudgets: categoryBudgets,
+          severity: 'warning',
+          message: `You have ${Math.abs(difference).toFixed(2)} ${overallBudget.currency} unallocated from your Overall budget`,
+        });
+      }
+    }
+
+    // Find category budgets and check allocation to subcategories
+    const categoryBudgets = budgets.filter(b => b.scope === 'category' && b.isActive);
+    
+    for (const categoryBudget of categoryBudgets) {
+      const subcategoryBudgets = budgets.filter(
+        b => b.scope === 'subcategory' && 
+             b.period === categoryBudget.period &&
+             b.year === categoryBudget.year &&
+             (categoryBudget.period === 'yearly' || b.periodIndex === categoryBudget.periodIndex) &&
+             b.isActive
+      );
+
+      if (subcategoryBudgets.length === 0) continue;
+
+      const totalAllocated = subcategoryBudgets.reduce((sum, b) => sum + b.amount, 0);
+      const difference = totalAllocated - categoryBudget.amount;
+
+      if (difference > 0) {
+        alerts.push({
+          type: 'over-allocation',
+          parentBudget: categoryBudget,
+          totalAllocated,
+          difference,
+          childBudgets: subcategoryBudgets,
+          severity: 'danger',
+          message: `Subcategory budgets exceed category budget by ${Math.abs(difference).toFixed(2)} ${categoryBudget.currency}`,
+        });
+      }
+    }
+
+    return alerts;
+  }
+
+  /**
    * Check if a specific transaction will trigger any budget alerts
    * Useful for warning users before they confirm a transaction
    */
@@ -154,6 +249,9 @@ export class BudgetAlertService {
       let isAffected = false;
 
       switch (budget.scope) {
+        case 'overall':
+          isAffected = true; // Overall is affected by all transactions
+          break;
         case 'account':
           isAffected = budget.targetId === accountId;
           break;
