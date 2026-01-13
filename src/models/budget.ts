@@ -46,14 +46,16 @@ export type UpdateBudgetInput = Partial<Omit<Budget, 'id' | 'createdAt'>>;
  * Migrates old budget data to new format with defaults
  * Ensures backward compatibility when loading existing budgets
  */
-export function migrateBudget(raw: Partial<Budget> & { scope?: string }): Budget {
+export function migrateBudget(raw: Partial<Budget> & { scope?: string; period?: string }): Budget {
   const now = new Date().toISOString();
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   
   // Handle scope migration: 'overall' becomes 'category' with empty targetId
-  let scope = (raw.scope === 'overall' ? 'category' : raw.scope) as BudgetScope;
-  let targetId = raw.targetId || (raw.scope === 'overall' ? '_overall_legacy' : '');
+  // Use string comparison since raw.scope may contain legacy values
+  const rawScope = raw.scope as string;
+  let scope: BudgetScope = rawScope === 'overall' ? 'category' : (rawScope as BudgetScope) || 'category';
+  let targetId = raw.targetId || (rawScope === 'overall' ? '_overall_legacy' : '');
   
   // Handle period migration: 'custom' becomes 'monthly'
   let period = raw.period as BudgetPeriod;
