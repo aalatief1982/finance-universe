@@ -3,14 +3,13 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { findCategoryForVendor } from '@/services/CategoryInferencer';
 import { useToast } from '@/components/ui/use-toast';
-import { resetNERModel } from '@/ml/ner';
 import { learningEngineService } from '@/services/LearningEngineService';
 import { useNavigate } from 'react-router-dom';
 
 /**
  * Custom hook for handling the smart paste functionality.
  * Manages text processing, transaction detection, and various matching algorithms.
- * Supports multiple detection methods: template matching, structure matching, ML, and fallback.
+ * Supports multiple detection methods: template matching, structure matching, regex-based, and fallback.
  */
 export const useSmartPaste = (
   onTransactionsDetected?: (
@@ -70,7 +69,7 @@ export const useSmartPaste = (
    * Tries multiple detection methods in order of reliability:
    * 1. Template matching
    * 2. Structure-based detection
-   * 3. ML-based extraction
+   * 3. Regex-based extraction
    * 4. Basic fallback extraction
    */
   const processText = async (rawText: string) => {
@@ -137,32 +136,32 @@ export const useSmartPaste = (
       if (import.meta.env.MODE === 'development') {
         console.log("[useSmartPaste] Step 2: Attempting structure match");
       }
-      const structureMatch = learningEngineService.matchUsingTemplateStructure(rawText);
+      const structureMatchResult = learningEngineService.matchUsingTemplateStructure(rawText);
       if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match result:", { 
-        success: !!structureMatch, 
-        confidence: structureMatch?.confidence 
+        success: !!structureMatchResult, 
+        confidence: structureMatchResult?.confidence 
       });
       
-      setStructureMatch(structureMatch);
+      setStructureMatch(structureMatchResult);
       
-      if (structureMatch && structureMatch.inferredTransaction) {
+      if (structureMatchResult && structureMatchResult.inferredTransaction) {
         if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match successful", { 
-          inference: structureMatch.inferredTransaction
+          inference: structureMatchResult.inferredTransaction
         });
         
-        const vendorName = structureMatch.inferredTransaction.description || '';
-        const categoryInfo = findCategoryForVendor(vendorName, structureMatch.inferredTransaction.type || 'expense');
+        const vendorName = structureMatchResult.inferredTransaction.description || '';
+        const categoryInfo = findCategoryForVendor(vendorName, structureMatchResult.inferredTransaction.type || 'expense');
 
         const txn: Transaction = {
           id: `structure-${Math.random().toString(36).substring(2, 9)}`,
-          title: `Structure: ${categoryInfo.category} | ${structureMatch.inferredTransaction.amount}`,
-          amount: structureMatch.inferredTransaction.amount.toFixed(2),
-          currency: structureMatch.inferredTransaction.currency || 'SAR',
-          type: structureMatch.inferredTransaction.type || 'expense',
-          fromAccount: structureMatch.inferredTransaction.fromAccount || 'Unknown',
+          title: `Structure: ${categoryInfo.category} | ${structureMatchResult.inferredTransaction.amount}`,
+          amount: structureMatchResult.inferredTransaction.amount.toFixed(2),
+          currency: structureMatchResult.inferredTransaction.currency || 'SAR',
+          type: structureMatchResult.inferredTransaction.type || 'expense',
+          fromAccount: structureMatchResult.inferredTransaction.fromAccount || 'Unknown',
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
-          date: structureMatch.inferredTransaction.date || new Date().toISOString(),
+          date: structureMatchResult.inferredTransaction.date || new Date().toISOString(),
           description: vendorName,
           notes: 'Matched by structure template',
           source: 'smart-paste'
@@ -174,49 +173,48 @@ export const useSmartPaste = (
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
         setMatchOrigin("structure");
-        onTransactionsDetected?.([txn], rawText, undefined, structureMatch.confidence, true, "structure");
+        onTransactionsDetected?.([txn], rawText, undefined, structureMatchResult.confidence, true, "structure");
         return;
       }
 
-      // 3. ML fallback
+      // 3. Regex-based extraction (previously ML)
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Step 3: Attempting ML-based extraction", { useHighAccuracy });
+        console.log("[useSmartPaste] Step 3: Attempting regex-based extraction");
       }
       const parsed = await extractTransactionEntities(rawText, useHighAccuracy);
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] ML extraction result:", parsed);
+        console.log("[useSmartPaste] Regex extraction result:", parsed);
       }
       
       if (parsed.amount) {
-        if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] ML extraction successful", {
+        if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Regex extraction successful", {
           amount: parsed.amount,
           vendor: parsed.vendor,
           type: parsed.type
         });
         
-        // Use the vendor property instead of description since that's what's available in the parsed output
         const categoryInfo = findCategoryForVendor(parsed.vendor || '', parsed.type || 'expense');
         const txn: Transaction = {
-          id: `ml-${Math.random().toString(36).substring(2, 9)}`,
-          title: `AI: ${categoryInfo.category} | ${parsed.amount}`,
-          amount: parseFloat(String(parsed.amount)),  // Convert to number if it's a string
+          id: `regex-${Math.random().toString(36).substring(2, 9)}`,
+          title: `Parsed: ${categoryInfo.category} | ${parsed.amount}`,
+          amount: parseFloat(String(parsed.amount)),
           currency: parsed.currency || 'SAR',
           type: (parsed.type as TransactionType) || 'expense',
           fromAccount: parsed.account || 'Unknown',
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
           date: parsed.date || new Date().toISOString(),
-          description: parsed.vendor || '', // Use vendor as description
-          notes: 'Extracted with ML',
+          description: parsed.vendor || '',
+          notes: 'Extracted with regex parser',
           source: 'smart-paste'
         };
 
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Created transaction from ML:", txn);
+          console.log("[useSmartPaste] Created transaction from regex:", txn);
         }
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
-        setMatchOrigin("ml");
+        setMatchOrigin("ml"); // Keep as 'ml' for UI compatibility
         onTransactionsDetected?.([txn], rawText, undefined, 0.65, true, "ml");
         return;
       }
@@ -225,7 +223,6 @@ export const useSmartPaste = (
       if (import.meta.env.MODE === 'development') {
         console.log("[useSmartPaste] Step 4: Attempting basic fallback extraction");
       }
-      // Check if fallback confidence is low (< 0.4) for fallback
       const fallbackTxn = createFallbackTransaction(rawText);
       if (fallbackTxn) {
         if (import.meta.env.MODE === 'development') {
@@ -235,7 +232,6 @@ export const useSmartPaste = (
         setIsSmartMatch(false);
         setMatchOrigin("fallback");
         
-        // Check if confidence is low (< 0.4) for fallback
         const fallbackConfidence = 0.3;
         if (import.meta.env.MODE === 'development') {
           console.log("[useSmartPaste] Fallback confidence:", fallbackConfidence);
@@ -264,9 +260,8 @@ export const useSmartPaste = (
       if (import.meta.env.MODE === 'development') {
         console.error("[useSmartPaste] Processing error:", error);
       }
-      resetNERModel();
       const fallbackTxn = createFallbackTransaction(rawText);
-      setError('ML failed. Using fallback.');
+      setError('Parsing failed. Using fallback.');
       if (fallbackTxn) {
         if (import.meta.env.MODE === 'development') {
           console.log("[useSmartPaste] Error recovery: created fallback transaction", fallbackTxn);
@@ -274,7 +269,6 @@ export const useSmartPaste = (
         setDetectedTransactions([fallbackTxn]);
         setMatchOrigin("fallback");
         
-        // Check if confidence is low (< 0.4) for error fallback
         const fallbackConfidence = 0.3;
         
         // Redirect to Train Model page if confidence is low

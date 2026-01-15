@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
@@ -11,11 +10,8 @@ import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
-// Simplified SmartPaste component that only uses the NER model to
-// extract transaction entities. The learning engine will still learn
-// from the saved transaction in the edit screen.
-
-
+// SmartPaste component that uses regex-based extraction to parse transaction entities.
+// The learning engine will still learn from the saved transaction in the edit screen.
 
 interface NERSmartPasteProps {
   senderHint?: string;
@@ -44,86 +40,89 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
 
   const { toast } = useToast();
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-
-  if (!text.trim()) {
-    toast({
-      title: "Error",
-      description: "Please paste or enter a message first",
-      variant: "destructive",
-    });
-    return;
-  }
-  if (import.meta.env.MODE === 'development') {
-    console.log('[NER] Submitting message:', text);
-  }
-  setIsProcessing(true);
-  setError(null);
-  setConfidence(null);
-  setMatchOrigin(null);
-  logAnalyticsEvent('smart_paste_sms');
-
-  try {
-    const parsed = await extractTransactionEntities(text);
+    if (!text.trim()) {
+      toast({
+        title: "Error",
+        description: "Please paste or enter a message first",
+        variant: "destructive",
+      });
+      return;
+    }
     if (import.meta.env.MODE === 'development') {
-      console.log('[NER] Extracted entities:', parsed);
+      console.log('[SmartPaste] Submitting message:', text);
     }
-
-    const transaction: Transaction = {
-      id: `ner-${Math.random().toString(36).substring(2, 9)}`,
-      title: parsed.vendor || 'NER Transaction',
-      amount: parseFloat(parsed.amount || '0'),
-      currency: parsed.currency || 'SAR',
-      type: (parsed.type as TransactionType) || 'expense',
-      vendor: parsed.vendor,
-      fromAccount: parsed.account,
-      date: parsed.date || new Date().toISOString(),
-      category: 'Uncategorized',
-      subcategory: 'Uncategorized',
-      source: 'smart-paste'
-    };
-    setDetectedTransactions([transaction]);
-
-    if (onTransactionsDetected) {
-      if (import.meta.env.MODE === 'development') {
-        console.log('[NER] Final transaction:', transaction);
-      }
-      onTransactionsDetected(
-        [transaction],
-        text,
-        senderHint,
-        0.9,
-        'ml',
-        0,
-        0,
-        undefined,
-        undefined
-      );
-    }
-  } catch (err: any) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('[NER] Extraction error:', err);
-    }
-    setError("Could not parse the message. Try again or report.");
-    toast({
-      title: "Error",
-      description: "Could not parse the message. Try again or report.",
-      variant: "destructive",
-    });
+    setIsProcessing(true);
+    setError(null);
     setConfidence(null);
     setMatchOrigin(null);
-  } finally {
-    setIsProcessing(false);
-  }
-};
+    logAnalyticsEvent('smart_paste_sms');
+
+    try {
+      const parsed = await extractTransactionEntities(text);
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SmartPaste] Extracted entities:', parsed);
+      }
+
+      const transaction: Transaction = {
+        id: `parsed-${Math.random().toString(36).substring(2, 9)}`,
+        title: parsed.vendor || 'Parsed Transaction',
+        amount: parseFloat(parsed.amount || '0'),
+        currency: parsed.currency || 'SAR',
+        type: (parsed.type as TransactionType) || 'expense',
+        vendor: parsed.vendor,
+        fromAccount: parsed.account,
+        date: parsed.date || new Date().toISOString(),
+        category: 'Uncategorized',
+        subcategory: 'Uncategorized',
+        source: 'smart-paste'
+      };
+      
+      setDetectedTransactions([transaction]);
+      setConfidence(parsed.amount ? 0.75 : 0.3);
+      setMatchOrigin('ml');
+      setHasMatch(!!parsed.amount);
+
+      if (onTransactionsDetected) {
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SmartPaste] Final transaction:', transaction);
+        }
+        onTransactionsDetected(
+          [transaction],
+          text,
+          senderHint,
+          parsed.amount ? 0.75 : 0.3,
+          'ml',
+          0,
+          0,
+          undefined,
+          undefined
+        );
+      }
+    } catch (err: any) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SmartPaste] Extraction error:', err);
+      }
+      setError("Could not parse the message. Try again or report.");
+      toast({
+        title: "Error",
+        description: "Could not parse the message. Try again or report.",
+        variant: "destructive",
+      });
+      setConfidence(null);
+      setMatchOrigin(null);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handlePaste = async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
       if (import.meta.env.MODE === 'development') {
-        console.log('[NER] Clipboard text captured:', clipboardText);
+        console.log('[SmartPaste] Clipboard text captured:', clipboardText);
       }
       setText(clipboardText);
     } catch (err) {
@@ -136,7 +135,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-    if (import.meta.env.MODE === 'development') console.log('[NER] Sending transaction to ImportTransactions:', {
+    if (import.meta.env.MODE === 'development') console.log('[SmartPaste] Sending transaction:', {
       transaction,
       parsedFields: {
         amount: transaction.amount,
@@ -149,15 +148,12 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
     });  
     
-    if (import.meta.env.MODE === 'development') {
-      console.log('[NER] Transaction added:', transaction);
-    }
     if (onTransactionsDetected) {
       onTransactionsDetected(
         [transaction],
         text,
         senderHint,
-        0.9,
+        0.75,
         'ml',
         0,
         0,
@@ -176,7 +172,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   return (
     <div className="pt-4 space-y-4">
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-muted-foreground">
           Paste a message from your bank or SMS app to automatically extract transaction details.
@@ -214,14 +209,13 @@ const handleSubmit = async (e: React.FormEvent) => {
             {matchOrigin === 'template'
               ? 'matched a saved template.'
               : matchOrigin === 'ml'
-              ? 'AI extracted.'
+              ? 'parsed from text.'
               : matchOrigin === 'fallback'
               ? 'basic guess from text.'
               : 'structure match.'}
           </p>
         )}
       </form>
-
 
       {detectedTransactions.length > 0 && (
         <div className="space-y-3 mt-2">
