@@ -406,6 +406,30 @@ export function findAffectedBudgets(
   return { parentBudgets, childBudgets, siblingBudgets, parentScopeBudgets, childScopeBudgets };
 }
 
+/**
+ * Find a parent period budget for a given budget configuration
+ * Used to show warnings when child budget exceeds parent allocation
+ */
+export function findParentPeriodBudget(
+  budget: Pick<Budget, 'scope' | 'targetId' | 'period' | 'year' | 'periodIndex'>,
+  allBudgets: Budget[]
+): Budget | null {
+  const parentPeriod = getParentPeriod(budget.period);
+  if (!parentPeriod) return null;
+  
+  const parentPeriodIndex = budget.periodIndex 
+    ? getParentPeriodIndex(budget.period, budget.periodIndex)
+    : undefined;
+  
+  return allBudgets.find(b => 
+    b.scope === budget.scope &&
+    b.targetId === budget.targetId &&
+    b.period === parentPeriod &&
+    b.year === budget.year &&
+    (parentPeriod === 'yearly' || b.periodIndex === parentPeriodIndex)
+  ) || null;
+}
+
 export const budgetHierarchyService = {
   // Period distribution
   distributeYearlyToQuarters,

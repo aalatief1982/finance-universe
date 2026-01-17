@@ -10,7 +10,8 @@ import {
   Tags, 
   ChevronRight,
   AlertTriangle,
-  PiggyBank
+  PiggyBank,
+  Edit2
 } from 'lucide-react';
 import { getPeriodLabel } from '@/utils/budget-period-utils';
 
@@ -125,16 +126,21 @@ export function BudgetProgressCard({
           </div>
         </div>
         
-        {isOverBudget && (
-          <div className="flex items-center gap-1 text-destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <span className="text-xs font-medium">Over budget</span>
-          </div>
-        )}
-        
-        {onClick && !isOverBudget && (
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        )}
+        <div className="flex items-center gap-2">
+          {isOverBudget && (
+            <div className="flex items-center gap-1 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-xs font-medium">Over budget</span>
+            </div>
+          )}
+          
+          {onClick && (
+            <div className="flex items-center gap-1 p-1.5 rounded-md hover:bg-accent/10 transition-colors">
+              <Edit2 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground hidden sm:inline">Edit</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Progress bar */}
