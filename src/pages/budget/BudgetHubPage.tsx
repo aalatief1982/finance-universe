@@ -259,7 +259,6 @@ const BudgetHubPage = () => {
                       budget={budget}
                       progress={budget.progress}
                       targetName={getTargetName(budget)}
-                      showPeriod={periodFilter === 'all'}
                       onClick={() => navigate(`/budget/set?edit=${budget.id}`)}
                     />
                   ))}
@@ -280,7 +279,6 @@ const BudgetHubPage = () => {
                       budget={budget}
                       progress={budget.progress}
                       targetName={getTargetName(budget)}
-                      showPeriod={periodFilter === 'all'}
                       onClick={() => navigate(`/budget/set?edit=${budget.id}`)}
                     />
                   ))}
@@ -301,7 +299,6 @@ const BudgetHubPage = () => {
                       budget={budget}
                       progress={budget.progress}
                       targetName={getTargetName(budget)}
-                      showPeriod={periodFilter === 'all'}
                       compact
                       onClick={() => navigate(`/budget/set?edit=${budget.id}`)}
                     />

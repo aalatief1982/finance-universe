@@ -21,6 +21,7 @@ interface BudgetProgressCardProps {
   targetName: string;
   onClick?: () => void;
   showPeriod?: boolean;
+  showScope?: boolean;
   compact?: boolean;
 }
 
@@ -31,16 +32,36 @@ const scopeIcons: Record<BudgetScope, React.ElementType> = {
   subcategory: Tags,
 };
 
+const scopeLabels: Record<BudgetScope, string> = {
+  overall: 'Overall',
+  account: 'Account',
+  category: 'Category',
+  subcategory: 'Subcategory',
+};
+
 export function BudgetProgressCard({
   budget,
   progress,
   targetName,
   onClick,
-  showPeriod = false,
+  showPeriod = true,  // Default to true - always show period
+  showScope = true,   // Default to true - always show scope
   compact = false,
 }: BudgetProgressCardProps) {
   const Icon = scopeIcons[budget.scope];
   const { spent, budgeted, percentUsed, remaining, isOverBudget, daysRemaining, dailyBudgetRemaining } = progress;
+  
+  // Build dimension label (e.g., "Category • Monthly" or "Subcategory • Q1 2024")
+  const dimensionLabel = React.useMemo(() => {
+    const parts: string[] = [];
+    if (showScope && budget.scope !== 'overall') {
+      parts.push(scopeLabels[budget.scope]);
+    }
+    if (showPeriod) {
+      parts.push(getPeriodLabel(budget.period));
+    }
+    return parts.join(' • ');
+  }, [budget.scope, budget.period, showScope, showPeriod]);
 
   // Determine progress bar color
   const getProgressColor = () => {
@@ -73,7 +94,7 @@ export function BudgetProgressCard({
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-0.5">
             <span className="font-medium text-sm truncate">{targetName}</span>
             <span className={cn(
               "text-sm font-medium",
@@ -82,6 +103,9 @@ export function BudgetProgressCard({
               {Math.round(percentUsed)}%
             </span>
           </div>
+          {dimensionLabel && (
+            <span className="text-xs text-muted-foreground">{dimensionLabel}</span>
+          )}
           
           <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
             <div 
@@ -118,9 +142,9 @@ export function BudgetProgressCard({
           </div>
           <div>
             <h3 className="font-semibold text-foreground">{targetName}</h3>
-            {showPeriod && (
+            {dimensionLabel && (
               <span className="text-xs text-muted-foreground">
-                {getPeriodLabel(budget.period)}
+                {dimensionLabel}
               </span>
             )}
           </div>
