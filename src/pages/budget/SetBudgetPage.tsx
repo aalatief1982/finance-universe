@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatCurrency } from '@/utils/format-utils';
 import { budgetService } from '@/services/BudgetService';
+import { findParentPeriodBudget, calculateDerivedBudgetAmount } from '@/services/BudgetHierarchyService';
 import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { Budget, BudgetScope, BudgetPeriod, DEFAULT_ALERT_THRESHOLDS, CreateBudgetInput } from '@/models/budget';
@@ -184,6 +185,39 @@ const SetBudgetPage = () => {
            b.id !== editId
     );
   }, [scope, targetId, period, year, periodIndex, existingBudgets, editId]);
+
+  // Check for parent period budget and calculate if current amount exceeds allocation
+  const parentPeriodWarning = React.useMemo(() => {
+    if (amount <= 0) return null;
+    
+    const currentConfig = {
+      scope,
+      targetId: scope === 'overall' ? '_overall' : targetId,
+      period,
+      year,
+      periodIndex: period === 'yearly' ? undefined : periodIndex,
+    };
+    
+    const parentBudget = findParentPeriodBudget(currentConfig, existingBudgets);
+    if (!parentBudget) return null;
+    
+    const derivedAmount = calculateDerivedBudgetAmount(
+      parentBudget,
+      period,
+      periodIndex,
+      year
+    );
+    
+    if (amount > derivedAmount) {
+      return {
+        parentBudget,
+        derivedAmount,
+        excess: amount - derivedAmount,
+      };
+    }
+    
+    return null;
+  }, [scope, targetId, period, year, periodIndex, amount, existingBudgets]);
 
   // Get target name for display
   const getTargetName = (id: string) => {
@@ -525,6 +559,23 @@ const SetBudgetPage = () => {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Parent Period Warning */}
+            {parentPeriodWarning && (
+              <Alert className="mt-4" variant="default">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-sm">
+                  <span className="font-medium text-amber-600">Exceeds parent budget allocation</span>
+                  <br />
+                  <span className="text-muted-foreground">
+                    Your {parentPeriodWarning.parentBudget.period} budget of{' '}
+                    <strong>{formatCurrency(parentPeriodWarning.parentBudget.amount, currency)}</strong>{' '}
+                    suggests ~<strong>{formatCurrency(parentPeriodWarning.derivedAmount, currency)}</strong> for this period.
+                    You're over by {formatCurrency(parentPeriodWarning.excess, currency)}.
+                  </span>
+                </AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
