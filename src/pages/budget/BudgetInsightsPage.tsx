@@ -12,7 +12,7 @@ import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { Budget } from '@/models/budget';
 import { formatCurrency } from '@/utils/format-utils';
-import { getPeriodLabel, getCurrentPeriodDates, getTotalDaysInPeriod, getDaysRemainingInPeriod } from '@/utils/budget-period-utils';
+import { getPeriodLabel, getCurrentPeriodDates, getTotalDaysInPeriod, getDaysRemainingInPeriod, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { differenceInDays, format, parseISO, subDays } from 'date-fns';
 import { 
   TrendingUp, 
@@ -43,10 +43,18 @@ const BudgetInsightsPage = () => {
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
-  const getTargetName = (b: Budget) => {
+  // Get display name with period (e.g., "Food • Jan 2026" or just "Jan 2026" for overall)
+  const getBudgetDisplayName = (b: Budget) => {
+    const periodName = formatPeriodLabel(b.period, b.year, b.periodIndex);
+    
+    if (b.scope === 'overall') {
+      return periodName; // Just "Jan 2026", "Q1 2026", etc.
+    }
+    
     const all = [...accounts, ...categories];
     const t = all.find((a: any) => a.id === b.targetId);
-    return t ? (t as any).name : b.targetId;
+    const scopeName = t ? (t as any).name : b.targetId;
+    return `${scopeName} • ${periodName}`;
   };
 
   // Generate insights
@@ -55,7 +63,7 @@ const BudgetInsightsPage = () => {
 
     budgets.forEach(budget => {
       const progress = budgetService.getBudgetProgress(budget);
-      const targetName = getTargetName(budget);
+      const targetName = getBudgetDisplayName(budget);
       const periodDates = getCurrentPeriodDates(budget.period);
       const totalDays = getTotalDaysInPeriod(periodDates.start, periodDates.end);
       const daysPassed = totalDays - progress.daysRemaining;
@@ -67,7 +75,7 @@ const BudgetInsightsPage = () => {
           id: `${budget.id}_over`,
           type: 'danger',
           title: `${targetName} Over Budget`,
-          description: `You've exceeded your ${targetName} budget by ${formatCurrency(Math.abs(progress.remaining), budget.currency)}. Consider reviewing your spending or adjusting the budget.`,
+          description: `You've exceeded your budget by ${formatCurrency(Math.abs(progress.remaining), budget.currency)}. Consider reviewing your spending or adjusting the budget.`,
           action: { label: 'View Details', path: `/budget/${budget.id}` },
           budgetId: budget.id,
         });
@@ -78,7 +86,7 @@ const BudgetInsightsPage = () => {
           id: `${budget.id}_warning`,
           type: 'warning',
           title: `${targetName} Approaching Limit`,
-          description: `You've used ${Math.round(progress.percentUsed)}% of your ${targetName} budget with ${progress.daysRemaining} days remaining. You have ${formatCurrency(progress.remaining, budget.currency)} left.`,
+          description: `You've used ${Math.round(progress.percentUsed)}% of your budget with ${progress.daysRemaining} days remaining. You have ${formatCurrency(progress.remaining, budget.currency)} left.`,
           action: { label: 'View Details', path: `/budget/${budget.id}` },
           budgetId: budget.id,
         });
@@ -89,7 +97,7 @@ const BudgetInsightsPage = () => {
           id: `${budget.id}_ahead`,
           type: 'warning',
           title: `${targetName} Spending Ahead`,
-          description: `Your ${targetName} spending is ${Math.round(progress.percentUsed - expectedPercent)}% ahead of target pace. At this rate, you may exceed your budget.`,
+          description: `Your spending is ${Math.round(progress.percentUsed - expectedPercent)}% ahead of target pace. At this rate, you may exceed your budget.`,
           action: { label: 'View Trend', path: `/budget/${budget.id}` },
           budgetId: budget.id,
         });
@@ -100,7 +108,7 @@ const BudgetInsightsPage = () => {
           id: `${budget.id}_good`,
           type: 'success',
           title: `${targetName} On Track`,
-          description: `Great job! Your ${targetName} spending is ${Math.round(expectedPercent - progress.percentUsed)}% below target pace. Keep it up!`,
+          description: `Great job! Your spending is ${Math.round(expectedPercent - progress.percentUsed)}% below target pace. Keep it up!`,
           budgetId: budget.id,
         });
       }
@@ -110,7 +118,7 @@ const BudgetInsightsPage = () => {
           id: `${budget.id}_under`,
           type: 'info',
           title: `${targetName} Under-Utilized`,
-          description: `You've only spent ${Math.round(progress.percentUsed)}% of your ${targetName} budget. Consider if this budget amount is realistic or if you're missing transactions.`,
+          description: `You've only spent ${Math.round(progress.percentUsed)}% of your budget. Consider if this budget amount is realistic or if you're missing transactions.`,
           budgetId: budget.id,
         });
       }
