@@ -23,8 +23,6 @@ export const routeTitleMap: Record<string, string> = {
   "/budget/set": "Set Budget",
   "/budget/report": "Budget vs Actual",
   "/budget/insights": "Suggestions & Insights",
-  "/dev/template-health": "Template Health",
-  "/dev/template-failures": "Template Failures",
 };
 
 // Navigation items that appear in the header
@@ -81,20 +79,6 @@ export const getNavItems = () => {
     },
   ];
 
-  if (import.meta.env.MODE === 'development') {
-    items.push({
-      title: "Template Health",
-      path: "/dev/template-health",
-      icon: "Activity",
-      description: "Template usage metrics",
-    });
-    items.push({
-      title: "Template Failures",
-      path: "/dev/template-failures",
-      icon: "Bug",
-      description: "Failed template logs",
-    });
-  }
 
   return items;
 };
