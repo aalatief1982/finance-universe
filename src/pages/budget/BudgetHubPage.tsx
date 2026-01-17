@@ -197,6 +197,7 @@ const BudgetHubPage = () => {
                   progress={overallBudget.progress}
                   currency={overallBudget.currency}
                   size="lg"
+                  dimensionLabel={`Overall • ${overallBudget.period.charAt(0).toUpperCase() + overallBudget.period.slice(1)}`}
                 />
 
               </div>
@@ -205,13 +206,13 @@ const BudgetHubPage = () => {
             {/* Yearly Budget Ring (for non-overall yearly budgets) */}
             {(yearlyBudgets.length > 0 || (overallProgress && !overallBudget)) && (
               <div className="bg-card rounded-xl p-6 border">
-                <h2 className="text-sm font-medium text-muted-foreground mb-4 text-center">
-                  Yearly Spending
-                </h2>
                 <OverallBudgetRing
                   progress={yearlyBudgets[0]?.progress || overallProgress}
                   currency={yearlyBudgets[0]?.currency || 'USD'}
                   size="lg"
+                  dimensionLabel={yearlyBudgets[0] 
+                    ? `${getTargetName(yearlyBudgets[0])} • Yearly` 
+                    : 'Overall • Yearly'}
                 />
               </div>
             )}

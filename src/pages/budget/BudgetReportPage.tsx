@@ -46,10 +46,31 @@ const BudgetReportPage = () => {
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
-  const getTargetName = (b: Budget) => {
-    const all = [...accounts, ...categories];
-    const t = all.find((a: any) => a.id === b.targetId);
-    return t ? (t as any).name : b.targetId;
+  // Get display name with scope and period for clarity
+  const getBudgetDisplayName = (b: Budget) => {
+    const periodLabels: Record<string, string> = {
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      quarterly: 'Quarterly',
+      yearly: 'Yearly',
+    };
+    const scopeLabels: Record<string, string> = {
+      overall: 'Overall',
+      category: 'Category',
+      subcategory: 'Subcategory',
+      account: 'Account',
+    };
+    
+    let name = '';
+    if (b.scope === 'overall') {
+      name = 'Overall';
+    } else {
+      const all = [...accounts, ...categories];
+      const t = all.find((a: any) => a.id === b.targetId);
+      name = t ? (t as any).name : b.targetId;
+    }
+    
+    return `${name} (${periodLabels[b.period] || b.period})`;
   };
 
   // Calculate budget vs actual data
@@ -59,7 +80,7 @@ const BudgetReportPage = () => {
       .map(budget => {
         const progress = budgetService.getBudgetProgress(budget);
         return {
-          name: getTargetName(budget),
+          name: getBudgetDisplayName(budget),
           budget: budget.amount,
           spent: progress.spent,
           remaining: Math.max(0, progress.remaining),
@@ -126,7 +147,7 @@ const BudgetReportPage = () => {
     return categoryBudgets.map((budget, index) => {
       const progress = budgetService.getBudgetProgress(budget);
       return {
-        name: getTargetName(budget),
+        name: getBudgetDisplayName(budget),
         value: progress.spent,
         budget: budget.amount,
         fill: CHART_COLORS[index % CHART_COLORS.length],

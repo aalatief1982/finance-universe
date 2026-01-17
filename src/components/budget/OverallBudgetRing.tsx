@@ -10,6 +10,8 @@ interface OverallBudgetRingProps {
   size?: 'sm' | 'md' | 'lg';
   showLabels?: boolean;
   className?: string;
+  /** Display label for the budget dimension, e.g., "Overall • Monthly" */
+  dimensionLabel?: string;
 }
 
 const sizeConfig = {
@@ -24,6 +26,7 @@ export function OverallBudgetRing({
   size = 'md',
   showLabels = true,
   className,
+  dimensionLabel,
 }: OverallBudgetRingProps) {
   const config = sizeConfig[size];
   
@@ -98,6 +101,12 @@ export function OverallBudgetRing({
       
       {showLabels && (
         <div className="mt-3 text-center space-y-1">
+          {/* Dimension label - shows what this budget represents */}
+          {dimensionLabel && (
+            <div className="text-xs font-medium text-primary bg-primary/10 px-3 py-1 rounded-full inline-block mb-2">
+              {dimensionLabel}
+            </div>
+          )}
           <div className="flex items-center justify-center gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Spent: </span>
