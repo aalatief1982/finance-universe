@@ -1,28 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { BudgetLayout } from '@/components/budget/BudgetLayout';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { useTransactions } from '@/context/TransactionContext';
 import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { Budget } from '@/models/budget';
 import { formatCurrency } from '@/utils/format-utils';
-import { getPeriodLabel, getCurrentPeriodDates, getTotalDaysInPeriod, getDaysRemainingInPeriod, formatPeriodLabel } from '@/utils/budget-period-utils';
-import { differenceInDays, format, parseISO, subDays } from 'date-fns';
+import { getCurrentPeriodDates, getTotalDaysInPeriod, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { 
-  TrendingUp, 
-  TrendingDown, 
   AlertTriangle, 
   Lightbulb,
-  Target,
-  Calendar,
   ArrowRight,
-  Clock,
   CheckCircle2,
   XCircle
 } from 'lucide-react';
@@ -38,17 +28,16 @@ interface Insight {
 
 const BudgetInsightsPage = () => {
   const navigate = useNavigate();
-  const { transactions } = useTransactions();
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
-  // Get display name with period (e.g., "Food • Jan 2026" or just "Jan 2026" for overall)
+  // Get display name with period
   const getBudgetDisplayName = (b: Budget) => {
     const periodName = formatPeriodLabel(b.period, b.year, b.periodIndex);
     
     if (b.scope === 'overall') {
-      return periodName; // Just "Jan 2026", "Q1 2026", etc.
+      return periodName;
     }
     
     const all = [...accounts, ...categories];
@@ -211,117 +200,80 @@ const BudgetInsightsPage = () => {
   }, [budgets]);
 
   return (
-    <Layout showBack>
-      <div className="container px-4 py-6 pb-24 space-y-6 max-w-lg mx-auto">
-        <div>
-          <h1 className="text-2xl font-bold">Budget Insights</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Smart analysis of your spending patterns
-          </p>
+    <BudgetLayout 
+      title="Insights" 
+      description="Smart analysis of your spending patterns"
+      showPeriodFilter={false}
+      showAddButton={false}
+    >
+      {/* Summary Cards */}
+      {budgets.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <Card className={summaryStats.onTrack > 0 ? 'border-green-500/30' : ''}>
+            <CardContent className="pt-4 pb-3 text-center">
+              <div className="text-2xl font-bold text-green-500">{summaryStats.onTrack}</div>
+              <div className="text-xs text-muted-foreground">On Track</div>
+            </CardContent>
+          </Card>
+          <Card className={summaryStats.atRisk > 0 ? 'border-amber-500/30' : ''}>
+            <CardContent className="pt-4 pb-3 text-center">
+              <div className="text-2xl font-bold text-amber-500">{summaryStats.atRisk}</div>
+              <div className="text-xs text-muted-foreground">At Risk</div>
+            </CardContent>
+          </Card>
+          <Card className={summaryStats.overBudget > 0 ? 'border-destructive/30' : ''}>
+            <CardContent className="pt-4 pb-3 text-center">
+              <div className="text-2xl font-bold text-destructive">{summaryStats.overBudget}</div>
+              <div className="text-xs text-muted-foreground">Over Budget</div>
+            </CardContent>
+          </Card>
         </div>
+      )}
 
-        {/* Summary Cards */}
-        {budgets.length > 0 && (
-          <div className="grid grid-cols-3 gap-3">
-            <Card className={summaryStats.onTrack > 0 ? 'border-green-500/30' : ''}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <div className="text-2xl font-bold text-green-500">{summaryStats.onTrack}</div>
-                <div className="text-xs text-muted-foreground">On Track</div>
-              </CardContent>
-            </Card>
-            <Card className={summaryStats.atRisk > 0 ? 'border-amber-500/30' : ''}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <div className="text-2xl font-bold text-amber-500">{summaryStats.atRisk}</div>
-                <div className="text-xs text-muted-foreground">At Risk</div>
-              </CardContent>
-            </Card>
-            <Card className={summaryStats.overBudget > 0 ? 'border-destructive/30' : ''}>
-              <CardContent className="pt-4 pb-3 text-center">
-                <div className="text-2xl font-bold text-destructive">{summaryStats.overBudget}</div>
-                <div className="text-xs text-muted-foreground">Over Budget</div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Insights */}
-        <div className="space-y-3">
-          {insights.map(insight => (
-            <Card key={insight.id} className={getCardStyle(insight.type)}>
-              <CardContent className="pt-4 pb-4">
-                <div className="flex gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    {getIcon(insight.type)}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <h3 className="font-medium">{insight.title}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {insight.description}
-                    </p>
-                    {insight.action && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="mt-2"
-                        onClick={() => navigate(insight.action!.path)}
-                      >
-                        {insight.action.label}
-                        <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                      </Button>
-                    )}
-                  </div>
+      {/* Insights */}
+      <div className="space-y-3">
+        {insights.map(insight => (
+          <Card key={insight.id} className={getCardStyle(insight.type)}>
+            <CardContent className="pt-4 pb-4">
+              <div className="flex gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  {getIcon(insight.type)}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="flex-1 space-y-2">
+                  <h3 className="font-medium">{insight.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {insight.description}
+                  </p>
+                  {insight.action && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => navigate(insight.action!.path)}
+                    >
+                      {insight.action.label}
+                      <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
 
-          {insights.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                <h3 className="font-medium text-lg">All budgets look good!</h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  No issues or suggestions at the moment.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button 
-              variant="outline" 
-              className="w-full justify-between"
-              onClick={() => navigate('/budget')}
-            >
-              <span>View All Budgets</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-between"
-              onClick={() => navigate('/budget/report')}
-            >
-              <span>View Reports</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              className="w-full justify-between"
-              onClick={() => navigate('/budget/set')}
-            >
-              <span>Create New Budget</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
+        {insights.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <h3 className="font-medium text-lg">All budgets look good!</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                No issues or suggestions at the moment.
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
-    </Layout>
+    </BudgetLayout>
   );
 };
 

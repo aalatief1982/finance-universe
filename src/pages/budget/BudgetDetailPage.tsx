@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
+import { BudgetBreadcrumb } from '@/components/budget/BudgetBreadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +11,7 @@ import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { formatCurrency } from '@/utils/format-utils';
-import { formatPeriodRange, getPeriodLabel } from '@/utils/budget-period-utils';
+import { formatPeriodRange, getPeriodLabel, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { SpendingTrendChart } from '@/components/budget/SpendingTrendChart';
 import { BudgetProgressCard } from '@/components/budget/BudgetProgressCard';
 import { cn } from '@/lib/utils';
@@ -105,9 +106,22 @@ const BudgetDetailPage = () => {
     return 'bg-primary';
   };
 
+  // Build breadcrumb items
+  const breadcrumbItems = React.useMemo(() => {
+    const periodLabel = formatPeriodLabel(budget.period, budget.year, budget.periodIndex);
+    return [
+      { label: 'Budgets', path: '/budget' },
+      { label: periodLabel, path: '/budget' },
+      { label: targetName },
+    ];
+  }, [budget, targetName]);
+
   return (
     <Layout showBack>
       <div className="container px-4 py-6 pb-24 space-y-6 max-w-2xl mx-auto">
+        {/* Breadcrumb */}
+        <BudgetBreadcrumb items={breadcrumbItems} className="mb-2" />
+
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>

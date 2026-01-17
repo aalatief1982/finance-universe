@@ -1,10 +1,10 @@
 import React from 'react';
-import Layout from '@/components/Layout';
+import { BudgetLayout } from '@/components/budget/BudgetLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -111,7 +111,6 @@ const AccountsPage = () => {
       return;
     }
 
-    // Check for duplicate names (excluding current account when editing)
     const existingAccount = accountService.getAccountByName(form.name);
     if (existingAccount && existingAccount.id !== editingAccount?.id) {
       toast({ title: 'An account with this name already exists', variant: 'destructive' });
@@ -119,11 +118,9 @@ const AccountsPage = () => {
     }
 
     if (editingAccount) {
-      // Update
       accountService.updateAccount(editingAccount.id, form);
       toast({ title: 'Account updated successfully' });
     } else {
-      // Create
       const newAccount: Account = { id: uuidv4(), ...form };
       accountService.addAccount(newAccount);
       toast({ title: 'Account created successfully' });
@@ -173,138 +170,135 @@ const AccountsPage = () => {
     return accountService.getLinkedTransactionCount(account.id);
   };
 
+  const headerActions = (
+    <Button size="sm" onClick={openAddDialog}>
+      <Plus className="h-4 w-4 mr-1" />
+      Add
+    </Button>
+  );
+
   return (
-    <Layout showBack>
-      <div className="container px-4 py-6 pb-24 space-y-6 max-w-lg mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Accounts</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage your financial accounts
+    <BudgetLayout 
+      title="Accounts" 
+      description="Manage your financial accounts"
+      showPeriodFilter={false}
+      showAddButton={false}
+      headerActions={headerActions}
+    >
+      {/* Unmanaged Accounts Alert */}
+      {unmanagedAccounts.length > 0 && (
+        <Alert className="border-amber-500/50 bg-amber-500/5 mb-6">
+          <AlertTriangle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="ml-2">
+            <p className="font-medium text-amber-600 mb-2">
+              {unmanagedAccounts.length} account{unmanagedAccounts.length > 1 ? 's' : ''} found in transactions but not managed
             </p>
-          </div>
-          <Button onClick={openAddDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add
-          </Button>
-        </div>
+            <div className="flex flex-wrap gap-2">
+              {unmanagedAccounts.slice(0, 5).map(name => (
+                <Badge
+                  key={name}
+                  variant="outline"
+                  className="cursor-pointer hover:bg-amber-500/10"
+                  onClick={() => handleImportUnmanaged(name)}
+                >
+                  {name}
+                  <Plus className="h-3 w-3 ml-1" />
+                </Badge>
+              ))}
+              {unmanagedAccounts.length > 5 && (
+                <Badge variant="outline">+{unmanagedAccounts.length - 5} more</Badge>
+              )}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {/* Unmanaged Accounts Alert */}
-        {unmanagedAccounts.length > 0 && (
-          <Alert className="border-amber-500/50 bg-amber-500/5">
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
-            <AlertDescription className="ml-2">
-              <p className="font-medium text-amber-600 mb-2">
-                {unmanagedAccounts.length} account{unmanagedAccounts.length > 1 ? 's' : ''} found in transactions but not managed
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {unmanagedAccounts.slice(0, 5).map(name => (
-                  <Badge
-                    key={name}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-amber-500/10"
-                    onClick={() => handleImportUnmanaged(name)}
-                  >
-                    {name}
-                    <Plus className="h-3 w-3 ml-1" />
-                  </Badge>
-                ))}
-                {unmanagedAccounts.length > 5 && (
-                  <Badge variant="outline">+{unmanagedAccounts.length - 5} more</Badge>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Accounts List */}
-        {accounts.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-medium text-lg mb-2">No accounts yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Add your bank accounts, cash, crypto wallets and more.
-              </p>
-              <Button onClick={openAddDialog}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Account
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {accounts.map(acc => {
-              const Icon = ACCOUNT_ICONS[acc.type] || Wallet;
-              const balance = getAccountBalance(acc);
-              const txCount = getLinkedCountForAccount(acc);
-              
-              return (
-                <Card key={acc.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2.5 rounded-full bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" />
+      {/* Accounts List */}
+      {accounts.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="font-medium text-lg mb-2">No accounts yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Add your bank accounts, cash, crypto wallets and more.
+            </p>
+            <Button onClick={openAddDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Account
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {accounts.map(acc => {
+            const Icon = ACCOUNT_ICONS[acc.type] || Wallet;
+            const balance = getAccountBalance(acc);
+            const txCount = getLinkedCountForAccount(acc);
+            
+            return (
+              <Card key={acc.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="pt-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2.5 rounded-full bg-primary/10">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold truncate">{acc.name}</h3>
+                        <div className="flex items-center gap-1 ml-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => openEditDialog(acc)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => openDeleteDialog(acc)}
+                            disabled={txCount > 0}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold truncate">{acc.name}</h3>
-                          <div className="flex items-center gap-1 ml-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openEditDialog(acc)}
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => openDeleteDialog(acc)}
-                              disabled={txCount > 0}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {acc.type}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {acc.currency}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Current Balance</p>
+                          <p className={cn(
+                            "font-semibold",
+                            balance < 0 ? "text-destructive" : "text-foreground"
+                          )}>
+                            {formatCurrency(balance, acc.currency)}
+                          </p>
                         </div>
-                        
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {acc.type}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {acc.currency}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Current Balance</p>
-                            <p className={cn(
-                              "font-semibold",
-                              balance < 0 ? "text-destructive" : "text-foreground"
-                            )}>
-                              {formatCurrency(balance, acc.currency)}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs text-muted-foreground">Transactions</p>
-                            <p className="font-medium text-sm">{txCount}</p>
-                          </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">Transactions</p>
+                          <p className="font-medium text-sm">{txCount}</p>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -433,7 +427,7 @@ const AccountsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+    </BudgetLayout>
   );
 };
 
