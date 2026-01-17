@@ -2,8 +2,7 @@ import React, { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Plus, Settings, BarChart3, Lightbulb, ChevronRight, PiggyBank, AlertTriangle } from 'lucide-react';
+import { Plus, Settings, BarChart3, Lightbulb, ChevronRight, PiggyBank } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useBudgetsWithProgress, useBudgetAlerts, useOverallBudgetProgress } from '@/hooks/useBudgets';
 import { BudgetPeriod } from '@/models/budget';
@@ -83,30 +82,8 @@ const BudgetHubPage = () => {
     return groups;
   }, [otherBudgets]);
 
-  // Calculate allocation status for overall budget
-  const allocationStatus = useMemo(() => {
-    if (!overallBudget) return null;
-    
-    // Get all category budgets for the same period
-    const categoryBudgets = budgetsWithProgress.filter(
-      b => b.scope === 'category' && 
-           b.period === overallBudget.period && 
-           b.year === overallBudget.year &&
-           (overallBudget.period === 'yearly' || b.periodIndex === overallBudget.periodIndex)
-    );
-    
-    const allocatedAmount = categoryBudgets.reduce((sum, b) => sum + b.amount, 0);
-    const unallocatedAmount = overallBudget.amount - allocatedAmount;
-    const allocationPercent = overallBudget.amount > 0 ? (allocatedAmount / overallBudget.amount) * 100 : 0;
-    
-    return {
-      allocatedAmount,
-      unallocatedAmount,
-      allocationPercent,
-      isOverAllocated: allocatedAmount > overallBudget.amount,
-      categoryCount: categoryBudgets.length,
-    };
-  }, [overallBudget, budgetsWithProgress]);
+  // Note: Scope types (overall, category, subcategory, account) are independent
+  // Distribution only happens across time periods (yearly → quarterly → monthly → weekly)
 
   const hasAnyBudgets = budgetsWithProgress.length > 0;
 
@@ -216,39 +193,6 @@ const BudgetHubPage = () => {
                   size="lg"
                 />
 
-                {/* Allocation Status */}
-                {allocationStatus && (
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="text-muted-foreground">Allocated to categories</span>
-                      <span className={cn(
-                        "font-medium",
-                        allocationStatus.isOverAllocated && "text-destructive"
-                      )}>
-                        {formatCurrency(allocationStatus.allocatedAmount, overallBudget.currency)}
-                        {' / '}
-                        {formatCurrency(overallBudget.amount, overallBudget.currency)}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={Math.min(allocationStatus.allocationPercent, 100)} 
-                      className={cn(
-                        "h-2",
-                        allocationStatus.isOverAllocated && "[&>div]:bg-destructive"
-                      )}
-                    />
-                    {allocationStatus.isOverAllocated ? (
-                      <div className="flex items-center gap-1 mt-2 text-xs text-destructive">
-                        <AlertTriangle className="h-3 w-3" />
-                        <span>Over-allocated by {formatCurrency(Math.abs(allocationStatus.unallocatedAmount), overallBudget.currency)}</span>
-                      </div>
-                    ) : allocationStatus.unallocatedAmount > 0 ? (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {formatCurrency(allocationStatus.unallocatedAmount, overallBudget.currency)} unallocated
-                      </p>
-                    ) : null}
-                  </div>
-                )}
               </div>
             )}
 

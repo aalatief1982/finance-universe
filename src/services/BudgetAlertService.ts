@@ -141,84 +141,14 @@ export class BudgetAlertService {
   }
 
   /**
-   * Get allocation alerts for scope hierarchy
+   * Get allocation alerts for time-based hierarchy
+   * Note: Scope types (overall, category, subcategory, account) are independent
+   * Distribution only happens across time periods (yearly → quarterly → monthly → weekly)
    */
   getAllocationAlerts(): AllocationAlert[] {
-    const budgets = budgetService.getBudgets();
-    const alerts: AllocationAlert[] = [];
-
-    // Find overall budgets and check allocation to categories
-    const overallBudgets = budgets.filter(b => b.scope === 'overall' && b.isActive);
-    
-    for (const overallBudget of overallBudgets) {
-      // Find category budgets for the same period
-      const categoryBudgets = budgets.filter(
-        b => b.scope === 'category' && 
-             b.period === overallBudget.period &&
-             b.year === overallBudget.year &&
-             (overallBudget.period === 'yearly' || b.periodIndex === overallBudget.periodIndex) &&
-             b.isActive
-      );
-
-      const totalAllocated = categoryBudgets.reduce((sum, b) => sum + b.amount, 0);
-      const difference = totalAllocated - overallBudget.amount;
-
-      if (difference > 0) {
-        // Over-allocation
-        alerts.push({
-          type: 'over-allocation',
-          parentBudget: overallBudget,
-          totalAllocated,
-          difference,
-          childBudgets: categoryBudgets,
-          severity: 'danger',
-          message: `Category budgets exceed Overall budget by ${Math.abs(difference).toFixed(2)} ${overallBudget.currency}`,
-        });
-      } else if (difference < -overallBudget.amount * 0.2) {
-        // Under-allocation (more than 20% unallocated)
-        alerts.push({
-          type: 'under-allocation',
-          parentBudget: overallBudget,
-          totalAllocated,
-          difference: Math.abs(difference),
-          childBudgets: categoryBudgets,
-          severity: 'warning',
-          message: `You have ${Math.abs(difference).toFixed(2)} ${overallBudget.currency} unallocated from your Overall budget`,
-        });
-      }
-    }
-
-    // Find category budgets and check allocation to subcategories
-    const categoryBudgets = budgets.filter(b => b.scope === 'category' && b.isActive);
-    
-    for (const categoryBudget of categoryBudgets) {
-      const subcategoryBudgets = budgets.filter(
-        b => b.scope === 'subcategory' && 
-             b.period === categoryBudget.period &&
-             b.year === categoryBudget.year &&
-             (categoryBudget.period === 'yearly' || b.periodIndex === categoryBudget.periodIndex) &&
-             b.isActive
-      );
-
-      if (subcategoryBudgets.length === 0) continue;
-
-      const totalAllocated = subcategoryBudgets.reduce((sum, b) => sum + b.amount, 0);
-      const difference = totalAllocated - categoryBudget.amount;
-
-      if (difference > 0) {
-        alerts.push({
-          type: 'over-allocation',
-          parentBudget: categoryBudget,
-          totalAllocated,
-          difference,
-          childBudgets: subcategoryBudgets,
-          severity: 'danger',
-          message: `Subcategory budgets exceed category budget by ${Math.abs(difference).toFixed(2)} ${categoryBudget.currency}`,
-        });
-      }
-    }
-
-    return alerts;
+    // Time-based distribution validation could be added here if needed
+    // For now, scope-based allocation alerts are disabled as scopes are independent
+    return [];
   }
 
   /**
