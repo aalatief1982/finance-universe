@@ -14,7 +14,7 @@ import { formatCurrency } from '@/utils/format-utils';
 import { budgetService } from '@/services/BudgetService';
 import { findParentPeriodBudget, calculateDerivedBudgetAmount } from '@/services/BudgetHierarchyService';
 import { accountService } from '@/services/AccountService';
-import { transactionService } from '@/services/TransactionService';
+import { getCategoryHierarchy } from '@/lib/categories-data';
 import { Budget, BudgetScope, BudgetPeriod, DEFAULT_ALERT_THRESHOLDS, CreateBudgetInput } from '@/models/budget';
 import { getCurrentPeriodInfo, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { CURRENCIES } from '@/lib/categories-data';
@@ -120,17 +120,28 @@ const SetBudgetPage = () => {
 
   // Data
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
-  const categories = React.useMemo(() => transactionService.getCategories(), []);
   const existingBudgets = React.useMemo(() => budgetService.getBudgets(), []);
 
-  // Organize categories into hierarchy
+  // Get category hierarchy and convert to flat structure for budget selection
+  const categoryHierarchy = React.useMemo(() => getCategoryHierarchy(), []);
+  
+  // Parent categories (top-level)
   const parentCategories = React.useMemo(
-    () => categories.filter(c => !c.parentId),
-    [categories]
+    () => categoryHierarchy.map(c => ({ id: c.id, name: c.name, type: c.type })),
+    [categoryHierarchy]
   );
+  
+  // Subcategories with parent reference
   const subcategories = React.useMemo(
-    () => categories.filter(c => c.parentId),
-    [categories]
+    () => categoryHierarchy.flatMap(parent => 
+      parent.subcategories.map(sub => ({ 
+        id: sub.id, 
+        name: sub.name, 
+        parentId: parent.id,
+        parentName: parent.name
+      }))
+    ),
+    [categoryHierarchy]
   );
 
   // Get targets based on scope
@@ -143,15 +154,13 @@ const SetBudgetPage = () => {
       case 'category':
         return parentCategories.map(c => ({ id: c.id, name: c.name, parentId: null }));
       case 'subcategory':
-        return subcategories.map(c => {
-          const parent = parentCategories.find(p => p.id === c.parentId);
-          return { 
-            id: c.id, 
-            name: c.name, 
-            parentId: c.parentId,
-            parentName: parent?.name 
-          };
-        });
+        // Subcategories already have parentId and parentName from our useMemo
+        return subcategories.map(c => ({ 
+          id: c.id, 
+          name: c.name, 
+          parentId: c.parentId,
+          parentName: c.parentName 
+        }));
       default:
         return [];
     }
