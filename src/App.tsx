@@ -23,8 +23,6 @@ import ImportTransactions from './pages/ImportTransactions';
 import EditTransaction from './pages/EditTransaction';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
-import TemplateHealthDashboard from '@/pages/DevTools/TemplateHealthDashboard';
-import TemplateFailureLog from '@/pages/DevTools/TemplateFailureLog';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
 import CustomParsingRules from '@/pages/CustomParsingRules';
 import ProcessVendors from '@/pages/sms/ProcessVendors';
@@ -420,26 +418,6 @@ function AppRoutes() {
             </ErrorBoundary>
           }
         />
-        {import.meta.env.MODE === 'development' && (
-          <>
-            <Route
-              path="/dev/template-health"
-              element={
-                <ErrorBoundary name="Template Health Dashboard">
-                  <TemplateHealthDashboard />
-                </ErrorBoundary>
-              }
-            />
-            <Route
-              path="/dev/template-failures"
-              element={
-                <ErrorBoundary name="Template Failure Log">
-                  <TemplateFailureLog />
-                </ErrorBoundary>
-              }
-            />
-          </>
-        )}
         <Route
           path="/custom-parsing-rules"
           element={
