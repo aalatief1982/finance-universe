@@ -10,6 +10,7 @@ import { OverallBudgetRing } from '@/components/budget/OverallBudgetRing';
 import { BudgetProgressCard } from '@/components/budget/BudgetProgressCard';
 import { BudgetAlertBanner } from '@/components/budget/BudgetAlertBanner';
 import { formatCurrency } from '@/utils/format-utils';
+import { formatPeriodLabel } from '@/utils/budget-period-utils';
 import { accountService } from '@/services/AccountService';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { budgetService } from '@/services/BudgetService';
@@ -197,7 +198,7 @@ const BudgetHubPage = () => {
                   progress={overallBudget.progress}
                   currency={overallBudget.currency}
                   size="lg"
-                  dimensionLabel={`Overall • ${overallBudget.period.charAt(0).toUpperCase() + overallBudget.period.slice(1)}`}
+                  dimensionLabel={`Overall • ${formatPeriodLabel(overallBudget.period, overallBudget.year, overallBudget.periodIndex)}`}
                 />
 
               </div>
@@ -211,8 +212,8 @@ const BudgetHubPage = () => {
                   currency={yearlyBudgets[0]?.currency || 'USD'}
                   size="lg"
                   dimensionLabel={yearlyBudgets[0] 
-                    ? `${getTargetName(yearlyBudgets[0])} • Yearly` 
-                    : 'Overall • Yearly'}
+                    ? `${getTargetName(yearlyBudgets[0])} • ${formatPeriodLabel(yearlyBudgets[0].period, yearlyBudgets[0].year, yearlyBudgets[0].periodIndex)}` 
+                    : `Overall • ${new Date().getFullYear()}`}
                 />
               </div>
             )}
