@@ -2,7 +2,7 @@ import { safeStorage } from "@/utils/safe-storage";
 import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate, TemplateMeta } from '@/types/template';
 import { normalizeTemplateStructure } from './templateNormalizer';
-
+import { normalizeCurrencyCode } from '@/utils/currency-utils';
 const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
 
 function ensureTemplateMeta(t: SmartPasteTemplate): TemplateMeta {
@@ -235,7 +235,8 @@ export function extractTemplateStructure(
         if (!placeholders.amount && !placeholders.currency && amount && currency) {
           const numericAmount = amount.replace(/,/g, '');
           placeholders.amount = numericAmount;
-          placeholders.currency = currency;
+          // Normalize currency code to handle Arabic names like 'جنيه' -> 'EGP'
+          placeholders.currency = normalizeCurrencyCode(currency);
           replacements.push({
             start: match.index,
             end: match.index + fullMatch.length,

@@ -1,5 +1,6 @@
 import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
 import { Transaction } from '@/types/transaction';
+import { normalizeCurrencyCode } from '@/utils/currency-utils';
 
 interface SmsEntry {
   sender: string;
@@ -21,6 +22,10 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
       // Extract relevant information from the parsed result
       const { directFields, inferredFields } = parsedResult;
 
+      // Normalize currency code to handle Arabic names like 'جنيه' -> 'EGP'
+      const rawCurrency = directFields.currency?.value || inferredFields.currency?.value || 'USD';
+      const normalizedCurrency = normalizeCurrencyCode(rawCurrency);
+
       // Combine direct and inferred fields to create a transaction object
       const transaction: Transaction = {
         id: 'sms-' + Math.random().toString(36).substring(2, 15), // Generate a random ID
@@ -32,7 +37,7 @@ export function processSmsEntries(entries: SmsEntry[]): Transaction[] {
         type: (directFields.type?.value || inferredFields.type?.value || (parseFloat(directFields.amount?.value || '0') > 0 ? 'income' : 'expense')) as 'income' | 'expense',
         notes: '',
         source: 'sms-import',
-        currency: directFields.currency?.value || inferredFields.currency?.value || 'USD',
+        currency: normalizedCurrency,
         fromAccount: inferredFields.fromAccount?.value || 'Cash',
         details: {
           ...Object.fromEntries(
