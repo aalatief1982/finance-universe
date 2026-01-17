@@ -166,21 +166,18 @@ const SetBudgetPage = () => {
     }
   }, [scope, accounts, parentCategories, subcategories]);
 
-  // Calculate cascade preview for overall scope
+  // Calculate time-based cascade preview for any scope
   const cascadePreview = React.useMemo(() => {
-    if (scope !== 'overall' || amount <= 0) return null;
+    if (amount <= 0 || period !== 'yearly') return null;
     
-    const categoryCount = parentCategories.length;
-    const perCategory = categoryCount > 0 ? amount / categoryCount : 0;
+    // Show time distribution preview for yearly budgets
+    const quarterlyAmount = amount / 4;
+    const monthlyAmount = amount / 12;
     
     return {
-      categoryCount,
-      perCategory,
-      message: categoryCount > 0 
-        ? `Will distribute ~${formatCurrency(perCategory, currency)} equally to ${categoryCount} categories`
-        : 'No categories found to distribute to'
+      message: `Will distribute to ~${formatCurrency(quarterlyAmount, currency)}/quarter or ~${formatCurrency(monthlyAmount, currency)}/month`
     };
-  }, [scope, amount, parentCategories.length, currency]);
+  }, [amount, period, currency]);
 
   // Check for existing budget conflict
   const existingBudgetConflict = React.useMemo(() => {
@@ -428,7 +425,7 @@ const SetBudgetPage = () => {
                 <div>
                   <p className="text-sm font-medium text-primary">Overall Budget</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    This budget covers all your spending. Category budgets will be validated against this total.
+                    This is your total spending budget. It distributes across time periods (yearly → quarterly → monthly → weekly).
                   </p>
                 </div>
               </div>
