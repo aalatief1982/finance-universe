@@ -167,18 +167,19 @@ const SetBudgetPage = () => {
     }
   }, [scope, accounts, parentCategories, subcategories]);
 
-  // Calculate time-based cascade preview for any scope
+  // Calculate time-based cascade preview ONLY for overall + yearly scope
   const cascadePreview = React.useMemo(() => {
-    if (amount <= 0 || period !== 'yearly') return null;
+    // Only show cascade preview for overall scope and yearly period
+    if (amount <= 0 || period !== 'yearly' || scope !== 'overall') return null;
     
-    // Show time distribution preview for yearly budgets
+    // Show time distribution preview for yearly overall budgets
     const quarterlyAmount = amount / 4;
     const monthlyAmount = amount / 12;
     
     return {
       message: `Will distribute to ~${formatCurrency(quarterlyAmount, currency)}/quarter or ~${formatCurrency(monthlyAmount, currency)}/month`
     };
-  }, [amount, period, currency]);
+  }, [amount, period, currency, scope]);
 
   // Check for existing budget with same criteria (for edit/delete options)
   const existingBudgetMatch = React.useMemo(() => {
@@ -347,9 +348,9 @@ const SetBudgetPage = () => {
     navigate('/budget');
   };
 
-  // Handle save button click - show cascade confirmation for yearly budgets
+  // Handle save button click - show cascade confirmation ONLY for overall + yearly budgets
   const handleSaveClick = () => {
-    if (period === 'yearly' && !isEditMode) {
+    if (period === 'yearly' && scope === 'overall' && !isEditMode) {
       setShowCascadeConfirm(true);
     } else {
       handleSave(false);

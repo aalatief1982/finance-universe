@@ -10,8 +10,8 @@ import { OverallBudgetRing } from '@/components/budget/OverallBudgetRing';
 import { BudgetProgressCard } from '@/components/budget/BudgetProgressCard';
 import { BudgetAlertBanner } from '@/components/budget/BudgetAlertBanner';
 import { formatCurrency } from '@/utils/format-utils';
-import { transactionService } from '@/services/TransactionService';
 import { accountService } from '@/services/AccountService';
+import { getCategoryHierarchy } from '@/lib/categories-data';
 import { budgetService } from '@/services/BudgetService';
 import { cn } from '@/lib/utils';
 
@@ -35,15 +35,21 @@ const BudgetHubPage = () => {
   const { alerts, dismissAlert } = useBudgetAlerts();
   const { progress: overallProgress } = useOverallBudgetProgress();
   
-  // Get target names for display
+  // Get target names for display from category hierarchy and accounts
   const targetNames = useMemo(() => {
     const names: Record<string, string> = {};
-    const categories = transactionService.getCategories();
+    const hierarchy = getCategoryHierarchy();
     const accounts = accountService.getAccounts();
     
-    categories.forEach(c => {
-      names[c.id] = c.name;
+    // Add parent categories and subcategories
+    hierarchy.forEach(parent => {
+      names[parent.id] = parent.name;
+      parent.subcategories.forEach(sub => {
+        names[sub.id] = sub.name;
+      });
     });
+    
+    // Add accounts
     accounts.forEach(a => {
       names[a.id] = a.name;
     });
