@@ -8,7 +8,11 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { ThemeProvider } from "@/components/theme-provider";
+import { fixCorruptedCurrencyCodes } from '@/utils/migration/fixCurrencyCodes';
 import Home from './pages/Home';
+
+// Run currency code migration on app startup
+fixCorruptedCurrencyCodes();
 import Transactions from './pages/Transactions';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
