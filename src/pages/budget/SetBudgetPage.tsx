@@ -97,16 +97,17 @@ const SetBudgetPage = () => {
   const currentPeriodInfo = React.useMemo(() => getCurrentPeriodInfo('monthly'), []);
 
   // Form state
+  // Default to 'overall' scope and 'yearly' period
   const [scope, setScope] = React.useState<BudgetScope>(
-    existingBudget?.scope || prefillScope || 'category'
+    existingBudget?.scope || prefillScope || 'overall'
   );
   const [targetId, setTargetId] = React.useState(
-    existingBudget?.targetId || prefillTarget || ''
+    existingBudget?.targetId || prefillTarget || (prefillScope === 'overall' || (!prefillScope && !existingBudget) ? '_overall' : '')
   );
   const [amount, setAmount] = React.useState(existingBudget?.amount || 0);
   const [currency, setCurrency] = React.useState(existingBudget?.currency || 'USD');
   const [period, setPeriod] = React.useState<BudgetPeriod>(
-    existingBudget?.period || prefillPeriod || 'monthly'
+    existingBudget?.period || prefillPeriod || 'yearly'
   );
   const [year, setYear] = React.useState(existingBudget?.year || currentPeriodInfo.year);
   const [periodIndex, setPeriodIndex] = React.useState<number>(
@@ -179,18 +180,22 @@ const SetBudgetPage = () => {
     };
   }, [amount, period, currency]);
 
-  // Check for existing budget conflict
-  const existingBudgetConflict = React.useMemo(() => {
-    if (!targetId) return null;
+  // Check for existing budget with same criteria (for edit/delete options)
+  const existingBudgetMatch = React.useMemo(() => {
+    if (!targetId && scope !== 'overall') return null;
+    const searchTargetId = scope === 'overall' ? '_overall' : targetId;
     return existingBudgets.find(
       b => b.scope === scope && 
-           b.targetId === targetId && 
+           b.targetId === searchTargetId && 
            b.period === period &&
            b.year === year &&
            (period === 'yearly' || b.periodIndex === periodIndex) &&
            b.id !== editId
     );
   }, [scope, targetId, period, year, periodIndex, existingBudgets, editId]);
+
+  // State for cascade confirmation dialog
+  const [showCascadeConfirm, setShowCascadeConfirm] = React.useState(false);
 
   // Check for parent period budget and calculate if current amount exceeds allocation
   const parentPeriodWarning = React.useMemo(() => {
@@ -254,8 +259,51 @@ const SetBudgetPage = () => {
     );
   };
 
+  // Create cascaded budgets (quarters, months, weeks) from yearly budget
+  const createCascadedBudgets = (yearlyBudget: CreateBudgetInput) => {
+    const quarterlyAmount = yearlyBudget.amount / 4;
+    const monthlyAmount = yearlyBudget.amount / 12;
+    
+    // Create quarterly budgets
+    for (let q = 1; q <= 4; q++) {
+      budgetService.addBudget({
+        ...yearlyBudget,
+        period: 'quarterly',
+        periodIndex: q,
+        amount: quarterlyAmount,
+        isOverride: false, // Derived from parent
+        notes: `Auto-distributed from ${year} yearly budget`,
+      });
+    }
+    
+    // Create monthly budgets
+    for (let m = 1; m <= 12; m++) {
+      budgetService.addBudget({
+        ...yearlyBudget,
+        period: 'monthly',
+        periodIndex: m,
+        amount: monthlyAmount,
+        isOverride: false,
+        notes: `Auto-distributed from ${year} yearly budget`,
+      });
+    }
+    
+    // Create weekly budgets (52 weeks)
+    const weeklyAmount = yearlyBudget.amount / 52;
+    for (let w = 1; w <= 52; w++) {
+      budgetService.addBudget({
+        ...yearlyBudget,
+        period: 'weekly',
+        periodIndex: w,
+        amount: weeklyAmount,
+        isOverride: false,
+        notes: `Auto-distributed from ${year} yearly budget`,
+      });
+    }
+  };
+
   // Handle save
-  const handleSave = () => {
+  const handleSave = (cascade: boolean = false) => {
     // For overall scope, targetId is '_overall', for others require selection
     if (!targetId && scope !== 'overall') {
       toast({ title: 'Please select a target', variant: 'destructive' });
@@ -263,10 +311,6 @@ const SetBudgetPage = () => {
     }
     if (amount <= 0) {
       toast({ title: 'Please enter a valid amount', variant: 'destructive' });
-      return;
-    }
-    if (existingBudgetConflict) {
-      toast({ title: 'A budget already exists for this target and period', variant: 'destructive' });
       return;
     }
 
@@ -290,10 +334,43 @@ const SetBudgetPage = () => {
       toast({ title: 'Budget updated successfully' });
     } else {
       budgetService.addBudget(budgetData);
-      toast({ title: 'Budget created successfully' });
+      
+      // If yearly and user confirmed cascade, create child period budgets
+      if (cascade && period === 'yearly') {
+        createCascadedBudgets(budgetData);
+        toast({ title: 'Budget created with time distribution' });
+      } else {
+        toast({ title: 'Budget created successfully' });
+      }
     }
 
     navigate('/budget');
+  };
+
+  // Handle save button click - show cascade confirmation for yearly budgets
+  const handleSaveClick = () => {
+    if (period === 'yearly' && !isEditMode) {
+      setShowCascadeConfirm(true);
+    } else {
+      handleSave(false);
+    }
+  };
+
+  // Navigate to edit existing budget
+  const handleEditExisting = () => {
+    if (existingBudgetMatch) {
+      navigate(`/budget/set?edit=${existingBudgetMatch.id}`);
+    }
+  };
+
+  // Delete existing budget
+  const handleDeleteExisting = () => {
+    if (existingBudgetMatch && confirm('Are you sure you want to delete this budget?')) {
+      budgetService.deleteBudget(existingBudgetMatch.id);
+      toast({ title: 'Budget deleted' });
+      // Reset form or refresh
+      window.location.reload();
+    }
   };
 
   // Handle delete
@@ -402,13 +479,25 @@ const SetBudgetPage = () => {
                 </SelectContent>
               </Select>
 
-              {existingBudgetConflict && (
-                <Alert className="mt-3" variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    A budget already exists for{' '}
-                    <strong>{getTargetName(existingBudgetConflict.targetId)}</strong>{' '}
-                    for {formatPeriodLabel(existingBudgetConflict.period, existingBudgetConflict.year, existingBudgetConflict.periodIndex)}.
+              {/* Existing budget actions - Edit or Delete */}
+              {existingBudgetMatch && !isEditMode && (
+                <Alert className="mt-3" variant="default">
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="flex flex-col gap-2">
+                    <span>
+                      A budget already exists for{' '}
+                      <strong>{getTargetName(existingBudgetMatch.targetId)}</strong>{' '}
+                      for {formatPeriodLabel(existingBudgetMatch.period, existingBudgetMatch.year, existingBudgetMatch.periodIndex)}.
+                    </span>
+                    <div className="flex gap-2 mt-1">
+                      <Button size="sm" variant="outline" onClick={handleEditExisting}>
+                        Edit Existing
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                   </AlertDescription>
                 </Alert>
               )}
@@ -422,11 +511,29 @@ const SetBudgetPage = () => {
             <CardContent className="py-4">
               <div className="flex items-start gap-3">
                 <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
+                <div className="flex-1">
                   <p className="text-sm font-medium text-primary">Overall Budget</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     This is your total spending budget. It distributes across time periods (yearly → quarterly → monthly → weekly).
                   </p>
+                  
+                  {/* Show edit/delete for existing overall budget */}
+                  {existingBudgetMatch && !isEditMode && (
+                    <div className="mt-3 pt-3 border-t border-primary/20">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        An overall budget exists for {formatPeriodLabel(existingBudgetMatch.period, existingBudgetMatch.year, existingBudgetMatch.periodIndex)}.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={handleEditExisting}>
+                          Edit Existing
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -668,12 +775,52 @@ const SetBudgetPage = () => {
           </Button>
           <Button 
             className="flex-1"
-            onClick={handleSave}
-            disabled={!!existingBudgetConflict || (!targetId && scope !== 'overall') || amount <= 0}
+            onClick={handleSaveClick}
+            disabled={(!targetId && scope !== 'overall') || amount <= 0}
           >
             {isEditMode ? 'Update' : 'Create'} Budget
           </Button>
         </div>
+
+        {/* Cascade Confirmation Dialog for yearly budgets */}
+        {showCascadeConfirm && (
+          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
+            <Card className="max-w-md w-full">
+              <CardHeader>
+                <CardTitle>Distribute to Child Periods?</CardTitle>
+                <CardDescription>
+                  Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters, months, and weeks.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <p>• 4 quarterly budgets: ~{formatCurrency(amount / 4, currency)} each</p>
+                <p>• 12 monthly budgets: ~{formatCurrency(amount / 12, currency)} each</p>
+                <p>• 52 weekly budgets: ~{formatCurrency(amount / 52, currency)} each</p>
+              </CardContent>
+              <div className="flex gap-2 p-6 pt-0">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setShowCascadeConfirm(false);
+                    handleSave(false);
+                  }}
+                >
+                  Just Yearly
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={() => {
+                    setShowCascadeConfirm(false);
+                    handleSave(true);
+                  }}
+                >
+                  Distribute All
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </Layout>
   );
