@@ -13,7 +13,7 @@ import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { Budget, BudgetPeriod } from '@/models/budget';
 import { formatCurrency } from '@/utils/format-utils';
-import { getPeriodLabel, getCurrentPeriodDates, getPreviousPeriodDates } from '@/utils/budget-period-utils';
+import { getPeriodLabel, getCurrentPeriodDates, getPreviousPeriodDates, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { format, subMonths, eachMonthOfInterval, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import { 
   Download,
@@ -46,31 +46,21 @@ const BudgetReportPage = () => {
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
-  // Get display name with scope and period for clarity
+  // Get display name with scope and specific period instance (e.g., "Jan 2026", "Q1 2026", "Week 3")
   const getBudgetDisplayName = (b: Budget) => {
-    const periodLabels: Record<string, string> = {
-      weekly: 'Weekly',
-      monthly: 'Monthly',
-      quarterly: 'Quarterly',
-      yearly: 'Yearly',
-    };
-    const scopeLabels: Record<string, string> = {
-      overall: 'Overall',
-      category: 'Category',
-      subcategory: 'Subcategory',
-      account: 'Account',
-    };
-    
-    let name = '';
+    let scopeName = '';
     if (b.scope === 'overall') {
-      name = 'Overall';
+      scopeName = 'Overall';
     } else {
       const all = [...accounts, ...categories];
       const t = all.find((a: any) => a.id === b.targetId);
-      name = t ? (t as any).name : b.targetId;
+      scopeName = t ? (t as any).name : b.targetId;
     }
     
-    return `${name} (${periodLabels[b.period] || b.period})`;
+    // Use formatPeriodLabel for specific period names like "Jan 2026", "Q1 2026", "Week 35"
+    const periodName = formatPeriodLabel(b.period, b.year, b.periodIndex);
+    
+    return `${scopeName} • ${periodName}`;
   };
 
   // Calculate budget vs actual data
