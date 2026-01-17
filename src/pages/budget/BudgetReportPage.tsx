@@ -46,19 +46,18 @@ const BudgetReportPage = () => {
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
-  // Get display name with scope and specific period instance (e.g., "Jan 2026", "Q1 2026", "Week 3")
+  // Get display name with specific period instance (e.g., "Jan 2026", "Q1 2026", "Week 3")
   const getBudgetDisplayName = (b: Budget) => {
-    let scopeName = '';
-    if (b.scope === 'overall') {
-      scopeName = 'Overall';
-    } else {
-      const all = [...accounts, ...categories];
-      const t = all.find((a: any) => a.id === b.targetId);
-      scopeName = t ? (t as any).name : b.targetId;
-    }
-    
     // Use formatPeriodLabel for specific period names like "Jan 2026", "Q1 2026", "Week 35"
     const periodName = formatPeriodLabel(b.period, b.year, b.periodIndex);
+    
+    if (b.scope === 'overall') {
+      return periodName; // Just "Jan 2026", "Q1 2026", etc. - no "Overall" prefix
+    }
+    
+    const all = [...accounts, ...categories];
+    const t = all.find((a: any) => a.id === b.targetId);
+    const scopeName = t ? (t as any).name : b.targetId;
     
     return `${scopeName} • ${periodName}`;
   };

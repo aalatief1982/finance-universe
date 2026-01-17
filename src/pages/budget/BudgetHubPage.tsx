@@ -198,7 +198,7 @@ const BudgetHubPage = () => {
                   progress={overallBudget.progress}
                   currency={overallBudget.currency}
                   size="lg"
-                  dimensionLabel={`Overall • ${formatPeriodLabel(overallBudget.period, overallBudget.year, overallBudget.periodIndex)}`}
+                  dimensionLabel={formatPeriodLabel(overallBudget.period, overallBudget.year, overallBudget.periodIndex)}
                 />
 
               </div>
@@ -213,7 +213,7 @@ const BudgetHubPage = () => {
                   size="lg"
                   dimensionLabel={yearlyBudgets[0] 
                     ? `${getTargetName(yearlyBudgets[0])} • ${formatPeriodLabel(yearlyBudgets[0].period, yearlyBudgets[0].year, yearlyBudgets[0].periodIndex)}` 
-                    : `Overall • ${new Date().getFullYear()}`}
+                    : `${new Date().getFullYear()}`}
                 />
               </div>
             )}
