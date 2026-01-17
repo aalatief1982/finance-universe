@@ -1,6 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
+import { BudgetLayout } from '@/components/budget/BudgetLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,14 +12,11 @@ import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { Budget, BudgetPeriod } from '@/models/budget';
 import { formatCurrency } from '@/utils/format-utils';
-import { getPeriodLabel, getCurrentPeriodDates, getPreviousPeriodDates, formatPeriodLabel } from '@/utils/budget-period-utils';
+import { formatPeriodLabel } from '@/utils/budget-period-utils';
+import { useBudgetPeriodParams } from '@/hooks/useBudgetPeriodParams';
 import { format, subMonths, eachMonthOfInterval, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
 import { 
   Download,
-  TrendingUp,
-  TrendingDown,
-  PieChartIcon,
-  BarChartIcon,
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
@@ -37,22 +33,23 @@ const CHART_COLORS = [
 ];
 
 const BudgetReportPage = () => {
-  const navigate = useNavigate();
   const { transactions } = useTransactions();
-  const [selectedPeriod, setSelectedPeriod] = React.useState<BudgetPeriod>('monthly');
+  const { period } = useBudgetPeriodParams();
   const [timeRange, setTimeRange] = React.useState<'3m' | '6m' | '12m'>('6m');
   
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
-  // Get display name with specific period instance (e.g., "Jan 2026", "Q1 2026", "Week 3")
+  // Use selected period or default to monthly
+  const selectedPeriod: BudgetPeriod = period === 'all' ? 'monthly' : period;
+
+  // Get display name with specific period instance
   const getBudgetDisplayName = (b: Budget) => {
-    // Use formatPeriodLabel for specific period names like "Jan 2026", "Q1 2026", "Week 35"
     const periodName = formatPeriodLabel(b.period, b.year, b.periodIndex);
     
     if (b.scope === 'overall') {
-      return periodName; // Just "Jan 2026", "Q1 2026", etc. - no "Overall" prefix
+      return periodName;
     }
     
     const all = [...accounts, ...categories];
@@ -94,7 +91,7 @@ const BudgetReportPage = () => {
     };
   }, [budgetVsActual]);
 
-  // Trend data (spending over last X months)
+  // Trend data
   const trendData = React.useMemo(() => {
     const months = timeRange === '3m' ? 3 : timeRange === '6m' ? 6 : 12;
     const now = new Date();
@@ -106,7 +103,6 @@ const BudgetReportPage = () => {
       const monthStart = startOfMonth(month);
       const monthEnd = endOfMonth(month);
       
-      // Calculate total spending in this month
       const monthSpending = transactions
         .filter(tx => {
           const txDate = typeof tx.date === 'string' ? parseISO(tx.date) : tx.date;
@@ -115,7 +111,6 @@ const BudgetReportPage = () => {
         })
         .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
       
-      // Get budget for this month (simplified - uses current budgets)
       const monthBudget = budgets
         .filter(b => b.period === 'monthly')
         .reduce((sum, b) => sum + b.amount, 0);
@@ -193,272 +188,254 @@ const BudgetReportPage = () => {
     );
   };
 
+  const headerActions = (
+    <Button variant="outline" size="sm" onClick={handleExport}>
+      <Download className="h-4 w-4 mr-2" />
+      Export
+    </Button>
+  );
+
   return (
-    <Layout showBack>
-      <div className="container px-4 py-6 pb-24 space-y-6 max-w-2xl mx-auto">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Budget Reports</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Analyze your budget performance
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-
-        {/* Period Filter */}
-        <div className="flex gap-3">
-          <Select value={selectedPeriod} onValueChange={v => setSelectedPeriod(v as BudgetPeriod)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="quarterly">Quarterly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">Total Budget</div>
-              <div className="text-2xl font-bold mt-1">
-                {formatCurrency(totalSummary.totalBudget)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="text-sm text-muted-foreground">Total Spent</div>
-              <div className="text-2xl font-bold mt-1">
-                {formatCurrency(totalSummary.totalSpent)}
-              </div>
-              <div className={`text-xs mt-1 flex items-center gap-1 ${
-                totalSummary.percentUsed > 100 ? 'text-destructive' : 'text-muted-foreground'
-              }`}>
-                {totalSummary.percentUsed > 100 ? (
-                  <ArrowUpRight className="h-3 w-3" />
-                ) : (
-                  <ArrowDownRight className="h-3 w-3" />
-                )}
-                {Math.round(totalSummary.percentUsed)}% of budget
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Over Budget Alert */}
-        {overBudgetItems.length > 0 && (
-          <Card className="border-destructive/50 bg-destructive/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base text-destructive">
-                Over Budget ({overBudgetItems.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {overBudgetItems.map(item => (
-                <div key={item.name} className="flex justify-between items-center">
-                  <span className="text-sm">{item.name}</span>
-                  <Badge variant="destructive">
-                    +{formatCurrency(item.over)} ({Math.round(item.percentOver)}%)
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Charts Tabs */}
-        <Tabs defaultValue="comparison" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="comparison">Comparison</TabsTrigger>
-            <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
-            <TabsTrigger value="trend">Trend</TabsTrigger>
-          </TabsList>
-
-          {/* Budget vs Spent Comparison */}
-          <TabsContent value="comparison">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Budget vs. Spent</CardTitle>
-                <CardDescription>Compare budgeted amounts to actual spending</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {budgetVsActual.length > 0 ? (
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart 
-                        data={budgetVsActual} 
-                        layout="vertical"
-                        margin={{ top: 10, right: 10, left: 60, bottom: 10 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis type="number" tickFormatter={v => formatCurrency(v)} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend />
-                        <Bar dataKey="budget" name="Budget" fill="hsl(var(--primary))" />
-                        <Bar dataKey="spent" name="Spent" fill="hsl(var(--destructive))" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-12">
-                    No {selectedPeriod} budgets found
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Category Breakdown Pie Chart */}
-          <TabsContent value="breakdown">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Spending by Category</CardTitle>
-                <CardDescription>Distribution of spending across categories</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {categoryBreakdown.length > 0 ? (
-                  <div className="h-72">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={categoryBreakdown}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          dataKey="value"
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          labelLine={false}
-                        >
-                          {categoryBreakdown.map((entry, index) => (
-                            <Cell key={index} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value: number) => formatCurrency(value)}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-12">
-                    No category spending data
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Spending Trend Line Chart */}
-          <TabsContent value="trend">
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">Spending Trend</CardTitle>
-                    <CardDescription>Monthly spending over time</CardDescription>
-                  </div>
-                  <Select value={timeRange} onValueChange={v => setTimeRange(v as '3m' | '6m' | '12m')}>
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3m">3M</SelectItem>
-                      <SelectItem value="6m">6M</SelectItem>
-                      <SelectItem value="12m">12M</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                      <YAxis tickFormatter={v => formatCurrency(v)} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="spent" 
-                        name="Spent"
-                        stroke="hsl(var(--destructive))" 
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="budget" 
-                        name="Budget"
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        dot={{ r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {/* Detailed Table */}
+    <BudgetLayout 
+      title="Reports" 
+      description="Analyze your budget performance"
+      showAddButton={false}
+      headerActions={headerActions}
+    >
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Detailed Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 font-medium">Category</th>
-                    <th className="text-right py-2 font-medium">Budget</th>
-                    <th className="text-right py-2 font-medium">Spent</th>
-                    <th className="text-right py-2 font-medium">% Used</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {budgetVsActual.map(item => (
-                    <tr key={item.name} className="border-b last:border-0">
-                      <td className="py-2">{item.name}</td>
-                      <td className="py-2 text-right">{formatCurrency(item.budget)}</td>
-                      <td className="py-2 text-right">{formatCurrency(item.spent)}</td>
-                      <td className="py-2 text-right">
-                        <Badge 
-                          variant={item.percentUsed > 100 ? 'destructive' : item.percentUsed > 80 ? 'secondary' : 'outline'}
-                        >
-                          {item.percentUsed}%
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                  {budgetVsActual.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="py-8 text-center text-muted-foreground">
-                        No budgets for this period
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+          <CardContent className="pt-4">
+            <div className="text-sm text-muted-foreground">Total Budget</div>
+            <div className="text-2xl font-bold mt-1">
+              {formatCurrency(totalSummary.totalBudget)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-sm text-muted-foreground">Total Spent</div>
+            <div className="text-2xl font-bold mt-1">
+              {formatCurrency(totalSummary.totalSpent)}
+            </div>
+            <div className={`text-xs mt-1 flex items-center gap-1 ${
+              totalSummary.percentUsed > 100 ? 'text-destructive' : 'text-muted-foreground'
+            }`}>
+              {totalSummary.percentUsed > 100 ? (
+                <ArrowUpRight className="h-3 w-3" />
+              ) : (
+                <ArrowDownRight className="h-3 w-3" />
+              )}
+              {Math.round(totalSummary.percentUsed)}% of budget
             </div>
           </CardContent>
         </Card>
       </div>
-    </Layout>
+
+      {/* Over Budget Alert */}
+      {overBudgetItems.length > 0 && (
+        <Card className="border-destructive/50 bg-destructive/5 mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-destructive">
+              Over Budget ({overBudgetItems.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {overBudgetItems.map(item => (
+              <div key={item.name} className="flex justify-between items-center">
+                <span className="text-sm">{item.name}</span>
+                <Badge variant="destructive">
+                  +{formatCurrency(item.over)} ({Math.round(item.percentOver)}%)
+                </Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Charts Tabs */}
+      <Tabs defaultValue="comparison" className="space-y-4 mb-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="comparison">Comparison</TabsTrigger>
+          <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
+          <TabsTrigger value="trend">Trend</TabsTrigger>
+        </TabsList>
+
+        {/* Budget vs Spent Comparison */}
+        <TabsContent value="comparison">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Budget vs. Spent</CardTitle>
+              <CardDescription>Compare budgeted amounts to actual spending</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {budgetVsActual.length > 0 ? (
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart 
+                      data={budgetVsActual} 
+                      layout="vertical"
+                      margin={{ top: 10, right: 10, left: 60, bottom: 10 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tickFormatter={v => formatCurrency(v)} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar dataKey="budget" name="Budget" fill="hsl(var(--primary))" />
+                      <Bar dataKey="spent" name="Spent" fill="hsl(var(--destructive))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-12">
+                  No {selectedPeriod} budgets found
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Category Breakdown Pie Chart */}
+        <TabsContent value="breakdown">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Spending by Category</CardTitle>
+              <CardDescription>Distribution of spending across categories</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {categoryBreakdown.length > 0 ? (
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryBreakdown}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        labelLine={false}
+                      >
+                        {categoryBreakdown.map((entry, index) => (
+                          <Cell key={index} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value)}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-12">
+                  No category spending data
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Spending Trend Line Chart */}
+        <TabsContent value="trend">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Spending Trend</CardTitle>
+                  <CardDescription>Monthly spending over time</CardDescription>
+                </div>
+                <Select value={timeRange} onValueChange={v => setTimeRange(v as '3m' | '6m' | '12m')}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3m">3M</SelectItem>
+                    <SelectItem value="6m">6M</SelectItem>
+                    <SelectItem value="12m">12M</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis tickFormatter={v => formatCurrency(v)} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="spent" 
+                      name="Spent"
+                      stroke="hsl(var(--destructive))" 
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="budget" 
+                      name="Budget"
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Detailed Table */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Detailed Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 font-medium">Category</th>
+                  <th className="text-right py-2 font-medium">Budget</th>
+                  <th className="text-right py-2 font-medium">Spent</th>
+                  <th className="text-right py-2 font-medium">% Used</th>
+                </tr>
+              </thead>
+              <tbody>
+                {budgetVsActual.map(item => (
+                  <tr key={item.name} className="border-b last:border-0">
+                    <td className="py-2">{item.name}</td>
+                    <td className="py-2 text-right">{formatCurrency(item.budget)}</td>
+                    <td className="py-2 text-right">{formatCurrency(item.spent)}</td>
+                    <td className="py-2 text-right">
+                      <Badge 
+                        variant={item.percentUsed > 100 ? 'destructive' : item.percentUsed > 80 ? 'secondary' : 'outline'}
+                      >
+                        {item.percentUsed}%
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+                {budgetVsActual.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-muted-foreground">
+                      No budget data for this period
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </BudgetLayout>
   );
 };
 
