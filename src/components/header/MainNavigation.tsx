@@ -13,21 +13,8 @@ import {
   User,
   Upload,
   BrainCircuit,
-  CreditCard,
-  ClipboardList,
-  Target,
-  TrendingDown,
   Lock,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { logAnalyticsEvent } from "@/utils/firebase-analytics";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
@@ -47,24 +34,7 @@ const iconMap = {
 export const MainNavigation: React.FC = () => {
   const location = useLocation();
   const navItems = getNavItems();
-  const [budgetOpen, setBudgetOpen] = React.useState(false);
-  const { toast } = useToast();
-  const [betaActive, setBetaActive] = React.useState(() => isBetaActive());
-
-  const budgetItems = [
-    {
-      name: "Accounts",
-      path: "/budget/accounts",
-      icon: <CreditCard size={18} />,
-    },
-    { name: "Budgets", path: "/budget/set", icon: <ClipboardList size={18} /> },
-    { name: "Reports", path: "/budget/report", icon: <Target size={18} /> },
-    {
-      name: "Insights",
-      path: "/budget/insights",
-      icon: <TrendingDown size={18} />,
-    },
-  ];
+  const [betaActive] = React.useState(() => isBetaActive());
 
   return (
     <motion.nav
@@ -77,77 +47,59 @@ export const MainNavigation: React.FC = () => {
         {navItems.map((item) => {
           const IconComponent = iconMap[item.icon as keyof typeof iconMap];
 
-          if (item.modal === "budget") {
+          // Handle Budget with beta lock
+          if (item.title === "Budget") {
+            if (!betaActive) {
+              return (
+                <li key={item.title}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logAnalyticsEvent('budget_menu_click', { beta_active: false });
+                      handleLockedFeatureClick('Budget');
+                    }}
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    )}
+                    title={item.title}
+                  >
+                    {IconComponent && <IconComponent size={18} className="mr-2" />}
+                    {item.title}
+                    <Lock className="h-3 w-3 ml-1" />
+                  </button>
+                </li>
+              );
+            }
+            // Beta active - render as normal link
             return (
               <li key={item.title}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    logAnalyticsEvent('budget_menu_click', {
-                      beta_active: betaActive
-                    });
-                    if (!betaActive) {
-                      handleLockedFeatureClick('Budget');
-                    } else {
-                      setBudgetOpen(true);
-                    }
-                  }}
+                <Link
+                  to={item.path ?? "/budget"}
+                  onClick={() => logAnalyticsEvent('budget_menu_click', { beta_active: true })}
                   className={cn(
                     "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     location.pathname.startsWith("/budget")
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}
                   title={item.title}
                 >
-                  {IconComponent && (
-                    <IconComponent size={18} className="mr-2" />
-                  )}
+                  {IconComponent && <IconComponent size={18} className="mr-2" />}
                   {item.title}
-                  {!betaActive && <Lock className="h-3 w-3 ml-1" />}
-                </button>
-
-                {betaActive && (
-                  <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
-                    <DialogContent className="sm:max-w-xs">
-                      <DialogHeader>
-                        <DialogTitle>Select Budget Page</DialogTitle>
-                      </DialogHeader>
-                      <div className="grid gap-2 py-2">
-                        {budgetItems.map((b) => (
-                          <DialogClose asChild key={b.path}>
-                            <Button
-                              asChild
-                              variant="outline"
-                              className="justify-start"
-                            >
-                              <Link
-                                to={b.path}
-                                className="flex items-center gap-2"
-                              >
-                                {b.icon}
-                                {b.name}
-                              </Link>
-                            </Button>
-                          </DialogClose>
-                        ))}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
+                </Link>
               </li>
             );
           }
 
+          // Handle Import SMS with beta lock
           if (item.title === "Import SMS") {
             return (
               <li key={item.title}>
                 <button
                   type="button"
                   onClick={() => {
-                    logAnalyticsEvent('import_menu_click', {
-                      beta_active: betaActive
-                    });
+                    logAnalyticsEvent('import_menu_click', { beta_active: betaActive });
                     if (!betaActive) {
                       handleLockedFeatureClick('Import SMS');
                     } else {
@@ -158,7 +110,7 @@ export const MainNavigation: React.FC = () => {
                     "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     location.pathname === item.path
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}
                   title={item.title}
                 >
@@ -170,6 +122,7 @@ export const MainNavigation: React.FC = () => {
             );
           }
 
+          // Regular navigation items
           return (
             <li key={item.title}>
               <Link
@@ -178,12 +131,10 @@ export const MainNavigation: React.FC = () => {
                   "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   location.pathname === item.path
                     ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 )}
                 title={item.title}
-                aria-current={
-                  location.pathname === item.path ? "page" : undefined
-                }
+                aria-current={location.pathname === item.path ? "page" : undefined}
               >
                 {IconComponent && <IconComponent size={18} className="mr-2" />}
                 {item.title}
