@@ -98,11 +98,12 @@ const Analytics: React.FC = () => {
     });
   }, [transactions, range, customStart, customEnd]);
 
+  // Budget data (EXCLUDES transfers)
   const budgetData = React.useMemo(() => {
     const categories = transactionService.getCategories().filter(c => c.metadata?.budget);
     return categories.map(cat => {
       const spent = filteredTransactions
-        .filter(t => t.category === cat.name && t.amount < 0)
+        .filter(t => t.category === cat.name && t.type === 'expense')
         .reduce((sum, t) => sum + Math.abs(t.amount), 0);
       const budget = cat.metadata?.budget || 0;
       const percentUsed = budget ? (spent / budget) * 100 : 0;
@@ -119,15 +120,19 @@ const Analytics: React.FC = () => {
     return AnalyticsService.getCategoryData(filteredTransactions).slice(0, 5);
   }, [filteredTransactions]);
 
+  // Monthly balance (EXCLUDES transfers)
   const monthlyBalance = React.useMemo(() => {
     const grouped: Record<string, { income: number; expense: number }> = {};
     filteredTransactions.forEach(tx => {
+      // Skip transfers from monthly balance
+      if (tx.type === 'transfer') return;
+      
       const d = new Date(tx.date);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (!grouped[key]) grouped[key] = { income: 0, expense: 0 };
-      if (tx.amount >= 0) {
-        grouped[key].income += tx.amount;
-      } else {
+      if (tx.type === 'income') {
+        grouped[key].income += Math.abs(tx.amount);
+      } else if (tx.type === 'expense') {
         grouped[key].expense += Math.abs(tx.amount);
       }
     });

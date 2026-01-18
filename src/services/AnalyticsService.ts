@@ -20,14 +20,14 @@ export interface MonthlyData {
 }
 
 export class AnalyticsService {
-  // Get expense and income totals
+  // Get expense and income totals (EXCLUDES transfers)
   static getTotals(transactions: Transaction[]): AnalyticsTotals {
     const income = transactions
-      .filter(t => t.amount > 0)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     const expenses = transactions
-      .filter(t => t.amount < 0)
+      .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0;
@@ -35,10 +35,10 @@ export class AnalyticsService {
     return { income, expenses, savingsRate };
   }
 
-  // Generate data for the category breakdown chart
+  // Generate data for the category breakdown chart (EXCLUDES transfers)
   static getCategoryData(transactions: Transaction[]): CategoryData[] {
     const expensesByCategory = transactions
-      .filter(t => t.amount < 0)
+      .filter(t => t.type === 'expense')
       .reduce((acc: Record<string, number>, transaction) => {
         const { category, amount } = transaction;
         if (!acc[category]) {
@@ -53,10 +53,10 @@ export class AnalyticsService {
       .sort((a, b) => b.value - a.value);
   }
 
-  // Generate data for the subcategory breakdown chart
+  // Generate data for the subcategory breakdown chart (EXCLUDES transfers)
   static getSubcategoryData(transactions: Transaction[]): CategoryData[] {
     const expensesBySubcategory = transactions
-      .filter(t => t.amount < 0 && t.subcategory && !isNaN(t.amount))
+      .filter(t => t.type === 'expense' && t.subcategory && !isNaN(t.amount))
       .reduce((acc: Record<string, number>, transaction) => {
         const sub = transaction.subcategory as string;
         if (!acc[sub]) {
@@ -76,11 +76,11 @@ export class AnalyticsService {
       .sort((a, b) => b.value - a.value);
   }
 
-  // Generate data for the monthly spending chart
+  // Generate data for the monthly spending chart (EXCLUDES transfers)
   static getMonthlyData(transactions: Transaction[]): MonthlyData[] {
-    // Filter out transactions that don't have a date field or have amount >= 0
+    // Filter out transactions that don't have a date field or are not expenses
     const validTransactions = transactions
-      .filter(t => t.amount < 0 && t.date);
+      .filter(t => t.type === 'expense' && t.date);
     
     // Now we can safely pass these to groupByMonth
     const grouped = groupByMonth(validTransactions);
@@ -104,11 +104,11 @@ export class AnalyticsService {
     });
   }
 
-  // Get all unique expense categories
+  // Get all unique expense categories (EXCLUDES transfers)
   static getUniqueCategories(transactions: Transaction[]): string[] {
     return Array.from(new Set(
       transactions
-        .filter(t => t.amount < 0)
+        .filter(t => t.type === 'expense')
         .map(t => t.category)
     ));
   }

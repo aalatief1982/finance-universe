@@ -3,16 +3,16 @@ import { Transaction, TransactionSummary, CategorySummary, TimePeriodData, TimeP
 import { getStoredTransactions } from '@/utils/storage-utils';
 
 export class TransactionAnalyticsService {
-  // Get transactions summary statistics
+  // Get transactions summary statistics (EXCLUDES transfers)
   getTransactionsSummary(): TransactionSummary {
     const transactions = getStoredTransactions();
     
     const income = transactions
-      .filter(t => t.amount > 0)
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     const expenses = transactions
-      .filter(t => t.amount < 0)
+      .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     const balance = income - expenses;
@@ -20,13 +20,13 @@ export class TransactionAnalyticsService {
     return { income, expenses, balance };
   }
 
-  // Get transactions grouped by category
+  // Get transactions grouped by category (EXCLUDES transfers)
   getTransactionsByCategory(): CategorySummary[] {
     const transactions = getStoredTransactions();
     const categories: Record<string, number> = {};
     
     transactions
-      .filter(t => t.amount < 0) // Only include expenses
+      .filter(t => t.type === 'expense')
       .forEach(t => {
         const category = t.category || 'Uncategorized';
         categories[category] = (categories[category] || 0) + Math.abs(t.amount);
@@ -35,7 +35,7 @@ export class TransactionAnalyticsService {
     return Object.entries(categories).map(([name, value]) => ({ name, value }));
   }
 
-  // Get transactions grouped by time period
+  // Get transactions grouped by time period (EXCLUDES transfers)
   getTransactionsByTimePeriod(period: TimePeriod = 'month'): TimePeriodData[] {
     const transactions = getStoredTransactions();
     const timelineData: Record<string, { income: number; expense: number }> = {};
@@ -73,15 +73,18 @@ export class TransactionAnalyticsService {
       timelineData[key] = { income: 0, expense: 0 };
     }
     
-    // Fill in the actual data
+    // Fill in the actual data (SKIP transfers)
     transactions.forEach(t => {
+      // Skip transfers entirely
+      if (t.type === 'transfer') return;
+      
       const date = new Date(t.date);
       const key = getDateKey(date);
       
       if (timelineData[key]) {
-        if (t.amount >= 0) {
-          timelineData[key].income += t.amount;
-        } else {
+        if (t.type === 'income') {
+          timelineData[key].income += Math.abs(t.amount);
+        } else if (t.type === 'expense') {
           timelineData[key].expense += Math.abs(t.amount);
         }
       }

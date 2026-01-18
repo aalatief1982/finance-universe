@@ -13,7 +13,7 @@ import { CATEGORIES } from '@/lib/mock-data';
 import { useNavigate } from 'react-router-dom';
 
 const Transactions = () => {
-  const [filter, setFilter] = React.useState<'all' | 'income' | 'expense'>('all');
+  const [filter, setFilter] = React.useState<'all' | 'income' | 'expense' | 'transfer'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const navigate = useNavigate();
 
@@ -79,12 +79,10 @@ const Transactions = () => {
       });
     }
 
+    // Filter by type using the type field directly
     result = result.filter(tx => {
-      if (filter !== 'all') {
-        const isIncome = tx.amount > 0;
-        if ((filter === 'income' && !isIncome) || (filter === 'expense' && isIncome)) {
-          return false;
-        }
+      if (filter !== 'all' && tx.type !== filter) {
+        return false;
       }
 
       if (searchQuery) {
@@ -139,10 +137,10 @@ const Transactions = () => {
         <ToggleGroup
           type="single"
           value={filter}
-          onValueChange={val => setFilter(val as 'all' | 'income' | 'expense')}
+          onValueChange={val => setFilter(val as 'all' | 'income' | 'expense' | 'transfer')}
           className="w-full bg-muted p-1 text-muted-foreground rounded-md"
         >
-          {['all', 'income', 'expense'].map(f => (
+          {['all', 'income', 'expense', 'transfer'].map(f => (
             <ToggleGroupItem
               key={f}
               value={f}

@@ -18,33 +18,76 @@ class TransactionService {
     storeTransactions(transactions);
   }
 
-  // Add a new transaction
-  addTransaction(transaction: Omit<Transaction, 'id'>): Transaction {
-    const newTransaction = {
-      ...transaction,
-      id: uuidv4()
-    };
-    
-    // Auto-categorize if no category is provided
-    if (!newTransaction.category) {
-      newTransaction.category = this.suggestCategory(newTransaction);
+  // Add a new transaction (creates dual entries for transfers)
+  addTransaction(transaction: Omit<Transaction, 'id'>): Transaction | Transaction[] {
+    // For non-transfers, create a single record as before
+    if (transaction.type !== 'transfer') {
+      const newTransaction = {
+        ...transaction,
+        id: uuidv4()
+      };
+      
+      // Auto-categorize if no category is provided
+      if (!newTransaction.category) {
+        newTransaction.category = this.suggestCategory(newTransaction);
+      }
+      
+      const transactions = this.getAllTransactions();
+      transactions.push(newTransaction);
+      this.saveTransactions(transactions);
+      
+      // Log analytics event
+      logAnalyticsEvent('transaction_add', {
+        category: newTransaction.category,
+        amount: newTransaction.amount,
+        currency: newTransaction.currency
+      });
+      
+      return newTransaction;
     }
     
+    // For transfers, create TWO linked records
+    const transferId = uuidv4();
+    const amount = Math.abs(transaction.amount);
+    
+    // Debit entry (money leaving source account)
+    const debitEntry: Transaction = {
+      ...transaction,
+      id: uuidv4(),
+      transferId,
+      transferDirection: 'out',
+      amount: -amount,
+      category: 'Transfer', // Force category to "Transfer"
+      type: 'transfer',
+    };
+    
+    // Credit entry (money entering destination account)
+    const creditEntry: Transaction = {
+      ...transaction,
+      id: uuidv4(),
+      transferId,
+      transferDirection: 'in',
+      amount: amount,
+      category: 'Transfer',
+      type: 'transfer',
+    };
+    
     const transactions = this.getAllTransactions();
-    transactions.push(newTransaction);
+    transactions.push(debitEntry, creditEntry);
     this.saveTransactions(transactions);
     
     // Log analytics event
     logAnalyticsEvent('transaction_add', {
-      category: newTransaction.category,
-      amount: newTransaction.amount,
-      currency: newTransaction.currency
+      category: 'Transfer',
+      amount: amount,
+      currency: transaction.currency,
+      type: 'transfer'
     });
     
-    return newTransaction;
+    return [debitEntry, creditEntry];
   }
 
-  // Update an existing transaction
+  // Update an existing transaction (handles linked transfers)
   updateTransaction(id: string, updates: Partial<Omit<Transaction, 'id'>>): Transaction | null {
     const transactions = this.getAllTransactions();
     const index = transactions.findIndex(t => t.id === id);
@@ -52,6 +95,12 @@ class TransactionService {
     if (index === -1) return null;
     
     const oldTransaction = transactions[index];
+    
+    // For transfers, update both linked records
+    if (oldTransaction.transferId) {
+      return this.updateTransfer(oldTransaction.transferId, updates);
+    }
+    
     const updatedTransaction = { ...oldTransaction, ...updates };
     transactions[index] = updatedTransaction;
     this.saveTransactions(transactions);
@@ -64,9 +113,56 @@ class TransactionService {
     return updatedTransaction;
   }
 
-  // Delete a transaction
+  // Update both halves of a transfer atomically
+  updateTransfer(transferId: string, updates: Partial<Omit<Transaction, 'id'>>): Transaction | null {
+    const transactions = this.getAllTransactions();
+    const linkedTransactions = transactions.filter(t => t.transferId === transferId);
+    
+    if (linkedTransactions.length !== 2) return null;
+    
+    const updatedIds: string[] = [];
+    
+    linkedTransactions.forEach(t => {
+      const index = transactions.findIndex(tx => tx.id === t.id);
+      if (index === -1) return;
+      
+      // Update shared fields
+      const updated: Transaction = {
+        ...t,
+        title: updates.title ?? t.title,
+        date: updates.date ?? t.date,
+        fromAccount: updates.fromAccount ?? t.fromAccount,
+        toAccount: updates.toAccount ?? t.toAccount,
+        notes: updates.notes ?? t.notes,
+        currency: updates.currency ?? t.currency,
+        // Amount update requires special handling to maintain correct signs
+        amount: updates.amount !== undefined 
+          ? (t.transferDirection === 'out' ? -Math.abs(updates.amount) : Math.abs(updates.amount))
+          : t.amount,
+      };
+      
+      transactions[index] = updated;
+      updatedIds.push(t.id);
+    });
+    
+    this.saveTransactions(transactions);
+    
+    // Return the debit entry as representative
+    return transactions.find(t => updatedIds.includes(t.id) && t.transferDirection === 'out') || null;
+  }
+
+  // Delete a transaction (handles linked transfers)
   deleteTransaction(id: string): boolean {
     const transactions = this.getAllTransactions();
+    const transaction = transactions.find(t => t.id === id);
+    
+    if (!transaction) return false;
+    
+    // For transfers, delete both linked records
+    if (transaction.transferId) {
+      return this.deleteTransfer(transaction.transferId);
+    }
+    
     const filteredTransactions = transactions.filter(t => t.id !== id);
     
     if (filteredTransactions.length === transactions.length) {
@@ -78,6 +174,26 @@ class TransactionService {
     // Log analytics event
     logAnalyticsEvent('transaction_delete', {
       transaction_id: id
+    });
+    
+    return true;
+  }
+
+  // Delete both halves of a transfer atomically
+  deleteTransfer(transferId: string): boolean {
+    const transactions = this.getAllTransactions();
+    const filteredTransactions = transactions.filter(t => t.transferId !== transferId);
+    
+    if (filteredTransactions.length === transactions.length) {
+      return false;
+    }
+    
+    this.saveTransactions(filteredTransactions);
+    
+    // Log analytics event
+    logAnalyticsEvent('transaction_delete', {
+      transfer_id: transferId,
+      type: 'transfer'
     });
     
     return true;

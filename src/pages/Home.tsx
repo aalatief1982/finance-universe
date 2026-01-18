@@ -100,21 +100,26 @@ const Home = () => {
     });
   }, [transactions, range, customStart, customEnd]);
 
+  // Calculate summary (EXCLUDES transfers from income/expense totals)
   const summary = filteredTransactions.reduce(
     (acc, transaction) => {
-      if (transaction.amount > 0) {
-        acc.income += transaction.amount;
-      } else {
+      if (transaction.type === 'income') {
+        acc.income += Math.abs(transaction.amount);
+      } else if (transaction.type === 'expense') {
         acc.expenses += Math.abs(transaction.amount);
       }
-      acc.balance += transaction.amount;
+      // Transfers don't affect the balance calculation for financial summary
+      if (transaction.type !== 'transfer') {
+        acc.balance += transaction.amount;
+      }
       return acc;
     },
     { income: 0, expenses: 0, balance: 0 },
   );
 
+  // Category data (EXCLUDES transfers)
   const categoryData = filteredTransactions
-    .filter((t) => t.amount < 0)
+    .filter((t) => t.type === 'expense')
     .reduce(
       (acc, transaction) => {
         const { category, amount } = transaction;
@@ -148,9 +153,13 @@ const Home = () => {
     ([name, value]) => ({ name, value }),
   );
 
+  // Timeline data (EXCLUDES transfers)
   const timelineData = React.useMemo(() => {
     const grouped = new Map<number, { income: number; expense: number }>();
     filteredTransactions.forEach((tx) => {
+      // Skip transfers from timeline data
+      if (tx.type === 'transfer') return;
+      
       const d = new Date(tx.date);
       const bucket =
         range === "year"
@@ -158,9 +167,9 @@ const Home = () => {
           : new Date(d.getFullYear(), d.getMonth(), d.getDate());
       const key = bucket.getTime();
       const existing = grouped.get(key) || { income: 0, expense: 0 };
-      if (tx.amount > 0) {
-        existing.income += tx.amount;
-      } else {
+      if (tx.type === 'income') {
+        existing.income += Math.abs(tx.amount);
+      } else if (tx.type === 'expense') {
         existing.expense += Math.abs(tx.amount);
       }
       grouped.set(key, existing);

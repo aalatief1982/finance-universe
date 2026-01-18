@@ -91,7 +91,10 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
     <>
       <div className="space-y-[var(--card-gap)] px-[var(--page-padding-x)]">
         {sortedDates.map((date) => {
-          const net = groupedTransactions[date].reduce((s, t) => s + t.amount, 0);
+          // Exclude transfers from daily net calculation
+          const net = groupedTransactions[date]
+            .filter(t => t.type !== 'transfer')
+            .reduce((s, t) => s + t.amount, 0);
           const netCurrency = groupedTransactions[date][0]?.currency || 'USD';
           return (
             <div key={date} className="space-y-[var(--card-gap)]">
@@ -130,7 +133,9 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
                               {transaction.title}
                             </h4>
                             <span className="text-xs text-muted-foreground">
-                              {transaction.category}
+                              {transaction.type === 'transfer' 
+                                ? `${transaction.fromAccount} → ${transaction.toAccount}`
+                                : transaction.category}
                             </span>
                           </div>
                         </div>

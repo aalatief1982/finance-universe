@@ -148,8 +148,19 @@ export class AccountService {
       const isAccount = tx.account === account.name || tx.account === account.id;
 
       if (tx.type === 'transfer') {
-        if (isFromAccount) balance -= Math.abs(tx.amount);
-        if (isToAccount) balance += Math.abs(tx.amount);
+        // With dual-entry model, each transfer record only affects ONE account
+        // Debit entry (out): affects fromAccount
+        // Credit entry (in): affects toAccount
+        if (tx.transferDirection === 'out' && isFromAccount) {
+          balance -= Math.abs(tx.amount);
+        } else if (tx.transferDirection === 'in' && isToAccount) {
+          balance += Math.abs(tx.amount);
+        }
+        // Legacy single-entry transfers (no transferDirection)
+        else if (!tx.transferDirection) {
+          if (isFromAccount) balance -= Math.abs(tx.amount);
+          if (isToAccount) balance += Math.abs(tx.amount);
+        }
       } else if (tx.type === 'expense') {
         if (isFromAccount || isAccount) balance -= Math.abs(tx.amount);
       } else if (tx.type === 'income') {

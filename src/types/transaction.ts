@@ -35,6 +35,10 @@ export interface Transaction {
   createdAt?: string;
   /** Indicates whether the transaction was seeded as a demo sample */
   isSample?: boolean;
+  /** Unique ID linking both halves of a transfer transaction */
+  transferId?: string;
+  /** Indicates which side of a transfer this record represents */
+  transferDirection?: 'out' | 'in';
 }
 
 // Category related types
