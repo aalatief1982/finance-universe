@@ -34,7 +34,7 @@ const CHART_COLORS = [
 
 const BudgetReportPage = () => {
   const { transactions } = useTransactions();
-  const { period } = useBudgetPeriodParams();
+  const { period, year, periodIndex, periodLabel } = useBudgetPeriodParams();
   const [timeRange, setTimeRange] = React.useState<'3m' | '6m' | '12m'>('6m');
   
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
@@ -59,13 +59,28 @@ const BudgetReportPage = () => {
     return `${scopeName} • ${periodName}`;
   };
 
-  // Calculate budget vs actual data
+  // Calculate budget vs actual data - filter by period, year, and periodIndex
   const budgetVsActual = React.useMemo(() => {
     return budgets
-      .filter(b => b.period === selectedPeriod)
+      .filter(b => {
+        // Filter by period type
+        if (b.period !== selectedPeriod) return false;
+        
+        // For "all" view, show all budgets of that period type
+        if (period === 'all') return true;
+        
+        // Filter by year
+        if (b.year !== year) return false;
+        
+        // Filter by periodIndex (for non-yearly periods)
+        if (selectedPeriod !== 'yearly' && b.periodIndex !== periodIndex) return false;
+        
+        return true;
+      })
       .map(budget => {
         const progress = budgetService.getBudgetProgress(budget);
         return {
+          id: budget.id,
           name: getBudgetDisplayName(budget),
           budget: budget.amount,
           spent: progress.spent,
@@ -74,7 +89,7 @@ const BudgetReportPage = () => {
         };
       })
       .sort((a, b) => b.spent - a.spent);
-  }, [budgets, selectedPeriod]);
+  }, [budgets, selectedPeriod, period, year, periodIndex]);
 
   // Total summary
   const totalSummary = React.useMemo(() => {
@@ -410,7 +425,7 @@ const BudgetReportPage = () => {
               </thead>
               <tbody>
                 {budgetVsActual.map(item => (
-                  <tr key={item.name} className="border-b last:border-0">
+                  <tr key={item.id} className="border-b last:border-0">
                     <td className="py-2">{item.name}</td>
                     <td className="py-2 text-right">{formatCurrency(item.budget)}</td>
                     <td className="py-2 text-right">{formatCurrency(item.spent)}</td>
