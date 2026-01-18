@@ -473,7 +473,41 @@ const SetBudgetPage = () => {
 
     if (isEditMode && editId) {
       budgetService.updateBudget(editId, budgetData);
-      toast({ title: 'Budget updated successfully' });
+      
+      // Handle upward propagation if enabled
+      if (propagateUp && period !== 'yearly') {
+        const mockBudget: Budget = {
+          id: editId,
+          ...budgetData,
+          periodIndex: budgetData.periodIndex,
+          createdAt: existingBudget?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        const updates = calculateParentPeriodUpdates(mockBudget, amount, existingBudgets);
+        
+        // Update quarterly parent if exists
+        if (updates.quarterUpdate) {
+          budgetService.updateBudget(updates.quarterUpdate.id, {
+            amount: updates.quarterUpdate.newAmount,
+            isOverride: false,
+            notes: `Auto-updated from child period changes`,
+          });
+        }
+        
+        // Update yearly parent if exists
+        if (updates.yearlyUpdate) {
+          budgetService.updateBudget(updates.yearlyUpdate.id, {
+            amount: updates.yearlyUpdate.newAmount,
+            isOverride: false,
+            notes: `Auto-updated from child period changes`,
+          });
+        }
+        
+        toast({ title: 'Budget and parent periods updated' });
+      } else {
+        toast({ title: 'Budget updated successfully' });
+      }
     } else {
       budgetService.addBudget(budgetData);
       
