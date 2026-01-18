@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LogOut,
   Menu,
   Home,
   PieChart,
@@ -12,10 +11,6 @@ import {
   User,
   Upload,
   BrainCircuit,
-  CreditCard,
-  ClipboardList,
-  Target,
-  TrendingDown,
   Lock,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
@@ -31,7 +26,6 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { getNavItems } from "./route-constants";
-import { useToast } from "@/hooks/use-toast";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
 // Map of icon names to their components
@@ -55,26 +49,9 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   currentPageTitle,
 }) => {
   const location = useLocation();
-  const { user, logOut } = useUser();
+  const { user } = useUser();
   const navItems = getNavItems();
-  const [budgetOpen, setBudgetOpen] = React.useState(false);
-  const { toast } = useToast();
-  const [betaActive, setBetaActive] = React.useState(() => isBetaActive());
-
-  const budgetItems = [
-    {
-      name: "Accounts",
-      path: "/budget/accounts",
-      icon: <CreditCard size={18} />,
-    },
-    { name: "Budgets", path: "/budget/set", icon: <ClipboardList size={18} /> },
-    { name: "Reports", path: "/budget/report", icon: <Target size={18} /> },
-    {
-      name: "Insights",
-      path: "/budget/insights",
-      icon: <TrendingDown size={18} />,
-    },
-  ];
+  const [betaActive] = React.useState(() => isBetaActive());
 
   return (
     <div className="md:hidden">
@@ -123,71 +100,59 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
             <nav className="space-y-1">
               {navItems.map((item) => {
-                const IconComponent =
-                  iconMap[item.icon as keyof typeof iconMap];
+                const IconComponent = iconMap[item.icon as keyof typeof iconMap];
 
-                if (item.modal === "budget") {
-                  return (
-                    <div key={item.title}>
+                // Handle Budget with beta lock
+                if (item.title === "Budget") {
+                  if (!betaActive) {
+                    return (
                       <button
+                        key={item.title}
                         type="button"
-                        onClick={() => {
-                          if (!betaActive) {
-                            handleLockedFeatureClick('Budget');
-                          } else {
-                            setBudgetOpen(!budgetOpen);
-                          }
-                        }}
+                        onClick={() => handleLockedFeatureClick('Budget')}
                         className={cn(
                           "flex w-full items-center px-4 py-3 rounded-md transition-colors",
-                          location.pathname.startsWith("/budget")
-                            ? "bg-primary/10 text-primary"
-                            : "text-foreground hover:bg-accent",
+                          "text-foreground hover:bg-accent"
                         )}
                       >
-                        {IconComponent && (
-                          <IconComponent size={20} className="mr-3" />
-                        )}
+                        {IconComponent && <IconComponent size={20} className="mr-3" />}
                         <div className="flex-1 text-left">
                           <p className="font-medium flex items-center">
                             {item.title}
-                            {!betaActive && <Lock className="h-3 w-3 ml-1" />}
+                            <Lock className="h-3 w-3 ml-1" />
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {item.description}
                           </p>
                         </div>
-                        {betaActive && (
-                          <span className="ml-auto">{budgetOpen ? "▾" : "▸"}</span>
-                        )}
                       </button>
-
-                      {betaActive && budgetOpen && (
-                        <ul className="mt-1 ml-6 space-y-1">
-                          {budgetItems.map((b) => (
-                            <li key={b.path}>
-                              <SheetClose asChild>
-                                <Link
-                                  to={b.path}
-                                  className={cn(
-                                    "flex items-center px-4 py-2 rounded-md text-sm transition-colors",
-                                    location.pathname === b.path
-                                      ? "bg-primary/10 text-primary"
-                                      : "text-foreground hover:bg-accent",
-                                  )}
-                                >
-                                  {b.icon}
-                                  <span className="ml-2">{b.name}</span>
-                                </Link>
-                              </SheetClose>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                    );
+                  }
+                  // Beta active - render as normal link
+                  return (
+                    <SheetClose asChild key={item.title}>
+                      <Link
+                        to={item.path ?? "/budget"}
+                        className={cn(
+                          "flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors",
+                          location.pathname.startsWith("/budget")
+                            ? "bg-primary/10 text-primary"
+                            : "text-foreground"
+                        )}
+                      >
+                        {IconComponent && <IconComponent size={20} className="mr-3" />}
+                        <div>
+                          <p className="font-medium">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.description}
+                          </p>
+                        </div>
+                      </Link>
+                    </SheetClose>
                   );
                 }
 
+                // Handle Import SMS with beta lock
                 if (item.title === "Import SMS") {
                   return (
                     <button
@@ -197,19 +162,17 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                         if (!betaActive) {
                           handleLockedFeatureClick('Import SMS');
                         } else {
-                          window.location.href = item.path;
+                          window.location.href = item.path ?? "";
                         }
                       }}
                       className={cn(
                         "flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors w-full",
                         location.pathname === item.path
                           ? "bg-primary/10 text-primary"
-                          : "text-foreground",
+                          : "text-foreground"
                       )}
                     >
-                      {IconComponent && (
-                        <IconComponent size={20} className="mr-3" />
-                      )}
+                      {IconComponent && <IconComponent size={20} className="mr-3" />}
                       <div>
                         <p className="font-medium flex items-center">
                           {item.title}
@@ -223,23 +186,20 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   );
                 }
 
+                // Regular navigation items
                 return (
                   <SheetClose asChild key={item.title}>
                     <Link
-                      to={item.path}
+                      to={item.path ?? ""}
                       className={cn(
                         "flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors",
                         location.pathname === item.path
                           ? "bg-primary/10 text-primary"
-                          : "text-foreground",
+                          : "text-foreground"
                       )}
-                      aria-current={
-                        location.pathname === item.path ? "page" : undefined
-                      }
+                      aria-current={location.pathname === item.path ? "page" : undefined}
                     >
-                      {IconComponent && (
-                        <IconComponent size={20} className="mr-3" />
-                      )}
+                      {IconComponent && <IconComponent size={20} className="mr-3" />}
                       <div>
                         <p className="font-medium">{item.title}</p>
                         <p className="text-xs text-muted-foreground">
@@ -251,7 +211,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 );
               })}
             </nav>
-
           </div>
         </SheetContent>
       </Sheet>

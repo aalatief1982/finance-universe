@@ -42,8 +42,7 @@ export const getNavItems = () => {
     },
     {
       title: "Budget",
-      // Opens a modal instead of linking directly
-      modal: "budget",
+      path: "/budget",
       icon: "Scale",
       description: "Manage budgets and accounts",
     },
