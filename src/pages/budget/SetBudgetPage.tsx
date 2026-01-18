@@ -318,11 +318,78 @@ const SetBudgetPage = () => {
     setTargetId(newScope === 'overall' ? '_overall' : '');
   };
 
-  // Handle period change - reset periodIndex to current
+  // Handle period change - check if there's an existing budget for the new period
   const handlePeriodChange = (newPeriod: BudgetPeriod) => {
-    setPeriod(newPeriod);
     const info = getCurrentPeriodInfo(newPeriod);
-    setPeriodIndex(info.periodIndex);
+    const newPeriodIndex = info.periodIndex;
+    
+    // Check if there's an existing budget for the new period configuration
+    const searchTargetId = scope === 'overall' ? '_overall' : targetId;
+    const existingForNewPeriod = existingBudgets.find(
+      b => b.scope === scope && 
+           b.targetId === searchTargetId && 
+           b.period === newPeriod &&
+           b.year === year &&
+           (newPeriod === 'yearly' || b.periodIndex === newPeriodIndex) &&
+           b.id !== editId
+    );
+    
+    if (existingForNewPeriod) {
+      // Navigate to edit that budget instead
+      navigate(`/budget/set?edit=${existingForNewPeriod.id}`, { replace: true });
+    } else {
+      // Switch to create mode for new period
+      setPeriod(newPeriod);
+      setPeriodIndex(newPeriodIndex);
+      if (isEditMode) {
+        // Clear edit ID and switch to create mode
+        navigate('/budget/set', { replace: true });
+      }
+    }
+  };
+
+  // Handle year change - check for existing budget
+  const handleYearChange = (newYear: number) => {
+    const searchTargetId = scope === 'overall' ? '_overall' : targetId;
+    const existingForYear = existingBudgets.find(
+      b => b.scope === scope && 
+           b.targetId === searchTargetId && 
+           b.period === period &&
+           b.year === newYear &&
+           (period === 'yearly' || b.periodIndex === periodIndex) &&
+           b.id !== editId
+    );
+    
+    if (existingForYear) {
+      navigate(`/budget/set?edit=${existingForYear.id}`, { replace: true });
+    } else {
+      setYear(newYear);
+      if (isEditMode) {
+        navigate('/budget/set', { replace: true });
+      }
+    }
+  };
+
+  // Handle period index change (month/quarter/week) - check for existing budget
+  const handlePeriodIndexChange = (newIndex: number) => {
+    const searchTargetId = scope === 'overall' ? '_overall' : targetId;
+    const existingForIndex = existingBudgets.find(
+      b => b.scope === scope && 
+           b.targetId === searchTargetId && 
+           b.period === period &&
+           b.year === year &&
+           b.periodIndex === newIndex &&
+           b.id !== editId
+    );
+    
+    if (existingForIndex) {
+      navigate(`/budget/set?edit=${existingForIndex.id}`, { replace: true });
+    } else {
+      setPeriodIndex(newIndex);
+      if (isEditMode) {
+        navigate('/budget/set', { replace: true });
+      }
+    }
   };
 
   // Handle alert threshold toggle
@@ -643,7 +710,7 @@ const SetBudgetPage = () => {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">Year</Label>
-                <Select value={year.toString()} onValueChange={val => setYear(parseInt(val))}>
+                <Select value={year.toString()} onValueChange={val => handleYearChange(parseInt(val))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -663,7 +730,7 @@ const SetBudgetPage = () => {
                   {period === 'weekly' ? 'Week' : period === 'monthly' ? 'Month' : 'Quarter'}
                 </Label>
                 {period === 'monthly' && (
-                  <Select value={periodIndex.toString()} onValueChange={val => setPeriodIndex(parseInt(val))}>
+                  <Select value={periodIndex.toString()} onValueChange={val => handlePeriodIndexChange(parseInt(val))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -675,7 +742,7 @@ const SetBudgetPage = () => {
                   </Select>
                 )}
                 {period === 'quarterly' && (
-                  <Select value={periodIndex.toString()} onValueChange={val => setPeriodIndex(parseInt(val))}>
+                  <Select value={periodIndex.toString()} onValueChange={val => handlePeriodIndexChange(parseInt(val))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -692,7 +759,7 @@ const SetBudgetPage = () => {
                     min={1}
                     max={53}
                     value={periodIndex}
-                    onChange={e => setPeriodIndex(parseInt(e.target.value) || 1)}
+                    onChange={e => handlePeriodIndexChange(parseInt(e.target.value) || 1)}
                     placeholder="Week number (1-53)"
                   />
                 )}
