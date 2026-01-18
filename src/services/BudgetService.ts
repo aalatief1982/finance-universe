@@ -24,12 +24,32 @@ export class BudgetService {
     try {
       const raw = safeStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
-      
+
       const parsed = JSON.parse(raw) as Partial<Budget>[];
-      // Migrate each budget to ensure all fields have defaults
-      return parsed
+
+      const migrated = parsed
         .map(b => migrateBudget(b))
         .filter(b => b.isActive !== false); // Only return active budgets
+
+      // De-duplicate by logical key (handles legacy overall targetId differences like '' vs '_overall')
+      const byKey = new Map<string, Budget>();
+      for (const b of migrated) {
+        const key = getBudgetKey(b);
+        const existing = byKey.get(key);
+        if (!existing) {
+          byKey.set(key, b);
+          continue;
+        }
+
+        const existingTime = Date.parse(existing.updatedAt ?? existing.createdAt ?? '') || 0;
+        const bTime = Date.parse(b.updatedAt ?? b.createdAt ?? '') || 0;
+
+        if (bTime >= existingTime) {
+          byKey.set(key, b);
+        }
+      }
+
+      return Array.from(byKey.values());
     } catch {
       return [];
     }
