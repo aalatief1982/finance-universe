@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { BudgetPeriod } from '@/models/budget';
-import { getCurrentPeriodInfo } from '@/utils/budget-period-utils';
+import { getCurrentPeriodInfo, formatPeriodLabel, navigatePeriod as navPeriod } from '@/utils/budget-period-utils';
 import { useCallback, useMemo } from 'react';
 
 export type PeriodFilter = 'all' | BudgetPeriod;
@@ -34,10 +34,6 @@ export function useBudgetPeriodParams(defaultPeriod: PeriodFilter = 'monthly'): 
   // Generate period label
   const periodLabel = useMemo(() => {
     if (period === 'all') return 'All Time';
-    
-    const info = getCurrentPeriodInfo(period);
-    // Use the actual year/periodIndex from URL
-    const { formatPeriodLabel } = require('@/utils/budget-period-utils');
     return formatPeriodLabel(period, year, periodIndex);
   }, [period, year, periodIndex]);
   
@@ -89,7 +85,6 @@ export function useBudgetPeriodParams(defaultPeriod: PeriodFilter = 'monthly'): 
   const navigatePeriod = useCallback((direction: 'prev' | 'next') => {
     if (period === 'all') return;
     
-    const { navigatePeriod: navPeriod } = require('@/utils/budget-period-utils');
     const result = navPeriod(period, year, periodIndex, direction);
     updateParams({ year: result.year, periodIndex: result.periodIndex });
   }, [period, year, periodIndex, updateParams]);
