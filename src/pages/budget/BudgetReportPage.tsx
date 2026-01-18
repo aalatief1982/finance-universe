@@ -59,7 +59,7 @@ const BudgetReportPage = () => {
     return `${scopeName} • ${periodName}`;
   };
 
-  // Calculate budget vs actual data - filter by period, year, and periodIndex
+  // Calculate budget vs actual data - filter by period type and year (show all periods in year for overview)
   const budgetVsActual = React.useMemo(() => {
     return budgets
       .filter(b => {
@@ -69,11 +69,8 @@ const BudgetReportPage = () => {
         // For "all" view, show all budgets of that period type
         if (period === 'all') return true;
         
-        // Filter by year
+        // Filter by year only (not periodIndex) to show all periods in the year
         if (b.year !== year) return false;
-        
-        // Filter by periodIndex (for non-yearly periods)
-        if (selectedPeriod !== 'yearly' && b.periodIndex !== periodIndex) return false;
         
         return true;
       })
@@ -86,10 +83,11 @@ const BudgetReportPage = () => {
           spent: progress.spent,
           remaining: Math.max(0, progress.remaining),
           percentUsed: Math.round(progress.percentUsed),
+          periodIndex: budget.periodIndex, // Keep for sorting
         };
       })
-      .sort((a, b) => b.spent - a.spent);
-  }, [budgets, selectedPeriod, period, year, periodIndex]);
+      .sort((a, b) => (a.periodIndex ?? 0) - (b.periodIndex ?? 0)); // Sort chronologically
+  }, [budgets, selectedPeriod, period, year]);
 
   // Total summary
   const totalSummary = React.useMemo(() => {
