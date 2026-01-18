@@ -16,11 +16,15 @@ import { cn } from '@/lib/utils';
 
 const BudgetHubPage = () => {
   const navigate = useNavigate();
-  const { period } = useBudgetPeriodParams();
+  const { period, year, periodIndex } = useBudgetPeriodParams();
   
-  const { data: budgetsWithProgress, loading, summary } = useBudgetsWithProgress(
-    period === 'all' ? undefined : period
-  );
+  // Build filter based on URL params
+  const budgetFilter = useMemo(() => {
+    if (period === 'all') return undefined;
+    return { period, year, periodIndex };
+  }, [period, year, periodIndex]);
+  
+  const { data: budgetsWithProgress, loading, summary } = useBudgetsWithProgress(budgetFilter);
   const { alerts, dismissAlert } = useBudgetAlerts();
   const { progress: overallProgress } = useOverallBudgetProgress();
   

@@ -75,30 +75,55 @@ export function useBudgetProgress(budgetId?: string) {
 /**
  * Hook for all budgets with progress
  */
-export function useBudgetsWithProgress(filterPeriod?: BudgetPeriod) {
+interface BudgetFilter {
+  period?: BudgetPeriod;
+  year?: number;
+  periodIndex?: number;
+}
+
+export function useBudgetsWithProgress(filter?: BudgetPeriod | BudgetFilter) {
   const [data, setData] = useState<Array<Budget & { progress: BudgetProgress }>>([]);
   const [loading, setLoading] = useState(true);
 
+  // Normalize filter to object form
+  const normalizedFilter = useMemo((): BudgetFilter | undefined => {
+    if (!filter) return undefined;
+    if (typeof filter === 'string') return { period: filter };
+    return filter;
+  }, [filter]);
+
+  const filterBudgets = useCallback((budgetsWithProgress: Array<Budget & { progress: BudgetProgress }>) => {
+    if (!normalizedFilter) return budgetsWithProgress;
+    
+    return budgetsWithProgress.filter(b => {
+      // Filter by period
+      if (normalizedFilter.period && b.period !== normalizedFilter.period) {
+        return false;
+      }
+      // Filter by year
+      if (normalizedFilter.year && b.year !== normalizedFilter.year) {
+        return false;
+      }
+      // Filter by periodIndex (only if not yearly)
+      if (normalizedFilter.periodIndex !== undefined && b.period !== 'yearly') {
+        if (b.periodIndex !== normalizedFilter.periodIndex) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [normalizedFilter]);
+
   useEffect(() => {
-    let budgetsWithProgress = budgetService.getAllBudgetsWithProgress();
-    
-    if (filterPeriod) {
-      budgetsWithProgress = budgetsWithProgress.filter(b => b.period === filterPeriod);
-    }
-    
-    setData(budgetsWithProgress);
+    const budgetsWithProgress = budgetService.getAllBudgetsWithProgress();
+    setData(filterBudgets(budgetsWithProgress));
     setLoading(false);
-  }, [filterPeriod]);
+  }, [filterBudgets]);
 
   const refresh = useCallback(() => {
-    let budgetsWithProgress = budgetService.getAllBudgetsWithProgress();
-    
-    if (filterPeriod) {
-      budgetsWithProgress = budgetsWithProgress.filter(b => b.period === filterPeriod);
-    }
-    
-    setData(budgetsWithProgress);
-  }, [filterPeriod]);
+    const budgetsWithProgress = budgetService.getAllBudgetsWithProgress();
+    setData(filterBudgets(budgetsWithProgress));
+  }, [filterBudgets]);
 
   // Memoized calculations
   const summary = useMemo(() => {
