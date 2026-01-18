@@ -67,7 +67,9 @@ export function migrateBudget(raw: Partial<Budget> & { scope?: string; period?: 
     scope = 'category'; // Default fallback
   }
   
-  let targetId = raw.targetId || (scope === 'overall' ? '' : '');
+  // Normalize targetId for 'overall' to a stable sentinel to avoid duplicates across versions
+  let targetId = raw.targetId || '';
+  if (scope === 'overall') targetId = '_overall';
   
   // Handle period migration: 'custom' becomes 'monthly'
   let period = raw.period as BudgetPeriod;
@@ -139,7 +141,8 @@ export function migrateBudget(raw: Partial<Budget> & { scope?: string; period?: 
  * Generate a unique key for a budget (used to prevent duplicates)
  */
 export function getBudgetKey(budget: Pick<Budget, 'scope' | 'targetId' | 'period' | 'year' | 'periodIndex'>): string {
-  return `${budget.scope}:${budget.targetId}:${budget.period}:${budget.year}:${budget.periodIndex || ''}`;
+  const normalizedTargetId = budget.scope === 'overall' ? '_overall' : budget.targetId;
+  return `${budget.scope}:${normalizedTargetId}:${budget.period}:${budget.year}:${budget.periodIndex || ''}`;
 }
 
 /**
