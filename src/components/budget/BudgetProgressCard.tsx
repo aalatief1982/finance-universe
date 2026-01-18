@@ -3,6 +3,7 @@ import { Budget, BudgetScope } from '@/models/budget';
 import { BudgetProgress } from '@/models/budget-period';
 import { formatCurrency } from '@/utils/format-utils';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { 
   Wallet, 
@@ -23,6 +24,7 @@ interface BudgetProgressCardProps {
   showPeriod?: boolean;
   showScope?: boolean;
   compact?: boolean;
+  showSourceBadge?: boolean;
 }
 
 const scopeIcons: Record<BudgetScope, React.ElementType> = {
@@ -47,6 +49,7 @@ export function BudgetProgressCard({
   showPeriod = true,  // Default to true - always show period
   showScope = true,   // Default to true - always show scope
   compact = false,
+  showSourceBadge = false, // Show Set/Calculated badge
 }: BudgetProgressCardProps) {
   const Icon = scopeIcons[budget.scope];
   const { spent, budgeted, percentUsed, remaining, isOverBudget, daysRemaining, dailyBudgetRemaining } = progress;
@@ -73,6 +76,19 @@ export function BudgetProgressCard({
 
   // Clamp visual progress to 100%
   const visualProgress = Math.min(percentUsed, 100);
+  
+  // Source badge component
+  const SourceBadge = showSourceBadge && (
+    <Badge 
+      variant={budget.isOverride ? "secondary" : "outline"} 
+      className={cn(
+        "text-[10px] px-1.5 py-0",
+        !budget.isOverride && "border-dashed"
+      )}
+    >
+      {budget.isOverride ? "Set" : "Calc"}
+    </Badge>
+  );
 
   if (compact) {
     return (
@@ -95,7 +111,10 @@ export function BudgetProgressCard({
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-0.5">
-            <span className="font-medium text-sm truncate">{targetName}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-medium text-sm truncate">{targetName}</span>
+              {SourceBadge}
+            </div>
             <span className={cn(
               "text-sm font-medium",
               isOverBudget && "text-destructive"
@@ -141,7 +160,10 @@ export function BudgetProgressCard({
             )} />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">{targetName}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-foreground">{targetName}</h3>
+              {SourceBadge}
+            </div>
             {dimensionLabel && (
               <span className="text-xs text-muted-foreground">
                 {dimensionLabel}

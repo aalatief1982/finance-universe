@@ -12,13 +12,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatCurrency } from '@/utils/format-utils';
 import { budgetService } from '@/services/BudgetService';
-import { findParentPeriodBudget, calculateDerivedBudgetAmount } from '@/services/BudgetHierarchyService';
+import { 
+  findParentPeriodBudget, 
+  calculateDerivedBudgetAmount,
+  calculateParentPeriodUpdates,
+  getSiblingBudgets,
+  getParentBudget,
+  PropagationResult
+} from '@/services/BudgetHierarchyService';
 import { accountService } from '@/services/AccountService';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { Budget, BudgetScope, BudgetPeriod, DEFAULT_ALERT_THRESHOLDS, CreateBudgetInput } from '@/models/budget';
 import { getCurrentPeriodInfo, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
+import { ParentImpactPreview } from '@/components/budget/ParentImpactPreview';
+import { SiblingBudgetsContext } from '@/components/budget/SiblingBudgetsContext';
 import { 
   Wallet, 
   Tag, 
@@ -30,7 +39,8 @@ import {
   Trash2,
   Calendar,
   PiggyBank,
-  Info
+  Info,
+  ArrowUp
 } from 'lucide-react';
 
 const PERIODS: { value: BudgetPeriod; label: string }[] = [
@@ -118,6 +128,7 @@ const SetBudgetPage = () => {
   const [alertThresholds, setAlertThresholds] = React.useState<number[]>(
     existingBudget?.alertThresholds || [...DEFAULT_ALERT_THRESHOLDS]
   );
+  const [propagateUp, setPropagateUp] = React.useState(false);
 
   // Data
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
@@ -230,6 +241,69 @@ const SetBudgetPage = () => {
     
     return null;
   }, [scope, targetId, period, year, periodIndex, amount, existingBudgets]);
+
+  // Calculate parent period impact preview (for upward propagation awareness)
+  const parentImpactPreview = React.useMemo((): PropagationResult | null => {
+    if (amount <= 0) return null;
+    if (period === 'yearly') return null; // Yearly has no parent
+    
+    // Create a mock budget for calculation
+    const mockBudget: Budget = {
+      id: editId || 'temp',
+      scope,
+      targetId: scope === 'overall' ? '_overall' : targetId,
+      amount: existingBudget?.amount || 0,
+      currency,
+      period,
+      year,
+      periodIndex,
+      isOverride: true,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    const result = calculateParentPeriodUpdates(mockBudget, amount, existingBudgets);
+    
+    // Only show if there are actual parent budgets to update
+    if (!result.quarterUpdate && !result.yearlyUpdate) return null;
+    
+    return result;
+  }, [amount, period, scope, targetId, currency, year, periodIndex, existingBudgets, editId, existingBudget]);
+
+  // Get sibling budgets for context
+  const siblingBudgets = React.useMemo(() => {
+    if (period === 'yearly') return [];
+    
+    const mockBudget: Budget = {
+      id: editId || 'temp',
+      scope,
+      targetId: scope === 'overall' ? '_overall' : targetId,
+      amount,
+      currency,
+      period,
+      year,
+      periodIndex,
+      isOverride: true,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    return getSiblingBudgets(mockBudget, existingBudgets);
+  }, [period, scope, targetId, amount, currency, year, periodIndex, existingBudgets, editId]);
+
+  // Get parent period label for sibling context
+  const parentPeriodLabel = React.useMemo(() => {
+    if (period === 'monthly') {
+      const quarter = Math.ceil((periodIndex || 1) / 3);
+      return `Q${quarter} ${year}`;
+    }
+    if (period === 'quarterly') {
+      return `${year}`;
+    }
+    return undefined;
+  }, [period, periodIndex, year]);
 
   // Get target name for display
   const getTargetName = (id: string) => {
@@ -690,6 +764,44 @@ const SetBudgetPage = () => {
                   </span>
                 </AlertDescription>
               </Alert>
+            )}
+            
+            {/* Parent Impact Preview */}
+            {parentImpactPreview && (
+              <ParentImpactPreview 
+                propagationResult={parentImpactPreview}
+                currency={currency}
+                year={year}
+              />
+            )}
+            
+            {/* Sibling Budgets Context */}
+            {siblingBudgets.length > 0 && (
+              <div className="mt-4">
+                <SiblingBudgetsContext
+                  siblings={siblingBudgets}
+                  currentAmount={amount}
+                  currentPeriodIndex={periodIndex}
+                  period={period}
+                  year={year}
+                  currency={currency}
+                  parentPeriodLabel={parentPeriodLabel}
+                />
+              </div>
+            )}
+            
+            {/* Upward Propagation Option */}
+            {parentImpactPreview && (parentImpactPreview.quarterUpdate || parentImpactPreview.yearlyUpdate) && (
+              <div className="mt-4 flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <ArrowUp className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">Update parent budgets</p>
+                    <p className="text-xs text-muted-foreground">Adjust parent totals to match</p>
+                  </div>
+                </div>
+                <Switch checked={propagateUp} onCheckedChange={setPropagateUp} />
+              </div>
             )}
           </CardContent>
         </Card>
