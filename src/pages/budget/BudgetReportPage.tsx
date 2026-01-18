@@ -10,7 +10,7 @@ import { useTransactions } from '@/context/TransactionContext';
 import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
-import { Budget, BudgetPeriod } from '@/models/budget';
+import { Budget, BudgetPeriod, BudgetScope } from '@/models/budget';
 import { formatCurrency } from '@/utils/format-utils';
 import { formatPeriodLabel } from '@/utils/budget-period-utils';
 import { useBudgetPeriodParams } from '@/hooks/useBudgetPeriodParams';
@@ -32,10 +32,19 @@ const CHART_COLORS = [
   '#06b6d4',
 ];
 
+const SCOPE_OPTIONS: { value: BudgetScope | 'all'; label: string }[] = [
+  { value: 'all', label: 'All Scopes' },
+  { value: 'overall', label: 'Overall' },
+  { value: 'category', label: 'Category' },
+  { value: 'subcategory', label: 'Subcategory' },
+  { value: 'account', label: 'Account' },
+];
+
 const BudgetReportPage = () => {
   const { transactions } = useTransactions();
   const { period, year, periodIndex, periodLabel } = useBudgetPeriodParams();
   const [timeRange, setTimeRange] = React.useState<'3m' | '6m' | '12m'>('6m');
+  const [scopeFilter, setScopeFilter] = React.useState<BudgetScope | 'all'>('overall');
   
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
@@ -59,12 +68,15 @@ const BudgetReportPage = () => {
     return `${scopeName} • ${periodName}`;
   };
 
-  // Calculate budget vs actual data - filter by period type and year (show all periods in year for overview)
+  // Calculate budget vs actual data - filter by period type, year, and scope (show all periods in year for overview)
   const budgetVsActual = React.useMemo(() => {
     return budgets
       .filter(b => {
         // Filter by period type
         if (b.period !== selectedPeriod) return false;
+        
+        // Filter by scope
+        if (scopeFilter !== 'all' && b.scope !== scopeFilter) return false;
         
         // For "all" view, show all budgets of that period type
         if (period === 'all') return true;
@@ -87,7 +99,7 @@ const BudgetReportPage = () => {
         };
       })
       .sort((a, b) => (a.periodIndex ?? 0) - (b.periodIndex ?? 0)); // Sort chronologically
-  }, [budgets, selectedPeriod, period, year]);
+  }, [budgets, selectedPeriod, period, year, scopeFilter]);
 
   // Total summary
   const totalSummary = React.useMemo(() => {
@@ -215,6 +227,21 @@ const BudgetReportPage = () => {
       showAddButton={false}
       headerActions={headerActions}
     >
+      {/* Scope Filter */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+        {SCOPE_OPTIONS.map(opt => (
+          <Button
+            key={opt.value}
+            variant={scopeFilter === opt.value ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setScopeFilter(opt.value)}
+            className="whitespace-nowrap"
+          >
+            {opt.label}
+          </Button>
+        ))}
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card>
