@@ -203,8 +203,8 @@ export class BudgetService {
       // Filter by scope
       switch (budget.scope) {
         case 'overall':
-          // Include all expense transactions
-          return tx.type === 'expense' || tx.amount < 0;
+          // Include ONLY expense transactions (NOT transfers)
+          return tx.type === 'expense';
         
         case 'account':
           return tx.fromAccount === budget.targetId || tx.account === budget.targetId;
@@ -224,17 +224,16 @@ export class BudgetService {
   }
 
   /**
-   * Get spent amount for a budget in the current period
+   * Get spent amount for a budget in the current period (EXCLUDES transfers)
    */
   getSpentAmount(budget: Budget): number {
     const transactions = this.getTransactionsForBudget(budget);
     
     // Sum up expense amounts (expenses are typically negative, so we use Math.abs)
+    // Only count actual expenses, NOT transfers
     return transactions.reduce((sum, tx) => {
-      const amount = Math.abs(tx.amount);
-      // Only count expenses
-      if (tx.type === 'expense' || tx.amount < 0) {
-        return sum + amount;
+      if (tx.type === 'expense') {
+        return sum + Math.abs(tx.amount);
       }
       return sum;
     }, 0);

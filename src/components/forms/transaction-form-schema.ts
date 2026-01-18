@@ -30,13 +30,23 @@ export const transactionFormSchema = z.object({
     message: "Please select a currency.",
   }),
 }).refine(data => {
-  // If transaction type is transfer, toAccount is required
-  if (data.type === 'transfer' && !data.toAccount) {
-    return false;
+  // If transaction type is transfer, both accounts are required
+  if (data.type === 'transfer') {
+    if (!data.toAccount) return false;
+    if (!data.fromAccount) return false;
   }
   return true;
 }, {
-  message: "To Account is required for transfer transactions",
+  message: "Both From and To accounts are required for transfers",
+  path: ["toAccount"]
+}).refine(data => {
+  // If transaction type is transfer, accounts must be different
+  if (data.type === 'transfer' && data.fromAccount && data.toAccount) {
+    return data.fromAccount !== data.toAccount;
+  }
+  return true;
+}, {
+  message: "Transfer accounts must be different",
   path: ["toAccount"]
 });
 

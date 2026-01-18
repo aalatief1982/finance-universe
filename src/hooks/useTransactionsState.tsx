@@ -171,15 +171,18 @@ export function useTransactionsState() {
       return;
     }
 
-    // Calculate summary
+    // Calculate summary (EXCLUDES transfers)
     const summary = transactions.reduce(
       (acc, transaction) => {
-        if (transaction.amount > 0) {
-          acc.income += transaction.amount;
-        } else {
+        if (transaction.type === 'income') {
+          acc.income += Math.abs(transaction.amount);
+        } else if (transaction.type === 'expense') {
           acc.expenses += Math.abs(transaction.amount);
         }
-        acc.balance += transaction.amount;
+        // Transfers don't affect balance calculation
+        if (transaction.type !== 'transfer') {
+          acc.balance += transaction.amount;
+        }
         return acc;
       },
       { income: 0, expenses: 0, balance: 0 }
@@ -195,9 +198,9 @@ export function useTransactionsState() {
       categoryMap.set(category.id, category.name);
     });
 
-    // Calculate category breakdown for expenses only
+    // Calculate category breakdown for expenses only (EXCLUDES transfers)
     const expensesByCategory = transactions
-      .filter(t => t.amount < 0)
+      .filter(t => t.type === 'expense')
       .reduce((acc, transaction) => {
         const categoryId = transaction.category;
         const categoryName = categoryMap.get(categoryId) || categoryId;
@@ -266,9 +269,12 @@ export function useTransactionsState() {
         acc[key] = { income: 0, expense: 0 };
       }
       
-      if (tx.amount > 0) {
-        acc[key].income += tx.amount;
-      } else {
+      // Skip transfers from time period calculations
+      if (tx.type === 'transfer') return acc;
+      
+      if (tx.type === 'income') {
+        acc[key].income += Math.abs(tx.amount);
+      } else if (tx.type === 'expense') {
         acc[key].expense += Math.abs(tx.amount);
       }
       
