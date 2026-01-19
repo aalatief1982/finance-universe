@@ -11,4 +11,10 @@ describe('normalizeTemplateStructure', () => {
     expect(res1.structure).toBe('Paid AMOUNT SAR to "Store" on DATE');
     expect(res1).toEqual(res2);
   });
+
+  it('returns empty structure for empty input', () => {
+    const result = normalizeTemplateStructure('');
+    expect(result.structure).toBe('');
+    expect(result.hash).toHaveLength(64);
+  });
 });

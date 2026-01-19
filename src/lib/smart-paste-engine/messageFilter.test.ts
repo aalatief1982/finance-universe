@@ -17,4 +17,16 @@ describe('isFinancialTransactionMessage', () => {
     localStorage.setItem('xpensia_type_keywords', JSON.stringify(['deposit']));
     expect(isFinancialTransactionMessage('Deposit of SAR 1,234 yesterday')).toBe(false);
   });
+
+  it('falls back to default keywords when stored keywords are malformed', () => {
+    localStorage.setItem('xpensia_type_keywords', JSON.stringify({ expense: ['purchase'] }));
+    const message = 'تم تحويل SAR 250 في 2024-01-02';
+    expect(isFinancialTransactionMessage(message)).toBe(true);
+  });
+
+  it('returns false when amount is missing even if keyword and date exist', () => {
+    localStorage.setItem('xpensia_type_keywords', JSON.stringify(['deposit']));
+    const message = 'Deposit completed on 2024-02-01';
+    expect(isFinancialTransactionMessage(message)).toBe(false);
+  });
 });

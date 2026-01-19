@@ -9,6 +9,10 @@ describe('normalizeNumerals', () => {
   it('converts Eastern Arabic digits to Western digits', () => {
     expect(normalizeNumerals('عدد ۴۵۶')).toBe('عدد 456');
   });
+
+  it('leaves Western digits unchanged', () => {
+    expect(normalizeNumerals('Total 789')).toBe('Total 789');
+  });
 });
 
 describe('normalizePunctuation', () => {
@@ -16,6 +20,11 @@ describe('normalizePunctuation', () => {
     const input = 'مرحباً، هل هذا صحيح؟ “نعم”؛ بالطبع.';
     const expected = 'مرحباً, هل هذا صحيح? "نعم"; بالطبع.';
     expect(normalizePunctuation(input)).toBe(expected);
+  });
+
+  it('keeps ASCII punctuation intact', () => {
+    const input = 'Paid $20, on 2024-02-01.';
+    expect(normalizePunctuation(input)).toBe(input);
   });
 });
 
