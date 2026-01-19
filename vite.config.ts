@@ -7,10 +7,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
     },
     // Keep these conditions to properly resolve Capacitor plugins
-    conditions: ['web', 'browser', 'default']
+    conditions: ['web', 'browser', 'default'],
   },
   optimizeDeps: {
     include: ['firebase/app', 'firebase/auth', 'firebase/analytics'],
@@ -22,6 +22,20 @@ export default defineConfig({
     },
   },
   server: {
-    port: 8080
-  }
+    port: 8080,
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    globals: true,
+    css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'json-summary'],
+      lines: 30,
+      functions: 30,
+      branches: 10,
+      statements: 30,
+    },
+  },
 });
