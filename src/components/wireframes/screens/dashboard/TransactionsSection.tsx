@@ -2,6 +2,7 @@ import React from 'react';
 import { CreditCard, MessageSquare, Plus, RefreshCw } from 'lucide-react';
 import WireframeButton from '../../WireframeButton';
 import { Transaction } from '@/types/transaction';
+import { getCurrencySymbol } from '@/utils/format-utils';
 
 interface TransactionsSectionProps {
   transactions: Transaction[];
@@ -20,10 +21,7 @@ const TransactionsSection = ({
 }: TransactionsSectionProps) => {
 
   const formatAmount = (transaction: Transaction) => {
-    const currencySymbol = transaction.currency === 'USD' ? '$' :
-                          transaction.currency === 'EUR' ? '€' : 
-                          'SAR ';
-    
+    const currencySymbol = getCurrencySymbol(transaction.currency || currency || 'USD');
     const amount = Math.abs(transaction.amount).toFixed(2);
     return `${currencySymbol}${amount}`;
   };
