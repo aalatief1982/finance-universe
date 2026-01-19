@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DollarSign } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { getUserSettings, storeUserSettings, updateCurrency } from '@/utils/storage-utils';
 import { SupportedCurrency } from '@/types/locale';
 import { getAllCurrencies } from '@/utils/locale';
@@ -38,7 +38,7 @@ const CurrencySettings = () => {
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <DollarSign className="mr-2" size={20} />
+          <Coins className="mr-2" size={20} />
           <span>Currency Settings</span>
         </CardTitle>
         <CardDescription>Change your preferred currency</CardDescription>

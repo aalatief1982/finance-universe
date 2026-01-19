@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/format-utils';
+import { getUserSettings } from '@/utils/storage-utils';
 import { TransactionSummary as TransactionSummaryType } from '@/types/transaction';
 
 interface TransactionSummaryProps {
@@ -23,7 +24,7 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-1">Total Income</p>
-              <h3 className="text-2xl font-bold text-success">{formatCurrency(income)}</h3>
+              <h3 className="text-2xl font-bold text-success">{formatCurrency(income, getUserSettings().currency || 'USD')}</h3>
             </div>
             <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
               <ArrowUpRight className="h-6 w-6 text-success" />
@@ -37,7 +38,7 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-1">Total Expenses</p>
-              <h3 className="text-2xl font-bold text-destructive">{formatCurrency(expenses)}</h3>
+              <h3 className="text-2xl font-bold text-destructive">{formatCurrency(expenses, getUserSettings().currency || 'USD')}</h3>
             </div>
             <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
               <ArrowDownRight className="h-6 w-6 text-destructive" />
@@ -51,10 +52,10 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-1">Balance</p>
-              <h3 className="text-2xl font-bold">{formatCurrency(balance)}</h3>
+              <h3 className="text-2xl font-bold">{formatCurrency(balance, getUserSettings().currency || 'USD')}</h3>
             </div>
             <div className={`h-12 w-12 rounded-full ${balanceChange.bgColor} flex items-center justify-center`}>
-              <DollarSign className={`h-6 w-6 ${balanceChange.color}`} />
+              <Wallet className={`h-6 w-6 ${balanceChange.color}`} />
             </div>
           </div>
         </CardContent>

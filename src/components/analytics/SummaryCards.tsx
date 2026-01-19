@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency } from '@/utils/format-utils';
+import { getUserSettings } from '@/utils/storage-utils';
 import { AnalyticsTotals } from '@/services/AnalyticsService';
 import { ArrowDown, ArrowUp, DollarSign, PiggyBank, CreditCard } from 'lucide-react';
 import { CHART_COLORS } from '@/constants/analytics';
@@ -26,7 +27,7 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
               <DollarSign size={16} className="text-success" />
             </div>
           </div>
-          <h3 className="text-2xl font-semibold text-success">{formatCurrency(income)}</h3>
+          <h3 className="text-2xl font-semibold text-success">{formatCurrency(income, getUserSettings().currency || 'USD')}</h3>
           <div className="mt-2 flex items-center text-sm">
             <ArrowUp size={16} className="text-success mr-1" />
             <span className="text-success font-medium">12% </span>
@@ -43,7 +44,7 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
               <CreditCard size={16} className="text-destructive" />
             </div>
           </div>
-          <h3 className="text-2xl font-semibold text-destructive">{formatCurrency(expenses)}</h3>
+          <h3 className="text-2xl font-semibold text-destructive">{formatCurrency(expenses, getUserSettings().currency || 'USD')}</h3>
           <div className="mt-2 flex items-center text-sm">
             <ArrowDown size={16} className="text-success mr-1" />
             <span className="text-success font-medium">3% </span>

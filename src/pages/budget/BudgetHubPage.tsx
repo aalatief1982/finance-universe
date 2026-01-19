@@ -9,6 +9,7 @@ import { OverallBudgetRing } from '@/components/budget/OverallBudgetRing';
 import { BudgetProgressCard } from '@/components/budget/BudgetProgressCard';
 import { BudgetAlertBanner } from '@/components/budget/BudgetAlertBanner';
 import { formatCurrency } from '@/utils/format-utils';
+import { getUserSettings } from '@/utils/storage-utils';
 import { formatPeriodLabel } from '@/utils/budget-period-utils';
 import { accountService } from '@/services/AccountService';
 import { getCategoryHierarchy } from '@/lib/categories-data';
@@ -157,7 +158,7 @@ const BudgetHubPage = () => {
             <div className="bg-card rounded-xl p-6 border">
               <OverallBudgetRing
                 progress={yearlyBudgets[0]?.progress || overallProgress}
-                currency={yearlyBudgets[0]?.currency || 'USD'}
+                currency={yearlyBudgets[0]?.currency || getUserSettings().currency || 'USD'}
                 size="lg"
                 dimensionLabel={yearlyBudgets[0] 
                   ? `${getTargetName(yearlyBudgets[0])} • ${formatPeriodLabel(yearlyBudgets[0].period, yearlyBudgets[0].year, yearlyBudgets[0].periodIndex)}` 
@@ -172,7 +173,7 @@ const BudgetHubPage = () => {
               <div className="bg-card rounded-lg p-3 border text-center">
                 <p className="text-xs text-muted-foreground">Total Budget</p>
                 <p className="text-lg font-bold">
-                  {formatCurrency(summary.totalBudgeted, 'USD')}
+                  {formatCurrency(summary.totalBudgeted, getUserSettings().currency || 'USD')}
                 </p>
               </div>
               <div className="bg-card rounded-lg p-3 border text-center">
@@ -181,7 +182,7 @@ const BudgetHubPage = () => {
                   "text-lg font-bold",
                   summary.totalSpent > summary.totalBudgeted && "text-destructive"
                 )}>
-                  {formatCurrency(summary.totalSpent, 'USD')}
+                  {formatCurrency(summary.totalSpent, getUserSettings().currency || 'USD')}
                 </p>
               </div>
               <div className="bg-card rounded-lg p-3 border text-center">
@@ -190,7 +191,7 @@ const BudgetHubPage = () => {
                   "text-lg font-bold",
                   summary.totalRemaining < 0 ? "text-destructive" : "text-primary"
                 )}>
-                  {formatCurrency(summary.totalRemaining, 'USD')}
+                  {formatCurrency(summary.totalRemaining, getUserSettings().currency || 'USD')}
                 </p>
               </div>
             </div>

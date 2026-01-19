@@ -1,7 +1,7 @@
 
 import React from 'react';
 import CurrencySelector from '../../CurrencySelector';
-import { DollarSign } from 'lucide-react';
+import { Coins } from 'lucide-react';
 
 interface BalanceCardProps {
   balance: number;
@@ -38,7 +38,7 @@ const BalanceCard = ({
             onChange={setCurrency}
             darkMode={true}
           />
-          <DollarSign size={18} className="opacity-80 ml-1" />
+          <Coins size={18} className="opacity-80 ml-1" />
         </div>
       </div>
       <h2 className="text-2xl font-bold">{formatCurrency(balance)}</h2>

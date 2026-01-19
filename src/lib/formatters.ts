@@ -1,11 +1,9 @@
+import { formatCurrency as formatCurrencyUtil } from '@/utils/format-utils';
+import { getUserSettings } from '@/utils/storage-utils';
 
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+export const formatCurrency = (amount: number, currency?: string): string => {
+  const currencyCode = currency || getUserSettings().currency || 'USD';
+  return formatCurrencyUtil(amount, currencyCode);
 };
 
 export const formatDate = (dateString: string): string => {

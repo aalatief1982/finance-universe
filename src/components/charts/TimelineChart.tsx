@@ -11,6 +11,7 @@ import {
   Legend
 } from 'recharts';
 import { formatCurrency } from '@/utils/format-utils';
+import { getUserSettings } from '@/utils/storage-utils';
 import { TimePeriodData } from '@/types/transaction';
 
 interface TimelineChartProps {
@@ -42,12 +43,12 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
               tick={{ fontSize: 11 }}
             />
             <YAxis 
-              tickFormatter={(value) => formatCurrency(value, 'USD').replace('.00', '')}
+              tickFormatter={(value) => formatCurrency(value, getUserSettings().currency || 'USD').replace('.00', '')}
               width={45}
               tick={{ fontSize: 11 }}
             />
             <Tooltip 
-              formatter={(value: number) => [formatCurrency(value), '']}
+              formatter={(value: number) => [formatCurrency(value, getUserSettings().currency || 'USD'), '']}
               labelFormatter={formatDate}
             />
             <Legend 
