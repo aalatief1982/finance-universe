@@ -49,6 +49,10 @@ describe('confidence scoring', () => {
     expect(getKeywordConfidence(transaction, [])).toBe(0);
   });
 
+  it('returns full template confidence when template matched', () => {
+    expect(getTemplateConfidence(1, 3)).toBe(1);
+  });
+
   it('computes weighted overall confidence', () => {
     expect(computeOverallConfidence(1, 0.5, 0.25)).toBeCloseTo(0.5 * 1 + 0.3 * 0.5 + 0.2 * 0.25, 5);
   });
