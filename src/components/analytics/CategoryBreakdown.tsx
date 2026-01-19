@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import CategoryPill from '@/components/CategoryPill';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency } from '@/utils/format-utils';
+import { getUserSettings } from '@/utils/storage-utils';
 import { CategoryData } from '@/services/AnalyticsService';
 
 interface CategoryBreakdownProps {
@@ -33,7 +34,7 @@ const CategoryBreakdown = ({ categories, categoryData, totalExpenses }: Category
                     <CategoryPill category={category.name} />
                     <span className="font-medium text-sm">{category.name}</span>
                   </div>
-                  <span className="font-semibold text-sm">{formatCurrency(category.value)}</span>
+                  <span className="font-semibold text-sm">{formatCurrency(category.value, getUserSettings().currency || 'USD')}</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-1.5 mt-1.5">
                   <div 

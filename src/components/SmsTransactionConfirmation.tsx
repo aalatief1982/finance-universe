@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, Edit, Globe, DollarSign, Building, ArrowRightLeft, User } from 'lucide-react';
+import { Check, X, Edit, Globe, Coins, Building, ArrowRightLeft, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -208,7 +208,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
           
           {transaction.currency && (
             <Badge variant="secondary" className="text-xs flex items-center gap-1">
-              <DollarSign size={12} />
+              <Coins size={12} />
               {transaction.currency}
             </Badge>
           )}

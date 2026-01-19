@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react';
 import { motion, PanInfo, useAnimation } from 'framer-motion';
 import { Trash2, Pen } from 'lucide-react';
 import { Transaction } from '@/types/transaction';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency } from '@/utils/format-utils';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useTransactions } from '@/context/TransactionContext';
@@ -61,7 +61,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
           
           <div className="flex items-center gap-4">
             <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-destructive' : 'text-success'}`}>
-              {formatCurrency(transaction.amount)}
+              {formatCurrency(transaction.amount, transaction.currency || 'USD')}
             </span>
             
             <div className="flex">
@@ -113,7 +113,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
             </div>
             
             <span className={`text-lg font-medium ${transaction.amount < 0 ? 'text-destructive' : 'text-success'}`}>
-              {formatCurrency(transaction.amount)}
+              {formatCurrency(transaction.amount, transaction.currency || 'USD')}
             </span>
           </div>
         </Card>
