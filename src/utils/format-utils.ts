@@ -1,4 +1,5 @@
 import { normalizeCurrencyCode, getCurrencyDisplayName, VALID_CURRENCY_CODES } from './currency-utils';
+import { getUserSettings } from '@/utils/storage-utils';
 
 /**
  * Utility functions for formatting values
@@ -11,20 +12,22 @@ import { normalizeCurrencyCode, getCurrencyDisplayName, VALID_CURRENCY_CODES } f
  * @param currencyCode The ISO currency code
  * @returns The currency symbol or code
  */
-export const getCurrencySymbol = (currencyCode: string = 'USD'): string => {
+export const getCurrencySymbol = (currencyCode?: string): string => {
+  const preferred = getUserSettings().currency || 'USD';
+  const requested = currencyCode ?? preferred;
   try {
-    const normalized = normalizeCurrencyCode(currencyCode, 'USD');
+    const normalized = normalizeCurrencyCode(requested, preferred);
     // Use Intl.NumberFormat to get the symbol
     const parts = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: normalized,
       currencyDisplay: 'narrowSymbol',
     }).formatToParts(0);
-    
+
     const symbolPart = parts.find(p => p.type === 'currency');
     return symbolPart?.value || normalized;
   } catch {
-    return currencyCode;
+    return requested;
   }
 };
 
@@ -36,25 +39,27 @@ export const getCurrencySymbol = (currencyCode: string = 'USD'): string => {
  * @param currency The currency code (default: USD)
  * @returns Formatted currency string
  */
-export const formatCurrency = (amount: number, currency = 'USD'): string => {
+export const formatCurrency = (amount: number, currency?: string): string => {
+  const preferred = getUserSettings().currency || 'USD';
+  const requested = currency ?? preferred;
   try {
     // Normalize the currency code to handle Arabic names and invalid codes
-    const validCurrency = normalizeCurrencyCode(currency, 'USD');
-    
+    const validCurrency = normalizeCurrencyCode(requested, preferred);
+
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: validCurrency,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-    
+
     return formatter.format(amount);
   } catch (error) {
-    // Ultimate fallback - format as number with currency code
+    // Ultimate fallback - format as number with currency symbol/code
     if (import.meta.env.MODE === 'development') {
-      console.warn('[formatCurrency] Failed for currency:', currency, error);
+      console.warn('[formatCurrency] Failed for currency:', requested, error);
     }
-    const symbol = getCurrencySymbol(currency);
+    const symbol = getCurrencySymbol(requested);
     return `${symbol}${amount.toFixed(2)}`;
   }
 };

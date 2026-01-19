@@ -78,7 +78,7 @@ import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
                                         <div className="text-right">
                                           <span className={cn('font-medium', typeInfo.color)}>
                                                 {isIncome ? '+' : '-'}
-                                                {formatCurrency(Math.abs(transaction.amount), transaction.currency || 'USD')}
+                                                {formatCurrency(Math.abs(transaction.amount), transaction.currency)}
                                           </span>
                                         </div>
 				  </div>
