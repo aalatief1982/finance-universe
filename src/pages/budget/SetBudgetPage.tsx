@@ -26,6 +26,7 @@ import { Budget, BudgetScope, BudgetPeriod, DEFAULT_ALERT_THRESHOLDS, CreateBudg
 import { getCurrentPeriodInfo, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
+import { getUserSettings } from '@/utils/storage-utils';
 import { ParentImpactPreview } from '@/components/budget/ParentImpactPreview';
 import { SiblingBudgetsContext } from '@/components/budget/SiblingBudgetsContext';
 import { 
@@ -115,7 +116,7 @@ const SetBudgetPage = () => {
     existingBudget?.targetId || prefillTarget || (prefillScope === 'overall' || (!prefillScope && !existingBudget) ? '_overall' : '')
   );
   const [amount, setAmount] = React.useState(existingBudget?.amount || 0);
-  const [currency, setCurrency] = React.useState(existingBudget?.currency || 'USD');
+  const [currency, setCurrency] = React.useState(existingBudget?.currency || getUserSettings().currency || 'USD');
   const [period, setPeriod] = React.useState<BudgetPeriod>(
     existingBudget?.period || prefillPeriod || 'yearly'
   );

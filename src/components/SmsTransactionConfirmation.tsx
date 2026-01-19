@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, Edit, Globe, DollarSign, Building, ArrowRightLeft, User } from 'lucide-react';
@@ -12,6 +11,7 @@ import { CATEGORY_HIERARCHY, CURRENCIES, getCategoriesForType, getSubcategoriesF
 import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Plus } from 'lucide-react';
 import { TransactionType } from '@/types/transaction';
+import { getCurrencySymbol } from '@/utils/format-utils';
 
 export interface SmsTransaction {
   id: string;
@@ -42,17 +42,6 @@ interface SmsTransactionConfirmationProps {
   onDecline: (id: string) => void;
   onEdit: (transaction: SmsTransaction) => void;
 }
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  'USD': '$',
-  'EUR': '€',
-  'GBP': '£',
-  'SAR': 'SR',
-  'EGP': 'E£',
-  'INR': '₹',
-  'AED': 'AED',
-  'BHD': 'BD',
-};
 
 const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   transaction,
@@ -137,13 +126,8 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
     }
   };
 
-  const getCurrencySymbol = (currency?: SupportedCurrency) => {
-    if (!currency) return '$';
-    return CURRENCY_SYMBOLS[currency] || currency;
-  };
-
   const formatAmount = (amount: number, currency?: SupportedCurrency) => {
-    const symbol = getCurrencySymbol(currency);
+    const symbol = getCurrencySymbol(currency || 'USD');
     return `${symbol}${Math.abs(amount).toFixed(2)}`;
   };
 
