@@ -134,7 +134,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           className={`mr-1 h-4 w-4 ${isIncome ? 'text-success' : 'text-destructive'}`} 
         />
         <span className={isIncome ? 'text-success' : 'text-destructive'}>
-          {formatCurrency(Math.abs(transaction.amount), transaction.currency || 'USD')}
+          {formatCurrency(Math.abs(transaction.amount), transaction.currency)}
         </span>
       </div>
     );

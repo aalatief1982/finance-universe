@@ -3,6 +3,7 @@ import { format, parseISO } from "date-fns";
 import { Trash2 } from "lucide-react";
 import { Transaction } from "@/types/transaction";
 import { formatCurrency } from "@/utils/format-utils";
+import { getUserSettings } from "@/utils/storage-utils";
 import CategoryIcon from "../CategoryIcon";
 import { CATEGORY_ICON_MAP } from "@/constants/categoryIconMap";
 import { TYPE_ICON_MAP } from "@/constants/typeIconMap";
@@ -32,6 +33,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
   const { deleteTransaction } = useTransactions();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const userCurrency = getUserSettings().currency || 'USD';
 
   // Group transactions by date
   const groupedTransactions = transactions.reduce(
@@ -95,7 +97,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
           const net = groupedTransactions[date]
             .filter(t => t.type !== 'transfer')
             .reduce((s, t) => s + t.amount, 0);
-          const netCurrency = groupedTransactions[date][0]?.currency || 'USD';
+          const netCurrency = groupedTransactions[date].find(t => !!t.currency)?.currency || userCurrency;
           return (
             <div key={date} className="space-y-[var(--card-gap)]">
               <h3 className="font-semibold text-card-foreground dark:text-white text-sm">
@@ -148,7 +150,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
                                 : "text-green-600"
                             }`}
                           >
-                            {formatCurrency(transaction.amount)}
+                            {formatCurrency(transaction.amount, transaction.currency || userCurrency)}
                           </span>
 
                           <Button
