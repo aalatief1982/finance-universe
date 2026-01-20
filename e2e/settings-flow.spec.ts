@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { routes } from './fixtures/test-data';
 import { NavigationHelper, SettingsHelper } from './fixtures/page-objects';
+import { setupTestUser, setupNewUser } from './fixtures/test-setup';
 
 test.describe('Settings & Preferences Journey', () => {
   let nav: NavigationHelper;
@@ -9,9 +10,8 @@ test.describe('Settings & Preferences Journey', () => {
   test.beforeEach(async ({ page }) => {
     nav = new NavigationHelper(page);
     settings = new SettingsHelper(page);
-    
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupTestUser(page);
   });
 
   test('should navigate to settings page', async ({ page }) => {
@@ -145,9 +145,15 @@ test.describe('Settings & Preferences Journey', () => {
 });
 
 test.describe('Onboarding Flow', () => {
+  let nav: NavigationHelper;
+
+  test.beforeEach(async ({ page }) => {
+    nav = new NavigationHelper(page);
+  });
+
   test('should show onboarding for new users', async ({ page }) => {
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupNewUser(page);
     
     await page.goto(routes.onboarding);
     
@@ -159,10 +165,9 @@ test.describe('Onboarding Flow', () => {
 
   test('should complete onboarding steps', async ({ page }) => {
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupNewUser(page);
     
     await page.goto(routes.onboarding);
-    
     // Find and click next/continue buttons
     const nextButton = page.getByRole('button', { name: /next|continue|skip/i });
     

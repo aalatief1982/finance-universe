@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { routes, testSmartPasteInput, testSmsMessage } from './fixtures/test-data';
 import { NavigationHelper, SmartPasteHelper } from './fixtures/page-objects';
+import { setupTestUser } from './fixtures/test-setup';
 
 test.describe('Smart Paste Flow', () => {
   let nav: NavigationHelper;
@@ -9,9 +10,8 @@ test.describe('Smart Paste Flow', () => {
   test.beforeEach(async ({ page }) => {
     nav = new NavigationHelper(page);
     smartPaste = new SmartPasteHelper(page);
-    
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupTestUser(page);
   });
 
   test('should navigate to import page', async ({ page }) => {
@@ -112,8 +112,7 @@ test.describe('Smart Paste Category Detection', () => {
     const smartPaste = new SmartPasteHelper(page);
     
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
-    
+    await setupTestUser(page);
     await nav.navigateToImport();
     
     // Paste text with clear category indicators

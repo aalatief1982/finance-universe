@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { routes, testTransfer } from './fixtures/test-data';
 import { NavigationHelper, TransactionFormHelper } from './fixtures/page-objects';
+import { setupTestUser } from './fixtures/test-setup';
 
 test.describe('Transfer Transaction Flow', () => {
   let nav: NavigationHelper;
@@ -9,9 +10,8 @@ test.describe('Transfer Transaction Flow', () => {
   test.beforeEach(async ({ page }) => {
     nav = new NavigationHelper(page);
     form = new TransactionFormHelper(page);
-    
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupTestUser(page);
   });
 
   test('should create a transfer between accounts', async ({ page }) => {
