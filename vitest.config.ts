@@ -10,10 +10,14 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],
-      lines: 30,
-      functions: 30,
-      branches: 10,
-      statements: 30,
+      reportsDirectory: './coverage',
+      clean: false,
+      thresholds: {
+        lines: 30,
+        functions: 30,
+        branches: 10,
+        statements: 30,
+      },
     },
   },
   resolve: {
