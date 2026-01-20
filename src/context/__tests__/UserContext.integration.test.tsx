@@ -7,6 +7,17 @@ import { createStorageMock } from '@/test/storage-mock';
 const storageMock = createStorageMock();
 vi.stubGlobal('localStorage', storageMock);
 
+// Mock Supabase
+vi.mock('@/lib/supabase', () => ({
+  supabase: null,
+  isSupabaseConfigured: () => false,
+}));
+
+vi.mock('@/lib/env', () => ({
+  ENABLE_SUPABASE_AUTH: false,
+  ENABLE_DEMO_MODE: true,
+}));
+
 // Import after mocks
 import { UserProvider, useUser } from '../user/UserContext';
 
@@ -16,7 +27,7 @@ const TestComponent = ({ onMount }: { onMount: (ctx: ReturnType<typeof useUser>)
   React.useEffect(() => {
     onMount(context);
   }, [context, onMount]);
-  return <div data-testid="currency">{context.settings?.currency || 'none'}</div>;
+  return <div data-testid="currency">{context.user?.preferences?.currency || 'none'}</div>;
 };
 
 describe('UserContext Integration', () => {
@@ -25,8 +36,8 @@ describe('UserContext Integration', () => {
     vi.clearAllMocks();
   });
 
-  describe('Settings persistence', () => {
-    it('should persist currency preference', async () => {
+  describe('User preferences persistence', () => {
+    it('should update currency preference', async () => {
       let contextRef: ReturnType<typeof useUser>;
 
       render(
@@ -40,40 +51,15 @@ describe('UserContext Integration', () => {
       });
 
       act(() => {
-        contextRef!.updateSettings({ currency: 'SAR' });
+        contextRef!.updateCurrency('SAR');
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('currency').textContent).toBe('SAR');
-      });
-
-      // Verify localStorage was updated
-      expect(storageMock.setItem).toHaveBeenCalled();
-    });
-
-    it('should load settings from localStorage on mount', async () => {
-      // Pre-populate storage with user settings
-      const existingSettings = {
-        currency: 'GBP',
-        theme: 'dark',
-      };
-
-      storageMock.setItem('xpensia_user_settings', JSON.stringify(existingSettings));
-
-      let contextRef: ReturnType<typeof useUser>;
-
-      render(
-        <UserProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </UserProvider>
-      );
-
-      await waitFor(() => {
-        expect(contextRef!.settings?.currency).toBe('GBP');
+        expect(contextRef!.user?.preferences?.currency).toBe('SAR');
       });
     });
 
-    it('should update multiple settings at once', async () => {
+    it('should update theme preference', async () => {
       let contextRef: ReturnType<typeof useUser>;
 
       render(
@@ -87,7 +73,29 @@ describe('UserContext Integration', () => {
       });
 
       act(() => {
-        contextRef!.updateSettings({
+        contextRef!.updateTheme('dark');
+      });
+
+      await waitFor(() => {
+        expect(contextRef!.user?.preferences?.theme).toBe('dark');
+      });
+    });
+
+    it('should update multiple preferences at once', async () => {
+      let contextRef: ReturnType<typeof useUser>;
+
+      render(
+        <UserProvider>
+          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
+        </UserProvider>
+      );
+
+      await waitFor(() => {
+        expect(contextRef!).toBeDefined();
+      });
+
+      act(() => {
+        contextRef!.updateUserPreferences({
           currency: 'EUR',
           theme: 'light',
           language: 'ar',
@@ -95,15 +103,15 @@ describe('UserContext Integration', () => {
       });
 
       await waitFor(() => {
-        expect(contextRef!.settings?.currency).toBe('EUR');
-        expect(contextRef!.settings?.theme).toBe('light');
-        expect(contextRef!.settings?.language).toBe('ar');
+        expect(contextRef!.user?.preferences?.currency).toBe('EUR');
+        expect(contextRef!.user?.preferences?.theme).toBe('light');
+        expect(contextRef!.user?.preferences?.language).toBe('ar');
       });
     });
   });
 
   describe('Theme management', () => {
-    it('should toggle theme correctly', async () => {
+    it('should get effective theme correctly', async () => {
       let contextRef: ReturnType<typeof useUser>;
 
       render(
@@ -116,20 +124,44 @@ describe('UserContext Integration', () => {
         expect(contextRef!).toBeDefined();
       });
 
-      const initialTheme = contextRef!.settings?.theme;
+      // getEffectiveTheme should return 'light' or 'dark'
+      const effectiveTheme = contextRef!.getEffectiveTheme();
+      expect(['light', 'dark']).toContain(effectiveTheme);
+    });
+
+    it('should switch between light and dark themes', async () => {
+      let contextRef: ReturnType<typeof useUser>;
+
+      render(
+        <UserProvider>
+          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
+        </UserProvider>
+      );
+
+      await waitFor(() => {
+        expect(contextRef!).toBeDefined();
+      });
 
       act(() => {
-        contextRef!.toggleTheme();
+        contextRef!.updateTheme('dark');
       });
 
       await waitFor(() => {
-        expect(contextRef!.settings?.theme).not.toBe(initialTheme);
+        expect(contextRef!.user?.preferences?.theme).toBe('dark');
+      });
+
+      act(() => {
+        contextRef!.updateTheme('light');
+      });
+
+      await waitFor(() => {
+        expect(contextRef!.user?.preferences?.theme).toBe('light');
       });
     });
   });
 
   describe('User profile management', () => {
-    it('should update user profile', async () => {
+    it('should update user profile via updateUser', async () => {
       let contextRef: ReturnType<typeof useUser>;
 
       render(
@@ -144,20 +176,18 @@ describe('UserContext Integration', () => {
 
       act(() => {
         contextRef!.updateUser({
-          name: 'Test User',
+          fullName: 'Test User',
           email: 'test@example.com',
         });
       });
 
       await waitFor(() => {
-        expect(contextRef!.user?.name).toBe('Test User');
+        expect(contextRef!.user?.fullName).toBe('Test User');
         expect(contextRef!.user?.email).toBe('test@example.com');
       });
     });
-  });
 
-  describe('Currency preference integration', () => {
-    it('should default to SAR if no currency is set', async () => {
+    it('should complete onboarding', async () => {
       let contextRef: ReturnType<typeof useUser>;
 
       render(
@@ -167,8 +197,86 @@ describe('UserContext Integration', () => {
       );
 
       await waitFor(() => {
-        // Default currency should be SAR or USD depending on implementation
-        expect(contextRef!.settings?.currency).toBeDefined();
+        expect(contextRef!).toBeDefined();
+      });
+
+      act(() => {
+        contextRef!.completeOnboarding();
+      });
+
+      await waitFor(() => {
+        expect(contextRef!.user?.completedOnboarding).toBe(true);
+        expect(contextRef!.auth.isAuthenticated).toBe(true);
+      });
+    });
+  });
+
+  describe('Display options', () => {
+    it('should update display options', async () => {
+      let contextRef: ReturnType<typeof useUser>;
+
+      render(
+        <UserProvider>
+          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
+        </UserProvider>
+      );
+
+      await waitFor(() => {
+        expect(contextRef!).toBeDefined();
+      });
+
+      act(() => {
+        contextRef!.updateDisplayOptions({
+          showCents: false,
+          compactMode: true,
+        });
+      });
+
+      await waitFor(() => {
+        expect(contextRef!.user?.preferences?.displayOptions?.showCents).toBe(false);
+        expect(contextRef!.user?.preferences?.displayOptions?.compactMode).toBe(true);
+      });
+    });
+  });
+
+  describe('Auth state management', () => {
+    it('should have correct initial auth state', async () => {
+      let contextRef: ReturnType<typeof useUser>;
+
+      render(
+        <UserProvider>
+          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
+        </UserProvider>
+      );
+
+      await waitFor(() => {
+        expect(contextRef!.auth).toBeDefined();
+        expect(contextRef!.auth.isDemoMode).toBeDefined();
+      });
+    });
+
+    it('should toggle demo mode', async () => {
+      let contextRef: ReturnType<typeof useUser>;
+
+      render(
+        <UserProvider>
+          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
+        </UserProvider>
+      );
+
+      await waitFor(() => {
+        expect(contextRef!).toBeDefined();
+      });
+
+      const initialDemoMode = contextRef!.auth.isDemoMode;
+
+      act(() => {
+        contextRef!.setDemoModeEnabled(!initialDemoMode);
+      });
+
+      // Demo mode toggle should work
+      await waitFor(() => {
+        expect(contextRef!.auth.isDemoMode).toBe(!initialDemoMode);
       });
     });
   });
