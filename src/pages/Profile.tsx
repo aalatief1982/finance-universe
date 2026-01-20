@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { useProfileImage } from '@/hooks/useProfileImage';
-import { IonLoading } from '@ionic/react';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 const Profile = () => {
@@ -86,7 +86,7 @@ const Profile = () => {
 
   return (
     <Layout>
-      <IonLoading isOpen={loading} message="Loading image..." />
+      <LoadingOverlay isOpen={loading} message="Loading image..." />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -17,7 +17,7 @@ import SmartPasteSummary from '@/components/SmartPasteSummary';
 import { LearnedEntry } from '@/types/learning';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
-import { IonLoading } from '@ionic/react';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 const EditTransaction = () => {
   const location = useLocation();
@@ -97,7 +97,7 @@ const EditTransaction = () => {
 
   return (
     <Layout showBack withPadding={false} fullWidth>
-      <IonLoading isOpen={saving} message="Saving..." />
+      <LoadingOverlay isOpen={saving} message="Saving..." />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
