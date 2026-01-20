@@ -5,6 +5,7 @@ import {
   TransactionFormHelper, 
   TransactionListHelper 
 } from './fixtures/page-objects';
+import { setupTestUser } from './fixtures/test-setup';
 
 test.describe('Transaction CRUD Journey', () => {
   let nav: NavigationHelper;
@@ -15,10 +16,8 @@ test.describe('Transaction CRUD Journey', () => {
     nav = new NavigationHelper(page);
     form = new TransactionFormHelper(page);
     list = new TransactionListHelper(page);
-    
-    // Clear localStorage before each test
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupTestUser(page);
   });
 
   test('should create a new expense transaction', async ({ page }) => {
@@ -137,8 +136,7 @@ test.describe('Income Transaction Flow', () => {
     const list = new TransactionListHelper(page);
     
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
-    
+    await setupTestUser(page);
     await nav.navigateToTransactions();
     await page.getByRole('button', { name: /add|new|create/i }).click();
     

@@ -1,18 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { routes, testAccount } from './fixtures/test-data';
 import { NavigationHelper } from './fixtures/page-objects';
+import { setupTestUser } from './fixtures/test-setup';
 
 test.describe('Account Management Journey', () => {
   let nav: NavigationHelper;
 
   test.beforeEach(async ({ page }) => {
     nav = new NavigationHelper(page);
-    
     await page.goto(routes.home);
-    await page.evaluate(() => {
-      localStorage.clear();
-      localStorage.setItem('xpensia_beta_code', 'valid');
-    });
+    await setupTestUser(page);
   });
 
   test('should navigate to accounts page', async ({ page }) => {

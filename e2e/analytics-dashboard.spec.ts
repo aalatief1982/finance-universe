@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { routes } from './fixtures/test-data';
 import { NavigationHelper, TransactionFormHelper } from './fixtures/page-objects';
+import { setupTestUser } from './fixtures/test-setup';
 
 test.describe('Analytics Dashboard Journey', () => {
   let nav: NavigationHelper;
@@ -9,9 +10,8 @@ test.describe('Analytics Dashboard Journey', () => {
   test.beforeEach(async ({ page }) => {
     nav = new NavigationHelper(page);
     form = new TransactionFormHelper(page);
-    
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupTestUser(page);
   });
 
   test('should navigate to analytics page', async ({ page }) => {
@@ -137,8 +137,7 @@ test.describe('Dashboard Overview', () => {
     const nav = new NavigationHelper(page);
     
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
-    
+    await setupTestUser(page);
     await nav.navigateToHome();
     
     // Should show summary cards
@@ -154,8 +153,7 @@ test.describe('Dashboard Overview', () => {
     const form = new TransactionFormHelper(page);
     
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
-    
+    await setupTestUser(page);
     // Add a transaction
     await nav.navigateToTransactions();
     await page.getByRole('button', { name: /add|new|create/i }).click();

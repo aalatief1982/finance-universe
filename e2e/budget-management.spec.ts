@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { routes, testBudget } from './fixtures/test-data';
 import { NavigationHelper, BudgetHelper } from './fixtures/page-objects';
+import { setupTestUser } from './fixtures/test-setup';
 
 test.describe('Budget Management Journey', () => {
   let nav: NavigationHelper;
@@ -9,14 +10,8 @@ test.describe('Budget Management Journey', () => {
   test.beforeEach(async ({ page }) => {
     nav = new NavigationHelper(page);
     budget = new BudgetHelper(page);
-    
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
-    
-    // Enable beta features if needed
-    await page.evaluate(() => {
-      localStorage.setItem('xpensia_beta_code', 'valid');
-    });
+    await setupTestUser(page);
   });
 
   test('should navigate to budget hub', async ({ page }) => {
@@ -128,9 +123,7 @@ test.describe('Budget Management Journey', () => {
 test.describe('Budget Period Navigation', () => {
   test('should switch between budget periods', async ({ page }) => {
     await page.goto(routes.home);
-    await page.evaluate(() => {
-      localStorage.setItem('xpensia_beta_code', 'valid');
-    });
+    await setupTestUser(page);
     
     await page.goto(routes.budget);
     

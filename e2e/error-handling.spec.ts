@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { routes } from './fixtures/test-data';
 import { NavigationHelper, TransactionFormHelper } from './fixtures/page-objects';
+import { setupTestUser } from './fixtures/test-setup';
 
 test.describe('Error Handling & Edge Cases', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(routes.home);
-    await page.evaluate(() => localStorage.clear());
+    await setupTestUser(page);
   });
 
   test('should handle 404 page not found', async ({ page }) => {
