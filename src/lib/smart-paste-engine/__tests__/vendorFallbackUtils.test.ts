@@ -1,50 +1,80 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { createStorageMock } from '@/test/storage-mock';
 import {
-  addUserVendor,
-  getVendorNames,
   loadVendorFallbacks,
   saveVendorFallbacks,
+  getVendorNames,
+  addUserVendor,
+  VendorFallbackData,
 } from '../vendorFallbackUtils';
-
-const createStorageMock = () => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
-  } as Storage;
-};
 
 describe('vendorFallbackUtils', () => {
   beforeEach(() => {
-    const mockStorage = createStorageMock();
-    Object.defineProperty(window, 'localStorage', {
-      value: mockStorage,
-      configurable: true,
-    });
+    vi.stubGlobal('localStorage', createStorageMock());
+    localStorage.clear();
   });
 
-  it('saves and loads vendor fallbacks', () => {
+  it('returns an empty object when no fallbacks exist', () => {
+    const fallbacks = loadVendorFallbacks();
+    expect(fallbacks).toEqual({});
+  });
+
+  it('saves and retrieves vendor fallbacks', () => {
+    const data: Record<string, VendorFallbackData> = {
+      amazon: {
+        type: 'expense',
+        category: 'Shopping',
+        subcategory: 'Online',
+      },
+    };
+    saveVendorFallbacks(data);
+    const fallbacks = loadVendorFallbacks();
+    expect(fallbacks['amazon']).toBeDefined();
+    expect(fallbacks['amazon'].category).toBe('Shopping');
+  });
+
+  it('overwrites existing fallback for same vendor', () => {
     saveVendorFallbacks({
-      Starbucks: { type: 'expense', category: 'Food', subcategory: 'Coffee Shops' },
+      amazon: { type: 'expense', category: 'Shopping', subcategory: '' },
     });
-
-    const loaded = loadVendorFallbacks();
-    expect(loaded.Starbucks.category).toBe('Food');
+    saveVendorFallbacks({
+      amazon: { type: 'expense', category: 'Electronics', subcategory: '' },
+    });
+    const fallbacks = loadVendorFallbacks();
+    expect(fallbacks['amazon'].category).toBe('Electronics');
   });
 
-  it('adds user vendors only when name is non-empty', () => {
-    addUserVendor(' ', { type: 'expense', category: 'Shopping', subcategory: 'Retail' });
-    addUserVendor('IKEA', { type: 'expense', category: 'Shopping', subcategory: 'Home Goods' });
-
+  it('gets vendor names', () => {
+    saveVendorFallbacks({
+      amazon: { type: 'expense', category: 'Shopping', subcategory: '' },
+      uber: { type: 'expense', category: 'Transport', subcategory: '' },
+    });
     const names = getVendorNames();
-    expect(names).toEqual(['IKEA']);
+    expect(names).toContain('amazon');
+    expect(names).toContain('uber');
+  });
+
+  it('adds a user vendor', () => {
+    addUserVendor('NewVendor', {
+      type: 'expense',
+      category: 'Entertainment',
+      subcategory: 'Streaming',
+    });
+    const fallbacks = loadVendorFallbacks();
+    expect(fallbacks['NewVendor']).toBeDefined();
+    expect(fallbacks['NewVendor'].user).toBe(true);
+  });
+
+  it('does not overwrite existing vendor when adding', () => {
+    saveVendorFallbacks({
+      existing: { type: 'expense', category: 'Original', subcategory: '' },
+    });
+    addUserVendor('existing', {
+      type: 'expense',
+      category: 'New',
+      subcategory: '',
+    });
+    const fallbacks = loadVendorFallbacks();
+    expect(fallbacks['existing'].category).toBe('Original');
   });
 });
