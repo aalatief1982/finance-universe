@@ -1,66 +1,79 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { deleteKeyword, loadKeywordBank, saveKeywordBank } from '../keywordBankUtils';
-import type { KeywordEntry } from '../keywordBankUtils';
-
-const createStorageMock = () => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
-  } as Storage;
-};
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { createStorageMock } from '@/test/storage-mock';
+import { loadKeywordBank, saveKeywordBank, deleteKeyword, KeywordEntry } from '../keywordBankUtils';
 
 describe('keywordBankUtils', () => {
   beforeEach(() => {
-    const mockStorage = createStorageMock();
-    Object.defineProperty(window, 'localStorage', {
-      value: mockStorage,
-      configurable: true,
-    });
+    vi.stubGlobal('localStorage', createStorageMock());
+    localStorage.clear();
   });
 
-  it('saves and loads keyword banks', () => {
+  it('returns an empty keyword bank when none exists', () => {
+    const bank = loadKeywordBank();
+    expect(bank).toEqual([]);
+  });
+
+  it('saves and retrieves a keyword bank', () => {
     const bank: KeywordEntry[] = [
       {
-        keyword: 'amazon',
-        type: 'auto',
-        mappings: [{ field: 'category', value: 'Shopping' }],
+        keyword: 'restaurant',
+        type: 'expense',
+        mappings: [{ field: 'category', value: 'Food' }],
       },
     ];
-
     saveKeywordBank(bank);
-    const loaded = loadKeywordBank();
-
-    expect(loaded).toEqual(bank);
+    expect(loadKeywordBank()).toEqual(bank);
   });
 
-  it('deletes keywords case-insensitively', () => {
+  it('saves multiple keywords', () => {
     const bank: KeywordEntry[] = [
       {
-        keyword: 'Cafe',
-        type: 'auto',
+        keyword: 'uber',
+        type: 'expense',
+        mappings: [{ field: 'category', value: 'Transport' }],
+      },
+      {
+        keyword: 'salary',
+        type: 'income',
+        mappings: [{ field: 'category', value: 'Income' }],
+      },
+    ];
+    saveKeywordBank(bank);
+    const loaded = loadKeywordBank();
+    expect(loaded).toHaveLength(2);
+  });
+
+  it('deletes a keyword by name', () => {
+    const bank: KeywordEntry[] = [
+      {
+        keyword: 'restaurant',
+        type: 'expense',
         mappings: [{ field: 'category', value: 'Food' }],
       },
       {
-        keyword: 'store',
-        type: 'auto',
-        mappings: [{ field: 'category', value: 'Shopping' }],
+        keyword: 'cafe',
+        type: 'expense',
+        mappings: [{ field: 'category', value: 'Food' }],
       },
     ];
-
     saveKeywordBank(bank);
-    deleteKeyword('cafe');
-
+    deleteKeyword('restaurant');
     const loaded = loadKeywordBank();
     expect(loaded).toHaveLength(1);
-    expect(loaded[0].keyword).toBe('store');
+    expect(loaded[0].keyword).toBe('cafe');
+  });
+
+  it('handles case-insensitive keyword deletion', () => {
+    const bank: KeywordEntry[] = [
+      {
+        keyword: 'Uber',
+        type: 'expense',
+        mappings: [{ field: 'vendor', value: 'Uber' }],
+      },
+    ];
+    saveKeywordBank(bank);
+    deleteKeyword('uber'); // lowercase
+    const loaded = loadKeywordBank();
+    expect(loaded).toHaveLength(0);
   });
 });

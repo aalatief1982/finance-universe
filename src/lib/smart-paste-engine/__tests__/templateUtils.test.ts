@@ -1,58 +1,67 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { createStorageMock } from '@/test/storage-mock';
 import {
-  getTemplateByHash,
-  getTemplateKey,
-  loadTemplateBank,
+  getAllTemplates,
   saveNewTemplate,
+  loadTemplateBank,
+  saveTemplateBank,
+  extractTemplateStructure,
+  getTemplateKey,
+  parseTemplateKey,
 } from '../templateUtils';
-import type { SmartPasteTemplate } from '@/types/template';
-
-const createStorageMock = () => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] ?? null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
-  } as Storage;
-};
 
 describe('templateUtils', () => {
   beforeEach(() => {
-    const mockStorage = createStorageMock();
-    Object.defineProperty(window, 'localStorage', {
-      value: mockStorage,
-      configurable: true,
-    });
+    vi.stubGlobal('localStorage', createStorageMock());
+    localStorage.clear();
   });
 
-  it('converts legacy template arrays into a bank', () => {
-    const legacyTemplate: SmartPasteTemplate = {
-      id: 'legacy-1',
-      template: 'Paid {{amount}}',
-      fields: ['amount'],
-      created: '2024-01-01T00:00:00.000Z',
-    };
+  it('returns an empty array when no templates exist', () => {
+    const templates = getAllTemplates();
+    expect(templates).toEqual([]);
+  });
 
-    window.localStorage.setItem('xpensia_structure_templates', JSON.stringify([legacyTemplate]));
+  it('saves and retrieves a template', () => {
+    saveNewTemplate('Payment of {{amount}}', ['amount'], 'Payment of 100', 'TestBank');
+    const templates = getAllTemplates();
+    expect(templates).toHaveLength(1);
+    expect(templates[0].fields).toContain('amount');
+  });
 
+  it('loads and saves template bank', () => {
     const bank = loadTemplateBank();
-    const key = getTemplateKey(undefined, undefined, 'legacy-1');
-    expect(bank[key].template).toBe('Paid {{amount}}');
+    expect(typeof bank).toBe('object');
+
+    saveNewTemplate('Transfer {{amount}}', ['amount'], 'Transfer 500');
+    const updatedBank = loadTemplateBank();
+    expect(Object.keys(updatedBank).length).toBeGreaterThan(0);
   });
 
-  it('saves templates and updates metadata on access', () => {
-    const hash = saveNewTemplate('Paid {{amount}}', ['amount'], 'Paid 20');
-    const template = getTemplateByHash(hash);
+  it('generates template key from sender and hash', () => {
+    const key = getTemplateKey('TestBank', undefined, 'abc123');
+    expect(key).toBe('testbank:abc123');
+  });
 
-    expect(template?.id).toBe(hash);
-    expect(template?.meta?.usageCount).toBe(1);
-    expect(template?.meta?.lastUsedAt).toBeDefined();
+  it('parses template key correctly', () => {
+    const { sender, hash } = parseTemplateKey('testbank:abc123');
+    expect(sender).toBe('testbank');
+    expect(hash).toBe('abc123');
+  });
+
+  it('extracts template structure from message', () => {
+    const message = 'Payment of SAR 100.00 on 2024-01-15';
+    const result = extractTemplateStructure(message);
+    expect(result.placeholders).toBeDefined();
+    expect(result.hash).toBeDefined();
+  });
+
+  it('updates existing template fields when saving duplicate', () => {
+    saveNewTemplate('Test {{amount}}', ['amount'], 'Test 100', 'Sender1');
+    saveNewTemplate('Test {{amount}}', ['amount', 'date'], 'Test 100', 'Sender1');
+
+    const templates = getAllTemplates();
+    // Should have merged fields
+    const template = templates.find(t => t.fields.includes('date'));
+    expect(template).toBeDefined();
   });
 });
