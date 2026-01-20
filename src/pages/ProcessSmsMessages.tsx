@@ -1,6 +1,6 @@
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
-import { IonLoading } from '@ionic/react';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { SmsReaderService, SmsEntry } from '@/services/SmsReaderService';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -297,7 +297,7 @@ const handleReadSms = async () => {
 
   return (
     <>
-      <IonLoading isOpen={loading} message="Reading SMS..." />
+      <LoadingOverlay isOpen={loading} message="Reading SMS..." />
     <Layout showBack>
       <div className="pt-4 pb-4">
         <div className="px-2 mb-4">

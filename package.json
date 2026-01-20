@@ -34,7 +34,6 @@
     "@huggingface/transformers": "^3.4.2",
     "@ionic/core": "^7.1.0",
     "@ionic/react": "^7.1.0",
-    "@ionic/react-router": "^7.1.0",
     "@playwright/test": "^1.57.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",

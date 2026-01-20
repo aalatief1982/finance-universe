@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { IonLoading } from '@ionic/react';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -343,7 +343,7 @@ const toggleSkipAll = () => {
 
   return (
     <>
-      <IonLoading isOpen={loading} message="Parsing messages..." />
+      <LoadingOverlay isOpen={loading} message="Parsing messages..." />
       <Layout showBack>
         <div className="flex justify-end mb-4 gap-2">
           <Button variant="outline" onClick={toggleSkipAll}>
