@@ -1,3 +1,4 @@
+import { describe, expect, it, vi, type Mock } from 'vitest';
 import SmsImportService from '../SmsImportService';
 import { SmsReaderService } from '../SmsReaderService';
 import {
@@ -10,9 +11,9 @@ import {
   inferIndirectFields
 } from '@/lib/smart-paste-engine/suggestionEngine';
 
-jest.mock('../SmsReaderService');
-jest.mock('@/utils/storage-utils');
-jest.mock('@/lib/smart-paste-engine/suggestionEngine');
+vi.mock('../SmsReaderService');
+vi.mock('@/utils/storage-utils');
+vi.mock('@/lib/smart-paste-engine/suggestionEngine');
 
 describe('SmsImportService.checkForNewMessages', () => {
   it('navigates to vendor mapping with parsed messages', async () => {
@@ -21,19 +22,19 @@ describe('SmsImportService.checkForNewMessages', () => {
       { sender: 'BANK', message: 'Paid 20 SAR at Dominoes', date: new Date().toISOString() }
     ];
 
-    (SmsReaderService.readSmsMessages as jest.Mock).mockResolvedValue(messages);
-    (getSelectedSmsSenders as jest.Mock).mockReturnValue(['BANK']);
-    (getSmsSenderImportMap as jest.Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
-    (setSelectedSmsSenders as jest.Mock).mockImplementation(() => {});
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
+    (setSelectedSmsSenders as Mock).mockImplementation(() => {});
 
-    (extractVendorName as jest.Mock).mockImplementation((msg: string) => {
+    (extractVendorName as Mock).mockImplementation((msg: string) => {
       if (msg.includes('Starbucks')) return 'Starbucks';
       if (msg.includes('Dominoes')) return 'Dominoes';
       return '';
     });
-    (inferIndirectFields as jest.Mock).mockReturnValue({ category: 'Food', subcategory: 'Fast Food', type: 'expense' });
+    (inferIndirectFields as Mock).mockReturnValue({ category: 'Food', subcategory: 'Fast Food', type: 'expense' });
 
-    const navigate = jest.fn();
+    const navigate = vi.fn();
 
     await SmsImportService.checkForNewMessages(navigate);
 
@@ -67,16 +68,16 @@ describe('SmsImportService.checkForNewMessages', () => {
       { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() }
     ];
 
-    (SmsReaderService.readSmsMessages as jest.Mock).mockResolvedValue(messages);
-    (getSelectedSmsSenders as jest.Mock).mockReturnValue(['BANK']);
-    (getSmsSenderImportMap as jest.Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
-    (setSelectedSmsSenders as jest.Mock).mockImplementation(() => {});
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
+    (setSelectedSmsSenders as Mock).mockImplementation(() => {});
 
-    (extractVendorName as jest.Mock).mockReturnValue('Starbucks');
-    (inferIndirectFields as jest.Mock).mockReturnValue({ category: 'Food', subcategory: 'Coffee', type: 'expense' });
+    (extractVendorName as Mock).mockReturnValue('Starbucks');
+    (inferIndirectFields as Mock).mockReturnValue({ category: 'Food', subcategory: 'Coffee', type: 'expense' });
 
-    const navigate = jest.fn();
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const navigate = vi.fn();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     await SmsImportService.checkForNewMessages(navigate, { auto: true });
 
@@ -91,13 +92,13 @@ describe('SmsImportService.checkForNewMessages', () => {
       { sender: 'BANK', message: 'Old message', date: new Date(0).toISOString() }
     ];
 
-    (SmsReaderService.readSmsMessages as jest.Mock).mockResolvedValue(messages);
-    (getSelectedSmsSenders as jest.Mock).mockReturnValue(['BANK']);
-    (getSmsSenderImportMap as jest.Mock).mockReturnValue({ BANK: new Date().toISOString() });
-    (setSelectedSmsSenders as jest.Mock).mockImplementation(() => {});
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date().toISOString() });
+    (setSelectedSmsSenders as Mock).mockImplementation(() => {});
 
-    const navigate = jest.fn();
-    const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+    const navigate = vi.fn();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     await SmsImportService.checkForNewMessages(navigate, { auto: true });
 

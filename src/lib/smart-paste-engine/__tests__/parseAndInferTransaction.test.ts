@@ -1,10 +1,10 @@
+import { describe, expect, it, vi } from 'vitest';
 import { parseAndInferTransaction } from '../parseAndInferTransaction';
-import { nanoid } from 'nanoid';
 
-jest.mock('nanoid', () => ({ nanoid: () => 'test-id' }));
+vi.mock('nanoid', () => ({ nanoid: () => 'test-id' }));
 
-jest.mock('../structureParser', () => ({
-  parseSmsMessage: jest.fn(() => ({
+vi.mock('../structureParser', () => ({
+  parseSmsMessage: vi.fn(() => ({
     rawMessage: 'raw',
     template: 'tmpl',
     templateHash: 'hash',
@@ -26,10 +26,10 @@ jest.mock('../structureParser', () => ({
   }))
 }));
 
-jest.mock('../keywordBankUtils', () => ({ loadKeywordBank: () => [] }));
-jest.mock('../templateUtils', () => ({ getAllTemplates: () => [] }));
-jest.mock('../cloudClassifier', () => ({ classifySmsViaCloud: jest.fn() }));
-jest.mock('../confidenceScoring', () => ({
+vi.mock('../keywordBankUtils', () => ({ loadKeywordBank: () => [] }));
+vi.mock('../templateUtils', () => ({ getAllTemplates: () => [] }));
+vi.mock('../cloudClassifier', () => ({ classifySmsViaCloud: vi.fn() }));
+vi.mock('../confidenceScoring', () => ({
   getFieldConfidence: () => 1,
   getTemplateConfidence: () => 1,
   getKeywordConfidence: () => 0,
