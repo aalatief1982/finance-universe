@@ -41,9 +41,20 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   if (import.meta.env.MODE === 'development') {
     console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
   }
-	if (!rawMessage) {
-    throw new Error('Empty message passed to extractTemplateStructure');
+  
+  // Return empty parse result instead of throwing for empty messages
+  if (!rawMessage) {
+    return {
+      rawMessage: '',
+      template: '',
+      templateHash: '',
+      matched: false,
+      directFields: {},
+      inferredFields: {},
+      defaultValues: {},
+    };
   }
+  
   let structure = '';
   let placeholders: Record<string, string> = {};
   let templateHash = '';
@@ -53,8 +64,8 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     placeholders = result.placeholders;
     templateHash = result.hash;
 
-        if (!structure) throw new Error('Extracted template is empty');
-        if (!placeholders) throw new Error('Extracted placeholders are missing');
+    if (!structure) throw new Error('Extracted template is empty');
+    if (!placeholders) throw new Error('Extracted placeholders are missing');
 	
   } catch (err) {
     if (import.meta.env.MODE === 'development') {
