@@ -87,6 +87,12 @@ const normalize = (str: string): string =>
 
 export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
   const lowerInput = softNormalize(vendorName);
+  
+  // Guard: prevent crash when vendor name is empty or whitespace-only
+  if (!lowerInput) {
+    return null;
+  }
+  
   const fallbackVendors = getFallbackVendors();
   const vendorKeys = Object.keys(fallbackVendors);
 
@@ -316,8 +322,8 @@ export function extractVendorName(message: string): string {
   );
 
   if (match && match[1]) {
-    // Strip trailing date patterns like "on 2024-01-02"
-    const candidate = match[1].trim().replace(/\s+on\s+\d{4}.*$/i, '');
+    // Strip trailing date patterns like "on 2024" or "on 2024-01-02"
+    const candidate = match[1].trim().replace(/\s+on\s+\d{4}(-\d{2}(-\d{2})?)?.*$/i, '');
 
     const isValidVendor =
       candidate.length > 2 &&

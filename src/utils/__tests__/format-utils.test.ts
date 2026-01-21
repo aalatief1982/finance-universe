@@ -32,7 +32,7 @@ describe('format-utils', () => {
 
     it('falls back to user settings currency when not provided', () => {
       localStorage.setItem(
-        'xpensia_settings',
+        'xpensia_user_settings',
         JSON.stringify({ currency: 'GBP' })
       );
       const symbol = getCurrencySymbol();
@@ -70,7 +70,7 @@ describe('format-utils', () => {
 
     it('uses user settings currency as default', () => {
       localStorage.setItem(
-        'xpensia_settings',
+        'xpensia_user_settings',
         JSON.stringify({ currency: 'GBP' })
       );
       const formatted = formatCurrency(100);
