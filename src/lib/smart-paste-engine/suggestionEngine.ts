@@ -90,6 +90,11 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   const fallbackVendors = getFallbackVendors();
   const vendorKeys = Object.keys(fallbackVendors);
 
+  // Guard: prevent crash when vendor list is empty
+  if (vendorKeys.length === 0) {
+    return null;
+  }
+
   // Step 1: Try full fuzzy match
   const match = stringSimilarity.findBestMatch(lowerInput, vendorKeys.map(softNormalize));
   const originalKeysMap = Object.fromEntries(
@@ -311,7 +316,8 @@ export function extractVendorName(message: string): string {
   );
 
   if (match && match[1]) {
-    const candidate = match[1].trim();
+    // Strip trailing date patterns like "on 2024-01-02"
+    const candidate = match[1].trim().replace(/\s+on\s+\d{4}.*$/i, '');
 
     const isValidVendor =
       candidate.length > 2 &&

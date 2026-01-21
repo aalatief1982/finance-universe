@@ -25,11 +25,21 @@ const possibleFormats = [
 ];
 
 export function normalizeDate(input: string): string | null {
+  const trimmed = input.trim();
+  
   for (const fmt of possibleFormats) {
-    const parsed = parse(input.trim(), fmt, new Date());
+    const parsed = parse(trimmed, fmt, new Date());
     if (isValid(parsed)) {
       return format(parsed, 'yyyy-MM-dd'); // ✅ for <input type="date" />
     }
+  }
+
+  // Fallback: Handle DD/MM/YY slash format manually
+  const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (slashMatch) {
+    const [, dd, mm, yy] = slashMatch;
+    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
+    return `${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   }
 
   if (import.meta.env.MODE === 'development') {
