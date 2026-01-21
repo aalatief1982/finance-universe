@@ -17,6 +17,14 @@ export const getCurrencySymbol = (currencyCode?: string): string => {
   const requested = currencyCode ?? preferred;
   try {
     const normalized = normalizeCurrencyCode(requested, preferred);
+    
+    // If the requested code was unknown (normalized to something different),
+    // return the original requested code instead of the fallback's symbol
+    if (normalized !== requested.toUpperCase() && 
+        !VALID_CURRENCY_CODES.has(requested.toUpperCase())) {
+      return requested;
+    }
+    
     // Use Intl.NumberFormat to get the symbol
     const parts = new Intl.NumberFormat('en-US', {
       style: 'currency',

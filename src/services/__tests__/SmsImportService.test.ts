@@ -64,12 +64,15 @@ describe('SmsImportService.checkForNewMessages', () => {
   });
 
   it('prompts user only when there are new messages in auto mode', async () => {
+    // Use a future date to ensure messages are considered "new"
+    const futureDate = new Date(Date.now() + 60000).toISOString();
     const messages = [
-      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() }
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: futureDate }
     ];
 
     (SmsReaderService.readSmsMessages as Mock).mockResolvedValue(messages);
     (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    // Set last import to far past so messages are definitely considered "new"
     (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
     (setSelectedSmsSenders as Mock).mockImplementation(() => {});
 
