@@ -2,9 +2,16 @@ import { describe, expect, it, vi, type Mock } from 'vitest';
 import { smsPermissionService } from '../SmsPermissionService';
 import { SmsReaderService } from '../SmsReaderService';
 import { loadSmsListener } from '@/lib/native/BackgroundSmsListener';
+import { Capacitor } from '@capacitor/core';
 
 vi.mock('../SmsReaderService');
 vi.mock('@/lib/native/BackgroundSmsListener');
+vi.mock('@capacitor/core', () => ({
+  Capacitor: {
+    isNativePlatform: vi.fn(() => true),
+    getPlatform: vi.fn(() => 'android'),
+  },
+}));
 
 describe('SmsPermissionService.requestPermission', () => {
   it('requests both sms reader and listener permissions', async () => {

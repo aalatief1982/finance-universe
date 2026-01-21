@@ -1,5 +1,5 @@
 // utils/dateParser.ts
-import { parse } from 'date-fns';
+import { parse, isValid } from 'date-fns';
 
 export function normalizeSmsDate(raw: string): string | undefined {
   const cleaned = raw.trim();
@@ -10,8 +10,17 @@ export function normalizeSmsDate(raw: string): string | undefined {
 
   const dateStr = match[0];
 
+  // Handle DD/MM/YY or DD-MM-YY with 2-digit year FIRST to avoid date-fns misparse
+  const shortYearMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
+  if (shortYearMatch) {
+    const [, dd, mm, yy] = shortYearMatch;
+    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
+    // Return UTC midnight to avoid timezone drift
+    return new Date(Date.UTC(parseInt(fullYear), parseInt(mm) - 1, parseInt(dd))).toISOString();
+  }
+
   const formats = [
-    'dd-MM-yy', 'dd-MM-yyyy', 'dd/MM/yy', 'dd/MM/yyyy', 'dd.MM.yyyy', 'dd.MM.yy',
+    'dd-MM-yyyy', 'dd/MM/yyyy', 'dd.MM.yyyy', 'dd.MM.yy',
     'yyyy-MM-dd', 'yyyy/MM/dd',
     'dd MMM yyyy', 'dd MMMM yyyy',
     'MMMM dd, yyyy', 'MMM dd, yyyy'
@@ -20,7 +29,10 @@ export function normalizeSmsDate(raw: string): string | undefined {
   for (const fmt of formats) {
     try {
       const parsed = parse(dateStr, fmt, new Date());
-      if (!isNaN(parsed.getTime())) return parsed.toISOString();
+      if (isValid(parsed)) {
+        // Return UTC midnight ISO to avoid timezone drift
+        return new Date(Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate())).toISOString();
+      }
     } catch {
       continue;
     }

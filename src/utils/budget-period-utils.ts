@@ -140,10 +140,12 @@ export function getMonthsInQuarter(quarter: number): number[] {
 
 /**
  * Get total weeks in a year
+ * Uses eachWeekOfInterval to correctly count weeks regardless of week numbering edge cases
  */
 export function getWeeksInYear(year: number): number {
-  const lastDay = new Date(year, 11, 31);
-  return getWeek(lastDay, { weekStartsOn: getWeekStartSetting() });
+  const { start, end } = getYearDates(year);
+  const weeks = eachWeekOfInterval({ start, end }, { weekStartsOn: getWeekStartSetting() });
+  return weeks.length;
 }
 
 /**

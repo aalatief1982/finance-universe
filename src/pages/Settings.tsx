@@ -643,6 +643,7 @@ const Settings = () => {
                 id="background-sms"
                 checked={backgroundSmsEnabled}
                 onCheckedChange={handleBackgroundSmsChange}
+                disabled={!betaActive}
               />
             </div>
           </LockedFeature>
