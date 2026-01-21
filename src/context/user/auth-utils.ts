@@ -356,10 +356,11 @@ export const logIn = async (
     }));
   } else {
     // When not using Supabase, handle auth state locally
-    // Only set as authenticated if phone is verified
+    // Preserve existing isAuthenticated if already true (e.g., from completeOnboarding)
+    // Otherwise, set based on phone verification
     setAuth((prev: any) => ({ 
       ...prev, 
-      isAuthenticated: user?.phoneVerified || false
+      isAuthenticated: prev.isAuthenticated || user?.phoneVerified || false
     }));
   }
   

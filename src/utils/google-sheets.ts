@@ -18,11 +18,16 @@ interface AnalyticsLogEntry {
 }
 
 export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
+  // Skip network calls in test environment to avoid timeouts
+  if (import.meta.env.MODE === 'test') {
+    return;
+  }
+
   try {
     // For mobile apps, we'll use a simple HTTP request approach
     // This requires setting up a Google Apps Script Web App endpoint
     
-    const webAppUrl = 'https://script.google.com/macros/s/AKfycby8oPsalrougUXkUjTuEclWKOKECRT48p9Mqaq6VXwbzJsJ270Wvk57wqfGq4CeELWPrQ/exec'; // You'll need to replace this
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycby8oPsalrougUXkUjTuEclWKOKECRT48p9Mqaq6VXwbzJsJ270Wvk57wqfGq4CeELWPrQ/exec';
     
     const payload = {
       action: 'addRow',
@@ -34,7 +39,7 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
         entry.parameters,
         entry.date,
         entry.osVersion,
-         entry.keywordBank || ''
+        entry.keywordBank || ''
       ]
     };
 
@@ -42,8 +47,6 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
     if (import.meta.env.MODE === 'development') {
       console.log('[GoogleSheets] Would log to sheet:', payload);
     }
-    
-    // Uncomment this when you have the Google Apps Script set up:
     
     const response = await fetch(webAppUrl, {
       method: 'POST',
@@ -61,8 +64,6 @@ export async function logToGoogleSheets(entry: AnalyticsLogEntry) {
     if (import.meta.env.MODE === 'development') {
       console.log('[GoogleSheets] Successfully logged to sheet:', result);
     }
-  
-    
   } catch (error) {
     console.error('[GoogleSheets] Failed to log to sheet:', error);
   }

@@ -8,7 +8,8 @@ import {
   validateTransactionInput,
 } from '../transaction-validator';
 
-const toastMock = vi.fn();
+// Use vi.hoisted to avoid "Cannot access before initialization" error
+const toastMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/components/ui/use-toast', () => ({
   toast: toastMock,
