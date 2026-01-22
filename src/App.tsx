@@ -56,6 +56,8 @@ import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
 import { useUser } from './context/UserContext';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { toast } from '@/components/ui/use-toast';
+import { useAppUpdate } from '@/hooks/useAppUpdate';
+import { UpdateDialog } from '@/components/UpdateDialog';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -452,6 +454,11 @@ function AppRoutes() {
 }
 
 function App() {
+  const { updateStatus, showDialog, setShowDialog } = useAppUpdate({ 
+    checkOnMount: true,
+    checkInterval: 1000 * 60 * 60 // Check hourly
+  });
+
   return (
     <ThemeProvider defaultTheme="light" attribute="class">
       <UserProvider>
@@ -460,6 +467,17 @@ function App() {
             <AppRoutes />
           </BrowserRouter>
           <Toaster />
+          
+          {/* OTA Update Dialog */}
+          {updateStatus?.available && updateStatus.manifest && (
+            <UpdateDialog
+              open={showDialog}
+              onOpenChange={setShowDialog}
+              currentVersion={updateStatus.currentVersion}
+              manifest={updateStatus.manifest}
+              requiresStoreUpdate={updateStatus.requiresStoreUpdate}
+            />
+          )}
         </TransactionProvider>
       </UserProvider>
     </ThemeProvider>
