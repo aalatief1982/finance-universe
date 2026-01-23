@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Download, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
+import { Download, RefreshCw, ExternalLink, Sparkles, Check } from 'lucide-react';
 import { UpdateManifest, DownloadProgress, appUpdateService } from '@/services/AppUpdateService';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -131,9 +131,9 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
               <Sparkles className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="font-medium">Update installed!</p>
+              <p className="font-medium">Update ready!</p>
               <p className="text-sm text-muted-foreground mt-1">
-                The app will close. Please reopen it to use the new version.
+                The update will apply the next time you open the app.
               </p>
             </div>
           </div>
@@ -227,9 +227,9 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
           )}
 
           {phase === 'success' && (
-            <Button onClick={handleReload} className="w-full">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Close & Restart
+            <Button onClick={handleClose} className="w-full">
+              <Check className="h-4 w-4 mr-2" />
+              Got it
             </Button>
           )}
 
