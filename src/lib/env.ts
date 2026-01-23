@@ -39,6 +39,9 @@ export const ENABLE_DEMO_MODE = getEnvironmentVariable('ENABLE_DEMO_MODE', 'fals
 
 // Configuration options
 export const DEFAULT_CURRENCY = getEnvironmentVariable('DEFAULT_CURRENCY', 'USD');
+
+// Beta features default state - set to 'false' to gate new beta features
+export const BETA_DEFAULT = getEnvironmentVariable('BETA_DEFAULT', 'true') === 'true';
 export const APP_VERSION = getEnvironmentVariable('APP_VERSION', '1.0.0');
 export const CLOUD_FUNCTIONS_BASE_URL = getEnvironmentVariable(
   'CLOUD_FUNCTIONS_BASE_URL',
