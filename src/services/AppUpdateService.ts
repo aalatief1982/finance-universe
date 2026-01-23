@@ -1,8 +1,6 @@
 import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { CapacitorUpdater, BundleInfo } from '@capgo/capacitor-updater';
 import { App } from '@capacitor/app';
-import { Preferences } from '@capacitor/preferences';
-import JSZip from 'jszip';
 
 export interface UpdateManifest {
   version: string;
@@ -28,36 +26,57 @@ export interface DownloadProgress {
 }
 
 const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json';
-const CURRENT_BUNDLE_KEY = 'ota_current_bundle';
-const PREVIOUS_BUNDLE_KEY = 'ota_previous_bundle';
-const UPDATE_DIR = 'updates';
 
 class AppUpdateService {
   private isChecking = false;
   private isDownloading = false;
+  private initialized = false;
 
   /**
-   * Get the current app version from Capacitor or localStorage fallback
+   * Initialize the updater - MUST be called on app start
+   */
+  async initialize(): Promise<void> {
+    if (!Capacitor.isNativePlatform() || this.initialized) return;
+
+    try {
+      // Tell Capgo the app loaded successfully (prevents auto-rollback)
+      await CapacitorUpdater.notifyAppReady();
+      this.initialized = true;
+      if (import.meta.env.MODE === 'development') {
+        console.log('[AppUpdateService] App marked as ready');
+      }
+    } catch (err) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('[AppUpdateService] Failed to notify app ready:', err);
+      }
+    }
+  }
+
+  /**
+   * Get current bundle version from Capgo
    */
   async getCurrentVersion(): Promise<string> {
     try {
       if (Capacitor.isNativePlatform()) {
+        const current = await CapacitorUpdater.current();
+        // If we have a downloaded bundle, use its version
+        if (current.bundle.version && current.bundle.version !== 'builtin') {
+          return current.bundle.version;
+        }
+        // Otherwise fall back to native app version
         const info = await App.getInfo();
         return info.version;
       }
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
-        console.warn('[AppUpdateService] Failed to get app info:', err);
+        console.warn('[AppUpdateService] Failed to get version:', err);
       }
     }
-
-    // Fallback to stored version
-    const { value } = await Preferences.get({ key: CURRENT_BUNDLE_KEY });
-    return value || '0.0.1';
+    return '0.0.1';
   }
 
   /**
-   * Fetch the remote manifest to check for updates
+   * Fetch manifest from Firebase
    */
   async fetchManifest(): Promise<UpdateManifest | null> {
     try {
@@ -65,11 +84,7 @@ class AppUpdateService {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache' }
       });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
@@ -80,32 +95,27 @@ class AppUpdateService {
   }
 
   /**
-   * Compare version strings (semver-like)
-   * Returns: 1 if a > b, -1 if a < b, 0 if equal
+   * Compare semver versions
    */
   compareVersions(a: string, b: string): number {
     const partsA = a.split('.').map(Number);
     const partsB = b.split('.').map(Number);
-    
     for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
       const numA = partsA[i] || 0;
       const numB = partsB[i] || 0;
-      
       if (numA > numB) return 1;
       if (numA < numB) return -1;
     }
-    
     return 0;
   }
 
   /**
-   * Check if an update is available
+   * Check for available updates
    */
   async checkForUpdates(): Promise<UpdateStatus> {
     if (this.isChecking) {
       return { available: false, currentVersion: await this.getCurrentVersion() };
     }
-
     this.isChecking = true;
 
     try {
@@ -116,32 +126,33 @@ class AppUpdateService {
         return { available: false, currentVersion };
       }
 
-      // Check if native version is too old
+      // Check if native update required
       if (manifest.minimumNativeVersion) {
-        let nativeVersion = currentVersion;
-        
-        if (Capacitor.isNativePlatform()) {
-          try {
-            const info = await App.getInfo();
-            nativeVersion = info.version;
-          } catch {
-            // Use current version as fallback
+        try {
+          const info = await App.getInfo();
+          if (this.compareVersions(info.version, manifest.minimumNativeVersion) < 0) {
+            return {
+              available: true,
+              currentVersion,
+              newVersion: manifest.version,
+              manifest,
+              requiresStoreUpdate: true
+            };
           }
-        }
-
-        if (this.compareVersions(nativeVersion, manifest.minimumNativeVersion) < 0) {
-          return {
-            available: true,
-            currentVersion,
-            newVersion: manifest.version,
-            manifest,
-            requiresStoreUpdate: true
-          };
+        } catch {
+          // Continue with OTA check if native version check fails
         }
       }
 
-      // Check if web bundle update is available
       const isNewer = this.compareVersions(manifest.version, currentVersion) > 0;
+      
+      if (import.meta.env.MODE === 'development') {
+        console.log('[AppUpdateService] Version check:', {
+          currentVersion,
+          manifestVersion: manifest.version,
+          isNewer
+        });
+      }
 
       return {
         available: isNewer,
@@ -155,157 +166,42 @@ class AppUpdateService {
   }
 
   /**
-   * Download and apply the update
+   * Download and apply update using Capgo
    */
   async downloadAndApplyUpdate(
     manifest: UpdateManifest,
     onProgress?: (progress: DownloadProgress) => void
   ): Promise<boolean> {
-    if (this.isDownloading) {
-      return false;
-    }
-
+    if (this.isDownloading) return false;
     this.isDownloading = true;
 
     try {
       if (import.meta.env.MODE === 'development') {
-        console.log('[AppUpdateService] Starting download:', manifest.url);
+        console.log('[AppUpdateService] Downloading:', manifest.url);
       }
 
-      // Download the zip file
-      const response = await fetch(manifest.url);
-      
-      if (!response.ok) {
-        throw new Error(`Download failed: HTTP ${response.status}`);
+      // Show initial progress
+      if (onProgress) {
+        onProgress({ loaded: 0, total: 100, percent: 0 });
       }
 
-      const contentLength = Number(response.headers.get('Content-Length')) || 0;
-      const reader = response.body?.getReader();
-      
-      if (!reader) {
-        throw new Error('Failed to get response reader');
-      }
-
-      // Read with progress
-      const chunks: Uint8Array[] = [];
-      let loaded = 0;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) break;
-        
-        chunks.push(value);
-        loaded += value.length;
-
-        if (onProgress && contentLength > 0) {
-          onProgress({
-            loaded,
-            total: contentLength,
-            percent: Math.round((loaded / contentLength) * 100)
-          });
-        }
-      }
-
-      // Combine chunks
-      const zipData = new Uint8Array(loaded);
-      let position = 0;
-      for (const chunk of chunks) {
-        zipData.set(chunk, position);
-        position += chunk.length;
-      }
-
-      if (import.meta.env.MODE === 'development') {
-        console.log('[AppUpdateService] Download complete, extracting...');
-      }
-
-      // Extract the zip
-      const zip = await JSZip.loadAsync(zipData);
-      const updatePath = `${UPDATE_DIR}/${manifest.version}`;
-
-      // Create update directory
-      try {
-        await Filesystem.mkdir({
-          path: updatePath,
-          directory: Directory.Data,
-          recursive: true
-        });
-      } catch {
-        // Directory might already exist
-      }
-
-      // Extract all files
-      const files = Object.keys(zip.files);
-      let extractedCount = 0;
-
-      for (const filename of files) {
-        const file = zip.files[filename];
-        
-        if (file.dir) {
-          try {
-            await Filesystem.mkdir({
-              path: `${updatePath}/${filename}`,
-              directory: Directory.Data,
-              recursive: true
-            });
-          } catch {
-            // Directory might exist
-          }
-        } else {
-          const content = await file.async('base64');
-          
-          // Ensure parent directory exists
-          const parentDir = filename.split('/').slice(0, -1).join('/');
-          if (parentDir) {
-            try {
-              await Filesystem.mkdir({
-                path: `${updatePath}/${parentDir}`,
-                directory: Directory.Data,
-                recursive: true
-              });
-            } catch {
-              // Directory might exist
-            }
-          }
-
-          await Filesystem.writeFile({
-            path: `${updatePath}/${filename}`,
-            data: content,
-            directory: Directory.Data
-          });
-        }
-
-        extractedCount++;
-        
-        if (onProgress) {
-          onProgress({
-            loaded: extractedCount,
-            total: files.length,
-            percent: Math.round((extractedCount / files.length) * 100)
-          });
-        }
-      }
-
-      if (import.meta.env.MODE === 'development') {
-        console.log('[AppUpdateService] Extraction complete');
-      }
-
-      // Save previous bundle for rollback
-      const { value: currentBundle } = await Preferences.get({ key: CURRENT_BUNDLE_KEY });
-      if (currentBundle) {
-        await Preferences.set({ key: PREVIOUS_BUNDLE_KEY, value: currentBundle });
-      }
-
-      // Set new bundle as current
-      await Preferences.set({ key: CURRENT_BUNDLE_KEY, value: manifest.version });
-
-      // Write a marker file for the native layer to know which bundle to load
-      await Filesystem.writeFile({
-        path: 'current_bundle.txt',
-        data: manifest.version,
-        directory: Directory.Data,
-        encoding: Encoding.UTF8
+      // Download using Capgo (handles extraction internally)
+      const bundle: BundleInfo = await CapacitorUpdater.download({
+        url: manifest.url,
+        version: manifest.version,
       });
+
+      if (import.meta.env.MODE === 'development') {
+        console.log('[AppUpdateService] Downloaded bundle:', bundle.id);
+      }
+
+      // Show download complete
+      if (onProgress) {
+        onProgress({ loaded: 100, total: 100, percent: 100 });
+      }
+
+      // Apply the update - this will reload the WebView
+      await CapacitorUpdater.set(bundle);
 
       return true;
     } catch (err) {
@@ -319,25 +215,11 @@ class AppUpdateService {
   }
 
   /**
-   * Rollback to previous bundle
+   * Rollback to previous bundle (builtin)
    */
   async rollback(): Promise<boolean> {
     try {
-      const { value: previousBundle } = await Preferences.get({ key: PREVIOUS_BUNDLE_KEY });
-      
-      if (!previousBundle) {
-        return false;
-      }
-
-      await Preferences.set({ key: CURRENT_BUNDLE_KEY, value: previousBundle });
-      
-      await Filesystem.writeFile({
-        path: 'current_bundle.txt',
-        data: previousBundle,
-        directory: Directory.Data,
-        encoding: Encoding.UTF8
-      });
-
+      await CapacitorUpdater.reset();
       return true;
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
@@ -348,55 +230,65 @@ class AppUpdateService {
   }
 
   /**
-   * Clean up old update bundles to save space
+   * List all downloaded bundles
    */
-  async cleanupOldBundles(): Promise<void> {
+  async listBundles(): Promise<BundleInfo[]> {
     try {
-      const { value: currentBundle } = await Preferences.get({ key: CURRENT_BUNDLE_KEY });
-      const { value: previousBundle } = await Preferences.get({ key: PREVIOUS_BUNDLE_KEY });
-
-      const result = await Filesystem.readdir({
-        path: UPDATE_DIR,
-        directory: Directory.Data
-      });
-
-      for (const file of result.files) {
-        if (file.type === 'directory' && 
-            file.name !== currentBundle && 
-            file.name !== previousBundle) {
-          try {
-            await Filesystem.rmdir({
-              path: `${UPDATE_DIR}/${file.name}`,
-              directory: Directory.Data,
-              recursive: true
-            });
-          } catch {
-            // Ignore cleanup errors
-          }
-        }
-      }
+      const result = await CapacitorUpdater.list();
+      return result.bundles;
     } catch {
-      // Ignore if updates directory doesn't exist
+      return [];
     }
   }
 
   /**
-   * Get the path to the current bundle for native layer
+   * Clean up old bundles to save space
    */
-  async getCurrentBundlePath(): Promise<string | null> {
+  async cleanupOldBundles(): Promise<void> {
     try {
-      const { value } = await Preferences.get({ key: CURRENT_BUNDLE_KEY });
-      
-      if (!value) return null;
+      const { bundles } = await CapacitorUpdater.list();
+      const current = await CapacitorUpdater.current();
 
-      const result = await Filesystem.getUri({
-        path: `${UPDATE_DIR}/${value}`,
-        directory: Directory.Data
-      });
+      for (const bundle of bundles) {
+        if (bundle.id !== current.bundle.id && bundle.status !== 'pending') {
+          try {
+            await CapacitorUpdater.delete({ id: bundle.id });
+          } catch {
+            // Ignore individual cleanup errors
+          }
+        }
+      }
+    } catch (err) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[AppUpdateService] Cleanup failed:', err);
+      }
+    }
+  }
 
-      return result.uri;
+  /**
+   * Get debug info about current update state
+   */
+  async getDebugInfo(): Promise<{
+    currentBundle: BundleInfo | null;
+    allBundles: BundleInfo[];
+    nativeVersion: string;
+  }> {
+    try {
+      const current = await CapacitorUpdater.current();
+      const { bundles } = await CapacitorUpdater.list();
+      const info = await App.getInfo();
+
+      return {
+        currentBundle: current.bundle,
+        allBundles: bundles,
+        nativeVersion: info.version
+      };
     } catch {
-      return null;
+      return {
+        currentBundle: null,
+        allBundles: [],
+        nativeVersion: '0.0.0'
+      };
     }
   }
 }

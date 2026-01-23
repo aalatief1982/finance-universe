@@ -190,18 +190,10 @@ const Settings = () => {
     const fetchVersion = async () => {
       try {
         if (Capacitor.isNativePlatform()) {
-          // First check if we have an OTA bundle version stored
-          const { Preferences } = await import('@capacitor/preferences');
-          const { value: otaVersion } = await Preferences.get({ key: 'ota_current_bundle' });
-          
-          if (otaVersion) {
-            // Use the OTA bundle version if available
-            setAppVersion(otaVersion);
-          } else {
-            // Fall back to native app version
-            const info = await App.getInfo();
-            setAppVersion(info.version || '1.0.0');
-          }
+          // Use Capgo to get the current bundle version
+          const { appUpdateService } = await import('@/services/AppUpdateService');
+          const version = await appUpdateService.getCurrentVersion();
+          setAppVersion(version);
         } else {
           const response = await fetch('/manifest.json');
           const manifest = await response.json();
