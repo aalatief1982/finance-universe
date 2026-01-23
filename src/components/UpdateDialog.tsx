@@ -9,9 +9,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Download, RefreshCw, ExternalLink, Sparkles, Check } from 'lucide-react';
+import { Download, RefreshCw as RefreshCwIcon, ExternalLink, Sparkles, Check } from 'lucide-react';
 import { UpdateManifest, DownloadProgress, appUpdateService } from '@/services/AppUpdateService';
-import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
 interface UpdateDialogProps {
@@ -69,19 +68,6 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     }
   };
 
-  const handleReload = async () => {
-    // Small delay to ensure all filesystem writes are flushed
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (Capacitor.isNativePlatform()) {
-      // Force native app exit - Android will restart it cleanly
-      // This avoids WebView reload race conditions
-      await CapacitorApp.exitApp();
-    } else {
-      window.location.reload();
-    }
-  };
-
   const handleClose = () => {
     if (phase === 'downloading' || phase === 'extracting') {
       return; // Don't allow closing during update
@@ -112,7 +98,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
         return (
           <div className="space-y-4 py-4">
             <div className="flex items-center gap-3">
-              <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+              <RefreshCwIcon className="h-5 w-5 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
                 Installing update...
               </span>
@@ -185,7 +171,13 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        // Only react to close requests; never force-close on open.
+        if (!nextOpen) handleClose();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
