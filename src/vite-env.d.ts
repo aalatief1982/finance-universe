@@ -37,6 +37,8 @@ declare module '@capacitor/app' {
   export const App: {
     getInfo: () => Promise<AppInfo>
     getState: () => Promise<{ isActive: boolean }>
+    exitApp: () => Promise<void>
+    minimizeApp: () => Promise<void>
     addListener: (
       event: string,
       callback: (state: { isActive: boolean }) => void
