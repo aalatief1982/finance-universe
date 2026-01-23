@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Download, RefreshCw, ExternalLink, Sparkles } from 'lucide-react';
 import { UpdateManifest, DownloadProgress, appUpdateService } from '@/services/AppUpdateService';
-import { App } from '@capacitor/app';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
 interface UpdateDialogProps {
@@ -69,9 +69,17 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     }
   };
 
-  const handleReload = () => {
-    // Reload the webview to apply the update
-    window.location.reload();
+  const handleReload = async () => {
+    // Small delay to ensure all filesystem writes are flushed
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (Capacitor.isNativePlatform()) {
+      // Force native app exit - Android will restart it cleanly
+      // This avoids WebView reload race conditions
+      await CapacitorApp.exitApp();
+    } else {
+      window.location.reload();
+    }
   };
 
   const handleClose = () => {
@@ -125,7 +133,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
             <div>
               <p className="font-medium">Update installed!</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Restart the app to apply changes.
+                The app will close. Please reopen it to use the new version.
               </p>
             </div>
           </div>
@@ -135,6 +143,11 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
         return (
           <div className="space-y-4 py-4 text-center">
             <p className="text-destructive text-sm">{errorMessage}</p>
+            {errorMessage.toLowerCase().includes('webview') && (
+              <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted rounded">
+                <p>Try: Settings → Apps → Android System WebView → Uninstall updates</p>
+              </div>
+            )}
           </div>
         );
 
@@ -216,7 +229,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
           {phase === 'success' && (
             <Button onClick={handleReload} className="w-full">
               <RefreshCw className="h-4 w-4 mr-2" />
-              Restart App
+              Close & Restart
             </Button>
           )}
 
