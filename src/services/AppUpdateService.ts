@@ -1,6 +1,43 @@
 import { Capacitor } from '@capacitor/core';
-import { CapacitorUpdater, BundleInfo } from '@capgo/capacitor-updater';
 import { App } from '@capacitor/app';
+
+type BundleInfo = {
+  id: string;
+  version?: string;
+  status?: string;
+};
+
+type CapacitorUpdaterType = {
+  notifyAppReady: () => Promise<void>;
+  current: () => Promise<{ bundle: BundleInfo }>;
+  download: (options: { url: string; version: string }) => Promise<BundleInfo>;
+  set: (bundle: BundleInfo) => Promise<void>;
+  reset: () => Promise<void>;
+  list: () => Promise<{ bundles: BundleInfo[] }>;
+  delete: (options: { id: string }) => Promise<void>;
+};
+
+const CAPGO_MODULE = '@capgo/capacitor-updater';
+let cachedUpdater: CapacitorUpdaterType | null | undefined;
+
+const getUpdater = async (): Promise<CapacitorUpdaterType | null> => {
+  if (!Capacitor.isNativePlatform()) return null;
+  if (cachedUpdater !== undefined) return cachedUpdater;
+
+  try {
+    const mod = (await import(
+      /* @vite-ignore */ CAPGO_MODULE
+    )) as { CapacitorUpdater: CapacitorUpdaterType };
+    cachedUpdater = mod.CapacitorUpdater;
+    return cachedUpdater;
+  } catch (err) {
+    cachedUpdater = null;
+    if (import.meta.env.MODE === 'development') {
+      console.warn('[AppUpdateService] Capgo updater not available:', err);
+    }
+    return null;
+  }
+};
 
 export interface UpdateManifest {
   version: string;
@@ -38,9 +75,12 @@ class AppUpdateService {
   async initialize(): Promise<void> {
     if (!Capacitor.isNativePlatform() || this.initialized) return;
 
+    const updater = await getUpdater();
+    if (!updater) return;
+
     try {
       // Tell Capgo the app loaded successfully (prevents auto-rollback)
-      await CapacitorUpdater.notifyAppReady();
+      await updater.notifyAppReady();
       this.initialized = true;
       if (import.meta.env.MODE === 'development') {
         console.log('[AppUpdateService] App marked as ready');
@@ -58,10 +98,13 @@ class AppUpdateService {
   async getCurrentVersion(): Promise<string> {
     try {
       if (Capacitor.isNativePlatform()) {
-        const current = await CapacitorUpdater.current();
-        // If we have a downloaded bundle, use its version
-        if (current.bundle.version && current.bundle.version !== 'builtin') {
-          return current.bundle.version;
+        const updater = await getUpdater();
+        if (updater) {
+          const current = await updater.current();
+          // If we have a downloaded bundle, use its version
+          if (current.bundle.version && current.bundle.version !== 'builtin') {
+            return current.bundle.version;
+          }
         }
         // Otherwise fall back to native app version
         const info = await App.getInfo();
@@ -176,6 +219,13 @@ class AppUpdateService {
     this.isDownloading = true;
 
     try {
+      const updater = await getUpdater();
+      if (!updater) {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[AppUpdateService] Capgo updater not available');
+        }
+        return false;
+      }
       if (import.meta.env.MODE === 'development') {
         console.log('[AppUpdateService] Downloading:', manifest.url);
       }
@@ -186,7 +236,7 @@ class AppUpdateService {
       }
 
       // Download using Capgo (handles extraction internally)
-      const bundle: BundleInfo = await CapacitorUpdater.download({
+      const bundle: BundleInfo = await updater.download({
         url: manifest.url,
         version: manifest.version,
       });
@@ -201,7 +251,7 @@ class AppUpdateService {
       }
 
       // Apply the update - this will reload the WebView
-      await CapacitorUpdater.set(bundle);
+      await updater.set(bundle);
 
       return true;
     } catch (err) {
@@ -219,7 +269,9 @@ class AppUpdateService {
    */
   async rollback(): Promise<boolean> {
     try {
-      await CapacitorUpdater.reset();
+      const updater = await getUpdater();
+      if (!updater) return false;
+      await updater.reset();
       return true;
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
@@ -234,7 +286,9 @@ class AppUpdateService {
    */
   async listBundles(): Promise<BundleInfo[]> {
     try {
-      const result = await CapacitorUpdater.list();
+      const updater = await getUpdater();
+      if (!updater) return [];
+      const result = await updater.list();
       return result.bundles;
     } catch {
       return [];
@@ -246,13 +300,15 @@ class AppUpdateService {
    */
   async cleanupOldBundles(): Promise<void> {
     try {
-      const { bundles } = await CapacitorUpdater.list();
-      const current = await CapacitorUpdater.current();
+      const updater = await getUpdater();
+      if (!updater) return;
+      const { bundles } = await updater.list();
+      const current = await updater.current();
 
       for (const bundle of bundles) {
         if (bundle.id !== current.bundle.id && bundle.status !== 'pending') {
           try {
-            await CapacitorUpdater.delete({ id: bundle.id });
+            await updater.delete({ id: bundle.id });
           } catch {
             // Ignore individual cleanup errors
           }
@@ -274,8 +330,16 @@ class AppUpdateService {
     nativeVersion: string;
   }> {
     try {
-      const current = await CapacitorUpdater.current();
-      const { bundles } = await CapacitorUpdater.list();
+      const updater = await getUpdater();
+      if (!updater) {
+        return {
+          currentBundle: null,
+          allBundles: [],
+          nativeVersion: '0.0.0'
+        };
+      }
+      const current = await updater.current();
+      const { bundles } = await updater.list();
       const info = await App.getInfo();
 
       return {
