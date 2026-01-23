@@ -7,6 +7,7 @@ import {
   useNavigate,
   useLocation,
 } from 'react-router-dom';
+import { appUpdateService } from '@/services/AppUpdateService';
 import { ThemeProvider } from "@/components/theme-provider";
 import { fixCorruptedCurrencyCodes } from '@/utils/migration/fixCurrencyCodes';
 import Home from './pages/Home';
@@ -458,6 +459,11 @@ function App() {
     checkOnMount: true,
     checkInterval: 1000 * 60 * 60 // Check hourly
   });
+
+  // Initialize Capgo updater on app start
+  useEffect(() => {
+    appUpdateService.initialize();
+  }, []);
 
   return (
     <ThemeProvider defaultTheme="light" attribute="class">

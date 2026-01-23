@@ -1,5 +1,4 @@
-
-import { CapacitorConfig } from '@capacitor/cli'; 
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.xpensia.com',
@@ -20,8 +19,13 @@ const config: CapacitorConfig = {
     BackgroundSmsListener: {
       android: true
     },
-    Updater: {
-      autoSync: false
+    CapacitorUpdater: {
+      autoUpdate: false,
+      updateUrl: 'https://xpensia-505ac.web.app/manifest.json',
+      statsUrl: '',
+      channelUrl: '',
+      appReadyTimeout: 10000,
+      responseTimeout: 60,
     },
     CapacitorHttp: {
       enabled: true
