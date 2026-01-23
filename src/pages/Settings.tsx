@@ -627,45 +627,53 @@ const Settings = () => {
           
           <LockedFeature
             isLocked={!betaActive}
-            featureName="Enable Background SMS Reading"
-            onLockedClick={() => handleLockedFeatureClick('Enable Background SMS Reading')}
+            featureName="Enable SMS Auto-Import"
+            onLockedClick={() => handleLockedFeatureClick('Enable SMS Auto-Import')}
           >
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="background-sms">
-                  Enable Background SMS Reading
+                <Label htmlFor="sms-auto-import">
+                  Enable SMS Auto-Import
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Read incoming SMS in the background
+                  Automatically read and import SMS transactions
                 </p>
               </div>
               <Switch
-                id="background-sms"
-                checked={backgroundSmsEnabled}
-                onCheckedChange={handleBackgroundSmsChange}
+                id="sms-auto-import"
+                checked={backgroundSmsEnabled && autoImport}
+                onCheckedChange={async (checked) => {
+                  if (checked) {
+                    const platform = Capacitor.getPlatform();
+                    if (platform === 'web') {
+                      setBackgroundSmsEnabled(true);
+                      setAutoImport(true);
+                    } else {
+                      try {
+                        const result = await smsPermissionService.requestPermission();
+                        if (result.granted) {
+                          setBackgroundSmsEnabled(true);
+                          setAutoImport(true);
+                        } else {
+                          if (result.permanentlyDenied) {
+                            toast({
+                              title: 'SMS permission permanently denied',
+                              description:
+                                'Enable SMS permissions in your device Settings > Apps > Xpensia > Permissions to use SMS auto-import.',
+                              variant: 'destructive',
+                            });
+                          }
+                        }
+                      } catch {
+                        // Permission request failed
+                      }
+                    }
+                  } else {
+                    setBackgroundSmsEnabled(false);
+                    setAutoImport(false);
+                  }
+                }}
                 disabled={!betaActive}
-              />
-            </div>
-          </LockedFeature>
-
-          <LockedFeature
-            isLocked={!betaActive}
-            featureName="Automatic SMS import"
-            onLockedClick={() => handleLockedFeatureClick('Automatic SMS import')}
-          >
-            <div className="flex items-center justify-between mt-2">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto-sms-import">
-                  Automatic SMS import
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Check for new SMS on startup
-                </p>
-              </div>
-              <Switch
-                id="auto-sms-import"
-                checked={autoImport}
-                onCheckedChange={setAutoImport}
               />
             </div>
           </LockedFeature>
