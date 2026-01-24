@@ -49,7 +49,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     setPhase('downloading');
     setProgress({ loaded: 0, total: 0, percent: 0 });
 
-    // Download only - do not apply immediately (deferred to background)
+    // Download only - do not apply immediately (deferred to next launch)
     const bundle = await appUpdateService.downloadUpdate(
       manifest,
       (prog) => {
@@ -63,7 +63,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
 
     if (bundle) {
       setPhase('success');
-      // User continues using app - update applies when they background the app
+      // User continues using app - update applies on next launch
     } else {
       setPhase('error');
       setErrorMessage('Failed to download update. Please try again.');

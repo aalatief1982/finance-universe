@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { safeStorage } from '@/utils/safe-storage';
 type CapacitorUpdaterType = typeof import('@capgo/capacitor-updater').CapacitorUpdater;
 
 type BundleInfo = {
@@ -32,6 +33,7 @@ export interface DownloadProgress {
 }
 
 const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json';
+const PENDING_BUNDLE_STORAGE_KEY = 'xpensia_pending_update_bundle';
 
 let updaterPromise: Promise<CapacitorUpdaterType | null> | null = null;
 
@@ -60,6 +62,34 @@ class AppUpdateService {
   private initialized = false;
   private initRetryTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingBundle: BundleInfo | null = null;
+
+  private readPendingBundleFromStorage(): BundleInfo | null {
+    try {
+      const raw = safeStorage.getItem(PENDING_BUNDLE_STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw) as BundleInfo;
+    } catch {
+      return null;
+    }
+  }
+
+  private getPendingBundleInternal(): BundleInfo | null {
+    if (this.pendingBundle) return this.pendingBundle;
+    const stored = this.readPendingBundleFromStorage();
+    if (stored) {
+      this.pendingBundle = stored;
+    }
+    return this.pendingBundle;
+  }
+
+  private setPendingBundle(bundle: BundleInfo | null) {
+    this.pendingBundle = bundle;
+    if (!bundle) {
+      safeStorage.removeItem(PENDING_BUNDLE_STORAGE_KEY);
+      return;
+    }
+    safeStorage.setItem(PENDING_BUNDLE_STORAGE_KEY, JSON.stringify(bundle));
+  }
 
   private normalizeSemver(input: string): string {
     const raw = (input ?? '').trim();
@@ -105,6 +135,7 @@ class AppUpdateService {
       await updater.notifyAppReady();
       this.initialized = true;
       console.log('[OTA] ✅ App marked as ready successfully');
+      await this.applyPendingBundle();
     } catch (err) {
       console.error('[OTA] ❌ Failed to notify app ready:', err);
       this.scheduleInitRetry(err);
@@ -267,7 +298,7 @@ class AppUpdateService {
       // Check if this version is already downloaded/pending - skip showing dialog again
       const alreadyPending = await this.hasPendingBundle(manifest.version);
       if (alreadyPending) {
-        console.log('[OTA] Update already downloaded, waiting for next app background/launch');
+        console.log('[OTA] Update already downloaded, waiting for next app launch');
         return {
           available: false,
           currentVersion,
@@ -283,6 +314,17 @@ class AppUpdateService {
         isNewer,
         comparison: this.compareVersions(manifest.version, currentVersion)
       });
+
+      const pending = this.getPendingBundleInternal();
+      if (pending?.version === manifest.version) {
+        console.log('[OTA] Pending bundle already downloaded for this version');
+        return {
+          available: false,
+          currentVersion,
+          newVersion: manifest.version,
+          manifest
+        };
+      }
 
       const result = {
         available: isNewer,
@@ -304,8 +346,9 @@ class AppUpdateService {
   async hasPendingBundle(targetVersion?: string): Promise<boolean> {
     try {
       // Check in-memory pending first
-      if (this.pendingBundle) {
-        if (!targetVersion || this.pendingBundle.version === targetVersion) {
+      const pending = this.getPendingBundleInternal();
+      if (pending) {
+        if (!targetVersion || pending.version === targetVersion) {
           return true;
         }
       }
@@ -329,11 +372,11 @@ class AppUpdateService {
    * Get the pending bundle if any
    */
   getPendingBundle(): BundleInfo | null {
-    return this.pendingBundle;
+    return this.getPendingBundleInternal();
   }
 
   /**
-   * Download update (does NOT apply immediately - deferred to background)
+   * Download update (does NOT apply immediately - deferred to next launch)
    */
   async downloadUpdate(
     manifest: UpdateManifest,
@@ -385,7 +428,7 @@ class AppUpdateService {
       }
 
       // Store as pending - DO NOT call set() here
-      this.pendingBundle = bundle;
+      this.setPendingBundle(bundle);
       console.log('[OTA] Bundle downloaded and marked as pending:', bundle.version);
       
       return bundle;
@@ -400,7 +443,7 @@ class AppUpdateService {
   }
 
   /**
-   * Apply a pending bundle (call when app goes to background)
+   * Apply a pending bundle (call on next launch)
    */
   async applyPendingBundle(): Promise<boolean> {
     console.log('[OTA] applyPendingBundle() called');
@@ -411,19 +454,31 @@ class AppUpdateService {
       return false;
     }
     
-    if (!this.pendingBundle) {
+    const pending = this.getPendingBundleInternal();
+    if (!pending) {
       console.log('[OTA] No pending bundle to apply');
       return false;
     }
 
     try {
-      console.log('[OTA] Applying pending bundle:', this.pendingBundle.version);
-      await updater.set(this.pendingBundle);
-      this.pendingBundle = null;
+      const current = await updater.current();
+      if (
+        pending.id &&
+        (pending.id === current.bundle.id || pending.version === current.bundle.version)
+      ) {
+        console.log('[OTA] Pending bundle already active, clearing flag');
+        this.setPendingBundle(null);
+        return false;
+      }
+
+      console.log('[OTA] Applying pending bundle:', pending.version);
+      this.setPendingBundle(null);
+      await updater.set(pending);
       console.log('[OTA] ✅ Bundle applied, will be active on next launch');
       return true;
     } catch (err) {
       console.error('[OTA] ❌ Failed to apply bundle:', err);
+      this.setPendingBundle(pending);
       return false;
     }
   }
