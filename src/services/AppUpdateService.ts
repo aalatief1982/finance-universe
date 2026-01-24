@@ -200,7 +200,19 @@ class AppUpdateService {
    * Check for available updates
    */
   async checkForUpdates(): Promise<UpdateStatus> {
-    console.log('[OTA] checkForUpdates() called, isChecking:', this.isChecking);
+    console.log('[OTA] checkForUpdates() called, isChecking:', this.isChecking, 'initialized:', this.initialized);
+    
+    // CRITICAL: Don't check for updates until notifyAppReady() has succeeded.
+    // Otherwise Capgo returns 'builtin' and we detect a false update, causing an infinite loop.
+    if (!this.initialized && Capacitor.isNativePlatform()) {
+      console.log('[OTA] ⏳ Waiting for initialization before checking updates...');
+      // Give it one more try
+      await this.initialize();
+      if (!this.initialized) {
+        console.log('[OTA] ❌ Still not initialized, skipping update check to prevent loop');
+        return { available: false, currentVersion: '0.0.0' };
+      }
+    }
     
     if (this.isChecking) {
       console.log('[OTA] Already checking, returning early');
@@ -309,8 +321,12 @@ class AppUpdateService {
       }
 
       // Apply the update - this will reload the WebView
+      // IMPORTANT: After set(), the app will reload. On next launch, notifyAppReady() 
+      // MUST be called before any update check to prevent an infinite loop.
       console.log('[OTA] Calling updater.set() to apply bundle...');
+      console.log('[OTA] ⚠️ App will reload now. Next launch must call notifyAppReady() first!');
       await updater.set(bundle);
+      // Note: Code below this line likely won't execute as set() triggers reload
       console.log('[OTA] ✅ Bundle set successfully, WebView should reload');
 
       return true;
