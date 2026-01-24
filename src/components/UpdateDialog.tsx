@@ -49,7 +49,8 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     setPhase('downloading');
     setProgress({ loaded: 0, total: 0, percent: 0 });
 
-    const success = await appUpdateService.downloadAndApplyUpdate(
+    // Download only - do not apply immediately (deferred to background)
+    const bundle = await appUpdateService.downloadUpdate(
       manifest,
       (prog) => {
         setProgress(prog);
@@ -60,11 +61,12 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
       }
     );
 
-    if (success) {
+    if (bundle) {
       setPhase('success');
+      // User continues using app - update applies when they background the app
     } else {
       setPhase('error');
-      setErrorMessage('Failed to download or apply update. Please try again.');
+      setErrorMessage('Failed to download update. Please try again.');
     }
   };
 
