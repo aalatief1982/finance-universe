@@ -21,20 +21,29 @@ const CAPGO_MODULE = '@capgo/capacitor-updater';
 let cachedUpdater: CapacitorUpdaterType | null | undefined;
 
 const getUpdater = async (): Promise<CapacitorUpdaterType | null> => {
-  if (!Capacitor.isNativePlatform()) return null;
-  if (cachedUpdater !== undefined) return cachedUpdater;
+  console.log('[OTA] getUpdater called, platform:', Capacitor.getPlatform());
+  
+  if (!Capacitor.isNativePlatform()) {
+    console.log('[OTA] Not native platform, skipping updater');
+    return null;
+  }
+  
+  if (cachedUpdater !== undefined) {
+    console.log('[OTA] Returning cached updater:', cachedUpdater ? 'available' : 'null');
+    return cachedUpdater;
+  }
 
   try {
+    console.log('[OTA] Attempting to import @capgo/capacitor-updater...');
     const mod = (await import(
       /* @vite-ignore */ CAPGO_MODULE
     )) as { CapacitorUpdater: CapacitorUpdaterType };
     cachedUpdater = mod.CapacitorUpdater;
+    console.log('[OTA] Capgo updater loaded successfully');
     return cachedUpdater;
   } catch (err) {
     cachedUpdater = null;
-    if (import.meta.env.MODE === 'development') {
-      console.warn('[AppUpdateService] Capgo updater not available:', err);
-    }
+    console.error('[OTA] Failed to load Capgo updater:', err);
     return null;
   }
 };
@@ -73,22 +82,26 @@ class AppUpdateService {
    * Initialize the updater - MUST be called on app start
    */
   async initialize(): Promise<void> {
-    if (!Capacitor.isNativePlatform() || this.initialized) return;
+    console.log('[OTA] initialize() called, isNative:', Capacitor.isNativePlatform(), 'initialized:', this.initialized);
+    
+    if (!Capacitor.isNativePlatform() || this.initialized) {
+      console.log('[OTA] Skipping init - not native or already initialized');
+      return;
+    }
 
     const updater = await getUpdater();
-    if (!updater) return;
+    if (!updater) {
+      console.log('[OTA] No updater available, skipping initialization');
+      return;
+    }
 
     try {
-      // Tell Capgo the app loaded successfully (prevents auto-rollback)
+      console.log('[OTA] Calling notifyAppReady()...');
       await updater.notifyAppReady();
       this.initialized = true;
-      if (import.meta.env.MODE === 'development') {
-        console.log('[AppUpdateService] App marked as ready');
-      }
+      console.log('[OTA] ✅ App marked as ready successfully');
     } catch (err) {
-      if (import.meta.env.MODE === 'development') {
-        console.error('[AppUpdateService] Failed to notify app ready:', err);
-      }
+      console.error('[OTA] ❌ Failed to notify app ready:', err);
     }
   }
 
@@ -96,25 +109,28 @@ class AppUpdateService {
    * Get current bundle version from Capgo
    */
   async getCurrentVersion(): Promise<string> {
+    console.log('[OTA] getCurrentVersion() called');
     try {
       if (Capacitor.isNativePlatform()) {
         const updater = await getUpdater();
         if (updater) {
+          console.log('[OTA] Getting current bundle from Capgo...');
           const current = await updater.current();
-          // If we have a downloaded bundle, use its version
+          console.log('[OTA] Current bundle:', JSON.stringify(current.bundle));
+          
           if (current.bundle.version && current.bundle.version !== 'builtin') {
+            console.log('[OTA] Using OTA bundle version:', current.bundle.version);
             return current.bundle.version;
           }
         }
-        // Otherwise fall back to native app version
         const info = await App.getInfo();
+        console.log('[OTA] Using native app version:', info.version);
         return info.version;
       }
     } catch (err) {
-      if (import.meta.env.MODE === 'development') {
-        console.warn('[AppUpdateService] Failed to get version:', err);
-      }
+      console.error('[OTA] Failed to get version:', err);
     }
+    console.log('[OTA] Returning fallback version: 0.0.1');
     return '0.0.1';
   }
 
@@ -122,17 +138,24 @@ class AppUpdateService {
    * Fetch manifest from Firebase
    */
   async fetchManifest(): Promise<UpdateManifest | null> {
+    const url = `${MANIFEST_URL}?t=${Date.now()}`;
+    console.log('[OTA] Fetching manifest from:', url);
+    
     try {
-      const response = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, {
+      const response = await fetch(url, {
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache' }
       });
+      
+      console.log('[OTA] Manifest response status:', response.status);
+      
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
+      
+      const manifest = await response.json();
+      console.log('[OTA] Manifest received:', JSON.stringify(manifest));
+      return manifest;
     } catch (err) {
-      if (import.meta.env.MODE === 'development') {
-        console.error('[AppUpdateService] Failed to fetch manifest:', err);
-      }
+      console.error('[OTA] ❌ Failed to fetch manifest:', err);
       return null;
     }
   }
@@ -156,16 +179,22 @@ class AppUpdateService {
    * Check for available updates
    */
   async checkForUpdates(): Promise<UpdateStatus> {
+    console.log('[OTA] checkForUpdates() called, isChecking:', this.isChecking);
+    
     if (this.isChecking) {
+      console.log('[OTA] Already checking, returning early');
       return { available: false, currentVersion: await this.getCurrentVersion() };
     }
     this.isChecking = true;
 
     try {
       const currentVersion = await this.getCurrentVersion();
+      console.log('[OTA] Current version:', currentVersion);
+      
       const manifest = await this.fetchManifest();
 
       if (!manifest) {
+        console.log('[OTA] No manifest available');
         return { available: false, currentVersion };
       }
 
@@ -173,7 +202,10 @@ class AppUpdateService {
       if (manifest.minimumNativeVersion) {
         try {
           const info = await App.getInfo();
+          console.log('[OTA] Native version check:', info.version, 'vs minimum:', manifest.minimumNativeVersion);
+          
           if (this.compareVersions(info.version, manifest.minimumNativeVersion) < 0) {
+            console.log('[OTA] ⚠️ Native update required - current native version too old');
             return {
               available: true,
               currentVersion,
@@ -182,27 +214,29 @@ class AppUpdateService {
               requiresStoreUpdate: true
             };
           }
-        } catch {
-          // Continue with OTA check if native version check fails
+        } catch (err) {
+          console.warn('[OTA] Native version check failed:', err);
         }
       }
 
       const isNewer = this.compareVersions(manifest.version, currentVersion) > 0;
       
-      if (import.meta.env.MODE === 'development') {
-        console.log('[AppUpdateService] Version check:', {
-          currentVersion,
-          manifestVersion: manifest.version,
-          isNewer
-        });
-      }
+      console.log('[OTA] Version comparison:', {
+        currentVersion,
+        manifestVersion: manifest.version,
+        isNewer,
+        comparison: this.compareVersions(manifest.version, currentVersion)
+      });
 
-      return {
+      const result = {
         available: isNewer,
         currentVersion,
         newVersion: manifest.version,
         manifest: isNewer ? manifest : undefined
       };
+      
+      console.log('[OTA] checkForUpdates result:', JSON.stringify(result));
+      return result;
     } finally {
       this.isChecking = false;
     }
@@ -215,20 +249,24 @@ class AppUpdateService {
     manifest: UpdateManifest,
     onProgress?: (progress: DownloadProgress) => void
   ): Promise<boolean> {
-    if (this.isDownloading) return false;
+    console.log('[OTA] downloadAndApplyUpdate() called');
+    console.log('[OTA] Manifest:', JSON.stringify(manifest));
+    console.log('[OTA] isDownloading:', this.isDownloading);
+    
+    if (this.isDownloading) {
+      console.log('[OTA] Already downloading, returning false');
+      return false;
+    }
     this.isDownloading = true;
 
     try {
       const updater = await getUpdater();
       if (!updater) {
-        if (import.meta.env.MODE === 'development') {
-          console.warn('[AppUpdateService] Capgo updater not available');
-        }
+        console.error('[OTA] ❌ Capgo updater not available for download');
         return false;
       }
-      if (import.meta.env.MODE === 'development') {
-        console.log('[AppUpdateService] Downloading:', manifest.url);
-      }
+      
+      console.log('[OTA] Starting download from:', manifest.url);
 
       // Show initial progress
       if (onProgress) {
@@ -236,14 +274,13 @@ class AppUpdateService {
       }
 
       // Download using Capgo (handles extraction internally)
+      console.log('[OTA] Calling updater.download()...');
       const bundle: BundleInfo = await updater.download({
         url: manifest.url,
         version: manifest.version,
       });
 
-      if (import.meta.env.MODE === 'development') {
-        console.log('[AppUpdateService] Downloaded bundle:', bundle.id);
-      }
+      console.log('[OTA] ✅ Download complete, bundle:', JSON.stringify(bundle));
 
       // Show download complete
       if (onProgress) {
@@ -251,16 +288,18 @@ class AppUpdateService {
       }
 
       // Apply the update - this will reload the WebView
+      console.log('[OTA] Calling updater.set() to apply bundle...');
       await updater.set(bundle);
+      console.log('[OTA] ✅ Bundle set successfully, WebView should reload');
 
       return true;
     } catch (err) {
-      if (import.meta.env.MODE === 'development') {
-        console.error('[AppUpdateService] Update failed:', err);
-      }
+      console.error('[OTA] ❌ Update failed:', err);
+      console.error('[OTA] Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
       return false;
     } finally {
       this.isDownloading = false;
+      console.log('[OTA] Download complete, isDownloading reset to false');
     }
   }
 
@@ -268,15 +307,19 @@ class AppUpdateService {
    * Rollback to previous bundle (builtin)
    */
   async rollback(): Promise<boolean> {
+    console.log('[OTA] rollback() called');
     try {
       const updater = await getUpdater();
-      if (!updater) return false;
+      if (!updater) {
+        console.log('[OTA] No updater available for rollback');
+        return false;
+      }
+      console.log('[OTA] Calling updater.reset()...');
       await updater.reset();
+      console.log('[OTA] ✅ Rollback successful');
       return true;
     } catch (err) {
-      if (import.meta.env.MODE === 'development') {
-        console.error('[AppUpdateService] Rollback failed:', err);
-      }
+      console.error('[OTA] ❌ Rollback failed:', err);
       return false;
     }
   }
