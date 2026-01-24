@@ -1,51 +1,11 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { CapacitorUpdater } from '@capgo/capacitor-updater';
 
 type BundleInfo = {
   id: string;
   version?: string;
   status?: string;
-};
-
-type CapacitorUpdaterType = {
-  notifyAppReady: () => Promise<void>;
-  current: () => Promise<{ bundle: BundleInfo }>;
-  download: (options: { url: string; version: string }) => Promise<BundleInfo>;
-  set: (bundle: BundleInfo) => Promise<void>;
-  reset: () => Promise<void>;
-  list: () => Promise<{ bundles: BundleInfo[] }>;
-  delete: (options: { id: string }) => Promise<void>;
-};
-
-const CAPGO_MODULE = '@capgo/capacitor-updater';
-let cachedUpdater: CapacitorUpdaterType | null | undefined;
-
-const getUpdater = async (): Promise<CapacitorUpdaterType | null> => {
-  console.log('[OTA] getUpdater called, platform:', Capacitor.getPlatform());
-  
-  if (!Capacitor.isNativePlatform()) {
-    console.log('[OTA] Not native platform, skipping updater');
-    return null;
-  }
-  
-  if (cachedUpdater !== undefined) {
-    console.log('[OTA] Returning cached updater:', cachedUpdater ? 'available' : 'null');
-    return cachedUpdater;
-  }
-
-  try {
-    console.log('[OTA] Attempting to import @capgo/capacitor-updater...');
-    const mod = (await import(
-      /* @vite-ignore */ CAPGO_MODULE
-    )) as { CapacitorUpdater: CapacitorUpdaterType };
-    cachedUpdater = mod.CapacitorUpdater;
-    console.log('[OTA] Capgo updater loaded successfully');
-    return cachedUpdater;
-  } catch (err) {
-    cachedUpdater = null;
-    console.error('[OTA] Failed to load Capgo updater:', err);
-    return null;
-  }
 };
 
 export interface UpdateManifest {
@@ -73,6 +33,16 @@ export interface DownloadProgress {
 
 const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json';
 
+// Simple synchronous getter - no caching of failures
+const getUpdater = () => {
+  if (!Capacitor.isNativePlatform()) {
+    console.log('[OTA] Not native platform, skipping updater');
+    return null;
+  }
+  console.log('[OTA] Returning CapacitorUpdater');
+  return CapacitorUpdater;
+};
+
 class AppUpdateService {
   private isChecking = false;
   private isDownloading = false;
@@ -89,7 +59,7 @@ class AppUpdateService {
       return;
     }
 
-    const updater = await getUpdater();
+    const updater = getUpdater();
     if (!updater) {
       console.log('[OTA] No updater available, skipping initialization');
       return;
@@ -112,7 +82,7 @@ class AppUpdateService {
     console.log('[OTA] getCurrentVersion() called');
     try {
       if (Capacitor.isNativePlatform()) {
-        const updater = await getUpdater();
+        const updater = getUpdater();
         if (updater) {
           console.log('[OTA] Getting current bundle from Capgo...');
           const current = await updater.current();
@@ -260,7 +230,7 @@ class AppUpdateService {
     this.isDownloading = true;
 
     try {
-      const updater = await getUpdater();
+      const updater = getUpdater();
       if (!updater) {
         console.error('[OTA] ❌ Capgo updater not available for download');
         return false;
@@ -309,7 +279,7 @@ class AppUpdateService {
   async rollback(): Promise<boolean> {
     console.log('[OTA] rollback() called');
     try {
-      const updater = await getUpdater();
+      const updater = getUpdater();
       if (!updater) {
         console.log('[OTA] No updater available for rollback');
         return false;
@@ -329,7 +299,7 @@ class AppUpdateService {
    */
   async listBundles(): Promise<BundleInfo[]> {
     try {
-      const updater = await getUpdater();
+      const updater = getUpdater();
       if (!updater) return [];
       const result = await updater.list();
       return result.bundles;
@@ -343,7 +313,7 @@ class AppUpdateService {
    */
   async cleanupOldBundles(): Promise<void> {
     try {
-      const updater = await getUpdater();
+      const updater = getUpdater();
       if (!updater) return;
       const { bundles } = await updater.list();
       const current = await updater.current();
@@ -373,7 +343,7 @@ class AppUpdateService {
     nativeVersion: string;
   }> {
     try {
-      const updater = await getUpdater();
+      const updater = getUpdater();
       if (!updater) {
         return {
           currentBundle: null,
