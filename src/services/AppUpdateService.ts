@@ -47,6 +47,29 @@ class AppUpdateService {
   private isChecking = false;
   private isDownloading = false;
   private initialized = false;
+  private initRetryTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private normalizeSemver(input: string): string {
+    const raw = (input ?? '').trim();
+    // Strip common prefixes like "v1.2.3" and grab the first semver-like sequence.
+    const withoutPrefix = raw.replace(/^v/i, '');
+    const match = withoutPrefix.match(/\d+(?:\.\d+){0,2}/);
+    return match?.[0] ?? withoutPrefix;
+  }
+
+  private isBuiltinBundle(bundle?: BundleInfo | null): boolean {
+    if (!bundle) return true;
+    return bundle.id === 'builtin' || bundle.version === 'builtin';
+  }
+
+  private scheduleInitRetry(reason: unknown) {
+    if (this.initRetryTimer != null) return;
+    console.warn('[OTA] notifyAppReady failed; will retry shortly:', reason);
+    this.initRetryTimer = globalThis.setTimeout(() => {
+      this.initRetryTimer = null;
+      void this.initialize();
+    }, 500);
+  }
 
   /**
    * Initialize the updater - MUST be called on app start
@@ -72,6 +95,7 @@ class AppUpdateService {
       console.log('[OTA] ✅ App marked as ready successfully');
     } catch (err) {
       console.error('[OTA] ❌ Failed to notify app ready:', err);
+      this.scheduleInitRetry(err);
     }
   }
 
@@ -82,23 +106,48 @@ class AppUpdateService {
     console.log('[OTA] getCurrentVersion() called');
     try {
       if (Capacitor.isNativePlatform()) {
+        // Ensure we mark the running bundle as "ready" as early as possible.
+        // If the bridge isn't ready yet, initialize() will retry.
+        if (!this.initialized) {
+          await this.initialize();
+        }
+
         const updater = getUpdater();
         if (updater) {
           console.log('[OTA] Getting current bundle from Capgo...');
           const current = await updater.current();
           console.log('[OTA] Current bundle:', JSON.stringify(current.bundle));
-          
-          if (current.bundle.version && current.bundle.version !== 'builtin') {
-            console.log('[OTA] Using OTA bundle version:', current.bundle.version);
-            return current.bundle.version;
+
+          // Capgo may provide version in either `bundle.version` or (on some setups) as the `bundle.id`.
+          // Falling back to native version here can cause an endless update loop after reload.
+          if (!this.isBuiltinBundle(current.bundle)) {
+            const candidate = current.bundle.version ?? current.bundle.id;
+            const normalized = this.normalizeSemver(candidate ?? '');
+            if (normalized) {
+              console.log('[OTA] Using OTA bundle version (normalized):', normalized);
+              return normalized;
+            }
           }
         }
         const info = await App.getInfo();
-        console.log('[OTA] Using native app version:', info.version);
-        return info.version;
+        const nativeNormalized = this.normalizeSemver(info.version);
+        console.log('[OTA] Using native app version (normalized):', nativeNormalized);
+        return nativeNormalized;
       }
     } catch (err) {
       console.error('[OTA] Failed to get version:', err);
+      // Avoid returning a tiny fallback on native, because it can create an endless
+      // "update available" loop if Capgo.current() temporarily fails during startup.
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const info = await App.getInfo();
+          const nativeNormalized = this.normalizeSemver(info.version);
+          console.log('[OTA] Fallback to native app version (normalized):', nativeNormalized);
+          return nativeNormalized;
+        } catch {
+          // ignore
+        }
+      }
     }
     console.log('[OTA] Returning fallback version: 0.0.1');
     return '0.0.1';
@@ -134,8 +183,10 @@ class AppUpdateService {
    * Compare semver versions
    */
   compareVersions(a: string, b: string): number {
-    const partsA = a.split('.').map(Number);
-    const partsB = b.split('.').map(Number);
+    const normA = this.normalizeSemver(a);
+    const normB = this.normalizeSemver(b);
+    const partsA = normA.split('.').map((p) => Number.parseInt(p, 10) || 0);
+    const partsB = normB.split('.').map((p) => Number.parseInt(p, 10) || 0);
     for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
       const numA = partsA[i] || 0;
       const numB = partsB[i] || 0;
