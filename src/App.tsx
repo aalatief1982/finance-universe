@@ -460,9 +460,12 @@ function App() {
     checkInterval: 1000 * 60 * 60 // Check hourly
   });
 
-  // Initialize Capgo updater on app start
+  // Initialize Capgo updater on app start (delayed to ensure bridge is stable)
   useEffect(() => {
-    appUpdateService.initialize();
+    const timer = setTimeout(() => {
+      appUpdateService.initialize();
+    }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
