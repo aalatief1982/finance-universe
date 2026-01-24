@@ -466,6 +466,32 @@ function App() {
     appUpdateService.initialize();
   }, []);
 
+  // Apply pending OTA update when app goes to background
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let listenerHandle: { remove: () => Promise<void> } | null = null;
+
+    const setupListener = async () => {
+      listenerHandle = await CapacitorApp.addListener('appStateChange', async (state) => {
+        if (!state.isActive) {
+          // App went to background - safe to apply pending update
+          console.log('[OTA] App backgrounded, checking for pending bundle...');
+          const applied = await appUpdateService.applyPendingBundle();
+          if (applied) {
+            console.log('[OTA] Pending bundle will be active on next launch');
+          }
+        }
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      listenerHandle?.remove();
+    };
+  }, []);
+
   return (
     <ThemeProvider defaultTheme="light" attribute="class">
       <UserProvider>

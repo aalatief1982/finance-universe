@@ -59,6 +59,7 @@ class AppUpdateService {
   private isDownloading = false;
   private initialized = false;
   private initRetryTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingBundle: BundleInfo | null = null;
 
   private normalizeSemver(input: string): string {
     const raw = (input ?? '').trim();
@@ -263,6 +264,17 @@ class AppUpdateService {
         }
       }
 
+      // Check if this version is already downloaded/pending - skip showing dialog again
+      const alreadyPending = await this.hasPendingBundle(manifest.version);
+      if (alreadyPending) {
+        console.log('[OTA] Update already downloaded, waiting for next app background/launch');
+        return {
+          available: false,
+          currentVersion,
+          newVersion: manifest.version,
+        };
+      }
+
       const isNewer = this.compareVersions(manifest.version, currentVersion) > 0;
       
       console.log('[OTA] Version comparison:', {
@@ -287,19 +299,60 @@ class AppUpdateService {
   }
 
   /**
-   * Download and apply update using Capgo
+   * Check if we have a pending bundle ready to apply
    */
-  async downloadAndApplyUpdate(
+  async hasPendingBundle(targetVersion?: string): Promise<boolean> {
+    try {
+      // Check in-memory pending first
+      if (this.pendingBundle) {
+        if (!targetVersion || this.pendingBundle.version === targetVersion) {
+          return true;
+        }
+      }
+      
+      const updater = await getUpdater();
+      if (!updater) return false;
+      
+      const { bundles } = await updater.list();
+      
+      // Check if any bundle matches target version or has pending status
+      return bundles.some(b => 
+        (targetVersion && b.version === targetVersion) ||
+        b.status === 'pending'
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get the pending bundle if any
+   */
+  getPendingBundle(): BundleInfo | null {
+    return this.pendingBundle;
+  }
+
+  /**
+   * Download update (does NOT apply immediately - deferred to background)
+   */
+  async downloadUpdate(
     manifest: UpdateManifest,
     onProgress?: (progress: DownloadProgress) => void
-  ): Promise<boolean> {
-    console.log('[OTA] downloadAndApplyUpdate() called');
+  ): Promise<BundleInfo | null> {
+    console.log('[OTA] downloadUpdate() called (download-only mode)');
     console.log('[OTA] Manifest:', JSON.stringify(manifest));
     console.log('[OTA] isDownloading:', this.isDownloading);
     
+    // Check if already downloaded
+    const alreadyPending = await this.hasPendingBundle(manifest.version);
+    if (alreadyPending) {
+      console.log('[OTA] Bundle already downloaded, skipping re-download');
+      return { id: 'already-pending', version: manifest.version };
+    }
+    
     if (this.isDownloading) {
-      console.log('[OTA] Already downloading, returning false');
-      return false;
+      console.log('[OTA] Already downloading, returning null');
+      return null;
     }
     this.isDownloading = true;
 
@@ -307,7 +360,7 @@ class AppUpdateService {
       const updater = await getUpdater();
       if (!updater) {
         console.error('[OTA] ❌ Capgo updater not available for download');
-        return false;
+        return null;
       }
       
       console.log('[OTA] Starting download from:', manifest.url);
@@ -331,23 +384,47 @@ class AppUpdateService {
         onProgress({ loaded: 100, total: 100, percent: 100 });
       }
 
-      // Apply the update - this will reload the WebView
-      // IMPORTANT: After set(), the app will reload. On next launch, notifyAppReady() 
-      // MUST be called before any update check to prevent an infinite loop.
-      console.log('[OTA] Calling updater.set() to apply bundle...');
-      console.log('[OTA] ⚠️ App will reload now. Next launch must call notifyAppReady() first!');
-      await updater.set(bundle);
-      // Note: Code below this line likely won't execute as set() triggers reload
-      console.log('[OTA] ✅ Bundle set successfully, WebView should reload');
-
-      return true;
+      // Store as pending - DO NOT call set() here
+      this.pendingBundle = bundle;
+      console.log('[OTA] Bundle downloaded and marked as pending:', bundle.version);
+      
+      return bundle;
     } catch (err) {
-      console.error('[OTA] ❌ Update failed:', err);
+      console.error('[OTA] ❌ Download failed:', err);
       console.error('[OTA] Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
-      return false;
+      return null;
     } finally {
       this.isDownloading = false;
       console.log('[OTA] Download complete, isDownloading reset to false');
+    }
+  }
+
+  /**
+   * Apply a pending bundle (call when app goes to background)
+   */
+  async applyPendingBundle(): Promise<boolean> {
+    console.log('[OTA] applyPendingBundle() called');
+    
+    const updater = await getUpdater();
+    if (!updater) {
+      console.log('[OTA] No updater available');
+      return false;
+    }
+    
+    if (!this.pendingBundle) {
+      console.log('[OTA] No pending bundle to apply');
+      return false;
+    }
+
+    try {
+      console.log('[OTA] Applying pending bundle:', this.pendingBundle.version);
+      await updater.set(this.pendingBundle);
+      this.pendingBundle = null;
+      console.log('[OTA] ✅ Bundle applied, will be active on next launch');
+      return true;
+    } catch (err) {
+      console.error('[OTA] ❌ Failed to apply bundle:', err);
+      return false;
     }
   }
 
