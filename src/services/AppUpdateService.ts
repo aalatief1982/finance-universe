@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { CapacitorUpdater } from '@capgo/capacitor-updater';
+type CapacitorUpdaterType = typeof import('@capgo/capacitor-updater').CapacitorUpdater;
 
 type BundleInfo = {
   id: string;
@@ -33,14 +33,25 @@ export interface DownloadProgress {
 
 const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json';
 
-// Simple synchronous getter - no caching of failures
-const getUpdater = () => {
+let updaterPromise: Promise<CapacitorUpdaterType | null> | null = null;
+
+const getUpdater = async (): Promise<CapacitorUpdaterType | null> => {
   if (!Capacitor.isNativePlatform()) {
     console.log('[OTA] Not native platform, skipping updater');
     return null;
   }
-  console.log('[OTA] Returning CapacitorUpdater');
-  return CapacitorUpdater;
+  if (!updaterPromise) {
+    updaterPromise = import('@capgo/capacitor-updater')
+      .then((module) => {
+        console.log('[OTA] Returning CapacitorUpdater');
+        return module.CapacitorUpdater;
+      })
+      .catch((err) => {
+        console.error('[OTA] Failed to load CapacitorUpdater:', err);
+        return null;
+      });
+  }
+  return updaterPromise;
 };
 
 class AppUpdateService {
@@ -82,7 +93,7 @@ class AppUpdateService {
       return;
     }
 
-    const updater = getUpdater();
+    const updater = await getUpdater();
     if (!updater) {
       console.log('[OTA] No updater available, skipping initialization');
       return;
@@ -112,7 +123,7 @@ class AppUpdateService {
           await this.initialize();
         }
 
-        const updater = getUpdater();
+        const updater = await getUpdater();
         if (updater) {
           console.log('[OTA] Getting current bundle from Capgo...');
           const current = await updater.current();
@@ -281,7 +292,7 @@ class AppUpdateService {
     this.isDownloading = true;
 
     try {
-      const updater = getUpdater();
+      const updater = await getUpdater();
       if (!updater) {
         console.error('[OTA] ❌ Capgo updater not available for download');
         return false;
@@ -330,7 +341,7 @@ class AppUpdateService {
   async rollback(): Promise<boolean> {
     console.log('[OTA] rollback() called');
     try {
-      const updater = getUpdater();
+      const updater = await getUpdater();
       if (!updater) {
         console.log('[OTA] No updater available for rollback');
         return false;
@@ -350,7 +361,7 @@ class AppUpdateService {
    */
   async listBundles(): Promise<BundleInfo[]> {
     try {
-      const updater = getUpdater();
+      const updater = await getUpdater();
       if (!updater) return [];
       const result = await updater.list();
       return result.bundles;
@@ -364,7 +375,7 @@ class AppUpdateService {
    */
   async cleanupOldBundles(): Promise<void> {
     try {
-      const updater = getUpdater();
+      const updater = await getUpdater();
       if (!updater) return;
       const { bundles } = await updater.list();
       const current = await updater.current();
@@ -394,7 +405,7 @@ class AppUpdateService {
     nativeVersion: string;
   }> {
     try {
-      const updater = getUpdater();
+      const updater = await getUpdater();
       if (!updater) {
         return {
           currentBundle: null,
