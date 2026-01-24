@@ -7,7 +7,9 @@ This document summarizes the current Capgo OTA implementation in this repository
 - Capgo is integrated via the `@capgo/capacitor-updater` plugin and a custom manifest fetched from Firebase Hosting.
 - Updates are triggered via a `useAppUpdate` hook and applied via `AppUpdateService`.
 - The current native app version in Android (`versionName`) is higher than the manifest versions in the repo, which will prevent updates from being marked as available.
-- A repo-local publish script (`scripts/publish-capgo.sh`) now automates building, zipping, and manifest updates.
+
+- There is no Capgo CLI publish script or documentation in this repo; publishing steps must be manual or added separately.
+
 
 ## Current Update Flow (Code Map)
 
@@ -19,12 +21,15 @@ This document summarizes the current Capgo OTA implementation in this repository
 ## Blocking Issues
 
 - **Runtime:** The manifest version in the repo (`updates/manifest.json` and `public/manifest.json`) is lower than the Android native version (`android/app/build.gradle`). This prevents updates from showing as available.
-- **Publishing Workflow:** A local publish script exists, but deployment to hosting is still manual.
+
+- **Publishing Workflow:** No Capgo CLI scripts or documented publish process exist in this repo.
 
 ## Publish Checklist (Based on Repo State)
 
-1. Run `npm run capgo:publish -- <version> [zip-url]` to build, zip, and update manifest files.
-2. Upload `public/manifest.json` and `public/www.zip` to your hosting (Firebase Hosting uses `public/` by default).
-3. Verify on device by opening Settings and checking the displayed app version, then trigger update checks.
+1. Build the web bundle with `npm run build` (produces `dist/`).
+2. Package and upload the bundle to your hosting (e.g., Firebase Hosting) as `www.zip`.
+3. Update the hosted `manifest.json` with a `version` higher than the native app version and the correct `url`.
+4. Verify on device by opening Settings and checking the displayed app version, then trigger update checks.
 
-> Note: The publish script does not deploy to hosting; it prepares artifacts for upload.
+> Note: This repo does **not** include Capgo CLI automation; add scripts if you want a repeatable publish workflow.
+
