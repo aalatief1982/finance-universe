@@ -7,7 +7,9 @@ This document summarizes the current Capgo OTA implementation in this repository
 - Capgo is integrated via the `@capgo/capacitor-updater` plugin and a custom manifest fetched from Firebase Hosting.
 - Updates are triggered via a `useAppUpdate` hook and applied via `AppUpdateService`.
 - The current native app version in Android (`versionName`) is higher than the manifest versions in the repo, which will prevent updates from being marked as available.
+
 - There is no Capgo CLI publish script or documentation in this repo; publishing steps must be manual or added separately.
+
 
 ## Current Update Flow (Code Map)
 
@@ -19,6 +21,7 @@ This document summarizes the current Capgo OTA implementation in this repository
 ## Blocking Issues
 
 - **Runtime:** The manifest version in the repo (`updates/manifest.json` and `public/manifest.json`) is lower than the Android native version (`android/app/build.gradle`). This prevents updates from showing as available.
+
 - **Publishing Workflow:** No Capgo CLI scripts or documented publish process exist in this repo.
 
 ## Publish Checklist (Based on Repo State)
@@ -29,3 +32,4 @@ This document summarizes the current Capgo OTA implementation in this repository
 4. Verify on device by opening Settings and checking the displayed app version, then trigger update checks.
 
 > Note: This repo does **not** include Capgo CLI automation; add scripts if you want a repeatable publish workflow.
+

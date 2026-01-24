@@ -14,7 +14,8 @@
     "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
     "preview": "vite preview",
-    "prepare:plugins": "bash scripts/build-plugins.sh"
+    "prepare:plugins": "bash scripts/build-plugins.sh",
+    "capgo:publish": "bash scripts/publish-capgo.sh"
   },
   "dependencies": {
     "@capacitor-firebase/analytics": "^6.3.1",
