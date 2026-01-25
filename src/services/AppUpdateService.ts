@@ -79,6 +79,7 @@ class AppUpdateService {
   private isChecking = false;
   private isDownloading = false;
   private initialized = false;
+  private initializing = false;
   private pendingBundle: BundleInfo | null = null;
 
   private readPendingBundleFromStorage(): BundleInfo | null {
@@ -134,17 +135,18 @@ class AppUpdateService {
       return;
     }
     
-    if (this.initialized) {
+    if (this.initialized || this.initializing) {
       console.log('[OTA] Already initialized');
       return;
     }
 
-    // Mark initialized immediately to prevent blocking
-    this.initialized = true;
+    this.initializing = true;
 
     const updater = getUpdater();
     if (!updater) {
       console.log('[OTA] No updater available');
+      this.initialized = true;
+      this.initializing = false;
       return;
     }
 
@@ -152,9 +154,13 @@ class AppUpdateService {
       console.log('[OTA] Calling notifyAppReady()...');
       await withTimeout(updater.notifyAppReady(), 3000, 'notifyAppReady');
       console.log('[OTA] ✅ App marked as ready');
+      this.initialized = true;
     } catch (err) {
       console.warn('[OTA] ⚠️ notifyAppReady failed (non-blocking):', err);
       // Continue anyway - the service is still usable
+      this.initialized = false;
+    } finally {
+      this.initializing = false;
     }
   }
 
@@ -274,7 +280,7 @@ class AppUpdateService {
     
     // Start initialization in background (don't wait)
     if (!this.initialized) {
-      this.initialize().catch(() => {});
+      await this.initialize().catch(() => {});
     }
     
     if (this.isChecking) {

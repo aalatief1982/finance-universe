@@ -12,8 +12,6 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { fixCorruptedCurrencyCodes } from '@/utils/migration/fixCurrencyCodes';
 import Home from './pages/Home';
 
-// Run currency code migration on app startup
-fixCorruptedCurrencyCodes();
 import Transactions from './pages/Transactions';
 import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
@@ -459,6 +457,17 @@ function App() {
     checkOnMount: true,
     checkInterval: 1000 * 60 * 60 // Check hourly
   });
+
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      fixCorruptedCurrencyCodes();
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('[Migration] Currency code migration failed:', error);
+      }
+    }
+  }, []);
 
   // Initialize Capgo updater on app start
   // (AppUpdateService has built-in retry if the bridge isn't ready yet)
