@@ -60,6 +60,7 @@ class AppUpdateService {
   private isChecking = false;
   private isDownloading = false;
   private initialized = false;
+  private initializeInFlight: Promise<void> | null = null;
   private initRetryTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingBundle: BundleInfo | null = null;
 
@@ -119,26 +120,39 @@ class AppUpdateService {
   async initialize(): Promise<void> {
     console.log('[OTA] initialize() called, isNative:', Capacitor.isNativePlatform(), 'initialized:', this.initialized);
     
+    if (this.initializeInFlight) {
+      await this.initializeInFlight;
+      return;
+    }
+
     if (!Capacitor.isNativePlatform() || this.initialized) {
       console.log('[OTA] Skipping init - not native or already initialized');
       return;
     }
 
-    const updater = await getUpdater();
-    if (!updater) {
-      console.log('[OTA] No updater available, skipping initialization');
-      return;
-    }
+    this.initializeInFlight = (async () => {
+      const updater = await getUpdater();
+      if (!updater) {
+        console.log('[OTA] No updater available, skipping initialization');
+        return;
+      }
+
+      try {
+        console.log('[OTA] Calling notifyAppReady()...');
+        await updater.notifyAppReady();
+        this.initialized = true;
+        console.log('[OTA] ✅ App marked as ready successfully');
+        await this.applyPendingBundle();
+      } catch (err) {
+        console.error('[OTA] ❌ Failed to notify app ready:', err);
+        this.scheduleInitRetry(err);
+      }
+    })();
 
     try {
-      console.log('[OTA] Calling notifyAppReady()...');
-      await updater.notifyAppReady();
-      this.initialized = true;
-      console.log('[OTA] ✅ App marked as ready successfully');
-      await this.applyPendingBundle();
-    } catch (err) {
-      console.error('[OTA] ❌ Failed to notify app ready:', err);
-      this.scheduleInitRetry(err);
+      await this.initializeInFlight;
+    } finally {
+      this.initializeInFlight = null;
     }
   }
 
