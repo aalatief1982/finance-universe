@@ -14,14 +14,11 @@ import {
 } from "@/components/ui/select";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
@@ -68,6 +65,7 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import OTADebugSection from '@/components/settings/OTADebugSection';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -188,31 +186,37 @@ const Settings = () => {
 
   useEffect(() => {
     const fetchVersion = async () => {
-      try {
-        if (Capacitor.isNativePlatform()) {
-          // Use Capgo to get the current bundle version
-          const { appUpdateService } = await import('@/services/AppUpdateService');
-          const version = await Promise.race([
-            appUpdateService.getCurrentVersion(),
-            new Promise<string>((resolve) => setTimeout(() => resolve(''), 4000)),
-          ]);
-
-          if (version) {
-            setAppVersion(version);
-            return;
-          }
-
-          // Fallback to native version (never block the UI)
+      // Show native version immediately for native platforms
+      if (Capacitor.isNativePlatform()) {
+        try {
           const info = await App.getInfo();
-          setAppVersion(info.version || '1.0.0');
-        } else {
+          setAppVersion(info.version || '...');
+        } catch {
+          setAppVersion('...');
+        }
+        
+        // Then try to get OTA version (non-blocking)
+        try {
+          const { appUpdateService } = await import('@/services/AppUpdateService');
+          const otaVersion = await Promise.race([
+            appUpdateService.getCurrentVersion(),
+            new Promise<string>((resolve) => setTimeout(() => resolve(''), 3000)),
+          ]);
+          if (otaVersion) {
+            setAppVersion(otaVersion);
+          }
+        } catch {
+          // Keep showing native version
+        }
+      } else {
+        // Web: fetch from manifest
+        try {
           const response = await fetch('/manifest.json');
           const manifest = await response.json();
           setAppVersion(manifest.version || '1.0.0');
+        } catch {
+          setAppVersion('1.0.0');
         }
-      } catch (error) {
-        console.error('Failed to fetch app version:', error);
-        setAppVersion('1.0.0');
       }
     };
 
@@ -806,6 +810,9 @@ const Settings = () => {
             </p>
           </div>
         </section>
+
+        {/* OTA Debug Section - only shows on native */}
+        <OTADebugSection />
 
       </motion.div>
       </div>
