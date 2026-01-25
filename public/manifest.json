@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "minimumNativeVersion": "1.0.0",
-  "url": "https://xpensia-505ac.web.app/www.zip",
-  "releaseNotes": "Initial release with OTA update support",
-  "mandatory": false
+    "version":  "1.0.8",
+    "minimumNativeVersion":  "1.0.0",
+    "url":  "https://xpensia-505ac.web.app/www.zip",
+    "releaseNotes":  "Initial release with OTA update support",
+    "mandatory":  false
 }

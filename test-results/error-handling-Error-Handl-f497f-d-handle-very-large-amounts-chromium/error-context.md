@@ -1,0 +1,98 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button [ref=e8] [cursor=pointer]:
+            - img
+          - link "Xpensia Logo Transactions" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img "Xpensia Logo" [ref=e12]
+            - generic [ref=e13]: Transactions
+          - navigation [ref=e14]:
+            - list [ref=e15]:
+              - listitem [ref=e16]:
+                - link "Home" [ref=e17] [cursor=pointer]:
+                  - /url: /home
+                  - img [ref=e18]
+                  - text: Home
+              - listitem [ref=e21]:
+                - link "Analytics" [ref=e22] [cursor=pointer]:
+                  - /url: /analytics
+                  - img [ref=e23]
+                  - text: Analytics
+              - listitem [ref=e26]:
+                - button "Budget" [ref=e27] [cursor=pointer]:
+                  - img [ref=e28]
+                  - text: Budget
+                  - img [ref=e32]
+              - listitem [ref=e35]:
+                - link "Transactions" [ref=e36] [cursor=pointer]:
+                  - /url: /transactions
+                  - img [ref=e37]
+                  - text: Transactions
+              - listitem [ref=e38]:
+                - link "Paste & Parse" [ref=e39] [cursor=pointer]:
+                  - /url: /import-transactions
+                  - img [ref=e40]
+                  - text: Paste & Parse
+              - listitem [ref=e43]:
+                - button "Import SMS" [ref=e44] [cursor=pointer]:
+                  - img [ref=e45]
+                  - text: Import SMS
+                  - img [ref=e47]
+              - listitem [ref=e50]:
+                - link "Settings" [ref=e51] [cursor=pointer]:
+                  - /url: /settings
+                  - img [ref=e52]
+                  - text: Settings
+              - listitem [ref=e55]:
+                - link "Profile" [ref=e56] [cursor=pointer]:
+                  - /url: /profile
+                  - img [ref=e57]
+                  - text: Profile
+        - button "Feedback" [ref=e61] [cursor=pointer]:
+          - img
+    - main [ref=e63]:
+      - generic [ref=e66]:
+        - generic [ref=e69]:
+          - group [ref=e70]:
+            - radio "Day" [ref=e71] [cursor=pointer]
+            - radio "Week" [ref=e72] [cursor=pointer]
+            - radio "Month" [ref=e73] [cursor=pointer]
+            - radio "Year" [ref=e74] [cursor=pointer]
+            - radio "Custom" [checked] [ref=e75] [cursor=pointer]
+          - generic [ref=e76]:
+            - button "December 22nd, 2025" [ref=e77] [cursor=pointer]:
+              - img
+              - text: December 22nd, 2025
+            - button "January 22nd, 2026" [ref=e78] [cursor=pointer]:
+              - img
+              - text: January 22nd, 2026
+          - group [ref=e79]:
+            - radio "All" [checked] [ref=e80] [cursor=pointer]
+            - radio "Income" [ref=e81] [cursor=pointer]
+            - radio "Expense" [ref=e82] [cursor=pointer]
+            - radio "Transfer" [ref=e83] [cursor=pointer]
+          - textbox "Search transactions..." [ref=e85]
+        - generic [ref=e89]:
+          - heading "Wed, Jan 21" [level=3] [ref=e90]
+          - generic [ref=e93] [cursor=pointer]:
+            - generic [ref=e94]:
+              - img [ref=e96]
+              - img [ref=e100]
+              - generic [ref=e103]:
+                - heading "Parking Fees" [level=4] [ref=e104]
+                - text: Transportation
+            - generic [ref=e105]:
+              - generic [ref=e106]: "-AED 208.18"
+              - button "Delete transaction" [ref=e107]:
+                - img
+                - generic [ref=e108]: Delete transaction
+          - generic [ref=e109]: "Net: -AED 208.18"
+  - region "Notifications (F8)":
+    - list
+```

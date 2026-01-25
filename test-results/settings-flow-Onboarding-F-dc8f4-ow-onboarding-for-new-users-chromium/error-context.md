@@ -1,0 +1,54 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - main [ref=e5]:
+    - generic [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e20]:
+          - img [ref=e23]
+          - heading "Track Expenses Instantly" [level=1] [ref=e25]
+          - paragraph [ref=e26]: Smart parsing of SMS in seconds
+          - paragraph [ref=e27]: Never miss a transaction. Our AI automatically reads your SMS notifications and tracks every expense.
+        - img "Track Expenses Instantly" [ref=e32]
+        - paragraph [ref=e35]: Swipe to continue
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+              - heading "Auto-Categorized for You" [level=1]
+              - paragraph: No setup needed, we learn as you go!
+              - paragraph: Intelligent categorization that gets smarter with every transaction. Spend time living, not organizing.
+          - generic:
+            - generic:
+              - generic:
+                - img "Auto-Categorized for You"
+          - generic:
+            - generic:
+              - paragraph: Swipe to continue
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - img
+              - heading "See Where Your Money Goes" [level=1]
+              - paragraph: Real-time dashboards & easy reports
+              - paragraph: Beautiful insights and reports that help you make informed financial decisions instantly.
+          - generic:
+            - generic:
+              - generic:
+                - img "See Where Your Money Goes"
+          - generic:
+            - generic:
+              - button "Start Your Journey":
+                - text: Start Your Journey
+                - img
+              - paragraph: Join thousands who are already in control of their finances
+  - region "Notifications (F8)":
+    - list
+```

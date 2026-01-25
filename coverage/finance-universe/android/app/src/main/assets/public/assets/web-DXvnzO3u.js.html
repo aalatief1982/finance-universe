@@ -1,0 +1,88 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for finance-universe/android/app/src/main/assets/public/assets/web-DXvnzO3u.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../../../../../../prettify.css" />
+    <link rel="stylesheet" href="../../../../../../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../../../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../../../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../../../../../../index.html">All files</a> / <a href="index.html">finance-universe/android/app/src/main/assets/public/assets</a> web-DXvnzO3u.js</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >import{W as w}from"./index-CwrcnMgf.js";class y extends w{async getId(){return{identifier:this.getUid()}}async getInfo(){if(typeof navigator&gt;"u"||!navigator.userAgent)throw this.unavailable("Device API not available in this browser");const e=navigator.userAgent,i=this.parseUa(e);return{model:i.model,platform:"web",operatingSystem:i.operatingSystem,osVersion:i.osVersion,manufacturer:navigator.vendor,isVirtual:!1,webViewVersion:i.browserVersion}}async getBatteryInfo(){if(typeof navigator&gt;"u"||!navigator.getBattery)throw this.unavailable("Device API not available in this browser");let e={};try{e=await navigator.getBattery()}catch{}return{batteryLevel:e.level,isCharging:e.charging}}async getLanguageCode(){return{value:navigator.language.split("-")[0].toLowerCase()}}async getLanguageTag(){return{value:navigator.language}}parseUa(e){const i={},r=e.indexOf("(")+1;let a=e.indexOf(") AppleWebKit");e.indexOf(") Gecko")!==-1&amp;&amp;(a=e.indexOf(") Gecko"));const s=e.substring(r,a);if(e.indexOf("Android")!==-1){const t=s.replace("; wv","").split("; ").pop();t&amp;&amp;(i.model=t.split(" Build")[0]),i.osVersion=s.split("; ")[1]}else if(i.model=s.split("; ")[0],typeof navigator&lt;"u"&amp;&amp;navigator.oscpu)i.osVersion=navigator.oscpu;else if(e.indexOf("Windows")!==-1)i.osVersion=s;else{const t=s.split("; ").pop();if(t){const n=t.replace(" like Mac OS X","").split(" ");i.osVersion=n[n.length-1].replace(/_/g,".")}}/android/i.test(e)?i.operatingSystem="android":/iPad|iPhone|iPod/.test(e)&amp;&amp;!window.MSStream?i.operatingSystem="ios":/Win/.test(e)?i.operatingSystem="windows":/Mac/i.test(e)?i.operatingSystem="mac":i.operatingSystem="unknown";const l=!!window.ApplePaySession,x=!!window.chrome,p=/Firefox/.test(e),d=/Edg/.test(e),g=/FxiOS/.test(e),c=/CriOS/.test(e),f=/EdgiOS/.test(e);if(l||x&amp;&amp;!d||g||c||f){let t;g?t="FxiOS":c?t="CriOS":f?t="EdgiOS":l?t="Version":t="Chrome";const n=e.split(" ");for(const o of n)if(o.includes(t)){const v=o.split("/")[1];i.browserVersion=v}}else if(p||d){const o=e.split("").reverse().join("").split("/")[0].split("").reverse().join("");i.browserVersion=o}return i}getUid(){if(typeof window&lt;"u"&amp;&amp;window.localStorage){let e=window.localStorage.getItem("_capuid");return e||(e=this.uuid4(),window.localStorage.setItem("_capuid",e),e)}return this.uuid4()}uuid4(){return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(e){const i=Math.random()*16|0;return(e==="x"?i:i&amp;3|8).toString(16)})}}export{y as DeviceWeb};<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-01-21T08:55:16.225Z
+            </div>
+        <script src="../../../../../../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../../../../../../sorter.js"></script>
+        <script src="../../../../../../../../block-navigation.js"></script>
+    </body>
+</html>
+    

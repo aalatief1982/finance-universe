@@ -1,0 +1,172 @@
+
+> vite_react_shadcn_ts@0.0.0 test:run
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/Xpensia/finance-universe[39m
+
+ [31m❯[39m src/lib/smart-paste-engine/__tests__/structureParser.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 41[2mms[22m[39m
+   [32m✓[39m parseSmsMessage[2m > [22mnormalizes short date formats in direct fields[32m 15[2mms[22m[39m
+   [32m✓[39m parseSmsMessage[2m > [22mhandles messages without a date[32m 5[2mms[22m[39m
+[31m   [31m×[31m parseSmsMessage[2m > [22mthrows when raw message is empty[39m[32m 18[2mms[22m[39m
+[31m     → expected [Function] to throw an error[39m
+ [31m❯[39m src/services/__tests__/SmsImportService.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 61[2mms[22m[39m
+   [32m✓[39m SmsImportService.checkForNewMessages[2m > [22mnavigates to vendor mapping with parsed messages[32m 13[2mms[22m[39m
+[31m   [31m×[31m SmsImportService.checkForNewMessages[2m > [22mprompts user only when there are new messages in auto mode[39m[32m 39[2mms[22m[39m
+[31m     → expected "bound " to be called at least once[39m
+   [32m✓[39m SmsImportService.checkForNewMessages[2m > [22mdoes not prompt when no new messages are found in auto mode[32m 5[2mms[22m[39m
+ [32m✓[39m src/components/forms/__tests__/CategorySelector.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 718[2mms[22m[39m
+   [33m[2m✓[22m[39m CategorySelector[2m > [22mlists all categories for the chosen type [33m 506[2mms[22m[39m
+ [32m✓[39m src/components/transactions/__tests__/TransactionCard.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 430[2mms[22m[39m
+[90mstderr[2m | src/components/transactions/__tests__/TransactionList.test.tsx[2m > [22m[2mTransactionList[2m > [22m[2mcalls onEdit and onDelete when buttons clicked
+[22m[39m`AlertDialogContent` requires a description for the component to be accessible for screen reader users.
+
+You can add a description to the `AlertDialogContent` by passing a `AlertDialogDescription` component as a child, which also benefits sighted users by adding visible context to the dialog.
+
+Alternatively, you can use your own component as a description by assigning it an `id` and passing the same value to the `aria-describedby` prop in `AlertDialogContent`. If the description is confusing or duplicative for sighted users, you can use the `@radix-ui/react-visually-hidden` primitive as a wrapper around your description component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/alert-dialog
+Warning: Missing `Description` or `aria-describedby={undefined}` for {AlertDialogContent}.
+
+ [32m✓[39m src/components/transactions/__tests__/TransactionList.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 665[2mms[22m[39m
+   [33m[2m✓[22m[39m TransactionList[2m > [22mcalls onEdit and onDelete when buttons clicked [33m 375[2mms[22m[39m
+[90mstderr[2m | src/pages/__tests__/SettingsBackgroundSms.test.tsx[2m > [22m[2mSettings background SMS toggle[2m > [22m[2mis disabled when feature is locked
+[22m[39mFailed to fetch app version: TypeError: Failed to parse URL from /manifest.json
+[90m    at node:internal/deps/undici/undici:13502:13[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at fetchVersion [90m(D:\Xpensia\finance-universe\[39msrc\pages\Settings.tsx:196:28[90m)[39m {
+  [cause]: TypeError: Invalid URL: /manifest.json
+      at new URLImpl [90m(D:\Xpensia\finance-universe\[39mnode_modules\[4mwhatwg-url[24m\lib\URL-impl.js:20:13[90m)[39m
+      at Object.exports.setup [90m(D:\Xpensia\finance-universe\[39mnode_modules\[4mwhatwg-url[24m\lib\URL.js:54:12[90m)[39m
+      at new URL [90m(D:\Xpensia\finance-universe\[39mnode_modules\[4mwhatwg-url[24m\lib\URL.js:115:22[90m)[39m
+  [90m    at new Request (node:internal/deps/undici/undici:9578:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:10307:25)[39m
+  [90m    at fetch (node:internal/deps/undici/undici:13500:10)[39m
+  [90m    at fetch (node:internal/bootstrap/web/exposed-window-or-worker:75:12)[39m
+      at fetchVersion [90m(D:\Xpensia\finance-universe\[39msrc\pages\Settings.tsx:196:34[90m)[39m
+      at [90mD:\Xpensia\finance-universe\[39msrc\pages\Settings.tsx:206:5
+      at commitHookEffectListMount [90m(D:\Xpensia\finance-universe\[39mnode_modules\[4mreact-dom[24m\cjs\react-dom.development.js:23189:26[90m)[39m
+}
+Warning: An update to Settings inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at Settings (D:\Xpensia\finance-universe\src\pages\Settings.tsx:69:64)
+    at Router (file:///D:/Xpensia/finance-universe/node_modules/react-router/dist/development/chunk-EPOLDU6W.mjs:6605:13)
+    at BrowserRouter (file:///D:/Xpensia/finance-universe/node_modules/react-router/dist/development/chunk-EPOLDU6W.mjs:9815:3)
+    at UserProvider (D:\Xpensia\finance-universe\src\context\user\UserContext.tsx:99:25)
+
+ [32m✓[39m src/pages/__tests__/SettingsBackgroundSms.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 472[2mms[22m[39m
+   [33m[2m✓[22m[39m Settings background SMS toggle[2m > [22mis disabled when feature is locked [33m 468[2mms[22m[39m
+ [32m✓[39m src/context/__tests__/UserContext.integration.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 388[2mms[22m[39m
+ [32m✓[39m src/context/__tests__/TransactionContext.integration.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[32m 275[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/format-utils.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 128[2mms[22m[39m
+ [32m✓[39m src/components/__tests__/DashboardStats.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 343[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/transaction-analytics.integration.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 110[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/AnalyticsService.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+ [32m✓[39m src/__tests__/useGuidedTips.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/sms-pipeline.integration.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/context/user/__tests__/UserContextPreferences.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 94[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/smartPaste.integration.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/TransactionService.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/templateUtils.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+[90mstdout[2m | src/services/__tests__/budget-transaction.integration.test.ts
+[22m[39mRunning budget data migrations...
+
+ [32m✓[39m src/services/__tests__/budget-transaction.integration.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/components/forms/__tests__/TransactionForm.integration.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/__tests__/navigation.integration.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/transaction-account.integration.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/budget-period-utils.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/storage-utils.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/messageFilter.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/vendorFallbackUtils.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/keywordBankUtils.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+[90mstdout[2m | src/lib/smart-paste-engine/__tests__/suggestionEngine.test.ts[2m > [22m[2msuggestionEngine[2m > [22m[2mfinds closest fallback vendor matches
+[22m[39m[SmartPaste] Fuzzy matched vendor: acme store → { type: [32m'expense'[39m, category: [32m'Shopping'[39m, subcategory: [32m'Retail'[39m }
+
+[90mstdout[2m | src/lib/smart-paste-engine/__tests__/suggestionEngine.test.ts[2m > [22m[2msuggestionEngine[2m > [22m[2muses vendor fallback when category is missing
+[22m[39m[SmartPaste] Fuzzy matched vendor: acme store → { type: [32m'expense'[39m, category: [32m'Shopping'[39m, subcategory: [32m'Retail'[39m }
+
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/suggestionEngine.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/validation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/templateNormalizer.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/dateUtils.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/utils/dateParser.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/confidenceScoring.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/csv.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/getStaleTemplates.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/BudgetHierarchyService.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/LearningEngineService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/normalize-utils.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/__tests__/transaction-validator.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/SmsProcessingService.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/smsParser.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/parseAndInferTransaction.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/classifier.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/services/__tests__/CategoryInferencer.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/smart-paste-engine/__tests__/confidenceUtils.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/__tests__/placeholder.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/components/charts/__tests__/SubcategoryChart.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Suites 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/services/__tests__/SmsPermissionService.test.ts[2m [ src/services/__tests__/SmsPermissionService.test.ts ][22m
+[31m[1mTypeError[22m: Capacitor.registerPlugin is not a function[39m
+[36m [2m❯[22m src/plugins/SmsReaderPlugin.ts:[2m29:29[22m[39m
+    [90m 27| [39m
+    [90m 28| [39m[90m// Register the plugin[39m
+    [90m 29| [39mconst SmsReader = Capacitor.registerPlugin<SmsReaderPlugin>('SmsReader…
+    [90m   | [39m                            [31m^[39m
+    [90m 30| [39m
+    [90m 31| [39m[35mexport[39m { [33mSmsReader[39m }[33m;[39m
+[90m [2m❯[22m src/services/SmsReaderService.ts:[2m4:1[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/services/__tests__/SmsImportService.test.ts[2m > [22mSmsImportService.checkForNewMessages[2m > [22mprompts user only when there are new messages in auto mode
+[31m[1mAssertionError[22m: expected "bound " to be called at least once[39m
+[36m [2m❯[22m src/services/__tests__/SmsImportService.test.ts:[2m87:24[22m[39m
+    [90m 85| [39m    await SmsImportService.checkForNewMessages(navigate, { auto: true …
+    [90m 86| [39m
+    [90m 87| [39m    [34mexpect[39m(confirmSpy)[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m 88| [39m    [34mexpect[39m(navigate)[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m 89| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/lib/smart-paste-engine/__tests__/structureParser.test.ts[2m > [22mparseSmsMessage[2m > [22mthrows when raw message is empty
+[31m[1mAssertionError[22m: expected [Function] to throw an error[39m
+
+[32m- Expected:[39m 
+null
+
+[31m+ Received:[39m 
+undefined
+
+[36m [2m❯[22m src/lib/smart-paste-engine/__tests__/structureParser.test.ts:[2m24:53[22m[39m
+    [90m 22| [39m
+    [90m 23| [39m  [34mit[39m([32m'throws when raw message is empty'[39m[33m,[39m () [33m=>[39m {
+    [90m 24| [39m    expect(() => parseSmsMessage('', sampleSender)).toThrow('Empty mes…
+    [90m   | [39m                                                    [31m^[39m
+    [90m 25| [39m  })[33m;[39m
+    [90m 26| [39m})[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m45 passed[39m[22m[90m (48)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m269 passed[39m[22m[90m (271)[39m
+[2m   Start at [22m 21:42:46
+[2m   Duration [22m 30.15s[2m (transform 6.20s, setup 15.84s, collect 23.57s, tests 4.50s, environment 109.89s, prepare 17.61s)[22m
+

@@ -1,0 +1,74 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button [ref=e8] [cursor=pointer]:
+            - img
+          - link "Xpensia Logo Paste & Parse" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img "Xpensia Logo" [ref=e12]
+            - generic [ref=e13]: Paste & Parse
+          - navigation [ref=e14]:
+            - list [ref=e15]:
+              - listitem [ref=e16]:
+                - link "Home" [ref=e17] [cursor=pointer]:
+                  - /url: /home
+                  - img [ref=e18]
+                  - text: Home
+              - listitem [ref=e21]:
+                - link "Analytics" [ref=e22] [cursor=pointer]:
+                  - /url: /analytics
+                  - img [ref=e23]
+                  - text: Analytics
+              - listitem [ref=e26]:
+                - button "Budget" [ref=e27] [cursor=pointer]:
+                  - img [ref=e28]
+                  - text: Budget
+                  - img [ref=e32]
+              - listitem [ref=e35]:
+                - link "Transactions" [ref=e36] [cursor=pointer]:
+                  - /url: /transactions
+                  - img [ref=e37]
+                  - text: Transactions
+              - listitem [ref=e38]:
+                - link "Paste & Parse" [ref=e39] [cursor=pointer]:
+                  - /url: /import-transactions
+                  - img [ref=e40]
+                  - text: Paste & Parse
+              - listitem [ref=e43]:
+                - button "Import SMS" [active] [ref=e44] [cursor=pointer]:
+                  - img [ref=e45]
+                  - text: Import SMS
+                  - img [ref=e47]
+              - listitem [ref=e50]:
+                - link "Settings" [ref=e51] [cursor=pointer]:
+                  - /url: /settings
+                  - img [ref=e52]
+                  - text: Settings
+              - listitem [ref=e55]:
+                - link "Profile" [ref=e56] [cursor=pointer]:
+                  - /url: /profile
+                  - img [ref=e57]
+                  - text: Profile
+        - button "Feedback" [ref=e61] [cursor=pointer]:
+          - img
+    - main [ref=e63]:
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - paragraph [ref=e71]: Paste a message from your bank or SMS app to automatically extract transaction details.
+          - generic [ref=e72]:
+            - generic [ref=e73]: Bank/SMS Message
+            - textbox "Bank/SMS Message" [ref=e74]:
+              - /placeholder: Paste your message here...
+              - text: Coffee at Starbucks - $4.50 Uber ride - $12.00 Grocery shopping at Whole Foods - $85.50
+          - button "Extract Transaction" [ref=e76] [cursor=pointer]
+        - generic [ref=e77]:
+          - img [ref=e78]
+          - text: No match yet
+  - region "Notifications (F8)":
+    - list
+```

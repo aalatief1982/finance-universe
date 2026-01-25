@@ -79,7 +79,6 @@ class AppUpdateService {
   private isChecking = false;
   private isDownloading = false;
   private initialized = false;
-  private initializing = false;
   private pendingBundle: BundleInfo | null = null;
 
   private readPendingBundleFromStorage(): BundleInfo | null {
@@ -123,30 +122,29 @@ class AppUpdateService {
   }
 
   /**
-   * Initialize the updater - fire-and-forget, never blocks
-   * Call this on app start but don't await it in critical paths
+   * Initialize the updater - fire-and-forget, never blocks.
+   * Call this on app start but don't await it in critical paths.
    */
   async initialize(): Promise<void> {
     console.log('[OTA] initialize() called, isNative:', Capacitor.isNativePlatform());
-    
+
     if (!Capacitor.isNativePlatform()) {
       console.log('[OTA] Skipping init - not native platform');
       this.initialized = true;
       return;
     }
-    
-    if (this.initialized || this.initializing) {
+
+    if (this.initialized) {
       console.log('[OTA] Already initialized');
       return;
     }
 
-    this.initializing = true;
+    // Mark initialized immediately to prevent blocking
+    this.initialized = true;
 
     const updater = getUpdater();
     if (!updater) {
       console.log('[OTA] No updater available');
-      this.initialized = true;
-      this.initializing = false;
       return;
     }
 
@@ -154,13 +152,21 @@ class AppUpdateService {
       console.log('[OTA] Calling notifyAppReady()...');
       await withTimeout(updater.notifyAppReady(), 3000, 'notifyAppReady');
       console.log('[OTA] ✅ App marked as ready');
-      this.initialized = true;
     } catch (err) {
       console.warn('[OTA] ⚠️ notifyAppReady failed (non-blocking):', err);
       // Continue anyway - the service is still usable
-      this.initialized = false;
-    } finally {
-      this.initializing = false;
+    }
+
+    // Call applyPendingBundle to apply any downloaded updates
+    try {
+      const applied = await this.applyPendingBundle();
+      if (applied) {
+        console.log('[OTA] ✅ Pending bundle applied successfully');
+      } else {
+        console.log('[OTA] No pending bundle to apply');
+      }
+    } catch (err) {
+      console.error('[OTA] ❌ Failed to apply pending bundle:', err);
     }
   }
 
@@ -179,18 +185,12 @@ class AppUpdateService {
     } catch (err) {
       console.warn('[OTA] Failed to get native version:', err);
     }
-
-    if (!Capacitor.isNativePlatform()) {
-      return nativeVersion;
-    }
-
     // Try to get OTA bundle version (with short timeout)
     try {
       const updater = getUpdater();
       if (updater) {
         const current = await withTimeout(updater.current(), 1500, 'updater.current');
         console.log('[OTA] Current bundle:', JSON.stringify(current.bundle));
-
         if (!this.isBuiltinBundle(current.bundle)) {
           const candidate = current.bundle.version ?? current.bundle.id;
           const normalized = this.normalizeSemver(candidate ?? '');
@@ -203,7 +203,6 @@ class AppUpdateService {
     } catch (err) {
       console.warn('[OTA] Capgo bundle fetch failed, using native:', err);
     }
-
     console.log('[OTA] Returning native version:', nativeVersion);
     return nativeVersion;
   }
@@ -224,30 +223,26 @@ class AppUpdateService {
    * Fetch manifest from Firebase
    */
   async fetchManifest(): Promise<UpdateManifest | null> {
-    const url = `${MANIFEST_URL}?t=${Date.now()}`;
+    const url = MANIFEST_URL; // Use the full URL directly
     console.log('[OTA] Fetching manifest from:', url);
-    
+
     try {
       const controller = new AbortController();
       const abortTimer = setTimeout(() => controller.abort(), 8000);
-
       const response = await fetch(url, {
+        method: 'GET',
         cache: 'no-store',
         headers: { 'Cache-Control': 'no-cache' },
         signal: controller.signal,
       }).finally(() => clearTimeout(abortTimer));
-      
+
       console.log('[OTA] Manifest response status:', response.status);
-      
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
       const manifest = await response.json();
       console.log('[OTA] Manifest received:', JSON.stringify(manifest));
-      
       // Store last manifest info
       safeStorage.setItem(LAST_MANIFEST_CHECK_KEY, new Date().toISOString());
       safeStorage.setItem(LAST_MANIFEST_VERSION_KEY, manifest.version);
-      
       return manifest;
     } catch (err) {
       console.error('[OTA] ❌ Failed to fetch manifest:', err);
@@ -277,12 +272,12 @@ class AppUpdateService {
    */
   async checkForUpdates(): Promise<UpdateStatus> {
     console.log('[OTA] checkForUpdates() called');
-    
+
     // Start initialization in background (don't wait)
     if (!this.initialized) {
-      await this.initialize().catch(() => {});
+      this.initialize().catch(() => {});
     }
-    
+
     if (this.isChecking) {
       console.log('[OTA] Already checking, returning early');
       const currentVersion = await this.getCurrentVersion();
@@ -293,7 +288,7 @@ class AppUpdateService {
     try {
       const currentVersion = await this.getCurrentVersion();
       console.log('[OTA] Current version:', currentVersion);
-      
+
       const manifest = await this.fetchManifest();
 
       if (!manifest) {
@@ -306,7 +301,7 @@ class AppUpdateService {
         try {
           const nativeVersion = await this.getNativeVersion();
           console.log('[OTA] Native version check:', nativeVersion, 'vs minimum:', manifest.minimumNativeVersion);
-          
+
           if (this.compareVersions(nativeVersion, manifest.minimumNativeVersion) < 0) {
             console.log('[OTA] ⚠️ Native update required');
             return {
@@ -314,7 +309,7 @@ class AppUpdateService {
               currentVersion,
               newVersion: manifest.version,
               manifest,
-              requiresStoreUpdate: true
+              requiresStoreUpdate: true,
             };
           }
         } catch (err) {
@@ -322,7 +317,6 @@ class AppUpdateService {
         }
       }
 
-      // Check if this version is already downloaded/pending
       const alreadyPending = await this.hasPendingBundle(manifest.version);
       if (alreadyPending) {
         console.log('[OTA] Update already downloaded, waiting for next app launch');
@@ -334,7 +328,7 @@ class AppUpdateService {
       }
 
       const isNewer = this.compareVersions(manifest.version, currentVersion) > 0;
-      
+
       console.log('[OTA] Version comparison:', {
         currentVersion,
         manifestVersion: manifest.version,
@@ -345,9 +339,9 @@ class AppUpdateService {
         available: isNewer,
         currentVersion,
         newVersion: manifest.version,
-        manifest: isNewer ? manifest : undefined
+        manifest: isNewer ? manifest : undefined,
       };
-      
+
       console.log('[OTA] checkForUpdates result:', JSON.stringify(result));
       return result;
     } finally {
@@ -366,15 +360,14 @@ class AppUpdateService {
           return true;
         }
       }
-      
+
       const updater = getUpdater();
       if (!updater) return false;
-      
+
       const { bundles } = await withTimeout(updater.list(), 3000, 'updater.list');
-      
-      return bundles.some(b => 
-        (targetVersion && b.version === targetVersion) ||
-        b.status === 'pending'
+
+      return bundles.some(
+        (b) => (targetVersion && b.version === targetVersion) || b.status === 'pending'
       );
     } catch {
       return false;
@@ -387,64 +380,80 @@ class AppUpdateService {
   getPendingBundle(): BundleInfo | null {
     return this.getPendingBundleInternal();
   }
-
   /**
    * Clear pending bundle
    */
   clearPendingBundle(): void {
     this.setPendingBundle(null);
   }
-
   /**
-   * Download update (does NOT apply immediately - deferred to next launch)
+   * Download update (does NOT apply immediately - deferred to next launch).
    */
   async downloadUpdate(
     manifest: UpdateManifest,
-    onProgress?: (progress: DownloadProgress) => void
   ): Promise<BundleInfo | null> {
     console.log('[OTA] downloadUpdate() called');
     console.log('[OTA] Manifest:', JSON.stringify(manifest));
-    
+
     const alreadyPending = await this.hasPendingBundle(manifest.version);
     if (alreadyPending) {
       console.log('[OTA] Bundle already downloaded, skipping');
       return { id: 'already-pending', version: manifest.version };
     }
-    
+
     if (this.isDownloading) {
       console.log('[OTA] Already downloading');
       return null;
     }
     this.isDownloading = true;
-
+    
     try {
       const updater = getUpdater();
       if (!updater) {
         console.error('[OTA] ❌ No updater available');
         return null;
       }
-      
+
       console.log('[OTA] Starting download from:', manifest.url);
 
-      if (onProgress) {
-        onProgress({ loaded: 0, total: 100, percent: 0 });
-      }
-
-      console.log('[OTA] Calling updater.download()...');
       const bundle: BundleInfo = await updater.download({
         url: manifest.url,
         version: manifest.version,
       });
 
-      console.log('[OTA] ✅ Download complete:', JSON.stringify(bundle));
-
-      if (onProgress) {
-        onProgress({ loaded: 100, total: 100, percent: 100 });
+      // Verify download completion
+      if (bundle.status !== 'success') {
+        console.error('[OTA] ❌ Download did not complete successfully:', bundle);
+        return null;
       }
+
+      console.log('[OTA] ✅ Download complete:', JSON.stringify(bundle));
 
       this.setPendingBundle(bundle);
       console.log('[OTA] Bundle marked as pending');
-      
+
+      // Log the list of bundles for debugging
+      try {
+        const { bundles } = await updater.list();
+        console.log('[OTA] Current bundles after download:', JSON.stringify(bundles));
+      } catch (err) {
+        console.warn('[OTA] Failed to list bundles after download:', err);
+      }
+
+      // Ensure the download is fully complete before applying
+      const applied = await this.applyPendingBundle();
+      if (applied) {
+        console.log('[OTA] ✅ Bundle applied immediately after download');
+        if (updater.reload) {
+          console.log('[OTA] Triggering WebView reload');
+          await updater.reload();
+        } else {
+          console.warn('[OTA] WebView reload not supported');
+        }
+      } else {
+        console.log('[OTA] Bundle will be applied on next app launch');
+      }
+
       return bundle;
     } catch (err) {
       console.error('[OTA] ❌ Download failed:', err);
@@ -459,13 +468,13 @@ class AppUpdateService {
    */
   async applyPendingBundle(): Promise<boolean> {
     console.log('[OTA] applyPendingBundle() called');
-    
+
     const updater = getUpdater();
     if (!updater) {
       console.log('[OTA] No updater available');
       return false;
     }
-    
+
     const pending = this.getPendingBundleInternal();
     if (!pending) {
       console.log('[OTA] No pending bundle');
@@ -481,8 +490,16 @@ class AppUpdateService {
       }
 
       console.log('[OTA] Applying bundle:', pending.version);
-      this.setPendingBundle(null);
-      await withTimeout(updater.set(pending), 8000, 'updater.set');
+
+      // Attempt to activate the pending bundle
+      if (pending.status === 'pending') {
+        console.log('[OTA] Activating pending bundle:', pending.id);
+        await withTimeout(updater.set(pending), 8000, 'updater.set');
+        console.log('[OTA] ✅ Pending bundle activated');
+      } else {
+        console.warn('[OTA] Bundle status is not pending, skipping activation:', pending.status);
+      }
+
       console.log('[OTA] ✅ Bundle applied');
       return true;
     } catch (err) {
@@ -537,11 +554,9 @@ class AppUpdateService {
       lastManifestCheck: safeStorage.getItem(LAST_MANIFEST_CHECK_KEY),
       lastManifestVersion: safeStorage.getItem(LAST_MANIFEST_VERSION_KEY),
     };
-
     try {
       result.nativeVersion = await this.getNativeVersion();
     } catch {}
-
     try {
       const updater = getUpdater();
       if (updater) {
@@ -552,7 +567,6 @@ class AppUpdateService {
         result.allBundles = bundles;
       }
     } catch {}
-
     return result;
   }
 

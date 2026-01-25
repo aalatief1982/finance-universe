@@ -1,0 +1,152 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button [ref=e8] [cursor=pointer]:
+            - img
+          - link "Xpensia Logo Set Budget" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img "Xpensia Logo" [ref=e12]
+            - generic [ref=e13]: Set Budget
+          - navigation [ref=e14]:
+            - list [ref=e15]:
+              - listitem [ref=e16]:
+                - link "Home" [ref=e17] [cursor=pointer]:
+                  - /url: /home
+                  - img [ref=e18]
+                  - text: Home
+              - listitem [ref=e21]:
+                - link "Analytics" [ref=e22] [cursor=pointer]:
+                  - /url: /analytics
+                  - img [ref=e23]
+                  - text: Analytics
+              - listitem [ref=e26]:
+                - button "Budget" [ref=e27] [cursor=pointer]:
+                  - img [ref=e28]
+                  - text: Budget
+                  - img [ref=e32]
+              - listitem [ref=e35]:
+                - link "Transactions" [ref=e36] [cursor=pointer]:
+                  - /url: /transactions
+                  - img [ref=e37]
+                  - text: Transactions
+              - listitem [ref=e38]:
+                - link "Paste & Parse" [ref=e39] [cursor=pointer]:
+                  - /url: /import-transactions
+                  - img [ref=e40]
+                  - text: Paste & Parse
+              - listitem [ref=e43]:
+                - button "Import SMS" [ref=e44] [cursor=pointer]:
+                  - img [ref=e45]
+                  - text: Import SMS
+                  - img [ref=e47]
+              - listitem [ref=e50]:
+                - link "Settings" [ref=e51] [cursor=pointer]:
+                  - /url: /settings
+                  - img [ref=e52]
+                  - text: Settings
+              - listitem [ref=e55]:
+                - link "Profile" [ref=e56] [cursor=pointer]:
+                  - /url: /profile
+                  - img [ref=e57]
+                  - text: Profile
+        - button "Feedback" [ref=e61] [cursor=pointer]:
+          - img
+    - main [ref=e63]:
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - heading "Create Budget" [level=1] [ref=e68]
+          - paragraph [ref=e69]: Set up a new spending limit
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - heading "Budget Scope" [level=3] [ref=e72]
+            - paragraph [ref=e73]: What do you want to budget?
+          - generic [ref=e74]:
+            - generic [ref=e75] [cursor=pointer]:
+              - img [ref=e77]
+              - generic [ref=e80]:
+                - paragraph [ref=e81]: Overall
+                - paragraph [ref=e82]: Total budget for all spending
+              - img [ref=e83]
+            - generic [ref=e85] [cursor=pointer]:
+              - img [ref=e87]
+              - generic [ref=e90]:
+                - paragraph [ref=e91]: Category
+                - paragraph [ref=e92]: Budget for a specific category
+            - generic [ref=e93] [cursor=pointer]:
+              - img [ref=e95]
+              - generic [ref=e99]:
+                - paragraph [ref=e100]: Subcategory
+                - paragraph [ref=e101]: Budget for a specific subcategory
+            - generic [ref=e102] [cursor=pointer]:
+              - img [ref=e104]
+              - generic [ref=e107]:
+                - paragraph [ref=e108]: Account
+                - paragraph [ref=e109]: Budget for a specific account
+        - generic [ref=e112]:
+          - img [ref=e113]
+          - generic [ref=e115]:
+            - paragraph [ref=e116]: Overall Budget
+            - paragraph [ref=e117]: This is your total spending budget. It distributes across time periods (yearly → quarterly → monthly → weekly).
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - heading "Budget Period" [level=3] [ref=e120]:
+              - img [ref=e121]
+              - text: Budget Period
+            - paragraph [ref=e123]: Select the time period for this budget
+          - generic [ref=e124]:
+            - generic [ref=e125]:
+              - generic [ref=e126]:
+                - text: Period Type
+                - combobox [ref=e127] [cursor=pointer]:
+                  - generic: Yearly
+                  - img [ref=e128]
+              - generic [ref=e130]:
+                - text: Year
+                - combobox [ref=e131] [cursor=pointer]:
+                  - generic: "2026"
+                  - img [ref=e132]
+            - generic [ref=e134]:
+              - text: "Budget for:"
+              - strong [ref=e135]: "2026"
+        - generic [ref=e136]:
+          - heading "Budget Amount" [level=3] [ref=e138]
+          - generic [ref=e140]:
+            - generic [ref=e141]:
+              - generic [ref=e142]: Amount
+              - spinbutton "Amount" [ref=e144]
+            - combobox [ref=e145] [cursor=pointer]:
+              - generic: USD
+              - img [ref=e146]
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - heading "Alert Thresholds" [level=3] [ref=e150]:
+              - img [ref=e151]
+              - text: Alert Thresholds
+            - paragraph [ref=e154]: Get notified when you reach these spending levels
+          - generic [ref=e156]:
+            - generic [ref=e157] [cursor=pointer]: 50%
+            - generic [ref=e158] [cursor=pointer]: 75%
+            - generic [ref=e159] [cursor=pointer]: 80%
+            - generic [ref=e160] [cursor=pointer]: 90%
+            - generic [ref=e161] [cursor=pointer]: 100%
+        - generic [ref=e162]:
+          - generic [ref=e164]:
+            - generic [ref=e165]:
+              - img [ref=e166]
+              - heading "Rollover" [level=3] [ref=e169]
+            - switch [ref=e170] [cursor=pointer]
+          - paragraph [ref=e172]: Carry over unused budget to the next period.
+        - generic [ref=e173]:
+          - heading "Notes" [level=3] [ref=e175]
+          - textbox "Add any notes about this budget..." [ref=e177]
+        - generic [ref=e178]:
+          - button "Cancel" [ref=e179] [cursor=pointer]
+          - button "Create Budget" [disabled]
+  - region "Notifications (F8)":
+    - list
+```

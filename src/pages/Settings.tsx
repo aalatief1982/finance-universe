@@ -66,6 +66,7 @@ import { App } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import OTADebugSection from '@/components/settings/OTADebugSection';
+import { appUpdateService } from '@/services/AppUpdateService';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -186,18 +187,11 @@ const Settings = () => {
 
   useEffect(() => {
     const fetchVersion = async () => {
-      // Show native version immediately for native platforms
       if (Capacitor.isNativePlatform()) {
         try {
           const info = await App.getInfo();
           setAppVersion(info.version || '...');
-        } catch {
-          setAppVersion('...');
-        }
-        
-        // Then try to get OTA version (non-blocking)
-        try {
-          const { appUpdateService } = await import('@/services/AppUpdateService');
+
           const otaVersion = await Promise.race([
             appUpdateService.getCurrentVersion(),
             new Promise<string>((resolve) => setTimeout(() => resolve(''), 3000)),
@@ -206,15 +200,15 @@ const Settings = () => {
             setAppVersion(otaVersion);
           }
         } catch {
-          // Keep showing native version
+          setAppVersion('...');
         }
       } else {
-        // Web: fetch from manifest
         try {
-          const response = await fetch('/manifest.json');
+          const response = await fetch('https://xpensia-505ac.web.app/manifest.json');
           const manifest = await response.json();
           setAppVersion(manifest.version || '1.0.0');
-        } catch {
+        } catch (err) {
+          console.error('[Settings] Failed to fetch manifest:', err);
           setAppVersion('1.0.0');
         }
       }

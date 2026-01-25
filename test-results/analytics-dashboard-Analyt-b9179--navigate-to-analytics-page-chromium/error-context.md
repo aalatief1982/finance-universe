@@ -1,0 +1,118 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - banner [ref=e4]:
+        - generic [ref=e6]:
+          - generic [ref=e7]:
+            - button [ref=e8] [cursor=pointer]:
+              - img
+            - link "Xpensia Logo Analytics" [ref=e10] [cursor=pointer]:
+              - /url: /
+              - img "Xpensia Logo" [ref=e12]
+              - generic [ref=e13]: Analytics
+            - navigation [ref=e14]:
+              - list [ref=e15]:
+                - listitem [ref=e16]:
+                  - link "Home" [ref=e17] [cursor=pointer]:
+                    - /url: /home
+                    - img [ref=e18]
+                    - text: Home
+                - listitem [ref=e21]:
+                  - link "Analytics" [ref=e22] [cursor=pointer]:
+                    - /url: /analytics
+                    - img [ref=e23]
+                    - text: Analytics
+                - listitem [ref=e26]:
+                  - button "Budget" [ref=e27] [cursor=pointer]:
+                    - img [ref=e28]
+                    - text: Budget
+                    - img [ref=e32]
+                - listitem [ref=e35]:
+                  - link "Transactions" [ref=e36] [cursor=pointer]:
+                    - /url: /transactions
+                    - img [ref=e37]
+                    - text: Transactions
+                - listitem [ref=e38]:
+                  - link "Paste & Parse" [ref=e39] [cursor=pointer]:
+                    - /url: /import-transactions
+                    - img [ref=e40]
+                    - text: Paste & Parse
+                - listitem [ref=e43]:
+                  - button "Import SMS" [ref=e44] [cursor=pointer]:
+                    - img [ref=e45]
+                    - text: Import SMS
+                    - img [ref=e47]
+                - listitem [ref=e50]:
+                  - link "Settings" [ref=e51] [cursor=pointer]:
+                    - /url: /settings
+                    - img [ref=e52]
+                    - text: Settings
+                - listitem [ref=e55]:
+                  - link "Profile" [ref=e56] [cursor=pointer]:
+                    - /url: /profile
+                    - img [ref=e57]
+                    - text: Profile
+          - button "Feedback" [ref=e61] [cursor=pointer]:
+            - img
+      - main [ref=e63]:
+        - generic [ref=e66]:
+          - generic [ref=e69]:
+            - group [ref=e70]:
+              - radio "Day" [ref=e71] [cursor=pointer]
+              - radio "Week" [ref=e72] [cursor=pointer]
+              - radio "Month" [ref=e73] [cursor=pointer]
+              - radio "Year" [ref=e74] [cursor=pointer]
+              - radio "Custom" [checked] [ref=e75] [cursor=pointer]
+            - generic [ref=e76]:
+              - button "December 22nd, 2025" [ref=e77] [cursor=pointer]:
+                - img
+                - text: December 22nd, 2025
+              - button "January 22nd, 2026" [ref=e78] [cursor=pointer]:
+                - img
+                - text: January 22nd, 2026
+          - generic [ref=e79]:
+            - generic [ref=e80]:
+              - heading "Budget vs Actual" [level=3] [ref=e82]
+              - paragraph [ref=e84]: No budget data configured.
+            - generic [ref=e85]:
+              - heading "Top Expense Categories" [level=3] [ref=e87]
+              - img [ref=e92]:
+                - generic [ref=e96]: Transportation
+                - generic [ref=e98]:
+                  - generic [ref=e100]: "0.00"
+                  - generic [ref=e102]: "25.00"
+                  - generic [ref=e104]: "50.00"
+                  - generic [ref=e106]: "75.00"
+                  - generic [ref=e108]: "100.00"
+            - generic [ref=e114]:
+              - heading "Net Monthly Balance" [level=3] [ref=e116]
+              - img [ref=e121]:
+                - generic [ref=e128]: Dec
+                - generic [ref=e130]:
+                  - generic [ref=e132]: "93.00"
+                  - generic [ref=e134]: "92.00"
+                  - generic [ref=e136]: "91.00"
+                  - generic [ref=e138]: "90.00"
+                  - generic [ref=e140]: "89.00"
+            - generic [ref=e144]:
+              - heading "Goal Progress Tracker" [level=3] [ref=e146]
+              - paragraph [ref=e148]: No goals configured.
+            - generic [ref=e149]:
+              - heading "Recurring Transactions" [level=3] [ref=e151]
+              - paragraph [ref=e153]: Recurring transaction insights coming soon.
+            - generic [ref=e154]:
+              - heading "Uncategorized Transactions" [level=3] [ref=e156]
+              - paragraph [ref=e158]: All transactions are categorized.
+            - generic [ref=e159]:
+              - heading "Smart Tip" [level=3] [ref=e161]
+              - paragraph [ref=e163]: Use categories to see where your money goes most.
+            - generic [ref=e164]:
+              - heading "Export Report" [level=3] [ref=e166]
+              - button "Download transactions JSON" [ref=e168] [cursor=pointer]
+    - region "Notifications (F8)":
+      - list
+  - generic [ref=e169]: "93.00"
+```

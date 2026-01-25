@@ -1,0 +1,114 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button [ref=e8] [cursor=pointer]:
+            - img
+          - link "Xpensia Logo Transactions" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img "Xpensia Logo" [ref=e12]
+            - generic [ref=e13]: Transactions
+          - navigation [ref=e14]:
+            - list [ref=e15]:
+              - listitem [ref=e16]:
+                - link "Home" [ref=e17] [cursor=pointer]:
+                  - /url: /home
+                  - img [ref=e18]
+                  - text: Home
+              - listitem [ref=e21]:
+                - link "Analytics" [ref=e22] [cursor=pointer]:
+                  - /url: /analytics
+                  - img [ref=e23]
+                  - text: Analytics
+              - listitem [ref=e26]:
+                - button "Budget" [ref=e27] [cursor=pointer]:
+                  - img [ref=e28]
+                  - text: Budget
+                  - img [ref=e34]
+              - listitem [ref=e37]:
+                - link "Transactions" [ref=e38] [cursor=pointer]:
+                  - /url: /transactions
+                  - img [ref=e39]
+                  - text: Transactions
+              - listitem [ref=e46]:
+                - link "Paste & Parse" [ref=e47] [cursor=pointer]:
+                  - /url: /import-transactions
+                  - img [ref=e48]
+                  - text: Paste & Parse
+              - listitem [ref=e52]:
+                - button "Import SMS" [ref=e53] [cursor=pointer]:
+                  - img [ref=e54]
+                  - text: Import SMS
+                  - img [ref=e56]
+              - listitem [ref=e59]:
+                - link "Settings" [ref=e60] [cursor=pointer]:
+                  - /url: /settings
+                  - img [ref=e61]
+                  - text: Settings
+              - listitem [ref=e64]:
+                - link "Profile" [ref=e65] [cursor=pointer]:
+                  - /url: /profile
+                  - img [ref=e66]
+                  - text: Profile
+        - button "Feedback" [ref=e70] [cursor=pointer]:
+          - img
+    - main [ref=e72]:
+      - generic [ref=e75]:
+        - generic [ref=e78]:
+          - group [ref=e79]:
+            - radio "Day" [ref=e80] [cursor=pointer]
+            - radio "Week" [ref=e81] [cursor=pointer]
+            - radio "Month" [ref=e82] [cursor=pointer]
+            - radio "Year" [ref=e83] [cursor=pointer]
+            - radio "Custom" [checked] [ref=e84] [cursor=pointer]
+          - generic [ref=e85]:
+            - button "December 22nd, 2025" [ref=e86] [cursor=pointer]:
+              - img
+              - text: December 22nd, 2025
+            - button "January 22nd, 2026" [ref=e87] [cursor=pointer]:
+              - img
+              - text: January 22nd, 2026
+          - group [ref=e88]:
+            - radio "All" [checked] [ref=e89] [cursor=pointer]
+            - radio "Income" [ref=e90] [cursor=pointer]
+            - radio "Expense" [ref=e91] [cursor=pointer]
+            - radio "Transfer" [ref=e92] [cursor=pointer]
+          - textbox "Search transactions..." [ref=e94]
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - heading "Sat, Jan 10" [level=3] [ref=e99]
+            - generic [ref=e102] [cursor=pointer]:
+              - generic [ref=e103]:
+                - img [ref=e105]
+                - img [ref=e108]
+                - generic [ref=e111]:
+                  - heading "Rent" [level=4] [ref=e112]
+                  - text: Housing
+              - generic [ref=e113]:
+                - generic [ref=e114]: "-BHD 81.50"
+                - button "Delete transaction" [ref=e115]:
+                  - img
+                  - generic [ref=e116]: Delete transaction
+            - generic [ref=e117]: "Net: -BHD 81.50"
+          - generic [ref=e118]:
+            - heading "Wed, Dec 24" [level=3] [ref=e119]
+            - generic [ref=e122] [cursor=pointer]:
+              - generic [ref=e123]:
+                - img [ref=e125]
+                - img [ref=e128]
+                - generic [ref=e131]:
+                  - heading "Real Estate" [level=4] [ref=e132]
+                  - text: Housing
+              - generic [ref=e133]:
+                - generic [ref=e134]: "-SAR 347.86"
+                - button "Delete transaction" [ref=e135]:
+                  - img
+                  - generic [ref=e136]: Delete transaction
+            - generic [ref=e137]: "Net: -SAR 347.86"
+  - region "Notifications (F8)":
+    - list
+```

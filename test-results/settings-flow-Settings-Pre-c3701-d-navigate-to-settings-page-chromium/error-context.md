@@ -1,0 +1,174 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button [ref=e8] [cursor=pointer]:
+            - img
+          - link "Xpensia Logo Settings" [ref=e10] [cursor=pointer]:
+            - /url: /
+            - img "Xpensia Logo" [ref=e12]
+            - generic [ref=e13]: Settings
+          - navigation [ref=e14]:
+            - list [ref=e15]:
+              - listitem [ref=e16]:
+                - link "Home" [ref=e17] [cursor=pointer]:
+                  - /url: /home
+                  - img [ref=e18]
+                  - text: Home
+              - listitem [ref=e21]:
+                - link "Analytics" [ref=e22] [cursor=pointer]:
+                  - /url: /analytics
+                  - img [ref=e23]
+                  - text: Analytics
+              - listitem [ref=e26]:
+                - button "Budget" [ref=e27] [cursor=pointer]:
+                  - img [ref=e28]
+                  - text: Budget
+                  - img [ref=e32]
+              - listitem [ref=e35]:
+                - link "Transactions" [ref=e36] [cursor=pointer]:
+                  - /url: /transactions
+                  - img [ref=e37]
+                  - text: Transactions
+              - listitem [ref=e38]:
+                - link "Paste & Parse" [ref=e39] [cursor=pointer]:
+                  - /url: /import-transactions
+                  - img [ref=e40]
+                  - text: Paste & Parse
+              - listitem [ref=e43]:
+                - button "Import SMS" [ref=e44] [cursor=pointer]:
+                  - img [ref=e45]
+                  - text: Import SMS
+                  - img [ref=e47]
+              - listitem [ref=e50]:
+                - link "Settings" [ref=e51] [cursor=pointer]:
+                  - /url: /settings
+                  - img [ref=e52]
+                  - text: Settings
+              - listitem [ref=e55]:
+                - link "Profile" [ref=e56] [cursor=pointer]:
+                  - /url: /profile
+                  - img [ref=e57]
+                  - text: Profile
+        - button "Feedback" [ref=e61] [cursor=pointer]:
+          - img
+    - main [ref=e63]:
+      - generic [ref=e67]:
+        - button "Save Settings" [ref=e68] [cursor=pointer]
+        - generic [ref=e69]:
+          - heading "Appearance" [level=2] [ref=e70]:
+            - img [ref=e71]
+            - generic [ref=e77]: Appearance
+          - paragraph [ref=e78]: Customize how the application looks
+          - generic [ref=e79]:
+            - text: Theme
+            - group [ref=e80]:
+              - radio "Light" [checked] [ref=e81] [cursor=pointer]:
+                - img [ref=e82]
+                - text: Light
+              - radio "Dark" [ref=e88] [cursor=pointer]:
+                - img [ref=e89]
+                - text: Dark
+              - radio "System" [ref=e91] [cursor=pointer]:
+                - img [ref=e92]
+                - text: System
+          - generic [ref=e94]:
+            - text: Currency
+            - combobox "Currency" [ref=e95] [cursor=pointer]:
+              - generic: USD
+              - img [ref=e96]
+        - generic [ref=e98]:
+          - heading "Display Options" [level=2] [ref=e99]:
+            - img [ref=e100]
+            - generic [ref=e103]: Display Options
+          - paragraph [ref=e104]: Customize how information is displayed
+          - generic [ref=e105]:
+            - text: Week Starts On
+            - group [ref=e106]:
+              - radio "Sunday" [checked] [ref=e107] [cursor=pointer]
+              - radio "Monday" [ref=e108] [cursor=pointer]
+              - radio "Saturday" [ref=e109] [cursor=pointer]
+        - generic [ref=e110]:
+          - heading "Notification Settings" [level=2] [ref=e111]:
+            - img [ref=e112]
+            - generic [ref=e115]: Notification Settings
+          - paragraph [ref=e116]: Manage notification preferences
+          - generic [ref=e117]:
+            - generic [ref=e119] [cursor=pointer]:
+              - img [ref=e120]
+              - paragraph [ref=e123]: Feature locked
+            - generic:
+              - generic:
+                - generic:
+                  - text: Enable Notifications
+                  - paragraph: Allow this app to send you notifications
+                - switch "Enable Notifications"
+        - generic [ref=e124]:
+          - heading "SMS Settings" [level=2] [ref=e125]:
+            - img [ref=e126]
+            - generic [ref=e128]: SMS Settings
+          - paragraph [ref=e129]: Manage SMS related options
+          - generic [ref=e130]:
+            - generic [ref=e132] [cursor=pointer]:
+              - img [ref=e133]
+              - paragraph [ref=e136]: Feature locked
+            - generic:
+              - generic:
+                - generic:
+                  - text: Enable Background SMS Reading
+                  - paragraph: Read incoming SMS in the background
+                - switch "Enable Background SMS Reading" [disabled]
+          - generic [ref=e137]:
+            - generic [ref=e139] [cursor=pointer]:
+              - img [ref=e140]
+              - paragraph [ref=e143]: Feature locked
+            - generic:
+              - generic:
+                - generic:
+                  - text: Automatic SMS import
+                  - paragraph: Check for new SMS on startup
+                - switch "Automatic SMS import"
+        - generic [ref=e144]:
+          - heading "Data Management" [level=2] [ref=e145]:
+            - img [ref=e146]
+            - generic [ref=e150]: Data Management
+          - paragraph [ref=e151]: Manage your data
+          - generic [ref=e152]:
+            - generic [ref=e153]:
+              - paragraph [ref=e154]: Export Data
+              - paragraph [ref=e155]: Download all your transaction data
+            - button "Export" [ref=e156] [cursor=pointer]:
+              - img
+              - text: Export
+          - generic [ref=e157]:
+            - generic [ref=e159] [cursor=pointer]:
+              - img [ref=e160]
+              - paragraph [ref=e163]: Feature locked
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: Import Data
+                  - paragraph: Import transactions from a file
+                - button "Import":
+                  - img
+                  - text: Import
+          - generic [ref=e164]:
+            - generic [ref=e165]:
+              - paragraph [ref=e166]: Clear Sample Data
+              - paragraph [ref=e167]: Remove seeded demo transactions
+            - button "Clear Sample Data" [ref=e168] [cursor=pointer]:
+              - img
+              - text: Clear Sample Data
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - paragraph [ref=e171]: Beta Features
+              - paragraph [ref=e172]: Unlock exclusive beta features
+            - button "Activate Beta Features" [ref=e173] [cursor=pointer]
+        - paragraph [ref=e176]: Version 0.0.1
+  - region "Notifications (F8)":
+    - list
+```
