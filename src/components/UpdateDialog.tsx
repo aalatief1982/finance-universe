@@ -49,22 +49,29 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     setPhase('downloading');
     setProgress({ loaded: 0, total: 0, percent: 0 });
 
-    // Download only - do not apply immediately (deferred to next launch)
-    const bundle = await appUpdateService.downloadUpdate(
-      manifest,
-      (prog) => {
-        setProgress(prog);
-        // Switch to extracting phase when download completes
-        if (prog.percent >= 100 && phase === 'downloading') {
-          setPhase('extracting');
+    try {
+      // Download only - do not apply immediately
+      // Bundle will be applied when user backgrounds the app
+      const bundle = await appUpdateService.downloadUpdate(
+        manifest,
+        (prog) => {
+          setProgress(prog);
+          // Switch to extracting phase when download completes
+          if (prog.percent >= 100 && phase === 'downloading') {
+            setPhase('extracting');
+          }
         }
-      }
-    );
+      );
 
-    if (bundle) {
-      setPhase('success');
-      // User continues using app - update applies on next launch
-    } else {
+      if (bundle) {
+        setPhase('success');
+        // User continues using app - update applies when app is backgrounded
+      } else {
+        setPhase('error');
+        setErrorMessage('Failed to download update. Please try again.');
+      }
+    } catch (err) {
+      console.error('[UpdateDialog] Download error:', err);
       setPhase('error');
       setErrorMessage('Failed to download update. Please try again.');
     }
@@ -121,7 +128,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
             <div>
               <p className="font-medium">Update ready!</p>
               <p className="text-sm text-muted-foreground mt-1">
-                The update will apply the next time you open the app.
+                Close or minimize the app to apply the update.
               </p>
             </div>
           </div>

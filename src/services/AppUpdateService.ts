@@ -142,7 +142,9 @@ class AppUpdateService {
         await updater.notifyAppReady();
         this.initialized = true;
         console.log('[OTA] ✅ App marked as ready successfully');
-        await this.applyPendingBundle();
+        // DO NOT call applyPendingBundle() here - it causes immediate reload
+        // before the new bundle can call notifyAppReady(), triggering rollback loops.
+        // Bundle application is now handled by appStateChange listener in App.tsx
       } catch (err) {
         console.error('[OTA] ❌ Failed to notify app ready:', err);
         this.scheduleInitRetry(err);

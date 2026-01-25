@@ -466,6 +466,27 @@ function App() {
     appUpdateService.initialize();
   }, []);
 
+  // Apply pending OTA bundle when app is backgrounded (not during active use)
+  // This prevents the reload from disrupting user sessions
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let listener: { remove: () => void } | null = null;
+    
+    CapacitorApp.addListener('appStateChange', async (state) => {
+      if (!state.isActive) {
+        console.log('[OTA] App backgrounded, checking for pending bundle...');
+        const hasPending = await appUpdateService.hasPendingBundle();
+        if (hasPending) {
+          console.log('[OTA] Applying pending bundle on background...');
+          await appUpdateService.applyPendingBundle();
+        }
+      }
+    }).then(l => { listener = l; });
+
+    return () => { listener?.remove(); };
+  }, []);
+
   return (
     <ThemeProvider defaultTheme="light" attribute="class">
       <UserProvider>
