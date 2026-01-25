@@ -1,7 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { safeStorage } from '@/utils/safe-storage';
-type CapacitorUpdaterType = typeof import('@capgo/capacitor-updater').CapacitorUpdater;
+import { CapacitorUpdater } from '@capgo/capacitor-updater';
+type CapacitorUpdaterType = typeof CapacitorUpdater;
 
 type BundleInfo = {
   id: string;
@@ -35,25 +36,32 @@ export interface DownloadProgress {
 const MANIFEST_URL = 'https://xpensia-505ac.web.app/manifest.json';
 const PENDING_BUNDLE_STORAGE_KEY = 'xpensia_pending_update_bundle';
 
-let updaterPromise: Promise<CapacitorUpdaterType | null> | null = null;
+const withTimeout = async <T,>(
+  promise: Promise<T>,
+  ms: number,
+  label: string,
+): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`[OTA] Timeout: ${label} after ${ms}ms`));
+    }, ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+};
 
 const getUpdater = async (): Promise<CapacitorUpdaterType | null> => {
   if (!Capacitor.isNativePlatform()) {
     console.log('[OTA] Not native platform, skipping updater');
     return null;
   }
-  if (!updaterPromise) {
-    updaterPromise = import('@capgo/capacitor-updater')
-      .then((module) => {
-        console.log('[OTA] Returning CapacitorUpdater');
-        return module.CapacitorUpdater;
-      })
-      .catch((err) => {
-        console.error('[OTA] Failed to load CapacitorUpdater:', err);
-        return null;
-      });
-  }
-  return updaterPromise;
+  // Static import ensures the plugin is bundled for the native WebView.
+  return CapacitorUpdater;
 };
 
 class AppUpdateService {
@@ -140,7 +148,7 @@ class AppUpdateService {
 
       try {
         console.log('[OTA] Calling notifyAppReady()...');
-        await updater.notifyAppReady();
+        await withTimeout(updater.notifyAppReady(), 2500, 'notifyAppReady');
         this.initialized = true;
         console.log('[OTA] ✅ App marked as ready successfully');
       } catch (err) {
@@ -177,7 +185,7 @@ class AppUpdateService {
           const updater = await getUpdater();
           if (updater) {
             console.log('[OTA] Getting current bundle from Capgo...');
-            const current = await updater.current();
+            const current = await withTimeout(updater.current(), 2500, 'updater.current');
             console.log('[OTA] Current bundle:', JSON.stringify(current.bundle));
 
             // Capgo may provide version in either `bundle.version` or `bundle.id`
@@ -226,10 +234,14 @@ class AppUpdateService {
     console.log('[OTA] Fetching manifest from:', url);
     
     try {
+      const controller = new AbortController();
+      const abortTimer = setTimeout(() => controller.abort(), 8000);
+
       const response = await fetch(url, {
         cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' }
-      });
+        headers: { 'Cache-Control': 'no-cache' },
+        signal: controller.signal,
+      }).finally(() => clearTimeout(abortTimer));
       
       console.log('[OTA] Manifest response status:', response.status);
       
@@ -374,7 +386,7 @@ class AppUpdateService {
       const updater = await getUpdater();
       if (!updater) return false;
       
-      const { bundles } = await updater.list();
+      const { bundles } = await withTimeout(updater.list(), 4000, 'updater.list');
       
       // Check if any bundle matches target version or has pending status
       return bundles.some(b => 
@@ -479,7 +491,7 @@ class AppUpdateService {
     }
 
     try {
-      const current = await updater.current();
+      const current = await withTimeout(updater.current(), 2500, 'updater.current');
       if (
         pending.id &&
         (pending.id === current.bundle.id || pending.version === current.bundle.version)
@@ -491,7 +503,7 @@ class AppUpdateService {
 
       console.log('[OTA] Applying pending bundle:', pending.version);
       this.setPendingBundle(null);
-      await updater.set(pending);
+      await withTimeout(updater.set(pending), 8000, 'updater.set');
       console.log('[OTA] ✅ Bundle applied, will be active on next launch');
       return true;
     } catch (err) {
@@ -513,7 +525,7 @@ class AppUpdateService {
         return false;
       }
       console.log('[OTA] Calling updater.reset()...');
-      await updater.reset();
+      await withTimeout(updater.reset(), 8000, 'updater.reset');
       console.log('[OTA] ✅ Rollback successful');
       return true;
     } catch (err) {
@@ -529,7 +541,7 @@ class AppUpdateService {
     try {
       const updater = await getUpdater();
       if (!updater) return [];
-      const result = await updater.list();
+      const result = await withTimeout(updater.list(), 4000, 'updater.list');
       return result.bundles;
     } catch {
       return [];
@@ -543,8 +555,8 @@ class AppUpdateService {
     try {
       const updater = await getUpdater();
       if (!updater) return;
-      const { bundles } = await updater.list();
-      const current = await updater.current();
+      const { bundles } = await withTimeout(updater.list(), 4000, 'updater.list');
+      const current = await withTimeout(updater.current(), 2500, 'updater.current');
 
       for (const bundle of bundles) {
         if (bundle.id !== current.bundle.id && bundle.status !== 'pending') {
@@ -579,9 +591,9 @@ class AppUpdateService {
           nativeVersion: '0.0.0'
         };
       }
-      const current = await updater.current();
-      const { bundles } = await updater.list();
-      const info = await App.getInfo();
+      const current = await withTimeout(updater.current(), 2500, 'updater.current');
+      const { bundles } = await withTimeout(updater.list(), 4000, 'updater.list');
+      const info = await withTimeout(App.getInfo(), 2500, 'App.getInfo');
 
       return {
         currentBundle: current.bundle,
