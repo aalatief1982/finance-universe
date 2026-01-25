@@ -61,7 +61,6 @@ class AppUpdateService {
   private isDownloading = false;
   private initialized = false;
   private initializeInFlight: Promise<void> | null = null;
-  private initRetryTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingBundle: BundleInfo | null = null;
 
   private readPendingBundleFromStorage(): BundleInfo | null {
@@ -105,14 +104,7 @@ class AppUpdateService {
     return bundle.id === 'builtin' || bundle.version === 'builtin';
   }
 
-  private scheduleInitRetry(reason: unknown) {
-    if (this.initRetryTimer != null) return;
-    console.warn('[OTA] notifyAppReady failed; will retry shortly:', reason);
-    this.initRetryTimer = globalThis.setTimeout(() => {
-      this.initRetryTimer = null;
-      void this.initialize();
-    }, 500);
-  }
+  // Removed retry logic - we now mark as initialized even on error to prevent blocking
 
   /**
    * Initialize the updater - MUST be called on app start
@@ -121,19 +113,28 @@ class AppUpdateService {
     console.log('[OTA] initialize() called, isNative:', Capacitor.isNativePlatform(), 'initialized:', this.initialized);
     
     if (this.initializeInFlight) {
+      console.log('[OTA] Init already in flight, waiting...');
       await this.initializeInFlight;
       return;
     }
 
-    if (!Capacitor.isNativePlatform() || this.initialized) {
-      console.log('[OTA] Skipping init - not native or already initialized');
+    if (!Capacitor.isNativePlatform()) {
+      console.log('[OTA] Skipping init - not native platform');
+      return;
+    }
+    
+    if (this.initialized) {
+      console.log('[OTA] Already initialized, skipping');
       return;
     }
 
     this.initializeInFlight = (async () => {
+      console.log('[OTA] Loading Capgo updater...');
       const updater = await getUpdater();
       if (!updater) {
-        console.log('[OTA] No updater available, skipping initialization');
+        console.log('[OTA] No updater available, marking as initialized anyway');
+        // Mark as initialized so version checks can proceed with native fallback
+        this.initialized = true;
         return;
       }
 
@@ -142,12 +143,12 @@ class AppUpdateService {
         await updater.notifyAppReady();
         this.initialized = true;
         console.log('[OTA] ✅ App marked as ready successfully');
-        // DO NOT call applyPendingBundle() here - it causes immediate reload
-        // before the new bundle can call notifyAppReady(), triggering rollback loops.
-        // Bundle application is now handled by appStateChange listener in App.tsx
       } catch (err) {
         console.error('[OTA] ❌ Failed to notify app ready:', err);
-        this.scheduleInitRetry(err);
+        // Mark as initialized anyway to prevent blocking update checks
+        // The next app restart will try notifyAppReady again
+        this.initialized = true;
+        console.log('[OTA] ⚠️ Continuing despite error - version checks will use native fallback');
       }
     })();
 
@@ -165,29 +166,35 @@ class AppUpdateService {
     console.log('[OTA] getCurrentVersion() called');
     try {
       if (Capacitor.isNativePlatform()) {
-        // Ensure we mark the running bundle as "ready" as early as possible.
-        // If the bridge isn't ready yet, initialize() will retry.
+        // Ensure initialization runs first
         if (!this.initialized) {
+          console.log('[OTA] Not initialized yet, initializing...');
           await this.initialize();
         }
 
-        const updater = await getUpdater();
-        if (updater) {
-          console.log('[OTA] Getting current bundle from Capgo...');
-          const current = await updater.current();
-          console.log('[OTA] Current bundle:', JSON.stringify(current.bundle));
+        // Try to get Capgo bundle version
+        try {
+          const updater = await getUpdater();
+          if (updater) {
+            console.log('[OTA] Getting current bundle from Capgo...');
+            const current = await updater.current();
+            console.log('[OTA] Current bundle:', JSON.stringify(current.bundle));
 
-          // Capgo may provide version in either `bundle.version` or (on some setups) as the `bundle.id`.
-          // Falling back to native version here can cause an endless update loop after reload.
-          if (!this.isBuiltinBundle(current.bundle)) {
-            const candidate = current.bundle.version ?? current.bundle.id;
-            const normalized = this.normalizeSemver(candidate ?? '');
-            if (normalized) {
-              console.log('[OTA] Using OTA bundle version (normalized):', normalized);
-              return normalized;
+            // Capgo may provide version in either `bundle.version` or `bundle.id`
+            if (!this.isBuiltinBundle(current.bundle)) {
+              const candidate = current.bundle.version ?? current.bundle.id;
+              const normalized = this.normalizeSemver(candidate ?? '');
+              if (normalized) {
+                console.log('[OTA] Using OTA bundle version (normalized):', normalized);
+                return normalized;
+              }
             }
           }
+        } catch (capgoErr) {
+          console.warn('[OTA] Capgo bundle fetch failed, using native fallback:', capgoErr);
         }
+        
+        // Fallback to native version
         const info = await App.getInfo();
         const nativeNormalized = this.normalizeSemver(info.version);
         console.log('[OTA] Using native app version (normalized):', nativeNormalized);
@@ -195,8 +202,7 @@ class AppUpdateService {
       }
     } catch (err) {
       console.error('[OTA] Failed to get version:', err);
-      // Avoid returning a tiny fallback on native, because it can create an endless
-      // "update available" loop if Capgo.current() temporarily fails during startup.
+      // Final fallback for native
       if (Capacitor.isNativePlatform()) {
         try {
           const info = await App.getInfo();
@@ -261,21 +267,17 @@ class AppUpdateService {
   async checkForUpdates(): Promise<UpdateStatus> {
     console.log('[OTA] checkForUpdates() called, isChecking:', this.isChecking, 'initialized:', this.initialized);
     
-    // CRITICAL: Don't check for updates until notifyAppReady() has succeeded.
-    // Otherwise Capgo returns 'builtin' and we detect a false update, causing an infinite loop.
+    // Ensure initialization has run first
     if (!this.initialized && Capacitor.isNativePlatform()) {
       console.log('[OTA] ⏳ Waiting for initialization before checking updates...');
-      // Give it one more try
       await this.initialize();
-      if (!this.initialized) {
-        console.log('[OTA] ❌ Still not initialized, skipping update check to prevent loop');
-        return { available: false, currentVersion: '0.0.0' };
-      }
+      // Note: initialize() now always marks initialized=true to prevent blocking
     }
     
     if (this.isChecking) {
       console.log('[OTA] Already checking, returning early');
-      return { available: false, currentVersion: await this.getCurrentVersion() };
+      const currentVersion = await this.getCurrentVersion();
+      return { available: false, currentVersion };
     }
     this.isChecking = true;
 
