@@ -408,6 +408,15 @@ class AppUpdateService {
     this.isDownloading = true;
     
     try {
+      if (!manifest.url) {
+        console.error('[OTA] ❌ Manifest missing download URL');
+        return null;
+      }
+      if (!manifest.version) {
+        console.error('[OTA] ❌ Manifest missing version');
+        return null;
+      }
+
       const updater = getUpdater();
       if (!updater) {
         console.error('[OTA] ❌ No updater available');
@@ -456,7 +465,14 @@ class AppUpdateService {
 
       return bundle;
     } catch (err) {
-      console.error('[OTA] ❌ Download failed:', err);
+      console.error(
+        '[OTA] ❌ Download failed:',
+        err,
+        'url:',
+        manifest.url,
+        'version:',
+        manifest.version,
+      );
       return null;
     } finally {
       this.isDownloading = false;
