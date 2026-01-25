@@ -131,10 +131,12 @@ export class SmsReaderService {
     // start date we fall back to the "months back" value stored in local
     // storage. The end date defaults to "now" if not provided.
     const monthsBack = getSmsLookbackMonths();
-    // Fetch limit to pass to the native plugin. Allows overriding via
-    // localStorage. Defaults to a large value which is higher than the
-    // plugin's default.
-    const limit = parseInt(safeStorage.getItem('xpensia_sms_fetch_limit') || '500000');
+    // Fetch limit to pass to the native plugin. Use a reasonable default
+    // to prevent OutOfMemoryError crashes when serializing large JSON payloads.
+    // The previous default of 500000 caused 75MB+ allocations that exceeded heap limits.
+    const MAX_SAFE_LIMIT = 2000; // ~2-3MB of JSON data max
+    const userLimit = options.limit ?? parseInt(safeStorage.getItem('xpensia_sms_fetch_limit') || String(MAX_SAFE_LIMIT));
+    const limit = Math.min(userLimit, MAX_SAFE_LIMIT);
 
     const startDate = (options.startDate
       ? options.startDate
