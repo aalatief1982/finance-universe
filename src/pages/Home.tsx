@@ -5,6 +5,7 @@ import TimelineChart from "@/components/charts/TimelineChart";
 import NetBalanceChart from "@/components/charts/NetBalanceChart";
 import CategoryChart from "@/components/charts/CategoryChart";
 import SubcategoryChart from "@/components/charts/SubcategoryChart";
+import ChartErrorBoundary from "@/components/charts/ChartErrorBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTransactions } from "@/context/TransactionContext";
 import { useNavigate } from "react-router-dom";
@@ -47,22 +48,6 @@ const Home = () => {
     navigate("/edit-transaction");
   };
 
-  const handleAddSampleTransaction = () => {
-    const sampleTransaction: Transaction = {
-      id: uuidv4(),
-      title: "Sample Transaction",
-      amount: -25.99,
-      category: "Food",
-      subcategory: "Fast Food",
-      date: new Date().toISOString().split("T")[0],
-      type: "expense",
-      notes: "Sample transaction for testing",
-      source: "manual",
-      fromAccount: "Cash",
-    };
-    addTransaction(sampleTransaction);
-  };
-
   const filteredTransactions = React.useMemo(() => {
     if (!range) {
       return transactions;
@@ -101,36 +86,46 @@ const Home = () => {
   }, [transactions, range, customStart, customEnd]);
 
   // Calculate summary (EXCLUDES transfers from income/expense totals)
-  const summary = filteredTransactions.reduce(
-    (acc, transaction) => {
-      if (transaction.type === 'income') {
-        acc.income += Math.abs(transaction.amount);
-      } else if (transaction.type === 'expense') {
-        acc.expenses += Math.abs(transaction.amount);
-      }
-      // Transfers don't affect the balance calculation for financial summary
-      if (transaction.type !== 'transfer') {
-        acc.balance += transaction.amount;
-      }
-      return acc;
-    },
-    { income: 0, expenses: 0, balance: 0 },
-  );
-
-  // Category data (EXCLUDES transfers)
-  const categoryData = filteredTransactions
-    .filter((t) => t.type === 'expense')
-    .reduce(
+  const summary = React.useMemo(() => {
+    return filteredTransactions.reduce(
       (acc, transaction) => {
-        const { category, amount } = transaction;
-        if (!acc[category]) {
-          acc[category] = 0;
+        // Defensive: skip invalid transactions
+        if (!transaction || typeof transaction.amount !== 'number') {
+          return acc;
         }
-        acc[category] += Math.abs(amount);
+        
+        if (transaction.type === 'income') {
+          acc.income += Math.abs(transaction.amount);
+        } else if (transaction.type === 'expense') {
+          acc.expenses += Math.abs(transaction.amount);
+        }
+        // Transfers don't affect the balance calculation for financial summary
+        if (transaction.type !== 'transfer') {
+          acc.balance += transaction.amount;
+        }
         return acc;
       },
-      {} as Record<string, number>,
+      { income: 0, expenses: 0, balance: 0 },
     );
+  }, [filteredTransactions]);
+
+  // Category data (EXCLUDES transfers)
+  const categoryData = React.useMemo(() => {
+    return filteredTransactions
+      .filter((t) => t && t.type === 'expense')
+      .reduce(
+        (acc, transaction) => {
+          const category = transaction.category || 'Uncategorized';
+          const amount = transaction.amount || 0;
+          if (!acc[category]) {
+            acc[category] = 0;
+          }
+          acc[category] += Math.abs(amount);
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+  }, [filteredTransactions]);
 
   const formatDisplayTitle = (txn: Transaction) => {
     const base = txn.title?.trim() || "Transaction";
@@ -145,43 +140,59 @@ const Home = () => {
     }
   };
 
-  const expensesBySubcategory = AnalyticsService.getSubcategoryData(
-    filteredTransactions,
-  );
+  const expensesBySubcategory = React.useMemo(() => {
+    try {
+      return AnalyticsService.getSubcategoryData(filteredTransactions);
+    } catch {
+      console.warn('[Home] Failed to get subcategory data');
+      return [];
+    }
+  }, [filteredTransactions]);
 
-  const expensesByCategory = Object.entries(categoryData).map(
-    ([name, value]) => ({ name, value }),
-  );
+  const expensesByCategory = React.useMemo(() => {
+    try {
+      return Object.entries(categoryData).map(([name, value]) => ({ name, value }));
+    } catch {
+      return [];
+    }
+  }, [categoryData]);
 
   // Timeline data (EXCLUDES transfers)
   const timelineData = React.useMemo(() => {
-    const grouped = new Map<number, { income: number; expense: number }>();
-    filteredTransactions.forEach((tx) => {
-      // Skip transfers from timeline data
-      if (tx.type === 'transfer') return;
-      
-      const d = new Date(tx.date);
-      const bucket =
-        range === "year"
-          ? new Date(d.getFullYear(), d.getMonth(), 1)
-          : new Date(d.getFullYear(), d.getMonth(), d.getDate());
-      const key = bucket.getTime();
-      const existing = grouped.get(key) || { income: 0, expense: 0 };
-      if (tx.type === 'income') {
-        existing.income += Math.abs(tx.amount);
-      } else if (tx.type === 'expense') {
-        existing.expense += Math.abs(tx.amount);
-      }
-      grouped.set(key, existing);
-    });
-    return Array.from(grouped.entries())
-      .sort((a, b) => a[0] - b[0])
-      .map(([ts, val]) => ({
-        date: new Date(ts).toISOString(),
-        income: val.income,
-        expense: val.expense,
-        balance: val.income - val.expense,
-      }));
+    try {
+      const grouped = new Map<number, { income: number; expense: number }>();
+      filteredTransactions.forEach((tx) => {
+        // Skip transfers and invalid transactions
+        if (!tx || tx.type === 'transfer') return;
+        
+        const d = new Date(tx.date);
+        if (isNaN(d.getTime())) return; // Skip invalid dates
+        
+        const bucket =
+          range === "year"
+            ? new Date(d.getFullYear(), d.getMonth(), 1)
+            : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const key = bucket.getTime();
+        const existing = grouped.get(key) || { income: 0, expense: 0 };
+        if (tx.type === 'income') {
+          existing.income += Math.abs(tx.amount || 0);
+        } else if (tx.type === 'expense') {
+          existing.expense += Math.abs(tx.amount || 0);
+        }
+        grouped.set(key, existing);
+      });
+      return Array.from(grouped.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([ts, val]) => ({
+          date: new Date(ts).toISOString(),
+          income: val.income,
+          expense: val.expense,
+          balance: val.income - val.expense,
+        }));
+    } catch (err) {
+      console.warn('[Home] Failed to compute timeline data:', err);
+      return [];
+    }
   }, [filteredTransactions, range]);
 
   return (
@@ -271,20 +282,28 @@ const Home = () => {
 
                 <TabsContent value="trends" className="space-y-2">
                   <h2 className="text-lg font-semibold">Spending Trends</h2>
-                  <TimelineChart data={timelineData} />
+                  <ChartErrorBoundary chartName="Spending Trends">
+                    <TimelineChart data={timelineData} />
+                  </ChartErrorBoundary>
                 </TabsContent>
 
                 <TabsContent value="net" className="space-y-2">
                   <h2 className="text-lg font-semibold">Net Growth Summary</h2>
-                  <NetBalanceChart data={timelineData} />
+                  <ChartErrorBoundary chartName="Net Balance">
+                    <NetBalanceChart data={timelineData} />
+                  </ChartErrorBoundary>
                 </TabsContent>
 
                 <TabsContent value="category" className="pt-2">
-                  <CategoryChart data={expensesByCategory} />
+                  <ChartErrorBoundary chartName="Category Chart">
+                    <CategoryChart data={expensesByCategory} />
+                  </ChartErrorBoundary>
                 </TabsContent>
 
                 <TabsContent value="subcategory" className="pt-2">
-                  <SubcategoryChart data={expensesBySubcategory} />
+                  <ChartErrorBoundary chartName="Subcategory Chart">
+                    <SubcategoryChart data={expensesBySubcategory} />
+                  </ChartErrorBoundary>
                 </TabsContent>
               </Tabs>
             </div>
@@ -377,9 +396,6 @@ const Home = () => {
               </div>
             </div>
           </div>
-          {/* TODO: Add <BudgetSummaryCard /> when data available */}
-          {/* TODO: Add Goal progress card */}
-          {/* TODO: Add Tip of the day card */}
         </div>
       </div>
       <ResponsiveFAB onClick={handleAddTransaction} />
