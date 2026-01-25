@@ -192,8 +192,19 @@ const Settings = () => {
         if (Capacitor.isNativePlatform()) {
           // Use Capgo to get the current bundle version
           const { appUpdateService } = await import('@/services/AppUpdateService');
-          const version = await appUpdateService.getCurrentVersion();
-          setAppVersion(version);
+          const version = await Promise.race([
+            appUpdateService.getCurrentVersion(),
+            new Promise<string>((resolve) => setTimeout(() => resolve(''), 4000)),
+          ]);
+
+          if (version) {
+            setAppVersion(version);
+            return;
+          }
+
+          // Fallback to native version (never block the UI)
+          const info = await App.getInfo();
+          setAppVersion(info.version || '1.0.0');
         } else {
           const response = await fetch('/manifest.json');
           const manifest = await response.json();
@@ -791,7 +802,7 @@ const Settings = () => {
         <section className="bg-card rounded-lg p-4 mt-6">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Version {appVersion}
+              Version {appVersion || '...'}
             </p>
           </div>
         </section>
