@@ -430,15 +430,13 @@ class AppUpdateService {
         version: manifest.version,
       });
 
-      // Verify download completion - Capgo returns 'pending' for downloaded bundles, 'success' for active ones
-      const validStatuses = ['pending', 'success'];
-      if (!validStatuses.includes(bundle.status || '')) {
-        console.error('[OTA] ❌ Download failed with status:', bundle.status, bundle);
+      // Verify download completion
+      if (bundle.status !== 'success') {
+        console.error('[OTA] ❌ Download did not complete successfully:', bundle);
         return null;
       }
 
-      console.log('[OTA] ✅ Download complete, bundle status:', bundle.status);
-      console.log('[OTA] Bundle details:', JSON.stringify(bundle));
+      console.log('[OTA] ✅ Download complete:', JSON.stringify(bundle));
 
       this.setPendingBundle(bundle);
       console.log('[OTA] Bundle marked as pending');
