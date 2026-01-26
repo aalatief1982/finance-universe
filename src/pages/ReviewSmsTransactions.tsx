@@ -142,22 +142,22 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 		if (field === 'type') {
 		  const validCategories = getCategoriesForType(value as TransactionType);  // ⬅️ Already names!
 		  if (import.meta.env.MODE === 'development') {
-		    console.log('[TYPE CHANGE] Valid Categories:', validCategories);
+		    // console.log('[TYPE CHANGE] Valid Categories:', validCategories);
 		  }
 
 		  txn.category = validCategories[0] || 'Uncategorized';
 		  if (import.meta.env.MODE === 'development') {
-		    console.log('[TYPE CHANGE] Selected Category:', txn.category);
+		    // console.log('[TYPE CHANGE] Selected Category:', txn.category);
 		  }
 
                   const validSubcategories = getSubcategoriesForCategory(txn.category);
 		  if (import.meta.env.MODE === 'development') {
-		    console.log('[TYPE CHANGE] Valid Subcategories for Category:', txn.category, validSubcategories);
+		    // console.log('[TYPE CHANGE] Valid Subcategories for Category:', txn.category, validSubcategories);
 		  }
 
 		  txn.subcategory = validSubcategories[0] || 'none';
 		  if (import.meta.env.MODE === 'development') {
-		    console.log('[TYPE CHANGE] Selected Subcategory:', txn.subcategory);
+		    // console.log('[TYPE CHANGE] Selected Subcategory:', txn.subcategory);
 		  }
 		}
 

@@ -210,7 +210,7 @@ export async function initializeXpensiaStorageDefaults() {
   if (!safeStorage.getItem('xpensia_structure_templates')) {
     safeStorage.setItem('xpensia_structure_templates', JSON.stringify([]));
     if (import.meta.env.MODE === 'development') {
-      console.log('[Init] xpensia_structure_templates initialized');
+      // console.log('[Init] xpensia_structure_templates initialized');
     }
   }
 
@@ -218,7 +218,7 @@ export async function initializeXpensiaStorageDefaults() {
   if (!safeStorage.getItem('xpensia_vendor_map')) {
     safeStorage.setItem('xpensia_vendor_map', JSON.stringify({}));
     if (import.meta.env.MODE === 'development') {
-      console.log('[Init] xpensia_vendor_map initialized');
+      // console.log('[Init] xpensia_vendor_map initialized');
     }
   }
 
@@ -229,7 +229,7 @@ export async function initializeXpensiaStorageDefaults() {
     
     saveVendorFallbacks(dataToUse);
     if (import.meta.env.MODE === 'development') {
-      console.log('[Init] xpensia_vendor_fallbacks initialized from local JSON');
+      // console.log('[Init] xpensia_vendor_fallbacks initialized from local JSON');
     }
   }
 
@@ -275,7 +275,7 @@ export async function initializeXpensiaStorageDefaults() {
 	  { "keyword": "سحب", "type": "transfer" }
     ]));
     if (import.meta.env.MODE === 'development') {
-      console.log('[Init] xpensia_type_keywords initialized');
+      // console.log('[Init] xpensia_type_keywords initialized');
     }
   }
   

@@ -20,7 +20,7 @@ export function logTransactionsMissingCategory(transactions: any[]) {
   });
 
   if (import.meta.env.MODE === 'development') {
-    console.log(`✅ Finished. ${missingCategoryCount} transactions missing category.`);
+    // console.log(`✅ Finished. ${missingCategoryCount} transactions missing category.`);
   }
   if (import.meta.env.MODE === 'development') {
     console.groupEnd();

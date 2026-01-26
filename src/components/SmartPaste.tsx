@@ -85,7 +85,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
  if (import.meta.env.MODE === 'development') {
-   console.log('[SmartPaste] Checking message:', text);
+   // console.log('[SmartPaste] Checking message:', text);
  }
   // 🚫 Check if message contains financial transaction pattern
   if (!isFinancialTransactionMessage(text)) {
@@ -98,7 +98,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 
   if (import.meta.env.MODE === 'development') {
-    console.log("[SmartPaste] Submitting message:", text);
+    // console.log("[SmartPaste] Submitting message:", text);
   }
   setIsProcessing(true);
   setError(null);
@@ -121,14 +121,14 @@ const handleSubmit = async (e: React.FormEvent) => {
     } = await parseAndInferTransaction(text, senderHint);
 
     if (import.meta.env.MODE === 'development') {
-      console.log("[SmartPaste] Parsed result:", parsed);
+      // console.log("[SmartPaste] Parsed result:", parsed);
     }
     if (import.meta.env.MODE === 'development') {
-      console.log("[SmartPaste] Confidence Breakdown:", {
-        confidence,
-        origin,
-        fieldConfidences
-      });
+      // console.log("[SmartPaste] Confidence Breakdown:", {
+        // confidence,
+        // origin,
+        // fieldConfidences
+      // });
     }
 
     setDetectedTransactions([transaction]);
@@ -137,13 +137,13 @@ const handleSubmit = async (e: React.FormEvent) => {
     setFieldConfidences(fieldConfidences || {});
     
     if (import.meta.env.MODE === 'development') {
-      console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
+      // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
     }
 
     if (onTransactionsDetected) {
       if (import.meta.env.MODE === 'development') {
-        console.log("[SmartPaste] Final transaction inference:", transaction);
-        console.log("[SmartPaste] Passing fieldConfidences:", fieldConfidences);
+        // console.log("[SmartPaste] Final transaction inference:", transaction);
+        // console.log("[SmartPaste] Passing fieldConfidences:", fieldConfidences);
       }
       onTransactionsDetected(
         [transaction],
@@ -193,7 +193,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     try {
       const clipboardText = await navigator.clipboard.readText();
       if (import.meta.env.MODE === 'development') {
-        console.log("[SmartPaste] Clipboard text captured:", clipboardText);
+        // console.log("[SmartPaste] Clipboard text captured:", clipboardText);
       }
       setText(clipboardText);
     } catch (err) {
@@ -207,29 +207,29 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   const handleAddTransaction = (transaction: Transaction) => {
     if (import.meta.env.MODE === 'development') {
-      console.log('[SmartPaste] handleAddTransaction called with:', {
-        transaction,
-        currentFieldConfidences: fieldConfidences,
-        currentConfidence: confidence,
-        currentMatchOrigin: matchOrigin,
-        parsedFields: {
-          amount: transaction.amount,
-          currency: transaction.currency,
-          date: transaction.date,
-          type: transaction.type,
-          category: transaction.category,
-          vendor: transaction.vendor,
-          fromAccount: transaction.fromAccount,
-        }
-      });
+      // console.log('[SmartPaste] handleAddTransaction called with:', {
+        // transaction,
+        // currentFieldConfidences: fieldConfidences,
+        // currentConfidence: confidence,
+        // currentMatchOrigin: matchOrigin,
+        // parsedFields: {
+          // amount: transaction.amount,
+          // currency: transaction.currency,
+          // date: transaction.date,
+          // type: transaction.type,
+          // category: transaction.category,
+          // vendor: transaction.vendor,
+          // fromAccount: transaction.fromAccount,
+        // }
+      // });
     }
     
     if (import.meta.env.MODE === 'development') {
-      console.log("[SmartPaste] Transaction added:", transaction);
+      // console.log("[SmartPaste] Transaction added:", transaction);
     }
     if (onTransactionsDetected) {
       if (import.meta.env.MODE === 'development') {
-        console.log("[SmartPaste] Calling onTransactionsDetected with fieldConfidences:", fieldConfidences);
+        // console.log("[SmartPaste] Calling onTransactionsDetected with fieldConfidences:", fieldConfidences);
       }
       onTransactionsDetected(
         [transaction],

@@ -123,7 +123,7 @@ class SmsPermissionService {
       await smsListener.startListening();
       this.smsListenerInitialized = true;
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] SMS listener initialized');
+        // console.log('[SMS] SMS listener initialized');
       }
     } catch (error) {
       if (import.meta.env.MODE === 'development') {

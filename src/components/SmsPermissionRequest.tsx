@@ -53,7 +53,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
           }
         });
         if (import.meta.env.MODE === 'development') {
-          console.log('[SMS] SMS listener initialized');
+          // console.log('[SMS] SMS listener initialized');
         }
       }
     } catch (err) {

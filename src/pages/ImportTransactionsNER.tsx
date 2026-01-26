@@ -13,7 +13,7 @@ const ImportTransactionsNER = () => {
   const navigate = useNavigate();
 
   if (import.meta.env.MODE === 'development') {
-    console.log('[ImportTransactionsNER] Page initialized');
+    // console.log('[ImportTransactionsNER] Page initialized');
   }
 
   const handleTransactionsDetected = (
@@ -28,15 +28,15 @@ const ImportTransactionsNER = () => {
     keywordScore?: number,
     fieldConfidences?: Record<string, number>
   ) => {
-    if (import.meta.env.MODE === 'development') console.log('[ImportTransactionsNER] Transactions detected', {
-      count: transactions.length,
-      transaction: transactions[0],
-      rawMessageLength: rawMessage?.length,
-      senderHint,
-      confidence,
-      matchOrigin,
-      fieldConfidences,
-    });
+    // if (import.meta.env.MODE === 'development') console.log('[ImportTransactionsNER] Transactions detected', {
+      // count: transactions.length,
+      // transaction: transactions[0],
+      // rawMessageLength: rawMessage?.length,
+      // senderHint,
+      // confidence,
+      // matchOrigin,
+      // fieldConfidences,
+    // });
 
     const transaction = transactions[0];
 
@@ -46,11 +46,11 @@ const ImportTransactionsNER = () => {
       }
     }
 
-    if (import.meta.env.MODE === 'development') console.log('[ImportTransactionsNER] Navigate to edit with parameters:', {
-      matchOrigin,
-      transaction,
-      fieldConfidences,
-    });
+    // if (import.meta.env.MODE === 'development') console.log('[ImportTransactionsNER] Navigate to edit with parameters:', {
+      // matchOrigin,
+      // transaction,
+      // fieldConfidences,
+    // });
 
     navigate('/edit-transaction', {
       state: {

@@ -22,7 +22,7 @@ export class SmsImportService {
     opts?: { auto?: boolean; usePermissionDate?: boolean }
   ): Promise<void> {
     if (import.meta.env.MODE === 'development') {
-      console.log('AIS-02 checkForNewMessages', opts);
+      // console.log('AIS-02 checkForNewMessages', opts);
     }
     try {
       await logAnalyticsEvent('app_start');
@@ -41,7 +41,7 @@ export class SmsImportService {
         // Auto mode: read from all senders, then filter by financial content
         senders = [];
         if (import.meta.env.MODE === 'development') {
-          console.log('[SMS Auto Import] No selected senders. Will check all senders for financial messages.');
+          // console.log('[SMS Auto Import] No selected senders. Will check all senders for financial messages.');
         }
       } else if (!auto && senders.length === 0) {
         return;
@@ -147,7 +147,7 @@ export class SmsImportService {
       const startDate = getAutoImportStartDate();
       
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS Auto Import] Using permission-based start date:', startDate.toISOString());
+        // console.log('[SMS Auto Import] Using permission-based start date:', startDate.toISOString());
       }
 
       // Read messages from all senders since the permission grant date
@@ -158,7 +158,7 @@ export class SmsImportService {
 
       if (!messages || messages.length === 0) {
         if (import.meta.env.MODE === 'development') {
-          console.log('[SMS Auto Import] No messages found since permission grant date');
+          // console.log('[SMS Auto Import] No messages found since permission grant date');
         }
         return;
       }
@@ -170,13 +170,13 @@ export class SmsImportService {
 
       if (filteredMessages.length === 0) {
         if (import.meta.env.MODE === 'development') {
-          console.log('[SMS Auto Import] No financial messages found');
+          // console.log('[SMS Auto Import] No financial messages found');
         }
         return;
       }
 
       if (import.meta.env.MODE === 'development') {
-        console.log(`[SMS Auto Import] Found ${filteredMessages.length} financial messages since ${startDate.toLocaleDateString()}`);
+        // console.log(`[SMS Auto Import] Found ${filteredMessages.length} financial messages since ${startDate.toLocaleDateString()}`);
       }
 
       // Show user confirmation for auto import

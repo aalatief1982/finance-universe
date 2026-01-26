@@ -39,7 +39,7 @@ export interface ParsedField {
 
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   if (import.meta.env.MODE === 'development') {
-    console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
+    // console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
   }
   
   // Return empty parse result instead of throwing for empty messages
@@ -75,10 +75,10 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   }
 
   if (import.meta.env.MODE === 'development') {
-    console.log('[SmartPaste] Step 2: Extracted Template:', structure);
+    // console.log('[SmartPaste] Step 2: Extracted Template:', structure);
   }
   if (import.meta.env.MODE === 'development') {
-    console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
+    // console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
   }
 
   const matchedTemplate = getTemplateByHash(
@@ -134,7 +134,7 @@ if (directFields['date']) {
   if (normalized) {
     directFields['date'].value = normalized;
     if (import.meta.env.MODE === 'development') {
-      console.log('[SmartPaste] Normalized date:', directFields['date'].value);
+      // console.log('[SmartPaste] Normalized date:', directFields['date'].value);
     }
   }
 }
@@ -154,10 +154,10 @@ if (directFields['date']) {
     }
   });
   if (import.meta.env.MODE === 'development') {
-    console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
+    // console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
   }
   if (import.meta.env.MODE === 'development') {
-    console.log('[SmartPaste] Final directFields:', directFields);
+    // console.log('[SmartPaste] Final directFields:', directFields);
   }
 
   return {

@@ -39,7 +39,7 @@ const VendorMapping: React.FC = () => {
   const [vendors, setVendors] = useState<VendorMappingEntry[]>([]);
   const location = useLocation();
   if (import.meta.env.MODE === 'development') {
-    console.log('VendorMapping state:', location.state);
+    // console.log('VendorMapping state:', location.state);
   }
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -117,7 +117,7 @@ const VendorMapping: React.FC = () => {
 
     setVendors(initialMappings);
     if (import.meta.env.MODE === 'development') {
-      console.log('VendorMapping vendors:', initialMappings);
+      // console.log('VendorMapping vendors:', initialMappings);
     }
   }, [location.state]);
 
@@ -151,7 +151,7 @@ const VendorMapping: React.FC = () => {
 
   const handleConfirm = () => {
     if (import.meta.env.MODE === 'development') {
-      console.log('VendorMapping: save clicked');
+      // console.log('VendorMapping: save clicked');
     }
 
     if (!hasRequiredState()) {
@@ -248,7 +248,7 @@ const VendorMapping: React.FC = () => {
 
 const handleRetry = () => {
     if (import.meta.env.MODE === 'development') {
-      console.log('VendorMapping: retry clicked');
+      // console.log('VendorMapping: retry clicked');
     }
 
     if (!hasRequiredState() || !hasValidData()) {
@@ -269,7 +269,7 @@ const handleRetry = () => {
 
   const handleBack = () => {
     if (import.meta.env.MODE === 'development') {
-      console.log('VendorMapping: back clicked');
+      // console.log('VendorMapping: back clicked');
     }
     if (!hasRequiredState()) {
       if (import.meta.env.MODE === 'development') {

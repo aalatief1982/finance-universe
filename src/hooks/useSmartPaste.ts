@@ -34,7 +34,7 @@ export const useSmartPaste = (
   const navigate = useNavigate();
 
   if (import.meta.env.MODE === 'development') {
-    console.log("[useSmartPaste] Hook initialized", { useHighAccuracy });
+    // console.log("[useSmartPaste] Hook initialized", { useHighAccuracy });
   }
 
   /**
@@ -43,12 +43,12 @@ export const useSmartPaste = (
    */
   const handlePaste = async () => {
     if (import.meta.env.MODE === 'development') {
-      console.log("[useSmartPaste] Attempting to read from clipboard");
+      // console.log("[useSmartPaste] Attempting to read from clipboard");
     }
     try {
       const clipboardText = await navigator.clipboard.readText();
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Text retrieved from clipboard, length:", clipboardText.length);
+        // console.log("[useSmartPaste] Text retrieved from clipboard, length:", clipboardText.length);
       }
       setText(clipboardText);
       processText(clipboardText);
@@ -74,11 +74,11 @@ export const useSmartPaste = (
    */
   const processText = async (rawText: string) => {
     if (import.meta.env.MODE === 'development') {
-      console.log("[useSmartPaste] Starting text processing, text length:", rawText.length);
+      // console.log("[useSmartPaste] Starting text processing, text length:", rawText.length);
     }
     if (!rawText.trim()) {
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Empty text, processing aborted");
+        // console.log("[useSmartPaste] Empty text, processing aborted");
       }
       return;
     }
@@ -88,19 +88,19 @@ export const useSmartPaste = (
     try {
       // 1. Try LearningEngine template match
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Step 1: Attempting template match");
+        // console.log("[useSmartPaste] Step 1: Attempting template match");
       }
       const match = learningEngineService.findBestMatch(rawText);
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Template match result:", { matched: match.matched, confidence: match.confidence });
+        // console.log("[useSmartPaste] Template match result:", { matched: match.matched, confidence: match.confidence });
       }
       
       if (match.matched && match.entry) {
-        if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Template match successful", { 
-          senderHint: match.entry.senderHint,
-          amount: match.entry.confirmedFields.amount,
-          vendor: match.entry.confirmedFields.vendor
-        });
+        // if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Template match successful", { 
+          // senderHint: match.entry.senderHint,
+          // amount: match.entry.confirmedFields.amount,
+          // vendor: match.entry.confirmedFields.vendor
+        // });
         
         const { confirmedFields } = match.entry;
         const vendorName = confirmedFields.vendor || '';
@@ -123,7 +123,7 @@ export const useSmartPaste = (
         };
 
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Created transaction from template:", txn);
+          // console.log("[useSmartPaste] Created transaction from template:", txn);
         }
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
@@ -134,20 +134,20 @@ export const useSmartPaste = (
 
       // 2. Structure-based fallback
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Step 2: Attempting structure match");
+        // console.log("[useSmartPaste] Step 2: Attempting structure match");
       }
       const structureMatchResult = learningEngineService.matchUsingTemplateStructure(rawText);
-      if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match result:", { 
-        success: !!structureMatchResult, 
-        confidence: structureMatchResult?.confidence 
-      });
+      // if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match result:", { 
+        // success: !!structureMatchResult, 
+        // confidence: structureMatchResult?.confidence 
+      // });
       
       setStructureMatch(structureMatchResult);
       
       if (structureMatchResult && structureMatchResult.inferredTransaction) {
-        if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match successful", { 
-          inference: structureMatchResult.inferredTransaction
-        });
+        // if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match successful", { 
+          // inference: structureMatchResult.inferredTransaction
+        // });
         
         const vendorName = structureMatchResult.inferredTransaction.description || '';
         const categoryInfo = findCategoryForVendor(vendorName, structureMatchResult.inferredTransaction.type || 'expense');
@@ -168,7 +168,7 @@ export const useSmartPaste = (
         };
 
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Created transaction from structure:", txn);
+          // console.log("[useSmartPaste] Created transaction from structure:", txn);
         }
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
@@ -179,19 +179,19 @@ export const useSmartPaste = (
 
       // 3. Regex-based extraction (previously ML)
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Step 3: Attempting regex-based extraction");
+        // console.log("[useSmartPaste] Step 3: Attempting regex-based extraction");
       }
       const parsed = await extractTransactionEntities(rawText, useHighAccuracy);
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Regex extraction result:", parsed);
+        // console.log("[useSmartPaste] Regex extraction result:", parsed);
       }
       
       if (parsed.amount) {
-        if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Regex extraction successful", {
-          amount: parsed.amount,
-          vendor: parsed.vendor,
-          type: parsed.type
-        });
+        // if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Regex extraction successful", {
+          // amount: parsed.amount,
+          // vendor: parsed.vendor,
+          // type: parsed.type
+        // });
         
         const categoryInfo = findCategoryForVendor(parsed.vendor || '', parsed.type || 'expense');
         const txn: Transaction = {
@@ -210,7 +210,7 @@ export const useSmartPaste = (
         };
 
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Created transaction from regex:", txn);
+          // console.log("[useSmartPaste] Created transaction from regex:", txn);
         }
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
@@ -221,12 +221,12 @@ export const useSmartPaste = (
 
       // 4. Final basic fallback
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Step 4: Attempting basic fallback extraction");
+        // console.log("[useSmartPaste] Step 4: Attempting basic fallback extraction");
       }
       const fallbackTxn = createFallbackTransaction(rawText);
       if (fallbackTxn) {
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Fallback extraction created transaction:", fallbackTxn);
+          // console.log("[useSmartPaste] Fallback extraction created transaction:", fallbackTxn);
         }
         setDetectedTransactions([fallbackTxn]);
         setIsSmartMatch(false);
@@ -234,13 +234,13 @@ export const useSmartPaste = (
         
         const fallbackConfidence = 0.3;
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Fallback confidence:", fallbackConfidence);
+          // console.log("[useSmartPaste] Fallback confidence:", fallbackConfidence);
         }
         
         // Redirect to Train Model page if confidence is low
         if (fallbackConfidence < 0.4) {
           if (import.meta.env.MODE === 'development') {
-            console.log("[useSmartPaste] Low confidence, redirecting to Train Model page");
+            // console.log("[useSmartPaste] Low confidence, redirecting to Train Model page");
           }
           navigate(`/train-model?msg=${encodeURIComponent(rawText)}&sender=${encodeURIComponent(currentSenderHint || '')}`);
           setIsProcessing(false);
@@ -250,7 +250,7 @@ export const useSmartPaste = (
         onTransactionsDetected?.([fallbackTxn], rawText, undefined, fallbackConfidence, true, "fallback");
       } else {
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] No transaction could be detected");
+          // console.log("[useSmartPaste] No transaction could be detected");
         }
         setDetectedTransactions([]);
         toast({ title: 'No transaction detected', description: 'Message could not be parsed.' });
@@ -264,7 +264,7 @@ export const useSmartPaste = (
       setError('Parsing failed. Using fallback.');
       if (fallbackTxn) {
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Error recovery: created fallback transaction", fallbackTxn);
+          // console.log("[useSmartPaste] Error recovery: created fallback transaction", fallbackTxn);
         }
         setDetectedTransactions([fallbackTxn]);
         setMatchOrigin("fallback");
@@ -274,7 +274,7 @@ export const useSmartPaste = (
         // Redirect to Train Model page if confidence is low
         if (fallbackConfidence < 0.4) {
           if (import.meta.env.MODE === 'development') {
-            console.log("[useSmartPaste] Low confidence after error, redirecting to Train Model");
+            // console.log("[useSmartPaste] Low confidence after error, redirecting to Train Model");
           }
           navigate(`/train-model?msg=${encodeURIComponent(rawText)}&sender=${encodeURIComponent(currentSenderHint || '')}`);
           setIsProcessing(false);
@@ -284,13 +284,13 @@ export const useSmartPaste = (
         onTransactionsDetected?.([fallbackTxn], rawText, undefined, fallbackConfidence, true, "fallback");
       } else {
         if (import.meta.env.MODE === 'development') {
-          console.log("[useSmartPaste] Error recovery failed, no transaction detected");
+          // console.log("[useSmartPaste] Error recovery failed, no transaction detected");
         }
         setDetectedTransactions([]);
       }
     } finally {
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Text processing completed");
+        // console.log("[useSmartPaste] Text processing completed");
       }
       setIsProcessing(false);
     }
@@ -303,14 +303,14 @@ export const useSmartPaste = (
    */
   const createFallbackTransaction = (text: string): Transaction | null => {
     if (import.meta.env.MODE === 'development') {
-      console.log("[useSmartPaste] Creating fallback transaction from text");
+      // console.log("[useSmartPaste] Creating fallback transaction from text");
     }
     const amountMatch = text.match(/(\d+(?:[.,]\d+)?)/);
     const amount = amountMatch ? parseFloat(amountMatch[0].replace(',', '.')) : 0;
     
     if (!amount) {
       if (import.meta.env.MODE === 'development') {
-        console.log("[useSmartPaste] Fallback failed: No amount found in text");
+        // console.log("[useSmartPaste] Fallback failed: No amount found in text");
       }
       return null;
     }
@@ -319,7 +319,7 @@ export const useSmartPaste = (
     const isExpense = lower.includes('شراء') || lower.includes('paid');
     const isIncome = lower.includes('راتب') || lower.includes('credited');
     if (import.meta.env.MODE === 'development') {
-      console.log("[useSmartPaste] Fallback analysis:", { amount, isExpense, isIncome });
+      // console.log("[useSmartPaste] Fallback analysis:", { amount, isExpense, isIncome });
     }
     
     setMatchOrigin("fallback");

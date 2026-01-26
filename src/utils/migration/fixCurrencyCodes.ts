@@ -53,7 +53,7 @@ export const fixCorruptedCurrencyCodes = (): void => {
     if (modifiedCount > 0) {
       safeStorage.setItem('transactions', JSON.stringify(transactions));
       if (import.meta.env.MODE === 'development') {
-        console.log(`[Migration] Fixed ${modifiedCount} transactions with invalid currency codes`);
+        // console.log(`[Migration] Fixed ${modifiedCount} transactions with invalid currency codes`);
       }
     }
 
@@ -61,7 +61,7 @@ export const fixCorruptedCurrencyCodes = (): void => {
     safeStorage.setItem(MIGRATION_KEY, 'true');
     
     if (import.meta.env.MODE === 'development') {
-      console.log('[Migration] Currency code migration completed');
+      // console.log('[Migration] Currency code migration completed');
     }
   } catch (error) {
     if (import.meta.env.MODE === 'development') {

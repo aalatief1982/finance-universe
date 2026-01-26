@@ -35,7 +35,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
   const [inferValue, setInferValue] = useState<string>('');
   
   if (import.meta.env.MODE === 'development') {
-    console.log("[AttributeSelectionDropdown] Rendered with text:", selectedText?.substring(0, 20));
+    // console.log("[AttributeSelectionDropdown] Rendered with text:", selectedText?.substring(0, 20));
   }
   
   /**
@@ -44,7 +44,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
    */
   const handleDirectAttributeSelect = (field: string) => {
     if (import.meta.env.MODE === 'development') {
-      console.log("[AttributeSelectionDropdown] Direct attribute selected:", field);
+      // console.log("[AttributeSelectionDropdown] Direct attribute selected:", field);
     }
     onSelect('direct', field);
   };
@@ -56,7 +56,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
   const handleInferAttributeSelect = () => {
     if (selectedField && inferValue) {
       if (import.meta.env.MODE === 'development') {
-        console.log("[AttributeSelectionDropdown] Infer attribute selected:", { field: selectedField, value: inferValue });
+        // console.log("[AttributeSelectionDropdown] Infer attribute selected:", { field: selectedField, value: inferValue });
       }
       onSelect('infer', selectedField, inferValue);
     }
@@ -68,7 +68,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
    */
   const handleCopy = () => {
     if (import.meta.env.MODE === 'development') {
-      console.log("[AttributeSelectionDropdown] Copy selected for text:", selectedText?.substring(0, 20));
+      // console.log("[AttributeSelectionDropdown] Copy selected for text:", selectedText?.substring(0, 20));
     }
     onSelect('copy', undefined, selectedText);
   };
@@ -92,7 +92,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               <p className="text-sm font-medium">Selection Options</p>
               <Button variant="ghost" size="sm" onClick={() => {
                 if (import.meta.env.MODE === 'development') {
-                  console.log("[AttributeSelectionDropdown] Close clicked");
+                  // console.log("[AttributeSelectionDropdown] Close clicked");
                 }
                 onClose();
               }} className="h-6 w-6 p-0">
@@ -106,7 +106,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               className="w-full justify-start gap-2"
               onClick={() => {
                 if (import.meta.env.MODE === 'development') {
-                  console.log("[AttributeSelectionDropdown] Direct mode selected");
+                  // console.log("[AttributeSelectionDropdown] Direct mode selected");
                 }
                 setMode('direct');
               }}
@@ -121,7 +121,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               className="w-full justify-start gap-2"
               onClick={() => {
                 if (import.meta.env.MODE === 'development') {
-                  console.log("[AttributeSelectionDropdown] Infer mode selected");
+                  // console.log("[AttributeSelectionDropdown] Infer mode selected");
                 }
                 setMode('infer');
               }}
@@ -136,7 +136,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               className="w-full justify-start gap-2"
               onClick={() => {
                 if (import.meta.env.MODE === 'development') {
-                  console.log("[AttributeSelectionDropdown] Ignore selected");
+                  // console.log("[AttributeSelectionDropdown] Ignore selected");
                 }
                 onSelect('ignore');
               }}
@@ -163,7 +163,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               <p className="text-sm font-medium">Select Attribute</p>
               <Button variant="ghost" size="sm" onClick={() => {
                 if (import.meta.env.MODE === 'development') {
-                  console.log("[AttributeSelectionDropdown] Back to main");
+                  // console.log("[AttributeSelectionDropdown] Back to main");
                 }
                 setMode('main');
               }} className="h-6 w-6 p-0">
@@ -192,7 +192,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
               <p className="text-sm font-medium">Infer Attribute</p>
               <Button variant="ghost" size="sm" onClick={() => {
                 if (import.meta.env.MODE === 'development') {
-                  console.log("[AttributeSelectionDropdown] Back to main");
+                  // console.log("[AttributeSelectionDropdown] Back to main");
                 }
                 setMode('main');
               }} className="h-6 w-6 p-0">
@@ -205,7 +205,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
                 value={selectedField} 
                 onValueChange={(value) => {
                   if (import.meta.env.MODE === 'development') {
-                    console.log("[AttributeSelectionDropdown] Field selected for inference:", value);
+                    // console.log("[AttributeSelectionDropdown] Field selected for inference:", value);
                   }
                   setSelectedField(value);
                 }}
@@ -227,7 +227,7 @@ const AttributeSelectionDropdown: React.FC<AttributeSelectionDropdownProps> = ({
                 value={inferValue} 
                 onChange={(e) => {
                   if (import.meta.env.MODE === 'development') {
-                    console.log("[AttributeSelectionDropdown] Infer value changed:", e.target.value);
+                    // console.log("[AttributeSelectionDropdown] Infer value changed:", e.target.value);
                   }
                   setInferValue(e.target.value);
                 }}

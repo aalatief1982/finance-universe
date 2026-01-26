@@ -51,7 +51,7 @@ export const startPhoneVerificationWithSupabase = async (phoneNumber: string): P
     // If in demo mode, skip actual Supabase API call
     if (verificationState.isInDemoMode) {
       if (import.meta.env.MODE === 'development') {
-        console.log('Demo mode: Simulating OTP verification send for:', phoneNumber);
+        // console.log('Demo mode: Simulating OTP verification send for:', phoneNumber);
       }
       await new Promise(resolve => setTimeout(resolve, 1000));
       return { success: true };
@@ -169,7 +169,7 @@ export const confirmPhoneVerificationWithSupabase = async (code: string): Promis
     // If in demo mode, only check for the demo code "1234"
     if (verificationState.isInDemoMode) {
       if (import.meta.env.MODE === 'development') {
-        console.log('Demo mode: Verifying code:', code);
+        // console.log('Demo mode: Verifying code:', code);
       }
       
       const isValid = code === "1234";
@@ -294,7 +294,7 @@ export const updateUserProfileInSupabase = async (userId: string, userData: any)
     // If in demo mode or Supabase is disabled, simulate success
     if (verificationState.isInDemoMode || !ENABLE_SUPABASE_AUTH) {
       if (import.meta.env.MODE === 'development') {
-        console.log('Demo mode or Supabase disabled: Simulating profile update for:', userId);
+        // console.log('Demo mode or Supabase disabled: Simulating profile update for:', userId);
       }
       await new Promise(resolve => setTimeout(resolve, 500));
       return true;
@@ -422,7 +422,7 @@ export const signOutFromSupabase = async (): Promise<boolean> => {
     // If in demo mode or Supabase is disabled, just return true
     if (verificationState.isInDemoMode || !ENABLE_SUPABASE_AUTH) {
       if (import.meta.env.MODE === 'development') {
-        console.log('Demo mode or Supabase disabled: Simulating sign out');
+        // console.log('Demo mode or Supabase disabled: Simulating sign out');
       }
       return true;
     }
