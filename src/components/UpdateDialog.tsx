@@ -52,16 +52,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     try {
       // Download only - do not apply immediately
       // Bundle will be applied when user backgrounds the app
-      const bundle = await appUpdateService.downloadUpdate(
-        manifest,
-        (prog) => {
-          setProgress(prog);
-          // Switch to extracting phase when download completes
-          if (prog.percent >= 100 && phase === 'downloading') {
-            setPhase('extracting');
-          }
-        }
-      );
+      const bundle = await appUpdateService.downloadUpdate(manifest);
 
       if (bundle) {
         setPhase('success');
@@ -88,33 +79,20 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
   const renderContent = () => {
     switch (phase) {
       case 'downloading':
-        return (
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-3">
-              <Download className="h-5 w-5 animate-bounce text-primary" />
-              <span className="text-sm text-muted-foreground">
-                Downloading update...
-              </span>
-            </div>
-            <Progress value={progress.percent} className="h-2" />
-            <p className="text-xs text-muted-foreground text-center">
-              {progress.percent}% complete
-            </p>
-          </div>
-        );
-
       case 'extracting':
         return (
           <div className="space-y-4 py-4">
             <div className="flex items-center gap-3">
               <RefreshCwIcon className="h-5 w-5 animate-spin text-primary" />
               <span className="text-sm text-muted-foreground">
-                Installing update...
+                {phase === 'downloading' ? 'Downloading update...' : 'Installing update...'}
               </span>
             </div>
-            <Progress value={progress.percent} className="h-2" />
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary animate-pulse" style={{ width: '100%' }} />
+            </div>
             <p className="text-xs text-muted-foreground text-center">
-              Extracting files...
+              Please wait...
             </p>
           </div>
         );
