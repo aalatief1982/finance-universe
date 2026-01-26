@@ -52,16 +52,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     try {
       // Download only - do not apply immediately
       // Bundle will be applied when user backgrounds the app
-      const bundle = await appUpdateService.downloadUpdate(
-        manifest,
-        (prog) => {
-          setProgress(prog);
-          // Switch to extracting phase when download completes
-          if (prog.percent >= 100 && phase === 'downloading') {
-            setPhase('extracting');
-          }
-        }
-      );
+      const bundle = await appUpdateService.downloadUpdate(manifest);
 
       if (bundle) {
         setPhase('success');

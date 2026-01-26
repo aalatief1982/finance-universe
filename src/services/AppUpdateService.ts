@@ -431,7 +431,10 @@ class AppUpdateService {
       });
 
       // Verify download completion
-      if (bundle.status !== 'success') {
+      // NOTE: Capgo returns status: "pending" for successfully downloaded bundles
+      // status: "success" means the bundle is currently active
+      // status: "pending" means the bundle is ready to be activated via set()
+      if (bundle.status !== 'pending' && bundle.status !== 'success') {
         console.error('[OTA] ❌ Download did not complete successfully:', bundle);
         return null;
       }
@@ -439,7 +442,7 @@ class AppUpdateService {
       console.log('[OTA] ✅ Download complete:', JSON.stringify(bundle));
 
       this.setPendingBundle(bundle);
-      console.log('[OTA] Bundle marked as pending');
+      console.log('[OTA] Bundle marked as pending (status=' + bundle.status + ')');
 
       // Log the list of bundles for debugging
       try {
