@@ -13,7 +13,7 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
   // Web platform gets a simulated implementation
   if (Capacitor.getPlatform() === 'web') {
     if (import.meta.env.MODE === 'development') {
-      console.log('[SMS] Web platform — Using web implementation');
+      // console.log('[SMS] Web platform — Using web implementation');
     }
     try {
       const { default: webListener } = await import('@/native/backgroundSms.web');
@@ -30,7 +30,7 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
   try {
     if (!backgroundSmsListener) {
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Loading native SMS listener plugin');
+        // console.log('[SMS] Loading native SMS listener plugin');
       }
       try {
         const { default: nativeListener } = await import('@/native/backgroundSms.native');
@@ -44,7 +44,7 @@ export async function loadSmsListener(): Promise<BackgroundSmsListenerPlugin | n
         }
         
         if (import.meta.env.MODE === 'development') {
-          console.log('[SMS] SMS listener plugin loaded successfully');
+          // console.log('[SMS] SMS listener plugin loaded successfully');
         }
       } catch (err) {
         if (import.meta.env.MODE === 'development') {

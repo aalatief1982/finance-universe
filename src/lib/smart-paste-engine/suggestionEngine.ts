@@ -146,10 +146,10 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   }
 
   if (import.meta.env.MODE === 'development') {
-    console.log('[DEBUG] keywordBank:', keywordBank);
+    // console.log('[DEBUG] keywordBank:', keywordBank);
   }
   if (import.meta.env.MODE === 'development') {
-    console.log('[DEBUG] fallbackVendors:', getFallbackVendors());
+    // console.log('[DEBUG] fallbackVendors:', getFallbackVendors());
   }
 
   // ⬇️ Keyword-based inference
@@ -194,10 +194,10 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
 	const vendorText = knowns.vendor || extractVendorName(text);
 	const fallback = findClosestFallbackMatch(vendorText);
 	if (import.meta.env.MODE === 'development') {
-	  console.log("Fallback vendorText used:", vendorText);
+	  // console.log("Fallback vendorText used:", vendorText);
 	}
 	if (import.meta.env.MODE === 'development') {
-	  console.log("Fallback result:", fallback);
+	  // console.log("Fallback result:", fallback);
 	}
 
 	const finalType = inferred['type'] || knowns['type'];
@@ -224,7 +224,7 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
   }
 
   if (import.meta.env.MODE === 'development') {
-    console.log('[SmartPaste] Inferred indirect fields:', inferred);
+    // console.log('[SmartPaste] Inferred indirect fields:', inferred);
   }
   return inferred;
 } */
@@ -284,10 +284,10 @@ export function inferIndirectFields(
     const vendorText = knowns.vendor || extractVendorName(text);
     const fallback = findClosestFallbackMatch(vendorText);
     if (import.meta.env.MODE === 'development') {
-      console.log('[SmartPaste] Fallback vendorText used:', vendorText);
+      // console.log('[SmartPaste] Fallback vendorText used:', vendorText);
     }
     if (import.meta.env.MODE === 'development') {
-      console.log('[SmartPaste] Fallback result:', fallback);
+      // console.log('[SmartPaste] Fallback result:', fallback);
     }
 
     const finalType = inferred['type'] || knowns['type'];
@@ -307,7 +307,7 @@ export function inferIndirectFields(
   }
 
   if (import.meta.env.MODE === 'development') {
-    console.log('[SmartPaste] Final inferred fields before return:', inferred);
+    // console.log('[SmartPaste] Final inferred fields before return:', inferred);
   }
   return inferred;
 }

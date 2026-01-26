@@ -147,9 +147,9 @@ function replaceVendorDataToFallbacks(vendorData: VendorData): void {
     saveVendorFallbacks(newFallbacks);
 
     if (import.meta.env.MODE === 'development') {
-      console.log(
-        `[VendorSync] Fallbacks replaced: preserved ${Object.keys(userVendors).length} user vendors, added ${Object.keys(vendorData).length} new.`
-      );
+      // console.log(
+        // `[VendorSync] Fallbacks replaced: preserved ${Object.keys(userVendors).length} user vendors, added ${Object.keys(vendorData).length} new.`
+      // );
     }
   } catch (error) {
     console.error('[VendorSync] Error replacing fallbacks:', error);
@@ -168,14 +168,14 @@ function replaceVendorDataToFallbacks(vendorData: VendorData): void {
 export async function checkForVendorUpdates(): Promise<boolean> {
   try {
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Starting vendor update check');
+      // console.log('[VendorSync] Starting vendor update check');
     }
 
     // Step 1: Check if vendor fallbacks exist, if not load from local JSON
     const existingFallbacks = safeStorage.getItem('xpensia_vendor_fallbacks');
     if (!existingFallbacks) {
       if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] No existing fallbacks, should load from local JSON first');
+        // console.log('[VendorSync] No existing fallbacks, should load from local JSON first');
       }
       // This will be handled by initializeXpensiaStorageDefaults
       return false;
@@ -185,7 +185,7 @@ export async function checkForVendorUpdates(): Promise<boolean> {
     const hasInternet = await hasInternetConnection();
     if (!hasInternet) {
       if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] No internet connection - using local data');
+        // console.log('[VendorSync] No internet connection - using local data');
       }
       return false;
     }
@@ -204,11 +204,11 @@ export async function checkForVendorUpdates(): Promise<boolean> {
     const latestFileId = registry.latest.fileId;
 
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Latest from registry:', {
-        filename: latestFilename,
-        version: latestVersion,
-        fileId: latestFileId
-      });
+      // console.log('[VendorSync] Latest from registry:', {
+        // filename: latestFilename,
+        // version: latestVersion,
+        // fileId: latestFileId
+      // });
     }
 
     // Extract the base filename without extension for comparison
@@ -216,27 +216,27 @@ export async function checkForVendorUpdates(): Promise<boolean> {
     const storedDocumentName = getStoredDocumentName();
 
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Comparing versions:', {
-        stored: storedDocumentName,
-        latest: latestDocumentName
-      });
+      // console.log('[VendorSync] Comparing versions:', {
+        // stored: storedDocumentName,
+        // latest: latestDocumentName
+      // });
     }
 
     // Step 4 & 6: Handle uninitialized source or version comparison
     if (storedDocumentName === null || storedDocumentName === undefined) {
       if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] No stored source - performing initial sync');
+        // console.log('[VendorSync] No stored source - performing initial sync');
       }
     } else if (storedDocumentName === latestDocumentName) {
       if (import.meta.env.MODE === 'development') {
-        console.log('[VendorSync] Already up to date');
+        // console.log('[VendorSync] Already up to date');
       }
       return false;
     }
 
     // Step 5: Update needed - fetch and replace vendor data
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Updating vendor data from:', latestFilename);
+      // console.log('[VendorSync] Updating vendor data from:', latestFilename);
     }
 
     const vendorData = await fetchVendorDataFromDrive(latestFileId);
@@ -255,8 +255,8 @@ export async function checkForVendorUpdates(): Promise<boolean> {
     safeStorage.setItem(VENDOR_SOURCE_KEY, latestDocumentName);
 
     if (import.meta.env.MODE === 'development') {
-      console.log('[VendorSync] Vendor data updated successfully');
-      console.log('[VendorSync] Updated vendor source to:', latestDocumentName);
+      // console.log('[VendorSync] Vendor data updated successfully');
+      // console.log('[VendorSync] Updated vendor source to:', latestDocumentName);
     }
 
     // Notify subscribers of success
@@ -284,7 +284,7 @@ export function refreshVendorFallbacks(): void {
         if (data) {
           replaceVendorDataToFallbacks(data);
           if (import.meta.env.MODE === 'development') {
-            console.log('[VendorSync] Fallbacks refreshed manually.');
+            // console.log('[VendorSync] Fallbacks refreshed manually.');
           }
         }
       });

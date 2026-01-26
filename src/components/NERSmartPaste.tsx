@@ -52,7 +52,7 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
       return;
     }
     if (import.meta.env.MODE === 'development') {
-      console.log('[SmartPaste] Submitting message:', text);
+      // console.log('[SmartPaste] Submitting message:', text);
     }
     setIsProcessing(true);
     setError(null);
@@ -63,7 +63,7 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
     try {
       const parsed = await extractTransactionEntities(text);
       if (import.meta.env.MODE === 'development') {
-        console.log('[SmartPaste] Extracted entities:', parsed);
+        // console.log('[SmartPaste] Extracted entities:', parsed);
       }
 
       const transaction: Transaction = {
@@ -87,7 +87,7 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
 
       if (onTransactionsDetected) {
         if (import.meta.env.MODE === 'development') {
-          console.log('[SmartPaste] Final transaction:', transaction);
+          // console.log('[SmartPaste] Final transaction:', transaction);
         }
         onTransactionsDetected(
           [transaction],
@@ -122,7 +122,7 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
     try {
       const clipboardText = await navigator.clipboard.readText();
       if (import.meta.env.MODE === 'development') {
-        console.log('[SmartPaste] Clipboard text captured:', clipboardText);
+        // console.log('[SmartPaste] Clipboard text captured:', clipboardText);
       }
       setText(clipboardText);
     } catch (err) {
@@ -135,18 +135,18 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
   };
 
   const handleAddTransaction = (transaction: Transaction) => {
-    if (import.meta.env.MODE === 'development') console.log('[SmartPaste] Sending transaction:', {
-      transaction,
-      parsedFields: {
-        amount: transaction.amount,
-        currency: transaction.currency,
-        date: transaction.date,
-        type: transaction.type,
-        category: transaction.category,
-        vendor: transaction.vendor,
-        fromAccount: transaction.fromAccount,
-      }
-    });  
+    // if (import.meta.env.MODE === 'development') console.log('[SmartPaste] Sending transaction:', {
+      // transaction,
+      // parsedFields: {
+        // amount: transaction.amount,
+        // currency: transaction.currency,
+        // date: transaction.date,
+        // type: transaction.type,
+        // category: transaction.category,
+        // vendor: transaction.vendor,
+        // fromAccount: transaction.fromAccount,
+      // }
+    // });  
     
     if (onTransactionsDetected) {
       onTransactionsDetected(

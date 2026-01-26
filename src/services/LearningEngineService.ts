@@ -120,7 +120,7 @@ export function suggestTransactionDetails(rawMessage: string): Partial<Transacti
 // Mock implementations of missing methods to fix the type errors
 function learnFromTransaction(rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: any): void {
   if (import.meta.env.MODE === 'development') {
-    console.log('Learning from transaction:', transaction);
+    // console.log('Learning from transaction:', transaction);
   }
 }
 
@@ -134,7 +134,7 @@ function inferFieldsFromText(message: string): Partial<Transaction> | null {
 
 function saveConfig(config: Partial<LearningEngineConfig>): void {
   if (import.meta.env.MODE === 'development') {
-    console.log('Saving config:', config);
+    // console.log('Saving config:', config);
   }
 }
 
@@ -144,7 +144,7 @@ function getLearnedEntries(): LearnedEntry[] {
 
 function clearLearnedEntries(): void {
   if (import.meta.env.MODE === 'development') {
-    console.log('Clearing learned entries');
+    // console.log('Clearing learned entries');
   }
 }
 
@@ -197,6 +197,6 @@ export const learningEngineService = {
   extractAccountTokensWithPosition,
   matchUsingTemplateStructure,
   saveUserTraining: (data: any) => {
-    if (import.meta.env.MODE === 'development') console.log('Saving user training:', data)
+    // if (import.meta.env.MODE === 'development') console.log('Saving user training:', data)
   }
 };

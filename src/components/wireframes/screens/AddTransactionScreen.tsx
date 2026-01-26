@@ -53,13 +53,13 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
   const handleSubmit = () => {
     if (validateForm()) {
       // In a real app, save the transaction
-      if (import.meta.env.MODE === 'development') console.log({
-        type: transactionType,
-        amount: Number(amount) * (transactionType === 'expense' ? -1 : 1),
-        category,
-        date,
-        description
-      });
+      // if (import.meta.env.MODE === 'development') console.log({
+        // type: transactionType,
+        // amount: Number(amount) * (transactionType === 'expense' ? -1 : 1),
+        // category,
+        // date,
+        // description
+      // });
       onSave(); // Call the onSave prop
     }
   };

@@ -53,7 +53,7 @@ function migrateToV1(): void {
     const migrated = budgets.map(b => migrateBudget(b));
     
     safeStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-    console.log('Budget migration V1 complete:', migrated.length, 'budgets migrated');
+    // console.log('Budget migration V1 complete:', migrated.length, 'budgets migrated');
   } catch (error) {
     console.error('V1 migration failed:', error);
   }
@@ -80,7 +80,7 @@ function migrateToV2(): void {
     // For now, we keep them but they're marked with _overall_legacy targetId
     
     safeStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-    console.log('Budget migration V2 complete');
+    // console.log('Budget migration V2 complete');
   } catch (error) {
     console.error('V2 migration failed:', error);
   }
@@ -119,7 +119,7 @@ export function verifyMigration(): { valid: boolean; issues: string[] } {
  */
 export function initBudgetMigrations(): void {
   if (needsMigration()) {
-    console.log('Running budget data migrations...');
+    // console.log('Running budget data migrations...');
     runMigrations();
     
     const result = verifyMigration();

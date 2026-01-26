@@ -237,14 +237,14 @@ export function learnFromTransaction(
     }
   }
 
-  if (import.meta.env.MODE === 'development') console.log('[Learned]', {
-    templateHash,
-    vendor: txn.vendor,
-    category: txn.category,
-    subcategory: txn.subcategory,
-    fromAccount: txn.fromAccount,
-    rawMessage
-  });
+  // if (import.meta.env.MODE === 'development') console.log('[Learned]', {
+    // templateHash,
+    // vendor: txn.vendor,
+    // category: txn.category,
+    // subcategory: txn.subcategory,
+    // fromAccount: txn.fromAccount,
+    // rawMessage
+  // });
 }
 
 

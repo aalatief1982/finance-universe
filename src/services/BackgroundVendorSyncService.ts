@@ -14,7 +14,7 @@ class BackgroundVendorSyncService {
     this.unsubscribeFromSync = onSyncComplete((success, updatedData) => {
       if (success && updatedData) {
         if (import.meta.env.MODE === 'development') {
-          console.log('[BackgroundSync] Vendor data updated successfully');
+          // console.log('[BackgroundSync] Vendor data updated successfully');
         }
         // Dispatch custom event for real-time UI updates
         window.dispatchEvent(new CustomEvent('vendorDataUpdated', { 
@@ -38,7 +38,7 @@ class BackgroundVendorSyncService {
     try {
       await checkForVendorUpdates();
       if (import.meta.env.MODE === 'development') {
-        console.log('[BackgroundSync] Vendor data sync completed');
+        // console.log('[BackgroundSync] Vendor data sync completed');
       }
     } catch (error) {
       if (import.meta.env.MODE === 'development') {

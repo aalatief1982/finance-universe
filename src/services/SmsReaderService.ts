@@ -26,7 +26,7 @@ export interface SmsPermissionStatus {
 export class SmsReaderService {
   static async hasPermission(): Promise<boolean> {
     if (import.meta.env.MODE === 'development') {
-      console.log("[SmsReaderService] hasPermission() called");
+      // console.log("[SmsReaderService] hasPermission() called");
     }
 
     if (!Capacitor.isNativePlatform()) {
@@ -39,7 +39,7 @@ export class SmsReaderService {
     try {
       const result = await SmsReader.checkPermission();
       if (import.meta.env.MODE === 'development') {
-        console.log("[SmsReaderService] hasPermission result:", result);
+        // console.log("[SmsReaderService] hasPermission result:", result);
       }
       return result?.granted ?? false;
     } catch (error) {
@@ -52,7 +52,7 @@ export class SmsReaderService {
 
   static async requestPermission(): Promise<boolean> {
     if (import.meta.env.MODE === 'development') {
-      console.log("[SmsReaderService] requestPermission() called");
+      // console.log("[SmsReaderService] requestPermission() called");
     }
 
     if (!Capacitor.isNativePlatform()) {
@@ -65,7 +65,7 @@ export class SmsReaderService {
     try {
       const result = await SmsReader.requestPermission();
       if (import.meta.env.MODE === 'development') {
-        console.log("[SmsReaderService] requestPermission result:", result);
+        // console.log("[SmsReaderService] requestPermission result:", result);
       }
       return result?.granted ?? false;
     } catch (error) {
@@ -78,7 +78,7 @@ export class SmsReaderService {
 
   static async checkPermissionWithRationale(): Promise<SmsPermissionStatus> {
     if (import.meta.env.MODE === 'development') {
-      console.log("[SmsReaderService] checkPermissionWithRationale() called");
+      // console.log("[SmsReaderService] checkPermissionWithRationale() called");
     }
 
     if (!Capacitor.isNativePlatform()) {
@@ -91,7 +91,7 @@ export class SmsReaderService {
     try {
       const result = await SmsReader.checkPermissionWithRationale();
       if (import.meta.env.MODE === 'development') {
-        console.log("[SmsReaderService] checkPermissionWithRationale result:", result);
+        // console.log("[SmsReaderService] checkPermissionWithRationale result:", result);
       }
       return {
         granted: result?.granted ?? false,
@@ -112,7 +112,7 @@ export class SmsReaderService {
 
   static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
     if (import.meta.env.MODE === 'development') {
-      console.log('AIS-01 readSmsMessages', options);
+      // console.log('AIS-01 readSmsMessages', options);
     }
 
     if (!Capacitor.isNativePlatform()) {
@@ -145,10 +145,10 @@ export class SmsReaderService {
     const endDate = (options.endDate ? options.endDate : new Date()).getTime();
 
     if (import.meta.env.MODE === 'development') {
-      console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
+      // console.log(`[SmsReaderService] Filtering from ${new Date(startDate).toISOString()} to ${new Date(endDate).toISOString()}`);
     }
     if (import.meta.env.MODE === 'development') {
-      console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
+      // console.log(`[SmsReaderService] Scanning for messages between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
     }
 
     try {

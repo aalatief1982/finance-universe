@@ -75,7 +75,7 @@ function AppWrapper() {
     
     if (platform === 'web') {
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Web platform — skipping setupSmsListener entirely.');
+        // console.log('[SMS] Web platform — skipping setupSmsListener entirely.');
       }
       return;
     }
@@ -83,12 +83,12 @@ function AppWrapper() {
     const setupSmsListener = async () => {
       try {
         if (import.meta.env.MODE === 'development') {
-          console.log('[SMS] Setting up listener...');
+          // console.log('[SMS] Setting up listener...');
         }
         
         if (platform === 'android') {
           if (import.meta.env.MODE === 'development') {
-            console.log('[INIT] Native platform detected. Setting up status bar...');
+            // console.log('[INIT] Native platform detected. Setting up status bar...');
           }
           try {
             await StatusBar.setOverlaysWebView({ overlay: true });
@@ -105,30 +105,30 @@ function AppWrapper() {
           // Check permission first - only proceed if already granted
           const permissionResult = await BackgroundSmsListener.checkPermission();
           if (import.meta.env.MODE === 'development') {
-            console.log('[SMS] Permission check result:', permissionResult);
+            // console.log('[SMS] Permission check result:', permissionResult);
           }
           
           if (!permissionResult.granted) {
             if (import.meta.env.MODE === 'development') {
-              console.log('[SMS] Permission not granted. SMS listener will not be set up. User can enable via Settings.');
+              // console.log('[SMS] Permission not granted. SMS listener will not be set up. User can enable via Settings.');
             }
             return;
           }
           
           if (import.meta.env.MODE === 'development') {
-            console.log('[SMS] Permission already granted. Setting up SMS listener.');
+            // console.log('[SMS] Permission already granted. Setting up SMS listener.');
           }
           
           if (import.meta.env.MODE === 'development') {
-            console.log('[SMS] Starting to listen for SMS...');
+            // console.log('[SMS] Starting to listen for SMS...');
           }
           if (import.meta.env.MODE === 'development') {
-            console.log('AIS-03 starting listener');
+            // console.log('AIS-03 starting listener');
           }
           try {
             await BackgroundSmsListener.startListening();
             if (import.meta.env.MODE === 'development') {
-              console.log('[SMS] Successfully started listening for SMS messages');
+              // console.log('[SMS] Successfully started listening for SMS messages');
             }
           } catch (err) {
             if (import.meta.env.MODE === 'development') {
@@ -140,18 +140,18 @@ function AppWrapper() {
           try {
             const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
               if (import.meta.env.MODE === 'development') {
-                console.log('[Xpensia SMS] Received from', sender, ':', body);
+                // console.log('[Xpensia SMS] Received from', sender, ':', body);
               }
 
               if (!isFinancialTransactionMessage(body)) {
                 if (import.meta.env.MODE === 'development') {
-                  console.log('[Xpensia SMS] Not a financial message. Skipped.');
+                  // console.log('[Xpensia SMS] Not a financial message. Skipped.');
                 }
                 return;
               }
 
               if (import.meta.env.MODE === 'development') {
-                console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
+                // console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
               }
 
               let parsed;
@@ -197,12 +197,12 @@ function AppWrapper() {
               const appState = await CapacitorApp.getState();
               if (appState.isActive) {
                 if (import.meta.env.MODE === 'development') {
-                  console.log('[NOTIFY] App active. Navigating to transaction.');
+                  // console.log('[NOTIFY] App active. Navigating to transaction.');
                 }
                 navigate('/edit-transaction', { state: { transaction: txn } });
               } else {
                 if (import.meta.env.MODE === 'development') {
-                  console.log('[NOTIFY] App backgrounded. Showing notification.');
+                  // console.log('[NOTIFY] App backgrounded. Showing notification.');
                 }
                 await LocalNotifications.schedule({
                   notifications: [
@@ -222,7 +222,7 @@ function AppWrapper() {
               }
             });
             if (import.meta.env.MODE === 'development') {
-              console.log('[SMS] Successfully added SMS listener');
+              // console.log('[SMS] Successfully added SMS listener');
             }
           } catch (err) {
             if (import.meta.env.MODE === 'development') {
@@ -235,7 +235,7 @@ function AppWrapper() {
             const statePayload = event.notification.extra;
             if (statePayload?.smsData) {
               if (import.meta.env.MODE === 'development') {
-                console.log('[NOTIFICATION] Tapped. Processing SMS directly.');
+                // console.log('[NOTIFICATION] Tapped. Processing SMS directly.');
               }
               
               const { sender, body } = statePayload.smsData;
@@ -245,7 +245,7 @@ function AppWrapper() {
                 const result = await parseAndInferTransaction(body, sender);
                 
                 if (import.meta.env.MODE === 'development') {
-                  console.log('[NOTIFICATION] SMS processed:', result);
+                  // console.log('[NOTIFICATION] SMS processed:', result);
                 }
                 
                 // Navigate to edit-transaction with the same state structure as ImportTransactions
@@ -292,7 +292,7 @@ function AppWrapper() {
     setupSmsListener();
     return () => {
       if (import.meta.env.MODE === 'development') {
-        console.log('AIS-04 stopping listener');
+        // console.log('AIS-04 stopping listener');
       }
       BackgroundSmsListener.stopListening().catch(err => {
         if (import.meta.env.MODE === 'development') {
@@ -484,10 +484,10 @@ function App() {
     
     CapacitorApp.addListener('appStateChange', async (state) => {
       if (!state.isActive) {
-        console.log('[OTA] App backgrounded, checking for pending bundle...');
+        // console.log('[OTA] App backgrounded, checking for pending bundle...');
         const hasPending = await appUpdateService.hasPendingBundle();
         if (hasPending) {
-          console.log('[OTA] Applying pending bundle on background...');
+          // console.log('[OTA] Applying pending bundle on background...');
           await appUpdateService.applyPendingBundle();
         }
       }

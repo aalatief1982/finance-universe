@@ -107,7 +107,7 @@ export function parseSmsMessage(message: string): TransactionDraft | null {
     };
 
     if (import.meta.env.MODE === 'development') {
-      console.log('[SmsParser] Parsed transaction draft:', transaction);
+      // console.log('[SmsParser] Parsed transaction draft:', transaction);
     }
 
     return transaction;

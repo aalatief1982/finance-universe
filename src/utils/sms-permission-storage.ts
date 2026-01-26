@@ -29,7 +29,7 @@ export const setSmsPermissionGrantDate = (date: string): void => {
     if (!existing) {
       safeStorage.setItem(SMS_PERMISSION_GRANT_DATE_KEY, date);
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS Permission] Grant date recorded:', date);
+        // console.log('[SMS Permission] Grant date recorded:', date);
       }
     }
   } catch (error) {
@@ -60,7 +60,7 @@ export const setLastAutoImportDate = (date: string): void => {
   try {
     safeStorage.setItem(LAST_AUTO_IMPORT_DATE_KEY, date);
     if (import.meta.env.MODE === 'development') {
-      console.log('[SMS Auto Import] Last import date updated:', date);
+      // console.log('[SMS Auto Import] Last import date updated:', date);
     }
   } catch (error) {
     if (import.meta.env.MODE === 'development') {

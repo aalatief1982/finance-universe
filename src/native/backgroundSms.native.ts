@@ -8,7 +8,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   addListener: async (eventName, listenerFunc) => {
     try {
       if (import.meta.env.MODE === 'development') {
-        console.log(`[SMS] Adding listener for event: ${eventName}`);
+        // console.log(`[SMS] Adding listener for event: ${eventName}`);
       }
       return await BackgroundSmsListener.addListener(eventName, listenerFunc);
     } catch (err) {
@@ -22,11 +22,11 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   checkPermission: async () => {
     try {
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Checking permission');
+        // console.log('[SMS] Checking permission');
       }
       const result = await BackgroundSmsListener.checkPermission();
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Permission check result:', result);
+        // console.log('[SMS] Permission check result:', result);
       }
       return result;
     } catch (err) {
@@ -41,11 +41,11 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   checkPermissionWithRationale: async () => {
     try {
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Checking permission with rationale');
+        // console.log('[SMS] Checking permission with rationale');
       }
       const result = await BackgroundSmsListener.checkPermissionWithRationale();
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Permission rationale check result:', result);
+        // console.log('[SMS] Permission rationale check result:', result);
       }
       return result;
     } catch (err) {
@@ -59,11 +59,11 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   requestPermission: async () => {
     try {
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Requesting permission');
+        // console.log('[SMS] Requesting permission');
       }
       const result = await BackgroundSmsListener.requestPermission();
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Permission request result:', result);
+        // console.log('[SMS] Permission request result:', result);
       }
       return result;
     } catch (err) {
@@ -78,11 +78,11 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   startListening: async () => {
     try {
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Starting to listen for SMS');
+        // console.log('[SMS] Starting to listen for SMS');
       }
       await BackgroundSmsListener.startListening();
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Now listening for SMS');
+        // console.log('[SMS] Now listening for SMS');
       }
       return; // Return void as expected
     } catch (err) {
@@ -96,11 +96,11 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
   stopListening: async () => {
     try {
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Stopping listening for SMS');
+        // console.log('[SMS] Stopping listening for SMS');
       }
       await BackgroundSmsListener.stopListening();
       if (import.meta.env.MODE === 'development') {
-        console.log('[SMS] Stopped listening for SMS');
+        // console.log('[SMS] Stopped listening for SMS');
       }
       return; // Return void as expected
     } catch (err) {

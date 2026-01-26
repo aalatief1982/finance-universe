@@ -209,7 +209,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
       
       if (import.meta.env.MODE === 'development') {
-        console.log('[TransactionEditForm] Processing fieldConfidences:', fieldConfidences);
+        // console.log('[TransactionEditForm] Processing fieldConfidences:', fieldConfidences);
       }
       
       // Use fieldConfidences to determine which fields were driven by smart paste
@@ -221,13 +221,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           driven[field as keyof Transaction] = true;
           
           if (import.meta.env.MODE === 'development') {
-            console.log(`[TransactionEditForm] Field "${field}" marked as driven with confidence:`, confidence);
+            // console.log(`[TransactionEditForm] Field "${field}" marked as driven with confidence:`, confidence);
           }
         }
       });
       
       if (import.meta.env.MODE === 'development') {
-        console.log('[TransactionEditForm] Final drivenFields map:', driven);
+        // console.log('[TransactionEditForm] Final drivenFields map:', driven);
       }
       
       setDrivenFields(driven);
