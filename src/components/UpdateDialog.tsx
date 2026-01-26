@@ -52,7 +52,13 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
     try {
       // Download only - do not apply immediately
       // Bundle will be applied when user backgrounds the app
+
+      // Note: Progress tracking not supported in current API, show indeterminate progress
+      setProgress({ loaded: 50, total: 100, percent: 50 });
       const bundle = await appUpdateService.downloadUpdate(manifest);
+      setProgress({ loaded: 100, total: 100, percent: 100 });
+      setPhase('extracting');
+
 
       if (bundle) {
         setPhase('success');
