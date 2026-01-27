@@ -212,27 +212,26 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         try { refreshPermission(); } catch (e) { /* ignore */ }
         try { logAnalyticsEvent('sms_permission_granted'); } catch (e) { console.warn('[SmsPermissionPrompt] analytics error', e); }
 
-        // Initialize listener and trigger initial SMS import
+        // Initialize listener and trigger initial SMS import with blocking spinner
         try {
+          setIsBusy(true);
+          setBusyMessage('Importing SMS messages...');
+          
           console.log('[SmsPermissionPrompt] Initializing SMS listener and triggering initial import...');
           await smsPermissionService.initSmsListener();
           
-          // Trigger initial import of existing SMS messages
-          // Use a small delay to ensure listener is ready
-          setTimeout(async () => {
-            try {
-              console.log('[SmsPermissionPrompt] Starting initial SMS import...');
-              await SmsImportService.checkForNewMessages(navigate, { 
-                auto: false, 
-                usePermissionDate: true 
-              });
-              console.log('[SmsPermissionPrompt] Initial SMS import triggered successfully');
-            } catch (importErr) {
-              console.warn('[SmsPermissionPrompt] Error during initial SMS import:', importErr);
-            }
-          }, 500);
+          // Small delay to ensure listener is ready
+          await new Promise(r => setTimeout(r, 500));
+          await SmsImportService.checkForNewMessages(navigate, { 
+            auto: false, 
+            usePermissionDate: true 
+          });
+          console.log('[SmsPermissionPrompt] Initial SMS import completed successfully');
         } catch (initErr) {
-          console.warn('[SmsPermissionPrompt] Error initializing SMS listener:', initErr);
+          console.warn('[SmsPermissionPrompt] Error during SMS import:', initErr);
+        } finally {
+          setIsBusy(false);
+          setBusyMessage('');
         }
 
         onOpenChange(false);
