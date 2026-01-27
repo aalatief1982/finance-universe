@@ -68,6 +68,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
 import { useSmsPermission } from '@/hooks/useSmsPermission';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -117,7 +118,12 @@ const Settings = () => {
   // App version state
   const [appVersion, setAppVersion] = useState<string>('');
 
+  // SMS busy state for loading overlay
+  const [smsBusy, setSmsBusy] = useState(false);
+  const [smsBusyMessage, setSmsBusyMessage] = useState('');
+
   const { hasPermission: hasSmsPermission, refreshPermission } = useSmsPermission();
+  const { updateUserPreferences } = useUser();
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -699,56 +705,76 @@ const Settings = () => {
                     if (platform === 'web') {
                       setBackgroundSmsEnabled(true);
                       setAutoImport(true);
-                    } else {
-                      try {
-                        const result = await smsPermissionService.requestPermission();
-                        
-                        // Always re-check canonical permission status
-                        const canonicalStatus = await smsPermissionService.checkPermissionStatus();
-                        console.log('[Settings] SMS Auto-Import toggle canonical status:', canonicalStatus);
+                      // Persist immediately on web
+                      updateUserPreferences({
+                        sms: { ...user?.preferences?.sms, autoImport: true, backgroundSmsEnabled: true }
+                      });
+                      setBaselineBackgroundSmsEnabled(true);
+                      return;
+                    }
 
-                        if (canonicalStatus.granted) {
-                          setBackgroundSmsEnabled(true);
-                          setAutoImport(true);
+                    // Show spinner
+                    setSmsBusy(true);
+                    setSmsBusyMessage('Requesting SMS permission...');
 
-                          // Initialize listener and trigger initial import
-                          try {
-                            console.log('[Settings] (toggle) Initializing SMS listener and triggering import...');
-                            await smsPermissionService.initSmsListener();
-                            const SmsImportService = (await import('@/services/SmsImportService')).default;
-                            setTimeout(async () => {
-                              try {
-                                await SmsImportService.checkForNewMessages(undefined, { auto: false, usePermissionDate: true });
-                                console.log('[Settings] (toggle) Initial SMS import triggered');
-                              } catch (e) {
-                                console.warn('[Settings] (toggle) Error during initial import:', e);
-                              }
-                            }, 500);
-                          } catch (e) {
-                            console.warn('[Settings] (toggle) Error initializing listener:', e);
-                          }
+                    try {
+                      await smsPermissionService.requestPermission();
+                      
+                      // Always re-check canonical permission status
+                      const canonicalStatus = await smsPermissionService.checkPermissionStatus();
+                      console.log('[Settings] SMS Auto-Import toggle canonical status:', canonicalStatus);
 
-                          toast({
-                            title: 'SMS Auto-Import Enabled! 🎉',
-                            description: 'Your transactions will now be imported automatically.'
-                          });
-                        } else {
-                          if (canonicalStatus.permanentlyDenied) {
-                            toast({
-                              title: 'SMS permission permanently denied',
-                              description:
-                                'Enable SMS permissions in your device Settings > Apps > Xpensia > Permissions to use SMS auto-import.',
-                              variant: 'destructive',
-                            });
-                          }
+                      if (canonicalStatus.granted) {
+                        setBackgroundSmsEnabled(true);
+                        setAutoImport(true);
+
+                        // PERSIST IMMEDIATELY - no Save button needed
+                        updateUserPreferences({
+                          sms: { ...user?.preferences?.sms, autoImport: true, backgroundSmsEnabled: true }
+                        });
+                        setBaselineBackgroundSmsEnabled(true);
+
+                        // Initialize listener and trigger initial import
+                        setSmsBusyMessage('Importing SMS messages...');
+                        try {
+                          console.log('[Settings] (toggle) Initializing SMS listener and triggering import...');
+                          await smsPermissionService.initSmsListener();
+                          const SmsImportService = (await import('@/services/SmsImportService')).default;
+                          await new Promise(r => setTimeout(r, 500)); // Small delay for listener ready
+                          await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
+                          console.log('[Settings] (toggle) Initial SMS import triggered');
+                        } catch (e) {
+                          console.warn('[Settings] (toggle) Error during import:', e);
                         }
-                      } catch {
-                        // Permission request failed
+
+                        toast({
+                          title: 'SMS Auto-Import Enabled! 🎉',
+                          description: 'Your transactions will now be imported automatically.'
+                        });
+                      } else {
+                        if (canonicalStatus.permanentlyDenied) {
+                          toast({
+                            title: 'SMS permission permanently denied',
+                            description:
+                              'Enable SMS permissions in your device Settings > Apps > Xpensia > Permissions to use SMS auto-import.',
+                            variant: 'destructive',
+                          });
+                        }
                       }
+                    } catch (e) {
+                      console.warn('[Settings] SMS toggle error:', e);
+                    } finally {
+                      setSmsBusy(false);
+                      setSmsBusyMessage('');
                     }
                   } else {
                     setBackgroundSmsEnabled(false);
                     setAutoImport(false);
+                    // Persist immediately
+                    updateUserPreferences({
+                      sms: { ...user?.preferences?.sms, autoImport: false, backgroundSmsEnabled: false }
+                    });
+                    setBaselineBackgroundSmsEnabled(false);
                   }
                 }}
                 disabled={!betaActive}
@@ -896,6 +922,7 @@ const Settings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <LoadingOverlay isOpen={smsBusy} message={smsBusyMessage} />
     </Layout>
   );
 };
