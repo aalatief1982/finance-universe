@@ -10,11 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Shield, Clock, Sparkles } from 'lucide-react';
 import { smsPermissionService } from '@/services/SmsPermissionService';
+import { useSmsPermission } from '@/hooks/useSmsPermission';
 import { useUser } from '@/context/user/UserContext';
 import { safeStorage } from '@/utils/safe-storage';
 import { toast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
 import SmsImportService from '@/services/SmsImportService';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useNavigate } from 'react-router-dom';
 
 interface SmsPermissionPromptProps {
@@ -30,6 +32,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   const [isRequesting, setIsRequesting] = useState(false);
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
   const navigate = useNavigate();
+
+  const { refreshPermission } = useSmsPermission();
 
   useEffect(() => {
     console.log('SmsPermissionPrompt rendered with open:', open);
@@ -104,6 +108,10 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
                 }
               });
               safeStorage.setItem('sms_prompt_shown', 'true');
+              // refresh permission hook so other components update immediately
+              try { refreshPermission(); } catch (e) { /* ignore */ }
+              // telemetry
+              try { logAnalyticsEvent('sms_permission_granted'); } catch (e) { console.warn('[SmsPermissionPrompt] analytics error', e); }
 
               // Initialize listener and trigger initial import on resume grant
               try {
@@ -161,6 +169,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           description: 'Permission dialog did not return. Please try again or enable SMS permission from Settings.',
           variant: 'destructive'
         });
+        try { logAnalyticsEvent('sms_permission_request_timed_out'); } catch (e) { /* ignore */ }
         // Keep prompt open so user can retry or open settings
         setIsRequesting(false);
         try { resumeListener?.remove?.(); } catch (e) {}
@@ -192,6 +201,9 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
 
         safeStorage.setItem('sms_prompt_shown', 'true');
         console.log('[SmsPermissionPrompt] sms_prompt_shown set to true (canonical granted)');
+        // refresh permission hook so UI updates instantly
+        try { refreshPermission(); } catch (e) { /* ignore */ }
+        try { logAnalyticsEvent('sms_permission_granted'); } catch (e) { console.warn('[SmsPermissionPrompt] analytics error', e); }
 
         // Initialize listener and trigger initial SMS import
         try {
@@ -245,6 +257,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         description: 'Please try enabling SMS import from Settings.',
         variant: 'destructive'
       });
+      try { logAnalyticsEvent('sms_permission_request_failed'); } catch (e) { /* ignore */ }
       safeStorage.setItem('sms_prompt_shown', 'true');
       console.log('[SmsPermissionPrompt] sms_prompt_shown set to true (error)');
       onOpenChange(false);
@@ -357,6 +370,21 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           )}
         </AlertDialogFooter>
       </AlertDialogContent>
+      {/* Blocking overlay while SMS permission prompt is processing */}
+      {isRequesting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-md p-4 flex items-center space-x-3 shadow-lg">
+            <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <div>
+              <div className="font-medium">Completing permission flow…</div>
+              <div className="text-sm text-muted-foreground">Please wait while we finalize SMS permission.</div>
+            </div>
+          </div>
+        </div>
+      )}
     </AlertDialog>
   );
 };

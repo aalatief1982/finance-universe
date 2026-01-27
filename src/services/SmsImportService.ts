@@ -42,8 +42,9 @@ export class SmsImportService {
       await logAnalyticsEvent('app_start');
       const { auto = false, usePermissionDate = false } = opts || {};
 
-      // For automatic import with permission date, use different logic
-      if (auto && usePermissionDate) {
+      // For permission-date-based import, use the dedicated logic
+      // This handles both initial import after permission grant and subsequent auto imports
+      if (usePermissionDate) {
         await this.handleAutoImportWithPermissionDate(safeNavigate as any);
         return;
       }
