@@ -18,6 +18,7 @@ import { Capacitor } from '@capacitor/core';
 import SmsImportService from '@/services/SmsImportService';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useNavigate } from 'react-router-dom';
+import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
 interface SmsPermissionPromptProps {
   open: boolean;
@@ -30,6 +31,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
 }) => {
   const { updateUserPreferences, user } = useUser();
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
+  const [busyMessage, setBusyMessage] = useState('');
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
   const navigate = useNavigate();
 
@@ -98,43 +101,47 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
             const canonicalStatus = await smsPermissionService.checkPermissionStatus();
             console.log('[SmsPermissionPrompt] canonical status on resume:', canonicalStatus);
             if (canonicalStatus.granted) {
-              updateUserPreferences({
-                sms: {
-                  ...user?.preferences?.sms,
-                  autoDetectProviders: user?.preferences?.sms?.autoDetectProviders ?? true,
-                  showDetectionNotifications: user?.preferences?.sms?.showDetectionNotifications ?? true,
-                  autoImport: true,
-                  backgroundSmsEnabled: true,
-                }
-              });
-              safeStorage.setItem('sms_prompt_shown', 'true');
-              // refresh permission hook so other components update immediately
-              try { refreshPermission(); } catch (e) { /* ignore */ }
-              // telemetry
-              try { logAnalyticsEvent('sms_permission_granted'); } catch (e) { console.warn('[SmsPermissionPrompt] analytics error', e); }
-
-              // Initialize listener and trigger initial import on resume grant
+              // persist preferences and then import
               try {
-                console.log('[SmsPermissionPrompt] (resume) Initializing SMS listener and triggering import...');
-                await smsPermissionService.initSmsListener();
-                setTimeout(async () => {
-                  try {
-                    await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
-                    console.log('[SmsPermissionPrompt] (resume) Initial SMS import triggered');
-                  } catch (e) {
-                    console.warn('[SmsPermissionPrompt] (resume) Error during import:', e);
+                setIsBusy(true);
+                setBusyMessage('Importing SMS messages...');
+                await updateUserPreferences({
+                  sms: {
+                    ...user?.preferences?.sms,
+                    autoDetectProviders: user?.preferences?.sms?.autoDetectProviders ?? true,
+                    showDetectionNotifications: user?.preferences?.sms?.showDetectionNotifications ?? true,
+                    autoImport: true,
+                    backgroundSmsEnabled: true,
                   }
-                }, 500);
-              } catch (e) {
-                console.warn('[SmsPermissionPrompt] (resume) Error initializing listener:', e);
+                });
+                safeStorage.setItem('sms_prompt_shown', 'true');
+                // refresh permission hook so other components update immediately
+                try { refreshPermission(); } catch (e) { /* ignore */ }
+                // telemetry
+                try { logAnalyticsEvent('sms_permission_granted'); } catch (e) { console.warn('[SmsPermissionPrompt] analytics error', e); }
+
+                // Initialize listener and perform import
+                try {
+                  console.log('[SmsPermissionPrompt] Initializing SMS listener and triggering initial import...');
+                  await smsPermissionService.initSmsListener();
+                  // small delay to ensure listener is ready
+                  await new Promise((res) => setTimeout(res, 500));
+                  await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
+                  console.log('[SmsPermissionPrompt] Initial SMS import completed');
+                } catch (importErr) {
+                  console.warn('[SmsPermissionPrompt] Error during initial SMS import:', importErr);
+                }
+
+                toast({
+                  title: 'SMS Import Enabled! 🎉',
+                  description: 'Your transactions will now be imported automatically.'
+                });
+
+                onOpenChange(false);
+              } finally {
+                setIsBusy(false);
+                setBusyMessage('');
               }
-
-              toast({
-                title: 'SMS Import Enabled! 🎉',
-                description: 'Your transactions will now be imported automatically.'
-              });
-
-              onOpenChange(false);
             } else if (canonicalStatus.permanentlyDenied) {
               setPermanentlyDenied(true);
             }
@@ -263,6 +270,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       onOpenChange(false);
     } finally {
       setIsRequesting(false);
+      setIsBusy(false);
+      setBusyMessage('');
       try { resumeListener?.remove?.(); } catch (e) {}
     }
   };
@@ -370,21 +379,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           )}
         </AlertDialogFooter>
       </AlertDialogContent>
-      {/* Blocking overlay while SMS permission prompt is processing */}
-      {isRequesting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-md p-4 flex items-center space-x-3 shadow-lg">
-            <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden>
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-            <div>
-              <div className="font-medium">Completing permission flow…</div>
-              <div className="text-sm text-muted-foreground">Please wait while we finalize SMS permission.</div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Use shared LoadingOverlay for both requesting and importing */}
+      <LoadingOverlay isOpen={isRequesting || isBusy} message={isRequesting ? 'Completing permission flow…' : busyMessage} />
     </AlertDialog>
   );
 };
