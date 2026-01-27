@@ -176,7 +176,25 @@ const Settings = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [refreshPermission]);
 
-  // Remove the old checkSmsPermissions useEffect since useSmsPermission covers it
+  // Sync toggle state with actual permission status
+  useEffect(() => {
+    const platform = Capacitor.getPlatform();
+    if (platform === 'web') return;
+
+    const prefEnabled = user?.preferences?.sms?.backgroundSmsEnabled || false;
+    const prefAutoImport = user?.preferences?.sms?.autoImport || false;
+
+    // Permission denied but preference says enabled → turn off toggle
+    if (!hasSmsPermission && (prefEnabled || backgroundSmsEnabled)) {
+      setBackgroundSmsEnabled(false);
+      setAutoImport(false);
+    }
+    // Permission granted and preference enabled → ensure toggle is on
+    else if (hasSmsPermission && prefEnabled) {
+      setBackgroundSmsEnabled(true);
+      setAutoImport(prefAutoImport || true);
+    }
+  }, [hasSmsPermission, user?.preferences?.sms?.backgroundSmsEnabled, user?.preferences?.sms?.autoImport]);
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -265,6 +283,7 @@ const Settings = () => {
         }
 
         setBackgroundSmsEnabled(true);
+        setAutoImport(true);
 
         // Initialize listener and trigger initial import after grant
         try {
@@ -273,7 +292,7 @@ const Settings = () => {
           const SmsImportService = (await import('@/services/SmsImportService')).default;
           setTimeout(async () => {
             try {
-              await SmsImportService.checkForNewMessages(undefined, { auto: false, usePermissionDate: true });
+              await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
               console.log('[Settings] Initial SMS import triggered');
             } catch (e) {
               console.warn('[Settings] Error during initial import:', e);
