@@ -44,22 +44,23 @@ export function useSmsPermission() {
 
   const requestPermission = useCallback(async () => {
     setState(prev => ({ ...prev, isChecking: true }));
-    
+
     try {
       const result = await smsPermissionService.requestPermission();
-      const granted = result.granted;
+      // After the request resolves, re-check canonical permission state to avoid native inconsistencies
+      const hasPermission = await checkPermission(true);
       setState({
-        hasPermission: granted,
+        hasPermission: !!hasPermission,
         isChecking: false,
         lastChecked: Date.now(),
       });
-      return granted;
+      return hasPermission;
     } catch (error) {
       console.error('Error requesting SMS permission:', error);
       setState(prev => ({ ...prev, isChecking: false }));
       return false;
     }
-  }, []);
+  }, [checkPermission]);
 
   const revokePermission = useCallback(async () => {
     setState(prev => ({ ...prev, isChecking: true }));

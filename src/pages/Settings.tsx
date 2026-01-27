@@ -253,9 +253,14 @@ const Settings = () => {
 
       try {
         const result = await smsPermissionService.requestPermission();
-        if (!result.granted) {
+        
+        // Always re-check canonical permission status after request
+        const canonicalStatus = await smsPermissionService.checkPermissionStatus();
+        console.log('[Settings] handleBackgroundSmsChange canonical status:', canonicalStatus);
+
+        if (!canonicalStatus.granted) {
           setBackgroundSmsEnabled(false);
-          if (result.permanentlyDenied) {
+          if (canonicalStatus.permanentlyDenied) {
             toast({
               title: 'SMS permission permanently denied',
               description:
@@ -265,7 +270,30 @@ const Settings = () => {
           }
           return;
         }
+
         setBackgroundSmsEnabled(true);
+
+        // Initialize listener and trigger initial import after grant
+        try {
+          console.log('[Settings] Initializing SMS listener and triggering import...');
+          await smsPermissionService.initSmsListener();
+          const SmsImportService = (await import('@/services/SmsImportService')).default;
+          setTimeout(async () => {
+            try {
+              await SmsImportService.checkForNewMessages(undefined, { auto: false, usePermissionDate: true });
+              console.log('[Settings] Initial SMS import triggered');
+            } catch (e) {
+              console.warn('[Settings] Error during initial import:', e);
+            }
+          }, 500);
+        } catch (e) {
+          console.warn('[Settings] Error initializing listener:', e);
+        }
+
+        toast({
+          title: 'SMS Auto-Import Enabled! 🎉',
+          description: 'Your transactions will now be imported automatically.'
+        });
       } catch {
         setBackgroundSmsEnabled(false);
       }
@@ -662,11 +690,38 @@ const Settings = () => {
                     } else {
                       try {
                         const result = await smsPermissionService.requestPermission();
-                        if (result.granted) {
+                        
+                        // Always re-check canonical permission status
+                        const canonicalStatus = await smsPermissionService.checkPermissionStatus();
+                        console.log('[Settings] SMS Auto-Import toggle canonical status:', canonicalStatus);
+
+                        if (canonicalStatus.granted) {
                           setBackgroundSmsEnabled(true);
                           setAutoImport(true);
+
+                          // Initialize listener and trigger initial import
+                          try {
+                            console.log('[Settings] (toggle) Initializing SMS listener and triggering import...');
+                            await smsPermissionService.initSmsListener();
+                            const SmsImportService = (await import('@/services/SmsImportService')).default;
+                            setTimeout(async () => {
+                              try {
+                                await SmsImportService.checkForNewMessages(undefined, { auto: false, usePermissionDate: true });
+                                console.log('[Settings] (toggle) Initial SMS import triggered');
+                              } catch (e) {
+                                console.warn('[Settings] (toggle) Error during initial import:', e);
+                              }
+                            }, 500);
+                          } catch (e) {
+                            console.warn('[Settings] (toggle) Error initializing listener:', e);
+                          }
+
+                          toast({
+                            title: 'SMS Auto-Import Enabled! 🎉',
+                            description: 'Your transactions will now be imported automatically.'
+                          });
                         } else {
-                          if (result.permanentlyDenied) {
+                          if (canonicalStatus.permanentlyDenied) {
                             toast({
                               title: 'SMS permission permanently denied',
                               description:

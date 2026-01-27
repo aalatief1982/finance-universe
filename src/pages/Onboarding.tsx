@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import Layout from '@/components/Layout';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
-import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -13,8 +12,11 @@ const Onboarding = () => {
 
   // Cleanup timeout on unmount
   useEffect(() => {
+    console.log('Onboarding component mounted');
+
     return () => {
       if (timeoutRef.current) {
+        console.log('Clearing timeout on unmount');
         clearTimeout(timeoutRef.current);
       }
     };
@@ -25,30 +27,10 @@ const Onboarding = () => {
   }, [showSmsPrompt]);
 
   const handleComplete = () => {
+    console.log('Onboarding completed');
     safeStorage.setItem('xpensia_onb_done', 'true');
+    safeStorage.setItem('xpensia_onb_just_completed', 'true'); // New flag
     navigate('/home');
-
-    // Only show SMS prompt on native Android and if not already shown
-    const isNative = Capacitor.isNativePlatform();
-    const isAndroid = Capacitor.getPlatform() === 'android';
-    const alreadyPrompted = safeStorage.getItem('sms_prompt_shown') === 'true';
-
-    console.log('handleComplete called. Navigating to /home.');
-    console.log('Platform details:', { isNative, isAndroid });
-    console.log('sms_prompt_shown flag:', alreadyPrompted);
-    if (isNative && isAndroid && !alreadyPrompted) {
-      console.log('Conditions met. Setting timeout to show SMS prompt.');
-      timeoutRef.current = setTimeout(() => {
-        console.log('Timeout triggered. Showing SMS prompt.');
-        setShowSmsPrompt(true);
-        console.log('Timeout triggered. Setting showSmsPrompt to true.');
-        setTimeout(() => {
-          console.log('showSmsPrompt state after timeout:', showSmsPrompt);
-        }, 0);
-      }, 5000);
-    } else {
-      console.log('Conditions not met. SMS prompt will not be shown.');
-    }
   };
 
   return (
@@ -61,10 +43,6 @@ const Onboarding = () => {
       safeAreaPadding={false}
     >
       <OnboardingSlides onComplete={handleComplete} />
-      <SmsPermissionPrompt 
-        open={showSmsPrompt} 
-        onOpenChange={setShowSmsPrompt} 
-      />
     </Layout>
   );
 };

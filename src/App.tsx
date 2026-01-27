@@ -57,12 +57,14 @@ import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInfer
 import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
+import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 
 function AppWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
   const showOnboarding = safeStorage.getItem('xpensia_onb_done') !== 'true';
   const navigateRef = React.useRef(navigate);
+  const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   useEffect(() => {
     navigateRef.current = navigate;
   }, [navigate]);
@@ -319,9 +321,61 @@ function AppWrapper() {
     }
   }, [showOnboarding, location.pathname, navigate]);
 
+  useEffect(() => {
+    const checkAndMaybeShowSmsPrompt = async () => {
+      const justCompleted = safeStorage.getItem('xpensia_onb_just_completed') === 'true';
+
+      // Always clear the one-time flag immediately so it never triggers twice
+      if (justCompleted) {
+        safeStorage.removeItem('xpensia_onb_just_completed');
+        console.log('[App] xpensia_onb_just_completed flag cleared');
+      }
+
+      const isNative = Capacitor.isNativePlatform();
+      const isAndroid = Capacitor.getPlatform() === 'android';
+      const alreadyPrompted = safeStorage.getItem('sms_prompt_shown') === 'true';
+
+      console.log('[App] SMS prompt check:', { justCompleted, isNative, isAndroid, alreadyPrompted });
+
+      // Only show prompt if: just completed onboarding OR app opened fresh without prompt shown yet
+      // AND we're on native Android AND user hasn't been prompted yet
+      if (isNative && isAndroid && !alreadyPrompted) {
+        // Check canonical permission - if already granted, don't show prompt
+        try {
+          const { smsPermissionService } = await import('@/services/SmsPermissionService');
+          const permissionStatus = await smsPermissionService.checkPermissionStatus();
+          console.log('[App] Canonical permission status:', permissionStatus);
+
+          if (permissionStatus.granted) {
+            // Permission already granted - mark as shown and don't show prompt
+            safeStorage.setItem('sms_prompt_shown', 'true');
+            console.log('[App] Permission already granted, skipping prompt');
+            return;
+          }
+        } catch (e) {
+          console.warn('[App] Error checking permission status:', e);
+        }
+
+        // Only show if just completed onboarding (not on every app launch)
+        if (justCompleted) {
+          setTimeout(() => {
+            console.log('[App] Showing SMS permission prompt');
+            setShowSmsPrompt(true);
+          }, 3000);
+        }
+      }
+    };
+
+    checkAndMaybeShowSmsPrompt();
+  }, []);
+
   return (
     <>
       <ScrollToTop />
+      <SmsPermissionPrompt 
+        open={showSmsPrompt} 
+        onOpenChange={setShowSmsPrompt} 
+      />
     </>
   );
 }

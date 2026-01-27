@@ -1,4 +1,3 @@
-
 import { safeStorage } from "@/utils/safe-storage";
 import { setSmsPermissionGrantDate } from "@/utils/sms-permission-storage";
 
@@ -151,6 +150,21 @@ class SmsPermissionService {
       return { granted: true, permanentlyDenied: false };
     }
 
+    // Helper to add a per-call timeout to native requests
+    const withTimeout = async <T,>(p: Promise<T>, ms: number): Promise<T | { __timedOut: true }> => {
+      let timedOut = false;
+      const timer = new Promise(resolve => setTimeout(() => { timedOut = true; resolve({ __timedOut: true }); }, ms));
+      try {
+        const res = await Promise.race([p, timer]) as any;
+        if (res && res.__timedOut) {
+          return { __timedOut: true } as any;
+        }
+        return res as T;
+      } catch (err) {
+        return { __timedOut: true } as any;
+      }
+    };
+
     try {
       const smsListener = await loadSmsListener();
       if (!smsListener) {
@@ -160,47 +174,60 @@ class SmsPermissionService {
         return { granted: false, permanentlyDenied: false };
       }
 
-      // Check if permission was already granted before (lightweight cached check)
+      // Lightweight cached check
       const cachedPermissionGranted = safeStorage.getItem('sms_permission') === 'granted';
       const readerPermissionGranted = await SmsReaderService.hasPermission();
       const wasAlreadyGranted = cachedPermissionGranted || readerPermissionGranted;
 
-      // Request permissions sequentially to avoid Android dialog collisions.
-      const readerGranted = await SmsReaderService.requestPermission();
-      if (!readerGranted) {
+      // Request reader permission with timeout
+      const readerResult = await withTimeout(SmsReaderService.requestPermission(), 8000);
+      if ((readerResult as any)?.__timedOut) {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] SmsReaderService.requestPermission timed out');
+        }
+        // proceed to polling to determine final state
+      } else if (!readerResult) {
         this.savePermissionStatus(false);
         const readerStatus = await SmsReaderService.checkPermissionWithRationale();
-        return {
-          granted: false,
-          permanentlyDenied: !readerStatus.granted && !readerStatus.shouldShowRationale,
-        };
+        // After a failed request, continue to polling for final state
       }
 
-      const listenerResult = await smsListener.requestPermission();
-      const listenerGranted = listenerResult?.granted ?? false;
-      if (!listenerGranted) {
+      // Request listener permission with timeout
+      const listenerResult = await withTimeout(smsListener.requestPermission(), 8000);
+      if ((listenerResult as any)?.__timedOut) {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] smsListener.requestPermission timed out');
+        }
+        // continue to polling
+      } else if (!(listenerResult as any)?.granted) {
         this.savePermissionStatus(false);
-        const listenerStatus = await smsListener.checkPermissionWithRationale();
-        return {
-          granted: false,
-          permanentlyDenied: !listenerStatus.granted && !listenerStatus.shouldShowRationale,
-        };
+        // continue to polling to determine if user granted via system
       }
 
-      const granted = true;
+      // Poll for definitive permission state using checkPermissionStatus
+      const POLL_INTERVAL_MS = 300;
+      const POLL_TIMEOUT_MS = 8000; // total poll timeout
+      const start = Date.now();
+
+      let finalStatus = await this.checkPermissionStatus();
+      while (!finalStatus.granted && !finalStatus.permanentlyDenied && (Date.now() - start) < POLL_TIMEOUT_MS) {
+        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+        finalStatus = await this.checkPermissionStatus();
+      }
+
+      const granted = !!finalStatus.granted;
       this.savePermissionStatus(granted);
 
-      // Record the grant date only if this is a new grant (not already granted)
       if (granted && !wasAlreadyGranted) {
         setSmsPermissionGrantDate(new Date().toISOString());
       }
 
-      // Initialize listener only when both permissions are granted
       if (granted) {
+        // Initialize listener when granted
         this.initSmsListener();
       }
 
-      return { granted, permanentlyDenied: false };
+      return { granted, permanentlyDenied: !!finalStatus.permanentlyDenied };
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
         console.error("[SMS] Error requesting SMS permission:", error);
