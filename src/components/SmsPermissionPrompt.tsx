@@ -15,6 +15,7 @@ import { safeStorage } from '@/utils/safe-storage';
 import { toast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
 import SmsImportService from '@/services/SmsImportService';
+import { useNavigate } from 'react-router-dom';
 
 interface SmsPermissionPromptProps {
   open: boolean;
@@ -28,6 +29,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   const { updateUserPreferences, user } = useUser();
   const [isRequesting, setIsRequesting] = useState(false);
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('SmsPermissionPrompt rendered with open:', open);
@@ -109,7 +111,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
                 await smsPermissionService.initSmsListener();
                 setTimeout(async () => {
                   try {
-                    await SmsImportService.checkForNewMessages(undefined, { auto: false, usePermissionDate: true });
+                    await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
                     console.log('[SmsPermissionPrompt] (resume) Initial SMS import triggered');
                   } catch (e) {
                     console.warn('[SmsPermissionPrompt] (resume) Error during import:', e);
@@ -201,7 +203,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           setTimeout(async () => {
             try {
               console.log('[SmsPermissionPrompt] Starting initial SMS import...');
-              await SmsImportService.checkForNewMessages(undefined, { 
+              await SmsImportService.checkForNewMessages(navigate, { 
                 auto: false, 
                 usePermissionDate: true 
               });

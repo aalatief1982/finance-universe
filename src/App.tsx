@@ -367,7 +367,7 @@ function AppWrapper() {
     };
 
     checkAndMaybeShowSmsPrompt();
-  }, []);
+  }, [location.pathname]);
 
   return (
     <>

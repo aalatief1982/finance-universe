@@ -17,20 +17,34 @@ let autoPromptAccepted: boolean | null = null;
 let autoAlertShown = false;
 
 export class SmsImportService {
+  private static importLock = false;
+
   static async checkForNewMessages(
-    navigate: (path: string, options?: any) => void,
+    navigate?: ((path: string, options?: any) => void) | undefined,
     opts?: { auto?: boolean; usePermissionDate?: boolean }
   ): Promise<void> {
-    if (import.meta.env.MODE === 'development') {
-      // console.log('AIS-02 checkForNewMessages', opts);
+    if (this.importLock) {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SmsImportService] Import already in progress, skipping duplicate call');
+      }
+      return;
     }
+
+    this.importLock = true;
+
+    const safeNavigate = typeof navigate === 'function' ? navigate : (path: string) => {
+      if (import.meta.env.MODE === 'development') {
+        console.log('[SmsImportService] navigate not provided - cannot navigate to', path);
+      }
+    };
+
     try {
       await logAnalyticsEvent('app_start');
       const { auto = false, usePermissionDate = false } = opts || {};
 
       // For automatic import with permission date, use different logic
       if (auto && usePermissionDate) {
-        await this.handleAutoImportWithPermissionDate(navigate);
+        await this.handleAutoImportWithPermissionDate(safeNavigate as any);
         return;
       }
 
@@ -73,7 +87,7 @@ export class SmsImportService {
           // Import financial messages from any sender
           return isFinancialTransactionMessage(msg.message);
         }
-        
+
         // For manual mode, use existing date filtering
         const lastForSender = senderMap[msg.sender];
         const senderDate = lastForSender ? new Date(lastForSender) : defaultStart;
@@ -129,11 +143,13 @@ export class SmsImportService {
       }
 
       await logAnalyticsEvent('sms_import_complete');
-      navigate('/vendor-mapping', { state: { messages: filteredMessages, vendorMap, keywordMap } });
+      safeNavigate('/vendor-mapping', { state: { messages: filteredMessages, vendorMap, keywordMap } });
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
         console.error('[SmsImportService] Failed to auto import SMS messages:', error);
       }
+    } finally {
+      this.importLock = false;
     }
   }
 
@@ -227,6 +243,8 @@ export class SmsImportService {
       if (import.meta.env.MODE === 'development') {
         console.error('[SmsImportService] Failed to handle auto import with permission date:', error);
       }
+    } finally {
+      this.importLock = false;
     }
   }
 }

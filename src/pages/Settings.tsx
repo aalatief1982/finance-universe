@@ -67,6 +67,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
+import { useSmsPermission } from '@/hooks/useSmsPermission';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -115,6 +116,8 @@ const Settings = () => {
   
   // App version state
   const [appVersion, setAppVersion] = useState<string>('');
+
+  const { hasPermission: hasSmsPermission, refreshPermission } = useSmsPermission();
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -166,24 +169,14 @@ const Settings = () => {
   }, [user]);
 
   useEffect(() => {
-    const checkSmsPermissions = async () => {
-      const platform = Capacitor.getPlatform();
-      if (platform === 'web') {
-        return;
-      } else {
-        try {
-          const hasPermission = await smsPermissionService.hasPermission();
-          if (!hasPermission && backgroundSmsEnabled) {
-            setBackgroundSmsEnabled(false);
-          }
-        } catch {
-          setBackgroundSmsEnabled(false);
-        }
-      }
+    const handleFocus = () => {
+      refreshPermission();
     };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refreshPermission]);
 
-    checkSmsPermissions();
-  }, []);
+  // Remove the old checkSmsPermissions useEffect since useSmsPermission covers it
 
   useEffect(() => {
     const fetchVersion = async () => {
