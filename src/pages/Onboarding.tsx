@@ -20,6 +20,10 @@ const Onboarding = () => {
     };
   }, []);
 
+  useEffect(() => {
+    console.log('showSmsPrompt state changed:', showSmsPrompt);
+  }, [showSmsPrompt]);
+
   const handleComplete = () => {
     safeStorage.setItem('xpensia_onb_done', 'true');
     navigate('/home');
@@ -29,10 +33,21 @@ const Onboarding = () => {
     const isAndroid = Capacitor.getPlatform() === 'android';
     const alreadyPrompted = safeStorage.getItem('sms_prompt_shown') === 'true';
 
+    console.log('handleComplete called. Navigating to /home.');
+    console.log('Platform details:', { isNative, isAndroid });
+    console.log('sms_prompt_shown flag:', alreadyPrompted);
     if (isNative && isAndroid && !alreadyPrompted) {
+      console.log('Conditions met. Setting timeout to show SMS prompt.');
       timeoutRef.current = setTimeout(() => {
+        console.log('Timeout triggered. Showing SMS prompt.');
         setShowSmsPrompt(true);
+        console.log('Timeout triggered. Setting showSmsPrompt to true.');
+        setTimeout(() => {
+          console.log('showSmsPrompt state after timeout:', showSmsPrompt);
+        }, 0);
       }, 5000);
+    } else {
+      console.log('Conditions not met. SMS prompt will not be shown.');
     }
   };
 

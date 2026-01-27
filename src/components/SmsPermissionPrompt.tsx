@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -25,6 +25,10 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
 }) => {
   const { updateUserPreferences, user } = useUser();
   const [isRequesting, setIsRequesting] = useState(false);
+
+  useEffect(() => {
+    console.log('SmsPermissionPrompt rendered with open:', open);
+  }, [open]);
 
   const handleEnable = async () => {
     setIsRequesting(true);
@@ -81,6 +85,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   };
 
   const handleLater = () => {
+    console.log('User selected Maybe Later for SMS permission.');
     toast({
       title: "No problem!",
       description: "Enable SMS auto-import anytime in Profile → Settings → SMS Settings"
