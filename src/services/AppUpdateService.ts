@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { safeStorage } from '@/utils/safe-storage';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 type CapacitorUpdaterType = typeof CapacitorUpdater;
 
@@ -444,6 +445,12 @@ class AppUpdateService {
       this.setPendingBundle(bundle);
       // console.log('[OTA] Bundle marked as pending (status=' + bundle.status + ')');
 
+      // Log analytics event for successful download
+      logAnalyticsEvent('ota_update_downloaded', {
+        version: manifest.version,
+        bundle_id: bundle.id
+      });
+
       // Log the list of bundles for debugging
       try {
         const { bundles } = await updater.list();
@@ -515,6 +522,12 @@ class AppUpdateService {
         // console.log('[OTA] Activating pending bundle:', pending.id);
         await withTimeout(updater.set(pending), 8000, 'updater.set');
         // console.log('[OTA] ✅ Pending bundle activated');
+        
+        // Log analytics event for successful apply
+        logAnalyticsEvent('ota_update_applied', {
+          version: pending.version,
+          bundle_id: pending.id
+        });
       } else {
         console.warn('[OTA] Bundle status is not pending, skipping activation:', pending.status);
       }

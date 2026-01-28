@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Layout from "@/components/Layout";
 import DashboardStats from "@/components/DashboardStats";
 import TimelineChart from "@/components/charts/TimelineChart";
@@ -23,11 +23,17 @@ import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AnalyticsService } from "@/services/AnalyticsService";
 import { DatePicker } from "@/components/ui/date-picker";
+import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
 
 const Home = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
+
+  // Track screen view
+  useEffect(() => {
+    logFirebaseOnlyEvent('view_home', { timestamp: Date.now() });
+  }, []);
 
   type Range = "" | "day" | "week" | "month" | "year" | "custom";
   const defaultEnd = React.useMemo(() => new Date(), []);

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
 import TransactionsByDate from '@/components/transactions/TransactionsByDate';
@@ -11,11 +11,17 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { DatePicker } from '@/components/ui/date-picker';
 import { CATEGORIES } from '@/lib/mock-data';
 import { useNavigate } from 'react-router-dom';
+import { logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 
 const Transactions = () => {
   const [filter, setFilter] = React.useState<'all' | 'income' | 'expense' | 'transfer'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const navigate = useNavigate();
+
+  // Track screen view
+  useEffect(() => {
+    logFirebaseOnlyEvent('view_transactions', { timestamp: Date.now() });
+  }, []);
 
   const {
     transactions,

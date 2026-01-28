@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { getFriendlyMessage } from '@/utils/errorMapper';
 import { safeStorage } from '@/utils/safe-storage';
 import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { logSheetsOnlyEvent } from '@/utils/firebase-analytics';
 
 const LAST_ERROR_KEY = 'xpensia_last_error';
 
@@ -41,11 +42,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     console.error('[ErrorBoundary] Stack:', error.stack);
     console.error('[ErrorBoundary] Component Stack:', info.componentStack);
 
+    const route = typeof window !== 'undefined' ? window.location.pathname : 'unknown';
+    const boundaryName = this.props.name || 'unknown';
+
     // Store last error for debugging
     try {
       const storedError: StoredError = {
-        route: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
-        boundaryName: this.props.name || 'unknown',
+        route,
+        boundaryName,
         message: error.message,
         stack: error.stack,
         timestamp: new Date().toISOString(),
@@ -54,6 +58,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     } catch {
       // Ignore storage errors
     }
+
+    // Log to Google Sheets for debugging (not Firebase to avoid noise)
+    logSheetsOnlyEvent('app_error', {
+      route,
+      boundary: boundaryName,
+      message: error.message,
+      stack: error.stack?.split('\n').slice(0, 5).join('\n'),
+      component_stack: info.componentStack?.split('\n').slice(0, 5).join('\n')
+    });
   }
 
   handleRetry = (): void => {

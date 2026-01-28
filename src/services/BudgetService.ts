@@ -6,6 +6,7 @@ import { getCurrentPeriodDates, getPeriodDates, getDaysRemainingInPeriod, isWith
 import { transactionService } from './TransactionService';
 import { Transaction, Category } from '@/types/transaction';
 import { initBudgetMigrations } from '@/utils/budget-migration';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 const STORAGE_KEY = 'xpensia_budgets';
 const ALERTS_STORAGE_KEY = 'xpensia_budget_alerts';
@@ -134,6 +135,14 @@ export class BudgetService {
     budgets.push(budget);
     this.saveBudgets(budgets);
     
+    // Log analytics event
+    logAnalyticsEvent('budget_create', {
+      scope: budget.scope,
+      period: budget.period,
+      amount: budget.amount,
+      currency: budget.currency
+    });
+    
     return budget;
   }
 
@@ -154,6 +163,14 @@ export class BudgetService {
     
     budgets[index] = updated;
     this.saveBudgets(budgets);
+    
+    // Log analytics event
+    logAnalyticsEvent('budget_edit', {
+      budget_id: id,
+      scope: updated.scope,
+      period: updated.period,
+      amount: updated.amount
+    });
     
     return updated;
   }
