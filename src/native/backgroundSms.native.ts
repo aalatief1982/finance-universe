@@ -1,7 +1,12 @@
-
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
 import { Capacitor } from '@capacitor/core';
+
+// Add a small cache and in-flight guard to avoid repeatedly calling native checkPermissionWithRationale
+let _lastPermissionCheckTime = 0;
+let _lastPermissionCheckResult: { granted: boolean; shouldShowRationale?: boolean } | null = null;
+let _permissionCheckInFlight: Promise<any> | null = null;
+const PERMISSION_CHECK_CACHE_TTL = 2000; // ms
 
 // Create a wrapper around the actual plugin with better error handling
 const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
@@ -24,16 +29,40 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       if (import.meta.env.MODE === 'development') {
         // console.log('[SMS] Checking permission');
       }
-      const result = await BackgroundSmsListener.checkPermission();
-      if (import.meta.env.MODE === 'development') {
-        // console.log('[SMS] Permission check result:', result);
+
+      // Use cached result if fresh
+      const now = Date.now();
+      if (_lastPermissionCheckResult && (now - _lastPermissionCheckTime) < PERMISSION_CHECK_CACHE_TTL) {
+        return _lastPermissionCheckResult;
       }
-      return result;
+
+      // If an in-flight permission check exists, reuse it
+      if (_permissionCheckInFlight) return _permissionCheckInFlight;
+
+      _permissionCheckInFlight = (async () => {
+        try {
+          const result = await BackgroundSmsListener.checkPermission();
+          _lastPermissionCheckResult = result as any;
+          _lastPermissionCheckTime = Date.now();
+          return result;
+        } catch (err) {
+          if (import.meta.env.MODE === 'development') {
+            console.warn('[SMS] Error checking permission:', err);
+          }
+          const fallback = { granted: false };
+          _lastPermissionCheckResult = fallback;
+          _lastPermissionCheckTime = Date.now();
+          return fallback;
+        } finally {
+          _permissionCheckInFlight = null;
+        }
+      })();
+
+      return _permissionCheckInFlight;
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
         console.warn('[SMS] Error checking permission:', err);
       }
-      // Return a standard response object to avoid further errors
       return { granted: false };
     }
   },
@@ -43,11 +72,36 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       if (import.meta.env.MODE === 'development') {
         // console.log('[SMS] Checking permission with rationale');
       }
-      const result = await BackgroundSmsListener.checkPermissionWithRationale();
-      if (import.meta.env.MODE === 'development') {
-        // console.log('[SMS] Permission rationale check result:', result);
+
+      // Use cached result if fresh
+      const now = Date.now();
+      if (_lastPermissionCheckResult && (now - _lastPermissionCheckTime) < PERMISSION_CHECK_CACHE_TTL) {
+        // Ensure returned object has shouldShowRationale
+        return { granted: _lastPermissionCheckResult.granted, shouldShowRationale: !!_lastPermissionCheckResult.shouldShowRationale };
       }
-      return result;
+
+      if (_permissionCheckInFlight) return _permissionCheckInFlight;
+
+      _permissionCheckInFlight = (async () => {
+        try {
+          const result = await BackgroundSmsListener.checkPermissionWithRationale();
+          _lastPermissionCheckResult = result as any;
+          _lastPermissionCheckTime = Date.now();
+          return result;
+        } catch (err) {
+          if (import.meta.env.MODE === 'development') {
+            console.warn('[SMS] Error checking permission rationale:', err);
+          }
+          const fallback = { granted: false, shouldShowRationale: true };
+          _lastPermissionCheckResult = fallback;
+          _lastPermissionCheckTime = Date.now();
+          return fallback;
+        } finally {
+          _permissionCheckInFlight = null;
+        }
+      })();
+
+      return _permissionCheckInFlight;
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
         console.warn('[SMS] Error checking permission rationale:', err);
@@ -65,6 +119,9 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       if (import.meta.env.MODE === 'development') {
         // console.log('[SMS] Permission request result:', result);
       }
+      // update cached result
+      _lastPermissionCheckResult = result as any;
+      _lastPermissionCheckTime = Date.now();
       return result;
     } catch (err) {
       if (import.meta.env.MODE === 'development') {

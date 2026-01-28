@@ -61,7 +61,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
     <div className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      
       {/* Progress indicator */}
       <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2 pt-4 safe-area-inset-top">
         <div className="flex space-x-2 pt-2">
@@ -79,7 +78,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
           ))}
         </div>
       </div>
-
       <Swiper
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
         pagination={{ 
@@ -91,6 +89,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
         effect="fade"
         fadeEffect={{ crossFade: true }}
         className="h-full"
+        style={{ height: '100%' }}
         speed={600}
       >
         {slides.map((slide, i) => (
@@ -115,12 +114,11 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                   </p>
                 </div>
               </div>
-
               {/* Image section */}
               <div className="flex-1 flex items-center justify-center px-4 min-h-0">
                 <div className="relative w-full max-w-xs h-full max-h-[40vh] flex items-center justify-center">
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-2xl transform rotate-1" />
-                  <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit">
+                  <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit flex items-center justify-center">
                     <img
                       src={slide.image.trim()}
                       alt={slide.title}
@@ -135,7 +133,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                   </div>
                 </div>
               </div>
-
               {/* Action section */}
               <div className="px-4 pb-4 safe-area-inset-bottom pt-2 shrink-0">
                 {i === slides.length - 1 ? (
@@ -163,7 +160,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
           </SwiperSlide>
         ))}
       </Swiper>
-
     </div>
   );
 };
