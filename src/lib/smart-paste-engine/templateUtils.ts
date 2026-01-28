@@ -80,6 +80,8 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
   });
   safeStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
 
+  console.log('[loadTemplateBank] Retrieved bank:', bank);
+
   return bank as Record<string, SmartPasteTemplate>;
 }
 
