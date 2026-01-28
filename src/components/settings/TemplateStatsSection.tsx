@@ -50,9 +50,8 @@ const TemplateStatsSection: React.FC = () => {
     }
   };
 
-  // Always render the section (show debug banner when user is not available)
-  // This helps confirm the section is mounted inside Settings while debugging.
-  const showDevBanner = true;
+  // Dev banner disabled for production
+  const showDevBanner = false;
 
   return (
     <section className="space-y-4 mt-4">

@@ -67,6 +67,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
+import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
 import { useSmsPermission } from '@/hooks/useSmsPermission';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
@@ -889,6 +890,9 @@ const Settings = () => {
             )}
           </div>
         </section>
+
+        {/* Template Stats Section */}
+        <TemplateStatsSection />
 
         <section className="bg-card rounded-lg p-4 mt-6">
           <div className="text-center">
