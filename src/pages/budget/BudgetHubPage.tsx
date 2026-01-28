@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BudgetLayout } from '@/components/budget/BudgetLayout';
 import { Settings, ChevronRight, PiggyBank } from 'lucide-react';
@@ -14,10 +14,16 @@ import { formatPeriodLabel } from '@/utils/budget-period-utils';
 import { accountService } from '@/services/AccountService';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { cn } from '@/lib/utils';
+import { logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 
 const BudgetHubPage = () => {
   const navigate = useNavigate();
   const { period, year, periodIndex } = useBudgetPeriodParams();
+  
+  // Track screen view
+  useEffect(() => {
+    logFirebaseOnlyEvent('view_budget', { timestamp: Date.now() });
+  }, []);
   
   // Build filter based on URL params
   const budgetFilter = useMemo(() => {

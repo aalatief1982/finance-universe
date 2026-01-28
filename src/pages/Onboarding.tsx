@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import Layout from '@/components/Layout';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
+import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -30,6 +31,13 @@ const Onboarding = () => {
     console.log('Onboarding completed');
     safeStorage.setItem('xpensia_onb_done', 'true');
     safeStorage.setItem('xpensia_onb_just_completed', 'true'); // New flag
+    
+    // Log onboarding completion
+    logAnalyticsEvent('onboarding_complete', {
+      platform: Capacitor.getPlatform(),
+      timestamp: Date.now()
+    });
+    
     navigate('/home');
   };
 

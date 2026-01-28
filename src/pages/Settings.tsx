@@ -60,7 +60,7 @@ import {
   storeTransactions,
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
-import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -125,6 +125,11 @@ const Settings = () => {
 
   const { hasPermission: hasSmsPermission, refreshPermission } = useSmsPermission();
   const { updateUserPreferences } = useUser();
+
+  // Track screen view
+  useEffect(() => {
+    logFirebaseOnlyEvent('view_settings', { timestamp: Date.now() });
+  }, []);
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -254,6 +259,7 @@ const Settings = () => {
 
   const handleThemeChange = (value: "light" | "dark" | "system") => {
     setTheme(value);
+    logFirebaseOnlyEvent('theme_change', { theme: value });
   };
 
   const handleCurrencyChange = (value: string) => {
@@ -292,6 +298,9 @@ const Settings = () => {
         setBackgroundSmsEnabled(true);
         setAutoImport(true);
 
+        // Log auto-import enabled
+        logAnalyticsEvent('auto_import_enabled', { platform });
+
         // Initialize listener and trigger initial import after grant
         try {
           console.log('[Settings] Initializing SMS listener and triggering import...');
@@ -318,6 +327,8 @@ const Settings = () => {
       }
     } else {
       setBackgroundSmsEnabled(false);
+      // Log auto-import disabled
+      logAnalyticsEvent('auto_import_disabled', { platform });
     }
   };
 
@@ -436,6 +447,12 @@ const Settings = () => {
         return;
       }
 
+      // Log export success
+      logAnalyticsEvent('data_export', {
+        count: transactions.length,
+        platform: Capacitor.getPlatform()
+      });
+
       toast({
         title: 'Export successful',
         description: 'Your data has been exported successfully.',
@@ -480,6 +497,14 @@ const Settings = () => {
 
           const merged = [...existing, ...(data as any[])];
           storeTransactions(merged as any);
+          
+          // Log import success
+          logAnalyticsEvent('data_import', {
+            imported_count: data.length,
+            existing_count: existing.length,
+            format: isCsv ? 'csv' : 'json'
+          });
+          
           toast({
             title: "Import successful",
             description: `Added ${data.length} transactions successfully.`,
