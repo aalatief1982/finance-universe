@@ -5,6 +5,10 @@ export interface VendorFallbackData {
   subcategory: string;
   /** Indicates entry was added by the user */
   user?: boolean;
+  source?: 'manual' | 'sms-learn' | 'csv-import';
+  learnedAt?: string;
+  confidence?: number;    // 0-1 based on consistency
+  sampleCount?: number;   // Number of transactions that informed this
 }
 
 const KEY = 'xpensia_vendor_fallbacks';
@@ -41,6 +45,26 @@ export function addUserVendor(
     vendors[name] = { ...data, ...(user ? { user: true } : {}) } as VendorFallbackData;
     saveVendorFallbacks(vendors);
   }
+}
+
+export function addLearnedVendor(
+  name: string,
+  data: Omit<VendorFallbackData, 'learnedAt'>,
+  source: 'manual' | 'sms-learn' | 'csv-import' = 'manual'
+): void {
+  if (!name.trim()) return;
+  const vendors = loadVendorFallbacks();
+  const existing = vendors[name];
+  if (existing) {
+    if (existing.user) return; // Never overwrite user-added
+    if (existing.confidence && data.confidence && existing.confidence > data.confidence) return;
+  }
+  vendors[name] = {
+    ...data,
+    source,
+    learnedAt: new Date().toISOString(),
+  };
+  saveVendorFallbacks(vendors);
 }
 
 export { KEY as VENDOR_FALLBACK_KEY };

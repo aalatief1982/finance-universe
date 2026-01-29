@@ -382,7 +382,7 @@ const handleRetry = () => {
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
-                        {getCategoryHierarchy().filter(c => c.type === 'expense').map(c => (
+                        {getCategoryHierarchy().map(c => (
                           <SelectItem key={c.id} value={c.name}>
                             {c.name}
                           </SelectItem>

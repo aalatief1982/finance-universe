@@ -40,6 +40,7 @@ function isDriven(
   field: keyof Transaction,
   drivenFields: Partial<Record<keyof Transaction, boolean>>
 ) {
+  // console.log('[TransactionEditForm] isDriven check:', field, drivenFields[field]);
   return !!drivenFields[field]
 }
 
@@ -48,6 +49,7 @@ function hasLowConfidence(
   scores: Partial<Record<keyof Transaction, number>>
 ) {
   const score = scores[field]
+  // console.log('[TransactionEditForm] hasLowConfidence check:', field, score);
   return score !== undefined && score < 0.6
 }
 
@@ -55,8 +57,9 @@ export function generateDefaultTitle(txn: Transaction): string {
   const label = txn.vendor?.trim() || (txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '');
   const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
   const currency = txn.currency?.toUpperCase() || '';
-
-  return label && amount && currency ? `${label} - ${amount} ${currency}` : '';
+  const title = label && amount && currency ? `${label} - ${amount} ${currency}` : '';
+  console.log('[TransactionEditForm] generateDefaultTitle:', title, txn);
+  return title;
 }
 
 function toISOFormat(input: string): string {
@@ -205,6 +208,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   });
 
   useEffect(() => {
+    // console.log('[TransactionEditForm] useEffect: transaction, fieldConfidences', transaction, fieldConfidences);
     if (transaction && fieldConfidences) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
       
@@ -235,6 +239,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   }, [transaction, fieldConfidences]);
 
   useEffect(() => {
+    console.log('[TransactionEditForm] useEffect: type/category', editedTransaction.type, editedTransaction.category);
     const categories = getCategoriesForType(editedTransaction.type) || [];
     setAvailableCategories(categories);
     const subcategories = getSubcategoriesForCategory(editedTransaction.category) || [];
@@ -258,6 +263,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   }, [newVendor.category]);
 
   const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
+    console.log('[TransactionEditForm] handleChange:', field, value);
     // Call onEditStart when user starts editing
     onEditStart?.();
 
@@ -455,6 +461,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[TransactionEditForm] handleSubmit', editedTransaction);
     const finalTransaction = { ...editedTransaction };
 
     if (!finalTransaction.title?.trim()) {
@@ -487,7 +494,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className={formClass}>
-
       <div className={rowClass}>
         <label className={labelClass}>Type*</label>
 

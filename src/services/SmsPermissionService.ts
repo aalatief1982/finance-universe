@@ -48,6 +48,35 @@ class SmsPermissionService {
     return Capacitor.isNativePlatform();
   }
 
+  // Check if SMS permissions are granted (Tier 1: routine, no rationale)
+  async hasPermission(): Promise<boolean> {
+    if (!this.isNativeEnvironment()) {
+      // For web environments, check local storage
+      return safeStorage.getItem('sms_permission_simulation') === 'granted';
+    }
+    try {
+      // Only check native permission, no rationale
+      const smsListener = await loadSmsListener();
+      if (!smsListener) return false;
+      const [readerGranted, listenerGranted] = await Promise.all([
+        SmsReaderService.hasPermission(),
+        smsListener.checkPermission(),
+      ]);
+      const granted = readerGranted && listenerGranted;
+      this.savePermissionStatus(granted);
+      if (granted && !this.smsListenerInitialized) {
+        await this.initSmsListener();
+      }
+      return granted;
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SMS] Error checking SMS permission:", error);
+      }
+      return false;
+    }
+  }
+
+  // Canonical UI check (Tier 2: rationale, for toggles/prompts)
   async checkPermissionStatus(): Promise<SmsPermissionCheckResult> {
     if (!this.isNativeEnvironment()) {
       const granted = safeStorage.getItem('sms_permission_simulation') === 'granted';
@@ -108,32 +137,6 @@ class SmsPermissionService {
     }
   }
 
-  // Check if SMS permissions are granted
-  async hasPermission(): Promise<boolean> {
-    if (!this.isNativeEnvironment()) {
-      // For web environments, check local storage
-      return safeStorage.getItem('sms_permission_simulation') === 'granted';
-    }
-
-    try {
-      const status = await this.checkPermissionStatus();
-      this.savePermissionStatus(status.granted);
-
-      // Initialize listener only when both permissions are granted and not already initialized
-      if (status.granted && !this.smsListenerInitialized) {
-        // ensure init runs only once
-        await this.initSmsListener();
-      }
-
-      return status.granted;
-    } catch (error) {
-      if (import.meta.env.MODE === 'development') {
-        console.error("[SMS] Error checking SMS permission:", error);
-      }
-      return false;
-    }
-  }
-  
   // Initialize SMS listener
   async initSmsListener(): Promise<void> {
     if (!this.isNativeEnvironment()) {

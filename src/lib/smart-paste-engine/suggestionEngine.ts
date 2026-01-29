@@ -230,6 +230,21 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
 } */
 
 
+// Enhanced type keyword patterns for Arabic/English SMS
+const typePatterns = {
+  income: [
+    'salary', 'راتب', 'credited', 'received', 'refund', 
+    'cashback', 'deposit', 'إيداع', 'تحويل وارد'
+  ],
+  transfer: [
+    'transfer to', 'حوالة', 'تحويل إلى', 'sent to',
+    'internal transfer', 'between accounts'
+  ],
+  expense: [
+    'purchase', 'payment', 'spent', 'debit', 'شراء', 'دفع'
+  ]
+};
+
 export function inferIndirectFields(
   text: string,
   knowns: Partial<Record<string, string>> = {}
@@ -259,10 +274,15 @@ export function inferIndirectFields(
 
   // Step 3: Type keyword inference
   if (!inferred['type']) {
-    const typeKeywordsData = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '{}');
+    // Prefer local typePatterns if no xpensia_type_keywords in storage
+    let typeKeywordsData = {};
+    try {
+      typeKeywordsData = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '{}');
+    } catch {}
+    if (!typeKeywordsData || Object.keys(typeKeywordsData).length === 0) {
+      typeKeywordsData = typePatterns;
+    }
     const rawTextLower = rawText.toLowerCase();
-    
-    // Handle object format: {expense: [...], income: [...], transfer: [...]}
     for (const [transactionType, keywords] of Object.entries(typeKeywordsData)) {
       if (Array.isArray(keywords)) {
         for (const keyword of keywords) {
