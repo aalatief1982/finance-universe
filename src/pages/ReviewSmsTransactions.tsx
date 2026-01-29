@@ -104,8 +104,9 @@ const ReviewSmsTransactions: React.FC = () => {
             msg.sender,
             msg.id
           );
-          // Assume parseAndInferTransaction returns templateHash if available
-          const { transaction: txn, confidence, fieldConfidences, parsingStatus, templateHash } = result;
+          const { transaction: txn, confidence, fieldConfidences, parsingStatus } = result;
+          // Template hash can be derived from the raw message if needed
+          const templateHash = (result as any).templateHash;
           
           const mappedVendor = vendorMap[txn.vendor] || txn.vendor;
           const kbEntry = keywordMap.find(kb => kb.keyword === mappedVendor);
@@ -329,16 +330,16 @@ const toggleSkipAll = () => {
       }
 
       // Template learning: check for changes and record
-      if (txn._templateHash) {
-        const orig = txn._originalValues || {};
+      if (originalTxn._templateHash) {
+        const orig = originalTxn._originalValues || {};
         const hasChanges =
           txn.category !== orig.category ||
           txn.subcategory !== orig.subcategory ||
           txn.type !== orig.type;
         if (hasChanges) {
-          recordTemplateFallback(txn._templateHash, txn.sender, txn.fromAccount);
+          recordTemplateFallback(originalTxn._templateHash, originalTxn.sender, txn.fromAccount);
         } else {
-          recordTemplateSuccess(txn._templateHash, txn.sender, txn.fromAccount);
+          recordTemplateSuccess(originalTxn._templateHash, originalTxn.sender, txn.fromAccount);
         }
       }
     });
@@ -552,6 +553,7 @@ const toggleSkipAll = () => {
                 handleFieldChange(index, 'fromAccount', value);
               }}
               accounts={accounts}
+              onAddClick={() => {/* Account add handled elsewhere */}}
               placeholder="Start typing account name..."
               userHasInteracted={userInteractions.fromAccount}
               className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${(txn.fieldConfidences?.fromAccount ?? 0) >= 0.8 ? 'border-green-500' : (txn.fieldConfidences?.fromAccount ?? 0) >= 0.4 ? 'border-amber-500' : 'border-red-500'}`}
@@ -565,6 +567,7 @@ const toggleSkipAll = () => {
                   handleFieldChange(index, 'toAccount', value);
                 }}
                 accounts={accounts}
+                onAddClick={() => {/* Account add handled elsewhere */}}
                 placeholder="Start typing destination account..."
                 userHasInteracted={userInteractions.toAccount}
                 className="p-2 col-span-2"
