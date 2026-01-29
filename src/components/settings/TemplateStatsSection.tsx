@@ -92,7 +92,7 @@ const TemplateStatsSection: React.FC = () => {
             <div className="mt-3 grid gap-2">
               {stats.mostUsed.slice(0,5).map((t, idx) => (
                 <div key={t.id} className="flex items-center justify-between space-x-2">
-                  <div className="truncate mr-2 text-sm">{idx+1}. {t.name}</div>
+                  <div className="truncate mr-2 text-sm">{idx+1}</div>
                   <div className="w-40">
                     <div className="bg-gray-200 rounded h-2 w-full overflow-hidden">
                       <div className="bg-primary h-2" style={{ width: `${Math.min(100, (t.count / (stats.mostUsed[0]?.count || 1)) * 100)}%` }} />

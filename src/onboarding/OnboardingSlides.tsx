@@ -3,6 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, EffectFade } from 'swiper/modules';
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+
+// Only import StatusBar if running in a native environment
+let StatusBar: any = null;
+if (typeof window !== 'undefined' && Capacitor.isNativePlatform?.()) {
+  try {
+    StatusBar = require('@capacitor/status-bar').StatusBar;
+  } catch {}
+}
 
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -55,6 +64,28 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
 
   useEffect(() => {
     setIsVisible(true);
+    // Status bar logic: overlay, transparent, light style
+    let didSet = false;
+    (async () => {
+      if (Capacitor.isNativePlatform?.() && StatusBar) {
+        try {
+          await StatusBar.setOverlaysWebView({ overlay: true });
+          await StatusBar.setBackgroundColor({ color: '#00000000' });
+          await StatusBar.setStyle({ style: StatusBar.Style.Light });
+          didSet = true;
+        } catch {}
+      }
+    })();
+    // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)
+    const setVh = () => {
+      document.documentElement.style.setProperty('--vh-onb', `${window.innerHeight * 0.01}px`);
+    };
+    setVh();
+    window.addEventListener('resize', setVh);
+    return () => {
+      window.removeEventListener('resize', setVh);
+      // No-op: app shell will re-apply global status bar settings
+    };
   }, []);
 
   return (
@@ -94,7 +125,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
       >
         {slides.map((slide, i) => (
           <SwiperSlide key={i}>
-            <div className={`flex flex-col h-full min-h-0 transition-all duration-700 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+            <div className="flex flex-col flex-1 min-h-0 h-full transition-all duration-700 animate-fade-in">
               {/* Header with icon and gradient */}
               <div className={`relative pt-16 pb-4 bg-gradient-to-b ${slide.gradient} shrink-0`}>
                 <div className="flex flex-col items-center text-center px-4">
