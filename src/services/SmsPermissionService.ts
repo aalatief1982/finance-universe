@@ -58,11 +58,11 @@ class SmsPermissionService {
       // Only check native permission, no rationale
       const smsListener = await loadSmsListener();
       if (!smsListener) return false;
-      const [readerGranted, listenerGranted] = await Promise.all([
+      const [readerGranted, listenerResult] = await Promise.all([
         SmsReaderService.hasPermission(),
         smsListener.checkPermission(),
       ]);
-      const granted = readerGranted && listenerGranted;
+      const granted = readerGranted && listenerResult.granted;
       this.savePermissionStatus(granted);
       if (granted && !this.smsListenerInitialized) {
         await this.initSmsListener();

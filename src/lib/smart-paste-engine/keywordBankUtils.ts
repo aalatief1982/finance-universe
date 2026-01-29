@@ -14,6 +14,8 @@ export interface KeywordEntry {
   lastUpdated?: string;
   mappingCount?: number;
   source?: 'manual' | 'sms-learn' | 'csv-import';
+  senderContext?: string;
+  transactionTypeContext?: string;
 }
 
 export function loadKeywordBank(): KeywordEntry[] {
