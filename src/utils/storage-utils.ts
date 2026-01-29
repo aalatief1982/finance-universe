@@ -507,18 +507,3 @@ export const updateSmsSenderImportDates = (updates: Record<string, string>): voi
   });
   setInStorage(SMS_SENDER_IMPORT_MAP_KEY, map);
 };
-
-// Extend xpensia_type_keywords default patterns for SMS-specific type detection
-export const XPENSIA_TYPE_KEYWORDS_DEFAULT = {
-  income: [
-    'salary', 'راتب', 'credited', 'received', 'refund', 
-    'cashback', 'deposit', 'إيداع', 'تحويل وارد'
-  ],
-  transfer: [
-    'transfer to', 'حوالة', 'تحويل إلى', 'sent to',
-    'internal transfer', 'between accounts'
-  ],
-  expense: [
-    'purchase', 'payment', 'spent', 'debit', 'شراء', 'دفع'
-  ]
-};

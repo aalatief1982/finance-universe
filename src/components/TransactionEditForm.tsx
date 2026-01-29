@@ -5,6 +5,7 @@ import {
   getCategoriesForType,
   getSubcategoriesForCategory,
   getCategoryHierarchy,
+  PEOPLE,
   CURRENCIES,
 } from '@/lib/categories-data';
 import { Plus, Calculator, ThumbsUp, ThumbsDown } from 'lucide-react';
@@ -17,7 +18,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { addUserVendor, getVendorNames } from '@/lib/smart-paste-engine/vendorFallbackUtils';
+import vendorData from '@/data/ksa_all_vendors_clean_final.json';
+import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import VendorAutocomplete from './VendorAutocomplete';
 import AccountAutocomplete from './AccountAutocomplete';
 
@@ -38,7 +40,6 @@ function isDriven(
   field: keyof Transaction,
   drivenFields: Partial<Record<keyof Transaction, boolean>>
 ) {
-  // console.log('[TransactionEditForm] isDriven check:', field, drivenFields[field]);
   return !!drivenFields[field]
 }
 
@@ -47,7 +48,6 @@ function hasLowConfidence(
   scores: Partial<Record<keyof Transaction, number>>
 ) {
   const score = scores[field]
-  // console.log('[TransactionEditForm] hasLowConfidence check:', field, score);
   return score !== undefined && score < 0.6
 }
 
@@ -55,8 +55,8 @@ export function generateDefaultTitle(txn: Transaction): string {
   const label = txn.vendor?.trim() || (txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '');
   const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
   const currency = txn.currency?.toUpperCase() || '';
-  const title = label && amount && currency ? `${label} - ${amount} ${currency}` : '';
-  return title;
+
+  return label && amount && currency ? `${label} - ${amount} ${currency}` : '';
 }
 
 function toISOFormat(input: string): string {
@@ -147,32 +147,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [addPersonOpen, setAddPersonOpen] = useState(false);
   const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
 
-  // Lazy-load vendors to prevent blocking render - only load user-added vendors initially
-  const [userAddedVendors, setUserAddedVendors] = useState<string[]>([]);
+  const [vendors, setVendors] = useState<string[]>(() => {
+    const builtIn = Object.keys((vendorData as any) || {});
+    const stored = Object.keys(loadVendorFallbacks());
+    return Array.from(new Set([...builtIn, ...stored]));
+  });
   const [addVendorOpen, setAddVendorOpen] = useState(false);
   const [newVendor, setNewVendor] = useState<{ name: string; type: TransactionType; category: string; subcategory: string }>(
     { name: '', type: 'expense', category: '', subcategory: '' }
   );
   const [vendorAvailableSubcategories, setVendorAvailableSubcategories] = useState<string[]>([]);
-
-  // Load vendors asynchronously to prevent UI freeze
-  useEffect(() => {
-    // Use requestIdleCallback or setTimeout to defer loading
-    const loadVendors = () => {
-      const storedVendors = getVendorNames();
-      setUserAddedVendors(storedVendors);
-    };
-    
-    if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(loadVendors, { timeout: 100 });
-    } else {
-      setTimeout(loadVendors, 0);
-    }
-  }, []);
-
-  // The vendors list uses only user-added vendors for autocomplete
-  // The full vendor list from JSON is too large and causes performance issues
-  const vendors = userAddedVendors;
 
   // Track user interactions to prevent auto-opening dropdowns
   const [userInteractions, setUserInteractions] = useState<{
@@ -221,7 +205,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   });
 
   useEffect(() => {
-    // console.log('[TransactionEditForm] useEffect: transaction, fieldConfidences', transaction, fieldConfidences);
     if (transaction && fieldConfidences) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
       
@@ -282,7 +265,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       const updated = { ...prev, [field]: value };
 
       if (drivenFields[field]) {
-        setDrivenFields(prevDriven => ({ ...prevDriven, [field]: false }));
+        setDrivenFields(prev => ({ ...prev, [field]: false }));
       }
 
       if (field === 'type') {
@@ -399,7 +382,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       category: newVendor.category.trim(),
       subcategory: newVendor.subcategory.trim(),
     });
-    setUserAddedVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
+    setVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
     handleChange('vendor', newVendor.name.trim());
     
     // Set the category and subcategory from the new vendor
@@ -504,6 +487,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className={formClass}>
+
       <div className={rowClass}>
         <label className={labelClass}>Type*</label>
 

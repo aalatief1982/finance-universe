@@ -1,42 +1,146 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { smsPermissionService } from '@/services/SmsPermissionService';
 
-export interface UseSmsPermissionResult {
+interface SmsPermissionState {
   hasPermission: boolean;
-  refreshPermission: () => void;
+  isChecking: boolean;
+  lastChecked: number;
 }
 
-export function useSmsPermission(): UseSmsPermissionResult {
-  const [granted, setGranted] = useState(false);
-  const lastCheckedRef = useRef(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+const PERMISSION_CHECK_INTERVAL = 5000; // 5 seconds
+const PERMISSION_CACHE_DURATION = 30000; // 30 seconds
 
-  const check = useCallback(async () => {
+export function useSmsPermission() {
+  const [state, setState] = useState<SmsPermissionState>({
+    hasPermission: false,
+    isChecking: false,
+    lastChecked: 0,
+  });
+
+  const checkPermission = useCallback(async (force: boolean = false) => {
     const now = Date.now();
-    if (now - lastCheckedRef.current < 30000) return; // 30s min interval
-    lastCheckedRef.current = now;
-    setGranted(await smsPermissionService.hasPermission());
+    
+    // Use cached result if recent and not forced
+    if (!force && (now - state.lastChecked) < PERMISSION_CACHE_DURATION) {
+      return state.hasPermission;
+    }
+
+    setState(prev => ({ ...prev, isChecking: true }));
+    
+    try {
+      const hasPermission = await smsPermissionService.hasPermission();
+      setState({
+        hasPermission,
+        isChecking: false,
+        lastChecked: now,
+      });
+      return hasPermission;
+    } catch (error) {
+      console.error('Error checking SMS permission:', error);
+      setState(prev => ({ ...prev, isChecking: false }));
+      return false;
+    }
+  }, [state.hasPermission, state.lastChecked]);
+
+  const requestPermission = useCallback(async () => {
+    setState(prev => ({ ...prev, isChecking: true }));
+
+    try {
+      const result = await smsPermissionService.requestPermission();
+      // After the request resolves, re-check canonical permission state to avoid native inconsistencies
+      const hasPermission = await checkPermission(true);
+      setState({
+        hasPermission: !!hasPermission,
+        isChecking: false,
+        lastChecked: Date.now(),
+      });
+      return hasPermission;
+    } catch (error) {
+      console.error('Error requesting SMS permission:', error);
+      setState(prev => ({ ...prev, isChecking: false }));
+      return false;
+    }
+  }, [checkPermission]);
+
+  const revokePermission = useCallback(async () => {
+    setState(prev => ({ ...prev, isChecking: true }));
+    
+    try {
+      const result = await smsPermissionService.revokePermission();
+      
+      if (result.success) {
+        setState({
+          hasPermission: false,
+          isChecking: false,
+          lastChecked: Date.now(),
+        });
+      } else {
+        setState(prev => ({ ...prev, isChecking: false }));
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error revoking SMS permission:', error);
+      setState(prev => ({ ...prev, isChecking: false }));
+      return {
+        success: false,
+        requiresManualAction: false,
+        message: 'Failed to revoke permission',
+      };
+    }
   }, []);
 
   const refreshPermission = useCallback(() => {
-    lastCheckedRef.current = 0; // Reset throttle to allow immediate check
-    check();
-  }, [check]);
+    return checkPermission(true);
+  }, [checkPermission]);
 
+  // Initial permission check
   useEffect(() => {
-    check(); // immediate check
+    checkPermission();
+  }, []);
+
+  // Periodic permission sync when app is focused
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     const handleFocus = () => {
-      lastCheckedRef.current = 0; // Allow check on focus
-      check();
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = setInterval(check, 60000); // 60s interval
+      checkPermission(true);
+      
+      // Start periodic checks when focused
+      intervalId = setInterval(() => {
+        checkPermission();
+      }, PERMISSION_CHECK_INTERVAL);
     };
+
+    const handleBlur = () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+
+    // Start periodic checks if already focused
+    if (document.hasFocus()) {
+      handleFocus();
+    }
+
     return () => {
       window.removeEventListener('focus', handleFocus);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      window.removeEventListener('blur', handleBlur);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [check]);
+  }, [checkPermission]);
 
-  return { hasPermission: granted, refreshPermission };
+  return {
+    hasPermission: state.hasPermission,
+    isChecking: state.isChecking,
+    checkPermission,
+    requestPermission,
+    revokePermission,
+    refreshPermission,
+  };
 }

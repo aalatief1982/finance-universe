@@ -76,12 +76,7 @@ export class SmsReaderService {
     }
   }
 
-  // Add caching/in-flight guard and TTL to rationale checks
-  static lastRationaleResult: { granted: boolean; shouldShowRationale: boolean; timestamp: number } | null = null;
-  static inFlightRationalePromise: Promise<any> | null = null;
-  static RATIONALE_TTL = 20000; // 20 seconds
-
-  static async checkPermissionWithRationale(force = false): Promise<SmsPermissionStatus> {
+  static async checkPermissionWithRationale(): Promise<SmsPermissionStatus> {
     if (import.meta.env.MODE === 'development') {
       // console.log("[SmsReaderService] checkPermissionWithRationale() called");
     }
@@ -93,33 +88,21 @@ export class SmsReaderService {
       return { granted: false, shouldShowRationale: true };
     }
 
-    const now = Date.now();
-    if (!force && SmsReaderService.lastRationaleResult && now - SmsReaderService.lastRationaleResult.timestamp < SmsReaderService.RATIONALE_TTL) {
-      return SmsReaderService.lastRationaleResult;
-    }
-    if (SmsReaderService.inFlightRationalePromise) return SmsReaderService.inFlightRationalePromise;
-    SmsReaderService.inFlightRationalePromise = (async () => {
-      try {
-        const result = await SmsReader.checkPermissionWithRationale();
-        if (import.meta.env.MODE === 'development') {
-          // console.log("[SmsReaderService] checkPermissionWithRationale result:", result);
-        }
-        SmsReaderService.lastRationaleResult = {
-          granted: result?.granted ?? false,
-          shouldShowRationale: result?.shouldShowRationale ?? true,
-          timestamp: Date.now(),
-        };
-        return SmsReaderService.lastRationaleResult;
-      } catch (error) {
-        if (import.meta.env.MODE === 'development') {
-          console.error("[SmsReaderService] Error checking permission rationale:", error);
-        }
-        return { granted: false, shouldShowRationale: true };
-      } finally {
-        SmsReaderService.inFlightRationalePromise = null;
+    try {
+      const result = await SmsReader.checkPermissionWithRationale();
+      if (import.meta.env.MODE === 'development') {
+        // console.log("[SmsReaderService] checkPermissionWithRationale result:", result);
       }
-    })();
-    return SmsReaderService.inFlightRationalePromise;
+      return {
+        granted: result?.granted ?? false,
+        shouldShowRationale: result?.shouldShowRationale ?? true,
+      };
+    } catch (error) {
+      if (import.meta.env.MODE === 'development') {
+        console.error("[SmsReaderService] Error checking permission rationale:", error);
+      }
+      return { granted: false, shouldShowRationale: true };
+    }
   }
 
   static async checkOrRequestPermission(): Promise<boolean> {

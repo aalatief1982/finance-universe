@@ -38,9 +38,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import AccountAutocomplete from '@/components/AccountAutocomplete';
-import { getStoredAccounts } from '@/lib/account-utils';
-import { recordTemplateSuccess, recordTemplateFallback } from '@/lib/smart-paste-engine/templateUtils';
 
 interface DraftTransaction {
   id?: string;
@@ -52,7 +49,6 @@ interface DraftTransaction {
   currency?: string;
   date?: string;
   fromAccount?: string;
-  toAccount?: string; // <-- Added for transfer destination
   type?: string;
   rawMessage: string;
   sender?: string;
@@ -67,14 +63,6 @@ interface DraftTransaction {
   fieldConfidences?: Record<string, number>;
   parsingStatus?: 'success' | 'partial' | 'failed';
 
-  _originalValues?: {
-    category?: string;
-    subcategory?: string;
-    type?: string;
-    amount?: number;
-    vendor?: string;
-  };
-  _templateHash?: string;
 }
 
 const ReviewSmsTransactions: React.FC = () => {
@@ -83,9 +71,6 @@ const ReviewSmsTransactions: React.FC = () => {
   const { toast } = useToast();
   const location = useLocation();
   const { addTransaction, updateTransaction } = useTransactions();
-  const [accounts, setAccounts] = useState(() => getStoredAccounts());
-  // Track user interaction for AccountAutocomplete (for better UX, as in TransactionEditForm)
-  const [userInteractions, setUserInteractions] = useState<{ fromAccount: boolean; toAccount: boolean }>({ fromAccount: false, toAccount: false });
 
   const messages: any[] = location.state?.messages || [];
   const vendorMap: Record<string, string> = location.state?.vendorMap || {};
@@ -105,8 +90,6 @@ const ReviewSmsTransactions: React.FC = () => {
             msg.id
           );
           const { transaction: txn, confidence, fieldConfidences, parsingStatus } = result;
-          // Template hash can be derived from the raw message if needed
-          const templateHash = (result as any).templateHash;
           
           const mappedVendor = vendorMap[txn.vendor] || txn.vendor;
           const kbEntry = keywordMap.find(kb => kb.keyword === mappedVendor);
@@ -126,15 +109,9 @@ const ReviewSmsTransactions: React.FC = () => {
 
             confidence,
             fieldConfidences,
-            parsingStatus,
-            _originalValues: {
-              category: cat,
-              subcategory: sub,
-              type: txn.type,
-              amount: txn.amount,
-              vendor: mappedVendor,
-            },
-            _templateHash: templateHash,
+            parsingStatus
+
+
           };
         })
       );
@@ -328,20 +305,6 @@ const toggleSkipAll = () => {
       if (originalTxn.alwaysApply && originalTxn.sender) {
         learnVendorCategoryRule(originalTxn.sender, txn.category, txn.subcategory);
       }
-
-      // Template learning: check for changes and record
-      if (originalTxn._templateHash) {
-        const orig = originalTxn._originalValues || {};
-        const hasChanges =
-          txn.category !== orig.category ||
-          txn.subcategory !== orig.subcategory ||
-          txn.type !== orig.type;
-        if (hasChanges) {
-          recordTemplateFallback(originalTxn._templateHash, originalTxn.sender, txn.fromAccount);
-        } else {
-          recordTemplateSuccess(originalTxn._templateHash, originalTxn.sender, txn.fromAccount);
-        }
-      }
     });
 
     const senderDates: Record<string, string> = {};
@@ -434,24 +397,6 @@ const toggleSkipAll = () => {
               readOnly
               className="p-2 text-gray-600 bg-gray-50 dark:bg-black dark:text-white dark:border-zinc-700"
             />
-            <ToggleGroup
-              type="single"
-              value={txn.type}
-              onValueChange={val =>
-                val && handleFieldChange(index, 'type', val)
-              }
-              className={`flex justify-start ${
-                (txn.fieldConfidences?.type ?? 0) >= 0.8
-                  ? 'border border-green-500'
-                  : (txn.fieldConfidences?.type ?? 0) >= 0.4
-                    ? 'border border-amber-500'
-                    : 'border border-red-500'
-              } col-span-2`}
-            >
-              <ToggleGroupItem value="expense">Expense</ToggleGroupItem>
-              <ToggleGroupItem value="income">Income</ToggleGroupItem>
-              <ToggleGroupItem value="transfer">Transfer</ToggleGroupItem>
-            </ToggleGroup>
             <Input
               value={txn.amount || ''}
               onChange={e => handleFieldChange(index, 'amount', e.target.value)}
@@ -546,33 +491,35 @@ const toggleSkipAll = () => {
                 Always apply for this sender
               </label>
             </div>
-            <AccountAutocomplete
+            <Input
               value={txn.fromAccount || ''}
-              onChange={value => {
-                setUserInteractions(prev => ({ ...prev, fromAccount: true }));
-                handleFieldChange(index, 'fromAccount', value);
-              }}
-              accounts={accounts}
-              onAddClick={() => {/* Account add handled elsewhere */}}
-              placeholder="Start typing account name..."
-              userHasInteracted={userInteractions.fromAccount}
-              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${(txn.fieldConfidences?.fromAccount ?? 0) >= 0.8 ? 'border-green-500' : (txn.fieldConfidences?.fromAccount ?? 0) >= 0.4 ? 'border-amber-500' : 'border-red-500'}`}
+              onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)}
+              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                (txn.fieldConfidences?.fromAccount ?? 0) >= 0.8
+                  ? 'border-green-500'
+                  : (txn.fieldConfidences?.fromAccount ?? 0) >= 0.4
+                    ? 'border-amber-500'
+                    : 'border-red-500'
+              }`}
             />
-            {/* Show toAccount only for transfer type */}
-            {txn.type === 'transfer' && (
-              <AccountAutocomplete
-                value={txn.toAccount || ''}
-                onChange={value => {
-                  setUserInteractions(prev => ({ ...prev, toAccount: true }));
-                  handleFieldChange(index, 'toAccount', value);
-                }}
-                accounts={accounts}
-                onAddClick={() => {/* Account add handled elsewhere */}}
-                placeholder="Start typing destination account..."
-                userHasInteracted={userInteractions.toAccount}
-                className="p-2 col-span-2"
-              />
-            )}
+            <ToggleGroup
+              type="single"
+              value={txn.type}
+              onValueChange={val =>
+                val && handleFieldChange(index, 'type', val)
+              }
+              className={`flex justify-start ${
+                (txn.fieldConfidences?.type ?? 0) >= 0.8
+                  ? 'border border-green-500'
+                  : (txn.fieldConfidences?.type ?? 0) >= 0.4
+                    ? 'border border-amber-500'
+                    : 'border border-red-500'
+              } col-span-2`}
+            >
+              <ToggleGroupItem value="expense">Expense</ToggleGroupItem>
+              <ToggleGroupItem value="income">Income</ToggleGroupItem>
+              <ToggleGroupItem value="transfer">Transfer</ToggleGroupItem>
+            </ToggleGroup>
           </div>
           <div className="flex justify-end mt-2 col-span-2">
             <Button

@@ -70,9 +70,6 @@ import { appUpdateService } from '@/services/AppUpdateService';
 import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
 import { useSmsPermission } from '@/hooks/useSmsPermission';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
-import TemplateReviewQueue from '@/components/settings/TemplateReviewQueue';
-import { batchLearnFromTransactions, LearningResult } from '@/lib/smart-paste-engine/csvLearningPipeline';
-import CsvLearnedMappings from '@/components/settings/CsvLearnedMappings';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -473,61 +470,59 @@ const Settings = () => {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = ".json,.csv";
-    fileInput.onchange = (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      const file = target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          try {
-            const text = event.target?.result as string;
-            const isCsv = file.name.toLowerCase().endsWith(".csv");
-            const data = isCsv ? parseCsvTransactions(text) : JSON.parse(text);
-            if (!Array.isArray(data) || data.length === 0) {
-              toast({
-                title: "Invalid file",
-                description: "The file does not contain valid transaction data",
-                variant: "destructive",
-              });
-              return;
-            }
-            const existing = getStoredTransactions();
-            const merged = [...existing, ...data];
-            storeTransactions(merged);
-            // NEW: Run learning pipeline after successful import
-            let learningResult: LearningResult | null = null;
-            if (isCsv) {
-              learningResult = batchLearnFromTransactions(data);
-            }
-            // Log analytics
-            logAnalyticsEvent('data_import', { 
-              count: data.length, 
-              format: isCsv ? 'csv' : 'json',
-              vendorsLearned: learningResult?.vendorsLearned || 0,
-              keywordsLearned: learningResult?.keywordsLearned || 0,
-            });
-            // Show success toast with learning info
-            let description = `Successfully imported ${data.length} transactions`;
-            if (learningResult && learningResult.vendorsLearned > 0) {
-              description += ` and learned ${learningResult.vendorsLearned} vendor mappings`;
-            }
-            toast({
-              title: "Import successful",
-              description,
-            });
-            window.location.reload();
-          } catch (error) {
-            console.error("Import error:", error);
-            toast({
-              title: "Import failed",
-              description: "Failed to parse the file. Please check the format.",
-              variant: "destructive",
-            });
+
+    fileInput.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      if (!target.files?.length) return;
+
+      const file = target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        try {
+          const text = event.target?.result as string;
+          const isCsv = file.name.toLowerCase().endsWith(".csv");
+          const data = isCsv ? parseCsvTransactions(text) : JSON.parse(text);
+
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("No valid transactions");
           }
-        };
-        reader.readAsText(file);
-      }
+
+          const existing = getStoredTransactions();
+          const confirmImport = window.confirm(
+            `This will add ${data.length} transactions to your existing ${existing.length}. Continue?`,
+          );
+
+          if (!confirmImport) return;
+
+          const merged = [...existing, ...(data as any[])];
+          storeTransactions(merged as any);
+          
+          // Log import success
+          logAnalyticsEvent('data_import', {
+            imported_count: data.length,
+            existing_count: existing.length,
+            format: isCsv ? 'csv' : 'json'
+          });
+          
+          toast({
+            title: "Import successful",
+            description: `Added ${data.length} transactions successfully.`,
+          });
+          setTimeout(() => window.location.reload(), 1500);
+        } catch {
+          toast({
+            title: "Import failed",
+            description:
+              "Failed to parse the imported file. Make sure it's a valid JSON or CSV file.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      reader.readAsText(file);
     };
+
     fileInput.click();
   };
 
@@ -924,12 +919,6 @@ const Settings = () => {
         {/* Template Stats Section */}
         <TemplateStatsSection />
 
-        {/* Template Review Queue Section */}
-        <section className="mt-8">
-          <h2 className="text-lg font-bold mb-2">Template Review Queue</h2>
-          <TemplateReviewQueue />
-        </section>
-
         <section className="bg-card rounded-lg p-4 mt-6">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
@@ -963,7 +952,6 @@ const Settings = () => {
         </AlertDialogContent>
       </AlertDialog>
       <LoadingOverlay isOpen={smsBusy} message={smsBusyMessage} />
-      <CsvLearnedMappings />
     </Layout>
   );
 };

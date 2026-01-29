@@ -8,14 +8,16 @@ import { safeStorage } from "@/utils/safe-storage";
 const KEY = 'xpensia_keyword_bank';
 
 export interface KeywordEntry {
-  keyword: string;
-  type?: string;
-  mappings: { field: string; value: string }[];
-  lastUpdated?: string;
-  mappingCount?: number;
-  source?: 'manual' | 'sms-learn' | 'csv-import';
-  senderContext?: string;
-  transactionTypeContext?: string;
+  keyword: string
+  type: string
+  lastUpdated?: string
+  mappingCount?: number
+  senderContext?: string
+  transactionTypeContext?: string
+  mappings: {
+    field: 'type' | 'category' | 'subcategory' | 'fromAccount' | 'vendor'
+    value: string
+  }[]
 }
 
 export function loadKeywordBank(): KeywordEntry[] {
