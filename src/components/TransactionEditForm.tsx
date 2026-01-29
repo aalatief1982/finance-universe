@@ -5,7 +5,6 @@ import {
   getCategoriesForType,
   getSubcategoriesForCategory,
   getCategoryHierarchy,
-  PEOPLE,
   CURRENCIES,
 } from '@/lib/categories-data';
 import { Plus, Calculator, ThumbsUp, ThumbsDown } from 'lucide-react';
@@ -18,8 +17,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import vendorData from '@/data/ksa_all_vendors_clean_final.json';
-import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
+import { addUserVendor, getVendorNames } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import VendorAutocomplete from './VendorAutocomplete';
 import AccountAutocomplete from './AccountAutocomplete';
 
@@ -58,7 +56,6 @@ export function generateDefaultTitle(txn: Transaction): string {
   const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
   const currency = txn.currency?.toUpperCase() || '';
   const title = label && amount && currency ? `${label} - ${amount} ${currency}` : '';
-  console.log('[TransactionEditForm] generateDefaultTitle:', title, txn);
   return title;
 }
 
@@ -150,16 +147,32 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [addPersonOpen, setAddPersonOpen] = useState(false);
   const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
 
-  const [vendors, setVendors] = useState<string[]>(() => {
-    const builtIn = Object.keys((vendorData as any) || {});
-    const stored = Object.keys(loadVendorFallbacks());
-    return Array.from(new Set([...builtIn, ...stored]));
-  });
+  // Lazy-load vendors to prevent blocking render - only load user-added vendors initially
+  const [userAddedVendors, setUserAddedVendors] = useState<string[]>([]);
   const [addVendorOpen, setAddVendorOpen] = useState(false);
   const [newVendor, setNewVendor] = useState<{ name: string; type: TransactionType; category: string; subcategory: string }>(
     { name: '', type: 'expense', category: '', subcategory: '' }
   );
   const [vendorAvailableSubcategories, setVendorAvailableSubcategories] = useState<string[]>([]);
+
+  // Load vendors asynchronously to prevent UI freeze
+  useEffect(() => {
+    // Use requestIdleCallback or setTimeout to defer loading
+    const loadVendors = () => {
+      const storedVendors = getVendorNames();
+      setUserAddedVendors(storedVendors);
+    };
+    
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(loadVendors, { timeout: 100 });
+    } else {
+      setTimeout(loadVendors, 0);
+    }
+  }, []);
+
+  // The vendors list uses only user-added vendors for autocomplete
+  // The full vendor list from JSON is too large and causes performance issues
+  const vendors = userAddedVendors;
 
   // Track user interactions to prevent auto-opening dropdowns
   const [userInteractions, setUserInteractions] = useState<{
@@ -239,7 +252,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   }, [transaction, fieldConfidences]);
 
   useEffect(() => {
-    console.log('[TransactionEditForm] useEffect: type/category', editedTransaction.type, editedTransaction.category);
     const categories = getCategoriesForType(editedTransaction.type) || [];
     setAvailableCategories(categories);
     const subcategories = getSubcategoriesForCategory(editedTransaction.category) || [];
@@ -263,7 +275,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   }, [newVendor.category]);
 
   const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
-    console.log('[TransactionEditForm] handleChange:', field, value);
     // Call onEditStart when user starts editing
     onEditStart?.();
 
@@ -271,7 +282,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       const updated = { ...prev, [field]: value };
 
       if (drivenFields[field]) {
-        setDrivenFields(prev => ({ ...prev, [field]: false }));
+        setDrivenFields(prevDriven => ({ ...prevDriven, [field]: false }));
       }
 
       if (field === 'type') {
@@ -388,7 +399,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       category: newVendor.category.trim(),
       subcategory: newVendor.subcategory.trim(),
     });
-    setVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
+    setUserAddedVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
     handleChange('vendor', newVendor.name.trim());
     
     // Set the category and subcategory from the new vendor
@@ -461,7 +472,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[TransactionEditForm] handleSubmit', editedTransaction);
     const finalTransaction = { ...editedTransaction };
 
     if (!finalTransaction.title?.trim()) {
