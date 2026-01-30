@@ -1,3 +1,42 @@
+/**
+ * @file TransactionService.ts
+ * @description Central service managing all transaction operations including
+ *              CRUD, dual-entry transfers, category management, and rule-based
+ *              auto-categorization.
+ * 
+ * @module services/TransactionService
+ * 
+ * @responsibilities
+ * 1. Transaction CRUD operations with validation
+ * 2. Dual-entry transfer creation (debit/credit pairs linked by transferId)
+ * 3. Category and subcategory management
+ * 4. Category rule creation, prioritization, and application
+ * 5. Automatic category suggestion based on rules and history
+ * 6. SMS transaction processing (delegated to SmsProcessingService)
+ * 7. Analytics delegation to TransactionAnalyticsService
+ * 
+ * @storage-keys
+ * - xpensia_transactions: Main transaction store
+ * - xpensia_categories: Category definitions
+ * - xpensia_category_rules: Auto-categorization rules
+ * - xpensia_category_changes: Category change history
+ * 
+ * @dependencies
+ * - storage-utils.ts: Persistence layer
+ * - TransactionAnalyticsService.ts: Summary/grouping calculations
+ * - SmsProcessingService.ts: SMS message parsing
+ * - firebase-analytics.ts: Event logging
+ * 
+ * @review-checklist
+ * - [ ] Transfer sign handling (debit negative, credit positive)
+ * - [ ] Category deletion cascade to transactions
+ * - [ ] Rule priority ordering maintenance
+ * - [ ] Similar transaction matching for suggestions
+ * 
+ * @created 2024
+ * @modified 2025-01-30
+ */
+
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
 import { getStoredTransactions, storeTransactions, getStoredCategories, storeCategories, getStoredCategoryRules, storeCategoryRules, getStoredCategoryChanges, storeCategoryChanges } from '@/utils/storage-utils';
@@ -6,19 +45,47 @@ import { processSmsEntries } from './SmsProcessingService';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 class TransactionService {
-  // Basic Transaction CRUD Operations
 
-  // Get all transactions
+  // ============================================================================
+  // SECTION: Basic Transaction CRUD Operations
+  // PURPOSE: Core read/write operations for single transactions
+  // REVIEW: Ensure proper ID generation and storage consistency
+  // ============================================================================
+
+  /**
+   * Get all transactions from storage
+   * @returns Array of all stored transactions
+   */
   getAllTransactions(): Transaction[] {
     return getStoredTransactions();
   }
 
-  // Save transactions
+  /**
+   * Save transactions array to storage (overwrites existing)
+   * @param transactions - Complete transactions array to persist
+   */
   saveTransactions(transactions: Transaction[]): void {
     storeTransactions(transactions);
   }
 
-  // Add a new transaction (creates dual entries for transfers)
+  // ============================================================================
+  // SECTION: Transaction Creation with Transfer Handling
+  // PURPOSE: Handle dual-entry accounting for transfers (debit + credit entries)
+  // REVIEW: Verify transfer amount signs and linked transferId consistency
+  // ============================================================================
+
+  /**
+   * Add a new transaction with automatic categorization.
+   * For transfers, creates TWO linked entries with shared transferId.
+   * 
+   * @param transaction - Transaction data without ID
+   * @returns Single transaction for income/expense, or array of two for transfers
+   * 
+   * @review-focus
+   * - Transfer amount signs: debit should be negative (line 96), credit positive (line 107)
+   * - transferId links both halves for atomic operations
+   * - Category forced to "Transfer" for transfer entries
+   */
   addTransaction(transaction: Omit<Transaction, 'id'>): Transaction | Transaction[] {
     // For non-transfers, create a single record as before
     if (transaction.type !== 'transfer') {
@@ -51,6 +118,7 @@ class TransactionService {
     const amount = Math.abs(transaction.amount);
     
     // Debit entry (money leaving source account)
+    // @review-risk Amount must be NEGATIVE for debit entries
     const debitEntry: Transaction = {
       ...transaction,
       id: uuidv4(),
@@ -62,6 +130,7 @@ class TransactionService {
     };
     
     // Credit entry (money entering destination account)
+    // @review-risk Amount must be POSITIVE for credit entries
     const creditEntry: Transaction = {
       ...transaction,
       id: uuidv4(),
@@ -87,7 +156,22 @@ class TransactionService {
     return [debitEntry, creditEntry];
   }
 
-  // Update an existing transaction (handles linked transfers)
+  // ============================================================================
+  // SECTION: Transaction Update Operations
+  // PURPOSE: Handle updates including linked transfer pairs atomically
+  // REVIEW: Verify both halves of transfers update together
+  // ============================================================================
+
+  /**
+   * Update an existing transaction.
+   * For transfers, delegates to updateTransfer to update both linked records.
+   * 
+   * @param id - Transaction ID to update
+   * @param updates - Partial transaction fields to update
+   * @returns Updated transaction or null if not found
+   * 
+   * @review-focus Records category change history for non-transfer updates
+   */
   updateTransaction(id: string, updates: Partial<Omit<Transaction, 'id'>>): Transaction | null {
     const transactions = this.getAllTransactions();
     const index = transactions.findIndex(t => t.id === id);
@@ -113,11 +197,23 @@ class TransactionService {
     return updatedTransaction;
   }
 
-  // Update both halves of a transfer atomically
+  /**
+   * Update both halves of a transfer atomically.
+   * Maintains correct amount signs for each direction.
+   * 
+   * @param transferId - Shared transfer ID linking both entries
+   * @param updates - Fields to update on both entries
+   * @returns The debit entry as representative, or null if not found
+   * 
+   * @review-focus
+   * - Amount sign maintenance: out = negative, in = positive (lines 176-178)
+   * - Shared fields (title, date, notes) update on both entries
+   */
   updateTransfer(transferId: string, updates: Partial<Omit<Transaction, 'id'>>): Transaction | null {
     const transactions = this.getAllTransactions();
     const linkedTransactions = transactions.filter(t => t.transferId === transferId);
     
+    // @review-risk Should have exactly 2 linked entries
     if (linkedTransactions.length !== 2) return null;
     
     const updatedIds: string[] = [];
@@ -136,6 +232,7 @@ class TransactionService {
         notes: updates.notes ?? t.notes,
         currency: updates.currency ?? t.currency,
         // Amount update requires special handling to maintain correct signs
+        // @review-risk Ensure sign is preserved based on direction
         amount: updates.amount !== undefined 
           ? (t.transferDirection === 'out' ? -Math.abs(updates.amount) : Math.abs(updates.amount))
           : t.amount,
@@ -151,7 +248,19 @@ class TransactionService {
     return transactions.find(t => updatedIds.includes(t.id) && t.transferDirection === 'out') || null;
   }
 
-  // Delete a transaction (handles linked transfers)
+  // ============================================================================
+  // SECTION: Transaction Delete Operations
+  // PURPOSE: Handle deletion including linked transfer pairs atomically
+  // REVIEW: Verify both halves of transfers delete together
+  // ============================================================================
+
+  /**
+   * Delete a transaction by ID.
+   * For transfers, deletes both linked entries.
+   * 
+   * @param id - Transaction ID to delete
+   * @returns true if deleted, false if not found
+   */
   deleteTransaction(id: string): boolean {
     const transactions = this.getAllTransactions();
     const transaction = transactions.find(t => t.id === id);
@@ -179,7 +288,12 @@ class TransactionService {
     return true;
   }
 
-  // Delete both halves of a transfer atomically
+  /**
+   * Delete both halves of a transfer atomically.
+   * 
+   * @param transferId - Shared transfer ID to delete
+   * @returns true if deleted, false if not found
+   */
   deleteTransfer(transferId: string): boolean {
     const transactions = this.getAllTransactions();
     const filteredTransactions = transactions.filter(t => t.transferId !== transferId);
@@ -199,7 +313,19 @@ class TransactionService {
     return true;
   }
 
-  // Process SMS messages to extract transactions (delegated to SmsProcessingService)
+  // ============================================================================
+  // SECTION: SMS Processing Delegation
+  // PURPOSE: Convert SMS messages to transaction objects
+  // REVIEW: Verify SmsProcessingService handles all message formats
+  // ============================================================================
+
+  /**
+   * Process SMS messages to extract transactions.
+   * Delegates parsing to SmsProcessingService.
+   * 
+   * @param messages - Array of SMS message objects
+   * @returns Array of parsed Transaction objects
+   */
   processTransactionsFromSMS(messages: { sender: string; message: string; date: Date }[]): Transaction[] {
     const entries = messages.map(msg => ({
       sender: msg.sender,
@@ -209,36 +335,64 @@ class TransactionService {
     return processSmsEntries(entries);
   }
 
-  // Analytics Methods (delegated to TransactionAnalyticsService)
+  // ============================================================================
+  // SECTION: Analytics Delegation
+  // PURPOSE: Delegate summary/grouping calculations to analytics service
+  // REVIEW: Ensure analytics service properly excludes transfers
+  // ============================================================================
 
-  // Get transactions summary statistics
+  /**
+   * Get transactions summary statistics (income, expenses, balance).
+   * Delegates to TransactionAnalyticsService.
+   * 
+   * @review-focus Analytics service MUST exclude transfers from totals
+   */
   getTransactionsSummary() {
     return transactionAnalyticsService.getTransactionsSummary();
   }
 
-  // Get transactions grouped by category
+  /**
+   * Get transactions grouped by category (expenses only).
+   */
   getTransactionsByCategory() {
     return transactionAnalyticsService.getTransactionsByCategory();
   }
 
-  // Get transactions grouped by time period
+  /**
+   * Get transactions grouped by time period for charts.
+   * @param period - 'week', 'month', or 'year'
+   */
   getTransactionsByTimePeriod(period: 'week' | 'month' | 'year' = 'month') {
     return transactionAnalyticsService.getTransactionsByTimePeriod(period);
   }
 
-  // Advanced Categorization Methods
+  // ============================================================================
+  // SECTION: Category CRUD Operations
+  // PURPOSE: Manage category definitions and hierarchy
+  // REVIEW: Verify subcategory deletion cascade and transaction re-assignment
+  // ============================================================================
 
-  // Get all categories
+  /**
+   * Get all categories from storage.
+   */
   getCategories(): Category[] {
     return getStoredCategories();
   }
 
-  // Save categories
+  /**
+   * Save categories array to storage.
+   */
   saveCategories(categories: Category[]): void {
     storeCategories(categories);
   }
 
-  // Add a new category
+  /**
+   * Add a new category with generated ID.
+   * Marks as user-created.
+   * 
+   * @param category - Category data without ID
+   * @returns Created category with ID
+   */
   addCategory(category: Omit<Category, 'id'>): Category {
     const newCategory = {
       ...category,
@@ -253,7 +407,13 @@ class TransactionService {
     return newCategory;
   }
 
-  // Update an existing category
+  /**
+   * Update an existing category.
+   * 
+   * @param id - Category ID to update
+   * @param updates - Partial category fields
+   * @returns Updated category or null if not found
+   */
   updateCategory(id: string, updates: Partial<Omit<Category, 'id'>>): Category | null {
     const categories = this.getCategories();
     const index = categories.findIndex(c => c.id === id);
@@ -267,11 +427,21 @@ class TransactionService {
     return updatedCategory;
   }
 
-  // Delete a category
+  /**
+   * Delete a category and re-assign affected transactions.
+   * 
+   * @param id - Category ID to delete
+   * @returns true if deleted, false if has subcategories or not found
+   * 
+   * @review-focus
+   * - Prevents deletion if category has subcategories (line 332)
+   * - Re-assigns transactions to parent or 'Uncategorized' (lines 346-359)
+   */
   deleteCategory(id: string): boolean {
     const categories = this.getCategories();
     
     // Check if this category has subcategories
+    // @review-risk Cannot delete categories with children
     const hasSubcategories = categories.some(c => c.parentId === id);
     if (hasSubcategories) {
       return false; // Don't delete categories with subcategories
@@ -286,6 +456,7 @@ class TransactionService {
     this.saveCategories(filteredCategories);
     
     // Re-categorize transactions that used this category
+    // @review-focus Transactions move to parent category or 'Uncategorized'
     const transactions = this.getAllTransactions();
     const updatedTransactions = transactions.map(t => {
       if (t.category === id) {
@@ -306,17 +477,35 @@ class TransactionService {
     return true;
   }
 
-  // Get category rules
+  // ============================================================================
+  // SECTION: Category Rules CRUD
+  // PURPOSE: Manage auto-categorization rules with priority ordering
+  // REVIEW: Verify priority-based insertion and rule matching order
+  // ============================================================================
+
+  /**
+   * Get all category rules, ordered by priority.
+   */
   getCategoryRules(): CategoryRule[] {
     return getStoredCategoryRules();
   }
 
-  // Save category rules
+  /**
+   * Save category rules to storage.
+   */
   saveCategoryRules(rules: CategoryRule[]): void {
     storeCategoryRules(rules);
   }
 
-  // Add a new category rule
+  /**
+   * Add a new category rule with priority-based insertion.
+   * Higher priority rules are inserted earlier in the array.
+   * 
+   * @param rule - Rule data without ID
+   * @returns Created rule with ID
+   * 
+   * @review-focus Priority insertion logic (lines 385-397)
+   */
   addCategoryRule(rule: Omit<CategoryRule, 'id'>): CategoryRule {
     const newRule = {
       ...rule,
@@ -325,7 +514,7 @@ class TransactionService {
     
     const rules = this.getCategoryRules();
     
-    // Insert based on priority
+    // Insert based on priority (higher priority = earlier in array)
     let inserted = false;
     for (let i = 0; i < rules.length; i++) {
       if (newRule.priority > rules[i].priority) {
@@ -344,7 +533,15 @@ class TransactionService {
     return newRule;
   }
 
-  // Update an existing rule
+  /**
+   * Update an existing rule with re-ordering based on priority.
+   * 
+   * @param id - Rule ID to update
+   * @param updates - Partial rule fields
+   * @returns Updated rule or null if not found
+   * 
+   * @review-focus Rule is removed and re-inserted based on new priority
+   */
   updateCategoryRule(id: string, updates: Partial<Omit<CategoryRule, 'id'>>): CategoryRule | null {
     const rules = this.getCategoryRules();
     const index = rules.findIndex(r => r.id === id);
@@ -373,7 +570,12 @@ class TransactionService {
     return updatedRule;
   }
 
-  // Delete a category rule
+  /**
+   * Delete a category rule.
+   * 
+   * @param id - Rule ID to delete
+   * @returns true if deleted, false if not found
+   */
   deleteCategoryRule(id: string): boolean {
     const rules = this.getCategoryRules();
     const filteredRules = rules.filter(r => r.id !== id);
@@ -386,7 +588,20 @@ class TransactionService {
     return true;
   }
 
-  // Apply category rules to all transactions
+  // ============================================================================
+  // SECTION: Auto-Categorization Logic
+  // PURPOSE: Apply rules to transactions and track category changes
+  // REVIEW: Verify rule application order and change history recording
+  // ============================================================================
+
+  /**
+   * Apply all category rules to all transactions.
+   * Returns count of transactions that were re-categorized.
+   * 
+   * @returns Number of transactions whose category changed
+   * 
+   * @review-focus Records change history for each re-categorization
+   */
   applyAllCategoryRules(): number {
     const transactions = this.getAllTransactions();
     const rules = this.getCategoryRules();
@@ -416,7 +631,13 @@ class TransactionService {
     return changedCount;
   }
 
-  // Record a category change
+  /**
+   * Record a category change for audit/learning purposes.
+   * 
+   * @param transactionId - Transaction that was re-categorized
+   * @param oldCategoryId - Previous category
+   * @param newCategoryId - New category
+   */
   recordCategoryChange(transactionId: string, oldCategoryId?: string, newCategoryId?: string): void {
     if (!newCategoryId || oldCategoryId === newCategoryId) return;
     
@@ -432,12 +653,31 @@ class TransactionService {
     storeCategoryChanges(categoryChanges);
   }
 
-  // Get category changes
+  /**
+   * Get all recorded category changes.
+   */
   getCategoryChanges(): TransactionCategoryChange[] {
     return getStoredCategoryChanges();
   }
 
-  // Suggest a category for a transaction based on rules
+  // ============================================================================
+  // SECTION: Category Suggestion Engine
+  // PURPOSE: Suggest categories for new transactions based on rules and history
+  // REVIEW: Verify fallback logic and similar transaction matching
+  // ============================================================================
+
+  /**
+   * Suggest a category for a transaction.
+   * Priority: Rules > Similar transactions > Default by amount sign
+   * 
+   * @param transaction - Transaction without ID or category
+   * @returns Suggested category name
+   * 
+   * @review-focus
+   * - First tries rule matching (line 490)
+   * - Falls back to similar transaction history (lines 497-527)
+   * - Final fallback based on amount sign (line 531)
+   */
   suggestCategory(transaction: Omit<Transaction, 'id' | 'category'>): string {
     const rules = this.getCategoryRules();
     const suggestedCategory = this.findMatchingCategoryByRules(transaction, rules);
@@ -450,7 +690,8 @@ class TransactionService {
     const transactions = this.getAllTransactions();
     const title = transaction.title.toLowerCase();
     
-    // Find similar transactions
+    // Find similar transactions by title substring match
+    // @review-risk Simple substring matching may produce false positives
     const similarTransactions = transactions.filter(t => 
       t.title.toLowerCase().includes(title) || title.includes(t.title.toLowerCase())
     );
@@ -485,7 +726,24 @@ class TransactionService {
     return transaction.amount < 0 ? 'Expenses' : 'Income';
   }
 
-  // Find matching category based on rules
+  // ============================================================================
+  // SECTION: Rule Matching Engine
+  // PURPOSE: Match transactions against rules using regex or substring
+  // REVIEW: Verify regex safety and pattern matching order
+  // ============================================================================
+
+  /**
+   * Find matching category by applying rules in priority order.
+   * 
+   * @param transaction - Transaction to match
+   * @param rules - Rules to apply (assumed sorted by priority)
+   * @returns Matching category ID or undefined
+   * 
+   * @review-focus
+   * - Regex matching with error handling (lines 549-556)
+   * - Substring matching fallback (line 558)
+   * - First match wins (priority order)
+   */
   private findMatchingCategoryByRules(transaction: Partial<Transaction>, rules: CategoryRule[]): string | undefined {
     const transactionText = [
       transaction.title,
@@ -501,6 +759,7 @@ class TransactionService {
           const regex = new RegExp(rule.pattern, 'i');
           isMatch = regex.test(transactionText);
         } catch (err) {
+          // @review-risk Invalid regex patterns should be validated on creation
           if (import.meta.env.MODE === 'development') {
             console.error('Invalid regex pattern in category rule:', rule.pattern);
           }
@@ -517,7 +776,18 @@ class TransactionService {
     return undefined;
   }
 
-  // Get full category path (including parent names)
+  // ============================================================================
+  // SECTION: Category Hierarchy Utilities
+  // PURPOSE: Navigate category tree for path display and subcategory queries
+  // REVIEW: Verify recursive traversal doesn't cause infinite loops
+  // ============================================================================
+
+  /**
+   * Get full category path from root to leaf.
+   * 
+   * @param categoryId - Category to get path for
+   * @returns Array of category names from root to leaf
+   */
   getCategoryPath(categoryId: string): string[] {
     const categories = this.getCategories();
     const result: string[] = [];
@@ -537,7 +807,12 @@ class TransactionService {
     return result;
   }
 
-  // Get transactions for a specific category including subcategories
+  /**
+   * Get transactions for a category including all its subcategories.
+   * 
+   * @param categoryId - Root category ID
+   * @returns All transactions in this category tree
+   */
   getTransactionsForCategoryAndSubcategories(categoryId: string): Transaction[] {
     const transactions = this.getAllTransactions();
     const categories = this.getCategories();
@@ -549,7 +824,15 @@ class TransactionService {
     return transactions.filter(t => categoryIds.includes(t.category));
   }
 
-  // Get all subcategory IDs for a category
+  /**
+   * Recursively get all subcategory IDs for a category.
+   * 
+   * @param categoryId - Parent category ID
+   * @param categories - All categories array
+   * @returns Array of all descendant category IDs
+   * 
+   * @review-risk Assumes no circular references in category hierarchy
+   */
   private getAllSubcategoryIds(categoryId: string, categories: Category[]): string[] {
     const result: string[] = [];
     
@@ -568,7 +851,23 @@ class TransactionService {
     return result;
   }
 
-  // Get budget vs actual spending for a category
+  // ============================================================================
+  // SECTION: Budget Analysis
+  // PURPOSE: Calculate budget vs actual for category-based budgeting
+  // REVIEW: Verify expense filtering and subcategory inclusion
+  // ============================================================================
+
+  /**
+   * Get budget vs actual spending analysis for a category.
+   * Includes spending from all subcategories.
+   * 
+   * @param categoryId - Category to analyze
+   * @returns Budget analysis object with budgeted, spent, remaining, percentUsed
+   * 
+   * @review-focus
+   * - Only counts negative amounts (expenses) (lines 631-633)
+   * - Includes subcategory spending (line 629)
+   */
   getCategoryBudgetAnalysis(categoryId: string): {
     budgeted: number;
     spent: number;
