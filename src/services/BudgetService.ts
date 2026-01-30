@@ -1,3 +1,37 @@
+/**
+ * @file BudgetService.ts
+ * @description Centralized service for budget management including CRUD operations,
+ *              spending calculations, progress tracking, and alert management.
+ * 
+ * @module services/BudgetService
+ * 
+ * @responsibilities
+ * 1. Budget CRUD with soft-delete and migration support
+ * 2. Period-based budget retrieval (weekly, monthly, yearly)
+ * 3. Spending calculations with transfer exclusion
+ * 4. Budget progress tracking with threshold alerts
+ * 5. Category hierarchy budget aggregation
+ * 6. Alert creation, dismissal, and persistence
+ * 
+ * @storage-keys
+ * - xpensia_budgets: Budget definitions
+ * - xpensia_budget_alerts: Triggered alerts
+ * 
+ * @dependencies
+ * - TransactionService.ts: Transaction queries for spending
+ * - budget-period-utils.ts: Date range calculations
+ * - budget.ts (model): Budget type and migration logic
+ * 
+ * @review-checklist
+ * - [ ] Transfer exclusion in spending calculations (lines 262-268)
+ * - [ ] Category tree cache invalidation
+ * - [ ] Alert threshold duplicate prevention
+ * - [ ] Period date range accuracy
+ * 
+ * @created 2024
+ * @modified 2025-01-30
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { v4 as uuidv4 } from 'uuid';
 import { Budget, CreateBudgetInput, UpdateBudgetInput, migrateBudget, DEFAULT_ALERT_THRESHOLDS, getBudgetKey } from '@/models/budget';
@@ -11,15 +45,35 @@ import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 const STORAGE_KEY = 'xpensia_budgets';
 const ALERTS_STORAGE_KEY = 'xpensia_budget_alerts';
 
-// Cache for category tree traversal (invalidated on category changes)
+/**
+ * Cache for category tree traversal.
+ * Invalidated when categories change via invalidateCategoryCache().
+ * 
+ * @review-perf Prevents repeated tree traversal for hierarchy lookups
+ */
 let categoryTreeCache: Map<string, string[]> | null = null;
 
 // Run migrations on module load
 initBudgetMigrations();
 
 export class BudgetService {
+
+  // ============================================================================
+  // SECTION: Budget Retrieval with Migration
+  // PURPOSE: Load budgets with backward compatibility migration and de-duplication
+  // REVIEW: Verify migration handles all legacy formats
+  // ============================================================================
+
   /**
-   * Get all active budgets with migration for backward compatibility
+   * Get all active budgets with migration applied.
+   * De-duplicates by logical key (handles legacy targetId variations).
+   * 
+   * @returns Array of active, migrated budgets
+   * 
+   * @review-focus
+   * - Migration applied to each budget (line 75)
+   * - De-duplication by getBudgetKey (lines 79-94)
+   * - Only returns active budgets (isActive !== false)
    */
   getBudgets(): Budget[] {
     try {
@@ -42,6 +96,7 @@ export class BudgetService {
           continue;
         }
 
+        // Keep the more recently updated budget
         const existingTime = Date.parse(existing.updatedAt ?? existing.createdAt ?? '') || 0;
         const bTime = Date.parse(b.updatedAt ?? b.createdAt ?? '') || 0;
 
@@ -57,7 +112,8 @@ export class BudgetService {
   }
 
   /**
-   * Get all budgets including inactive ones
+   * Get all budgets including inactive ones.
+   * Used for admin/export purposes.
    */
   getAllBudgets(): Budget[] {
     try {
@@ -72,7 +128,7 @@ export class BudgetService {
   }
 
   /**
-   * Get a single budget by ID
+   * Get a single budget by ID.
    */
   getBudgetById(id: string): Budget | null {
     const budgets = this.getAllBudgets();
@@ -80,21 +136,25 @@ export class BudgetService {
   }
 
   /**
-   * Get budgets filtered by scope
+   * Get budgets filtered by scope (overall, category, subcategory, account).
    */
   getBudgetsByScope(scope: Budget['scope']): Budget[] {
     return this.getBudgets().filter(b => b.scope === scope);
   }
 
   /**
-   * Get budget for a specific period
+   * Get budgets filtered by period type.
    */
   getBudgetsByPeriod(period: Budget['period']): Budget[] {
     return this.getBudgets().filter(b => b.period === period);
   }
 
   /**
-   * Get budgets for a specific year and period type
+   * Get budgets for a specific year and period index.
+   * 
+   * @param period - Period type (weekly, monthly, yearly)
+   * @param year - Target year
+   * @param periodIndex - Week/month index (optional for yearly)
    */
   getBudgetsForPeriod(period: Budget['period'], year: number, periodIndex?: number): Budget[] {
     return this.getBudgets().filter(b => {
@@ -104,8 +164,22 @@ export class BudgetService {
     });
   }
 
+  // ============================================================================
+  // SECTION: Budget CRUD Operations
+  // PURPOSE: Create, update, soft-delete, and hard-delete budgets
+  // REVIEW: Verify duplicate detection and analytics logging
+  // ============================================================================
+
   /**
-   * Add a new budget
+   * Add a new budget with duplicate detection.
+   * If a budget with same key exists, updates it instead.
+   * 
+   * @param input - Budget creation input
+   * @returns Created or updated budget
+   * 
+   * @review-focus
+   * - Duplicate detection by getBudgetKey (lines 160-170)
+   * - Default alert thresholds applied if not provided
    */
   addBudget(input: CreateBudgetInput): Budget {
     const now = new Date().toISOString();
@@ -147,7 +221,11 @@ export class BudgetService {
   }
 
   /**
-   * Update an existing budget
+   * Update an existing budget.
+   * 
+   * @param id - Budget ID to update
+   * @param updates - Partial budget fields
+   * @returns Updated budget or null if not found
    */
   updateBudget(id: string, updates: UpdateBudgetInput): Budget | null {
     const budgets = this.getAllBudgets();
@@ -176,14 +254,22 @@ export class BudgetService {
   }
 
   /**
-   * Soft delete a budget (set isActive to false)
+   * Soft delete a budget (sets isActive to false).
+   * Budget remains in storage for history/audit.
+   * 
+   * @param id - Budget ID to soft-delete
+   * @returns true if found and deactivated
    */
   deleteBudget(id: string): boolean {
     return this.updateBudget(id, { isActive: false }) !== null;
   }
 
   /**
-   * Hard delete a budget (permanent removal)
+   * Hard delete a budget (permanent removal).
+   * Use with caution - no recovery possible.
+   * 
+   * @param id - Budget ID to permanently delete
+   * @returns true if found and removed
    */
   permanentlyDeleteBudget(id: string): boolean {
     const budgets = this.getAllBudgets();
@@ -196,16 +282,28 @@ export class BudgetService {
   }
 
   /**
-   * Save budgets to storage
+   * Persist budgets to storage.
    */
   private saveBudgets(budgets: Budget[]): void {
     safeStorage.setItem(STORAGE_KEY, JSON.stringify(budgets));
   }
 
-  // ============ Spending Calculations ============
+  // ============================================================================
+  // SECTION: Spending Calculations
+  // PURPOSE: Calculate actual spending for budget progress (EXCLUDES transfers)
+  // REVIEW: Critical - transfers MUST be excluded from spending totals
+  // ============================================================================
 
   /**
-   * Get transactions for the current period of a budget
+   * Get transactions that apply to a budget's scope and period.
+   * 
+   * @param budget - Budget to get transactions for
+   * @returns Filtered transactions within budget scope and period
+   * 
+   * @review-focus
+   * - Period date range filtering (line 264)
+   * - Scope-based filtering (lines 267-284)
+   * - Overall scope ONLY includes expenses (NOT transfers) (line 271)
    */
   getTransactionsForBudget(budget: Budget): Transaction[] {
     const transactions = transactionService.getAllTransactions();
@@ -220,7 +318,7 @@ export class BudgetService {
       // Filter by scope
       switch (budget.scope) {
         case 'overall':
-          // Include ONLY expense transactions (NOT transfers)
+          // @review-risk Include ONLY expense transactions (NOT transfers)
           return tx.type === 'expense';
         
         case 'account':
@@ -241,7 +339,15 @@ export class BudgetService {
   }
 
   /**
-   * Get spent amount for a budget in the current period (EXCLUDES transfers)
+   * Get total spent amount for a budget in current period.
+   * 
+   * @param budget - Budget to calculate spending for
+   * @returns Total spent amount (positive number)
+   * 
+   * @review-focus
+   * - Only counts tx.type === 'expense' (line 303)
+   * - Uses Math.abs to ensure positive spending value
+   * - Transfers are EXCLUDED (filtered in getTransactionsForBudget)
    */
   getSpentAmount(budget: Budget): number {
     const transactions = this.getTransactionsForBudget(budget);
@@ -256,8 +362,22 @@ export class BudgetService {
     }, 0);
   }
 
+  // ============================================================================
+  // SECTION: Budget Progress Tracking
+  // PURPOSE: Calculate comprehensive progress metrics for budgets
+  // REVIEW: Verify percentage calculations and alert triggering
+  // ============================================================================
+
   /**
-   * Get comprehensive budget progress
+   * Get comprehensive budget progress metrics.
+   * 
+   * @param budget - Budget to calculate progress for
+   * @returns BudgetProgress object with all metrics
+   * 
+   * @review-focus
+   * - percentUsed calculation (line 327)
+   * - dailyBudgetRemaining for pacing (line 330)
+   * - triggeredAlerts based on thresholds (lines 333-334)
    */
   getBudgetProgress(budget: Budget): BudgetProgress {
     const spent = this.getSpentAmount(budget);
@@ -289,7 +409,8 @@ export class BudgetService {
   }
 
   /**
-   * Get all budgets with their progress calculated
+   * Get all budgets with their progress calculated.
+   * Convenience method for dashboard display.
    */
   getAllBudgetsWithProgress(): Array<Budget & { progress: BudgetProgress }> {
     const budgets = this.getBudgets();
@@ -300,7 +421,11 @@ export class BudgetService {
   }
 
   /**
-   * Get yearly budget progress (replaces overall progress)
+   * Get aggregated yearly budget progress.
+   * Combines all yearly budgets for a given year.
+   * 
+   * @param year - Target year (defaults to current year)
+   * @returns Aggregated progress or null if no yearly budgets exist
    */
   getYearlyProgress(year?: number): BudgetProgress | null {
     const targetYear = year || new Date().getFullYear();
@@ -335,7 +460,10 @@ export class BudgetService {
   }
 
   /**
-   * Get category hierarchy progress (category + its subcategories)
+   * Get hierarchical progress for a category and its subcategories.
+   * 
+   * @param categoryId - Root category ID
+   * @returns Category progress plus array of subcategory progresses
    */
   getCategoryHierarchyProgress(categoryId: string): {
     categoryProgress: BudgetProgress | null;
@@ -384,10 +512,17 @@ export class BudgetService {
     };
   }
 
-  // ============ Category Tree Helpers ============
+  // ============================================================================
+  // SECTION: Category Tree Helpers
+  // PURPOSE: Efficient category hierarchy traversal with caching
+  // REVIEW: Verify cache invalidation is called on category changes
+  // ============================================================================
 
   /**
-   * Get all subcategory IDs for a category (with caching)
+   * Get all subcategory IDs for a category (with caching).
+   * 
+   * @param categoryId - Parent category ID
+   * @returns Array of direct and indirect subcategory IDs
    */
   private getSubcategoryIds(categoryId: string): string[] {
     if (!categoryTreeCache) {
@@ -397,14 +532,18 @@ export class BudgetService {
   }
 
   /**
-   * Get category ID and all its subcategory IDs
+   * Get category ID and all its subcategory IDs.
+   * Convenience wrapper for budget scope filtering.
    */
   private getCategoryAndSubcategoryIds(categoryId: string): string[] {
     return [categoryId, ...this.getSubcategoryIds(categoryId)];
   }
 
   /**
-   * Build category tree cache for efficient traversal
+   * Build category tree cache for efficient traversal.
+   * 
+   * @review-perf One-time build, reused until invalidated
+   * @review-risk Assumes no circular references in category hierarchy
    */
   private buildCategoryTreeCache(): void {
     const categories = transactionService.getCategories();
@@ -437,16 +576,23 @@ export class BudgetService {
   }
 
   /**
-   * Invalidate category cache (call when categories change)
+   * Invalidate category cache.
+   * MUST be called when categories are added, updated, or deleted.
+   * 
+   * @review-focus Ensure TransactionService calls this on category changes
    */
   invalidateCategoryCache(): void {
     categoryTreeCache = null;
   }
 
-  // ============ Alert Management ============
+  // ============================================================================
+  // SECTION: Alert Management
+  // PURPOSE: Track and manage budget threshold alerts
+  // REVIEW: Verify alert deduplication and dismissal persistence
+  // ============================================================================
 
   /**
-   * Get all budget alerts
+   * Get all budget alerts from storage.
    */
   getAlerts(): BudgetAlert[] {
     try {
@@ -458,7 +604,13 @@ export class BudgetService {
   }
 
   /**
-   * Check budgets and create/update alerts
+   * Check all budgets and create/update alerts for threshold breaches.
+   * 
+   * @returns Array of active (undismissed) alerts
+   * 
+   * @review-focus
+   * - Prevents duplicate alerts for same budget+threshold (lines 515-520)
+   * - Preserves dismissed state (lines 530-533)
    */
   checkBudgetAlerts(): BudgetAlert[] {
     const budgets = this.getBudgets();
@@ -477,6 +629,7 @@ export class BudgetService {
           );
           
           if (!existingAlert) {
+            // Create new alert
             newAlerts.push({
               budgetId: budget.id,
               threshold,
@@ -503,7 +656,10 @@ export class BudgetService {
   }
 
   /**
-   * Dismiss an alert
+   * Dismiss an alert for a specific budget and threshold.
+   * 
+   * @param budgetId - Budget ID
+   * @param threshold - Threshold value that was triggered
    */
   dismissAlert(budgetId: string, threshold: number): void {
     const alerts = this.getAlerts();
@@ -522,20 +678,24 @@ export class BudgetService {
   }
 
   /**
-   * Get active (undismissed) alerts
+   * Get only active (undismissed) alerts.
    */
   getActiveAlerts(): BudgetAlert[] {
     return this.getAlerts().filter(a => !a.dismissed);
   }
 
   /**
-   * Save alerts to storage
+   * Persist alerts to storage.
    */
   private saveAlerts(alerts: BudgetAlert[]): void {
     safeStorage.setItem(ALERTS_STORAGE_KEY, JSON.stringify(alerts));
   }
 
-  // ============ Legacy Compatibility ============
+  // ============================================================================
+  // SECTION: Legacy Compatibility
+  // PURPOSE: Deprecated methods for backward compatibility
+  // REVIEW: Remove these in a future major version
+  // ============================================================================
 
   /**
    * @deprecated Use getBudgetsByPeriod instead
