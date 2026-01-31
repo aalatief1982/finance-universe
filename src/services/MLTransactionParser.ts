@@ -1,5 +1,24 @@
-// src/services/MLTransactionParser.ts
-// Regex-based transaction entity extraction (ML libraries removed for APK size optimization)
+/**
+ * @file MLTransactionParser.ts
+ * @description Regex-based transaction entity extraction (ML removed for APK size).
+ *
+ * @module services/MLTransactionParser
+ *
+ * @responsibilities
+ * 1. Extract amount, currency, vendor, date, and type from raw text
+ * 2. Normalize currency codes and numeric formats
+ * 3. Provide lightweight alternative to ML parsing
+ *
+ * @review-tags
+ * - @risk: regex coverage across languages
+ * - @data-quality: false positives in vendor/type detection
+ *
+ * @review-checklist
+ * - [ ] Amount parsing strips commas correctly
+ * - [ ] Currency normalization covers Arabic tokens
+ * - [ ] Type inference uses keyword lists
+ */
+
 
 /**
  * Extract transaction entities from text using regex patterns.

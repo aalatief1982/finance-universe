@@ -1,3 +1,20 @@
+/**
+ * @file locale.ts
+ * @description Type definitions for locale.
+ *
+ * @module types/locale
+ *
+ * @responsibilities
+ * 1. Define shared interfaces and type aliases
+ * 2. Provide consistent contracts across services and UI
+ *
+ * @review-tags
+ * - @data-contract: shared types
+ *
+ * @review-checklist
+ * - [ ] Types align with runtime data shapes
+ * - [ ] Optional fields documented where needed
+ */
 // Expanded list of supported locales
 export type SupportedLocale = 
   | 'en-US'  // English (United States)

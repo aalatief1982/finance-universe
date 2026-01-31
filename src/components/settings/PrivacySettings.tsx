@@ -1,3 +1,21 @@
+/**
+ * @file PrivacySettings.tsx
+ * @description Settings section for PrivacySettings.
+ *
+ * @module components/settings/PrivacySettings
+ *
+ * @responsibilities
+ * 1. Render settings controls and labels
+ * 2. Persist setting changes via callbacks/services
+ * 3. Provide validation or feedback where required
+ *
+ * @review-tags
+ * - @ui: settings state wiring
+ *
+ * @review-checklist
+ * - [ ] Settings state reflects stored preferences
+ * - [ ] Changes are persisted or bubbled up
+ */
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

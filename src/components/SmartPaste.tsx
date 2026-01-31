@@ -1,3 +1,21 @@
+/**
+ * @file SmartPaste.tsx
+ * @description UI component for SmartPaste.
+ *
+ * @module components/SmartPaste
+ *
+ * @responsibilities
+ * 1. Render UI for the feature area
+ * 2. Accept props and emit user interactions
+ * 3. Compose shared subcomponents where needed
+ *
+ * @review-tags
+ * - @ui: visual/layout behavior
+ *
+ * @review-checklist
+ * - [ ] Props have sensible defaults
+ * - [ ] Component renders without crashing
+ */
 import React, { useState, useEffect } from 'react';
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"

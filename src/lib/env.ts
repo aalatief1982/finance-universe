@@ -1,3 +1,29 @@
+/**
+ * @file env.ts
+ * @description Environment variable helpers and default configuration values.
+ *
+ * @module lib/env
+ *
+ * @responsibilities
+ * 1. Resolve environment variables from Vite or window._env
+ * 2. Provide app-level config constants
+ * 3. Persist and read SMS lookback defaults
+ *
+ * @storage-keys
+ * - xpensia_sms_period_months: SMS lookback preference
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ *
+ * @review-tags
+ * - @risk: missing env vars fall back to defaults
+ *
+ * @review-checklist
+ * - [ ] VITE_ prefix normalization works
+ * - [ ] Defaults persisted when preference missing
+ * - [ ] Parsing errors fall back to env defaults
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 
 /**

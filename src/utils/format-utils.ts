@@ -1,3 +1,27 @@
+/**
+ * @file format-utils.ts
+ * @description Formatting helpers for currency and dates.
+ *
+ * @module utils/format-utils
+ *
+ * @responsibilities
+ * 1. Format currency with normalized codes and symbols
+ * 2. Format dates for display
+ * 3. Provide currency symbol helpers
+ *
+ * @dependencies
+ * - currency-utils.ts: code normalization and display names
+ * - storage-utils.ts: user currency settings
+ *
+ * @review-tags
+ * - @risk: invalid currency codes in Intl.NumberFormat
+ *
+ * @review-checklist
+ * - [ ] Invalid currency codes fall back safely
+ * - [ ] Symbols derived from Intl with fallback
+ * - [ ] Date formatting handles invalid inputs
+ */
+
 import { normalizeCurrencyCode, getCurrencyDisplayName, VALID_CURRENCY_CODES } from './currency-utils';
 import { getUserSettings } from '@/utils/storage-utils';
 

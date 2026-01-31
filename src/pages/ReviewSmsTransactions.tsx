@@ -1,3 +1,30 @@
+/**
+ * @file ReviewSmsTransactions.tsx
+ * @description Review UI for SMS-imported transactions with smart-paste
+ *              parsing, confidence display, and bulk save.
+ *
+ * @module pages/ReviewSmsTransactions
+ *
+ * @responsibilities
+ * 1. Parse SMS messages into draft transactions with confidence scores
+ * 2. Allow user edits, category overrides, and skip decisions
+ * 3. Persist transactions and optional learning mappings
+ *
+ * @dependencies
+ * - parseAndInferTransaction: SMS parsing + confidence scoring
+ * - saveTransactionWithLearning: persistence + learning
+ * - senderCategoryRules: optional "always apply" rules
+ *
+ * @review-tags
+ * - @risk: date input parsing and ISO conversion
+ * - @side-effects: writes transactions and learning stores
+ *
+ * @review-checklist
+ * - [ ] Low-confidence transactions are surfaced for review
+ * - [ ] "Always apply" rules stored with sender context
+ * - [ ] Skipped messages do not persist or learn
+ */
+
 import React, { useEffect, useState } from 'react';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { Ban } from 'lucide-react';

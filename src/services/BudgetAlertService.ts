@@ -1,3 +1,29 @@
+/**
+ * @file BudgetAlertService.ts
+ * @description Builds budget alert context and severity levels for UI.
+ *
+ * @module services/BudgetAlertService
+ *
+ * @responsibilities
+ * 1. Map active alerts to budget/account/category context
+ * 2. Classify severity and craft alert messages
+ * 3. Provide alert summaries and impact checks
+ *
+ * @dependencies
+ * - BudgetService.ts: alert detection and budget progress
+ * - TransactionService.ts: category lookup
+ * - AccountService.ts: account lookup
+ *
+ * @review-tags
+ * - @risk: mismatched targetId resolution for categories/accounts
+ * - @side-effects: refreshAlerts triggers alert recalculation
+ *
+ * @review-checklist
+ * - [ ] Severity thresholds align with UX expectations
+ * - [ ] Alerts filter out missing budgets
+ * - [ ] Transaction impact respects budget scopes
+ */
+
 import { budgetService } from './BudgetService';
 import { transactionService } from './TransactionService';
 import { accountService } from './AccountService';

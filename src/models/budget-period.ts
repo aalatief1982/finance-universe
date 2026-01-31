@@ -1,4 +1,23 @@
 /**
+ * @file budget-period.ts
+ * @description Budget period record, progress, and alert interfaces.
+ *
+ * @module models/budget-period
+ *
+ * @responsibilities
+ * 1. Define stored records for period spending/rollover
+ * 2. Define computed progress structure for UI consumption
+ * 3. Define alert payloads for threshold tracking
+ *
+ * @review-tags
+ * - @data-contract: shared across budget services and UI
+ *
+ * @review-checklist
+ * - [ ] Period dates use ISO strings for persistence
+ * - [ ] Progress values remain normalized (percentUsed 0-100+)
+ */
+
+/**
  * Tracks actual spending for a specific budget period.
  * Used for rollover calculations and historical tracking.
  */

@@ -1,3 +1,21 @@
+/**
+ * @file transaction-form-schema.ts
+ * @description UI component for transaction-form-schema.
+ *
+ * @module components/forms/transaction-form-schema
+ *
+ * @responsibilities
+ * 1. Render UI for the feature area
+ * 2. Accept props and emit user interactions
+ * 3. Compose shared subcomponents where needed
+ *
+ * @review-tags
+ * - @ui: visual/layout behavior
+ *
+ * @review-checklist
+ * - [ ] Props have sensible defaults
+ * - [ ] Component renders without crashing
+ */
 
 import { z } from 'zod';
 import { getPeopleNames } from '@/lib/people-utils';

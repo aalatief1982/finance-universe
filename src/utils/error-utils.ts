@@ -1,3 +1,28 @@
+/**
+ * @file error-utils.ts
+ * @description Error creation and handling helpers with toast notifications.
+ *
+ * @module utils/error-utils
+ *
+ * @responsibilities
+ * 1. Create standardized AppError objects with metadata
+ * 2. Log errors and optionally surface toast notifications
+ * 3. Map severity to toast variants
+ *
+ * @dependencies
+ * - types/error: error types and defaults
+ * - use-toast.ts: UI notifications
+ *
+ * @review-tags
+ * - @side-effects: logs to console and shows toasts
+ * - @risk: error severity defaults must match UX expectations
+ *
+ * @review-checklist
+ * - [ ] Unknown errors are wrapped as AppError
+ * - [ ] Toast severity matches error severity
+ * - [ ] Silent errors skip toast display
+ */
+
 import { ErrorType, AppError, ErrorSeverity, errorSeverityDefaults } from "@/types/error";
 import { toast } from "@/hooks/use-toast";
 

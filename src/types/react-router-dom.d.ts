@@ -1,3 +1,20 @@
+/**
+ * @file react-router-dom.d.ts
+ * @description Type definitions for react-router-dom.d.
+ *
+ * @module types/react-router-dom.d
+ *
+ * @responsibilities
+ * 1. Define shared interfaces and type aliases
+ * 2. Provide consistent contracts across services and UI
+ *
+ * @review-tags
+ * - @data-contract: shared types
+ *
+ * @review-checklist
+ * - [ ] Types align with runtime data shapes
+ * - [ ] Optional fields documented where needed
+ */
 
 declare module 'react-router-dom' {
   export interface NavigateOptions {

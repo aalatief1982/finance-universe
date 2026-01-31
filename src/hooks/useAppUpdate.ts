@@ -1,3 +1,27 @@
+/**
+ * @file useAppUpdate.ts
+ * @description Hook to check and surface OTA updates on native platforms.
+ *
+ * @module hooks/useAppUpdate
+ *
+ * @responsibilities
+ * 1. Check for updates on mount or interval
+ * 2. Track update status and dialog visibility
+ * 3. Provide handlers to open/dismiss update UI
+ *
+ * @dependencies
+ * - AppUpdateService.ts: update checks and manifest logic
+ *
+ * @review-tags
+ * - @platform: native-only update checks
+ * - @risk: repeated checks via interval
+ *
+ * @review-checklist
+ * - [ ] Web platform returns early
+ * - [ ] Interval cleared on unmount
+ * - [ ] Silent checks do not show dialog
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { appUpdateService, UpdateStatus } from '@/services/AppUpdateService';

@@ -1,3 +1,32 @@
+/**
+ * @file VendorSyncService.ts
+ * @description Syncs vendor-category mappings from a remote registry
+ *              and persists fallback data for smart-paste suggestions.
+ *
+ * @module services/VendorSyncService
+ *
+ * @responsibilities
+ * 1. Fetch vendor registry metadata and latest mapping files
+ * 2. Cache vendor source metadata in storage
+ * 3. Expose callbacks for sync completion notifications
+ *
+ * @storage-keys
+ * - xpensia_vendor_source: persisted vendor registry source
+ *
+ * @dependencies
+ * - vendorFallbackUtils.ts: vendor mapping persistence
+ * - safe-storage.ts: storage wrapper
+ *
+ * @review-tags
+ * - @risk: remote fetch failures and stale caches
+ * - @side-effects: writes vendor fallback mappings
+ *
+ * @review-checklist
+ * - [ ] Registry fetch handles malformed responses
+ * - [ ] Sync writes are idempotent
+ * - [ ] Offline detection falls back to navigator status
+ */
+
 import { safeStorage } from '@/utils/safe-storage';
 import {
   saveVendorFallbacks,
@@ -311,4 +340,3 @@ export function getVendorData(): VendorData | null {
     return null;
   }
 }
-

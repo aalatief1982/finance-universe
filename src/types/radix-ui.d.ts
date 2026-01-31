@@ -1,3 +1,20 @@
+/**
+ * @file radix-ui.d.ts
+ * @description Type definitions for radix-ui.d.
+ *
+ * @module types/radix-ui.d
+ *
+ * @responsibilities
+ * 1. Define shared interfaces and type aliases
+ * 2. Provide consistent contracts across services and UI
+ *
+ * @review-tags
+ * - @data-contract: shared types
+ *
+ * @review-checklist
+ * - [ ] Types align with runtime data shapes
+ * - [ ] Optional fields documented where needed
+ */
 
 // Enhanced typings for Radix UI components used by shadcn/ui
 

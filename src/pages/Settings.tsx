@@ -1,3 +1,31 @@
+/**
+ * @file Settings.tsx
+ * @description Settings screen for app preferences, SMS import options,
+ *              notifications, data import/export, and beta toggles.
+ *
+ * @module pages/Settings
+ *
+ * @responsibilities
+ * 1. Read/update user preferences (theme, currency, display options)
+ * 2. Manage SMS permissions and background SMS settings
+ * 3. Handle import/export, data reset, and OTA update utilities
+ * 4. Log analytics for settings changes
+ *
+ * @dependencies
+ * - storage-utils.ts: persist currency and transaction data
+ * - SmsPermissionService: permission orchestration
+ * - firebase-analytics.ts: settings event logging
+ *
+ * @review-tags
+ * - @side-effects: writes user prefs, storage exports, and native APIs
+ * - @risk: data reset and import flows must be reversible/validated
+ *
+ * @review-checklist
+ * - [ ] Permissions checked before enabling background SMS
+ * - [ ] CSV import validates schema before overwrite
+ * - [ ] Unsaved changes prompt on exit
+ */
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";

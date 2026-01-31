@@ -1,3 +1,30 @@
+/**
+ * @file categories-data.ts
+ * @description Category hierarchy accessors and cached constants for UI forms.
+ *
+ * @module lib/categories-data
+ *
+ * @responsibilities
+ * 1. Load category hierarchy from storage with fallback
+ * 2. Provide category/subcategory lists for a transaction type
+ * 3. Expose PEOPLE and CURRENCIES convenience lists
+ *
+ * @storage-keys
+ * - xpensia_category_hierarchy: stored hierarchy JSON
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ * - people-utils.ts: People list
+ *
+ * @review-tags
+ * - @risk: fallback hierarchy used when storage missing
+ *
+ * @review-checklist
+ * - [ ] Storage parse errors fall back safely
+ * - [ ] Category type filtering matches TransactionType
+ * - [ ] PEOPLE list stays in sync with people-utils
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 
 import { TransactionType } from '@/types/transaction';
@@ -52,6 +79,5 @@ export const getSubcategoriesForCategory = (categoryName: string): string[] => {
 export const PEOPLE = getPeopleNames();
 
 export const CURRENCIES = ['SAR', 'EGP', 'USD', 'BHD', 'AED'];
-
 
 

@@ -1,3 +1,27 @@
+/**
+ * @file useBudgetPeriodParams.ts
+ * @description Hook for syncing budget period filters with URL params.
+ *
+ * @module hooks/useBudgetPeriodParams
+ *
+ * @responsibilities
+ * 1. Read/write period, year, and index query params
+ * 2. Provide navigation helpers for previous/next periods
+ * 3. Generate human-readable period labels
+ *
+ * @dependencies
+ * - budget-period-utils.ts: period calculations and labels
+ * - react-router: search params
+ *
+ * @review-tags
+ * - @risk: param parsing defaults when values are missing
+ *
+ * @review-checklist
+ * - [ ] Period changes reset to current period
+ * - [ ] "all" clears period param from URL
+ * - [ ] Label formatting matches UI expectations
+ */
+
 import { useSearchParams } from 'react-router-dom';
 import { BudgetPeriod } from '@/models/budget';
 import { getCurrentPeriodInfo, formatPeriodLabel, navigatePeriod as navPeriod } from '@/utils/budget-period-utils';

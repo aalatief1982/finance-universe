@@ -1,3 +1,28 @@
+/**
+ * @file account-utils.ts
+ * @description Account list storage helpers and defaults.
+ *
+ * @module lib/account-utils
+ *
+ * @responsibilities
+ * 1. Load stored accounts with defaults
+ * 2. Add user-defined accounts with duplicate prevention
+ *
+ * @storage-keys
+ * - xpensia_accounts: user account list
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ *
+ * @review-tags
+ * - @risk: duplicate account name handling
+ *
+ * @review-checklist
+ * - [ ] Empty account names are rejected
+ * - [ ] Duplicate check is case-insensitive
+ * - [ ] Defaults are preserved when storage is empty
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 export interface Account {
   name: string;
