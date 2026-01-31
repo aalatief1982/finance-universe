@@ -1,3 +1,33 @@
+/**
+ * @file storage-utils.ts
+ * @description Persistence utilities for transactions, categories, and related
+ *              smart-paste learning data stored in local storage.
+ *
+ * @responsibilities
+ * - Read/write transaction and category data to local storage
+ * - Dispatch storage events for cross-tab synchronization
+ * - Validate payloads before persisting to storage
+ * - Persist smart-paste templates and keyword mappings
+ *
+ * @storage-keys
+ * - xpensia_transactions
+ * - xpensia_categories
+ * - xpensia_category_rules
+ * - xpensia_category_changes
+ * - xpensia_user_settings
+ * - xpensia_locale_settings
+ * - xpensia_structure_templates
+ * - xpensia_sms_sender_import_map
+ *
+ * @review-tags
+ * - @side-effects: writes to local storage and dispatches StorageEvent
+ * - @risk: validation failures should surface before persistence
+ *
+ * @review-checklist
+ * - [ ] StorageEvent payload matches persisted data
+ * - [ ] Validation runs before writes in storeTransaction
+ * - [ ] Template/keyword writes stay within size limits
+ */
 import { safeStorage } from "@/utils/safe-storage";
 import { Transaction, TransactionSummary, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,6 +47,12 @@ const LOCALE_SETTINGS_STORAGE_KEY = 'xpensia_locale_settings';
 const STRUCTURE_KEY = 'xpensia_structure_templates';
 const SMS_SENDER_IMPORT_MAP_KEY = 'xpensia_sms_sender_import_map';
 
+
+// ============================================================================
+// SECTION: Core Storage Accessors
+// PURPOSE: Read/write helpers with safeStorage fallback support
+// REVIEW: Ensure JSON parse failures fall back to defaults safely
+// ============================================================================
 
 // Helper function to safely get data from storage
 // Fallbacks to in-memory storage handled by safeStorage
@@ -45,8 +81,11 @@ const setInStorage = <T>(key: string, data: T): void => {
 
 /**
  * Attempts to persist a value in localStorage.
- * Returns true on success and false if an error occurred
- * (e.g. QuotaExceededError).
+ * Returns true on success and false if an error occurred.
+ *
+ * @review-focus
+ * - QuotaExceededError should not corrupt existing data
+ * - Errors are logged only in development mode
  */
 export const safeSetItem = <T>(key: string, data: T): boolean => {
   try {
@@ -60,11 +99,23 @@ export const safeSetItem = <T>(key: string, data: T): boolean => {
   }
 };
 
+// ============================================================================
+// SECTION: Transaction Storage
+// PURPOSE: Persist and broadcast transaction updates
+// REVIEW: StorageEvent dispatch should stay in sync with writes
+// ============================================================================
+
 // Transactions storage functions
 export const getStoredTransactions = (): Transaction[] => {
   return getFromStorage<Transaction[]>(TRANSACTIONS_STORAGE_KEY, []);
 };
 
+/**
+ * Persist all transactions and broadcast updates to listeners.
+ *
+ * @param transactions - Full list of transactions to store
+ * @review-focus StorageEvent payload matches stored JSON
+ */
 export const storeTransactions = (transactions: Transaction[]): void => {
   setInStorage(TRANSACTIONS_STORAGE_KEY, transactions);
   if (typeof window !== 'undefined') {
@@ -92,6 +143,12 @@ export const getStructureTemplates = (): StructureTemplateEntry[] => {
   }
 };
 
+/**
+ * Persist a single transaction after validation.
+ *
+ * @param transaction - Raw transaction payload to validate and store
+ * @review-focus Validation should enforce required fields before write
+ */
 export const storeTransaction = (transaction: any): void => {
   try {
     // Use the validation function from storage-utils-fixes.ts to ensure all required fields are present
@@ -120,6 +177,11 @@ export const storeTransaction = (transaction: any): void => {
 };
 
 
+/**
+ * Update a single transaction in storage without validation.
+ *
+ * @review-focus This bypasses validation; ensure callers sanitize input.
+ */
 export function updateTransaction(txn: Transaction) {
   const existing = JSON.parse(safeStorage.getItem('xpensia_transactions') || '[]');
   const updated = existing.map((t: Transaction) => t.id === txn.id ? txn : t);
@@ -133,6 +195,12 @@ export function updateTransaction(txn: Transaction) {
     );
   }
 }
+
+// ============================================================================
+// SECTION: Smart-Paste Learning Persistence
+// PURPOSE: Capture template and keyword learning for SMS parsing
+// REVIEW: Ensure training data is consistent and deduplicated
+// ============================================================================
 
 export function learnFromTransaction(
   rawMessage: string,

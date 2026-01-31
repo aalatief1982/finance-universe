@@ -1,4 +1,25 @@
 
+/**
+ * @file TransactionGrid.tsx
+ * @description Animated list of transaction cards with edit and delete actions.
+ *
+ * @responsibilities
+ * - Render transaction cards with consistent formatting
+ * - Provide edit and delete affordances with confirmation
+ * - Display hover controls for item actions
+ *
+ * @dependencies
+ * - ExpenseCard: transaction card display
+ * - AlertDialog: confirmation dialog for deletes
+ *
+ * @review-tags
+ * - @risk: delete action must require confirmation
+ * - @usability: hover-only controls should remain discoverable
+ *
+ * @review-checklist
+ * - [ ] Delete action always uses AlertDialog confirmation
+ * - [ ] onEditTransaction is triggered from card click and edit button
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Edit, Eye } from 'lucide-react';
@@ -21,6 +42,12 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
   onDeleteTransaction
 }) => {
   const { toast } = useToast();
+  // ============================================================================
+  // SECTION: Animation Variants
+  // PURPOSE: Provide consistent enter animations for list + items
+  // REVIEW: Stagger timing should not hinder list performance
+  // ============================================================================
+
   // Animation variants for the container
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -79,6 +106,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
                 <Edit size={16} />
               </Button>
               
+              {/* Delete confirmation dialog */}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">

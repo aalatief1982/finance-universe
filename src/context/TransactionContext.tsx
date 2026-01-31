@@ -1,3 +1,24 @@
+/**
+ * @file TransactionContext.tsx
+ * @description React context for transaction state, storage synchronization,
+ *              and computed summaries used across the application.
+ *
+ * @responsibilities
+ * - Load and persist transactions to local storage
+ * - Provide CRUD helpers for transaction state
+ * - Expose summary/grouping utilities for UI consumption
+ *
+ * @dependencies
+ * - storage-utils.ts: local storage persistence and StorageEvent dispatch
+ *
+ * @review-tags
+ * - @side-effects: writes to storage and listens for storage events
+ * - @performance: summary calculations iterate over full transaction lists
+ *
+ * @review-checklist
+ * - [ ] StorageEvent handler stays in sync with storage keys
+ * - [ ] Summary calculations exclude transfers where required
+ */
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
 import { getStoredTransactions, storeTransactions, storeTransaction, removeTransaction } from '@/utils/storage-utils';
@@ -20,6 +41,12 @@ const TransactionContext = createContext<TransactionContextType | undefined>(und
 export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
+  // ============================================================================
+  // SECTION: Storage Initialization + Sync
+  // PURPOSE: Load transactions and listen for external storage updates
+  // REVIEW: Ensure storage key matches storage-utils constants
+  // ============================================================================
+
   // Load transactions from local storage on component mount
   useEffect(() => {
     const storedTransactions = getStoredTransactions();
@@ -39,6 +66,12 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
+
+  // ============================================================================
+  // SECTION: CRUD Helpers
+  // PURPOSE: Maintain local state and persist updates
+  // REVIEW: Ensure ID and source defaults are applied consistently
+  // ============================================================================
 
   const addTransactions = (newTransactions: Transaction[]) => {
     // Ensure all transactions have required fields
@@ -110,6 +143,12 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
   };
 
   // Mock methods for wireframes
+  // ============================================================================
+  // SECTION: Summary + Grouping Helpers
+  // PURPOSE: Provide basic aggregates for UI display
+  // REVIEW: Expense totals should use absolute amounts
+  // ============================================================================
+
   const getTransactionsSummary = () => {
     return {
       income: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
