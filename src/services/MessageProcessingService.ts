@@ -1,3 +1,27 @@
+/**
+ * @file MessageProcessingService.ts
+ * @description Extracts transaction data from freeform message text.
+ *
+ * @module services/MessageProcessingService
+ *
+ * @responsibilities
+ * 1. Parse amounts, currency, vendor/title, and date from text
+ * 2. Infer transaction type and default category
+ * 3. Return normalized Transaction objects or null on failure
+ *
+ * @dependencies
+ * - error-utils.ts: structured error reporting
+ * - uuid: transaction ID generation
+ *
+ * @review-tags
+ * - @risk: regex parsing may mis-detect amounts/currencies
+ * - @side-effects: logs parsing errors
+ *
+ * @review-checklist
+ * - [ ] Amount parsing handles commas and currency symbols
+ * - [ ] Type inference sets amount sign correctly
+ * - [ ] Error handling uses PARSING error type
+ */
 
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction, TransactionType } from '@/types/transaction';

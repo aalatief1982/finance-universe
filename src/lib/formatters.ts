@@ -1,3 +1,27 @@
+/**
+ * @file formatters.ts
+ * @description Formatting helpers for currency, dates, and grouping.
+ *
+ * @module lib/formatters
+ *
+ * @responsibilities
+ * 1. Format currency with user settings
+ * 2. Format dates for UI display
+ * 3. Group records by month for analytics
+ *
+ * @dependencies
+ * - format-utils.ts: currency formatting implementation
+ * - storage-utils.ts: user settings
+ *
+ * @review-tags
+ * - @risk: timezone effects on month grouping
+ *
+ * @review-checklist
+ * - [ ] Currency fallback uses user settings or USD
+ * - [ ] Date formatting uses locale expectations
+ * - [ ] Grouping skips items without date
+ */
+
 import { formatCurrency as formatCurrencyUtil } from '@/utils/format-utils';
 import { getUserSettings } from '@/utils/storage-utils';
 

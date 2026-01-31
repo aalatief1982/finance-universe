@@ -1,3 +1,25 @@
+/**
+ * @file templateNormalizer.ts
+ * @description Normalizes template strings and generates stable hashes.
+ *
+ * @module lib/smart-paste-engine/templateNormalizer
+ *
+ * @responsibilities
+ * 1. Normalize punctuation, whitespace, dates, and amounts
+ * 2. Return normalized structure + SHA256 hash
+ *
+ * @dependencies
+ * - crypto-js/sha256: hashing implementation
+ *
+ * @review-tags
+ * - @risk: over-normalization may collapse distinct templates
+ *
+ * @review-checklist
+ * - [ ] Date patterns normalized consistently
+ * - [ ] Amount patterns replaced with AMOUNT token
+ * - [ ] Hash computed from normalized structure
+ */
+
 import SHA256 from 'crypto-js/sha256';
 
 export interface NormalizedTemplate {
