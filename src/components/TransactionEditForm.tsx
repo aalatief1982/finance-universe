@@ -83,6 +83,19 @@ function hasLowConfidence(
   return score !== undefined && score < 0.6
 }
 
+function areDrivenFieldsEqual(
+  next: Partial<Record<keyof Transaction, boolean>>,
+  prev: Partial<Record<keyof Transaction, boolean>>
+) {
+  const keys = new Set([...Object.keys(next), ...Object.keys(prev)]);
+  for (const key of keys) {
+    if (next[key as keyof Transaction] !== prev[key as keyof Transaction]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export function generateDefaultTitle(txn: Transaction): string {
   const label = txn.vendor?.trim() || (txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '');
   const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
@@ -262,7 +275,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         // console.log('[TransactionEditForm] Final drivenFields map:', driven);
       }
       
-      setDrivenFields(driven);
+      setDrivenFields(prev => {
+        if (areDrivenFieldsEqual(driven, prev)) {
+          if (import.meta.env.MODE === 'development') {
+            console.log('[TransactionEditForm] drivenFields unchanged, skipping state update.');
+          }
+          return prev;
+        }
+        if (import.meta.env.MODE === 'development') {
+          console.log('[TransactionEditForm] Updating drivenFields:', driven);
+        }
+        return driven;
+      });
     }
   }, [transaction, fieldConfidences]);
 
