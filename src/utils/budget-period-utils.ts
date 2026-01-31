@@ -1,3 +1,29 @@
+/**
+ * @file budget-period-utils.ts
+ * @description Date utilities for budget periods (weekly/monthly/quarterly/yearly),
+ *              including period boundaries and labeling.
+ *
+ * @module utils/budget-period-utils
+ *
+ * @responsibilities
+ * 1. Calculate start/end dates for each budget period
+ * 2. Convert between period indices and calendar labels
+ * 3. Respect user-configured week start settings
+ *
+ * @dependencies
+ * - date-fns: date math utilities
+ * - models/budget: BudgetPeriod types
+ *
+ * @review-tags
+ * - @risk: week-start settings affect period boundaries
+ * - @edge-case: year boundary week numbering
+ *
+ * @review-checklist
+ * - [ ] Week/year calculations align with getWeekStartSetting
+ * - [ ] Month/quarter indices are 1-based for display
+ * - [ ] Interval helpers handle months with variable weeks
+ */
+
 import { 
   startOfWeek, 
   endOfWeek, 

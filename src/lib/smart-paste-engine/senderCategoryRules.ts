@@ -1,3 +1,28 @@
+/**
+ * @file senderCategoryRules.ts
+ * @description Sender-to-category rules for Smart Paste learning.
+ *
+ * @module lib/smart-paste-engine/senderCategoryRules
+ *
+ * @responsibilities
+ * 1. Persist sender → category/subcategory mappings
+ * 2. Load mappings for SMS inference
+ * 3. Update rules when user confirms categories
+ *
+ * @storage-keys
+ * - xpensia_sender_category_rules: Sender rule map
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ *
+ * @review-tags
+ * - @risk: sender key must be normalized consistently
+ *
+ * @review-checklist
+ * - [ ] Empty sender values are ignored
+ * - [ ] Parse errors return empty rules object
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 export interface SenderCategoryRule {
   category: string;

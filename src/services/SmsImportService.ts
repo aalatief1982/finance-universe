@@ -1,3 +1,30 @@
+/**
+ * @file SmsImportService.ts
+ * @description Orchestrates SMS import flow, including sender selection,
+ *              auto-import prompts, and navigation to review screens.
+ *
+ * @module services/SmsImportService
+ *
+ * @responsibilities
+ * 1. Fetch SMS messages based on sender filters and lookback windows
+ * 2. Gate auto-import prompts to avoid repeated dialogs
+ * 3. Log analytics for import activity and failures
+ *
+ * @dependencies
+ * - SmsReaderService.ts: native SMS access
+ * - messageFilter.ts: financial SMS filtering
+ * - storage-utils.ts: sender selection and import tracking
+ *
+ * @review-tags
+ * - @risk: import lock prevents duplicate fetches
+ * - @side-effects: analytics logging and navigation
+ *
+ * @review-checklist
+ * - [ ] Import lock releases on error paths
+ * - [ ] Sender selection defaults are handled safely
+ * - [ ] Auto-import uses permission date when requested
+ */
+
 import { SmsReaderService, SmsEntry } from './SmsReaderService';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';

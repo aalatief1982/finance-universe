@@ -1,3 +1,24 @@
+/**
+ * @file useGuidedTips.ts
+ * @description Hook for showing one-time guided tips per section.
+ *
+ * @module hooks/useGuidedTips
+ *
+ * @responsibilities
+ * 1. Track whether a tip has been shown for a section
+ * 2. Persist dismissals to storage
+ *
+ * @dependencies
+ * - safe-storage.ts: storage wrapper
+ *
+ * @review-tags
+ * - @risk: storage failures should not block UI
+ *
+ * @review-checklist
+ * - [ ] Defaults to visible when no stored flag
+ * - [ ] Dismiss persists flag before hiding
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { safeStorage } from '@/utils/safe-storage';
 

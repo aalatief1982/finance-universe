@@ -1,3 +1,27 @@
+/**
+ * @file templateService.ts
+ * @description Computes template learning statistics for settings UI.
+ *
+ * @module services/templateService
+ *
+ * @responsibilities
+ * 1. Aggregate template usage, coverage, and efficiency stats
+ * 2. Provide top templates and field distribution metrics
+ * 3. Support time-range selection for stats display
+ *
+ * @dependencies
+ * - templateUtils.ts: template bank queries
+ *
+ * @review-tags
+ * - @risk: divide-by-zero in percentage calculations
+ * - @performance: iterates over all templates
+ *
+ * @review-checklist
+ * - [ ] Zero totals guard percentages
+ * - [ ] Most-used list sorted by usageCount
+ * - [ ] Stale detection uses correct threshold
+ */
+
 import { getAllTemplates, getStaleTemplates } from '@/lib/smart-paste-engine/templateUtils';
 
 export type FieldStat = {

@@ -1,3 +1,29 @@
+/**
+ * @file TemplateStatsSection.tsx
+ * @description Settings section that displays template learning statistics,
+ *              coverage, and efficiency metrics.
+ *
+ * @module components/settings/TemplateStatsSection
+ *
+ * @responsibilities
+ * 1. Fetch template statistics for selected time ranges
+ * 2. Render summary cards and visualization rings
+ * 3. Refresh stats on focus and template updates
+ *
+ * @dependencies
+ * - templateService.ts: getTemplateStats
+ * - UserContext: authenticated user gating
+ *
+ * @review-tags
+ * - @risk: NaN/Infinity values if stats totals are zero
+ * - @performance: repeated fetches on focus events
+ *
+ * @review-checklist
+ * - [ ] Percentage calculations guard against zero totals
+ * - [ ] Event listeners cleaned up on unmount
+ * - [ ] Range selection triggers fetch
+ */
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

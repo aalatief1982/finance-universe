@@ -1,3 +1,21 @@
+/**
+ * @file TemplateStructureService.ts
+ * @description Generates template structures from raw SMS text by
+ *              replacing detected entities with placeholders.
+ *
+ * @module services/TemplateStructureService
+ *
+ * @responsibilities
+ * 1. Normalize amounts, currency, date, and account tokens into placeholders
+ * 2. Return template string plus detected field list
+ *
+ * @review-tags
+ * - @risk: regex replacements may overlap or miss tokens
+ *
+ * @review-checklist
+ * - [ ] Placeholder list matches applied replacements
+ * - [ ] Field list is de-duplicated
+ */
 
 export const TemplateStructureService = {
   generateTemplateStructure(text: string): {

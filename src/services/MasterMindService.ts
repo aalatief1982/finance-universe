@@ -1,5 +1,32 @@
+/**
+ * @file MasterMindService.ts
+ * @description Global field-token learning store with position awareness.
+ *              Tracks token usage for smart-paste inference.
+ *
+ * @module services/MasterMindService
+ *
+ * @responsibilities
+ * 1. Persist token-to-field mappings with usage counts
+ * 2. Track positional context for improved inference
+ * 3. Provide registration helpers for learning updates
+ *
+ * @storage-keys
+ * - xpensia_master_mind_map: token learning map
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ *
+ * @review-tags
+ * - @side-effects: writes token learning data
+ * - @risk: growth of token map over time
+ *
+ * @review-checklist
+ * - [ ] Token normalization uses lowercase keys
+ * - [ ] Save handles JSON serialization errors
+ * - [ ] Position tracking preserves context arrays
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
-// MasterMindService.ts - Global Field-Token Learning Store with Position Awareness
 
 import { PositionedToken } from '@/types/learning';
 

@@ -1,6 +1,22 @@
+/**
+ * @file CategoryInferencer.ts
+ * @description Simple vendor keyword to category/subcategory inference.
+ *
+ * @module services/CategoryInferencer
+ *
+ * @responsibilities
+ * 1. Map vendor keywords to category/subcategory pairs
+ * 2. Provide default categories when no match is found
+ *
+ * @review-tags
+ * - @data-quality: keyword map coverage
+ * - @risk: default categories used when no match
+ *
+ * @review-checklist
+ * - [ ] Keyword map uses lowercase keys
+ * - [ ] Defaults are defined for income/expense
+ */
 
-// src/services/CategoryInferencer.ts
-// A simple service to infer transaction categories based on vendor names
 
 interface CategoryInfo {
   category: string;
