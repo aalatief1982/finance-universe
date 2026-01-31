@@ -1,3 +1,21 @@
+/**
+ * @file SetBudgetPage.tsx
+ * @description Page component for SetBudgetPage.
+ *
+ * @module pages/budget/SetBudgetPage
+ *
+ * @responsibilities
+ * 1. Compose layout and section components
+ * 2. Load data or invoke services for the page
+ * 3. Handle navigation and page-level actions
+ *
+ * @review-tags
+ * - @ui: page composition
+ *
+ * @review-checklist
+ * - [ ] Data loading handles empty states
+ * - [ ] Navigation hooks are wired correctly
+ */
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';

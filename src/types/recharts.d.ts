@@ -1,3 +1,20 @@
+/**
+ * @file recharts.d.ts
+ * @description Type definitions for recharts.d.
+ *
+ * @module types/recharts.d
+ *
+ * @responsibilities
+ * 1. Define shared interfaces and type aliases
+ * 2. Provide consistent contracts across services and UI
+ *
+ * @review-tags
+ * - @data-contract: shared types
+ *
+ * @review-checklist
+ * - [ ] Types align with runtime data shapes
+ * - [ ] Optional fields documented where needed
+ */
 
 declare module 'recharts' {
   export interface ChartProps {

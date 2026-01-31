@@ -1,3 +1,21 @@
+/**
+ * @file NotFound.tsx
+ * @description Page component for NotFound.
+ *
+ * @module pages/NotFound
+ *
+ * @responsibilities
+ * 1. Compose layout and section components
+ * 2. Load data or invoke services for the page
+ * 3. Handle navigation and page-level actions
+ *
+ * @review-tags
+ * - @ui: page composition
+ *
+ * @review-checklist
+ * - [ ] Data loading handles empty states
+ * - [ ] Navigation hooks are wired correctly
+ */
 
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";

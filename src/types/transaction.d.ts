@@ -1,3 +1,20 @@
+/**
+ * @file transaction.d.ts
+ * @description Type definitions for transaction.d.
+ *
+ * @module types/transaction.d
+ *
+ * @responsibilities
+ * 1. Define shared interfaces and type aliases
+ * 2. Provide consistent contracts across services and UI
+ *
+ * @review-tags
+ * - @data-contract: shared types
+ *
+ * @review-checklist
+ * - [ ] Types align with runtime data shapes
+ * - [ ] Optional fields documented where needed
+ */
 
 export type TransactionType = 'income' | 'expense' | 'transfer';
 

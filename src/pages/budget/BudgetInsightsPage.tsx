@@ -1,3 +1,21 @@
+/**
+ * @file BudgetInsightsPage.tsx
+ * @description Page component for BudgetInsightsPage.
+ *
+ * @module pages/budget/BudgetInsightsPage
+ *
+ * @responsibilities
+ * 1. Compose layout and section components
+ * 2. Load data or invoke services for the page
+ * 3. Handle navigation and page-level actions
+ *
+ * @review-tags
+ * - @ui: page composition
+ *
+ * @review-checklist
+ * - [ ] Data loading handles empty states
+ * - [ ] Navigation hooks are wired correctly
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BudgetLayout } from '@/components/budget/BudgetLayout';

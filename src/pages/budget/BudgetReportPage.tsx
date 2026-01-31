@@ -1,3 +1,21 @@
+/**
+ * @file BudgetReportPage.tsx
+ * @description Page component for BudgetReportPage.
+ *
+ * @module pages/budget/BudgetReportPage
+ *
+ * @responsibilities
+ * 1. Compose layout and section components
+ * 2. Load data or invoke services for the page
+ * 3. Handle navigation and page-level actions
+ *
+ * @review-tags
+ * - @ui: page composition
+ *
+ * @review-checklist
+ * - [ ] Data loading handles empty states
+ * - [ ] Navigation hooks are wired correctly
+ */
 import React from 'react';
 import { BudgetLayout } from '@/components/budget/BudgetLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

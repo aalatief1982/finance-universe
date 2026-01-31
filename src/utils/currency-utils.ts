@@ -1,4 +1,23 @@
 /**
+ * @file currency-utils.ts
+ * @description Currency normalization and validation helpers.
+ *
+ * @module utils/currency-utils
+ *
+ * @responsibilities
+ * 1. Normalize Arabic/English currency names to ISO codes
+ * 2. Provide valid currency code lists
+ * 3. Expose helpers for currency validation
+ *
+ * @review-tags
+ * - @risk: incomplete mapping for regional names
+ *
+ * @review-checklist
+ * - [ ] Arabic currency names map to correct ISO codes
+ * - [ ] Invalid values fall back to safe defaults
+ */
+
+/**
  * Currency utilities for normalization and validation
  * Handles Arabic currency names and ISO code mapping
  */

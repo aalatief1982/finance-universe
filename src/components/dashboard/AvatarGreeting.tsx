@@ -1,3 +1,21 @@
+/**
+ * @file AvatarGreeting.tsx
+ * @description UI component for AvatarGreeting.
+ *
+ * @module components/dashboard/AvatarGreeting
+ *
+ * @responsibilities
+ * 1. Render UI for the feature area
+ * 2. Accept props and emit user interactions
+ * 3. Compose shared subcomponents where needed
+ *
+ * @review-tags
+ * - @ui: visual/layout behavior
+ *
+ * @review-checklist
+ * - [ ] Props have sensible defaults
+ * - [ ] Component renders without crashing
+ */
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User } from '@/types/user';

@@ -1,3 +1,28 @@
+/**
+ * @file useAutoSave.ts
+ * @description Auto-save hook for form data with debounce and status tracking.
+ *
+ * @module hooks/useAutoSave
+ *
+ * @responsibilities
+ * 1. Debounce form changes and trigger save callback
+ * 2. Track save status and last saved timestamp
+ * 3. Surface save errors via toast or custom handler
+ *
+ * @dependencies
+ * - errorMapper.ts: user-friendly error messages
+ * - use-toast.ts: UI notifications
+ *
+ * @review-tags
+ * - @risk: MutationObserver usage on form
+ * - @side-effects: triggers save callback and toasts
+ *
+ * @review-checklist
+ * - [ ] Debounce respects enabled flag
+ * - [ ] Timeout cleared on rapid changes
+ * - [ ] Error handler fallback uses toast
+ */
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';

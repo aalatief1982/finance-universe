@@ -1,4 +1,29 @@
 
+/**
+ * @file AnalyticsService.ts
+ * @description Pure analytics helpers for totals, category breakdowns,
+ *              and time-series data used by dashboard charts.
+ *
+ * @module services/AnalyticsService
+ *
+ * @responsibilities
+ * 1. Compute income/expense totals and savings rate (transfer-excluded)
+ * 2. Build category/subcategory rollups for charts
+ * 3. Aggregate monthly totals for trend displays
+ *
+ * @dependencies
+ * - formatters.ts: formatCurrency, groupByMonth
+ *
+ * @review-tags
+ * - @risk: transfer exclusion affects summary correctness
+ * - @performance: groupByMonth iterates over filtered transactions
+ *
+ * @review-checklist
+ * - [ ] Transfers excluded from all analytics outputs
+ * - [ ] Subcategory totals ignore NaN/Infinity values
+ * - [ ] Month sorting uses actual dates, not strings
+ */
+
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/lib/formatters';
 import { groupByMonth } from '@/lib/formatters';

@@ -1,3 +1,30 @@
+/**
+ * @file Home.tsx
+ * @description Dashboard home page for financial summaries, charts,
+ *              and quick actions.
+ *
+ * @module pages/Home
+ *
+ * @responsibilities
+ * 1. Filter transactions by date range for analytics
+ * 2. Render summary cards and charts (category, time, net balance)
+ * 3. Track screen view analytics
+ *
+ * @dependencies
+ * - AnalyticsService.ts: totals and chart data helpers
+ * - TransactionContext: transaction data source
+ * - firebase-analytics.ts: screen view logging
+ *
+ * @review-tags
+ * - @risk: summary calculations must exclude transfers where required
+ * - @performance: memoized aggregates on large transaction lists
+ *
+ * @review-checklist
+ * - [ ] Transfers excluded from income/expense totals
+ * - [ ] Date range filters include end date for custom ranges
+ * - [ ] Charts receive consistent data ordering
+ */
+
 import React, { useEffect } from "react";
 import Layout from "@/components/Layout";
 import DashboardStats from "@/components/DashboardStats";
