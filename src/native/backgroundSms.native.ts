@@ -1,3 +1,28 @@
+/**
+ * @file backgroundSms.native.ts
+ * @description Native background SMS listener wrapper with cached
+ *              permission checks and resilient error handling.
+ *
+ * @module native/backgroundSms.native
+ *
+ * @responsibilities
+ * 1. Wrap BackgroundSmsListener plugin calls with safe defaults
+ * 2. Cache permission checks to reduce native round-trips
+ * 3. Provide guarded start/stop listening helpers
+ *
+ * @dependencies
+ * - BackgroundSmsListenerPlugin: native Capacitor plugin
+ * - Capacitor core: platform detection
+ *
+ * @review-tags
+ * - @side-effects: caches permission results in module scope
+ * - @risk: stale permission cache if TTL too high
+ *
+ * @review-checklist
+ * - [ ] Cache TTL is short enough for permission changes
+ * - [ ] Errors never crash the app (logs only in dev)
+ */
+
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import type { BackgroundSmsListenerPlugin } from '@/plugins/BackgroundSmsListenerPlugin';
 import { Capacitor } from '@capacitor/core';

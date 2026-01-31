@@ -1,3 +1,27 @@
+/**
+ * @file CategorySuggestionService.ts
+ * @description Rule- and similarity-based category suggestions for transactions.
+ *
+ * @module services/CategorySuggestionService
+ *
+ * @responsibilities
+ * 1. Suggest categories using rule matches (regex or substring)
+ * 2. Fallback to similar-transaction matching by title
+ * 3. Create category rules from user-confirmed transactions
+ *
+ * @dependencies
+ * - TransactionService.ts: category rules and transaction history
+ *
+ * @review-tags
+ * - @risk: invalid regex patterns must not crash suggestion flow
+ * - @data-quality: similarity matching should avoid false positives
+ *
+ * @review-checklist
+ * - [ ] Rules evaluated in priority order
+ * - [ ] Regex errors handled without throwing in production
+ * - [ ] Similarity matching excludes empty titles
+ */
+
 import { Transaction, CategoryRule } from '@/types/transaction';
 import { transactionService } from '@/services/TransactionService';
 

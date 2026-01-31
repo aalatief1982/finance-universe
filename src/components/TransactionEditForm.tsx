@@ -1,3 +1,35 @@
+/**
+ * @file TransactionEditForm.tsx
+ * @description Main transaction form with validation, vendor/account
+ *              suggestions, and confidence-driven UI hints.
+ *
+ * @module components/TransactionEditForm
+ *
+ * @responsibilities
+ * 1. Render transaction input fields with category/subcategory selection
+ * 2. Normalize date, amount, vendor, and account inputs
+ * 3. Support vendor/account remapping and autocomplete
+ * 4. Surface smart-paste confidence indicators
+ *
+ * @storage-keys
+ * - xpensia_vendor_map: vendor remapping
+ * - xpensia_fromaccount_map: account remapping
+ * - xpensia_custom_currencies: custom currency list
+ *
+ * @dependencies
+ * - categories-data.ts: category/subcategory sources
+ * - vendorFallbackUtils.ts: vendor mapping persistence
+ *
+ * @review-tags
+ * - @risk: date parsing and normalization (ISO conversion)
+ * - @side-effects: writes vendor/account mappings to storage
+ *
+ * @review-checklist
+ * - [ ] Date inputs normalized to ISO for storage
+ * - [ ] Amounts maintain sign based on transaction type
+ * - [ ] Vendor/account remaps saved only when user confirms
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
