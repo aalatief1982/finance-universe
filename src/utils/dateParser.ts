@@ -1,3 +1,24 @@
+/**
+ * @file dateParser.ts
+ * @description Normalizes SMS date strings to ISO format.
+ *
+ * @module utils/dateParser
+ *
+ * @responsibilities
+ * 1. Extract date substrings from raw SMS text
+ * 2. Parse multiple formats and return ISO UTC dates
+ *
+ * @dependencies
+ * - date-fns: parse + validate helpers
+ *
+ * @review-tags
+ * - @risk: ambiguous day/month ordering
+ *
+ * @review-checklist
+ * - [ ] Two-digit years map to 19xx/20xx correctly
+ * - [ ] UTC midnight used to avoid timezone drift
+ */
+
 // utils/dateParser.ts
 import { parse, isValid } from 'date-fns';
 

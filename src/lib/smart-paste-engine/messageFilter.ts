@@ -1,3 +1,30 @@
+/**
+ * @file messageFilter.ts
+ * @description Determines whether an SMS text looks like a financial transaction.
+ *
+ * @module lib/smart-paste-engine/messageFilter
+ *
+ * @responsibilities
+ * 1. Load user-defined financial keywords
+ * 2. Match keywords, amounts, and dates in SMS text
+ * 3. Provide a fallback keyword list for filtering
+ *
+ * @storage-keys
+ * - xpensia_type_keywords: custom keyword list
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ *
+ * @review-tags
+ * - @risk: regex false positives/negatives
+ * - @data-quality: keyword normalization affects matches
+ *
+ * @review-checklist
+ * - [ ] Keyword list defaults when storage is invalid
+ * - [ ] Amount/date regexes cover localized formats
+ * - [ ] Text normalization strips whitespace and casing
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 export function isFinancialTransactionMessage(text: string): boolean {
   let storedKeywords: string[] = [];

@@ -1,3 +1,33 @@
+/**
+ * @file SmsProviderSelectionService.ts
+ * @description Manages selectable SMS providers and detected senders.
+ *
+ * @module services/SmsProviderSelectionService
+ *
+ * @responsibilities
+ * 1. Persist available provider list and selected providers
+ * 2. Track detected providers for UI highlighting
+ * 3. Manage SMS import start date defaults
+ *
+ * @storage-keys
+ * - sms_providers: stored provider list
+ * - sms_start_date: start date for SMS import
+ * - detected_sms_providers: providers observed in inbox
+ *
+ * @dependencies
+ * - safe-storage.ts: storage wrapper
+ * - error-utils.ts: error handling for storage failures
+ *
+ * @review-tags
+ * - @risk: storage parse errors fall back to defaults
+ * - @side-effects: writes provider selections
+ *
+ * @review-checklist
+ * - [ ] Provider list merges detected metadata
+ * - [ ] Storage errors emit ErrorType.STORAGE
+ * - [ ] Default providers remain selectable
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { ErrorType } from '@/types/error';
 import { handleError } from '@/utils/error-utils';

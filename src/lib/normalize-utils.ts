@@ -1,3 +1,23 @@
+/**
+ * @file normalize-utils.ts
+ * @description Text normalization helpers for numerals, punctuation, and RTL detection.
+ *
+ * @module lib/normalize-utils
+ *
+ * @responsibilities
+ * 1. Normalize Arabic/Persian numerals to ASCII digits
+ * 2. Normalize common punctuation variants
+ * 3. Detect RTL scripts for UI/layout handling
+ *
+ * @review-tags
+ * - @risk: normalization should preserve meaningful characters
+ *
+ * @review-checklist
+ * - [ ] Numeral map covers Arabic and Persian digits
+ * - [ ] Punctuation map covers smart quotes
+ * - [ ] RTL regex includes Arabic/Hebrew ranges
+ */
+
 export function normalizeNumerals(text: string): string {
   const map: Record<string, string> = {
     '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',

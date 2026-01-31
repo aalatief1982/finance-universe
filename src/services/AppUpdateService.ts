@@ -1,3 +1,33 @@
+/**
+ * @file AppUpdateService.ts
+ * @description OTA update service for Capgo bundles and native version checks.
+ *
+ * @module services/AppUpdateService
+ *
+ * @responsibilities
+ * 1. Fetch and validate update manifests
+ * 2. Download/apply OTA bundles on native platforms
+ * 3. Track update metadata and analytics
+ *
+ * @storage-keys
+ * - xpensia_pending_update_bundle: pending bundle metadata
+ * - xpensia_last_manifest_check: last manifest fetch time
+ * - xpensia_last_manifest_version: last manifest version seen
+ *
+ * @dependencies
+ * - CapacitorUpdater: Capgo OTA updates
+ * - firebase-analytics.ts: update event logging
+ *
+ * @review-tags
+ * - @platform: native-only update logic
+ * - @risk: timeout handling and mandatory update enforcement
+ *
+ * @review-checklist
+ * - [ ] Web platforms no-op safely
+ * - [ ] Timeouts handled without crashing app
+ * - [ ] Pending bundle metadata cleared after apply
+ */
+
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { safeStorage } from '@/utils/safe-storage';

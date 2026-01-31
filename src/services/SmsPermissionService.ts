@@ -1,3 +1,33 @@
+/**
+ * @file SmsPermissionService.ts
+ * @description Handles SMS permission checks and requests across
+ *              reader and background listener plugins.
+ *
+ * @module services/SmsPermissionService
+ *
+ * @responsibilities
+ * 1. Aggregate permission status from reader and listener plugins
+ * 2. Serialize permission checks/requests to avoid flooding native APIs
+ * 3. Persist permission grant timestamps
+ *
+ * @storage-keys
+ * - sms_permission_simulation: web-only permission override
+ *
+ * @dependencies
+ * - SmsReaderService.ts: permission status
+ * - BackgroundSmsListener: listener permission status
+ * - sms-permission-storage.ts: grant date persistence
+ *
+ * @review-tags
+ * - @platform: native permission flows
+ * - @risk: cached permission status and in-flight requests
+ *
+ * @review-checklist
+ * - [ ] Concurrent checks reuse cached status
+ * - [ ] Request flow updates grant date on success
+ * - [ ] Web simulation flag is respected
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { setSmsPermissionGrantDate } from "@/utils/sms-permission-storage";
 

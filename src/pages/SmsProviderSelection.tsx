@@ -1,3 +1,21 @@
+/**
+ * @file SmsProviderSelection.tsx
+ * @description Page component for SmsProviderSelection.
+ *
+ * @module pages/SmsProviderSelection
+ *
+ * @responsibilities
+ * 1. Compose layout and section components
+ * 2. Load data or invoke services for the page
+ * 3. Handle navigation and page-level actions
+ *
+ * @review-tags
+ * - @ui: page composition
+ *
+ * @review-checklist
+ * - [ ] Data loading handles empty states
+ * - [ ] Navigation hooks are wired correctly
+ */
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';

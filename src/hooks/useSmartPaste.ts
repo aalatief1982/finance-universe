@@ -1,3 +1,29 @@
+/**
+ * @file useSmartPaste.ts
+ * @description Hook for smart-paste detection, parsing, and navigation.
+ *
+ * @module hooks/useSmartPaste
+ *
+ * @responsibilities
+ * 1. Process pasted text and detect transactions via multiple strategies
+ * 2. Track confidence and match origin for UI feedback
+ * 3. Navigate to edit/review flows when transactions are detected
+ *
+ * @dependencies
+ * - MLTransactionParser.ts: regex-based entity extraction
+ * - LearningEngineService.ts: learned matching
+ * - CategoryInferencer.ts: vendor → category fallback
+ *
+ * @review-tags
+ * - @risk: clipboard access failures
+ * - @performance: multiple parsing strategies per message
+ *
+ * @review-checklist
+ * - [ ] Empty text is ignored early
+ * - [ ] Match origin is set for detected transactions
+ * - [ ] Errors surface via toast notifications
+ */
+
 import { useState, useCallback } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';

@@ -1,3 +1,21 @@
+/**
+ * @file BottomNav.tsx
+ * @description UI component for BottomNav.
+ *
+ * @module components/BottomNav
+ *
+ * @responsibilities
+ * 1. Render UI for the feature area
+ * 2. Accept props and emit user interactions
+ * 3. Compose shared subcomponents where needed
+ *
+ * @review-tags
+ * - @ui: visual/layout behavior
+ *
+ * @review-checklist
+ * - [ ] Props have sensible defaults
+ * - [ ] Component renders without crashing
+ */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Upload, List, LineChart } from 'lucide-react';

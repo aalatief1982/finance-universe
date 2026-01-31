@@ -1,3 +1,24 @@
+/**
+ * @file csv.ts
+ * @description CSV import/export helpers for transactions.
+ *
+ * @module utils/csv
+ *
+ * @responsibilities
+ * 1. Convert transactions to CSV with escaped fields
+ * 2. Parse CSV rows into Transaction objects
+ *
+ * @dependencies
+ * - uuid: ID generation for imported rows
+ *
+ * @review-tags
+ * - @risk: CSV parsing edge cases with quotes/newlines
+ *
+ * @review-checklist
+ * - [ ] Required fields validated on import
+ * - [ ] CSV escaping handles quotes and newlines
+ */
+
 export interface CsvConversionOptions {
   delimiter?: string;
 }

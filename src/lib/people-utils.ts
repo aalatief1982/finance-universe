@@ -1,3 +1,28 @@
+/**
+ * @file people-utils.ts
+ * @description People list storage helpers and defaults.
+ *
+ * @module lib/people-utils
+ *
+ * @responsibilities
+ * 1. Load stored people with defaults
+ * 2. Add user-defined people with duplicate prevention
+ *
+ * @storage-keys
+ * - xpensia_people: user people list
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ *
+ * @review-tags
+ * - @risk: duplicate name handling
+ *
+ * @review-checklist
+ * - [ ] Empty names are rejected
+ * - [ ] Duplicate check is case-insensitive
+ * - [ ] Defaults are preserved when storage is empty
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 export interface Person {
   name: string;

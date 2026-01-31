@@ -1,3 +1,32 @@
+/**
+ * @file DemoTransactionService.ts
+ * @description Seeds demo transactions for new users or demo mode.
+ *
+ * @module services/DemoTransactionService
+ *
+ * @responsibilities
+ * 1. Generate randomized demo transactions across categories
+ * 2. Avoid seeding when real transactions already exist
+ * 3. Persist seeded data and initialization flag
+ *
+ * @storage-keys
+ * - xpensia_demo_transactions_initialized: seed guard flag
+ *
+ * @dependencies
+ * - categories-data.ts: category hierarchy
+ * - storage-utils.ts: transaction persistence
+ * - safe-storage.ts: storage wrapper
+ *
+ * @review-tags
+ * - @risk: seed runs only once per install
+ * - @data-integrity: amounts respect transaction type sign
+ *
+ * @review-checklist
+ * - [ ] Seed skips if transactions exist
+ * - [ ] Transfer amounts include positive/negative variants
+ * - [ ] Date generation stays within expected range
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { Transaction, TransactionType } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';

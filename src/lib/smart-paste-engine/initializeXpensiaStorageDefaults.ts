@@ -1,3 +1,29 @@
+/**
+ * @file initializeXpensiaStorageDefaults.ts
+ * @description Seeds default category hierarchy and vendor fallback data
+ *              for smart-paste initialization.
+ *
+ * @module lib/smart-paste-engine/initializeXpensiaStorageDefaults
+ *
+ * @responsibilities
+ * 1. Define default category hierarchy constants
+ * 2. Seed vendor fallback mappings into storage
+ * 3. Kick off vendor registry sync when needed
+ *
+ * @dependencies
+ * - VendorSyncService.ts: remote vendor updates
+ * - vendorFallbackUtils.ts: persistence for fallback data
+ *
+ * @review-tags
+ * - @side-effects: writes large default datasets to storage
+ * - @risk: category hierarchy drift from canonical data
+ *
+ * @review-checklist
+ * - [ ] Seed logic runs only when storage is empty
+ * - [ ] Vendor fallback data matches registry schema
+ * - [ ] Category hierarchy uses TransactionType enums
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { TransactionType } from '@/types/transaction';
 import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';

@@ -1,3 +1,31 @@
+/**
+ * @file useProfileImage.ts
+ * @description Hook to capture, store, and retrieve profile images.
+ *
+ * @module hooks/useProfileImage
+ *
+ * @responsibilities
+ * 1. Capture or select photos via Capacitor Camera
+ * 2. Persist image data to filesystem and storage
+ * 3. Provide base64 data for UI rendering
+ *
+ * @storage-keys
+ * - profileImagePath: stored file name
+ *
+ * @dependencies
+ * - Capacitor Camera + Filesystem
+ * - firebase-analytics.ts: photo_added event
+ *
+ * @review-tags
+ * - @platform: native camera/filesystem usage
+ * - @side-effects: writes files and logs analytics
+ *
+ * @review-checklist
+ * - [ ] Stored file name exists before read
+ * - [ ] Loading state resets on failure
+ * - [ ] Analytics logged after successful save
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { useEffect, useState } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';

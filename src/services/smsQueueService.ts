@@ -1,3 +1,29 @@
+/**
+ * @file smsQueueService.ts
+ * @description Persists queued inbound SMS messages for later processing.
+ *
+ * @module services/smsQueueService
+ *
+ * @responsibilities
+ * 1. Store queued SMS messages in preferences (native) or localStorage (web)
+ * 2. Provide helpers to add, read, and clear the queue
+ *
+ * @storage-keys
+ * - newIncomingBuffer: queued SMS payloads
+ *
+ * @dependencies
+ * - safe-storage.ts: safeStorage + safePreferences wrappers
+ *
+ * @review-tags
+ * - @platform: native vs web storage
+ * - @risk: JSON parse failures on corrupted storage
+ *
+ * @review-checklist
+ * - [ ] Native uses Capacitor Preferences
+ * - [ ] Web fallback uses localStorage
+ * - [ ] Queue reads default to empty array
+ */
+
 import { safeStorage, safePreferences } from "@/utils/safe-storage";
 import { Capacitor } from '@capacitor/core';
 
@@ -38,4 +64,3 @@ export const addToQueue = async (sms: QueuedSms): Promise<void> => {
     safeStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
   }
 };
-
