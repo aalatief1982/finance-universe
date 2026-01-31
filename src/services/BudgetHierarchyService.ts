@@ -1,3 +1,29 @@
+/**
+ * @file BudgetHierarchyService.ts
+ * @description Helpers for distributing and aggregating budget amounts
+ *              across period and scope hierarchies.
+ *
+ * @module services/BudgetHierarchyService
+ *
+ * @responsibilities
+ * 1. Distribute budgets down period hierarchies (yearly → weekly)
+ * 2. Aggregate child budgets to parent totals
+ * 3. Provide utilities for parent/child period relationships
+ *
+ * @dependencies
+ * - budget-period-utils.ts: week/month/quarter calculations
+ * - models/budget: period and scope definitions
+ *
+ * @review-tags
+ * - @risk: incorrect period indexing breaks allocations
+ * - @data-integrity: aggregate totals must match parent sums
+ *
+ * @review-checklist
+ * - [ ] Period indices are 1-based for months/quarters
+ * - [ ] Weekly distributions respect weeks-in-month/year
+ * - [ ] Parent/child period mapping is consistent
+ */
+
 import { Budget, BudgetPeriod, BudgetScope, getScopeLevel } from '@/models/budget';
 import { getWeeksInMonth, getMonthsInQuarter, getWeeksInYear } from '@/utils/budget-period-utils';
 

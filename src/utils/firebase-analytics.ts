@@ -1,3 +1,30 @@
+/**
+ * @file firebase-analytics.ts
+ * @description Analytics logging helpers for Firebase and Google Sheets.
+ *              Supports native-only event logging and debug telemetry.
+ *
+ * @module utils/firebase-analytics
+ *
+ * @responsibilities
+ * 1. Log high-frequency events to Firebase only
+ * 2. Log detailed events to Google Sheets with device metadata
+ * 3. Provide combined logging helper with safe error handling
+ *
+ * @dependencies
+ * - @capacitor-firebase/analytics: native event logging
+ * - Device: device metadata for Sheets logging
+ * - google-sheets.ts: logToGoogleSheets transport
+ *
+ * @review-tags
+ * - @side-effects: network calls to Firebase/Google Sheets
+ * - @risk: silent failures should not block app flow
+ *
+ * @review-checklist
+ * - [ ] Web platform does not attempt native logging
+ * - [ ] Test environment skips Sheets logging
+ * - [ ] Keyword bank attached only for transaction events
+ */
+
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 import { Device } from '@capacitor/device';

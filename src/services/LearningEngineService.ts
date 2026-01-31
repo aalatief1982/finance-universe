@@ -1,14 +1,33 @@
 
+/**
+ * @file LearningEngineService.ts
+ * @description Token-based inference utilities for smart-paste learning.
+ *              Analyzes labeled tokens to infer transaction properties.
+ *
+ * @module services/LearningEngineService
+ *
+ * @responsibilities
+ * 1. Infer transaction type, amount, currency, and vendor from token labels
+ * 2. Provide fallback heuristics for incomplete tokenization
+ * 3. Supply suggested transaction details for smart-paste workflows
+ *
+ * @dependencies
+ * - types/transaction: Transaction type definitions
+ * - types/learning: ML/learning types for downstream services
+ *
+ * @review-tags
+ * - @risk: default type inference impacts downstream categorization
+ * - @data-quality: token labeling quality dictates inference accuracy
+ *
+ * @review-checklist
+ * - [ ] Default type is expense when no keyword matches
+ * - [ ] Amount parsing strips commas safely
+ * - [ ] Currency falls back to USD only when unlabeled
+ */
+
 type TokenLabels = Record<string, string>;
 import { Transaction } from '@/types/transaction';
 import { LearnedEntry, LearningEngineConfig, MatchResult, PositionedToken } from '@/types/learning';
-
-/**
- * LearningEngineService.ts
- *
- * This service is responsible for analyzing text and suggesting transaction details.
- * It uses a combination of token analysis and rule-based logic to infer transaction properties.
- */
 
 /**
  * Determines the transaction type (income/expense) based on token analysis.

@@ -1,3 +1,28 @@
+/**
+ * @file useBudgets.ts
+ * @description Budget hooks for CRUD, progress calculations,
+ *              and alert summaries.
+ *
+ * @module hooks/useBudgets
+ *
+ * @responsibilities
+ * 1. Provide reactive CRUD helpers for budgets
+ * 2. Compute budget progress and summary statistics
+ * 3. Surface active budget alerts
+ *
+ * @dependencies
+ * - BudgetService.ts: storage-backed budget operations
+ *
+ * @review-tags
+ * - @side-effects: refreshes state from storage after mutations
+ * - @performance: recompute summaries on data change
+ *
+ * @review-checklist
+ * - [ ] Refresh called after add/update/delete
+ * - [ ] Progress computation handles missing budgets
+ * - [ ] Alerts are fetched on mount only
+ */
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Budget, CreateBudgetInput, UpdateBudgetInput, BudgetPeriod } from '@/models/budget';
 import { BudgetProgress, BudgetAlert } from '@/models/budget-period';
