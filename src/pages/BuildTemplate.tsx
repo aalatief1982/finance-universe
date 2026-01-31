@@ -1,3 +1,21 @@
+/**
+ * @file BuildTemplate.tsx
+ * @description Page component for BuildTemplate.
+ *
+ * @module pages/BuildTemplate
+ *
+ * @responsibilities
+ * 1. Compose layout and section components
+ * 2. Load data or invoke services for the page
+ * 3. Handle navigation and page-level actions
+ *
+ * @review-tags
+ * - @ui: page composition
+ *
+ * @review-checklist
+ * - [ ] Data loading handles empty states
+ * - [ ] Navigation hooks are wired correctly
+ */
 
 import React, { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';

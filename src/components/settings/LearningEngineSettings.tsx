@@ -1,3 +1,21 @@
+/**
+ * @file LearningEngineSettings.tsx
+ * @description Settings section for LearningEngineSettings.
+ *
+ * @module components/settings/LearningEngineSettings
+ *
+ * @responsibilities
+ * 1. Render settings controls and labels
+ * 2. Persist setting changes via callbacks/services
+ * 3. Provide validation or feedback where required
+ *
+ * @review-tags
+ * - @ui: settings state wiring
+ *
+ * @review-checklist
+ * - [ ] Settings state reflects stored preferences
+ * - [ ] Changes are persisted or bubbled up
+ */
 
 import React, { useState, useEffect } from 'react';
 import { Brain, Trash2, Database, Settings2 } from 'lucide-react';

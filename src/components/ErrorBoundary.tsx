@@ -1,3 +1,21 @@
+/**
+ * @file ErrorBoundary.tsx
+ * @description UI component for ErrorBoundary.
+ *
+ * @module components/ErrorBoundary
+ *
+ * @responsibilities
+ * 1. Render UI for the feature area
+ * 2. Accept props and emit user interactions
+ * 3. Compose shared subcomponents where needed
+ *
+ * @review-tags
+ * - @ui: visual/layout behavior
+ *
+ * @review-checklist
+ * - [ ] Props have sensible defaults
+ * - [ ] Component renders without crashing
+ */
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { getFriendlyMessage } from '@/utils/errorMapper';

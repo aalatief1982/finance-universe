@@ -1,3 +1,21 @@
+/**
+ * @file EnhancedFormField.tsx
+ * @description UI component for EnhancedFormField.
+ *
+ * @module components/forms/EnhancedFormField
+ *
+ * @responsibilities
+ * 1. Render UI for the feature area
+ * 2. Accept props and emit user interactions
+ * 3. Compose shared subcomponents where needed
+ *
+ * @review-tags
+ * - @ui: visual/layout behavior
+ *
+ * @review-checklist
+ * - [ ] Props have sensible defaults
+ * - [ ] Component renders without crashing
+ */
 import React, { ReactNode } from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';

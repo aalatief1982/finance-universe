@@ -1,3 +1,21 @@
+/**
+ * @file Analytics.tsx
+ * @description Page component for Analytics.
+ *
+ * @module pages/Analytics
+ *
+ * @responsibilities
+ * 1. Compose layout and section components
+ * 2. Load data or invoke services for the page
+ * 3. Handle navigation and page-level actions
+ *
+ * @review-tags
+ * - @ui: page composition
+ *
+ * @review-checklist
+ * - [ ] Data loading handles empty states
+ * - [ ] Navigation hooks are wired correctly
+ */
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
