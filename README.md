@@ -251,3 +251,7 @@ Use `AlertDialog` from shadcn-ui to confirm destructive actions such as deleting
 
 See [`TransactionGrid.tsx`](src/components/transactions/TransactionGrid.tsx) for a concrete example of integrating an `AlertDialog` into a list of transactions.
 
+## Review Commenting Guide
+
+For the manual review workflow and documentation-comment conventions, see
+[`docs/REVIEW_COMMENTS_GUIDE.md`](docs/REVIEW_COMMENTS_GUIDE.md).

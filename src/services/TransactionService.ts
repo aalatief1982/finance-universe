@@ -26,6 +26,10 @@
  * - TransactionAnalyticsService.ts: Summary/grouping calculations
  * - SmsProcessingService.ts: SMS message parsing
  * - firebase-analytics.ts: Event logging
+ *
+ * @review-tags
+ * - @side-effects: writes to local storage and logs analytics events
+ * - @risk: transfer sign handling and category cascade behavior
  * 
  * @review-checklist
  * - [ ] Transfer sign handling (debit negative, credit positive)
@@ -82,7 +86,7 @@ class TransactionService {
    * @returns Single transaction for income/expense, or array of two for transfers
    * 
    * @review-focus
-   * - Transfer amount signs: debit should be negative (line 96), credit positive (line 107)
+   * - Transfer amount signs: debit should be negative, credit positive
    * - transferId links both halves for atomic operations
    * - Category forced to "Transfer" for transfer entries
    */
@@ -119,6 +123,7 @@ class TransactionService {
     
     // Debit entry (money leaving source account)
     // @review-risk Amount must be NEGATIVE for debit entries
+    // REVIEW-ANCHOR: transfer-signs
     const debitEntry: Transaction = {
       ...transaction,
       id: uuidv4(),
@@ -131,6 +136,7 @@ class TransactionService {
     
     // Credit entry (money entering destination account)
     // @review-risk Amount must be POSITIVE for credit entries
+    // REVIEW-ANCHOR: transfer-signs
     const creditEntry: Transaction = {
       ...transaction,
       id: uuidv4(),
@@ -206,7 +212,7 @@ class TransactionService {
    * @returns The debit entry as representative, or null if not found
    * 
    * @review-focus
-   * - Amount sign maintenance: out = negative, in = positive (lines 176-178)
+   * - Amount sign maintenance: out = negative, in = positive
    * - Shared fields (title, date, notes) update on both entries
    */
   updateTransfer(transferId: string, updates: Partial<Omit<Transaction, 'id'>>): Transaction | null {
@@ -233,6 +239,7 @@ class TransactionService {
         currency: updates.currency ?? t.currency,
         // Amount update requires special handling to maintain correct signs
         // @review-risk Ensure sign is preserved based on direction
+        // REVIEW-ANCHOR: transfer-update-signs
         amount: updates.amount !== undefined 
           ? (t.transferDirection === 'out' ? -Math.abs(updates.amount) : Math.abs(updates.amount))
           : t.amount,
@@ -434,14 +441,15 @@ class TransactionService {
    * @returns true if deleted, false if has subcategories or not found
    * 
    * @review-focus
-   * - Prevents deletion if category has subcategories (line 332)
-   * - Re-assigns transactions to parent or 'Uncategorized' (lines 346-359)
+   * - Prevents deletion if category has subcategories
+   * - Re-assigns transactions to parent or 'Uncategorized'
    */
   deleteCategory(id: string): boolean {
     const categories = this.getCategories();
     
     // Check if this category has subcategories
     // @review-risk Cannot delete categories with children
+    // REVIEW-ANCHOR: category-delete-guard
     const hasSubcategories = categories.some(c => c.parentId === id);
     if (hasSubcategories) {
       return false; // Don't delete categories with subcategories
@@ -457,6 +465,7 @@ class TransactionService {
     
     // Re-categorize transactions that used this category
     // @review-focus Transactions move to parent category or 'Uncategorized'
+    // REVIEW-ANCHOR: category-reassign
     const transactions = this.getAllTransactions();
     const updatedTransactions = transactions.map(t => {
       if (t.category === id) {
@@ -674,13 +683,14 @@ class TransactionService {
    * @returns Suggested category name
    * 
    * @review-focus
-   * - First tries rule matching (line 490)
-   * - Falls back to similar transaction history (lines 497-527)
-   * - Final fallback based on amount sign (line 531)
+   * - First tries rule matching
+   * - Falls back to similar transaction history
+   * - Final fallback based on amount sign
    */
   suggestCategory(transaction: Omit<Transaction, 'id' | 'category'>): string {
     const rules = this.getCategoryRules();
     const suggestedCategory = this.findMatchingCategoryByRules(transaction, rules);
+    // REVIEW-ANCHOR: category-suggest-rule-match
     
     if (suggestedCategory) {
       return suggestedCategory;
@@ -692,6 +702,7 @@ class TransactionService {
     
     // Find similar transactions by title substring match
     // @review-risk Simple substring matching may produce false positives
+    // REVIEW-ANCHOR: category-suggest-similar
     const similarTransactions = transactions.filter(t => 
       t.title.toLowerCase().includes(title) || title.includes(t.title.toLowerCase())
     );
@@ -723,6 +734,7 @@ class TransactionService {
     }
     
     // If no matches, use default based on transaction amount
+    // REVIEW-ANCHOR: category-suggest-fallback
     return transaction.amount < 0 ? 'Expenses' : 'Income';
   }
 
@@ -740,8 +752,8 @@ class TransactionService {
    * @returns Matching category ID or undefined
    * 
    * @review-focus
-   * - Regex matching with error handling (lines 549-556)
-   * - Substring matching fallback (line 558)
+   * - Regex matching with error handling
+   * - Substring matching fallback
    * - First match wins (priority order)
    */
   private findMatchingCategoryByRules(transaction: Partial<Transaction>, rules: CategoryRule[]): string | undefined {

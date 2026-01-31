@@ -1,3 +1,26 @@
+/**
+ * @file useTransactionsState.tsx
+ * @description Aggregates transaction CRUD, filtering, sorting, pagination,
+ *              and summary calculations for the Transactions UI.
+ *
+ * @responsibilities
+ * - Bridge TransactionContext with UI-specific CRUD handlers
+ * - Compose filtering, sorting, and pagination hooks
+ * - Calculate summaries and category breakdowns for dashboards
+ *
+ * @dependencies
+ * - useTransactionsCrud/useTransactionsFilters/useTransactionsSorting
+ * - TransactionContext for global transaction state
+ * - storage-utils.ts for category lookup and change history
+ *
+ * @review-tags
+ * - @side-effects: persists changes and records category history
+ * - @performance: summary calculations run on full transaction list
+ *
+ * @review-checklist
+ * - [ ] Summary calculations exclude transfers where required
+ * - [ ] Category change history records only real changes
+ */
 import { useCallback, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '@/types/transaction';
@@ -28,6 +51,12 @@ export function useTransactionsState() {
     deleteTransaction: contextDeleteTransaction
   } = useTransactions();
   
+  // ============================================================================
+  // SECTION: CRUD Wiring
+  // PURPOSE: Wrap CRUD hooks with context-backed persistence
+  // REVIEW: Ensure updates stay in sync with storage events
+  // ============================================================================
+
   // CRUD operations with enhanced storage
   const {
     currentTransaction,
@@ -113,6 +142,12 @@ export function useTransactionsState() {
     contextDeleteTransaction(id);
   }, [contextDeleteTransaction]);
 
+  // ============================================================================
+  // SECTION: Filters + Sorting + Pagination
+  // PURPOSE: Compose UI-facing derived transaction lists
+  // REVIEW: Filtering and sorting should be applied in deterministic order
+  // ============================================================================
+
   // Filtering
   const {
     filteredTransactions,
@@ -151,6 +186,12 @@ export function useTransactionsState() {
     setItemsPerPage,
     totalPages
   } = useTransactionsPagination({ sortedTransactions });
+
+  // ============================================================================
+  // SECTION: Summary Calculations
+  // PURPOSE: Compute totals and category breakdowns for dashboards
+  // REVIEW: Transfers should be excluded from income/expense totals
+  // ============================================================================
 
   // Transaction summary calculations
   const [transactionSummary, setTransactionSummary] = useState({

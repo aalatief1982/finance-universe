@@ -1,4 +1,26 @@
 
+/**
+ * @file Transactions.tsx
+ * @description Transactions screen with date/type filters, search, and edit flow.
+ *
+ * @responsibilities
+ * - Render transaction list with filters and search
+ * - Manage date range filtering (preset + custom)
+ * - Orchestrate edit dialog and navigation to new transaction
+ *
+ * @dependencies
+ * - useTransactionsState: provides transaction CRUD and derived lists
+ * - TransactionsByDate: groups list items by date
+ * - EditTransactionDialog: edit flow for selected transaction
+ *
+ * @review-tags
+ * - @usability: filter and search behavior should be intuitive
+ * - @risk: date range boundaries should include expected transactions
+ *
+ * @review-checklist
+ * - [ ] Filters apply in deterministic order (range -> type -> search)
+ * - [ ] Custom date range includes end date
+ */
 import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
@@ -17,6 +39,12 @@ const Transactions = () => {
   const [filter, setFilter] = React.useState<'all' | 'income' | 'expense' | 'transfer'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const navigate = useNavigate();
+
+  // ============================================================================
+  // SECTION: Analytics
+  // PURPOSE: Track screen view for usage insights
+  // REVIEW: Ensure event fires only once on mount
+  // ============================================================================
 
   // Track screen view
   useEffect(() => {
@@ -49,6 +77,12 @@ const Transactions = () => {
   const [customStart, setCustomStart] = React.useState<Date | null>(defaultStart);
   const [customEnd, setCustomEnd] = React.useState<Date | null>(defaultEnd);
   
+  // ============================================================================
+  // SECTION: Filtering + Search
+  // PURPOSE: Apply date, type, and search filters in order
+  // REVIEW: Date range boundaries should remain inclusive
+  // ============================================================================
+
   const filteredTransactions = React.useMemo(() => {
     let result = transactions;
 
@@ -179,6 +213,7 @@ const Transactions = () => {
       
       </div>
 
+      {/* Edit flow modal */}
       <EditTransactionDialog
         isOpen={isEditingExpense}
         onOpenChange={setIsEditingExpense}

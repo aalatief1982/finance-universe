@@ -1,10 +1,23 @@
-import { safeStorage } from "@/utils/safe-storage";
-// structureParser.ts
-
 /**
- * Parses a raw SMS using structure-template-first approach.
- * Matches existing templates or builds new ones; returns structured transaction data.
+ * @file structureParser.ts
+ * @description Parses SMS text using a structure-template-first pipeline to
+ *              extract direct fields, infer missing data, and normalize values.
+ *
+ * @responsibilities
+ * - Build or match template structures for incoming SMS messages
+ * - Normalize key fields (e.g., dates) for consistent downstream use
+ * - Infer indirect fields using suggestion engine heuristics
+ *
+ * @dependencies
+ * - templateUtils.ts: template extraction and lookup
+ * - suggestionEngine.ts: inferred field generation
+ * - confidenceUtils.ts: confidence scoring for parsed fields
+ *
+ * @review-tags
+ * - @risk: parsing failures should be surfaced to callers (no silent corruption)
+ * - @invariant: directFields values are normalized before inference
  */
+import { safeStorage } from "@/utils/safe-storage";
 
 import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
@@ -13,6 +26,13 @@ import { computeConfidenceScore } from './confidenceUtils';
 
 
 
+/**
+ * Normalize a date string into ISO (yyyy-MM-dd) format when possible.
+ *
+ * @review-focus
+ * - Handles short yy-mm-dd variants safely
+ * - Falls back to Date parsing when format is unknown
+ */
 export function normalizeDate(dateStr: string): string | undefined {
   if (!dateStr) return undefined;
 
@@ -37,7 +57,23 @@ export interface ParsedField {
   source: 'direct' | 'inferred' | 'default'
 }
 
+/**
+ * Parse an SMS message into structured fields with confidence scores.
+ *
+ * @param rawMessage - Raw SMS text payload
+ * @param senderHint - Optional sender identifier used for template lookup
+ * @returns Parsed structure, direct fields, inferred fields, and defaults
+ *
+ * @review-focus
+ * - Throws if template extraction fails
+ * - Returns empty parse object for empty messages
+ */
 export function parseSmsMessage(rawMessage: string, senderHint?: string) {
+  // ============================================================================
+  // SECTION: Input Guardrails
+  // PURPOSE: Handle empty messages without throwing
+  // REVIEW: Callers should treat empty parse as non-transactional
+  // ============================================================================
   if (import.meta.env.MODE === 'development') {
     // console.log('[SmartPaste] Step 1: Received raw message:', rawMessage);
   }
@@ -55,6 +91,12 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     };
   }
   
+  // ============================================================================
+  // SECTION: Template Extraction
+  // PURPOSE: Build a template structure and placeholders from raw SMS text
+  // REVIEW: Extraction errors should be surfaced to caller
+  // ============================================================================
+
   let structure = '';
   let placeholders: Record<string, string> = {};
   let templateHash = '';
@@ -80,6 +122,12 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   if (import.meta.env.MODE === 'development') {
     // console.log('[SmartPaste] Step 3: Template Hash:', templateHash);
   }
+
+  // ============================================================================
+  // SECTION: Template Matching + Direct Field Extraction
+  // PURPOSE: Hydrate direct fields using matched template defaults
+  // REVIEW: Missing placeholders should be logged in development
+  // ============================================================================
 
   const matchedTemplate = getTemplateByHash(
     templateHash,
@@ -128,16 +176,23 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
       };
     });
   }
-// Normalize known field names like 'date'
-if (directFields['date']) {
-  const normalized = normalizeDate(directFields['date'].value);
-  if (normalized) {
-    directFields['date'].value = normalized;
-    if (import.meta.env.MODE === 'development') {
-      // console.log('[SmartPaste] Normalized date:', directFields['date'].value);
+
+  // Normalize known field names like 'date'
+  if (directFields['date']) {
+    const normalized = normalizeDate(directFields['date'].value);
+    if (normalized) {
+      directFields['date'].value = normalized;
+      if (import.meta.env.MODE === 'development') {
+        // console.log('[SmartPaste] Normalized date:', directFields['date'].value);
+      }
     }
   }
-}
+
+  // ============================================================================
+  // SECTION: Normalization + Inference
+  // PURPOSE: Normalize known fields and infer missing data
+  // REVIEW: Inference should not overwrite direct fields
+  // ============================================================================
 
   const rawDirects: Record<string, string> = {};
   Object.entries(directFields).forEach(([k, v]) => (rawDirects[k] = v.value));
@@ -159,6 +214,12 @@ if (directFields['date']) {
   if (import.meta.env.MODE === 'development') {
     // console.log('[SmartPaste] Final directFields:', directFields);
   }
+
+  // ============================================================================
+  // SECTION: Output Assembly
+  // PURPOSE: Return parsed fields with metadata for downstream processing
+  // REVIEW: directFields and inferredFields should be disjoint
+  // ============================================================================
 
   return {
     rawMessage,
