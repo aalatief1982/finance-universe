@@ -1,3 +1,24 @@
+/**
+ * @file useLearningEngine.ts
+ * @description Hook wrapper for the learning engine service.
+ *
+ * @module hooks/useLearningEngine
+ *
+ * @responsibilities
+ * 1. Expose learn/match/infer helpers for smart-paste flows
+ * 2. Track loading state for learning operations
+ * 3. Persist configuration updates
+ *
+ * @dependencies
+ * - LearningEngineService.ts: learning and matching logic
+ *
+ * @review-tags
+ * - @side-effects: writes learning data and config
+ *
+ * @review-checklist
+ * - [ ] Errors handled without crashing UI
+ * - [ ] Config updates merge with existing settings
+ */
 
 import { useState, useCallback } from 'react';
 import { learningEngineService } from '@/services/LearningEngineService';

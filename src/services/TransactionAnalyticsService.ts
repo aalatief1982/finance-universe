@@ -1,3 +1,26 @@
+/**
+ * @file TransactionAnalyticsService.ts
+ * @description Computes high-level transaction summaries, category rollups,
+ *              and time-series aggregates for charts.
+ *
+ * @module services/TransactionAnalyticsService
+ *
+ * @responsibilities
+ * 1. Calculate income/expense/balance totals (excluding transfers)
+ * 2. Aggregate expenses by category for pie charts
+ * 3. Aggregate income/expense by time period for trend charts
+ *
+ * @dependencies
+ * - storage-utils.ts: getStoredTransactions
+ *
+ * @review-tags
+ * - @risk: transfer exclusion must be consistent with UI expectations
+ * - @performance: iterates over full transaction list per call
+ *
+ * @review-checklist
+ * - [ ] Transfers excluded from summaries and category totals
+ * - [ ] Date bucketing aligns with chart period (week/month/year)
+ */
 
 import { Transaction, TransactionSummary, CategorySummary, TimePeriodData, TimePeriod } from '@/types/transaction';
 import { getStoredTransactions } from '@/utils/storage-utils';

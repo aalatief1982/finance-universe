@@ -1,3 +1,27 @@
+/**
+ * @file BackgroundVendorSyncService.ts
+ * @description Background scheduler for vendor sync updates.
+ *
+ * @module services/BackgroundVendorSyncService
+ *
+ * @responsibilities
+ * 1. Schedule periodic vendor sync checks
+ * 2. Dispatch UI update events on sync completion
+ * 3. Manage lifecycle cleanup for intervals and callbacks
+ *
+ * @dependencies
+ * - VendorSyncService.ts: sync and callback registration
+ *
+ * @review-tags
+ * - @side-effects: sets intervals and dispatches browser events
+ * - @risk: multiple initialization leading to duplicate intervals
+ *
+ * @review-checklist
+ * - [ ] initialize is idempotent
+ * - [ ] cleanup clears interval and subscriptions
+ * - [ ] sync failures are handled gracefully
+ */
+
 import { checkForVendorUpdates, onSyncComplete } from './VendorSyncService';
 
 class BackgroundVendorSyncService {

@@ -1,4 +1,28 @@
-// confidenceScoring.ts
+/**
+ * @file confidenceScoring.ts
+ * @description Confidence scoring utilities for Smart Paste parsing.
+ *              Combines field, template, and keyword signals.
+ *
+ * @module lib/smart-paste-engine/confidenceScoring
+ *
+ * @responsibilities
+ * 1. Score field coverage based on parsed/inferred/defaulted values
+ * 2. Score template match confidence
+ * 3. Score keyword-based consistency using vendor/category maps
+ * 4. Combine scores into overall confidence
+ *
+ * @dependencies
+ * - localStorage: xpensia_vendor_map, xpensia_fromaccount_map
+ *
+ * @review-tags
+ * - @side-effects: reads localStorage for user mappings
+ * - @risk: vendor keyword matching only uses first token
+ *
+ * @review-checklist
+ * - [ ] Field score includes both inferred and defaulted values
+ * - [ ] Keyword score averages only when a source contributes
+ * - [ ] Overall weighting matches UX expectations
+ */
 
 export function getFieldConfidence(parsed: any): number {
   const totalFields = ['amount', 'currency', 'date', 'type', 'category', 'subcategory', 'vendor', 'fromAccount'];

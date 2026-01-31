@@ -1,3 +1,33 @@
+/**
+ * @file SmsReaderService.ts
+ * @description Native SMS reader bridge with permission handling,
+ *              lookback window defaults, and safe fetch limits.
+ *
+ * @module services/SmsReaderService
+ *
+ * @responsibilities
+ * 1. Check/request SMS permissions on native platforms
+ * 2. Read SMS messages within a date range and sender filter
+ * 3. Apply safety limits to prevent large payloads
+ *
+ * @storage-keys
+ * - xpensia_sms_fetch_limit: user-defined SMS fetch limit
+ *
+ * @dependencies
+ * - SmsReaderPlugin: native Capacitor plugin
+ * - env.ts: getSmsLookbackMonths
+ * - safe-storage.ts: localStorage wrapper
+ *
+ * @review-tags
+ * - @platform: native-only functionality
+ * - @risk: permission flow and memory usage (limit capping)
+ *
+ * @review-checklist
+ * - [ ] Non-native platforms return empty results safely
+ * - [ ] Permissions checked before read
+ * - [ ] Limit is capped to MAX_SAFE_LIMIT
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 
 import { Capacitor } from "@capacitor/core";
