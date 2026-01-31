@@ -1,3 +1,37 @@
+/**
+ * @file UserContext.tsx
+ * @description Global user state management including authentication,
+ *              preferences, and profile data.
+ *
+ * @responsibilities
+ * - Manage user authentication state (phone verification, sessions)
+ * - Store and persist user preferences (theme, currency, language)
+ * - Handle profile completion and onboarding flow
+ * - Sync user data with Supabase when enabled
+ * - Manage demo mode for testing
+ *
+ * @storage-keys
+ * - user: Full user object in localStorage
+ *
+ * @dependencies
+ * - auth-utils.ts: Authentication flow utilities
+ * - theme-utils.ts: Theme detection and application
+ * - preferences-utils.ts: Preference update utilities
+ * - supabase.ts: Supabase client and config check
+ * - supabase-auth.ts: Supabase auth utilities
+ *
+ * @review-checklist
+ * - [ ] Local storage checked before Supabase on init (fast first render)
+ * - [ ] Theme system preference listener cleaned up on unmount
+ * - [ ] Demo mode isolated from real auth flows
+ * - [ ] Supabase profile sync only when configured and authenticated
+ *
+ * @review-tags
+ * - @side-effects: Writes to localStorage, updates Supabase profile
+ * - @review-focus: Auth initialization order (lines 137-151)
+ * - @platform: Web-only (no native auth)
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
@@ -32,6 +66,12 @@ import {
   updateDataManagement as updateDataManagementUtil
 } from './preferences-utils';
 
+// ============================================================================
+// SECTION: Default Preferences
+// PURPOSE: Define default values for new users
+// REVIEW: Ensure all preference keys have defaults
+// ============================================================================
+
 const DEFAULT_PREFERENCES = {
   currency: 'USD',
   theme: 'light' as const,
@@ -52,6 +92,11 @@ const DEFAULT_PREFERENCES = {
     backgroundSmsEnabled: false
   }
 };
+
+// ============================================================================
+// SECTION: Context Default Value
+// PURPOSE: Provide type-safe defaults for context consumers
+// ============================================================================
 
 export const UserContext = createContext<UserContextType>({
   user: null,
@@ -84,6 +129,11 @@ export const UserContext = createContext<UserContextType>({
   checkUserExists: async () => false,
 });
 
+// ============================================================================
+// SECTION: User Provider Component
+// PURPOSE: Manage global user state and provide context
+// ============================================================================
+
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -96,7 +146,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isDemoMode: isDemoMode()
   });
   
-  // Get effective theme based on user preference and system setting
+  // ============================================================================
+  // SECTION: Theme Management
+  // PURPOSE: Handle theme preference and system theme detection
+  // REVIEW: System theme listener must be cleaned up
+  // ============================================================================
+  
+  /**
+   * Get effective theme based on user preference.
+   * Falls back to system preference when set to 'system'.
+   */
   const getEffectiveTheme = useCallback((): 'light' | 'dark' => {
     if (!user || !user.preferences) return 'light';
     const userTheme = user.preferences.theme;
@@ -107,12 +166,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userTheme;
   }, [user]);
   
-  // Apply theme to document
+  // Apply theme to document when it changes
   useEffect(() => {
     applyThemeToDocument(getEffectiveTheme());
   }, [getEffectiveTheme]);
   
-  // Listen for system theme changes
+  // Listen for system theme changes when using 'system' preference
   useEffect(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -128,12 +187,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
   
-  // Set demo mode based on environment or user preference
+  // Set demo mode based on environment
   useEffect(() => {
     setDemoMode(ENABLE_DEMO_MODE);
   }, []);
   
-  // Enhanced auth check that initializes with local storage first for faster UI response
+  // ============================================================================
+  // SECTION: Auth Initialization
+  // PURPOSE: Initialize auth state from localStorage then verify with Supabase
+  // REVIEW: Local check first for faster initial render
+  // @review-focus: Order matters - local before Supabase
+  // ============================================================================
+  
   useEffect(() => {
     // First check localStorage for quicker initial render
     const localUser = getUserFromLocalStorage();
@@ -160,7 +225,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
   
-  // Save user to local storage whenever it changes
+  // ============================================================================
+  // SECTION: User Persistence
+  // PURPOSE: Sync user state to localStorage and Supabase
+  // REVIEW: Supabase sync only when configured and user has ID
+  // @side-effects: Writes to localStorage and Supabase
+  // ============================================================================
+  
   useEffect(() => {
     if (user) {
       safeSetItem('user', user);
@@ -188,7 +259,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
   
-  // Enhanced updateUser with improved defaults
+  // ============================================================================
+  // SECTION: User Update
+  // PURPOSE: Update user state with proper defaults
+  // REVIEW: New user gets full default preferences
+  // ============================================================================
+  
   const updateUser = useCallback((userData: Partial<User>) => {
     setUser(prevUser => {
       if (!prevUser) {
@@ -243,7 +319,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, []);
   
-  // Function implementations 
+  // ============================================================================
+  // SECTION: Auth Functions
+  // PURPOSE: Authentication flow wrappers
+  // ============================================================================
+  
   const checkUserExists = useCallback((phoneNumber: string): Promise<boolean> => {
     return checkUserExistsUtil(phoneNumber);
   }, []);
@@ -272,6 +352,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     return user;
   }, [user]);
+  
+  // ============================================================================
+  // SECTION: Preference Updates
+  // PURPOSE: Type-safe preference update wrappers
+  // REVIEW: Each method merges with defaults for new users
+  // ============================================================================
   
   const updateUserPreferences = useCallback(
     (preferences: Partial<User['preferences']>) => {
@@ -348,7 +434,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateDataManagementUtil(user, setUser, dataManagement);
   }, [user]);
   
-  // Enhanced onboarding completion that also updates authentication state
+  // ============================================================================
+  // SECTION: Onboarding Completion
+  // PURPOSE: Mark user as fully onboarded and authenticated
+  // REVIEW: Updates multiple state flags atomically
+  // ============================================================================
+  
   const completeOnboarding = useCallback(() => {
     updateUser({ 
       completedOnboarding: true,
@@ -387,6 +478,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         : "Using real authentication services."
     });
   }, [updateAuthState]);
+  
+  // ============================================================================
+  // SECTION: Provider Render
+  // ============================================================================
   
   return (
     <UserContext.Provider

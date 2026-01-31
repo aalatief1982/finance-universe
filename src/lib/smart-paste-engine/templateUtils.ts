@@ -1,9 +1,51 @@
+/**
+ * @file templateUtils.ts
+ * @description Core template bank operations for Smart Paste engine.
+ *              Handles template storage, retrieval, matching, and failure tracking.
+ *
+ * @responsibilities
+ * - Template bank CRUD (load, save, get by hash)
+ * - Dual-key indexing: {sender}:{templateHash} for sender-scoped isolation
+ * - Template structure extraction from raw SMS messages
+ * - Legacy migration from array-based to keyed storage
+ * - Template failure tracking for auto-retraining triggers
+ *
+ * @storage-keys
+ * - xpensia_template_bank: Primary template storage (keyed by sender:hash)
+ * - xpensia_structure_templates: Legacy array storage (migrated on load)
+ * - xpensia_template_failures: Failure records for flagged templates
+ *
+ * @dependencies
+ * - safe-storage.ts: localStorage wrapper
+ * - suggestionEngine.ts: extractVendorName for vendor placeholder
+ * - templateNormalizer.ts: normalizeTemplateStructure for hash generation
+ * - currency-utils.ts: normalizeCurrencyCode for Arabic currency names
+ *
+ * @review-checklist
+ * - [ ] Template key generation uses sender fallback correctly
+ * - [ ] Legacy migration preserves existing templates
+ * - [ ] Failure threshold triggers storage write
+ * - [ ] Amount+currency regex handles Arabic and Eastern numerals
+ *
+ * @review-tags
+ * - @review-risk: extractTemplateStructure regex patterns (lines 172-199)
+ * - @side-effects: modifies localStorage on template save/load
+ * - @platform: web-only (no native storage)
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { extractVendorName } from './suggestionEngine';
 import { SmartPasteTemplate, TemplateMeta } from '@/types/template';
 import { normalizeTemplateStructure } from './templateNormalizer';
 import { normalizeCurrencyCode } from '@/utils/currency-utils';
+
 const TEMPLATE_BANK_KEY = 'xpensia_template_bank';
+
+// ============================================================================
+// SECTION: Template Metadata
+// PURPOSE: Ensure all templates have lifecycle tracking fields
+// REVIEW: Backward compatibility with legacy templates missing meta
+// ============================================================================
 
 function ensureTemplateMeta(t: SmartPasteTemplate): TemplateMeta {
   const meta: TemplateMeta = {
@@ -17,6 +59,21 @@ function ensureTemplateMeta(t: SmartPasteTemplate): TemplateMeta {
   return meta;
 }
 
+// ============================================================================
+// SECTION: Template Key Generation
+// PURPOSE: Create dual-key format {sender}:{hash} for sender isolation
+// REVIEW: Fallback chain: sender → fromAccount → '__unknown__'
+// ============================================================================
+
+/**
+ * Generate a template storage key using sender-scoped indexing.
+ * Falls back to fromAccount if sender is missing.
+ * 
+ * @param sender - SMS sender identifier (e.g., "ALRAJHI")
+ * @param fromAccount - Account identifier as fallback
+ * @param hash - Template structure hash
+ * @returns Key in format "sender:hash" or "__unknown__:hash"
+ */
 export function getTemplateKey(
   sender: string | undefined,
   fromAccount: string | undefined,
@@ -36,6 +93,22 @@ export function parseTemplateKey(key: string): { sender: string; hash: string } 
   return { sender: '__unknown__', hash: key };
 }
 
+// ============================================================================
+// SECTION: Template Bank CRUD
+// PURPOSE: Load/save template bank with legacy migration support
+// REVIEW: Three migration paths handled (null, legacy array, legacy keyed)
+// ============================================================================
+
+/**
+ * Load template bank from storage with automatic migration.
+ * Handles three storage formats:
+ * 1. New keyed format: Record<string, SmartPasteTemplate>
+ * 2. Legacy array format: SmartPasteTemplate[]
+ * 3. Fresh install: null
+ * 
+ * @returns Template bank keyed by sender:hash
+ * @side-effects Persists migrated format back to storage
+ */
 export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
   let raw = safeStorage.getItem(TEMPLATE_BANK_KEY);
   let bank: any = raw ? JSON.parse(raw) : null;
@@ -67,13 +140,6 @@ export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
     safeStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(bank));
   }
 
-  // Flag legacy templates without version/hashAlgorithm
-  Object.values(bank).forEach((t: any) => {
-    if (!('version' in t)) {
-      // legacy template retained as-is
-    }
-  });
-
   // Ensure meta defaults for backward compatibility
   Object.values(bank).forEach((t: SmartPasteTemplate) => {
     ensureTemplateMeta(t);
@@ -89,6 +155,16 @@ export function saveTemplateBank(templates: Record<string, SmartPasteTemplate>) 
   safeStorage.setItem(TEMPLATE_BANK_KEY, JSON.stringify(templates));
 }
 
+/**
+ * Get a template by hash, with sender-scoped lookup.
+ * Falls back to unknown sender if scoped lookup fails.
+ * 
+ * @param hash - Template structure hash
+ * @param sender - Optional sender for scoped lookup
+ * @param fromAccount - Optional account fallback
+ * @returns Template if found, undefined otherwise
+ * @side-effects Updates lastUsedAt and usageCount on hit
+ */
 export function getTemplateByHash(
   hash: string,
   sender?: string,
@@ -112,6 +188,16 @@ export function getTemplateByHash(
   return template;
 }
 
+/**
+ * Save a new template or update existing one's fields.
+ * 
+ * @param template - Normalized template structure string
+ * @param fields - List of detected field names
+ * @param rawMessage - Original SMS message for debugging
+ * @param sender - SMS sender identifier
+ * @param fromAccount - Account identifier
+ * @returns Template ID (base64 hash of structure)
+ */
 export function saveNewTemplate(
   template: string,
   fields: string[],
@@ -153,6 +239,14 @@ export function getAllTemplates(): SmartPasteTemplate[] {
   return Object.values(loadTemplateBank());
 }
 
+/**
+ * Find templates unused for more than threshold days.
+ * Used for template health dashboard and cleanup.
+ * 
+ * @param bank - Template bank to scan
+ * @param thresholdDays - Staleness threshold (default 90)
+ * @returns Array of stale templates
+ */
 export function getStaleTemplates(
   bank: Record<string, SmartPasteTemplate>,
   thresholdDays = 90
@@ -166,6 +260,25 @@ export function getStaleTemplates(
   });
 }
 
+// ============================================================================
+// SECTION: Template Structure Extraction
+// PURPOSE: Convert raw SMS to template with placeholders
+// REVIEW: Regex patterns must handle Arabic text and various date formats
+// @review-risk: Complex regex - test with diverse SMS samples
+// ============================================================================
+
+/**
+ * Extract template structure from a raw SMS message.
+ * Replaces detected fields with placeholders ({{amount}}, {{date}}, etc.)
+ * 
+ * @param message - Raw SMS text
+ * @returns structure (template string), placeholders (extracted values), hash
+ * 
+ * @review-focus
+ * - Amount+currency regex handles: SAR 55,100.00 | 35 SAR | 200.00 ر.س | جنيه مصري
+ * - Date regex handles: dd/MM/yy, yyyy-MM-dd, dd-MMM-yyyy, etc.
+ * - Vendor extraction strips trailing date patterns
+ */
 export function extractTemplateStructure(
   message: string
 ): { structure: string; placeholders: Record<string, string>; hash: string } {
@@ -270,7 +383,11 @@ export function extractTemplateStructure(
   return { structure, placeholders, hash };
 }
 
-// ---------------- Template Failure Tracking ----------------
+// ============================================================================
+// SECTION: Template Failure Tracking
+// PURPOSE: Track parsing failures to auto-flag templates for retraining
+// REVIEW: Threshold-based persistence to avoid storage spam
+// ============================================================================
 
 interface TemplateFailureRecord {
   hash: string;
@@ -286,6 +403,16 @@ const FAILURE_THRESHOLD = 3;
 // In-memory map of template failures in this session
 const templateFailureMap: Record<string, number> = {};
 
+/**
+ * Increment failure count for a template.
+ * Persists to storage when threshold is reached.
+ * 
+ * @param hash - Template hash
+ * @param sender - SMS sender
+ * @param rawMessage - Failed message for debugging
+ * @param expectedStructure - What we expected to parse
+ * @side-effects Writes to xpensia_template_failures after N failures
+ */
 export function incrementTemplateFailure(
   hash: string,
   sender: string | undefined,
