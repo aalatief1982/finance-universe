@@ -1,3 +1,39 @@
+/**
+ * @file saveTransactionWithLearning.ts
+ * @description Orchestrates transaction saving with Smart Paste learning.
+ *              Persists transaction, updates template bank, and stores mappings.
+ *
+ * @responsibilities
+ * - Validate and persist transaction to storage
+ * - Extract template structure and save to template bank
+ * - Update keyword bank with category mappings
+ * - Store vendor and fromAccount remappings
+ * - Update template default values for future parsing
+ *
+ * @storage-keys
+ * - xpensia_transactions: Transaction storage
+ * - xpensia_template_bank: Template storage
+ * - xpensia_keyword_bank: Keyword mappings
+ * - xpensia_vendor_map: Vendor name corrections
+ * - xpensia_fromaccount_map: Account name corrections
+ *
+ * @dependencies
+ * - templateUtils.ts: extractTemplateStructure, saveNewTemplate, etc.
+ * - keywordBankUtils.ts: loadKeywordBank, saveKeywordBank
+ * - storage-utils.ts: storeTransaction
+ * - transaction-validator.ts: validateTransactionInput
+ *
+ * @review-checklist
+ * - [ ] Validation runs before any persistence
+ * - [ ] Template saved only for smart-paste source transactions
+ * - [ ] Keyword mappings don't duplicate existing entries
+ * - [ ] Vendor/account remaps stored for future inference
+ *
+ * @review-tags
+ * - @side-effects: Multiple localStorage writes
+ * - @review-focus: Learning trigger conditions (lines 58-134)
+ */
+
 import { safeStorage } from "@/utils/safe-storage";
 import { Transaction } from '@/types/transaction';
 import { validateTransactionInput } from '../transaction-validator';
@@ -6,6 +42,10 @@ import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTempla
 import { loadKeywordBank, saveKeywordBank, KeywordEntry } from './keywordBankUtils';
 import { storeTransaction } from '@/utils/storage-utils';
 import { toast } from '@/components/ui/use-toast';
+
+// ============================================================================
+// SECTION: Save Options Interface
+// ============================================================================
 
 interface SaveOptions {
   rawMessage?: string;
@@ -20,6 +60,26 @@ interface SaveOptions {
   combineToasts?: boolean;
 }
 
+// ============================================================================
+// SECTION: Main Save Function
+// PURPOSE: Validate, persist, and learn from transaction
+// REVIEW: Learning only triggers for smart-paste source with rawMessage
+// ============================================================================
+
+/**
+ * Save a transaction with optional learning from raw SMS.
+ * Performs validation, persistence, and template/keyword learning.
+ * 
+ * @param transaction - Transaction to save
+ * @param options - Save configuration including callbacks
+ * 
+ * @side-effects
+ * - Persists transaction to storage
+ * - Updates template bank (if smart-paste)
+ * - Updates keyword bank (if smart-paste)
+ * - Stores vendor/account remappings (if user corrected)
+ * - Shows toast notifications
+ */
 export function saveTransactionWithLearning(
   transaction: Transaction,
   options: SaveOptions
@@ -34,9 +94,10 @@ export function saveTransactionWithLearning(
     navigateBack,
     silent = false,
     showPatternToast = true,
-  combineToasts = false,
+    combineToasts = false,
   } = options;
 
+  // Validate before any persistence
   if (!validateTransactionInput(transaction)) {
     return;
   }
@@ -47,6 +108,7 @@ export function saveTransactionWithLearning(
     source: transaction.source || 'manual'
   };
 
+  // Persist transaction
   if (isNew) {
     addTransaction(newTransaction);
   } else {
@@ -55,9 +117,16 @@ export function saveTransactionWithLearning(
 
   storeTransaction(newTransaction);
 
+  // ============================================================================
+  // SECTION: Smart Paste Learning
+  // PURPOSE: Extract patterns from confirmed transactions
+  // REVIEW: Only runs for smart-paste source with raw message
+  // ============================================================================
+
   if (rawMessage && newTransaction.source === 'smart-paste') {
     learnFromTransaction(rawMessage, newTransaction, senderHint || '');
 
+    // Extract and save template structure
     const { structure, placeholders, hash: templateHash } = extractTemplateStructure(rawMessage);
     const fields = Object.keys(placeholders);
 
@@ -74,7 +143,12 @@ export function saveTransactionWithLearning(
       });
     }
 
-    // Keyword Bank Mapping
+    // ============================================================================
+    // SECTION: Keyword Bank Update
+    // PURPOSE: Map vendor keywords to category for future inference
+    // REVIEW: Avoid duplicate mappings in existing entries
+    // ============================================================================
+
     const keyword = placeholders?.vendor?.toLowerCase() || newTransaction.vendor.toLowerCase();
     const keywordBank = loadKeywordBank();
     const existing = keywordBank.find(k => k.keyword === keyword);
@@ -94,7 +168,13 @@ export function saveTransactionWithLearning(
     }
     saveKeywordBank(keywordBank);
 
-    // Vendor Remapping
+    // ============================================================================
+    // SECTION: Remapping Storage
+    // PURPOSE: Store user corrections for vendor/account names
+    // REVIEW: Only stores if user changed the value
+    // ============================================================================
+
+    // Vendor Remapping - user corrected vendor name
     if (
       rawMessage &&
       transaction.vendor &&
@@ -106,7 +186,7 @@ export function saveTransactionWithLearning(
       safeStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
     }
 
-    // FromAccount Remapping
+    // FromAccount Remapping - user corrected account name
     if (
       rawMessage &&
       transaction.fromAccount &&
@@ -118,7 +198,7 @@ export function saveTransactionWithLearning(
       safeStorage.setItem('xpensia_fromaccount_map', JSON.stringify(fromAccountMap));
     }
 
-    // Default From Account Mapping
+    // Default From Account Mapping - store for template defaults
     if (templateHash && newTransaction.fromAccount) {
       const templates = loadTemplateBank();
       const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
@@ -132,6 +212,12 @@ export function saveTransactionWithLearning(
       }
     }
   }
+
+  // ============================================================================
+  // SECTION: Toast Notifications
+  // PURPOSE: Provide user feedback on save
+  // REVIEW: Combine mode reduces notification noise
+  // ============================================================================
 
   if (!silent) {
     if (combineToasts) {

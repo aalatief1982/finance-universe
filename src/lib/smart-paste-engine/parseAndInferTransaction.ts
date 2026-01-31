@@ -1,3 +1,31 @@
+/**
+ * @file parseAndInferTransaction.ts
+ * @description Main entry point for Smart Paste transaction parsing.
+ *              Combines template matching, field extraction, and confidence scoring.
+ *
+ * @responsibilities
+ * - Parse raw SMS message into transaction fields
+ * - Calculate field-level and overall confidence scores
+ * - Track template failures for retraining
+ * - Log parsing failures for debugging
+ *
+ * @dependencies
+ * - structureParser.ts: parseSmsMessage for template/field extraction
+ * - keywordBankUtils.ts: loadKeywordBank for inference
+ * - templateUtils.ts: getAllTemplates, incrementTemplateFailure
+ * - confidenceScoring.ts: confidence calculation functions
+ * - parsingLogger.ts: failure logging
+ *
+ * @review-checklist
+ * - [ ] Confidence thresholds: >=0.8 success, >=0.4 partial, <0.4 failed
+ * - [ ] Template failure incremented only on matched + failed
+ * - [ ] Transaction type defaults to 'expense' if not inferred
+ *
+ * @review-tags
+ * - @review-focus: Confidence calculation (lines 125-133)
+ * - @review-risk: Template failure tracking on matched+failed
+ */
+
 import { Transaction, TransactionType } from '@/types/transaction';
 import { nanoid } from 'nanoid';
 import { parseSmsMessage } from './structureParser';
@@ -11,7 +39,16 @@ import {
   computeOverallConfidence,
 } from './confidenceScoring';
 
-// String similarity function for template matching
+// ============================================================================
+// SECTION: String Similarity Utilities
+// PURPOSE: Calculate similarity between template structures
+// REVIEW: Used for slight match detection when exact match fails
+// ============================================================================
+
+/**
+ * Calculate similarity ratio between two strings.
+ * Uses Levenshtein distance normalized by length.
+ */
 function getSimilarity(str1: string, str2: string): number {
   if (str1 === str2) return 1;
   if (str1.length === 0 || str2.length === 0) return 0;
@@ -53,6 +90,10 @@ function levenshteinDistance(str1: string, str2: string): number {
   return matrix[str2.length][str1.length];
 }
 
+// ============================================================================
+// SECTION: Result Type Definition
+// ============================================================================
+
 export interface ParsedTransactionResult {
   transaction: Transaction;
   confidence: number;
@@ -66,8 +107,25 @@ export interface ParsedTransactionResult {
   keywordScore: number;
 }
 
+// ============================================================================
+// SECTION: Main Parsing Function
+// PURPOSE: Parse SMS and compute confidence-weighted transaction
+// REVIEW: Confidence thresholds determine parsing status
+// ============================================================================
+
 /**
- * Given a raw message, extract transaction fields and compute confidence
+ * Parse a raw SMS message and infer transaction fields.
+ * Returns transaction with confidence scores for UI display.
+ * 
+ * @param rawMessage - Raw SMS text
+ * @param senderHint - SMS sender identifier (e.g., "ALRAJHI")
+ * @param smsId - Optional SMS ID for failure logging
+ * @returns Parsed transaction with confidence metadata
+ * 
+ * @review-focus
+ * - Confidence scoring: field (40%) + template (40%) + keyword (20%)
+ * - Status thresholds: >=0.8 success, >=0.4 partial, <0.4 failed
+ * - Template failure tracked when matched template produces failed status
  */
 export async function parseAndInferTransaction(
   rawMessage: string,
@@ -76,6 +134,7 @@ export async function parseAndInferTransaction(
 ): Promise<ParsedTransactionResult> {
   const parsed = parseSmsMessage(rawMessage, senderHint);
 
+  // Build transaction from parsed fields
   const transaction: Transaction = {
     id: nanoid(),
     amount: parseFloat(parsed.directFields.amount?.value || '0'),
@@ -96,13 +155,19 @@ export async function parseAndInferTransaction(
       senderHint || '',
     source: 'smart-paste',
     createdAt: new Date().toISOString(),
-    title: '', // editable in form later
+    title: '', // Editable in form later
   };
 
+  // Load inference data
   const keywordBank = loadKeywordBank();
   const templates = getAllTemplates();
   
-  // Template confidence: check for exact match first, then slight match
+  // ============================================================================
+  // Template Confidence Calculation
+  // PURPOSE: Score based on exact or slight template match
+  // REVIEW: Slight match threshold is 70% similarity
+  // ============================================================================
+  
   let templateMatched = 0;
   const totalTemplates = templates.length;
   
@@ -122,6 +187,7 @@ export async function parseAndInferTransaction(
     }
   }
 
+  // Calculate component confidence scores
   const fieldScore = getFieldConfidence(parsed);
   const templateScore = getTemplateConfidence(templateMatched, totalTemplates);
   const keywordScore = getKeywordConfidence(transaction, keywordBank);
@@ -132,6 +198,7 @@ export async function parseAndInferTransaction(
     keywordScore
   );
 
+  // Build field-level confidence map
   const fields = [
     'amount',
     'currency',
@@ -151,6 +218,7 @@ export async function parseAndInferTransaction(
     else fieldConfidences[f] = 0;
   });
 
+  // Determine parsing status based on confidence thresholds
   const parsingStatus: ParsedTransactionResult['parsingStatus'] =
     finalConfidence >= 0.8
       ? 'success'
@@ -162,6 +230,8 @@ export async function parseAndInferTransaction(
     ? 'template'
     : 'structure';
 
+  // Track template failure if matched but still failed
+  // This triggers retraining flow after N failures
   if (parsed.matched && parsingStatus === 'failed') {
     incrementTemplateFailure(
       parsed.templateHash,
@@ -171,7 +241,7 @@ export async function parseAndInferTransaction(
     );
   }
 
-
+  // Log parsing failure for debugging
   if (parsingStatus === 'failed' && smsId) {
     logParsingFailure(smsId);
   }
