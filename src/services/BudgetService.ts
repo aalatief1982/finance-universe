@@ -324,10 +324,11 @@ export class BudgetService {
         case 'account':
           return tx.fromAccount === budget.targetId || tx.account === budget.targetId;
         
-        case 'category':
+        case 'category': {
           // Include transactions from this category and all subcategories
           const categoryIds = this.getCategoryAndSubcategoryIds(budget.targetId);
           return categoryIds.includes(tx.category);
+        }
         
         case 'subcategory':
           return tx.subcategory === budget.targetId || tx.category === budget.targetId;

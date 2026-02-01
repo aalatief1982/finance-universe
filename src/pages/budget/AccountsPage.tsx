@@ -426,7 +426,7 @@ const AccountsPage = () => {
                 </span>
               ) : (
                 <>
-                  Are you sure you want to delete <strong>"{accountToDelete?.name}"</strong>? 
+                  Are you sure you want to delete <strong>&quot;{accountToDelete?.name}&quot;</strong>? 
                   This action cannot be undone.
                 </>
               )}

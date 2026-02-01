@@ -68,7 +68,7 @@ export const formatCurrency = (
     }
     
     // Format the number
-    let formatted = new Intl.NumberFormat(localeCode, {
+    const formatted = new Intl.NumberFormat(localeCode, {
       style: options?.showSymbol === false ? 'decimal' : 'currency',
       currency: currencyCode,
       currencyDisplay: options?.showCode ? 'code' : 'symbol',

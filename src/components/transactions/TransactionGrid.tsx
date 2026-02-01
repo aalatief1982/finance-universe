@@ -117,7 +117,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete transaction</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete "{transaction.title}"? This action cannot be undone.
+                      Are you sure you want to delete &quot;{transaction.title}&quot;? This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
