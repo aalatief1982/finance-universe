@@ -48,8 +48,8 @@ declare module '@capacitor/app' {
 
 declare module '@capacitor/local-notifications' {
   export const LocalNotifications: {
-    schedule: (options: { notifications: any[] }) => Promise<void>;
-    addListener: (eventName: string, callback: (event: any) => void) => Promise<any>;
+    schedule: (options: { notifications: unknown[] }) => Promise<void>;
+    addListener: (eventName: string, callback: (event: unknown) => void) => Promise<unknown>;
     checkPermissions: () => Promise<{ display?: string }>;
     requestPermissions: () => Promise<{ display?: string }>;
   };
@@ -58,7 +58,7 @@ declare module '@capacitor/local-notifications' {
 declare module '@capacitor-firebase/analytics' {
   export interface LogEventOptions {
     name: string
-    params?: { [key: string]: any }
+    params?: { [key: string]: unknown }
   }
 
   export interface SetUserIdOptions {

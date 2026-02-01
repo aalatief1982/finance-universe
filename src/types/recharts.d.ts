@@ -20,7 +20,7 @@ declare module 'recharts' {
   export interface ChartProps {
     width?: number;
     height?: number;
-    data?: any[];
+    data?: Record<string, unknown>[];
     margin?: {
       top?: number;
       right?: number;
@@ -29,6 +29,37 @@ declare module 'recharts' {
     };
     children?: React.ReactNode;
     layout?: 'horizontal' | 'vertical';
+  }
+
+  export interface CategoricalChartState {
+    isTooltipActive?: boolean;
+    activeTooltipIndex?: number;
+    activeLabel?: string | number;
+    activePayload?: unknown[];
+    activeCoordinate?: { x: number; y: number };
+  }
+
+  export type ActiveShape<Props = Record<string, unknown>> =
+    | React.ReactElement
+    | ((props: Props) => React.ReactElement);
+
+  export interface PieLabelRenderProps {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    outerRadius: number;
+    percent: number;
+  }
+
+  export interface TooltipProps<TValue = number, TName = string> {
+    active?: boolean;
+    payload?: Array<{
+      value?: TValue;
+      name?: TName;
+      payload?: Record<string, unknown>;
+      color?: string;
+    }>;
+    label?: string | number;
   }
 
   export function ResponsiveContainer(props: {
@@ -46,32 +77,32 @@ declare module 'recharts' {
     fill?: string;
     stroke?: string;
     stackId?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }): JSX.Element;
   
   export function Line(props: {
     type?: string;
     dataKey: string;
     stroke?: string;
-    activeDot?: any;
-    [key: string]: any;
+    activeDot?: ActiveShape;
+    [key: string]: unknown;
   }): JSX.Element;
   
   export function Pie(props: {
-    data?: any[];
+    data?: Record<string, unknown>[];
     dataKey: string;
     nameKey?: string;
     cx?: string | number;
     cy?: string | number;
     innerRadius?: number;
     outerRadius?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }): JSX.Element;
   
-  export function XAxis(props: { dataKey?: string; [key: string]: any }): JSX.Element;
-  export function YAxis(props: { [key: string]: any }): JSX.Element;
-  export function CartesianGrid(props: { [key: string]: any }): JSX.Element;
-  export function Tooltip(props: { [key: string]: any }): JSX.Element;
-  export function Legend(props: { [key: string]: any }): JSX.Element;
-  export function Cell(props: { fill?: string; [key: string]: any }): JSX.Element;
+  export function XAxis(props: { dataKey?: string; [key: string]: unknown }): JSX.Element;
+  export function YAxis(props: { [key: string]: unknown }): JSX.Element;
+  export function CartesianGrid(props: { [key: string]: unknown }): JSX.Element;
+  export function Tooltip(props: { [key: string]: unknown }): JSX.Element;
+  export function Legend(props: { [key: string]: unknown }): JSX.Element;
+  export function Cell(props: { fill?: string; [key: string]: unknown }): JSX.Element;
 }

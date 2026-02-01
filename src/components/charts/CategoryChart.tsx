@@ -18,14 +18,14 @@
  */
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, type PieLabelRenderProps } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { getChartColor } from '@/utils/color-utils';
 
 
 const RADIAN = Math.PI / 180;
 
-const renderLabelLine = ({ cx, cy, midAngle, outerRadius }: any) => {
+const renderLabelLine = ({ cx, cy, midAngle, outerRadius }: PieLabelRenderProps) => {
   const radius = outerRadius + 12;
   const sx = cx + outerRadius * Math.cos(-midAngle * RADIAN);
   const sy = cy + outerRadius * Math.sin(-midAngle * RADIAN);
@@ -34,7 +34,7 @@ const renderLabelLine = ({ cx, cy, midAngle, outerRadius }: any) => {
   return <path d={`M${sx},${sy}L${ex},${ey}`} stroke="currentColor" fill="none" strokeWidth={1} />;
 };
 
-const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }: any) => {
+const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }: PieLabelRenderProps) => {
   const radius = outerRadius + 20;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);

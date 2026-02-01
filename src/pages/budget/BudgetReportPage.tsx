@@ -23,7 +23,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, LineChart, Line, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  LineChart,
+  Line,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend,
+  type CategoricalChartState,
+  type TooltipProps,
+} from 'recharts';
 import { useTransactions } from '@/context/TransactionContext';
 import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
@@ -215,16 +231,24 @@ const BudgetReportPage = () => {
   };
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: TooltipProps<number, string> & CategoricalChartState) => {
     if (!active || !payload?.length) return null;
-    
+
     return (
       <div className="bg-popover border rounded-lg shadow-lg p-3 text-sm">
-        <p className="font-medium mb-2">{payload[0]?.payload?.fullMonth || label}</p>
-        {payload.map((p: any, i: number) => (
+        <p className="font-medium mb-2">
+          {String(
+            (payload[0]?.payload as { fullMonth?: string } | undefined)?.fullMonth ?? label ?? ''
+          )}
+        </p>
+        {payload.map((p, i) => (
           <div key={i} className="flex justify-between gap-4">
-            <span style={{ color: p.color }}>{p.name}:</span>
-            <span className="font-medium">{formatCurrency(p.value)}</span>
+            <span style={{ color: p.color }}>{p.name ?? ''}:</span>
+            <span className="font-medium">{formatCurrency(Number(p.value ?? 0))}</span>
           </div>
         ))}
       </div>

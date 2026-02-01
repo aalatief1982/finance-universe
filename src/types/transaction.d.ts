@@ -33,7 +33,7 @@ export interface Transaction {
   vendor?: string;
   currency?: string;
   person?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt?: string;
   /** Indicates whether the transaction was seeded as a demo sample */
   isSample?: boolean;

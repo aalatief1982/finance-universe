@@ -18,7 +18,17 @@
  */
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  type CategoricalChartState,
+  type TooltipProps,
+} from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { getChartColor } from '@/utils/color-utils';
 
@@ -43,9 +53,13 @@ export const chunkSubcategoryData = (items: Item[], size: number = MAX_SUBCATEGO
 
 const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
 
-const BarTooltip = (total: number) => ({ active, payload }: any) => {
+const BarTooltip = (total: number) => (
+  { active, payload }: TooltipProps<number, string> & CategoricalChartState
+) => {
   if (active && payload && payload.length) {
-    const { name, value } = payload[0].payload;
+    const firstPayload = payload[0]?.payload as { name?: string; value?: number } | undefined;
+    const name = firstPayload?.name ?? '';
+    const value = firstPayload?.value ?? 0;
     const percent = total ? ((value / total) * 100).toFixed(1) : null;
     return (
       <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
@@ -60,7 +74,9 @@ const BarTooltip = (total: number) => ({ active, payload }: any) => {
   return null;
 };
 
-const YAxisTick = ({ x, y, payload }: any) => {
+type AxisTickProps = { x: number; y: number; payload: { value: string | number } };
+
+const YAxisTick = ({ x, y, payload }: AxisTickProps) => {
   const text = String(payload.value);
   const truncated = text.length > 10 ? `${text.slice(0, 10)}…` : text;
   return (
@@ -97,7 +113,7 @@ const SubcategoryBarChart = ({ items }: { items: Item[] }) => {
         </BarChart>
       </ResponsiveContainer>
     );
-  } catch (err) {
+  } catch (err: unknown) {
     if (import.meta.env.MODE === 'development') {
       console.warn('[SubcategoryChart] Failed to render chart', err);
     }
