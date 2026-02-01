@@ -110,7 +110,7 @@ export function parseTemplateKey(key: string): { sender: string; hash: string } 
  * @side-effects Persists migrated format back to storage
  */
 export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
-  let raw = safeStorage.getItem(TEMPLATE_BANK_KEY);
+  const raw = safeStorage.getItem(TEMPLATE_BANK_KEY);
   let bank: any = raw ? JSON.parse(raw) : null;
 
   if (!bank) {

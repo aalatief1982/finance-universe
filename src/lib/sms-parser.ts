@@ -291,7 +291,7 @@ function extractToAccount(message: string): string | null {
   const patterns = [
     // Common patterns for recipient in transfer messages
     /(?:to|sent to|transferred to|recipient)[\s:]+([\w\s.']+?)(?:\s+on|\s+at|\s+for|\s+with|$)/i,
-    new RegExp(`(?:to account|account number|account no|a\/c)[\\s:#]+([${DIGIT_RANGES}*]+)`, 'i'),
+    new RegExp(`(?:to account|account number|account no|a/c)[\\s:#]+([${DIGIT_RANGES}*]+)`, 'i'),
     // Arabic patterns
     /(?:حوالة|تحويل)[\s:]+([\w\s.']+?)(?:\s+في|\s+بتاريخ|\s+على|$)/i
   ];

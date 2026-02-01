@@ -274,17 +274,20 @@ export function useTransactionsState() {
     
     // Determine start date based on period
     switch(period) {
-      case 'week':
+      case 'week': {
         const dayOfWeek = now.getDay();
         startDate = new Date(now);
         startDate.setDate(now.getDate() - dayOfWeek);
         break;
-      case 'month':
+      }
+      case 'month': {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
         break;
-      case 'year':
+      }
+      case 'year': {
         startDate = new Date(now.getFullYear(), 0, 1);
         break;
+      }
     }
     
     // Filter transactions within the period

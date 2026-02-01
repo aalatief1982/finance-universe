@@ -4,13 +4,18 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, EffectFade } from 'swiper/modules';
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
+import type { StatusBar as StatusBarType } from '@capacitor/status-bar';
 
 // Only import StatusBar if running in a native environment
-let StatusBar: any = null;
+let StatusBar: typeof StatusBarType | null = null;
 if (typeof window !== 'undefined' && Capacitor.isNativePlatform?.()) {
-  try {
-    StatusBar = require('@capacitor/status-bar').StatusBar;
-  } catch {}
+  import('@capacitor/status-bar')
+    .then((module) => {
+      StatusBar = module.StatusBar;
+    })
+    .catch((error) => {
+      void error;
+    });
 }
 
 import 'swiper/css';
@@ -73,7 +78,9 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
           await StatusBar.setBackgroundColor({ color: '#00000000' });
           await StatusBar.setStyle({ style: StatusBar.Style.Light });
           didSet = true;
-        } catch {}
+        } catch (error) {
+          void error;
+        }
       }
     })();
     // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)

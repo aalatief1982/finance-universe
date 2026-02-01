@@ -52,8 +52,8 @@ export function normalizeTemplateStructure(msg: string): NormalizedTemplate {
   text = text.replace(/\s+/g, ' ').trim();
 
   // Normalize date patterns to placeholder
-  text = text.replace(/\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b/g, 'DATE');
-  text = text.replace(/\b\d{4}[\/-]\d{1,2}[\/-]\d{1,2}\b/g, 'DATE');
+  text = text.replace(/\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/g, 'DATE');
+  text = text.replace(/\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b/g, 'DATE');
 
   // Normalize numeric amounts
   text = text.replace(/(?:\d{1,3},)*\d+(?:\.\d{1,2})?/g, 'AMOUNT');

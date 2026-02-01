@@ -115,8 +115,8 @@ export async function extractTransactionEntities(text: string, _useHighAccuracy 
 
     // Extract date
     const datePatterns = [
-      /(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/,
-      /(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/,
+      /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/,
+      /(\d{4}[/-]\d{1,2}[/-]\d{1,2})/,
       /(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{2,4})/i,
     ];
 

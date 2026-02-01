@@ -175,7 +175,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
             
             {manifest.releaseNotes && (
               <div className="mt-4 p-3 rounded-lg bg-muted/50">
-                <p className="text-xs font-medium mb-1">What's new:</p>
+                <p className="text-xs font-medium mb-1">What&apos;s new:</p>
                 <p className="text-xs text-muted-foreground">
                   {manifest.releaseNotes}
                 </p>
