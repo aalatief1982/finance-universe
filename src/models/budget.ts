@@ -87,12 +87,13 @@ export function migrateBudget(raw: Partial<Budget> & { scope?: string; period?: 
     
     if (!periodIndex) {
       switch (period) {
-        case 'weekly':
+        case 'weekly': {
           // Approximate week number from date
           const startOfYear = new Date(year, 0, 1);
           const days = Math.floor((startDate.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
           periodIndex = Math.ceil((days + startOfYear.getDay() + 1) / 7);
           break;
+        }
         case 'monthly':
           periodIndex = startDate.getMonth() + 1;
           break;

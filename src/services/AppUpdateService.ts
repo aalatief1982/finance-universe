@@ -618,7 +618,9 @@ class AppUpdateService {
     };
     try {
       result.nativeVersion = await this.getNativeVersion();
-    } catch {}
+    } catch (error) {
+      void error;
+    }
     try {
       const updater = getUpdater();
       if (updater) {
@@ -628,7 +630,9 @@ class AppUpdateService {
         const { bundles } = await withTimeout(updater.list(), 3000, 'updater.list');
         result.allBundles = bundles;
       }
-    } catch {}
+    } catch (error) {
+      void error;
+    }
     return result;
   }
 

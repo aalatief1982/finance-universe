@@ -106,18 +106,19 @@ export function generateDefaultTitle(txn: Transaction): string {
 
 function toISOFormat(input: string): string {
   if (!input || input.includes('undefined')) return '';
-  const normalized = input.trim().replace(/\s+/g, ' ').replace(/[.\/]/g, '-');
+  const normalized = input.trim().replace(/\s+/g, ' ').replace(/[./]/g, '-');
   const dmy = normalized.match(/^(\d{1,2})-(\d{1,2})-(\d{2,4})$/);
   if (dmy) {
-    let [_, dd, mm, yyyy] = dmy;
-    dd = dd.padStart(2, '0');
-    mm = mm.padStart(2, '0');
+    const [, rawDay, rawMonth, rawYear] = dmy;
+    const dd = rawDay.padStart(2, '0');
+    const mm = rawMonth.padStart(2, '0');
+    let yyyy = rawYear;
     if (yyyy.length === 2) yyyy = parseInt(yyyy) < 50 ? `20${yyyy}` : `19${yyyy}`;
     return `${yyyy}-${mm}-${dd}`;
   }
   const ymd = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (ymd) {
-    let [_, yyyy, mm, dd] = ymd;
+    const [_, yyyy, mm, dd] = ymd;
     return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   }
   const fallback = new Date(input);
@@ -461,7 +462,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const evaluateCalc = () => {
     try {
-      // eslint-disable-next-line no-new-func
+       
       const result = Function(`return (${calcExpr || 0})`)();
       setCalcExpr(String(result));
     } catch {
@@ -471,7 +472,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const handleUseCalc = () => {
     try {
-      // eslint-disable-next-line no-new-func
+       
       const result = Function(`return (${calcExpr || 0})`)();
       handleChange('amount', parseFloat(result));
     } catch {

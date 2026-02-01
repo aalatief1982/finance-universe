@@ -189,9 +189,10 @@ export function getChildPeriodIndices(
     case 'quarterly':
       return getMonthsInQuarter(parentPeriodIndex || 1);
     
-    case 'monthly':
+    case 'monthly': {
       const weeksInMonth = getWeeksInMonth(year, parentPeriodIndex || 1);
       return Array.from({ length: weeksInMonth }, (_, i) => i + 1);
+    }
     
     default:
       return [];

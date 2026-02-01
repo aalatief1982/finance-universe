@@ -51,7 +51,7 @@ const NotFound = () => {
         </div>
         <h1 className="text-4xl font-bold mb-3">Page Not Found</h1>
         <p className="text-muted-foreground mb-6">
-          We couldn't find the page you're looking for. The page might have been removed or the link might be broken.
+          We couldn&apos;t find the page you&apos;re looking for. The page might have been removed or the link might be broken.
         </p>
         <Button asChild size="lg">
           <Link to="/">Return to Dashboard</Link>

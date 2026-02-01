@@ -122,7 +122,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
       <div className="p-4 space-y-4">
         <p className="text-sm text-gray-600 mb-2">
           Choose financial institutions that send you transaction SMS alerts.
-          We'll scan messages from these providers to track your expenses.
+          We&apos;ll scan messages from these providers to track your expenses.
         </p>
       
         {hasDetections && (
@@ -131,7 +131,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
             <div>
               <h3 className="text-sm font-medium text-green-800">Providers Detected!</h3>
               <p className="text-xs text-green-600">
-                We've automatically detected some SMS providers from your messages.
+                We&apos;ve automatically detected some SMS providers from your messages.
               </p>
             </div>
           </div>
@@ -226,7 +226,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
           </div>
           
           <p className="text-xs text-gray-500 mt-1">
-            We'll analyze messages from this date forward. For privacy, we only access financial SMS.
+            We&apos;ll analyze messages from this date forward. For privacy, we only access financial SMS.
           </p>
         </div>
         

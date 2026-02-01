@@ -83,7 +83,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         const Plugins = (window as any).Plugins ?? (window as any).CapacitorPlugins ?? null;
         if (Plugins && Plugins.App && typeof Plugins.App.openUrl === 'function') {
           console.log('[SmsPermissionPrompt] Trying Plugins.App.openUrl("app-settings:")');
-          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+           
           Plugins.App.openUrl({ url: 'app-settings:' });
           return;
         }
@@ -194,10 +194,18 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           description: 'Permission dialog did not return. Please try again or enable SMS permission from Settings.',
           variant: 'destructive'
         });
-        try { logAnalyticsEvent('sms_permission_request_timed_out'); } catch (e) { /* ignore */ }
+        try {
+          logAnalyticsEvent('sms_permission_request_timed_out');
+        } catch (e) {
+          void e;
+        }
         // Keep prompt open so user can retry or open settings
         setIsRequesting(false);
-        try { resumeListener?.remove?.(); } catch (e) {}
+        try {
+          resumeListener?.remove?.();
+        } catch (e) {
+          void e;
+        }
         return;
       }
 
@@ -281,7 +289,11 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         description: 'Please try enabling SMS import from Settings.',
         variant: 'destructive'
       });
-      try { logAnalyticsEvent('sms_permission_request_failed'); } catch (e) { /* ignore */ }
+      try {
+        logAnalyticsEvent('sms_permission_request_failed');
+      } catch (e) {
+        void e;
+      }
       safeStorage.setItem('sms_prompt_shown', 'true');
       console.log('[SmsPermissionPrompt] sms_prompt_shown set to true (error)');
       onOpenChange(false);
@@ -289,7 +301,11 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       setIsRequesting(false);
       setIsBusy(false);
       setBusyMessage('');
-      try { resumeListener?.remove?.(); } catch (e) {}
+      try {
+        resumeListener?.remove?.();
+      } catch (e) {
+        void e;
+      }
     }
   };
 
