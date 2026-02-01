@@ -76,6 +76,7 @@ interface DraftTransaction {
   currency?: string;
   date?: string;
   fromAccount?: string;
+  toAccount?: string;
   type?: string;
   rawMessage: string;
   sender?: string;
@@ -126,20 +127,27 @@ const ReviewSmsTransactions: React.FC = () => {
             msg.id
           );
           const { transaction: txn, confidence, fieldConfidences, parsingStatus } = result;
-          
+          const normalizedTransaction = {
+            ...txn,
+            toAccount:
+              txn.type === 'income' && !txn.toAccount && txn.fromAccount
+                ? txn.fromAccount
+                : txn.toAccount,
+            fromAccount: txn.type === 'income' ? undefined : txn.fromAccount,
+          };
           const mappedVendor = vendorMap[txn.vendor] || txn.vendor;
           const kbEntry = keywordMap.find(kb => kb.keyword === mappedVendor);
           const cat = kbEntry?.mappings.find(m => m.field === "category")?.value || txn.category;
           const sub = kbEntry?.mappings.find(m => m.field === "subcategory")?.value || txn.subcategory;
 
           return {
-            ...txn,
+            ...normalizedTransaction,
             vendor: mappedVendor,
             category: cat,
             subcategory: sub,
             rawMessage,
 
-            title: generateDefaultTitle({ ...txn, category: cat, subcategory: sub }),
+            title: generateDefaultTitle({ ...normalizedTransaction, category: cat, subcategory: sub }),
             sender: msg.sender,
             alwaysApply: false,
 
@@ -195,6 +203,11 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
 		  if (import.meta.env.MODE === 'development') {
 		    // console.log('[TYPE CHANGE] Selected Subcategory:', txn.subcategory);
 		  }
+
+      if (value === 'income' && txn.fromAccount && !txn.toAccount) {
+        txn.toAccount = txn.fromAccount;
+        txn.fromAccount = '';
+      }
 		}
 
 
@@ -216,7 +229,8 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
       source: 'sms-import',
       currency: txn.currency,
       vendor: txn.vendor,
-      fromAccount: txn.fromAccount
+      fromAccount: txn.fromAccount,
+      toAccount: txn.toAccount
     };
     txn.title = generateDefaultTitle(transactionForTitle);
   }
@@ -274,7 +288,8 @@ const toggleSkipAll = () => {
         source: 'sms-import',
         currency: txn.currency,
         vendor: txn.vendor,
-        fromAccount: txn.fromAccount
+        fromAccount: txn.fromAccount,
+        toAccount: txn.toAccount
       };
       const title = generateDefaultTitle(transactionForTitle);
       
@@ -291,6 +306,7 @@ const toggleSkipAll = () => {
           currency: txn.currency,
           vendor: txn.vendor,
           fromAccount: txn.fromAccount,
+          toAccount: txn.toAccount,
           details: {
             sms: txn.sender ? {
               sender: txn.sender,
@@ -319,17 +335,22 @@ const toggleSkipAll = () => {
     valid.forEach(({ txn, idx }) => {
       const normalizedAmount =
         txn.type === 'expense' ? -Math.abs(parseFloat(String(txn.amount!))) : Math.abs(parseFloat(String(txn.amount!)));
+      const normalizedToAccount =
+        txn.type === 'income' && !txn.toAccount && txn.fromAccount ? txn.fromAccount : txn.toAccount;
+      const normalizedFromAccount = txn.type === 'income' ? '' : txn.fromAccount;
 
       const cleanTransaction = {
         ...txn,
         amount: normalizedAmount,
+        fromAccount: normalizedFromAccount,
+        toAccount: normalizedToAccount,
         title: txn.title,
       };
 
       const originalTxn = transactions[idx];
       saveTransactionWithLearning(cleanTransaction as any, {
         rawMessage: originalTxn.rawMessage,
-        senderHint: txn.fromAccount || '',
+        senderHint: normalizedFromAccount || normalizedToAccount || '',
         isNew: true,
         addTransaction,
         updateTransaction,
@@ -528,9 +549,19 @@ const toggleSkipAll = () => {
                 Always apply for this sender
               </label>
             </div>
-            <Input
-              value={txn.fromAccount || ''}
-              onChange={e => handleFieldChange(index, 'fromAccount', e.target.value)}
+            <div className="col-span-2 space-y-1">
+              <label className="text-sm text-muted-foreground">
+                {txn.type === 'income' ? 'To account' : 'From account'}
+              </label>
+              <Input
+                value={txn.type === 'income' ? txn.toAccount || '' : txn.fromAccount || ''}
+                onChange={e =>
+                  handleFieldChange(
+                    index,
+                    txn.type === 'income' ? 'toAccount' : 'fromAccount',
+                    e.target.value
+                  )
+                }
               className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
                 (txn.fieldConfidences?.fromAccount ?? 0) >= 0.8
                   ? 'border-green-500'
@@ -538,7 +569,8 @@ const toggleSkipAll = () => {
                     ? 'border-amber-500'
                     : 'border-red-500'
               }`}
-            />
+              />
+            </div>
             <ToggleGroup
               type="single"
               value={txn.type}
