@@ -519,11 +519,12 @@ const toggleSkipAll = () => {
             </Select>
             <div className="col-span-2 flex items-center gap-2">
               <Checkbox
+                id={`always-apply-${index}`}
                 checked={txn.alwaysApply || false}
                 onCheckedChange={checked => handleAlwaysApplyChange(index, !!checked)}
                 className="mr-2"
               />
-              <label className="text-sm">
+              <label className="text-sm" htmlFor={`always-apply-${index}`}>
                 Always apply for this sender
               </label>
             </div>

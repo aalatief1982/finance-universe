@@ -34,6 +34,7 @@ interface AccountAutocompleteProps {
   className?: string;
   required?: boolean;
   userHasInteracted?: boolean;
+  inputId?: string;
 }
 
 const AccountAutocomplete: React.FC<AccountAutocompleteProps> = ({
@@ -46,7 +47,8 @@ const AccountAutocomplete: React.FC<AccountAutocompleteProps> = ({
   placeholder = "Start typing account name...",
   className = "",
   required = false,
-  userHasInteracted = false
+  userHasInteracted = false,
+  inputId
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filteredAccounts, setFilteredAccounts] = useState<Account[]>([]);
@@ -106,6 +108,7 @@ const AccountAutocomplete: React.FC<AccountAutocompleteProps> = ({
     <div ref={containerRef} className="relative flex-1">
       <div className="flex w-full items-center gap-1">
         <Input
+          id={inputId}
           value={searchTerm}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
@@ -134,6 +137,9 @@ const AccountAutocomplete: React.FC<AccountAutocompleteProps> = ({
                   key={account.name}
                   className="px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground text-sm"
                   onClick={() => handleSelectAccount(account)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSelectAccount(account)}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="font-medium">{account.name}</div>
                   {account.iban && (

@@ -424,7 +424,6 @@ const PhoneVerification = ({
                 onKeyDown={handleCodeKeyDown}
                 role="group"
                 aria-labelledby="code-label"
-                tabIndex={0}
               >
                 <InputOTP
                   maxLength={4}

@@ -384,8 +384,11 @@ const handleRetry = () => {
               <AccordionContent>
                 <Card className="p-[var(--card-padding)] space-y-3">
                   <div>
-                    <label className="block mb-1 font-semibold">Vendor:</label>
+                    <label className="block mb-1 font-semibold" htmlFor={`vendor-map-name-${index}`}>
+                      Vendor:
+                    </label>
                     <Input
+                      id={`vendor-map-name-${index}`}
                       type="text"
                       value={vendor.updatedVendor}
                       onChange={e => handleVendorChange(index, 'updatedVendor', e.target.value)}
@@ -394,9 +397,14 @@ const handleRetry = () => {
                   </div>
 
                   <div>
-                    <label className="block mb-1 font-semibold">Category:</label>
+                    <label className="block mb-1 font-semibold" htmlFor={`vendor-map-category-${index}`}>
+                      Category:
+                    </label>
                     <Select value={vendor.category} onValueChange={value => handleVendorChange(index, 'category', value)}>
-                      <SelectTrigger className="w-full p-2 dark:bg-white dark:text-black">
+                      <SelectTrigger
+                        id={`vendor-map-category-${index}`}
+                        className="w-full p-2 dark:bg-white dark:text-black"
+                      >
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -410,9 +418,14 @@ const handleRetry = () => {
                   </div>
 
                   <div>
-                    <label className="block mb-1 font-semibold">Subcategory:</label>
+                    <label className="block mb-1 font-semibold" htmlFor={`vendor-map-subcategory-${index}`}>
+                      Subcategory:
+                    </label>
                     <Select value={vendor.subcategory} onValueChange={value => handleVendorChange(index, 'subcategory', value)}>
-                      <SelectTrigger className="w-full p-2 dark:bg-white dark:text-black">
+                      <SelectTrigger
+                        id={`vendor-map-subcategory-${index}`}
+                        className="w-full p-2 dark:bg-white dark:text-black"
+                      >
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>

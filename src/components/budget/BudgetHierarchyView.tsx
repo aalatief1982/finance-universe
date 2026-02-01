@@ -44,6 +44,9 @@ export function BudgetHierarchyView({
             : "hover:bg-muted/50"
         )}
         onClick={() => !isCurrent && navigate(`/budget/${budget.id}`)}
+        onKeyDown={(e) => !isCurrent && e.key === 'Enter' && navigate(`/budget/${budget.id}`)}
+        role={isCurrent ? undefined : "button"}
+        tabIndex={isCurrent ? undefined : 0}
       >
         <div className="flex items-center gap-2">
           <span className={cn(

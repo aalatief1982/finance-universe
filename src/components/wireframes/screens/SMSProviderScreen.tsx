@@ -175,6 +175,9 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
                       : 'bg-white hover:bg-gray-50'
                   } ${provider.isDetected && !selectedProviders.includes(provider.id) ? 'border-amber-300' : ''}`}
                   onClick={() => toggleProvider(provider.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && toggleProvider(provider.id)}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="flex items-center">
                     <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${
@@ -210,12 +213,18 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
         )}
         
         <div className="mt-4 space-y-2">
-          <label className="block text-gray-700 text-sm font-medium">Select Start Date</label>
+          <label className="block text-gray-700 text-sm font-medium" htmlFor="wireframe-sms-start-date">
+            Select Start Date
+          </label>
           <div 
+            id="wireframe-sms-start-date"
             className={`flex items-center border rounded-lg p-3 cursor-pointer hover:bg-gray-50 ${
               startDate ? 'border-blue-300 bg-blue-50' : ''
             }`}
             onClick={handleDateSelect}
+            onKeyDown={(e) => e.key === 'Enter' && handleDateSelect()}
+            role="button"
+            tabIndex={0}
           >
             <Calendar className={`mr-2 ${startDate ? 'text-blue-500' : 'text-gray-500'}`} size={20} />
             <span className={startDate ? 'text-blue-700' : 'text-gray-700'}>

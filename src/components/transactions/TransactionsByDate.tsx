@@ -118,6 +118,9 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
                       key={transaction.id?.trim() || `txn-${date}-${index}`}
                       className="bg-card text-card-foreground dark:bg-black dark:text-white rounded-2xl shadow-sm border px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors"
                       onClick={() => handleTransactionClick(transaction)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleTransactionClick(transaction)}
+                      role="button"
+                      tabIndex={0}
                     >
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2 min-w-0">

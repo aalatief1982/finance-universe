@@ -88,7 +88,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({ isLandingPage }) => {
                       className="text-destructive focus:text-destructive cursor-pointer"
                       asChild
                     >
-                      <div onClick={logOut}>
+                      <div
+                        onClick={logOut}
+                        onKeyDown={(e) => e.key === 'Enter' && logOut()}
+                        role="button"
+                        tabIndex={0}
+                      >
                         <LogOut className="mr-2 h-4 w-4" />
                         <span>Log out</span>
                       </div>

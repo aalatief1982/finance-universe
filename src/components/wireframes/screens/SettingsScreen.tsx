@@ -361,6 +361,9 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
                 : 'bg-gray-200 text-gray-700'
             }`}
             onClick={() => setActiveTab(tab.id)}
+            onKeyDown={(e) => e.key === 'Enter' && setActiveTab(tab.id)}
+            role="button"
+            tabIndex={0}
           >
             <span className="mr-1">{tab.icon}</span>
             <span>{tab.label}</span>
@@ -381,6 +384,9 @@ const SettingsScreen = ({ onBack, userData, onUpdateUserData }: SettingsScreenPr
                     index < section.items.length - 1 ? 'border-b' : ''
                   }`}
                   onClick={item.action}
+                  onKeyDown={(e) => e.key === 'Enter' && item.action?.()}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="flex items-center">
                     <div className={`mr-3 ${item.danger ? 'text-red-500' : 'text-gray-500'}`}>

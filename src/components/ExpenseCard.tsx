@@ -54,6 +54,9 @@ const ExpenseCard = ({
         className
       )}
       onClick={onClick}
+      onKeyDown={(e) => onClick && e.key === 'Enter' && onClick()}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-0.5">

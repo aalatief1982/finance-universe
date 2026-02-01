@@ -59,6 +59,9 @@ const CategoryPill = ({
         className
       )}
       onClick={onClick}
+      onKeyDown={(e) => onClick && e.key === 'Enter' && onClick()}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       {category}
     </div>

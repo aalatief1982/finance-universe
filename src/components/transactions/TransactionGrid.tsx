@@ -86,7 +86,13 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
           className="group transition-all duration-300"
         >
           <div className="flex items-center gap-3 relative">
-            <div className="flex-1" onClick={() => onEditTransaction(transaction)}>
+            <div
+              className="flex-1"
+              onClick={() => onEditTransaction(transaction)}
+              onKeyDown={(e) => e.key === 'Enter' && onEditTransaction(transaction)}
+              role="button"
+              tabIndex={0}
+            >
               <ExpenseCard
                 id={transaction.id}
                 title={transaction.title}

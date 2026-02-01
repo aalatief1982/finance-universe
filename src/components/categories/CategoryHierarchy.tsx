@@ -80,6 +80,9 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
             "cursor-pointer"
           )}
           onClick={() => handleCategoryClick(category.id)}
+          onKeyDown={(e) => e.key === 'Enter' && handleCategoryClick(category.id)}
+          role="button"
+          tabIndex={0}
           style={{ paddingLeft: `${(depth * 12) + 8}px` }}
         >
           {hasSubcategories && collapsible ? (
@@ -166,6 +169,9 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
                         "cursor-pointer"
                       )}
                       onClick={() => handleCategoryClick(subcat.id)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleCategoryClick(subcat.id)}
+                      role="button"
+                      tabIndex={0}
                     >
                       <div
                         className="h-3 w-3 rounded-full mr-2"
@@ -185,6 +191,9 @@ const CategoryHierarchy: React.FC<CategoryHierarchyProps> = ({
                 "cursor-pointer"
               )}
               onClick={() => handleCategoryClick(category.id)}
+              onKeyDown={(e) => e.key === 'Enter' && handleCategoryClick(category.id)}
+              role="button"
+              tabIndex={0}
             >
               <div
                 className="h-3 w-3 rounded-full mr-2"

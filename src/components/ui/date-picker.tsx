@@ -19,6 +19,7 @@ interface DatePickerProps {
   placeholder?: string;
   className?: string;
   isAutoFilled?: boolean;
+  inputId?: string;
 }
 
 export function DatePicker({
@@ -27,6 +28,7 @@ export function DatePicker({
   placeholder = "Pick a date",
   className,
   isAutoFilled,
+  inputId,
 }: DatePickerProps) {
   const isNative = Capacitor.isNativePlatform();
 
@@ -42,6 +44,7 @@ export function DatePicker({
       <div className={cn("relative", className)}>
         <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
+          id={inputId}
           type="date"
           className={cn(
             "w-full pl-10 pr-3 py-2 font-normal",
@@ -63,6 +66,7 @@ export function DatePicker({
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          id={inputId}
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal dark:bg-black dark:text-white",

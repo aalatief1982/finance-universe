@@ -445,6 +445,9 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                                         }`}
                                         style={{ backgroundColor: color.value }}
                                         onClick={() => form.setValue('color', color.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && form.setValue('color', color.value)}
+                                        role="button"
+                                        tabIndex={0}
                                       />
                                     ))}
                                   </div>

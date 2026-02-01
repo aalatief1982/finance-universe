@@ -152,6 +152,9 @@ const BudgetHubPage = () => {
             <div 
               className="bg-card rounded-xl p-6 border cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => navigate(`/budget/set?edit=${overallBudget.id}`)}
+              onKeyDown={(e) => e.key === 'Enter' && navigate(`/budget/set?edit=${overallBudget.id}`)}
+              role="button"
+              tabIndex={0}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">

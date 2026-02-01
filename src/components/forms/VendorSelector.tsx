@@ -134,13 +134,21 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Vendor Name*</label>
-              <Input value={newVendor.name} onChange={e => setNewVendor(prev => ({ ...prev, name: e.target.value }))} />
+              <label className="mb-1 block text-sm font-medium" htmlFor="vendor-selector-name">
+                Vendor Name*
+              </label>
+              <Input
+                id="vendor-selector-name"
+                value={newVendor.name}
+                onChange={e => setNewVendor(prev => ({ ...prev, name: e.target.value }))}
+              />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Type*</label>
+              <label className="mb-1 block text-sm font-medium" htmlFor="vendor-selector-type">
+                Type*
+              </label>
               <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType, category: '', subcategory: '' }))}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="vendor-selector-type" className="w-full">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -151,9 +159,11 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
               </Select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Category*</label>
+              <label className="mb-1 block text-sm font-medium" htmlFor="vendor-selector-category">
+                Category*
+              </label>
               <Select value={newVendor.category} onValueChange={val => setNewVendor(prev => ({ ...prev, category: val, subcategory: '' }))}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="vendor-selector-category" className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
@@ -167,9 +177,11 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
             </div>
             {availableSubcategories.length > 0 && (
               <div>
-                <label className="mb-1 block text-sm font-medium">Subcategory</label>
+                <label className="mb-1 block text-sm font-medium" htmlFor="vendor-selector-subcategory">
+                  Subcategory
+                </label>
                 <Select value={newVendor.subcategory} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val }))}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="vendor-selector-subcategory" className="w-full">
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">

@@ -91,12 +91,24 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Name*</label>
-              <Input value={newPerson.name} onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))} />
+              <label className="mb-1 block text-sm font-medium" htmlFor="person-selector-name">
+                Name*
+              </label>
+              <Input
+                id="person-selector-name"
+                value={newPerson.name}
+                onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))}
+              />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Relation</label>
-              <Input value={newPerson.relation} onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))} />
+              <label className="mb-1 block text-sm font-medium" htmlFor="person-selector-relation">
+                Relation
+              </label>
+              <Input
+                id="person-selector-relation"
+                value={newPerson.relation}
+                onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))}
+              />
             </div>
           </div>
           <DialogFooter>

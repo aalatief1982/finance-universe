@@ -613,6 +613,9 @@ const SetBudgetPage = () => {
                     : 'border-border hover:bg-accent/5'
                 }`}
                 onClick={() => handleScopeChange(value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleScopeChange(value)}
+                role="button"
+                tabIndex={0}
               >
                 <div className={`p-2 rounded-full ${
                   scope === value ? 'bg-primary/10' : 'bg-muted'

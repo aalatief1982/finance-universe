@@ -338,8 +338,11 @@ const AccountsPage = () => {
           
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Name</label>
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="account-name">
+                Name
+              </label>
               <Input
+                id="account-name"
                 placeholder="e.g., Main Checking"
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
@@ -347,9 +350,11 @@ const AccountsPage = () => {
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Type</label>
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="account-type">
+                Type
+              </label>
               <Select value={form.type} onValueChange={val => setForm({ ...form, type: val as Account['type'] })}>
-                <SelectTrigger>
+                <SelectTrigger id="account-type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -370,9 +375,11 @@ const AccountsPage = () => {
             
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Currency</label>
+                <label className="text-sm font-medium mb-1.5 block" htmlFor="account-currency">
+                  Currency
+                </label>
                 <Select value={form.currency} onValueChange={val => setForm({ ...form, currency: val })}>
-                  <SelectTrigger>
+                  <SelectTrigger id="account-currency">
                     <SelectValue placeholder="Currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -384,8 +391,11 @@ const AccountsPage = () => {
               </div>
               
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Initial Balance</label>
+                <label className="text-sm font-medium mb-1.5 block" htmlFor="account-initial-balance">
+                  Initial Balance
+                </label>
                 <Input
+                  id="account-initial-balance"
                   type="number"
                   placeholder="0.00"
                   value={form.initialBalance || ''}
@@ -395,10 +405,13 @@ const AccountsPage = () => {
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Start Date</label>
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="account-start-date">
+                Start Date
+              </label>
               <DatePicker
                 date={new Date(form.startDate)}
                 setDate={d => setForm({ ...form, startDate: d?.toISOString().split('T')[0] || form.startDate })}
+                inputId="account-start-date"
               />
             </div>
           </div>
