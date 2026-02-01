@@ -165,6 +165,9 @@ const SettingsPage = () => {
                 <div 
                   className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center cursor-pointer rounded-lg"
                   onClick={() => handleLockedFeatureClick('Learning Engine')}
+                  onKeyDown={(e) => e.key === 'Enter' && handleLockedFeatureClick('Learning Engine')}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div className="text-center">
                     <Lock className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />

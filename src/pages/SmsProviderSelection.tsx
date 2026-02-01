@@ -201,6 +201,9 @@ const SmsProviderSelection = () => {
                   ${provider.isDetected && !provider.isSelected ? 'border-amber-300' : ''}
                   `}
                   onClick={() => toggleProvider(provider.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && toggleProvider(provider.id)}
+                  role="button"
+                  tabIndex={0}
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -225,12 +228,18 @@ const SmsProviderSelection = () => {
         )}
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium">Select Start Date</label>
+          <label className="block text-sm font-medium" htmlFor="sms-provider-start-date">
+            Select Start Date
+          </label>
           <div 
+            id="sms-provider-start-date"
             className={`flex items-center border rounded-lg p-3 cursor-pointer hover:bg-secondary ${
               startDate ? 'border-primary/50 bg-primary/5' : ''
             }`}
             onClick={handleDateSelect}
+            onKeyDown={(e) => e.key === 'Enter' && handleDateSelect()}
+            role="button"
+            tabIndex={0}
           >
             <Calendar className={`mr-2 ${startDate ? 'text-primary' : 'text-muted-foreground'}`} size={20} />
             <span className={startDate ? 'text-foreground' : 'text-muted-foreground'}>

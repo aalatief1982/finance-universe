@@ -240,6 +240,9 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
                       selectedMessages.includes(msg.id) ? 'bg-blue-50' : ''
                     }`}
                     onClick={() => toggleMessage(msg.id)}
+                    onKeyDown={(e) => e.key === 'Enter' && toggleMessage(msg.id)}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className={`w-6 h-6 rounded-full border mr-3 flex-shrink-0 flex items-center justify-center ${
                       selectedMessages.includes(msg.id) 

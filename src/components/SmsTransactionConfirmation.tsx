@@ -296,12 +296,14 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Transaction Type</label>
+              <label className="text-sm font-medium" htmlFor="sms-edit-transaction-type">
+                Transaction Type
+              </label>
               <Select 
                 value={editedTransaction.type}
                 onValueChange={(value) => handleChange('type', value as TransactionType)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="sms-edit-transaction-type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -313,8 +315,9 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">From Account</label>
+              <label className="text-sm font-medium" htmlFor="sms-edit-from-account">From Account</label>
               <Input 
+                id="sms-edit-from-account"
                 value={editedTransaction.fromAccount || editedTransaction.sender}
                 onChange={(e) => handleChange('fromAccount', e.target.value)}
               />
@@ -322,8 +325,9 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             
             {editedTransaction.type === 'transfer' && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">To Account</label>
+                <label className="text-sm font-medium" htmlFor="sms-edit-to-account">To Account</label>
                 <Input 
+                  id="sms-edit-to-account"
                   value={editedTransaction.toAccount || ''}
                   onChange={(e) => handleChange('toAccount', e.target.value)}
                 />
@@ -332,8 +336,9 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Amount</label>
+                <label className="text-sm font-medium" htmlFor="sms-edit-amount">Amount</label>
                 <Input 
+                  id="sms-edit-amount"
                   type="number" 
                   value={Math.abs(editedTransaction.amount)}
                   onChange={(e) => handleChange('amount', Number(e.target.value))}
@@ -341,12 +346,12 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Currency</label>
+                <label className="text-sm font-medium" htmlFor="sms-edit-currency">Currency</label>
                 <Select 
                   value={editedTransaction.currency || 'USD'}
                   onValueChange={(value) => handleChange('currency', value as SupportedCurrency)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="sms-edit-currency">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
@@ -359,12 +364,12 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Category</label>
+              <label className="text-sm font-medium" htmlFor="sms-edit-category">Category</label>
               <Select 
                 value={editedTransaction.inferredCategory}
                 onValueChange={(value) => handleChange('inferredCategory', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="sms-edit-category">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -377,12 +382,12 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             
             {availableSubcategories.length > 0 && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Subcategory</label>
+                <label className="text-sm font-medium" htmlFor="sms-edit-subcategory">Subcategory</label>
                 <Select 
                   value={editedTransaction.subcategory || ''}
                   onValueChange={(value) => handleChange('subcategory', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="sms-edit-subcategory">
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent>
@@ -395,13 +400,13 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             )}
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Person (Optional)</label>
+              <label className="text-sm font-medium" htmlFor="sms-edit-person">Person (Optional)</label>
               <div className="flex items-center gap-1">
                 <Select
                   value={editedTransaction.person || ''}
                   onValueChange={(value) => handleChange('person', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="sms-edit-person">
                     <SelectValue placeholder="Select person" />
                   </SelectTrigger>
                   <SelectContent>
@@ -418,16 +423,20 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Description (Optional)</label>
+              <label className="text-sm font-medium" htmlFor="sms-edit-description">
+                Description (Optional)
+              </label>
               <Input 
+                id="sms-edit-description"
                 value={editedTransaction.description}
                 onChange={(e) => handleChange('description', e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Date</label>
+              <label className="text-sm font-medium" htmlFor="sms-edit-date">Date</label>
               <Input 
+                id="sms-edit-date"
                 type="date"
                 value={editedTransaction.date}
                 onChange={(e) => handleChange('date', e.target.value)}
@@ -449,12 +458,24 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Name*</label>
-              <Input value={newPerson.name} onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))} />
+              <label className="mb-1 block text-sm font-medium" htmlFor="sms-new-person-name">
+                Name*
+              </label>
+              <Input
+                id="sms-new-person-name"
+                value={newPerson.name}
+                onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))}
+              />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Relation</label>
-              <Input value={newPerson.relation} onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))} />
+              <label className="mb-1 block text-sm font-medium" htmlFor="sms-new-person-relation">
+                Relation
+              </label>
+              <Input
+                id="sms-new-person-relation"
+                value={newPerson.relation}
+                onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))}
+              />
             </div>
           </div>
           <div className="flex justify-end space-x-2">

@@ -112,12 +112,15 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                 <h3 className="font-medium">Filters</h3>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Category</label>
+                  <label className="text-sm font-medium" htmlFor="transaction-filter-category">
+                    Category
+                  </label>
                   <Popover open={showCategoryHierarchy} onOpenChange={setShowCategoryHierarchy}>
                     <PopoverTrigger asChild>
                       <Button 
                         variant="outline" 
                         className="w-full justify-start font-normal text-left h-10"
+                        id="transaction-filter-category"
                       >
                         {getCategoryName(selectedCategory)}
                       </Button>
@@ -150,9 +153,11 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Type</label>
+                  <label className="text-sm font-medium" htmlFor="transaction-filter-type">
+                    Type
+                  </label>
                   <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger>
+                    <SelectTrigger id="transaction-filter-type">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
@@ -164,17 +169,21 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Date Range</label>
+                  <label className="text-sm font-medium" htmlFor="transaction-filter-date-start">
+                    Date Range
+                  </label>
                   <div className="flex gap-2">
                     <DatePicker
                       date={startDate}
                       setDate={setStartDate}
                       placeholder="From"
+                      inputId="transaction-filter-date-start"
                     />
                     <DatePicker
                       date={endDate}
                       setDate={setEndDate}
                       placeholder="To"
+                      inputId="transaction-filter-date-end"
                     />
                   </div>
                 </div>
@@ -196,10 +205,13 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                   <CollapsibleContent>
                     {setMinAmount && setMaxAmount && (
                       <div className="space-y-2 py-2">
-                        <label className="text-sm font-medium">Amount Range</label>
+                        <label className="text-sm font-medium" htmlFor="transaction-filter-amount-min">
+                          Amount Range
+                        </label>
                         <div className="flex gap-2">
                           <div className="flex-1">
                             <Input
+                              id="transaction-filter-amount-min"
                               type="number"
                               placeholder="Min"
                               value={minAmount || ''}
@@ -209,6 +221,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                           </div>
                           <div className="flex-1">
                             <Input
+                              id="transaction-filter-amount-max"
                               type="number"
                               placeholder="Max"
                               value={maxAmount || ''}
@@ -222,9 +235,11 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                     
                     {setSortBy && (
                       <div className="space-y-2 py-2">
-                        <label className="text-sm font-medium">Sort By</label>
+                        <label className="text-sm font-medium" htmlFor="transaction-filter-sort">
+                          Sort By
+                        </label>
                         <Select value={sortBy} onValueChange={setSortBy}>
-                          <SelectTrigger>
+                          <SelectTrigger id="transaction-filter-sort">
                             <SelectValue placeholder="Date (newest)" />
                           </SelectTrigger>
                           <SelectContent>

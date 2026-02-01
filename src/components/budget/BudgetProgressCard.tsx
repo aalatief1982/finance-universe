@@ -98,6 +98,9 @@ export function BudgetProgressCard({
           onClick && "cursor-pointer hover:bg-accent/5"
         )}
         onClick={onClick}
+        onKeyDown={(e) => onClick && e.key === 'Enter' && onClick()}
+        role={onClick ? "button" : undefined}
+        tabIndex={onClick ? 0 : undefined}
       >
         <div className={cn(
           "p-2 rounded-full",
@@ -146,6 +149,9 @@ export function BudgetProgressCard({
         onClick && "cursor-pointer hover:shadow-md hover:border-primary/20"
       )}
       onClick={onClick}
+      onKeyDown={(e) => onClick && e.key === 'Enter' && onClick()}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">

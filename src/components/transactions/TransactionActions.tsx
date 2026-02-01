@@ -68,7 +68,12 @@ const TransactionActions = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem asChild>
-            <div onClick={handleEdit}>
+            <div
+              onClick={handleEdit}
+              onKeyDown={(e) => e.key === 'Enter' && handleEdit()}
+              role="button"
+              tabIndex={0}
+            >
               <Pen className="mr-2 h-4 w-4" />
               <span>Edit</span>
             </div>
@@ -77,6 +82,9 @@ const TransactionActions = ({
             <div 
               onClick={handleDelete}
               className="text-destructive focus:text-destructive"
+              onKeyDown={(e) => e.key === 'Enter' && handleDelete()}
+              role="button"
+              tabIndex={0}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               <span>Delete</span>

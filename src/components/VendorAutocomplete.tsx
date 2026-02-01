@@ -33,6 +33,7 @@ interface VendorAutocompleteProps {
   placeholder?: string;
   className?: string;
   userHasInteracted?: boolean;
+  inputId?: string;
 }
 
 const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
@@ -45,6 +46,7 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   placeholder = "e.g., Netflix",
   className,
   userHasInteracted = false,
+  inputId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filteredVendors, setFilteredVendors] = useState<string[]>([]);
@@ -106,6 +108,7 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
         <div className="relative flex-1">
           <Input
             ref={inputRef}
+            id={inputId}
             value={searchTerm}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
@@ -139,6 +142,9 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
               key={vendor}
               className="px-3 py-2 cursor-pointer hover:bg-muted text-sm border-b border-border last:border-b-0"
               onClick={() => handleSelectVendor(vendor)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSelectVendor(vendor)}
+              role="button"
+              tabIndex={0}
             >
               {vendor}
             </div>

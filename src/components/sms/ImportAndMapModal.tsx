@@ -126,8 +126,11 @@ const ImportAndMapModal: React.FC<ImportAndMapModalProps> = ({
                 <AccordionContent>
                   <Card className="p-[var(--card-padding)] space-y-3">
                     <div>
-                      <label className="block mb-1 font-semibold">Vendor:</label>
+                      <label className="block mb-1 font-semibold" htmlFor={`vendor-name-${index}`}>
+                        Vendor:
+                      </label>
                       <Input
+                        id={`vendor-name-${index}`}
                         type="text"
                         value={vendor.updatedVendor}
                         onChange={(e) => handleVendorChange(index, 'updatedVendor', e.target.value)}
@@ -135,12 +138,17 @@ const ImportAndMapModal: React.FC<ImportAndMapModalProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block mb-1 font-semibold">Category:</label>
+                      <label className="block mb-1 font-semibold" htmlFor={`vendor-category-${index}`}>
+                        Category:
+                      </label>
                       <Select
                         value={vendor.category}
                         onValueChange={(val) => handleVendorChange(index, 'category', val)}
                       >
-                        <SelectTrigger className="w-full p-2 dark:bg-white dark:text-black">
+                        <SelectTrigger
+                          id={`vendor-category-${index}`}
+                          className="w-full p-2 dark:bg-white dark:text-black"
+                        >
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
@@ -155,12 +163,17 @@ const ImportAndMapModal: React.FC<ImportAndMapModalProps> = ({
                       </Select>
                     </div>
                     <div>
-                      <label className="block mb-1 font-semibold">Subcategory:</label>
+                      <label className="block mb-1 font-semibold" htmlFor={`vendor-subcategory-${index}`}>
+                        Subcategory:
+                      </label>
                       <Select
                         value={vendor.subcategory}
                         onValueChange={(val) => handleVendorChange(index, 'subcategory', val)}
                       >
-                        <SelectTrigger className="w-full p-2 dark:bg-white dark:text-black">
+                        <SelectTrigger
+                          id={`vendor-subcategory-${index}`}
+                          className="w-full p-2 dark:bg-white dark:text-black"
+                        >
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>

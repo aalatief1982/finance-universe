@@ -546,13 +546,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     <form onSubmit={handleSubmit} className={formClass}>
 
       <div className={rowClass}>
-        <label className={labelClass}>Type*</label>
+        <label className={labelClass} htmlFor="transaction-type">Type*</label>
 
         <Select
           value={editedTransaction.type}
           onValueChange={(value) => handleChange('type', value as TransactionType)}
         >
           <SelectTrigger
+            id="transaction-type"
             className={cn(
               'w-full text-sm',
               inputPadding,
@@ -575,9 +576,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Title*</label>
+        <label className={labelClass} htmlFor="transaction-title">Title*</label>
 
         <Input
+          id="transaction-title"
           value={editedTransaction.title || ''}
           onChange={(e) => {
             setTitleManuallyEdited(true);
@@ -598,7 +600,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Currency*</label>
+        <label className={labelClass} htmlFor="transaction-currency">Currency*</label>
 
         <div className="flex w-full items-center gap-1">
           <Select
@@ -606,6 +608,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('currency', value)}
           >
           <SelectTrigger
+            id="transaction-currency"
             className={cn(
               'w-full text-sm',
               inputPadding,
@@ -640,24 +643,33 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Short Name*</label>
+              <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="new-currency-code">
+                Short Name*
+              </label>
               <Input
+                id="new-currency-code"
                 value={newCurrency.code}
                 onChange={e => setNewCurrency(prev => ({ ...prev, code: e.target.value }))}
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Country*</label>
+              <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="new-currency-country">
+                Country*
+              </label>
               <Input
+                id="new-currency-country"
                 value={newCurrency.country}
                 onChange={e => setNewCurrency(prev => ({ ...prev, country: e.target.value }))}
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Conversion Rate</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-currency-rate">
+                Conversion Rate
+              </label>
               <Input
+                id="new-currency-rate"
                 type="number"
                 step="0.0001"
                 value={newCurrency.rate}
@@ -680,16 +692,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Name*</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-account-name">
+                Name*
+              </label>
               <Input
+                id="new-account-name"
                 value={newAccount.name}
                 onChange={e => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">IBAN</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-account-iban">
+                IBAN
+              </label>
               <Input
+                id="new-account-iban"
                 value={newAccount.iban}
                 onChange={e => setNewAccount(prev => ({ ...prev, iban: e.target.value }))}
                 className={darkFieldClass}
@@ -710,14 +728,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Type*</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-category-type">
+                Type*
+              </label>
               <Select
                 value={newCategory.type}
                 onValueChange={(val) =>
                   setNewCategory((prev) => ({ ...prev, type: val as TransactionType }))
                 }
               >
-                <SelectTrigger className={cn('w-full', darkFieldClass)}>
+                <SelectTrigger id="new-category-type" className={cn('w-full', darkFieldClass)}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -728,8 +748,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               </Select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Category*</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-category-name">
+                Category*
+              </label>
               <Input
+                id="new-category-name"
                 value={newCategory.category}
                 onChange={(e) =>
                   setNewCategory((prev) => ({ ...prev, category: e.target.value }))
@@ -738,8 +761,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Subcategory</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-category-subcategory">
+                Subcategory
+              </label>
               <Input
+                id="new-category-subcategory"
                 value={newCategory.subcategory}
                 onChange={(e) =>
                   setNewCategory((prev) => ({ ...prev, subcategory: e.target.value }))
@@ -766,16 +792,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Name*</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-person-name">
+                Name*
+              </label>
               <Input
+                id="new-person-name"
                 value={newPerson.name}
                 onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))}
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Relation</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-person-relation">
+                Relation
+              </label>
               <Input
+                id="new-person-relation"
                 value={newPerson.relation}
                 onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))}
                 className={darkFieldClass}
@@ -796,17 +828,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Vendor Name*</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-name">
+                Vendor Name*
+              </label>
               <Input
+                id="new-vendor-name"
                 value={newVendor.name}
                 onChange={e => setNewVendor(prev => ({ ...prev, name: e.target.value }))}
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Type*</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-type">
+                Type*
+              </label>
               <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType, category: '', subcategory: '' }))}>
-                <SelectTrigger className={cn('w-full', darkFieldClass)}>
+                <SelectTrigger id="new-vendor-type" className={cn('w-full', darkFieldClass)}>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -817,9 +854,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               </Select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white">Category*</label>
+              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-category">
+                Category*
+              </label>
               <Select value={newVendor.category} onValueChange={val => setNewVendor(prev => ({ ...prev, category: val, subcategory: '' }))}>
-                <SelectTrigger className={cn('w-full', darkFieldClass)}>
+                <SelectTrigger id="new-vendor-category" className={cn('w-full', darkFieldClass)}>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
@@ -833,9 +872,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             </div>
             {vendorAvailableSubcategories.length > 0 && (
               <div>
-                <label className="mb-1 block text-sm font-medium dark:text-white">Subcategory</label>
+                <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-subcategory">
+                  Subcategory
+                </label>
                 <Select value={newVendor.subcategory || "none"} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val === "none" ? "" : val }))}>
-                  <SelectTrigger className={cn('w-full', darkFieldClass)}>
+                  <SelectTrigger id="new-vendor-subcategory" className={cn('w-full', darkFieldClass)}>
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
@@ -885,10 +926,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Amount*</label>
+        <label className={labelClass} htmlFor="transaction-amount">Amount*</label>
 
         <div className="flex w-full items-center gap-1">
             <Input
+              id="transaction-amount"
               type="number"
               step="0.01"
               value={editedTransaction.amount}
@@ -919,10 +961,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>From Account*</label>
+        <label className={labelClass} htmlFor="transaction-from-account">From Account*</label>
 
         <div className="flex w-full items-center gap-1">
           <AccountAutocomplete
+            inputId="transaction-from-account"
             value={editedTransaction.fromAccount || ''}
             onChange={(value) => {
               setUserInteractions(prev => ({ ...prev, fromAccount: true }));
@@ -949,12 +992,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
       {editedTransaction.type === 'transfer' && (
         <div className={rowClass}>
-          <label className={labelClass}>To Account*</label>
+          <label className={labelClass} htmlFor="transaction-to-account">To Account*</label>
 
           <div className="flex w-full items-center gap-1">
-            <AccountAutocomplete
-              value={editedTransaction.toAccount || ''}
-              onChange={(value) => {
+          <AccountAutocomplete
+            inputId="transaction-to-account"
+            value={editedTransaction.toAccount || ''}
+            onChange={(value) => {
                 setUserInteractions(prev => ({ ...prev, toAccount: true }));
                 handleChange('toAccount', value);
               }}
@@ -978,7 +1022,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Category*</label>
+        <label className={labelClass} htmlFor="transaction-category">Category*</label>
 
         <div className="flex w-full items-center gap-1">
           <Select
@@ -986,6 +1030,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('category', value)}
           >
             <SelectTrigger
+              id="transaction-category"
               className={cn(
                 'w-full text-sm',
                 inputPadding,
@@ -1022,7 +1067,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       </div>
 
       <div className={rowClass}>
-        <label className={labelClass}>Subcategory</label>
+        <label className={labelClass} htmlFor="transaction-subcategory">Subcategory</label>
 
         <div className="flex w-full items-center gap-1">
           {availableSubcategories.length > 0 ? (
@@ -1032,6 +1077,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 onValueChange={(value) => handleChange('subcategory', value)}
               >
                 <SelectTrigger
+                  id="transaction-subcategory"
                   className={cn(
                     'w-full text-sm',
                     inputPadding,
@@ -1063,7 +1109,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Person (Optional)</label>
+        <label className={labelClass} htmlFor="transaction-person">Person (Optional)</label>
 
         <div className="flex w-full items-center gap-1">
           <Select
@@ -1071,6 +1117,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('person', value)}
           >
             <SelectTrigger
+              id="transaction-person"
               className={cn(
                 'w-full text-sm',
                 inputPadding,
@@ -1099,10 +1146,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Vendor</label>
+        <label className={labelClass} htmlFor="transaction-vendor">Vendor</label>
 
         <div className="flex w-full items-center gap-1">
           <VendorAutocomplete
+            inputId="transaction-vendor"
             value={editedTransaction.vendor || ''}
             onChange={(value) => {
               setUserInteractions(prev => ({ ...prev, vendor: true }));
@@ -1126,9 +1174,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Date*</label>
+        <label className={labelClass} htmlFor="transaction-date">Date*</label>
 
         <Input
+          id="transaction-date"
           type="date"
           value={editedTransaction.date || ''}
           onChange={(e) => handleChange('date', e.target.value)}
@@ -1148,9 +1197,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
 
       <div className={rowClass}>
-        <label className={labelClass}>Description (Optional)</label>
+        <label className={labelClass} htmlFor="transaction-description">Description (Optional)</label>
 
         <Textarea
+          id="transaction-description"
           value={editedTransaction.description || ''}
           onChange={(e) => {
             setDescriptionManuallyEdited(true);
@@ -1172,9 +1222,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
       {showNotes && (
         <div className={rowClass}>
-          <label className={labelClass}>Notes (Optional)</label>
+          <label className={labelClass} htmlFor="transaction-notes">Notes (Optional)</label>
 
           <Textarea
+            id="transaction-notes"
             value={editedTransaction.notes || ''}
             onChange={(e) => handleChange('notes', e.target.value)}
             placeholder="Additional notes..."

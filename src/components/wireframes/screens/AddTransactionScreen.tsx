@@ -94,10 +94,13 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
         </div>
         
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Amount</label>
+          <label className="block text-gray-700 mb-1" htmlFor="wireframe-amount">
+            Amount
+          </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
             <Input
+              id="wireframe-amount"
               type="text"
               placeholder="0.00"
               className={`pl-8 ${errors.amount ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
@@ -109,11 +112,16 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
         </div>
         
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Category</label>
+          <label className="block text-gray-700 mb-1" htmlFor="wireframe-category">
+            Category
+          </label>
           <div className="relative">
             <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className={`pl-8 ${errors.category ? 'border-red-500' : ''} dark:bg-white dark:text-black`}>
+              <SelectTrigger
+                id="wireframe-category"
+                className={`pl-8 ${errors.category ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
+              >
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
@@ -129,10 +137,13 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
         </div>
         
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Date</label>
+          <label className="block text-gray-700 mb-1" htmlFor="wireframe-date">
+            Date
+          </label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
             <Input
+              id="wireframe-date"
               type="date"
               className={`pl-8 ${errors.date ? 'border-red-500' : ''} dark:bg-white dark:text-black`}
               value={date}
@@ -143,10 +154,13 @@ const AddTransactionScreen = ({ onCancel, onSave }: AddTransactionScreenProps) =
         </div>
         
         <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Description</label>
+          <label className="block text-gray-700 mb-1" htmlFor="wireframe-description">
+            Description
+          </label>
           <div className="relative">
             <Receipt className="absolute left-3 top-3 text-gray-500" size={16} />
             <textarea 
+              id="wireframe-description"
               placeholder="Add a description" 
               className="w-full p-2 pl-8 border rounded-lg min-h-[80px]"
               value={description}
