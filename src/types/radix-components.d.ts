@@ -28,46 +28,46 @@ interface BaseProps {
 
 // Dialog Components
 declare module '@radix-ui/react-dialog' {
-  interface DialogProps extends BaseProps {}
-  interface DialogTriggerProps extends BaseProps {}
-  interface DialogContentProps extends BaseProps {}
-  interface DialogHeaderProps extends BaseProps {}
-  interface DialogFooterProps extends BaseProps {}
-  interface DialogTitleProps extends BaseProps {}
-  interface DialogDescriptionProps extends BaseProps {}
-  interface DialogCloseProps extends BaseProps {}
+  type DialogProps = BaseProps;
+  type DialogTriggerProps = BaseProps;
+  type DialogContentProps = BaseProps;
+  type DialogHeaderProps = BaseProps;
+  type DialogFooterProps = BaseProps;
+  type DialogTitleProps = BaseProps;
+  type DialogDescriptionProps = BaseProps;
+  type DialogCloseProps = BaseProps;
 }
 
 // Navigation Menu Components
 declare module '@radix-ui/react-navigation-menu' {
-  interface NavigationMenuProps extends BaseProps {}
-  interface NavigationMenuListProps extends BaseProps {}
-  interface NavigationMenuItemProps extends BaseProps {}
-  interface NavigationMenuTriggerProps extends BaseProps {}
-  interface NavigationMenuContentProps extends BaseProps {}
-  interface NavigationMenuLinkProps extends BaseProps {}
+  type NavigationMenuProps = BaseProps;
+  type NavigationMenuListProps = BaseProps;
+  type NavigationMenuItemProps = BaseProps;
+  type NavigationMenuTriggerProps = BaseProps;
+  type NavigationMenuContentProps = BaseProps;
+  type NavigationMenuLinkProps = BaseProps;
 }
 
 // Dropdown Menu Components
 declare module '@radix-ui/react-dropdown-menu' {
-  interface DropdownMenuProps extends BaseProps {}
-  interface DropdownMenuTriggerProps extends BaseProps {}
-  interface DropdownMenuContentProps extends BaseProps {}
-  interface DropdownMenuItemProps extends BaseProps {}
-  interface DropdownMenuLabelProps extends BaseProps {}
-  interface DropdownMenuSeparatorProps extends BaseProps {}
+  type DropdownMenuProps = BaseProps;
+  type DropdownMenuTriggerProps = BaseProps;
+  type DropdownMenuContentProps = BaseProps;
+  type DropdownMenuItemProps = BaseProps;
+  type DropdownMenuLabelProps = BaseProps;
+  type DropdownMenuSeparatorProps = BaseProps;
 }
 
 // Avatar Components
 declare module '@radix-ui/react-avatar' {
-  interface AvatarProps extends BaseProps {}
+  type AvatarProps = BaseProps;
   
   interface AvatarImageProps extends BaseProps {
     src?: string;
     alt?: string;
   }
   
-  interface AvatarFallbackProps extends BaseProps {}
+  type AvatarFallbackProps = BaseProps;
 }
 
 // Tabs Components
@@ -78,7 +78,7 @@ declare module '@radix-ui/react-tabs' {
     defaultValue?: string;
   }
   
-  interface TabsListProps extends BaseProps {}
+  type TabsListProps = BaseProps;
   
   interface TabsTriggerProps extends BaseProps {
     value?: string;
@@ -98,13 +98,13 @@ declare module '@radix-ui/react-label' {
 
 // Select Components
 declare module '@radix-ui/react-select' {
-  interface SelectProps extends BaseProps {}
-  interface SelectTriggerProps extends BaseProps {}
-  interface SelectContentProps extends BaseProps {}
+  type SelectProps = BaseProps;
+  type SelectTriggerProps = BaseProps;
+  type SelectContentProps = BaseProps;
   interface SelectItemProps extends BaseProps {
     value?: string;
   }
-  interface SelectValueProps extends BaseProps {}
+  type SelectValueProps = BaseProps;
 }
 
 // Switch Components

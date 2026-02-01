@@ -1,54 +1,68 @@
 
 import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '@/types/transaction';
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const getString = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value : undefined;
+
+const getBoolean = (value: unknown): boolean | undefined =>
+  typeof value === 'boolean' ? value : undefined;
+
 // These are wrapper functions to fix issues with type compatibility
 // They ensure that required properties are added before calling the original storage functions
 
-export const validateTransactionForStorage = (transaction: any): Transaction => {
+export const validateTransactionForStorage = (transaction: unknown): Transaction => {
+  const record = isRecord(transaction) ? transaction : {};
+  const amountValue =
+    typeof record.amount === 'number' && !Number.isNaN(record.amount)
+      ? record.amount
+      : 0;
   const resolvedType =
-    transaction.type === 'income' || transaction.type === 'expense' || transaction.type === 'transfer'
-      ? transaction.type
-      : (transaction.amount >= 0 ? 'income' : 'expense');
+    record.type === 'income' || record.type === 'expense' || record.type === 'transfer'
+      ? record.type
+      : amountValue >= 0
+        ? 'income'
+        : 'expense';
 
   // Create a new object to avoid mutating the input
   const validatedTransaction: Transaction = {
     // Required fields with defaults
-    id: transaction.id || '',
-    title: transaction.title || 'Untitled Transaction',
+    id: getString(record.id) || '',
+    title: getString(record.title) || 'Untitled Transaction',
     amount:
-      typeof transaction.amount === 'number' && !isNaN(transaction.amount)
-        ? transaction.amount
-        : 0,
-    category: transaction.category || 'Uncategorized',
-    date: transaction.date || new Date().toISOString(),
+      amountValue,
+    category: getString(record.category) || 'Uncategorized',
+    date: getString(record.date) || new Date().toISOString(),
     type: resolvedType,
-    source: transaction.source === 'manual' || transaction.source === 'import' || transaction.source === 'sms' || transaction.source === 'telegram'
-      ? transaction.source 
+    source: record.source === 'manual' || record.source === 'import' || record.source === 'sms' || record.source === 'telegram'
+      ? record.source
       : 'manual',
-    fromAccount: transaction.fromAccount || (resolvedType !== 'income' ? 'Main Account' : undefined)
+    fromAccount: getString(record.fromAccount) || (resolvedType !== 'income' ? 'Main Account' : undefined)
   };
   
   // Optional fields
-  if (transaction.subcategory) validatedTransaction.subcategory = transaction.subcategory;
-  if (transaction.notes) validatedTransaction.notes = transaction.notes;
-  if (transaction.currency) validatedTransaction.currency = transaction.currency;
-  if (transaction.person) validatedTransaction.person = transaction.person;
-  if (transaction.toAccount) validatedTransaction.toAccount = transaction.toAccount;
-  if (transaction.country) validatedTransaction.country = transaction.country;
-  if (transaction.description) validatedTransaction.description = transaction.description;
-  if (transaction.originalCurrency) validatedTransaction.originalCurrency = transaction.originalCurrency;
+  if (getString(record.subcategory)) validatedTransaction.subcategory = getString(record.subcategory);
+  if (getString(record.notes)) validatedTransaction.notes = getString(record.notes);
+  if (getString(record.currency)) validatedTransaction.currency = getString(record.currency);
+  if (getString(record.person)) validatedTransaction.person = getString(record.person);
+  if (getString(record.toAccount)) validatedTransaction.toAccount = getString(record.toAccount);
+  if (getString(record.country)) validatedTransaction.country = getString(record.country);
+  if (getString(record.description)) validatedTransaction.description = getString(record.description);
+  if (getString(record.originalCurrency)) validatedTransaction.originalCurrency = getString(record.originalCurrency);
   
   // Convert any smsDetails to the details.sms format
-  if (transaction.smsDetails) {
+  if (isRecord(record.smsDetails)) {
     validatedTransaction.details = {
       sms: {
-        sender: transaction.smsDetails.sender || '',
-        message: transaction.smsDetails.message || '',
-        timestamp: transaction.smsDetails.timestamp || new Date().toISOString()
+        sender: getString(record.smsDetails.sender) || '',
+        message: getString(record.smsDetails.message) || '',
+        timestamp: getString(record.smsDetails.timestamp) || new Date().toISOString()
       }
     };
-  } else if (transaction.details) {
-    validatedTransaction.details = transaction.details;
+  } else if (isRecord(record.details)) {
+    validatedTransaction.details = record.details as Transaction['details'];
   }
   
   // Ensure ID is present
@@ -59,19 +73,20 @@ export const validateTransactionForStorage = (transaction: any): Transaction => 
   return validatedTransaction;
 };
 
-export const validateCategoryForStorage = (category: any): Category => {
+export const validateCategoryForStorage = (category: unknown): Category => {
+  const record = isRecord(category) ? category : {};
   // Create a new object to avoid mutating the input
   const validatedCategory: Category = {
     // Required fields with defaults
-    id: category.id || '',
-    name: category.name || 'Uncategorized'
+    id: getString(record.id) || '',
+    name: getString(record.name) || 'Uncategorized'
   };
   
   // Optional fields
-  if (category.parentId) validatedCategory.parentId = category.parentId;
-  if (category.metadata) validatedCategory.metadata = category.metadata;
-  if (category.subcategories) validatedCategory.subcategories = category.subcategories;
-  if (typeof category.user === 'boolean') validatedCategory.user = category.user;
+  if (getString(record.parentId)) validatedCategory.parentId = getString(record.parentId);
+  if (isRecord(record.metadata)) validatedCategory.metadata = record.metadata as Category['metadata'];
+  if (Array.isArray(record.subcategories)) validatedCategory.subcategories = record.subcategories as Category[];
+  if (getBoolean(record.user) !== undefined) validatedCategory.user = getBoolean(record.user);
   
   // Ensure ID is present
   if (!validatedCategory.id) {
@@ -81,19 +96,20 @@ export const validateCategoryForStorage = (category: any): Category => {
   return validatedCategory;
 };
 
-export const validateCategoryRuleForStorage = (rule: any): CategoryRule => {
+export const validateCategoryRuleForStorage = (rule: unknown): CategoryRule => {
+  const record = isRecord(rule) ? rule : {};
   // Create a new object to avoid mutating the input
   const validatedRule: CategoryRule = {
     // Required fields with defaults
-    id: rule.id || '',
-    pattern: rule.pattern || '',
-    categoryId: rule.categoryId || '',
-    priority: typeof rule.priority === 'number' ? rule.priority : 0
+    id: getString(record.id) || '',
+    pattern: getString(record.pattern) || '',
+    categoryId: getString(record.categoryId) || '',
+    priority: typeof record.priority === 'number' ? record.priority : 0
   };
   
   // Optional fields
-  if (rule.description) validatedRule.description = rule.description;
-  if (typeof rule.isRegex === 'boolean') validatedRule.isRegex = rule.isRegex;
+  if (getString(record.description)) validatedRule.description = getString(record.description);
+  if (getBoolean(record.isRegex) !== undefined) validatedRule.isRegex = getBoolean(record.isRegex);
   
   // Ensure required fields are present
   if (!validatedRule.id) {
@@ -107,17 +123,18 @@ export const validateCategoryRuleForStorage = (rule: any): CategoryRule => {
   return validatedRule;
 };
 
-export const validateCategoryChangeForStorage = (change: any): TransactionCategoryChange => {
+export const validateCategoryChangeForStorage = (change: unknown): TransactionCategoryChange => {
+  const record = isRecord(change) ? change : {};
   // Create a new object to avoid mutating the input
   const validatedChange: TransactionCategoryChange = {
     // Required fields with defaults
-    transactionId: change.transactionId || '',
-    newCategoryId: change.newCategoryId || '',
-    timestamp: change.timestamp || new Date().toISOString()
+    transactionId: getString(record.transactionId) || '',
+    newCategoryId: getString(record.newCategoryId) || '',
+    timestamp: getString(record.timestamp) || new Date().toISOString()
   };
   
   // Optional fields
-  if (change.oldCategoryId) validatedChange.oldCategoryId = change.oldCategoryId;
+  if (getString(record.oldCategoryId)) validatedChange.oldCategoryId = getString(record.oldCategoryId);
   
   // Ensure required fields are present
   if (!validatedChange.transactionId) {

@@ -19,9 +19,9 @@
 declare module '@hookform/resolvers/zod' {
   import { z } from 'zod';
   
-  export function zodResolver<T extends z.ZodType<any, any>>(
+  export function zodResolver<T extends z.ZodType<unknown, unknown>>(
     schema: T,
     schemaOptions?: z.ParseParams,
     factoryOptions?: { mode?: 'async' | 'sync' }
-  ): (values: any) => Promise<{ values: any; errors: Record<string, any> }>;
+  ): (values: unknown) => Promise<{ values: unknown; errors: Record<string, unknown> }>;
 }

@@ -16,7 +16,7 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
   transaction,
   onChange
 }) => {
-  const handleChange = (field: keyof Transaction, value: any) => {
+  const handleChange = <K extends keyof Transaction>(field: K, value: Transaction[K]) => {
     onChange({
       ...transaction,
       [field]: value
@@ -47,7 +47,9 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
             id="amount"
             type="number"
             value={transaction.amount?.toString() || '0'}
-            onChange={(e) => handleChange('amount', parseFloat(e.target.value) || 0)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              handleChange('amount', parseFloat(event.target.value) || 0)
+            }
             className="h-9"
           />
         </div>
@@ -95,7 +97,9 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
           <Input
             id="vendor"
             value={transaction.description || ''}
-            onChange={(e) => handleChange('description', e.target.value)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              handleChange('description', event.target.value)
+            }
             className="h-9"
           />
         </div>
@@ -105,7 +109,9 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
           <Input
             id="account"
             value={transaction.fromAccount || ''}
-            onChange={(e) => handleChange('fromAccount', e.target.value)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              handleChange('fromAccount', event.target.value)
+            }
             className="h-9"
           />
         </div>
@@ -116,7 +122,9 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
             id="date"
             type="date"
             value={formatDate(transaction.date)}
-            onChange={(e) => handleChange('date', new Date(e.target.value).toISOString())}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              handleChange('date', new Date(event.target.value).toISOString())
+            }
             className="h-9"
           />
         </div>

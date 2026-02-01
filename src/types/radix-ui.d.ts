@@ -48,11 +48,11 @@ declare module '@radix-ui/react-accordion' {
     disabled?: boolean;
   }
 
-  export interface AccordionHeaderProps extends BaseProps {}
+  export type AccordionHeaderProps = BaseProps;
 
-  export interface AccordionTriggerProps extends BaseProps {}
+  export type AccordionTriggerProps = BaseProps;
 
-  export interface AccordionContentProps extends BaseProps {}
+  export type AccordionContentProps = BaseProps;
 
   export const Root: React.ForwardRefExoticComponent<AccordionProps & React.RefAttributes<HTMLDivElement>>;
   export const Item: React.ForwardRefExoticComponent<AccordionItemProps & React.RefAttributes<HTMLDivElement>>;
@@ -90,9 +90,9 @@ declare module '@radix-ui/react-dialog' {
     onInteractOutside?: (event: React.MouseEvent | React.TouchEvent) => void;
   }
 
-  export interface DialogTitleProps extends BaseProps {}
+  export type DialogTitleProps = BaseProps;
 
-  export interface DialogDescriptionProps extends BaseProps {}
+  export type DialogDescriptionProps = BaseProps;
 
   export interface DialogCloseProps extends BaseProps {
     asChild?: boolean;
@@ -137,15 +137,15 @@ declare module '@radix-ui/react-alert-dialog' {
     onEscapeKeyDown?: (event: KeyboardEvent) => void;
   }
 
-  export interface AlertDialogTitleProps extends BaseProps {}
+  export type AlertDialogTitleProps = BaseProps;
 
-  export interface AlertDialogDescriptionProps extends BaseProps {}
+  export type AlertDialogDescriptionProps = BaseProps;
 
   export interface AlertDialogActionProps extends BaseProps {
     onClick?: () => void;
   }
 
-  export interface AlertDialogCancelProps extends BaseProps {}
+  export type AlertDialogCancelProps = BaseProps;
 
   export const Root: React.FC<AlertDialogProps>;
   export const Trigger: React.ForwardRefExoticComponent<AlertDialogTriggerProps & React.RefAttributes<HTMLButtonElement>>;
@@ -214,11 +214,11 @@ declare module '@radix-ui/react-dropdown-menu' {
     forceMount?: boolean;
   }
 
-  export interface DropdownMenuSeparatorProps extends BaseProps {}
+  export type DropdownMenuSeparatorProps = BaseProps;
 
-  export interface DropdownMenuLabelProps extends BaseProps {}
+  export type DropdownMenuLabelProps = BaseProps;
 
-  export interface DropdownMenuGroupProps extends BaseProps {}
+  export type DropdownMenuGroupProps = BaseProps;
 
   export interface DropdownMenuSubProps extends BaseProps {
     open?: boolean;
@@ -268,7 +268,7 @@ declare module '@radix-ui/react-context-menu' {
     modal?: boolean;
   }
 
-  export interface ContextMenuTriggerProps extends BaseProps {}
+  export type ContextMenuTriggerProps = BaseProps;
 
   export interface ContextMenuPortalProps extends BaseProps {
     container?: HTMLElement;
@@ -315,11 +315,11 @@ declare module '@radix-ui/react-context-menu' {
     forceMount?: boolean;
   }
 
-  export interface ContextMenuSeparatorProps extends BaseProps {}
+  export type ContextMenuSeparatorProps = BaseProps;
 
-  export interface ContextMenuLabelProps extends BaseProps {}
+  export type ContextMenuLabelProps = BaseProps;
 
-  export interface ContextMenuGroupProps extends BaseProps {}
+  export type ContextMenuGroupProps = BaseProps;
 
   export interface ContextMenuSubProps extends BaseProps {
     open?: boolean;
@@ -373,16 +373,16 @@ declare module '@radix-ui/react-scroll-area' {
     dir?: Direction;
   }
 
-  export interface ScrollAreaViewportProps extends BaseProps {}
+  export type ScrollAreaViewportProps = BaseProps;
 
   export interface ScrollAreaScrollbarProps extends BaseProps {
     orientation?: 'vertical' | 'horizontal';
     forceMount?: true;
   }
 
-  export interface ScrollAreaThumbProps extends BaseProps {}
+  export type ScrollAreaThumbProps = BaseProps;
 
-  export interface ScrollAreaCornerProps extends BaseProps {}
+  export type ScrollAreaCornerProps = BaseProps;
 
   export const Root: React.ForwardRefExoticComponent<ScrollAreaProps & React.RefAttributes<HTMLDivElement>>;
   export const Viewport: React.ForwardRefExoticComponent<ScrollAreaViewportProps & React.RefAttributes<HTMLDivElement>>;
@@ -400,7 +400,7 @@ declare module '@radix-ui/react-collapsible' {
     disabled?: boolean;
   }
 
-  export interface CollapsibleTriggerProps extends BaseProps {}
+  export type CollapsibleTriggerProps = BaseProps;
 
   export interface CollapsibleContentProps extends BaseProps {
     forceMount?: true;
@@ -435,14 +435,14 @@ declare module '@radix-ui/react-checkbox' {
 declare module 'react-router-dom' {
   export interface NavigateOptions {
     replace?: boolean;
-    state?: any;
+    state?: unknown;
   }
 
   export interface Location {
     pathname: string;
     search: string;
     hash: string;
-    state: any;
+    state: unknown;
   }
 
   export interface NavigateFunction {
@@ -457,10 +457,10 @@ declare module 'react-router-dom' {
   export function Link(props: {
     to: string;
     replace?: boolean;
-    state?: any;
+    state?: unknown;
     className?: string;
     children: React.ReactNode;
-    [key: string]: any;
+    [key: string]: unknown;
   }): JSX.Element;
 
   export function BrowserRouter(props: { children: React.ReactNode }): JSX.Element;
@@ -494,24 +494,24 @@ declare module 'recharts' {
     };
     content?: React.ReactElement | React.FC;
     wrapperStyle?: React.CSSProperties;
-    onClick?: (data: any) => void;
-    onMouseEnter?: (data: any) => void;
-    onMouseLeave?: (data: any) => void;
+    onClick?: (data: unknown) => void;
+    onMouseEnter?: (data: unknown) => void;
+    onMouseLeave?: (data: unknown) => void;
   }
 }
 
 // Define types for react-hook-form
 declare module 'react-hook-form' {
-  export type FieldValues = Record<string, any>;
+  export type FieldValues = Record<string, unknown>;
   
-  export type Control<TFieldValues extends FieldValues = FieldValues> = any;
+  export type Control<TFieldValues extends FieldValues = FieldValues> = unknown;
   
   export type FieldPath<TFieldValues extends FieldValues = FieldValues> = string;
   
   export type UseFormRegister<TFieldValues extends FieldValues> = (name: string) => {
-    onChange: (event: any) => void;
+    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     onBlur: () => void;
-    ref: (ref: any) => void;
+    ref: (ref: unknown) => void;
     name: string;
   };
 
@@ -524,32 +524,32 @@ declare module 'react-hook-form' {
     register: UseFormRegister<TFieldValues>;
     handleSubmit: (onSubmit: SubmitHandler<TFieldValues>) => (e?: React.BaseSyntheticEvent) => Promise<void>;
     formState: {
-      errors: any;
+      errors: Record<string, unknown>;
       isSubmitting: boolean;
     };
     control: Control<TFieldValues>;
     reset: (values?: TFieldValues) => void;
-    setValue: (name: string, value: any) => void;
+    setValue: (name: string, value: unknown) => void;
     getValues: () => TFieldValues;
-    watch: (name?: string | string[]) => any;
+    watch: (name?: string | string[]) => unknown;
   };
   
   export function useForm<TFieldValues extends FieldValues = FieldValues>(options?: {
     defaultValues?: TFieldValues;
-    resolver?: any;
+    resolver?: unknown;
     mode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
   }): UseFormReturn<TFieldValues>;
   
   export function Controller(props: {
     name: string;
     control: Control;
-    defaultValue?: any;
-    render: (props: { field: any; fieldState: any }) => React.ReactElement;
+    defaultValue?: unknown;
+    render: (props: { field: unknown; fieldState: unknown }) => React.ReactElement;
   }): JSX.Element;
   
   export const FormProvider: React.FC<{
     children: React.ReactNode;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   
   export function useFormContext<TFieldValues extends FieldValues = FieldValues>(): UseFormReturn<TFieldValues>;

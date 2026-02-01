@@ -56,7 +56,7 @@ const SMS_SENDER_IMPORT_MAP_KEY = 'xpensia_sms_sender_import_map';
 
 // Helper function to safely get data from storage
 // Fallbacks to in-memory storage handled by safeStorage
-const getFromStorage = <T>(key: string, defaultValue: T): T => {
+const getFromStorage = <T extends object>(key: string, defaultValue: T): T => {
   try {
     const storedData = safeStorage.getItem(key);
     return storedData ? JSON.parse(storedData) : defaultValue;
@@ -69,7 +69,7 @@ const getFromStorage = <T>(key: string, defaultValue: T): T => {
 };
 
 // Helper function to safely set data in localStorage
-const setInStorage = <T>(key: string, data: T): void => {
+const setInStorage = <T extends object>(key: string, data: T): void => {
   try {
     safeStorage.setItem(key, JSON.stringify(data));
   } catch (error) {
@@ -87,11 +87,11 @@ const setInStorage = <T>(key: string, data: T): void => {
  * - QuotaExceededError should not corrupt existing data
  * - Errors are logged only in development mode
  */
-export const safeSetItem = <T>(key: string, data: T): boolean => {
+export const safeSetItem = <T extends object>(key: string, data: T): boolean => {
   try {
     safeStorage.setItem(key, JSON.stringify(data));
     return true;
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (import.meta.env.MODE === 'development') {
       console.error(`Error storing ${key} in storage:`, error);
     }
@@ -149,7 +149,7 @@ export const getStructureTemplates = (): StructureTemplateEntry[] => {
  * @param transaction - Raw transaction payload to validate and store
  * @review-focus Validation should enforce required fields before write
  */
-export const storeTransaction = (transaction: any): void => {
+export const storeTransaction = (transaction: unknown): void => {
   try {
     // Use the validation function from storage-utils-fixes.ts to ensure all required fields are present
     const validatedTransaction = validateTransactionForStorage(transaction);
@@ -168,7 +168,7 @@ export const storeTransaction = (transaction: any): void => {
     }
     
     storeTransactions(transactions);
-  } catch (error) {
+  } catch (error: unknown) {
     if (import.meta.env.MODE === 'development') {
       console.error('Error storing transaction:', error);
     }
@@ -219,7 +219,7 @@ export function learnFromTransaction(
 
   const template = bank[key];
   if (template) {
-    if (!template.meta) template.meta = {} as any;
+    if (!template.meta) template.meta = { createdAt: new Date().toISOString() };
     template.meta.usageCount = (template.meta.usageCount || 0) + 1;
     template.meta.lastUsedAt = new Date().toISOString();
 
@@ -270,7 +270,10 @@ export function learnFromTransaction(
 
     if (existing) {
       newMappings.forEach(mapping => {
-        const exists = existing.mappings.some((m: any) => m.field === mapping.field && m.value === mapping.value);
+        const exists = existing.mappings.some(
+          (m: KeywordEntry['mappings'][number]) =>
+            m.field === mapping.field && m.value === mapping.value
+        );
         if (!exists) existing.mappings.push(mapping);
       });
     } else {
@@ -347,7 +350,7 @@ export const storeCategories = (categories: Category[]): void => {
   setInStorage(CATEGORIES_STORAGE_KEY, categories);
 };
 
-export const storeCategory = (category: any): void => {
+export const storeCategory = (category: unknown): void => {
   try {
     // Use the validation function from storage-utils-fixes.ts to ensure all required fields are present
     const validatedCategory = validateCategoryForStorage(category);
@@ -366,7 +369,7 @@ export const storeCategory = (category: any): void => {
     }
     
     storeCategories(categories);
-  } catch (error) {
+  } catch (error: unknown) {
     if (import.meta.env.MODE === 'development') {
       console.error('Error storing category:', error);
     }
@@ -389,7 +392,7 @@ export const storeCategoryRules = (rules: CategoryRule[]): void => {
   setInStorage(CATEGORY_RULES_STORAGE_KEY, rules);
 };
 
-export const storeCategoryRule = (rule: any): void => {
+export const storeCategoryRule = (rule: unknown): void => {
   try {
     // Use the validation function from storage-utils-fixes.ts to ensure all required fields are present
     const validatedRule = validateCategoryRuleForStorage(rule);
@@ -408,7 +411,7 @@ export const storeCategoryRule = (rule: any): void => {
     }
     
     storeCategoryRules(rules);
-  } catch (error) {
+  } catch (error: unknown) {
     if (import.meta.env.MODE === 'development') {
       console.error('Error storing category rule:', error);
     }
@@ -431,7 +434,7 @@ export const storeCategoryChanges = (changes: TransactionCategoryChange[]): void
   setInStorage(CATEGORY_CHANGES_STORAGE_KEY, changes);
 };
 
-export const addCategoryChange = (change: any): void => {
+export const addCategoryChange = (change: unknown): void => {
   try {
     // Use the validation function from storage-utils-fixes.ts to ensure all required fields are present
     const validatedChange = validateCategoryChangeForStorage(change);
@@ -439,7 +442,7 @@ export const addCategoryChange = (change: any): void => {
     const changes = getStoredCategoryChanges();
     changes.push(validatedChange);
     storeCategoryChanges(changes);
-  } catch (error) {
+  } catch (error: unknown) {
     if (import.meta.env.MODE === 'development') {
       console.error('Error storing category change:', error);
     }
@@ -448,11 +451,13 @@ export const addCategoryChange = (change: any): void => {
 };
 
 // Helper function to get the full category hierarchy with parent-child relationships
-export const getCategoryHierarchy = (): any[] => {
+export type CategoryHierarchy = Category & { subcategories: CategoryHierarchy[] };
+
+export const getCategoryHierarchy = (): CategoryHierarchy[] => {
   const categories = getStoredCategories();
   const rootCategories = categories.filter(c => !c.parentId);
   
-  const buildHierarchy = (category: Category) => {
+  const buildHierarchy = (category: Category): CategoryHierarchy => {
     const children = categories.filter(c => c.parentId === category.id);
     return {
       ...category,

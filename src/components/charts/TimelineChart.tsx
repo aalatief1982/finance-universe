@@ -26,7 +26,8 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  Legend
+  Legend,
+  type ActiveShape
 } from 'recharts';
 import { formatCurrency } from '@/utils/format-utils';
 import { getUserSettings } from '@/utils/storage-utils';
@@ -40,6 +41,13 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('default', { month: 'short', day: '2-digit' });
+  };
+
+  const renderActiveDot: ActiveShape<{ cx?: number; cy?: number }> = (props) => {
+    if (typeof props?.cx !== 'number' || typeof props?.cy !== 'number') {
+      return null;
+    }
+    return <circle cx={props.cx} cy={props.cy} r={4} className="fill-primary" />;
   };
 
   return (
@@ -79,6 +87,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
               stroke="#27AE60" 
               fill="#27AE60" 
               strokeWidth={2}
+              activeDot={renderActiveDot}
               dot={{r: 2}}
             />
             <Line 
@@ -88,6 +97,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
               stroke="#DC3545" 
               fill="#DC3545"
               strokeWidth={2}
+              activeDot={renderActiveDot}
               dot={{r: 2}}
             />
           </LineChart>

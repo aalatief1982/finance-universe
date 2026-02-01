@@ -19,14 +19,14 @@
 declare module 'react-router-dom' {
   export interface NavigateOptions {
     replace?: boolean;
-    state?: any;
+    state?: unknown;
   }
 
   export interface Location {
     pathname: string;
     search: string;
     hash: string;
-    state: any;
+    state: unknown;
   }
 
   export interface NavigateFunction {
@@ -41,10 +41,10 @@ declare module 'react-router-dom' {
   export function Link(props: {
     to: string;
     replace?: boolean;
-    state?: any;
+    state?: unknown;
     className?: string;
     children: React.ReactNode;
-    [key: string]: any;
+    [key: string]: unknown;
   }): JSX.Element;
 
   export function BrowserRouter(props: { children: React.ReactNode }): JSX.Element;

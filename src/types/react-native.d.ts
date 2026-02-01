@@ -16,5 +16,5 @@
  * - [ ] Optional fields documented where needed
  */
 declare module 'react-native' {
-  export const PermissionsAndroid: any;
+  export const PermissionsAndroid: unknown;
 }

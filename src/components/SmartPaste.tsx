@@ -190,7 +190,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         );
       }
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (import.meta.env.MODE === 'development') {
       console.error("[SmartPaste] Error in structure parsing:", err);
     }

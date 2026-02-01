@@ -17,16 +17,16 @@
  */
 
 declare module 'react-hook-form' {
-  export type FieldValues = Record<string, any>;
+  export type FieldValues = Record<string, unknown>;
   
-  export type Control<TFieldValues extends FieldValues = FieldValues> = any;
+  export type Control<TFieldValues extends FieldValues = FieldValues> = unknown;
   
   export type FieldPath<TFieldValues extends FieldValues = FieldValues> = string;
   
   export type UseFormRegister<TFieldValues extends FieldValues> = (name: string) => {
-    onChange: (event: any) => void;
+    onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
     onBlur: () => void;
-    ref: (ref: any) => void;
+    ref: (ref: unknown) => void;
     name: string;
   };
 
@@ -39,32 +39,32 @@ declare module 'react-hook-form' {
     register: UseFormRegister<TFieldValues>;
     handleSubmit: (onSubmit: SubmitHandler<TFieldValues>) => (e?: React.BaseSyntheticEvent) => Promise<void>;
     formState: {
-      errors: any;
+      errors: Record<string, unknown>;
       isSubmitting: boolean;
     };
     control: Control<TFieldValues>;
     reset: (values?: TFieldValues) => void;
-    setValue: (name: string, value: any) => void;
+    setValue: (name: string, value: unknown) => void;
     getValues: () => TFieldValues;
-    watch: (name?: string | string[]) => any;
+    watch: (name?: string | string[]) => unknown;
   };
   
   export function useForm<TFieldValues extends FieldValues = FieldValues>(options?: {
     defaultValues?: TFieldValues;
-    resolver?: any;
+    resolver?: unknown;
     mode?: 'onSubmit' | 'onChange' | 'onBlur' | 'all';
   }): UseFormReturn<TFieldValues>;
   
   export function Controller(props: {
     name: string;
     control: Control;
-    defaultValue?: any;
-    render: (props: { field: any; fieldState: any }) => React.ReactElement;
+    defaultValue?: unknown;
+    render: (props: { field: unknown; fieldState: unknown }) => React.ReactElement;
   }): JSX.Element;
   
   export const FormProvider: React.FC<{
     children: React.ReactNode;
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
   
   export function useFormContext<TFieldValues extends FieldValues = FieldValues>(): UseFormReturn<TFieldValues>;
