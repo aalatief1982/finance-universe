@@ -126,10 +126,12 @@ const ExpenseForm = ({
               {/* Accounts Section */}
               <div className="grid grid-cols-1 gap-4">
                 {/* From Account */}
-                <AccountSelector form={form} isFromAccount={true} />
+                {(transactionType === 'expense' || transactionType === 'transfer') && (
+                  <AccountSelector form={form} isFromAccount={true} />
+                )}
                 
-                {/* To Account - Only shown for Transfer */}
-                {transactionType === 'transfer' && (
+                {/* To Account - Shown for Income and Transfer */}
+                {(transactionType === 'income' || transactionType === 'transfer') && (
                   <AccountSelector form={form} isFromAccount={false} />
                 )}
               </div>

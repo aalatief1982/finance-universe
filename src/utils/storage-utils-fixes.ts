@@ -5,6 +5,11 @@ import { Transaction, Category, CategoryRule, TransactionCategoryChange } from '
 // They ensure that required properties are added before calling the original storage functions
 
 export const validateTransactionForStorage = (transaction: any): Transaction => {
+  const resolvedType =
+    transaction.type === 'income' || transaction.type === 'expense' || transaction.type === 'transfer'
+      ? transaction.type
+      : (transaction.amount >= 0 ? 'income' : 'expense');
+
   // Create a new object to avoid mutating the input
   const validatedTransaction: Transaction = {
     // Required fields with defaults
@@ -16,13 +21,11 @@ export const validateTransactionForStorage = (transaction: any): Transaction => 
         : 0,
     category: transaction.category || 'Uncategorized',
     date: transaction.date || new Date().toISOString(),
-    type: transaction.type === 'income' || transaction.type === 'expense' || transaction.type === 'transfer' 
-      ? transaction.type 
-      : (transaction.amount >= 0 ? 'income' : 'expense'),
+    type: resolvedType,
     source: transaction.source === 'manual' || transaction.source === 'import' || transaction.source === 'sms' || transaction.source === 'telegram'
       ? transaction.source 
       : 'manual',
-    fromAccount: transaction.fromAccount || 'Main Account'
+    fromAccount: transaction.fromAccount || (resolvedType !== 'income' ? 'Main Account' : undefined)
   };
   
   // Optional fields
