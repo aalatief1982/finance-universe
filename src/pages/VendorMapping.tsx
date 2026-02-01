@@ -16,7 +16,7 @@
  * - [ ] Data loading handles empty states
  * - [ ] Navigation hooks are wired correctly
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -62,9 +62,9 @@ const VendorMapping: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const hasRequiredState = () => {
+  const hasRequiredState = useCallback(() => {
     return !!location.state && (location.state?.messages?.length ?? 0) > 0;
-  };
+  }, [location.state]);
 
   const hasValidData = () => {
     return vendors.some(v => !v.skipped) && hasRequiredState();
@@ -79,7 +79,7 @@ const VendorMapping: React.FC = () => {
         description: 'Please reprocess SMS messages.',
       });
     }
-  }, [location.state, toast]);
+  }, [hasRequiredState, toast]);
 
   useEffect(() => {
     if (!hasRequiredState()) return;
@@ -137,7 +137,7 @@ const VendorMapping: React.FC = () => {
     if (import.meta.env.MODE === 'development') {
       // console.log('VendorMapping vendors:', initialMappings);
     }
-  }, [location.state]);
+  }, [hasRequiredState, location.state, toast]);
 
   const handleVendorChange = (index: number, field: keyof VendorMappingEntry, value: string) => {
     setVendors(prev => {

@@ -247,3 +247,7 @@ export const useTransactions = (): TransactionContextType => {
   }
   return context;
 };
+
+export const useOptionalTransactions = () => {
+  return useContext(TransactionContext);
+};

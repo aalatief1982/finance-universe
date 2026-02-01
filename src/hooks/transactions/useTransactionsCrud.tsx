@@ -90,7 +90,7 @@ export function useTransactionsCrud() {
       description: 'Your transaction has been deleted successfully.',
     });
     return id;
-  }, []);
+  }, [toast]);
 
   return {
     currentTransaction,

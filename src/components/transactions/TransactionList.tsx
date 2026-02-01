@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { useTransactions } from '@/context/TransactionContext';
+import { useOptionalTransactions } from '@/context/TransactionContext';
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/utils/format-utils';
 import { Badge } from '@/components/ui/badge';
@@ -66,12 +66,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   const [transactionPendingDelete, setTransactionPendingDelete] = useState<Transaction | null>(null);
-  let contextDeleteTransaction: ((id: string) => void) | undefined;
-  try {
-    contextDeleteTransaction = useTransactions().deleteTransaction;
-  } catch {
-    contextDeleteTransaction = undefined;
-  }
+  const transactionContext = useOptionalTransactions();
+  const contextDeleteTransaction = transactionContext?.deleteTransaction;
   const { toast } = useToast();
   const isMobile = useMediaQuery('(max-width: 768px)');
 

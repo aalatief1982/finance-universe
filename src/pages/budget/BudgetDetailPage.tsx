@@ -93,6 +93,19 @@ const BudgetDetailPage = () => {
     return target ? (target as any).name : budget.targetId;
   }, [budget]);
 
+  // Build breadcrumb items
+  const breadcrumbItems = React.useMemo(() => {
+    if (!budget) {
+      return [{ label: 'Budgets', path: '/budget' }];
+    }
+    const periodLabel = formatPeriodLabel(budget.period, budget.year, budget.periodIndex);
+    return [
+      { label: 'Budgets', path: '/budget' },
+      { label: periodLabel, path: '/budget' },
+      { label: targetName },
+    ];
+  }, [budget, targetName]);
+
   // Get subcategory names
   const getSubcategoryName = (id: string) => {
     const categories = transactionService.getCategories();
@@ -123,16 +136,6 @@ const BudgetDetailPage = () => {
     if (percentUsed >= 50) return 'bg-accent';
     return 'bg-primary';
   };
-
-  // Build breadcrumb items
-  const breadcrumbItems = React.useMemo(() => {
-    const periodLabel = formatPeriodLabel(budget.period, budget.year, budget.periodIndex);
-    return [
-      { label: 'Budgets', path: '/budget' },
-      { label: periodLabel, path: '/budget' },
-      { label: targetName },
-    ];
-  }, [budget, targetName]);
 
   return (
     <Layout showBack>

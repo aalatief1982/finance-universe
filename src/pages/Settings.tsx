@@ -234,7 +234,12 @@ const Settings = () => {
       setBackgroundSmsEnabled(true);
       setAutoImport(prefAutoImport || true);
     }
-  }, [hasSmsPermission, user?.preferences?.sms?.backgroundSmsEnabled, user?.preferences?.sms?.autoImport]);
+  }, [
+    hasSmsPermission,
+    backgroundSmsEnabled,
+    user?.preferences?.sms?.backgroundSmsEnabled,
+    user?.preferences?.sms?.autoImport,
+  ]);
 
   useEffect(() => {
     const fetchVersion = async () => {

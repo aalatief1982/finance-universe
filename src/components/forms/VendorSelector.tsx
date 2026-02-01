@@ -85,7 +85,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
       setAvailableSubcategories([]);
       setNewVendor(prev => ({ ...prev, subcategory: '' }));
     }
-  }, [newVendor.category]);
+  }, [newVendor.category, newVendor.subcategory]);
 
   const handleSave = () => {
     if (!newVendor.name.trim()) return;

@@ -51,7 +51,7 @@ const BudgetInsightsPage = () => {
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
   // Get display name with period
-  const getBudgetDisplayName = (b: Budget) => {
+  const getBudgetDisplayName = React.useCallback((b: Budget) => {
     const periodName = formatPeriodLabel(b.period, b.year, b.periodIndex);
     
     if (b.scope === 'overall') {
@@ -62,7 +62,7 @@ const BudgetInsightsPage = () => {
     const t = all.find((a: any) => a.id === b.targetId);
     const scopeName = t ? (t as any).name : b.targetId;
     return `${scopeName} • ${periodName}`;
-  };
+  }, [accounts, categories]);
 
   // Generate insights
   const insights = React.useMemo(() => {
@@ -177,7 +177,7 @@ const BudgetInsightsPage = () => {
     result.sort((a, b) => order[a.type] - order[b.type]);
 
     return result;
-  }, [budgets, accounts, categories]);
+  }, [budgets, getBudgetDisplayName]);
 
   const getIcon = (type: Insight['type']) => {
     switch (type) {

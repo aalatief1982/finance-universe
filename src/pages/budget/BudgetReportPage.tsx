@@ -72,7 +72,7 @@ const BudgetReportPage = () => {
   const selectedPeriod: BudgetPeriod = period === 'all' ? 'monthly' : period;
 
   // Get display name with specific period instance
-  const getBudgetDisplayName = (b: Budget) => {
+  const getBudgetDisplayName = React.useCallback((b: Budget) => {
     const periodName = formatPeriodLabel(b.period, b.year, b.periodIndex);
     
     if (b.scope === 'overall') {
@@ -84,7 +84,7 @@ const BudgetReportPage = () => {
     const scopeName = t ? (t as any).name : b.targetId;
     
     return `${scopeName} • ${periodName}`;
-  };
+  }, [accounts, categories]);
 
   // Calculate budget vs actual data - filter by period type, year, and scope (show all periods in year for overview)
   const budgetVsActual = React.useMemo(() => {
@@ -117,7 +117,7 @@ const BudgetReportPage = () => {
         };
       })
       .sort((a, b) => (a.periodIndex ?? 0) - (b.periodIndex ?? 0)); // Sort chronologically
-  }, [budgets, selectedPeriod, period, year, scopeFilter]);
+  }, [budgets, selectedPeriod, period, year, scopeFilter, getBudgetDisplayName]);
 
   // Total summary
   const totalSummary = React.useMemo(() => {
@@ -180,7 +180,7 @@ const BudgetReportPage = () => {
         fill: CHART_COLORS[index % CHART_COLORS.length],
       };
     }).filter(c => c.value > 0);
-  }, [budgets]);
+  }, [budgets, getBudgetDisplayName]);
 
   // Over-budget items
   const overBudgetItems = React.useMemo(() => {
