@@ -47,8 +47,8 @@ describe('TransactionForm + Service Integration', () => {
         title: 'Salary',
         amount: 5000,
         type: 'income' as const,
-        fromAccount: 'Employer',
-        toAccount: '',
+        fromAccount: '',
+        toAccount: 'Bank',
         category: 'Salary',
         subcategory: '',
         date: '2024-01-15',
@@ -70,6 +70,26 @@ describe('TransactionForm + Service Integration', () => {
         fromAccount: 'Bank',
         toAccount: '', // Missing!
         category: 'Transfer',
+        subcategory: '',
+        date: '2024-01-15',
+        description: '',
+        notes: '',
+        person: '',
+        currency: 'USD',
+      };
+
+      const result = transactionFormSchema.safeParse(formData);
+      expect(result.success).toBe(false);
+    });
+
+    it('should require toAccount for income', () => {
+      const formData = {
+        title: 'Interest',
+        amount: 15,
+        type: 'income' as const,
+        fromAccount: '',
+        toAccount: '',
+        category: 'Interest',
         subcategory: '',
         date: '2024-01-15',
         description: '',

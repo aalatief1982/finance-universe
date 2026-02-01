@@ -30,9 +30,7 @@ export const transactionFormSchema = z.object({
     message: "Amount cannot exceed 999,999.99",
   }),
   type: z.enum(["expense", "income", "transfer"]),
-  fromAccount: z.string().min(1, {
-    message: "From Account is required.",
-  }),
+  fromAccount: z.string().optional(),
   toAccount: z.string().optional(),
   category: z.string().min(1, {
     message: "Please select a category.",
@@ -47,6 +45,22 @@ export const transactionFormSchema = z.object({
   currency: z.string().min(1, {
     message: "Please select a currency.",
   }),
+}).refine(data => {
+  if (data.type === 'expense') {
+    return !!data.fromAccount;
+  }
+  return true;
+}, {
+  message: "From Account is required for expenses",
+  path: ["fromAccount"]
+}).refine(data => {
+  if (data.type === 'income') {
+    return !!data.toAccount;
+  }
+  return true;
+}, {
+  message: "To Account is required for income",
+  path: ["toAccount"]
 }).refine(data => {
   // If transaction type is transfer, both accounts are required
   if (data.type === 'transfer') {
