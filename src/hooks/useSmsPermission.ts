@@ -175,7 +175,7 @@ export function useSmsPermission() {
   // Initial permission check on mount
   useEffect(() => {
     checkPermission();
-  }, []);
+  }, [checkPermission]);
 
   // ============================================================================
   // SECTION: Periodic Permission Sync

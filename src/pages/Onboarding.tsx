@@ -32,11 +32,12 @@ const Onboarding = () => {
   // Cleanup timeout on unmount
   useEffect(() => {
     console.log('Onboarding component mounted');
+    const timeoutId = timeoutRef.current;
 
     return () => {
-      if (timeoutRef.current) {
+      if (timeoutId) {
         console.log('Clearing timeout on unmount');
-        clearTimeout(timeoutRef.current);
+        clearTimeout(timeoutId);
       }
     };
   }, []);

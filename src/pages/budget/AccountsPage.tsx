@@ -70,7 +70,10 @@ const AccountsPage = () => {
   const [linkedCount, setLinkedCount] = React.useState(0);
   
   // Unmanaged accounts (used in transactions but not in list)
-  const unmanagedAccounts = React.useMemo(() => accountService.getUnmanagedAccounts(), [accounts]);
+  const unmanagedAccounts = React.useMemo(() => {
+    void accounts;
+    return accountService.getUnmanagedAccounts();
+  }, [accounts]);
 
   const today = React.useMemo(() => new Date().toISOString().split('T')[0], []);
   

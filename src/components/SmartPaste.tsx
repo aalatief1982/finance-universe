@@ -89,7 +89,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
       setMatchStatus('No match yet');
       setHasMatch(false);
     }
-  }, [text]);
+  }, [text, senderHint]);
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();

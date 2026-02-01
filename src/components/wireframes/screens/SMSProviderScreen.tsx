@@ -66,9 +66,7 @@ const SMSProviderScreen = ({ onNext, onComplete, onSkip, userData, onUpdateUserD
       setDetectedProviders(detected);
       
       // Auto-select detected providers if none are selected yet
-      if (selectedProviders.length === 0) {
-        setSelectedProviders(detected);
-      }
+      setSelectedProviders(prev => (prev.length === 0 ? detected : prev));
       
       setHasDetections(detected.length > 0);
       setIsDetecting(false);

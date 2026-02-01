@@ -1,5 +1,5 @@
 import { safeStorage } from "@/utils/safe-storage";
-import React, { useState, useEffect, KeyboardEvent } from 'react';
+import React, { useState, useEffect, useCallback, KeyboardEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,6 +34,68 @@ const PhoneVerification = ({
   const [attemptsRemaining, setAttemptsRemaining] = useState(5);
   const { toast } = useToast();
 
+  // Validation function for phone number
+  const validatePhoneNumber = (number: string): boolean => {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(number.replace(/\s+/g, ''));
+  };
+
+  const handleSendCode = useCallback(async () => {
+    // If phone number is already saved and we're hiding input, use it directly
+    const phoneToVerify = hidePhoneInput ? user?.phone || phoneNumber : phoneNumber;
+    
+    if (!phoneToVerify || !validatePhoneNumber(phoneToVerify)) {
+      setError('Please enter a valid phone number with country code');
+      setErrorType('validation');
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid phone number with country code',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setErrorType(null);
+    try {
+      const success = await startPhoneVerification(phoneToVerify);
+      
+      if (success) {
+        setIsVerificationSent(true);
+        setSuccess('Verification code sent successfully!');
+        toast({
+          title: 'Success',
+          description: 'Verification code sent successfully!',
+        });
+        toast({
+          title: 'Demo Code',
+          description: 'For this demo, please use code: 1234',
+        });
+        
+        // Clear success message after a few seconds
+        setTimeout(() => {
+          setSuccess('');
+        }, 5000);
+      } else {
+        throw new Error('Failed to send verification code');
+      }
+    } catch (err) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('Error sending code:', err);
+      }
+      setError('Failed to send code. Please check your phone number and try again.');
+      setErrorType('network');
+      toast({
+        title: 'Error',
+        description: 'Failed to send code. Please check your phone number and try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hidePhoneInput, phoneNumber, startPhoneVerification, toast, user?.phone]);
+
   // Initialize with phone number from user context if available
   useEffect(() => {
     if (user?.phone) {
@@ -60,7 +122,7 @@ const PhoneVerification = ({
         }
       }
     }
-  }, [user, hidePhoneInput, phoneNumber]);
+  }, [user, hidePhoneInput, phoneNumber, handleSendCode]);
 
   // Update timer when verification is sent
   useEffect(() => {
@@ -90,12 +152,6 @@ const PhoneVerification = ({
       if (timerId) clearInterval(timerId);
     };
   }, [isVerificationSent, toast]);
-
-  // Validation function for phone number
-  const validatePhoneNumber = (number: string): boolean => {
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    return phoneRegex.test(number.replace(/\s+/g, ''));
-  };
 
   // Format phone number as user types
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,62 +207,6 @@ const PhoneVerification = ({
     if (timeRemaining < 180000) return 'text-warning';
     // Otherwise normal (green)
     return 'text-success';
-  };
-
-  const handleSendCode = async () => {
-    // If phone number is already saved and we're hiding input, use it directly
-    const phoneToVerify = hidePhoneInput ? user?.phone || phoneNumber : phoneNumber;
-    
-    if (!phoneToVerify || !validatePhoneNumber(phoneToVerify)) {
-      setError('Please enter a valid phone number with country code');
-      setErrorType('validation');
-      toast({
-        title: 'Error',
-        description: 'Please enter a valid phone number with country code',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-    setErrorType(null);
-    try {
-      const success = await startPhoneVerification(phoneToVerify);
-      
-      if (success) {
-        setIsVerificationSent(true);
-        setSuccess('Verification code sent successfully!');
-        toast({
-          title: 'Success',
-          description: 'Verification code sent successfully!',
-        });
-        toast({
-          title: 'Demo Code',
-          description: 'For this demo, please use code: 1234',
-        });
-        
-        // Clear success message after a few seconds
-        setTimeout(() => {
-          setSuccess('');
-        }, 5000);
-      } else {
-        throw new Error('Failed to send verification code');
-      }
-    } catch (err) {
-      if (import.meta.env.MODE === 'development') {
-        console.error('Error sending code:', err);
-      }
-      setError('Failed to send code. Please check your phone number and try again.');
-      setErrorType('network');
-      toast({
-        title: 'Error',
-        description: 'Failed to send code. Please check your phone number and try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleVerifyCode = async () => {

@@ -99,9 +99,18 @@ const ReviewSmsTransactions: React.FC = () => {
   const location = useLocation();
   const { addTransaction, updateTransaction } = useTransactions();
 
-  const messages: any[] = location.state?.messages || [];
-  const vendorMap: Record<string, string> = location.state?.vendorMap || {};
-  const keywordMap: any[] = location.state?.keywordMap || [];
+  const messages: any[] = React.useMemo(
+    () => location.state?.messages || [],
+    [location.state]
+  );
+  const vendorMap: Record<string, string> = React.useMemo(
+    () => location.state?.vendorMap || {},
+    [location.state]
+  );
+  const keywordMap: any[] = React.useMemo(
+    () => location.state?.keywordMap || [],
+    [location.state]
+  );
 
   const allHighConfidence =
     transactions.length > 0 && transactions.every(t => t.confidence >= 0.9);
@@ -149,7 +158,7 @@ const ReviewSmsTransactions: React.FC = () => {
     parseAll()
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [] );
+  }, [messages, vendorMap, keywordMap] );
 
 
 /*   const handleFieldChange = (index: number, field: keyof DraftTransaction, value: string) => {

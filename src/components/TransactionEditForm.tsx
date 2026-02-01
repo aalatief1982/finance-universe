@@ -312,7 +312,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       setVendorAvailableSubcategories([]);
       setNewVendor(prev => ({ ...prev, subcategory: '' }));
     }
-  }, [newVendor.category]);
+  }, [newVendor.category, newVendor.subcategory]);
 
   const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
     // Call onEditStart when user starts editing
