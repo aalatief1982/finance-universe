@@ -261,7 +261,7 @@ const CategorySettings = () => {
                     Generate rule suggestions based on your transaction history.
                   </p>
                   <p className="text-sm text-muted-foreground mb-6">
-                    We'll analyze your transactions and suggest rules to automatically categorize similar transactions in the future.
+                    We&apos;ll analyze your transactions and suggest rules to automatically categorize similar transactions in the future.
                   </p>
                   <Button onClick={generateSuggestions}>
                     Generate Suggestions
@@ -275,7 +275,7 @@ const CategorySettings = () => {
                         <div className="flex flex-col space-y-2">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-medium">Pattern: "{suggestion.pattern}"</h3>
+                              <h3 className="font-medium">Pattern: &quot;{suggestion.pattern}&quot;</h3>
                               <p className="text-sm text-muted-foreground">
                                 Would match {suggestion.matchCount} transactions
                               </p>

@@ -138,7 +138,7 @@ const SmsPermissionRequest: React.FC<SmsPermissionRequestProps> = ({
           <div>
             <h3 className="font-medium">SMS Permission Granted</h3>
             <p className="text-sm text-muted-foreground">
-              You've successfully granted permission for SMS reading. The app can now read your transaction SMS messages.
+              You&apos;ve successfully granted permission for SMS reading. The app can now read your transaction SMS messages.
             </p>
           </div>
         </div>

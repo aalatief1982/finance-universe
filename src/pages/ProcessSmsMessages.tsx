@@ -448,7 +448,7 @@ const handleReadSms = async () => {
           <DialogHeader>
             <DialogTitle>Importing SMS</DialogTitle>
             <DialogDescription>
-              Xpensia will read new SMS messages from your saved senders and process them as if you pressed "Read SMS".
+              Xpensia will read new SMS messages from your saved senders and process them as if you pressed &quot;Read SMS&quot;.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

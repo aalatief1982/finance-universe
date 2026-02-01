@@ -880,7 +880,7 @@ const SetBudgetPage = () => {
                     Your {parentPeriodWarning.parentBudget.period} budget of{' '}
                     <strong>{formatCurrency(parentPeriodWarning.parentBudget.amount, currency)}</strong>{' '}
                     suggests ~<strong>{formatCurrency(parentPeriodWarning.derivedAmount, currency)}</strong> for this period.
-                    You're over by {formatCurrency(parentPeriodWarning.excess, currency)}.
+                    You&apos;re over by {formatCurrency(parentPeriodWarning.excess, currency)}.
                   </span>
                 </AlertDescription>
               </Alert>

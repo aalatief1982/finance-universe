@@ -226,7 +226,7 @@ export async function parseAndInferTransaction(
         ? 'partial'
         : 'failed';
 
-  let origin: ParsedTransactionResult['origin'] = parsed.matched
+  const origin: ParsedTransactionResult['origin'] = parsed.matched
     ? 'template'
     : 'structure';
 

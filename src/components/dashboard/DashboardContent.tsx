@@ -137,7 +137,7 @@ const DashboardContent = ({
           {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Welcome to your Dashboard'}
         </h2>
         <p className="text-muted-foreground text-sm">
-          Here's an overview of your finances
+          Here&apos;s an overview of your finances
         </p>
       </div>
       

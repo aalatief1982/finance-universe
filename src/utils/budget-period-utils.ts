@@ -186,9 +186,10 @@ export function formatPeriodLabel(
     case 'weekly':
       return `Week ${periodIndex}, ${year}`;
     
-    case 'monthly':
+    case 'monthly': {
       const monthDate = new Date(year, (periodIndex || 1) - 1, 1);
       return format(monthDate, 'MMM yyyy');
+    }
     
     case 'quarterly':
       return `Q${periodIndex} ${year}`;
@@ -211,9 +212,10 @@ export function getShortPeriodLabel(
   switch (period) {
     case 'weekly':
       return `W${periodIndex}`;
-    case 'monthly':
+    case 'monthly': {
       const monthDate = new Date(2024, (periodIndex || 1) - 1, 1);
       return format(monthDate, 'MMM');
+    }
     case 'quarterly':
       return `Q${periodIndex}`;
     case 'yearly':

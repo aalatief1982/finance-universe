@@ -285,7 +285,7 @@ export function inferIndirectFields(
  */
 export function extractVendorName(message: string): string {
   const match = message.match(
-    /(?:لدى|من|في|عند|من عند|تم الدفع لـ|تم الشراء من|at|from|paid to|purchased from)[:\s]*([^\n,؛;:\-]+)/i
+    /(?:لدى|من|في|عند|من عند|تم الدفع لـ|تم الشراء من|at|from|paid to|purchased from)[:\s]*([^\n,؛;:-]+)/i
   );
 
   if (match && match[1]) {

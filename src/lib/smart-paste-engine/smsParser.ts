@@ -16,7 +16,7 @@ export interface TransactionDraft {
 }
 
 // Helper regexes
-const amountRegex = /(\d+[\.,]\d{2})|\d+/g;
+const amountRegex = /(\d+[.,]\d{2})|\d+/g;
 const dateRegex = /\d{4}-\d{2}-\d{2}/g;
 
 function normalizeDate(value: string): string | null {
@@ -44,7 +44,7 @@ export function parseSmsMessage(message: string): TransactionDraft | null {
   if (!message) return null;
 
   let amount = 0;
-  let currency = 'SAR';
+  const currency = 'SAR';
   let vendor = 'Unknown Vendor';
   let date = new Date().toISOString();
 

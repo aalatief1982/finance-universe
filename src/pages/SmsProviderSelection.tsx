@@ -159,7 +159,7 @@ const SmsProviderSelection = () => {
             <div>
               <h3 className="font-medium text-green-800">Providers Detected!</h3>
               <p className="text-sm text-green-700">
-                We've detected some SMS providers and pre-selected them for you. You can modify this selection.
+                We&apos;ve detected some SMS providers and pre-selected them for you. You can modify this selection.
               </p>
             </div>
           </motion.div>
@@ -238,7 +238,7 @@ const SmsProviderSelection = () => {
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            We'll analyze messages from this date forward. For privacy, we only access financial SMS.
+            We&apos;ll analyze messages from this date forward. For privacy, we only access financial SMS.
           </p>
         </div>
 
