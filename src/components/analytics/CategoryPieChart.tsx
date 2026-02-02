@@ -5,8 +5,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { CategoryData } from '@/services/AnalyticsService';
 
+type CategoryDataWithIndex = CategoryData & { [key: string]: unknown };
+
 interface CategoryPieChartProps {
-  categoryData: CategoryData[];
+  categoryData: CategoryDataWithIndex[];
   colors: string[];
 }
 

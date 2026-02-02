@@ -5,8 +5,10 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell
 import { formatCurrency } from '@/lib/formatters';
 import { MonthlyData } from '@/services/AnalyticsService';
 
+type MonthlyDataWithIndex = MonthlyData & { [key: string]: unknown };
+
 interface MonthlyTrendsChartProps {
-  monthlyData: MonthlyData[];
+  monthlyData: MonthlyDataWithIndex[];
 }
 
 const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];

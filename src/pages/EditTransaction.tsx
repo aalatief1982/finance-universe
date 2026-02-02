@@ -37,6 +37,19 @@ import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransa
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 
+interface EditTransactionState {
+  transaction?: Transaction;
+  rawMessage?: string;
+  senderHint?: string;
+  isSuggested?: boolean;
+  confidence?: number;
+  fieldConfidences?: Record<string, number>;
+  matchedCount?: number;
+  totalTemplates?: number;
+  fieldScore?: number;
+  keywordScore?: number;
+}
+
 const EditTransaction = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -51,14 +64,13 @@ const EditTransaction = () => {
     confidence: number;
   } | null>(null);
 
-  const transaction = location.state?.transaction as Transaction | undefined;
-  const rawMessage = location.state?.rawMessage as string | undefined;
-  const senderHint = location.state?.senderHint as string | undefined;
-  const isSuggested = location.state?.isSuggested as boolean | undefined;
-  const confidenceScore = location.state?.confidence as number | undefined;
-  const fieldConfidences = location.state?.fieldConfidences as
-    | Record<string, number>
-    | undefined;
+  const state = location.state as EditTransactionState | null;
+  const transaction = state?.transaction;
+  const rawMessage = state?.rawMessage;
+  const senderHint = state?.senderHint;
+  const isSuggested = state?.isSuggested;
+  const confidenceScore = state?.confidence;
+  const fieldConfidences = state?.fieldConfidences;
   const isNewTransaction = !transaction;
 
   if (import.meta.env.MODE === 'development') {
@@ -132,14 +144,14 @@ const EditTransaction = () => {
         )}
 
         {!isEditing && confidenceScore !== undefined &&
-          location.state?.matchedCount !== undefined &&
-          location.state?.totalTemplates !== undefined && (
+          state?.matchedCount !== undefined &&
+          state?.totalTemplates !== undefined && (
             <SmartPasteSummary
               confidence={confidenceScore}
-              matchedCount={location.state.matchedCount}
-              totalTemplates={location.state.totalTemplates}
-              fieldScore={location.state.fieldScore}
-              keywordScore={location.state.keywordScore}
+              matchedCount={state.matchedCount}
+              totalTemplates={state.totalTemplates}
+              fieldScore={state.fieldScore}
+              keywordScore={state.keywordScore}
             />
           )}
 

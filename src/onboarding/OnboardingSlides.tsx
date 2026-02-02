@@ -4,19 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, EffectFade } from 'swiper/modules';
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
-import type { StatusBar as StatusBarType } from '@capacitor/status-bar';
-
-// Only import StatusBar if running in a native environment
-let StatusBar: typeof StatusBarType | null = null;
-if (typeof window !== 'undefined' && Capacitor.isNativePlatform?.()) {
-  import('@capacitor/status-bar')
-    .then((module) => {
-      StatusBar = module.StatusBar;
-    })
-    .catch((error) => {
-      void error;
-    });
-}
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -70,14 +58,12 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   useEffect(() => {
     setIsVisible(true);
     // Status bar logic: overlay, transparent, light style
-    let didSet = false;
     (async () => {
-      if (Capacitor.isNativePlatform?.() && StatusBar) {
+      if (Capacitor.isNativePlatform?.()) {
         try {
           await StatusBar.setOverlaysWebView({ overlay: true });
           await StatusBar.setBackgroundColor({ color: '#00000000' });
-          await StatusBar.setStyle({ style: StatusBar.Style.Light });
-          didSet = true;
+          await StatusBar.setStyle({ style: Style.Light });
         } catch (error) {
           void error;
         }

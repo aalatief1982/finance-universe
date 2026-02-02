@@ -29,11 +29,13 @@ import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger, TooltipProvider }
 interface ExpenseByCategory {
   name: string;
   value: number;
+  [key: string]: unknown;
 }
 
 interface ExpenseBySubcategory {
   name: string;
   value: number;
+  [key: string]: unknown;
 }
 
 interface ExpenseChartProps {

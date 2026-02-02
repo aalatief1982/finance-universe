@@ -23,8 +23,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CategorySummary } from '@/types/transaction';
 import { getChartColor } from '@/utils/color-utils';
 
+type CategorySummaryWithIndex = CategorySummary & { [key: string]: unknown };
+
 interface CategoryBreakdownChartProps {
-  data: CategorySummary[];
+  data: CategorySummaryWithIndex[];
 }
 
 

@@ -53,18 +53,25 @@ interface VendorMappingEntry {
   skipped?: boolean;
 }
 
+interface VendorLocationState {
+  messages?: Array<{ message: string; sender?: string; date?: string }>;
+  vendorMap?: Record<string, string>;
+  keywordMap?: Array<{ keyword: string; mappings: Array<{ field: string; value: string }> }>;
+}
+
 const VendorMapping: React.FC = () => {
   const [vendors, setVendors] = useState<VendorMappingEntry[]>([]);
   const location = useLocation();
+  const state = location.state as VendorLocationState | null;
   if (import.meta.env.MODE === 'development') {
-    // console.log('VendorMapping state:', location.state);
+    // console.log('VendorMapping state:', state);
   }
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const hasRequiredState = useCallback(() => {
-    return !!location.state && (location.state?.messages?.length ?? 0) > 0;
-  }, [location.state]);
+    return !!state && (state?.messages?.length ?? 0) > 0;
+  }, [state]);
 
   const hasValidData = () => {
     return vendors.some(v => !v.skipped) && hasRequiredState();
@@ -84,9 +91,9 @@ const VendorMapping: React.FC = () => {
   useEffect(() => {
     if (!hasRequiredState()) return;
 
-    const incomingVendorMap = location.state?.vendorMap || {};
-    const incomingKeywordBank = location.state?.keywordMap || [];
-    const messages = location.state?.messages || [];
+    const incomingVendorMap = state?.vendorMap || {};
+    const incomingKeywordBank = state?.keywordMap || [];
+    const messages = state?.messages || [];
 
     if (Object.keys(incomingVendorMap).length === 0 || messages.length === 0) {
       toast({
@@ -186,7 +193,7 @@ const VendorMapping: React.FC = () => {
     }
 
     if (vendors.every(v => v.skipped)) {
-      const allMessages = location.state?.messages || [];
+      const allMessages = state?.messages || [];
       const senderDates: Record<string, string> = {};
       allMessages.forEach((m: any) => {
         if (m.sender) {
@@ -230,7 +237,7 @@ const VendorMapping: React.FC = () => {
       });
     });
 
-    const allMessages = location.state?.messages || [];
+    const allMessages = state?.messages || [];
     const allowed = new Set(vendors.filter(v => !v.skipped).map(v => v.vendor));
     const messages = allMessages.filter((m: any) => {
       const extracted = extractVendorName(m.message);

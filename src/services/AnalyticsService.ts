@@ -37,11 +37,13 @@ export interface AnalyticsTotals {
 export interface CategoryData {
   name: string;
   value: number;
+  [key: string]: unknown;
 }
 
 export interface MonthlyData {
   month: string;
   total: number;
+  [key: string]: unknown;
 }
 
 export class AnalyticsService {

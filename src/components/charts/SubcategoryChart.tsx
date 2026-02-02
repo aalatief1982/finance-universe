@@ -35,6 +35,7 @@ import { getChartColor } from '@/utils/color-utils';
 interface Item {
   name: string;
   value: number;
+  [key: string]: unknown;
 }
 
 interface SubcategoryChartProps {

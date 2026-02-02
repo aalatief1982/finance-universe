@@ -57,9 +57,9 @@ describe('storage-utils', () => {
   });
 
   it('returns success when safeSetItem writes to storage', () => {
-    const result = safeSetItem('test_key', 'test_value');
+    const result = safeSetItem('test_key', { value: 'test_value' });
     expect(result).toBe(true);
-    expect(localStorage.getItem('test_key')).toBe('"test_value"');
+    expect(localStorage.getItem('test_key')).toBe('{"value":"test_value"}');
   });
 
   it('returns empty array when no transactions exist', () => {
