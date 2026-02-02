@@ -72,9 +72,10 @@ const ExpenseForm = ({
   const selectedCategory = form.watch("category");
   
   // Update available subcategories when category changes
+  // Note: form is excluded from deps to prevent render loops - we use form.getValues() inside
   useEffect(() => {
     if (selectedCategory) {
-      const subcategories = getSubcategoriesForCategory(selectedCategory);
+      const subcategories = getSubcategoriesForCategory(selectedCategory as string);
       setAvailableSubcategories(subcategories);
       
       // If current subcategory is not available, reset it to "none"
@@ -84,9 +85,13 @@ const ExpenseForm = ({
       }
     } else {
       setAvailableSubcategories([]);
-      form.setValue("subcategory", "none");
+      const currentSubcategory = form.getValues().subcategory;
+      if (currentSubcategory !== "none") {
+        form.setValue("subcategory", "none");
+      }
     }
-  }, [selectedCategory, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
 
   const handleSubmit = (values: TransactionFormValues) => {
     onSubmit(values);

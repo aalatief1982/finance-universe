@@ -34,17 +34,20 @@ const TransactionTypeSelector: React.FC<TransactionTypeSelectorProps> = ({
   const vendor = form.watch('vendor')
   const [matches, setMatches] = useState<KeywordEntry[]>([])
 
+  // Note: form is excluded from deps to prevent render loops - we use form.getValues() inside
   useEffect(() => {
     if (vendor) {
-      const m = getKeywordMatches(vendor)
+      const m = getKeywordMatches(vendor as string)
       setMatches(m)
-      if (m.length === 1) {
+      const currentType = form.getValues().type
+      if (m.length === 1 && currentType !== m[0].type) {
         form.setValue('type', m[0].type)
       }
     } else {
       setMatches([])
     }
-  }, [vendor, form])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendor])
   return (
     <FormField
       control={form.control}

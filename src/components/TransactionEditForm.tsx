@@ -145,6 +145,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   fieldConfidences = {},
   onEditStart,
 }) => {
+  // Serialize fieldConfidences to prevent object reference changes triggering re-renders
+  const fieldConfidencesKey = JSON.stringify(fieldConfidences);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
   const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
@@ -254,10 +256,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     if (transaction && fieldConfidences) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
       
-      if (import.meta.env.MODE === 'development') {
-        // console.log('[TransactionEditForm] Processing fieldConfidences:', fieldConfidences);
-      }
-      
       // Use fieldConfidences to determine which fields were driven by smart paste
       Object.keys(fieldConfidences).forEach((field) => {
         const confidence = fieldConfidences[field as keyof Transaction];
@@ -265,31 +263,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         // Field is driven if it has a confidence score (regardless of value)
         if (confidence !== undefined && confidence > 0) {
           driven[field as keyof Transaction] = true;
-          
-          if (import.meta.env.MODE === 'development') {
-            // console.log(`[TransactionEditForm] Field "${field}" marked as driven with confidence:`, confidence);
-          }
         }
       });
       
-      if (import.meta.env.MODE === 'development') {
-        // console.log('[TransactionEditForm] Final drivenFields map:', driven);
-      }
-      
       setDrivenFields(prev => {
         if (areDrivenFieldsEqual(driven, prev)) {
-          if (import.meta.env.MODE === 'development') {
-            console.log('[TransactionEditForm] drivenFields unchanged, skipping state update.');
-          }
           return prev;
-        }
-        if (import.meta.env.MODE === 'development') {
-          console.log('[TransactionEditForm] Updating drivenFields:', driven);
         }
         return driven;
       });
     }
-  }, [transaction, fieldConfidences]);
+    // Use serialized key to prevent object reference changes from triggering re-renders
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transaction, fieldConfidencesKey]);
 
   useEffect(() => {
     const categories = getCategoriesForType(editedTransaction.type) || [];
