@@ -132,6 +132,7 @@ export interface TransactionSummary {
 export interface CategorySummary {
   name: string;
   value: number;
+  [key: string]: unknown;
 }
 
 export type TimePeriod = 'week' | 'month' | 'year' | 'all';
@@ -140,4 +141,5 @@ export interface TimePeriodData {
   date: string;
   income: number;
   expense: number;
+  [key: string]: unknown;
 }

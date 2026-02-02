@@ -56,6 +56,7 @@ const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }: PieLabelRenderP
 interface CategoryItem {
   name: string;
   value: number;
+  [key: string]: unknown;
 }
 
 interface CategoryChartProps {

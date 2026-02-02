@@ -234,7 +234,7 @@ function AppWrapper() {
           }
           
           // Handle notification taps
-          LocalNotifications.addListener('localNotificationActionPerformed', async (event) => {
+          LocalNotifications.addListener('localNotificationActionPerformed', async (event: { notification: { extra?: { smsData?: { sender: string; body: string } } } }) => {
             const statePayload = event.notification.extra;
             if (statePayload?.smsData) {
               if (import.meta.env.MODE === 'development') {

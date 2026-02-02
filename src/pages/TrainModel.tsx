@@ -72,12 +72,17 @@ const TrainModel = () => {
   // });
   
   // Get message and sender from URL parameters
+  interface TrainModelState {
+    message?: string;
+    sender?: string;
+  }
+  const locationState = location.state as TrainModelState | null;
   const messageFromUrl = searchParams.get('msg') || '';
   const senderFromUrl = searchParams.get('sender') || '';
   
   // State for the message and selections
-  const [message, setMessage] = useState<string>(messageFromUrl || location.state?.message || '');
-  const [senderHint, setSenderHint] = useState<string>(senderFromUrl || location.state?.sender || '');
+  const [message, setMessage] = useState<string>(messageFromUrl || locationState?.message || '');
+  const [senderHint, setSenderHint] = useState<string>(senderFromUrl || locationState?.sender || '');
   const [selections, setSelections] = useState<TextSelection[]>([]);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });

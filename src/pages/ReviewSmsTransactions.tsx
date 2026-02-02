@@ -93,6 +93,21 @@ interface DraftTransaction {
 
 }
 
+interface SmsMessage {
+  id?: string;
+  message?: string;
+  rawMessage?: string;
+  body?: string;
+  sender: string;
+  date?: string;
+}
+
+interface SmsLocationState {
+  messages?: SmsMessage[];
+  vendorMap?: Record<string, string>;
+  keywordMap?: Array<{ keyword: string; mappings: Array<{ field: string; value: string }> }>;
+}
+
 const ReviewSmsTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<DraftTransaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,18 +115,10 @@ const ReviewSmsTransactions: React.FC = () => {
   const location = useLocation();
   const { addTransaction, updateTransaction } = useTransactions();
 
-  const messages: any[] = React.useMemo(
-    () => location.state?.messages || [],
-    [location.state]
-  );
-  const vendorMap: Record<string, string> = React.useMemo(
-    () => location.state?.vendorMap || {},
-    [location.state]
-  );
-  const keywordMap: any[] = React.useMemo(
-    () => location.state?.keywordMap || [],
-    [location.state]
-  );
+  const state = location.state as SmsLocationState | null;
+  const messages = React.useMemo(() => state?.messages || [], [state]);
+  const vendorMap = React.useMemo(() => state?.vendorMap || {}, [state]);
+  const keywordMap = React.useMemo(() => state?.keywordMap || [], [state]);
 
   const allHighConfidence =
     transactions.length > 0 && transactions.every(t => t.confidence >= 0.9);
@@ -540,12 +547,12 @@ const toggleSkipAll = () => {
             </Select>
             <div className="col-span-2 flex items-center gap-2">
               <Checkbox
-                id={`always-apply-${index}`}
                 checked={txn.alwaysApply || false}
                 onCheckedChange={checked => handleAlwaysApplyChange(index, !!checked)}
                 className="mr-2"
+                aria-labelledby={`always-apply-label-${index}`}
               />
-              <label className="text-sm" htmlFor={`always-apply-${index}`}>
+              <label id={`always-apply-label-${index}`} className="text-sm" htmlFor={`always-apply-${index}`}>
                 Always apply for this sender
               </label>
             </div>

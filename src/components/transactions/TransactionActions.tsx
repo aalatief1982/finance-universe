@@ -70,7 +70,7 @@ const TransactionActions = ({
           <DropdownMenuItem asChild>
             <div
               onClick={handleEdit}
-              onKeyDown={(e) => e.key === 'Enter' && handleEdit()}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleEdit(e as unknown as React.MouseEvent); }}
               role="button"
               tabIndex={0}
             >
@@ -82,7 +82,7 @@ const TransactionActions = ({
             <div 
               onClick={handleDelete}
               className="text-destructive focus:text-destructive"
-              onKeyDown={(e) => e.key === 'Enter' && handleDelete()}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleDelete(e as unknown as React.MouseEvent); }}
               role="button"
               tabIndex={0}
             >

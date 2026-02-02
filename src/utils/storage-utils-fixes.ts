@@ -84,7 +84,7 @@ export const validateCategoryForStorage = (category: unknown): Category => {
   
   // Optional fields
   if (getString(record.parentId)) validatedCategory.parentId = getString(record.parentId);
-  if (isRecord(record.metadata)) validatedCategory.metadata = record.metadata as Category['metadata'];
+  if (isRecord(record.metadata)) validatedCategory.metadata = record.metadata as unknown as Category['metadata'];
   if (Array.isArray(record.subcategories)) validatedCategory.subcategories = record.subcategories as Category[];
   if (getBoolean(record.user) !== undefined) validatedCategory.user = getBoolean(record.user);
   

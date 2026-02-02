@@ -35,7 +35,7 @@ const AmountField: React.FC<AmountFieldProps> = ({
   
   const getFieldState = () => {
     if (amountError) return 'error';
-    if (amountValue && amountValue > 0) return 'success';
+    if (typeof amountValue === 'number' && amountValue > 0) return 'success';
     return 'default';
   };
 
