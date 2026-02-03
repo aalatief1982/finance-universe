@@ -22,8 +22,16 @@
   - Added optional `manualFxRate` parameter for manual rate entry
 - [x] All 13 TransactionService tests passing
 
-### 🔲 Phase 3: Transaction Entry UI (NEXT)
-### 🔲 Phase 4: Dashboard & Analytics
+### ✅ Phase 3: Transaction Entry UI (COMPLETED)
+- [x] Created `src/components/fx/UnconvertedBadge.tsx` - Warning badge for missing rates
+- [x] Created `src/components/fx/FxConvertedEstimate.tsx` - Converted amount estimate display
+- [x] Created `src/components/fx/FxRateInput.tsx` - Manual rate entry dialog
+- [x] Created `src/hooks/useFxEstimate.ts` - Hook for computing FX estimates
+- [x] Created `src/components/forms/FxEstimateDisplay.tsx` - Form field integration
+- [x] Updated `src/components/ExpenseForm.tsx` - Added FX estimate display and manual rate dialog
+- [x] Updated `src/components/SmsTransactionConfirmation.tsx` - Added FX indicator badges
+
+### 🔲 Phase 4: Dashboard & Analytics (NEXT)
 ### 🔲 Phase 5: Budget & Account Integration
 ### 🔲 Phase 6: Export & Final Polish
 

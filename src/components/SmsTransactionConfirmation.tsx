@@ -30,6 +30,8 @@ import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Plus } from 'lucide-react';
 import { TransactionType } from '@/types/transaction';
 import { getCurrencySymbol } from '@/utils/format-utils';
+import { useFxEstimate } from '@/hooks/useFxEstimate';
+import { FxConvertedEstimate, UnconvertedBadge } from '@/components/fx';
 
 export interface SmsTransaction {
   id: string;
@@ -60,6 +62,46 @@ interface SmsTransactionConfirmationProps {
   onDecline: (id: string) => void;
   onEdit: (transaction: SmsTransaction) => void;
 }
+
+/**
+ * Helper component to display FX indicator in SMS confirmation.
+ */
+const FxIndicator: React.FC<{
+  amount: number;
+  currency?: SupportedCurrency;
+  date: string;
+}> = ({ amount, currency, date }) => {
+  const fxEstimate = useFxEstimate(amount, currency, date);
+  
+  // Don't show if no conversion needed
+  if (!fxEstimate.needsConversion) {
+    return null;
+  }
+  
+  // Show warning if no rate available
+  if (fxEstimate.convertedAmount === null) {
+    return (
+      <UnconvertedBadge
+        fromCurrency={currency || 'USD'}
+        toCurrency={fxEstimate.baseCurrency}
+        size="sm"
+      />
+    );
+  }
+  
+  // Show converted estimate inline
+  return (
+    <FxConvertedEstimate
+      originalAmount={amount}
+      fromCurrency={currency || 'USD'}
+      toCurrency={fxEstimate.baseCurrency}
+      convertedAmount={fxEstimate.convertedAmount}
+      rate={fxEstimate.rate}
+      source={fxEstimate.source}
+      size="sm"
+    />
+  );
+};
 
 const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   transaction,
@@ -230,6 +272,13 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               {transaction.currency}
             </Badge>
           )}
+          
+          {/* FX Conversion Indicator */}
+          <FxIndicator 
+            amount={transaction.amount}
+            currency={transaction.currency}
+            date={transaction.date}
+          />
           
           {transaction.country && (
             <Badge variant="secondary" className="text-xs flex items-center gap-1">
