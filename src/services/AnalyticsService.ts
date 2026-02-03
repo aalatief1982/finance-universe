@@ -1,4 +1,3 @@
-
 /**
  * @file AnalyticsService.ts
  * @description Pure analytics helpers for totals, category breakdowns,
@@ -10,18 +9,21 @@
  * 1. Compute income/expense totals and savings rate (transfer-excluded)
  * 2. Build category/subcategory rollups for charts
  * 3. Aggregate monthly totals for trend displays
+ * 4. FX-aware aggregation using amountInBase for multi-currency support
  *
  * @dependencies
  * - formatters.ts: formatCurrency, groupByMonth
  *
  * @review-tags
  * - @risk: transfer exclusion affects summary correctness
+ * - @risk: FX aggregation must handle null amountInBase gracefully
  * - @performance: groupByMonth iterates over filtered transactions
  *
  * @review-checklist
  * - [ ] Transfers excluded from all analytics outputs
  * - [ ] Subcategory totals ignore NaN/Infinity values
  * - [ ] Month sorting uses actual dates, not strings
+ * - [ ] FX totals track unconverted transactions separately
  */
 
 import { Transaction } from '@/types/transaction';
@@ -34,10 +36,33 @@ export interface AnalyticsTotals {
   savingsRate: number;
 }
 
+/**
+ * FX-aware totals that track unconverted transactions
+ */
+export interface FxAwareTotals extends AnalyticsTotals {
+  /** Number of transactions with missing amountInBase */
+  unconvertedCount: number;
+  /** Currencies that couldn't be converted */
+  unconvertedCurrencies: string[];
+  /** Native amounts by currency for unconverted transactions */
+  unconvertedByNative: Record<string, { income: number; expenses: number }>;
+  /** Whether all transactions are fully converted */
+  isFullyConverted: boolean;
+}
+
 export interface CategoryData {
   name: string;
   value: number;
   [key: string]: unknown;
+}
+
+/**
+ * FX-aware category data
+ */
+export interface FxAwareCategoryData extends CategoryData {
+  /** Native currency amounts for unconverted */
+  unconvertedAmount?: number;
+  unconvertedCurrency?: string;
 }
 
 export interface MonthlyData {
@@ -62,6 +87,66 @@ export class AnalyticsService {
     return { income, expenses, savingsRate };
   }
 
+  /**
+   * Get FX-aware totals using amountInBase when available.
+   * Tracks unconverted transactions separately.
+   * EXCLUDES transfers from all calculations.
+   * 
+   * @param transactions - Array of transactions to aggregate
+   * @param baseCurrency - User's base currency for context
+   * @returns FxAwareTotals with conversion status
+   */
+  static getFxAwareTotals(transactions: Transaction[], baseCurrency: string): FxAwareTotals {
+    let income = 0;
+    let expenses = 0;
+    let unconvertedCount = 0;
+    const unconvertedCurrenciesSet = new Set<string>();
+    const unconvertedByNative: Record<string, { income: number; expenses: number }> = {};
+
+    transactions.forEach(t => {
+      // Skip transfers - they don't affect income/expense totals
+      if (t.type === 'transfer') return;
+
+      const hasValidConversion = t.amountInBase != null && t.fxSource !== 'missing';
+      
+      if (hasValidConversion) {
+        // Use converted amount in base currency
+        if (t.type === 'income') {
+          income += Math.abs(t.amountInBase!);
+        } else if (t.type === 'expense') {
+          expenses += Math.abs(t.amountInBase!);
+        }
+      } else {
+        // Track unconverted transaction
+        unconvertedCount++;
+        const currency = t.currency || 'Unknown';
+        unconvertedCurrenciesSet.add(currency);
+        
+        if (!unconvertedByNative[currency]) {
+          unconvertedByNative[currency] = { income: 0, expenses: 0 };
+        }
+        
+        if (t.type === 'income') {
+          unconvertedByNative[currency].income += Math.abs(t.amount);
+        } else if (t.type === 'expense') {
+          unconvertedByNative[currency].expenses += Math.abs(t.amount);
+        }
+      }
+    });
+
+    const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0;
+
+    return {
+      income,
+      expenses,
+      savingsRate,
+      unconvertedCount,
+      unconvertedCurrencies: Array.from(unconvertedCurrenciesSet),
+      unconvertedByNative,
+      isFullyConverted: unconvertedCount === 0,
+    };
+  }
+
   // Generate data for the category breakdown chart (EXCLUDES transfers)
   static getCategoryData(transactions: Transaction[]): CategoryData[] {
     const expensesByCategory = transactions
@@ -77,6 +162,49 @@ export class AnalyticsService {
 
     return Object.entries(expensesByCategory)
       .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }
+
+  /**
+   * Generate FX-aware category data using amountInBase.
+   * EXCLUDES transfers from calculations.
+   * 
+   * @param transactions - Array of transactions
+   * @returns Category data with base currency amounts
+   */
+  static getFxAwareCategoryData(transactions: Transaction[]): FxAwareCategoryData[] {
+    const categoryMap: Record<string, { 
+      converted: number; 
+      unconverted: number; 
+      unconvertedCurrency?: string;
+    }> = {};
+
+    transactions
+      .filter(t => t.type === 'expense')
+      .forEach(t => {
+        const category = t.category || 'Uncategorized';
+        
+        if (!categoryMap[category]) {
+          categoryMap[category] = { converted: 0, unconverted: 0 };
+        }
+
+        const hasValidConversion = t.amountInBase != null && t.fxSource !== 'missing';
+        
+        if (hasValidConversion) {
+          categoryMap[category].converted += Math.abs(t.amountInBase!);
+        } else {
+          categoryMap[category].unconverted += Math.abs(t.amount);
+          categoryMap[category].unconvertedCurrency = t.currency;
+        }
+      });
+
+    return Object.entries(categoryMap)
+      .map(([name, data]) => ({
+        name,
+        value: data.converted,
+        unconvertedAmount: data.unconverted > 0 ? data.unconverted : undefined,
+        unconvertedCurrency: data.unconvertedCurrency,
+      }))
       .sort((a, b) => b.value - a.value);
   }
 
@@ -100,6 +228,53 @@ export class AnalyticsService {
     return Object.entries(expensesBySubcategory)
       .map(([name, value]) => ({ name, value }))
       .filter(({ value }) => !isNaN(value) && isFinite(value) && value > 0)
+      .sort((a, b) => b.value - a.value);
+  }
+
+  /**
+   * Generate FX-aware subcategory data using amountInBase.
+   * EXCLUDES transfers from calculations.
+   */
+  static getFxAwareSubcategoryData(transactions: Transaction[]): FxAwareCategoryData[] {
+    const subcategoryMap: Record<string, { 
+      converted: number; 
+      unconverted: number; 
+      unconvertedCurrency?: string;
+    }> = {};
+
+    transactions
+      .filter(t => t.type === 'expense' && t.subcategory && !isNaN(t.amount))
+      .forEach(t => {
+        const subcategory = t.subcategory as string;
+        
+        if (!subcategoryMap[subcategory]) {
+          subcategoryMap[subcategory] = { converted: 0, unconverted: 0 };
+        }
+
+        const hasValidConversion = t.amountInBase != null && t.fxSource !== 'missing';
+        
+        if (hasValidConversion) {
+          const amount = Math.abs(t.amountInBase!);
+          if (!isNaN(amount) && isFinite(amount)) {
+            subcategoryMap[subcategory].converted += amount;
+          }
+        } else {
+          const amount = Math.abs(t.amount);
+          if (!isNaN(amount) && isFinite(amount)) {
+            subcategoryMap[subcategory].unconverted += amount;
+            subcategoryMap[subcategory].unconvertedCurrency = t.currency;
+          }
+        }
+      });
+
+    return Object.entries(subcategoryMap)
+      .map(([name, data]) => ({
+        name,
+        value: data.converted,
+        unconvertedAmount: data.unconverted > 0 ? data.unconverted : undefined,
+        unconvertedCurrency: data.unconvertedCurrency,
+      }))
+      .filter(({ value, unconvertedAmount }) => value > 0 || (unconvertedAmount && unconvertedAmount > 0))
       .sort((a, b) => b.value - a.value);
   }
 
@@ -145,5 +320,65 @@ export class AnalyticsService {
     return [...categoryData]
       .sort((a, b) => b.value - a.value)
       .slice(0, limit);
+  }
+
+  /**
+   * Get timeline data using amountInBase for FX-aware aggregation.
+   * EXCLUDES transfers from calculations.
+   * 
+   * @param transactions - Array of transactions
+   * @param range - Time range for bucketing ('day' | 'week' | 'month' | 'year')
+   * @returns Timeline data with income/expense/balance per period
+   */
+  static getFxAwareTimelineData(
+    transactions: Transaction[], 
+    range: string
+  ): Array<{ date: string; income: number; expense: number; balance: number; hasUnconverted?: boolean }> {
+    const grouped = new Map<number, { 
+      income: number; 
+      expense: number; 
+      hasUnconverted: boolean;
+    }>();
+
+    transactions.forEach((tx) => {
+      // Skip transfers and invalid transactions
+      if (!tx || tx.type === 'transfer') return;
+
+      const d = new Date(tx.date);
+      if (isNaN(d.getTime())) return;
+
+      const bucket =
+        range === 'year'
+          ? new Date(d.getFullYear(), d.getMonth(), 1)
+          : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const key = bucket.getTime();
+
+      const existing = grouped.get(key) || { income: 0, expense: 0, hasUnconverted: false };
+      
+      const hasValidConversion = tx.amountInBase != null && tx.fxSource !== 'missing';
+      const amount = hasValidConversion ? Math.abs(tx.amountInBase!) : Math.abs(tx.amount);
+
+      if (tx.type === 'income') {
+        existing.income += amount;
+      } else if (tx.type === 'expense') {
+        existing.expense += amount;
+      }
+
+      if (!hasValidConversion) {
+        existing.hasUnconverted = true;
+      }
+
+      grouped.set(key, existing);
+    });
+
+    return Array.from(grouped.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([ts, val]) => ({
+        date: new Date(ts).toISOString(),
+        income: val.income,
+        expense: val.expense,
+        balance: val.income - val.expense,
+        hasUnconverted: val.hasUnconverted || undefined,
+      }));
   }
 }

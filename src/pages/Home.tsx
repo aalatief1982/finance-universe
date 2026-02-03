@@ -9,6 +9,7 @@
  * 1. Filter transactions by date range for analytics
  * 2. Render summary cards and charts (category, time, net balance)
  * 3. Track screen view analytics
+ * 4. Display FX-aware totals with unconverted transaction warnings
  *
  * @dependencies
  * - AnalyticsService.ts: totals and chart data helpers
@@ -17,15 +18,17 @@
  *
  * @review-tags
  * - @risk: summary calculations must exclude transfers where required
+ * - @risk: FX aggregation must track unconverted transactions
  * - @performance: memoized aggregates on large transaction lists
  *
  * @review-checklist
  * - [ ] Transfers excluded from income/expense totals
  * - [ ] Date range filters include end date for custom ranges
  * - [ ] Charts receive consistent data ordering
+ * - [ ] FX warning banner shows when transactions are unconverted
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import DashboardStats from "@/components/DashboardStats";
 import TimelineChart from "@/components/charts/TimelineChart";
@@ -33,6 +36,7 @@ import NetBalanceChart from "@/components/charts/NetBalanceChart";
 import CategoryChart from "@/components/charts/CategoryChart";
 import SubcategoryChart from "@/components/charts/SubcategoryChart";
 import ChartErrorBoundary from "@/components/charts/ChartErrorBoundary";
+import UnconvertedWarningBanner from "@/components/dashboard/UnconvertedWarningBanner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTransactions } from "@/context/TransactionContext";
 import { useNavigate } from "react-router-dom";
@@ -56,6 +60,9 @@ const Home = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
+  
+  // State to dismiss the unconverted warning
+  const [dismissedWarning, setDismissedWarning] = useState(false);
 
   // Track screen view
   useEffect(() => {
@@ -76,6 +83,9 @@ const Home = () => {
   );
   const [customEnd, setCustomEnd] = React.useState<Date | null>(defaultEnd);
   const [activeTab, setActiveTab] = React.useState("trends");
+
+  // Get user's base currency
+  const baseCurrency = user?.settings?.currency || 'USD';
 
   const handleAddTransaction = () => {
     navigate("/edit-transaction");
@@ -118,48 +128,15 @@ const Home = () => {
     });
   }, [transactions, range, customStart, customEnd]);
 
-  // Calculate summary (EXCLUDES transfers from income/expense totals)
-  const summary = React.useMemo(() => {
-    return filteredTransactions.reduce(
-      (acc, transaction) => {
-        // Defensive: skip invalid transactions
-        if (!transaction || typeof transaction.amount !== 'number') {
-          return acc;
-        }
-        
-        if (transaction.type === 'income') {
-          acc.income += Math.abs(transaction.amount);
-        } else if (transaction.type === 'expense') {
-          acc.expenses += Math.abs(transaction.amount);
-        }
-        // Transfers don't affect the balance calculation for financial summary
-        if (transaction.type !== 'transfer') {
-          acc.balance += transaction.amount;
-        }
-        return acc;
-      },
-      { income: 0, expenses: 0, balance: 0 },
-    );
-  }, [filteredTransactions]);
+  // Calculate FX-aware summary (EXCLUDES transfers from income/expense totals)
+  const fxSummary = React.useMemo(() => {
+    return AnalyticsService.getFxAwareTotals(filteredTransactions, baseCurrency);
+  }, [filteredTransactions, baseCurrency]);
 
-  // Category data (EXCLUDES transfers)
-  const categoryData = React.useMemo(() => {
-    return filteredTransactions
-      .filter((t) => t && t.type === 'expense')
-      .reduce(
-        (acc, transaction) => {
-          const category = transaction.category || 'Uncategorized';
-          const amount = transaction.amount || 0;
-          if (!acc[category]) {
-            acc[category] = 0;
-          }
-          acc[category] += Math.abs(amount);
-          return acc;
-        },
-        {} as Record<string, number>,
-      );
-  }, [filteredTransactions]);
-
+  // Calculate balance separately (income - expenses for display)
+  const balance = React.useMemo(() => {
+    return fxSummary.income - fxSummary.expenses;
+  }, [fxSummary]);
   const formatDisplayTitle = (txn: Transaction) => {
     const base = txn.title?.trim() || "Transaction";
     return txn.type === "expense" ? `${base} (Expense)` : base;
@@ -175,7 +152,7 @@ const Home = () => {
 
   const expensesBySubcategory = React.useMemo(() => {
     try {
-      return AnalyticsService.getSubcategoryData(filteredTransactions);
+      return AnalyticsService.getFxAwareSubcategoryData(filteredTransactions);
     } catch {
       console.warn('[Home] Failed to get subcategory data');
       return [];
@@ -184,44 +161,16 @@ const Home = () => {
 
   const expensesByCategory = React.useMemo(() => {
     try {
-      return Object.entries(categoryData).map(([name, value]) => ({ name, value }));
+      return AnalyticsService.getFxAwareCategoryData(filteredTransactions);
     } catch {
       return [];
     }
-  }, [categoryData]);
+  }, [filteredTransactions]);
 
-  // Timeline data (EXCLUDES transfers)
+  // FX-aware timeline data (EXCLUDES transfers)
   const timelineData = React.useMemo(() => {
     try {
-      const grouped = new Map<number, { income: number; expense: number }>();
-      filteredTransactions.forEach((tx) => {
-        // Skip transfers and invalid transactions
-        if (!tx || tx.type === 'transfer') return;
-        
-        const d = new Date(tx.date);
-        if (isNaN(d.getTime())) return; // Skip invalid dates
-        
-        const bucket =
-          range === "year"
-            ? new Date(d.getFullYear(), d.getMonth(), 1)
-            : new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const key = bucket.getTime();
-        const existing = grouped.get(key) || { income: 0, expense: 0 };
-        if (tx.type === 'income') {
-          existing.income += Math.abs(tx.amount || 0);
-        } else if (tx.type === 'expense') {
-          existing.expense += Math.abs(tx.amount || 0);
-        }
-        grouped.set(key, existing);
-      });
-      return Array.from(grouped.entries())
-        .sort((a, b) => a[0] - b[0])
-        .map(([ts, val]) => ({
-          date: new Date(ts).toISOString(),
-          income: val.income,
-          expense: val.expense,
-          balance: val.income - val.expense,
-        }));
+      return AnalyticsService.getFxAwareTimelineData(filteredTransactions, range || 'month');
     } catch (err) {
       console.warn('[Home] Failed to compute timeline data:', err);
       return [];
@@ -273,10 +222,19 @@ const Home = () => {
         </div>
 
         <div className="space-y-[calc(var(--section-gap)/2)]">
+          {/* Unconverted transactions warning */}
+          {!dismissedWarning && fxSummary.unconvertedCount > 0 && (
+            <UnconvertedWarningBanner
+              unconvertedCount={fxSummary.unconvertedCount}
+              unconvertedCurrencies={fxSummary.unconvertedCurrencies}
+              onDismiss={() => setDismissedWarning(true)}
+            />
+          )}
+
           <DashboardStats
-            income={summary.income}
-            expenses={summary.expenses}
-            balance={summary.balance}
+            income={fxSummary.income}
+            expenses={fxSummary.expenses}
+            balance={balance}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
