@@ -81,13 +81,21 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
   useEffect(() => {
     const loadInfo = async () => {
       try {
+        type DeviceIdInfo = { uuid?: string; identifier?: string };
+        type AppInfoResult = { version?: string };
+
         const [info, id, appInfo] = await Promise.all([
           Device.getInfo(),
-          Device.getId().catch(() => ({ uuid: '' })),
-          App.getInfo().catch(() => ({ version: '' })),
+          Device.getId().catch((): DeviceIdInfo => ({ uuid: '' })),
+          App.getInfo().catch((): AppInfoResult => ({ version: '' })),
         ]);
-        const uuid = (id as any).uuid || (id as any).identifier || '';
-        const version = (appInfo as any).version || '1.0.0';
+        const uuid =
+          typeof id.uuid === 'string'
+            ? id.uuid
+            : typeof id.identifier === 'string'
+              ? id.identifier
+              : '';
+        const version = typeof appInfo.version === 'string' && appInfo.version ? appInfo.version : '1.0.0';
         setDeviceInfo(`${info.model}, ${uuid}, ${version}, ${screenName}`);
       } catch {
         // ignore failures

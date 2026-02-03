@@ -19,11 +19,9 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { getFriendlyMessage } from '@/utils/errorMapper';
-import { safeStorage } from '@/utils/safe-storage';
+import { storeLastError, type StoredError } from '@/components/error-boundary-utils';
 import { ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { logSheetsOnlyEvent } from '@/utils/firebase-analytics';
-
-const LAST_ERROR_KEY = 'xpensia_last_error';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -34,14 +32,6 @@ interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   showDetails: boolean;
-}
-
-interface StoredError {
-  route: string;
-  boundaryName: string;
-  message: string;
-  stack?: string;
-  timestamp: string;
 }
 
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -64,18 +54,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     const boundaryName = this.props.name || 'unknown';
 
     // Store last error for debugging
-    try {
-      const storedError: StoredError = {
-        route,
-        boundaryName,
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      };
-      safeStorage.setItem(LAST_ERROR_KEY, JSON.stringify(storedError));
-    } catch {
-      // Ignore storage errors
-    }
+    const storedError: StoredError = {
+      route,
+      boundaryName,
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    };
+    storeLastError(storedError);
 
     // Log to Google Sheets for debugging (not Firebase to avoid noise)
     logSheetsOnlyEvent('app_error', {
@@ -146,19 +132,3 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 export default ErrorBoundary;
-
-// Helper to get last stored error (for debug UI)
-export function getLastStoredError(): StoredError | null {
-  try {
-    const raw = safeStorage.getItem(LAST_ERROR_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-// Helper to clear stored error
-export function clearStoredError(): void {
-  safeStorage.removeItem(LAST_ERROR_KEY);
-}
