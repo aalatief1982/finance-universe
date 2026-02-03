@@ -18,6 +18,7 @@ import {
 import { useTransactions } from "@/context/TransactionContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { UnconvertedBadge } from "@/components/fx";
 
 interface TransactionsByDateProps {
   transactions: Transaction[];
@@ -146,15 +147,39 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
                         </div>
 
                         <div className="flex items-center gap-4">
-                          <span
-                            className={`font-semibold ${
-                              transaction.amount < 0
-                                ? "text-red-600"
-                                : "text-green-600"
-                            }`}
-                          >
-                            {formatCurrency(transaction.amount, transaction.currency || userCurrency)}
-                          </span>
+                          <div className="text-right">
+                            <span
+                              className={`font-semibold ${
+                                transaction.amount < 0
+                                  ? "text-red-600"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {formatCurrency(transaction.amount, transaction.currency || userCurrency)}
+                            </span>
+                            {/* FX conversion display */}
+                            {transaction.baseCurrency && 
+                             transaction.currency?.toUpperCase() !== transaction.baseCurrency?.toUpperCase() && (
+                              <div className="mt-0.5">
+                                {transaction.amountInBase !== null && transaction.amountInBase !== undefined ? (
+                                  <span className="text-xs text-muted-foreground">
+                                    ≈ {formatCurrency(transaction.amountInBase, transaction.baseCurrency)}
+                                    {transaction.fxRateToBase && (
+                                      <span className="ml-1 opacity-70">
+                                        @ {transaction.fxRateToBase.toFixed(2)}
+                                      </span>
+                                    )}
+                                  </span>
+                                ) : (
+                                  <UnconvertedBadge
+                                    fromCurrency={transaction.currency || userCurrency}
+                                    toCurrency={transaction.baseCurrency}
+                                    size="sm"
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </div>
 
                           <Button
                             variant="ghost"

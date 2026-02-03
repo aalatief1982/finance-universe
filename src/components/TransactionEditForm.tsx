@@ -40,7 +40,7 @@ import {
   PEOPLE,
   CURRENCIES,
 } from '@/lib/categories-data';
-import { Plus, Calculator, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Plus, Calculator, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
 import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -54,6 +54,9 @@ import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import VendorAutocomplete from './VendorAutocomplete';
 import AccountAutocomplete from './AccountAutocomplete';
+import FxEstimateDisplay from '@/components/forms/FxEstimateDisplay';
+import { FxInfoDisplay, FxRateInput } from '@/components/fx';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -621,6 +624,27 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         {renderFeedbackIcons('currency')}
       </div>
       </div>
+
+      {/* FX Estimate Display - shows converted amount preview for new transactions */}
+      <FxEstimateDisplay
+        amount={Math.abs(editedTransaction.amount)}
+        currency={editedTransaction.currency}
+        date={editedTransaction.date}
+      />
+
+      {/* FX Info Display - shows saved FX metadata for existing transactions */}
+      {transaction && transaction.baseCurrency && 
+       transaction.currency?.toUpperCase() !== transaction.baseCurrency?.toUpperCase() && (
+        <Collapsible className="mt-2">
+          <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <span>FX Details</span>
+            <ChevronDown className="size-3" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2">
+            <FxInfoDisplay transaction={transaction} size="sm" />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       <Dialog open={addCurrencyOpen} onOpenChange={setAddCurrencyOpen}>
         <DialogContent className="sm:max-w-md">
