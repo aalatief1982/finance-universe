@@ -17,13 +17,13 @@
  * - [ ] Component renders without crashing
  */
 import React from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
 interface FormErrorSummaryProps {
-  form: UseFormReturn<any>;
+  form: UseFormReturn<FieldValues>;
   className?: string;
 }
 
@@ -51,7 +51,12 @@ const FormErrorSummary: React.FC<FormErrorSummaryProps> = ({
         <div className="space-y-2">
           <p className="font-medium">Please fix the following errors:</p>
           <ul className="space-y-1">
-            {errorEntries.map(([fieldName, error]) => (
+            {errorEntries.map(([fieldName, error]) => {
+              const message =
+                typeof (error as { message?: unknown })?.message === 'string'
+                  ? (error as { message?: string }).message
+                  : 'Invalid value';
+              return (
               <li key={fieldName}>
                 <Button
                   variant="link"
@@ -59,10 +64,11 @@ const FormErrorSummary: React.FC<FormErrorSummaryProps> = ({
                   className="h-auto p-0 text-destructive-foreground underline"
                   onClick={() => scrollToField(fieldName)}
                 >
-                  {fieldName}: {(error as any)?.message || 'Invalid value'}
+                  {fieldName}: {message}
                 </Button>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       </AlertDescription>

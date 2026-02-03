@@ -499,7 +499,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                                 {...field}
                                 onChange={(e) => {
                                   const value = e.target.value === '' ? undefined : Number(e.target.value);
-                                  form.setValue('budget', value as any);
+                                  form.setValue('budget', value);
                                 }}
                                 value={field.value ?? ''}
                               />

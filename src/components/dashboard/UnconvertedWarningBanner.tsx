@@ -38,7 +38,7 @@ const UnconvertedWarningBanner: React.FC<UnconvertedWarningBannerProps> = ({
       <AlertDescription className="text-sm text-muted-foreground">
         <p>
           Transactions in {currencyList}{hasMore ? ` and ${unconvertedCurrencies.length - 3} more` : ''} 
-          {' '}couldn't be converted to your base currency. Totals may be incomplete.
+          {' '}could not be converted to your base currency. Totals may be incomplete.
         </p>
         <div className="flex gap-2 mt-2">
           <Button 

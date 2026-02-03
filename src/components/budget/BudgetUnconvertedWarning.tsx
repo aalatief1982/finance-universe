@@ -49,7 +49,7 @@ const BudgetUnconvertedWarning: React.FC<BudgetUnconvertedWarningProps> = ({
           <span className="font-medium text-warning">
             {unconvertedCount} transaction{unconvertedCount > 1 ? 's' : ''}
           </span>
-          {' '}in {unconvertedCurrencies.join(', ')} couldn't be converted to {baseCurrency}.
+          {' '}in {unconvertedCurrencies.join(', ')} could not be converted to {baseCurrency}.
           {currencyBreakdown && (
             <span className="block mt-1">
               Unconverted total: {currencyBreakdown}

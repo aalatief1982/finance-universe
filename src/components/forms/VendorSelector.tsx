@@ -50,7 +50,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
     const loadVendorList = () => {
       // Prioritize synced vendor data, fallback to built-in data
       const syncedVendors = getVendorData();
-      const builtIn = Object.keys(syncedVendors || (vendorData as any) || {});
+      const builtIn = Object.keys(syncedVendors || (vendorData as Record<string, unknown>) || {});
       const stored = Object.keys(loadVendorFallbacks());
       const all = Array.from(new Set([...builtIn, ...stored]));
       setVendors(all);

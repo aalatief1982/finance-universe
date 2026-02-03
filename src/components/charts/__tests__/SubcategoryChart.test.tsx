@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { chunkSubcategoryData, MAX_SUBCATEGORIES } from '../SubcategoryChart';
+import { chunkSubcategoryData, MAX_SUBCATEGORIES } from '../subcategory-utils';
 
 describe('chunkSubcategoryData', () => {
   it('splits subcategories into chunks of MAX_SUBCATEGORIES', () => {

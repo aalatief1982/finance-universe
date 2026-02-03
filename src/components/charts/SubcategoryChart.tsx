@@ -31,48 +31,38 @@ import {
 } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { getChartColor } from '@/utils/color-utils';
-
-interface Item {
-  name: string;
-  value: number;
-  [key: string]: unknown;
-}
+import { chunkSubcategoryData, type Item } from './subcategory-utils';
 
 interface SubcategoryChartProps {
   data: Item[];
 }
 
-export const MAX_SUBCATEGORIES = 6;
-
-export const chunkSubcategoryData = (items: Item[], size: number = MAX_SUBCATEGORIES) => {
-  const chunks: Item[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
-  }
-  return chunks;
-};
-
 const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
 
-const BarTooltip = (total: number) => (
-  { active, payload }: TooltipProps<number, string> & CategoricalChartState
-) => {
-  if (active && payload && payload.length) {
-    const firstPayload = payload[0]?.payload as { name?: string; value?: number } | undefined;
-    const name = firstPayload?.name ?? '';
-    const value = firstPayload?.value ?? 0;
-    const percent = total ? ((value / total) * 100).toFixed(1) : null;
-    return (
-      <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
-        <p className="font-medium">{name}</p>
-        <p className="text-primary">
-          {formatCurrency(Math.abs(value))}
-          {percent ? ` • ${percent}%` : ''}
-        </p>
-      </div>
-    );
-  }
-  return null;
+const BarTooltip = (total: number) => {
+  const BarTooltipRenderer = (
+    { active, payload }: TooltipProps<number, string> & CategoricalChartState
+  ) => {
+    if (active && payload && payload.length) {
+      const firstPayload = payload[0]?.payload as { name?: string; value?: number } | undefined;
+      const name = firstPayload?.name ?? '';
+      const value = firstPayload?.value ?? 0;
+      const percent = total ? ((value / total) * 100).toFixed(1) : null;
+      return (
+        <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
+          <p className="font-medium">{name}</p>
+          <p className="text-primary">
+            {formatCurrency(Math.abs(value))}
+            {percent ? ` • ${percent}%` : ''}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  BarTooltipRenderer.displayName = 'BarTooltip';
+  return BarTooltipRenderer;
 };
 
 type AxisTickProps = { x: number; y: number; payload: { value: string | number } };
