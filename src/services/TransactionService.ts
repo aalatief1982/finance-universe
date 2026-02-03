@@ -47,6 +47,7 @@ import { getStoredTransactions, storeTransactions, getStoredCategories, storeCat
 import { transactionAnalyticsService } from './TransactionAnalyticsService';
 import { processSmsEntries } from './SmsProcessingService';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { applyFxConversion, getBaseCurrency } from './FxConversionService';
 
 class TransactionService {
 
@@ -90,12 +91,47 @@ class TransactionService {
    * - transferId links both halves for atomic operations
    * - Category forced to "Transfer" for transfer entries
    */
-  addTransaction(transaction: Omit<Transaction, 'id'>): Transaction | Transaction[] {
-    // For non-transfers, create a single record as before
+  /**
+   * Add a new transaction with automatic categorization and FX conversion.
+   * For transfers, creates TWO linked entries with shared transferId.
+   * 
+   * @param transaction - Transaction data without ID
+   * @param manualFxRate - Optional manually provided exchange rate
+   * @returns Single transaction for income/expense, or array of two for transfers
+   * 
+   * @review-focus
+   * - FX conversion is applied at save time and locked
+   * - Transfer amount signs: debit should be negative, credit positive
+   * - transferId links both halves for atomic operations
+   * - Category forced to "Transfer" for transfer entries
+   */
+  addTransaction(transaction: Omit<Transaction, 'id'>, manualFxRate?: number): Transaction | Transaction[] {
+    // Ensure currency is set (default to user's base currency)
+    const transactionCurrency = transaction.currency || getBaseCurrency();
+    const transactionDate = transaction.date || new Date().toISOString().split('T')[0];
+
+    // Apply FX conversion at save time
+    const fxResult = applyFxConversion(
+      Math.abs(transaction.amount),
+      transactionCurrency,
+      transactionDate,
+      manualFxRate
+    );
+
+    // For non-transfers, create a single record with FX fields
     if (transaction.type !== 'transfer') {
-      const newTransaction = {
+      const newTransaction: Transaction = {
         ...transaction,
-        id: uuidv4()
+        id: uuidv4(),
+        currency: fxResult.fields.currency,
+        baseCurrency: fxResult.fields.baseCurrency,
+        amountInBase: fxResult.fields.amountInBase !== null
+          ? (transaction.amount < 0 ? -Math.abs(fxResult.fields.amountInBase) : Math.abs(fxResult.fields.amountInBase))
+          : null,
+        fxRateToBase: fxResult.fields.fxRateToBase,
+        fxSource: fxResult.fields.fxSource,
+        fxLockedAt: fxResult.fields.fxLockedAt,
+        fxPair: fxResult.fields.fxPair,
       };
       
       // Auto-categorize if no category is provided
@@ -111,13 +147,14 @@ class TransactionService {
       logAnalyticsEvent('transaction_add', {
         category: newTransaction.category,
         amount: newTransaction.amount,
-        currency: newTransaction.currency
+        currency: newTransaction.currency,
+        fxSource: newTransaction.fxSource,
       });
       
       return newTransaction;
     }
     
-    // For transfers, create TWO linked records
+    // For transfers, create TWO linked records with shared FX context
     const transferId = uuidv4();
     const amount = Math.abs(transaction.amount);
     
@@ -132,6 +169,14 @@ class TransactionService {
       amount: -amount,
       category: 'Transfer', // Force category to "Transfer"
       type: 'transfer',
+      // Apply FX fields (use negative amountInBase for debit)
+      currency: fxResult.fields.currency,
+      baseCurrency: fxResult.fields.baseCurrency,
+      amountInBase: fxResult.fields.amountInBase !== null ? -Math.abs(fxResult.fields.amountInBase) : null,
+      fxRateToBase: fxResult.fields.fxRateToBase,
+      fxSource: fxResult.fields.fxSource,
+      fxLockedAt: fxResult.fields.fxLockedAt,
+      fxPair: fxResult.fields.fxPair,
     };
     
     // Credit entry (money entering destination account)
@@ -145,6 +190,14 @@ class TransactionService {
       amount: amount,
       category: 'Transfer',
       type: 'transfer',
+      // Apply FX fields (use positive amountInBase for credit)
+      currency: fxResult.fields.currency,
+      baseCurrency: fxResult.fields.baseCurrency,
+      amountInBase: fxResult.fields.amountInBase !== null ? Math.abs(fxResult.fields.amountInBase) : null,
+      fxRateToBase: fxResult.fields.fxRateToBase,
+      fxSource: fxResult.fields.fxSource,
+      fxLockedAt: fxResult.fields.fxLockedAt,
+      fxPair: fxResult.fields.fxPair,
     };
     
     const transactions = this.getAllTransactions();
@@ -156,7 +209,8 @@ class TransactionService {
       category: 'Transfer',
       amount: amount,
       currency: transaction.currency,
-      type: 'transfer'
+      type: 'transfer',
+      fxSource: fxResult.fields.fxSource,
     });
     
     return [debitEntry, creditEntry];
@@ -169,16 +223,19 @@ class TransactionService {
   // ============================================================================
 
   /**
-   * Update an existing transaction.
+   * Update an existing transaction with FX recalculation if amount/currency changes.
    * For transfers, delegates to updateTransfer to update both linked records.
    * 
    * @param id - Transaction ID to update
    * @param updates - Partial transaction fields to update
+   * @param manualFxRate - Optional manually provided exchange rate for recalculation
    * @returns Updated transaction or null if not found
    * 
-   * @review-focus Records category change history for non-transfer updates
+   * @review-focus 
+   * - Records category change history for non-transfer updates
+   * - FX is recalculated only if amount or currency changes
    */
-  updateTransaction(id: string, updates: Partial<Omit<Transaction, 'id'>>): Transaction | null {
+  updateTransaction(id: string, updates: Partial<Omit<Transaction, 'id'>>, manualFxRate?: number): Transaction | null {
     const transactions = this.getAllTransactions();
     const index = transactions.findIndex(t => t.id === id);
     
@@ -188,10 +245,43 @@ class TransactionService {
     
     // For transfers, update both linked records
     if (oldTransaction.transferId) {
-      return this.updateTransfer(oldTransaction.transferId, updates);
+      return this.updateTransfer(oldTransaction.transferId, updates, manualFxRate);
     }
     
-    const updatedTransaction = { ...oldTransaction, ...updates };
+    // Check if FX recalculation is needed (amount or currency changed)
+    const amountChanged = updates.amount !== undefined && updates.amount !== oldTransaction.amount;
+    const currencyChanged = updates.currency !== undefined && updates.currency !== oldTransaction.currency;
+    const needsFxRecalc = amountChanged || currencyChanged;
+
+    let updatedTransaction: Transaction = { ...oldTransaction, ...updates };
+
+    // Recalculate FX if needed
+    if (needsFxRecalc) {
+      const newAmount = updates.amount ?? oldTransaction.amount;
+      const newCurrency = updates.currency ?? oldTransaction.currency;
+      const transactionDate = updates.date ?? oldTransaction.date;
+
+      const fxResult = applyFxConversion(
+        Math.abs(newAmount),
+        newCurrency,
+        transactionDate,
+        manualFxRate
+      );
+
+      updatedTransaction = {
+        ...updatedTransaction,
+        currency: fxResult.fields.currency,
+        baseCurrency: fxResult.fields.baseCurrency,
+        amountInBase: fxResult.fields.amountInBase !== null
+          ? (newAmount < 0 ? -Math.abs(fxResult.fields.amountInBase) : Math.abs(fxResult.fields.amountInBase))
+          : null,
+        fxRateToBase: fxResult.fields.fxRateToBase,
+        fxSource: fxResult.fields.fxSource,
+        fxLockedAt: fxResult.fields.fxLockedAt,
+        fxPair: fxResult.fields.fxPair,
+      };
+    }
+
     transactions[index] = updatedTransaction;
     this.saveTransactions(transactions);
     
@@ -204,18 +294,20 @@ class TransactionService {
   }
 
   /**
-   * Update both halves of a transfer atomically.
+   * Update both halves of a transfer atomically with FX recalculation.
    * Maintains correct amount signs for each direction.
    * 
    * @param transferId - Shared transfer ID linking both entries
    * @param updates - Fields to update on both entries
+   * @param manualFxRate - Optional manually provided exchange rate
    * @returns The debit entry as representative, or null if not found
    * 
    * @review-focus
    * - Amount sign maintenance: out = negative, in = positive
    * - Shared fields (title, date, notes) update on both entries
+   * - Both legs share the same FX context
    */
-  updateTransfer(transferId: string, updates: Partial<Omit<Transaction, 'id'>>): Transaction | null {
+  updateTransfer(transferId: string, updates: Partial<Omit<Transaction, 'id'>>, manualFxRate?: number): Transaction | null {
     const transactions = this.getAllTransactions();
     const linkedTransactions = transactions.filter(t => t.transferId === transferId);
     
@@ -224,12 +316,48 @@ class TransactionService {
     
     const updatedIds: string[] = [];
     
+    // Check if FX recalculation is needed
+    const firstLeg = linkedTransactions[0];
+    const amountChanged = updates.amount !== undefined && Math.abs(updates.amount) !== Math.abs(firstLeg.amount);
+    const currencyChanged = updates.currency !== undefined && updates.currency !== firstLeg.currency;
+    const needsFxRecalc = amountChanged || currencyChanged;
+
+    // Calculate FX once for both legs if needed
+    let fxFields: {
+      currency: string;
+      baseCurrency: string;
+      amountInBase: number | null;
+      fxRateToBase: number | null;
+      fxSource: import('@/types/transaction').FxSource;
+      fxLockedAt: string | null;
+      fxPair: string | null;
+    } | null = null;
+
+    if (needsFxRecalc) {
+      const newAmount = updates.amount ?? Math.abs(firstLeg.amount);
+      const newCurrency = updates.currency ?? firstLeg.currency;
+      const transactionDate = updates.date ?? firstLeg.date;
+
+      const fxResult = applyFxConversion(
+        Math.abs(newAmount),
+        newCurrency,
+        transactionDate,
+        manualFxRate
+      );
+
+      fxFields = fxResult.fields;
+    }
+    
     linkedTransactions.forEach(t => {
       const index = transactions.findIndex(tx => tx.id === t.id);
       if (index === -1) return;
       
+      const newAmount = updates.amount !== undefined 
+        ? (t.transferDirection === 'out' ? -Math.abs(updates.amount) : Math.abs(updates.amount))
+        : t.amount;
+
       // Update shared fields
-      const updated: Transaction = {
+      let updated: Transaction = {
         ...t,
         title: updates.title ?? t.title,
         date: updates.date ?? t.date,
@@ -237,13 +365,24 @@ class TransactionService {
         toAccount: updates.toAccount ?? t.toAccount,
         notes: updates.notes ?? t.notes,
         currency: updates.currency ?? t.currency,
-        // Amount update requires special handling to maintain correct signs
-        // @review-risk Ensure sign is preserved based on direction
-        // REVIEW-ANCHOR: transfer-update-signs
-        amount: updates.amount !== undefined 
-          ? (t.transferDirection === 'out' ? -Math.abs(updates.amount) : Math.abs(updates.amount))
-          : t.amount,
+        amount: newAmount,
       };
+
+      // Apply FX fields if recalculated
+      if (fxFields) {
+        updated = {
+          ...updated,
+          currency: fxFields.currency,
+          baseCurrency: fxFields.baseCurrency,
+          amountInBase: fxFields.amountInBase !== null
+            ? (t.transferDirection === 'out' ? -Math.abs(fxFields.amountInBase) : Math.abs(fxFields.amountInBase))
+            : null,
+          fxRateToBase: fxFields.fxRateToBase,
+          fxSource: fxFields.fxSource,
+          fxLockedAt: fxFields.fxLockedAt,
+          fxPair: fxFields.fxPair,
+        };
+      }
       
       transactions[index] = updated;
       updatedIds.push(t.id);
