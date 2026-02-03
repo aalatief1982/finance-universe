@@ -164,6 +164,7 @@ export const parseCsvTransactions = (fileData: string): Transaction[] => {
       date: row.date,
       type: row.type as TransactionType,
       source: (row.source as TransactionSource) || 'import',
+      currency: row.currency || 'USD',
     };
 
     if (row.subcategory) txn.subcategory = row.subcategory;

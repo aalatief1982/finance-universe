@@ -10,7 +10,8 @@ describe('CSV utilities', () => {
       category: 'Food',
       date: '2024-05-01',
       type: 'expense',
-      source: 'manual'
+      source: 'manual',
+      currency: 'USD',
     },
     {
       id: '2',
@@ -21,7 +22,7 @@ describe('CSV utilities', () => {
       type: 'income',
       source: 'manual',
       notes: 'Monthly salary',
-      currency: 'USD'
+      currency: 'USD',
     }
   ];
 
@@ -54,6 +55,7 @@ describe('CSV utilities', () => {
         type: 'expense',
         source: 'manual',
         notes: 'line1\nline2',
+        currency: 'USD',
       },
     ];
 

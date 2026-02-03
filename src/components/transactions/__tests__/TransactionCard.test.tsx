@@ -14,6 +14,7 @@ describe('TransactionCard', () => {
     date: '2024-05-01T10:00:00Z',
     type: 'income',
     source: 'manual',
+    currency: 'USD',
   };
 
   it('renders title, amount and category', () => {

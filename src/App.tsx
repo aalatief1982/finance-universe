@@ -10,6 +10,8 @@ import {
 import { appUpdateService } from '@/services/AppUpdateService';
 import { ThemeProvider } from "@/components/theme-provider";
 import { fixCorruptedCurrencyCodes } from '@/utils/migration/fixCurrencyCodes';
+import { migrateFxFields } from '@/utils/migration/migrateFxFields';
+import { cleanExpiredRates } from '@/utils/fx/fx-cache';
 import Home from './pages/Home';
 
 import Transactions from './pages/Transactions';
@@ -514,13 +516,22 @@ function App() {
     checkInterval: 1000 * 60 * 60 // Check hourly
   });
 
+  // Run migrations and cache cleanup on startup
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return;
+      
+      // Legacy currency code migration
       fixCorruptedCurrencyCodes();
+      
+      // FX fields migration (adds baseCurrency, amountInBase, etc. to existing transactions)
+      migrateFxFields();
+      
+      // Clean expired FX rates from cache
+      cleanExpiredRates();
     } catch (error) {
       if (import.meta.env.MODE === 'development') {
-        console.error('[Migration] Currency code migration failed:', error);
+        console.error('[Migration] Startup migrations failed:', error);
       }
     }
   }, []);

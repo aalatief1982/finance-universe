@@ -20,12 +20,23 @@ export type TransactionType = 'income' | 'expense' | 'transfer';
 export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smart-paste' | 'sms-import';
 
 /**
+ * Source of the exchange rate used for conversion.
+ * - 'identity': Same currency, no conversion needed (rate = 1)
+ * - 'cached': Rate retrieved from local cache
+ * - 'api': Rate fetched from external API
+ * - 'manual': User manually entered the rate
+ * - 'missing': No rate available (offline/unavailable)
+ */
+export type FxSource = 'identity' | 'cached' | 'api' | 'manual' | 'missing';
+
+/**
  * Core transaction record used across storage, services, and UI layers.
  *
  * @invariants
  * - transferId links two records for transfers (one out, one in)
  * - transferDirection is 'out' for debit (negative), 'in' for credit (positive)
  * - category should resolve to a stored Category ID or label
+ * - FX fields are populated at save time and locked for audit purposes
  */
 export interface Transaction {
   id: string;
@@ -46,8 +57,25 @@ export interface Transaction {
     },
     rawMessage?: string;
   };
-  currency?: string;
-  person?: string ;
+  
+  // ============ FX Fields (required for multi-currency support) ============
+  /** ISO 4217 currency code of the transaction (required) */
+  currency: string;
+  /** User's base currency at time of save - snapshot for audit */
+  baseCurrency?: string;
+  /** Amount converted to base currency, null if unconverted */
+  amountInBase?: number | null;
+  /** Exchange rate used (currency -> baseCurrency), null if unconverted */
+  fxRateToBase?: number | null;
+  /** Source of the exchange rate */
+  fxSource?: FxSource;
+  /** When the rate was locked (ISO timestamp), null if unconverted */
+  fxLockedAt?: string | null;
+  /** Currency pair notation, e.g., "USD->SAR" */
+  fxPair?: string | null;
+  // =========================================================================
+  
+  person?: string;
   fromAccount?: string;
   toAccount?: string;
   country?: string;

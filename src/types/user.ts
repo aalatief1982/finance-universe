@@ -41,6 +41,23 @@ export interface User {
   };
 }
 
+/**
+ * FX fallback mode determines how missing exchange rates are handled.
+ */
+export type FxFallbackMode = 'manual' | 'cachedOnly' | 'allowMissing';
+
+/**
+ * FX-specific user preferences.
+ */
+export interface FxUserPreferences {
+  /** Optional external rate provider identifier */
+  provider?: string;
+  /** How to handle missing rates */
+  fallbackMode: FxFallbackMode;
+  /** Whether to show warnings for unconverted transactions */
+  showUnconvertedWarning: boolean;
+}
+
 export interface UserPreferences {
   currency: string;
   language: string;
@@ -93,6 +110,8 @@ export interface UserPreferences {
     rolloverUnspent: boolean;
     startDay?: number; // day of month for monthly budgets
   };
+  /** FX conversion preferences */
+  fx?: FxUserPreferences;
 }
 
 export type ProfileSection = 'personal' | 'preferences' | 'security' | 'notifications' | 'data' | 'categories' | 'budgets';
