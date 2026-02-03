@@ -14,13 +14,20 @@ interface SMSTransactionScreenProps {
   onCancel: () => void;
 }
 
+interface SmsMessage {
+  id: string;
+  sender: string;
+  message: string;
+  date: Date;
+}
+
 const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProps) => {
-  const [smsMessages, setSmsMessages] = useState<any[]>([]);
+  const [smsMessages, setSmsMessages] = useState<SmsMessage[]>([]);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const { processTransactionsFromSMS } = useTransactions();
   const { user } = useUser();
-  const [groupedMessages, setGroupedMessages] = useState<Record<string, any[]>>({});
+  const [groupedMessages, setGroupedMessages] = useState<Record<string, SmsMessage[]>>({});
   
   // Get SMS messages on mount
   useEffect(() => {
@@ -37,7 +44,7 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
       : mockMessages;
     
     // Group messages by provider/sender
-    const grouped = filteredMessages.reduce((groups: Record<string, any[]>, message) => {
+    const grouped = filteredMessages.reduce((groups: Record<string, SmsMessage[]>, message: SmsMessage) => {
       // Extract provider name - either use sender directly or try to extract from message
       const providerName = extractProviderName(message.sender, message.message);
       

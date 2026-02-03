@@ -23,16 +23,42 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Transaction } from '@/types/transaction';
 import { getStoredTransactions, storeTransactions, storeTransaction, removeTransaction } from '@/utils/storage-utils';
 
+interface TransactionSummary {
+  income: number;
+  expenses: number;
+  balance: number;
+}
+
+interface CategorySummary {
+  name: string;
+  category: string;
+  transactions: Transaction[];
+  total: number;
+  value: number;
+}
+
+interface TimePeriodData {
+  date: string;
+  income: number;
+  expense: number;
+}
+
+interface SmsMessageInput {
+  sender?: string;
+  body?: string;
+  date?: Date;
+}
+
 interface TransactionContextType {
   transactions: Transaction[];
   addTransactions: (newTransactions: Transaction[]) => void;
   updateTransaction: (updatedTransaction: Transaction) => void;
   deleteTransaction: (transactionId: string) => void;
   clearTransactions: () => void;
-  getTransactionsSummary: () => any;
-  getTransactionsByCategory: () => any;
-  getTransactionsByTimePeriod: (period?: string) => any;
-  processTransactionsFromSMS: (messages: any[]) => Transaction[];
+  getTransactionsSummary: () => TransactionSummary;
+  getTransactionsByCategory: () => CategorySummary[];
+  getTransactionsByTimePeriod: (period?: string) => TimePeriodData[];
+  processTransactionsFromSMS: (messages: SmsMessageInput[]) => Transaction[];
   addTransaction: (transaction: Transaction) => void;
 }
 
@@ -157,7 +183,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
     };
   };
 
-  const getTransactionsByCategory = () => {
+  const getTransactionsByCategory = (): CategorySummary[] => {
     // Group by category logic would go here
     const categorized: Record<string, Transaction[]> = {};
     
@@ -169,15 +195,20 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       categorized[category].push(transaction);
     });
     
-    return Object.entries(categorized).map(([category, transactions]) => ({
-      category,
-      transactions,
-      total: transactions.reduce((sum, t) => sum + Number(t.amount), 0)
-    }));
+    return Object.entries(categorized).map(([category, txns]) => {
+      const total = txns.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+      return {
+        name: category,
+        category,
+        transactions: txns,
+        total,
+        value: total
+      };
+    });
   };
 
-  const getTransactionsByTimePeriod = (period = 'month') => {
-    // Time period grouping logic would go here
+  const getTransactionsByTimePeriod = (period = 'month'): TimePeriodData[] => {
+    // Time period grouping logic
     const now = new Date();
     let startDate: Date;
     
@@ -199,13 +230,35 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         startDate.setMonth(now.getMonth() - 1);
     }
     
-    return transactions.filter(t => {
+    // Filter transactions in the period
+    const periodTransactions = transactions.filter(t => {
       const transactionDate = new Date(t.date);
       return transactionDate >= startDate && transactionDate <= now;
     });
+    
+    // Group by date and calculate income/expense
+    const groupedByDate: Record<string, { income: number; expense: number }> = {};
+    
+    periodTransactions.forEach(t => {
+      const dateKey = new Date(t.date).toISOString().split('T')[0];
+      if (!groupedByDate[dateKey]) {
+        groupedByDate[dateKey] = { income: 0, expense: 0 };
+      }
+      if (t.type === 'income') {
+        groupedByDate[dateKey].income += Math.abs(Number(t.amount));
+      } else {
+        groupedByDate[dateKey].expense += Math.abs(Number(t.amount));
+      }
+    });
+    
+    return Object.entries(groupedByDate).map(([date, data]) => ({
+      date,
+      income: data.income,
+      expense: data.expense
+    }));
   };
 
-  const processTransactionsFromSMS = (messages: any[]): Transaction[] => {
+  const processTransactionsFromSMS = (messages: SmsMessageInput[]): Transaction[] => {
     // SMS processing logic would go here
     // This is a mock implementation
     return messages.map(msg => ({
