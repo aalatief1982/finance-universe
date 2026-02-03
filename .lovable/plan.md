@@ -53,7 +53,22 @@
   - Updated `getYearlyProgress()` - Aggregates FX-aware spending across yearly budgets
 - [x] Created `src/components/budget/BudgetUnconvertedWarning.tsx` - Warning component for budget dashboards
 
-### 🔲 Phase 6: Export & Final Polish
+### ✅ Phase 6: Export & Final Polish (COMPLETED)
+- [x] Updated `src/utils/csv.ts`
+  - Export now includes FX columns: baseCurrency, amountInBase, fxRateToBase, fxSource, fxLockedAt, fxPair
+  - Import parses FX fields for round-trip support
+  - Added `includeFxFields` option (default: true) for backward compatibility
+- [x] All CSV tests passing
+
+## Implementation Complete! 🎉
+
+All 6 phases of the Multi-Currency FX Support plan have been implemented:
+1. ✅ Core Data Model - FX types, cache, conversion service, migration
+2. ✅ TransactionService Integration - FX fields applied at save time
+3. ✅ Transaction Entry UI - FX estimates, manual rate input, warnings
+4. ✅ Dashboard & Analytics - FX-aware aggregation, unconverted warnings
+5. ✅ Budget Integration - FX-aware spending calculations
+6. ✅ CSV Export - Full FX audit trail in exports
 
 ---
 
