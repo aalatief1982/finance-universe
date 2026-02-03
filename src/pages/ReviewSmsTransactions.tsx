@@ -43,7 +43,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
-import { generateDefaultTitle } from '@/components/TransactionEditForm';
+import { generateDefaultTitle } from '@/components/transaction-utils';
 import { useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';

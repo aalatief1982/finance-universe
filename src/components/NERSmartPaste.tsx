@@ -119,7 +119,7 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
           undefined
         );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (import.meta.env.MODE === 'development') {
         console.error('[SmartPaste] Extraction error:', err);
       }

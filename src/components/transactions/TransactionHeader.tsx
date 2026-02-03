@@ -6,11 +6,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import ExpenseForm from '@/components/ExpenseForm';
+import type { TransactionFormValues } from '@/components/forms/transaction-form-schema';
 
 interface TransactionHeaderProps {
   isAddingExpense: boolean;
   setIsAddingExpense: (isAdding: boolean) => void;
-  onAddTransaction: (formData: any) => void;
+  onAddTransaction: (formData: TransactionFormValues) => void;
   categories: string[];
   filtersVisible?: boolean;
   setFiltersVisible?: (visible: boolean) => void;

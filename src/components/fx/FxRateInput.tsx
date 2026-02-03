@@ -118,7 +118,6 @@ const FxRateInput: React.FC<FxRateInputProps> = ({
               value={rateInput}
               onChange={(e) => setRateInput(e.target.value)}
               className="text-lg"
-              autoFocus
             />
           </div>
 

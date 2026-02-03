@@ -28,6 +28,7 @@ import { demoTransactionService } from '@/services/DemoTransactionService';
 import { useToast } from '@/hooks/use-toast';
 import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
+import type { Transaction } from '@/types/transaction';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 const DataManagementSettings = () => {
@@ -91,7 +92,7 @@ const DataManagementSettings = () => {
         try {
           const text = event.target?.result as string;
           const isCsv = file.name.toLowerCase().endsWith('.csv');
-          const data = isCsv ? parseCsvTransactions(text) : JSON.parse(text);
+          const data = isCsv ? parseCsvTransactions(text) : (JSON.parse(text) as Transaction[]);
 
           if (!Array.isArray(data) || data.length === 0) {
             throw new Error('No valid transactions');
@@ -104,8 +105,8 @@ const DataManagementSettings = () => {
 
           if (!confirmImport) return;
 
-          const merged = [...existing, ...(data as any[])];
-          storeTransactions(merged as any);
+          const merged = [...existing, ...data];
+          storeTransactions(merged);
           toast({
             title: "Import successful",
             description: `Added ${data.length} transactions successfully.`,

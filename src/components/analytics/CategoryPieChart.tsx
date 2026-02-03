@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, type TooltipProps } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { CategoryData } from '@/services/AnalyticsService';
 
@@ -14,12 +14,12 @@ interface CategoryPieChartProps {
 
 const CategoryPieChart = ({ categoryData, colors }: CategoryPieChartProps) => {
   // Custom tooltip for the chart
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
           <p className="font-medium">{payload[0].name}</p>
-          <p className="text-primary">{formatCurrency(payload[0].value as number)}</p>
+          <p className="text-primary">{formatCurrency(Number(payload[0].value))}</p>
         </div>
       );
     }

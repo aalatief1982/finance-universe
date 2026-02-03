@@ -21,7 +21,19 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  type TooltipProps,
+} from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { Info } from 'lucide-react';
 import { Tooltip as UiTooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -46,12 +58,22 @@ interface ExpenseChartProps {
 const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 const CHART_MARGIN = { top: 20, right: 20, left: 20, bottom: 20 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type ChartTooltipProps = TooltipProps<number, string>;
+
+interface AxisTickProps {
+  x?: number;
+  y?: number;
+  payload?: {
+    value?: string | number;
+  };
+}
+
+const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
         <p className="font-medium">{label}</p>
-        <p className="text-primary">{formatCurrency(Math.abs(payload[0].value))}</p>
+        <p className="text-primary">{formatCurrency(Math.abs(Number(payload[0].value)))}</p>
       </div>
     );
   }
@@ -59,9 +81,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const BarTooltip = (total: number) => ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const { name, value } = payload[0].payload;
+const BarTooltip = (total: number) => {
+  const BarTooltipRenderer = ({ active, payload }: ChartTooltipProps) => {
+    if (!active || !payload?.length) {
+      return null;
+    }
+
+    const item = payload[0]?.payload as ExpenseBySubcategory | undefined;
+    if (!item) {
+      return null;
+    }
+
+    const { name, value } = item;
     const percent = total ? ((value / total) * 100).toFixed(1) : null;
     return (
       <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
@@ -72,12 +103,15 @@ const BarTooltip = (total: number) => ({ active, payload }: any) => {
         </p>
       </div>
     );
-  }
-  return null;
+  };
+
+  BarTooltipRenderer.displayName = 'BarTooltip';
+
+  return BarTooltipRenderer;
 };
 
-const YAxisTick = ({ x, y, payload }: any) => {
-  const text = String(payload.value);
+const YAxisTick = ({ x = 0, y = 0, payload }: AxisTickProps) => {
+  const text = String(payload?.value ?? '');
   const truncated = text.length > 10 ? `${text.slice(0, 10)}…` : text;
   return (
     <g transform={`translate(${x},${y})`}>

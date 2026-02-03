@@ -421,7 +421,6 @@ const PhoneVerification = ({
               </label>
               <div 
                 className="flex justify-center py-2"
-                onKeyDown={handleCodeKeyDown}
                 role="group"
                 aria-labelledby="code-label"
               >
@@ -430,6 +429,8 @@ const PhoneVerification = ({
                   value={verificationCode}
                   onChange={setVerificationCode}
                   disabled={isLoading}
+                  onKeyDown={handleCodeKeyDown}
+                  aria-labelledby="code-label"
                 >
                   <InputOTPGroup>
                     {[0, 1, 2, 3].map((index) => (

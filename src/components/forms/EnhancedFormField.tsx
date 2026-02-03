@@ -18,22 +18,25 @@
  */
 import React, { ReactNode } from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import { UseFormReturn } from 'react-hook-form';
+import type { ControllerRenderProps, FieldValues, Path, UseFormReturn } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
-interface EnhancedFormFieldProps {
-  form: UseFormReturn<any>;
-  name: string;
+interface EnhancedFormFieldProps<TFieldValues extends FieldValues> {
+  form: UseFormReturn<TFieldValues>;
+  name: Path<TFieldValues>;
   label?: string;
   description?: string;
   required?: boolean;
   showValidationState?: boolean;
   className?: string;
-  children: (field: any, fieldState: 'default' | 'error' | 'success' | 'loading') => ReactNode;
+  children: (
+    field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
+    fieldState: 'default' | 'error' | 'success' | 'loading'
+  ) => ReactNode;
 }
 
-const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
+const EnhancedFormField = <TFieldValues extends FieldValues>({
   form,
   name,
   label,
@@ -42,7 +45,7 @@ const EnhancedFormField: React.FC<EnhancedFormFieldProps> = ({
   showValidationState = true,
   className,
   children
-}) => {
+}: EnhancedFormFieldProps<TFieldValues>) => {
   const fieldError = form.formState.errors[name];
   const fieldValue = form.watch(name);
   const isLoading = form.formState.isSubmitting;

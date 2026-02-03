@@ -6,7 +6,8 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer
+  ResponsiveContainer,
+  type TooltipProps,
 } from 'recharts';
 import { format, eachDayOfInterval, parseISO, isSameDay } from 'date-fns';
 import { Budget } from '@/models/budget';
@@ -20,6 +21,15 @@ interface SpendingTrendChartProps {
   progress: BudgetProgress;
   transactions: Transaction[];
   className?: string;
+}
+
+interface SpendingTrendPoint {
+  date: string;
+  shortDate: string;
+  spent: number | null;
+  ideal: number;
+  budget: number;
+  dayExpense: number | null;
 }
 
 export function SpendingTrendChart({
@@ -64,10 +74,10 @@ export function SpendingTrendChart({
   }, [budget, progress, transactions]);
 
   // Custom tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (!active || !payload?.length) return null;
     
-    const data = payload[0]?.payload;
+    const data = payload[0]?.payload as SpendingTrendPoint | undefined;
     if (!data) return null;
     
     return (

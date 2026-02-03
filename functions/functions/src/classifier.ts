@@ -4,7 +4,7 @@ export interface ClassificationResult {
   vendor?: string;
   type?: string;
   confidence?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export async function classifyText(text: string): Promise<ClassificationResult> {

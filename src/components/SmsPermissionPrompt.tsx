@@ -32,7 +32,7 @@ import { useSmsPermission } from '@/hooks/useSmsPermission';
 import { useUser } from '@/context/user/UserContext';
 import { safeStorage } from '@/utils/safe-storage';
 import { toast } from '@/hooks/use-toast';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import SmsImportService from '@/services/SmsImportService';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useNavigate } from 'react-router-dom';
@@ -108,7 +108,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
     setPermanentlyDenied(false);
 
     // Add a one-time listener for app resume so we can immediately check permission when app regains focus
-    let resumeListener: any | null = null;
+    let resumeListener: PluginListenerHandle | null = null;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const Plugins = (window as any).Plugins ?? (window as any).CapacitorPlugins ?? null;
@@ -181,13 +181,15 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
 
     try {
       const REQUEST_TIMEOUT = 15000; // ms
-      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ timedOut: true }), REQUEST_TIMEOUT));
+      type TimeoutResult = { timedOut: true };
+      const timeoutPromise = new Promise<TimeoutResult>(resolve =>
+        setTimeout(() => resolve({ timedOut: true }), REQUEST_TIMEOUT)
+      );
 
       // Race the real permission request against a client-side timeout to avoid hanging forever
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = (await Promise.race([smsPermissionService.requestPermission(), timeoutPromise])) as any;
+      const result = await Promise.race([smsPermissionService.requestPermission(), timeoutPromise]);
 
-      if (result?.timedOut) {
+      if ('timedOut' in result) {
         console.warn('[SmsPermissionPrompt] requestPermission timed out after', REQUEST_TIMEOUT, 'ms');
         toast({
           title: 'Request timed out',
