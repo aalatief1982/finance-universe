@@ -33,6 +33,7 @@ import ReviewSmsTransactions from '@/pages/ReviewSmsTransactions';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
+import About from './pages/About';
 import AccountsPage from './pages/budget/AccountsPage';
 import SetBudgetPage from './pages/budget/SetBudgetPage';
 import BudgetReportPage from './pages/budget/BudgetReportPage';
@@ -506,6 +507,7 @@ function AppRoutes() {
         <Route path="/budget/set" element={<SetBudgetPage />} />
         <Route path="/budget/report" element={<BudgetReportPage />} />
         <Route path="/budget/insights" element={<BudgetInsightsPage />} />
+        <Route path="/about" element={<About />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

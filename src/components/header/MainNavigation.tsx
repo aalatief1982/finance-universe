@@ -14,6 +14,7 @@ import {
   Upload,
   BrainCircuit,
   Lock,
+  Info,
 } from "lucide-react";
 import { logAnalyticsEvent } from "@/utils/firebase-analytics";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
@@ -29,11 +30,12 @@ const iconMap = {
   User: User,
   Upload: Upload,
   BrainCircuit: BrainCircuit,
+  Info: Info,
 };
 
 export const MainNavigation: React.FC = () => {
   const location = useLocation();
-  const navItems = getNavItems();
+  const navItems = getNavItems().filter((item) => !item.mobileOnly);
   const [betaActive] = React.useState(() => isBetaActive());
 
   return (
