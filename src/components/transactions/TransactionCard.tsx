@@ -11,6 +11,7 @@ import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
 		import { Button } from '@/components/ui/button';
 		import { cn } from '@/lib/utils';
 		import { format } from 'date-fns';
+import { UnconvertedBadge } from '@/components/fx';
 
 		interface TransactionCardProps {
 		  transaction: Transaction;
@@ -80,6 +81,23 @@ import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
                                                 {isIncome ? '+' : '-'}
                                                 {formatCurrency(Math.abs(transaction.amount), transaction.currency)}
                                           </span>
+                                          {/* FX conversion indicator */}
+                                          {transaction.baseCurrency && 
+                                           transaction.currency?.toUpperCase() !== transaction.baseCurrency?.toUpperCase() && (
+                                            <div className="mt-0.5">
+                                              {transaction.amountInBase !== null && transaction.amountInBase !== undefined ? (
+                                                <span className="text-xs text-muted-foreground">
+                                                  ≈ {formatCurrency(Math.abs(transaction.amountInBase), transaction.baseCurrency)}
+                                                </span>
+                                              ) : (
+                                                <UnconvertedBadge
+                                                  fromCurrency={transaction.currency}
+                                                  toCurrency={transaction.baseCurrency}
+                                                  size="sm"
+                                                />
+                                              )}
+                                            </div>
+                                          )}
                                         </div>
 				  </div>
 				  
