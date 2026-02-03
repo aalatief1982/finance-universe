@@ -44,7 +44,15 @@
   - All charts use amountInBase for multi-currency aggregation
 - [x] All 18 AnalyticsService tests passing
 
-### 🔲 Phase 5: Budget & Account Integration
+### ✅ Phase 5: Budget & Account Integration (COMPLETED)
+- [x] Updated `src/models/budget-period.ts`
+  - Added FX fields to BudgetProgress: unconvertedCount, unconvertedCurrencies, isFullyConverted, unconvertedByNative
+- [x] Updated `src/services/BudgetService.ts`
+  - Added `getSpentAmountFxAware()` - Uses amountInBase for spending with unconverted tracking
+  - Updated `getBudgetProgress()` - Now returns FX status in progress metrics
+  - Updated `getYearlyProgress()` - Aggregates FX-aware spending across yearly budgets
+- [x] Created `src/components/budget/BudgetUnconvertedWarning.tsx` - Warning component for budget dashboards
+
 ### 🔲 Phase 6: Export & Final Polish
 
 ---

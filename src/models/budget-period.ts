@@ -48,6 +48,16 @@ export interface BudgetProgress {
   daysRemaining: number;
   dailyBudgetRemaining: number;
   triggeredAlerts: number[]; // Alert thresholds that have been exceeded
+  
+  // FX-aware fields
+  /** Number of transactions with missing amountInBase */
+  unconvertedCount?: number;
+  /** Currencies that couldn't be converted */
+  unconvertedCurrencies?: string[];
+  /** Whether all transactions are fully converted to base currency */
+  isFullyConverted?: boolean;
+  /** Spending breakdown by native currency for unconverted transactions */
+  unconvertedByNative?: Record<string, number>;
 }
 
 /**
