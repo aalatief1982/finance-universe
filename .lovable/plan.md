@@ -31,7 +31,19 @@
 - [x] Updated `src/components/ExpenseForm.tsx` - Added FX estimate display and manual rate dialog
 - [x] Updated `src/components/SmsTransactionConfirmation.tsx` - Added FX indicator badges
 
-### 🔲 Phase 4: Dashboard & Analytics (NEXT)
+### ✅ Phase 4: Dashboard & Analytics (COMPLETED)
+- [x] Updated `src/services/AnalyticsService.ts`
+  - Added `getFxAwareTotals()` - Uses amountInBase with unconverted tracking
+  - Added `getFxAwareCategoryData()` - Category data using base currency amounts
+  - Added `getFxAwareSubcategoryData()` - Subcategory data with FX awareness
+  - Added `getFxAwareTimelineData()` - Timeline data using amountInBase
+- [x] Created `src/components/dashboard/UnconvertedWarningBanner.tsx` - Warning banner for missing rates
+- [x] Updated `src/pages/Home.tsx`
+  - Dashboard now uses FX-aware totals from AnalyticsService
+  - Shows warning banner when transactions have missing exchange rates
+  - All charts use amountInBase for multi-currency aggregation
+- [x] All 18 AnalyticsService tests passing
+
 ### 🔲 Phase 5: Budget & Account Integration
 ### 🔲 Phase 6: Export & Final Polish
 
