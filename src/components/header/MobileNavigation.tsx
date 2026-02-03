@@ -12,6 +12,7 @@ import {
   Upload,
   BrainCircuit,
   Lock,
+  ArrowLeftRight,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ const iconMap = {
   User: User,
   Upload: Upload,
   BrainCircuit: BrainCircuit,
+  ArrowLeftRight: ArrowLeftRight,
 };
 
 interface MobileNavigationProps {

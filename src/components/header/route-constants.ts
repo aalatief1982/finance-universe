@@ -23,6 +23,7 @@ export const routeTitleMap: Record<string, string> = {
   "/budget/set": "Set Budget",
   "/budget/report": "Budget vs Actual",
   "/budget/insights": "Suggestions & Insights",
+  "/exchange-rates": "Exchange Rates",
 };
 
 // Navigation items that appear in the header
@@ -63,6 +64,12 @@ export const getNavItems = () => {
       path: "/process-sms",
       icon: "MessageSquare",
       description: "Import transactions from SMS",
+    },
+    {
+      title: "Exchange Rates",
+      path: "/exchange-rates",
+      icon: "ArrowLeftRight",
+      description: "Manage currency exchange rates",
     },
     {
       title: "Settings",

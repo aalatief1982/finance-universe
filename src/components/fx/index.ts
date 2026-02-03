@@ -9,3 +9,4 @@ export { default as UnconvertedBadge } from './UnconvertedBadge';
 export { default as FxConvertedEstimate } from './FxConvertedEstimate';
 export { default as FxRateInput } from './FxRateInput';
 export { default as FxInfoDisplay } from './FxInfoDisplay';
+export { default as ExchangeRateDialog } from './ExchangeRateDialog';

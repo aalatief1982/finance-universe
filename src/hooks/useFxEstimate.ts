@@ -13,6 +13,7 @@
 import { useMemo } from 'react';
 import { getBaseCurrency, needsConversion } from '@/services/FxConversionService';
 import { getCachedRate } from '@/utils/fx/fx-cache';
+import { getRate as getPermanentRate } from '@/services/ExchangeRateService';
 import { roundToCurrencyPrecision, FxSource } from '@/types/fx';
 
 export interface FxEstimate {
@@ -63,7 +64,22 @@ export function useFxEstimate(
       };
     }
 
-    // Lookup rate from cache
+    // First check permanent ExchangeRateService
+    const permanentResult = getPermanentRate(txCurrency, baseCurrency, txDate);
+    
+    if (permanentResult !== null) {
+      const converted = roundToCurrencyPrecision(txAmount * permanentResult.rate, baseCurrency);
+      return {
+        needsConversion: true,
+        baseCurrency,
+        convertedAmount: converted,
+        rate: permanentResult.rate,
+        source: permanentResult.source === 'manual' ? 'manual' as FxSource : 'cached' as FxSource,
+        pairDisplay: `${txCurrency} → ${baseCurrency}`,
+      };
+    }
+
+    // Fallback to cache lookup
     const rateResult = getCachedRate(txDate, txCurrency, baseCurrency);
 
     if (rateResult.rate !== null) {

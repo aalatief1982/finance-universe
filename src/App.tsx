@@ -39,6 +39,7 @@ import BudgetReportPage from './pages/budget/BudgetReportPage';
 import BudgetInsightsPage from './pages/budget/BudgetInsightsPage';
 import BudgetHubPage from './pages/budget/BudgetHubPage';
 import BudgetDetailPage from './pages/budget/BudgetDetailPage';
+import ExchangeRates from './pages/ExchangeRates';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -498,6 +499,7 @@ function AppRoutes() {
         <Route path="/sms/vendors" element={<VendorCategorization />} />
         <Route path="/vendor-mapping" element={<VendorMapping />} />
         <Route path="/review-sms-transactions" element={<ReviewSmsTransactions />} />
+        <Route path="/exchange-rates" element={<ExchangeRates />} />
         <Route path="/budget" element={<BudgetHubPage />} />
         <Route path="/budget/:budgetId" element={<BudgetDetailPage />} />
         <Route path="/budget/accounts" element={<AccountsPage />} />

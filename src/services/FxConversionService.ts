@@ -30,6 +30,7 @@ import {
   createFxPair,
 } from '@/types/fx';
 import { getCachedRate, setCachedRate } from '@/utils/fx/fx-cache';
+import { getRate as getPermanentRate } from '@/services/ExchangeRateService';
 
 /**
  * Default FX preferences when not configured.
@@ -117,7 +118,25 @@ export const applyFxConversion = (
     return { success: true, fields };
   }
 
-  // STEP 3: Check cache for rate
+  // STEP 3: Check permanent ExchangeRateService first
+  const permanentResult = getPermanentRate(transactionCurrency, baseCurrency, transactionDate);
+  
+  if (permanentResult !== null) {
+    const convertedAmount = amount * permanentResult.rate;
+    const fields: TransactionFxFields = {
+      currency: transactionCurrency.toUpperCase(),
+      baseCurrency: baseCurrency.toUpperCase(),
+      amountInBase: roundToCurrencyPrecision(convertedAmount, baseCurrency),
+      fxRateToBase: permanentResult.rate,
+      fxSource: permanentResult.source === 'manual' ? 'manual' : 'cached',
+      fxLockedAt: now,
+      fxPair: createFxPair(transactionCurrency, baseCurrency),
+    };
+
+    return { success: true, fields };
+  }
+
+  // STEP 4: Check temporary cache for rate (fallback)
   const cachedResult = getCachedRate(transactionDate, transactionCurrency, baseCurrency);
 
   if (cachedResult.rate !== null && cachedResult.source !== 'missing') {
@@ -135,7 +154,7 @@ export const applyFxConversion = (
     return { success: true, fields };
   }
 
-  // STEP 4: No rate available - handle based on user preference
+  // STEP 5: No rate available - handle based on user preference
   const { fallbackMode } = getFxPreferences();
 
   // For 'allowMissing' mode, save with null values
