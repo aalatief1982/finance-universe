@@ -31,7 +31,7 @@
  */
 
 import { safeStorage } from "@/utils/safe-storage";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import {
   getCategoriesForType,
@@ -40,7 +40,7 @@ import {
   PEOPLE,
   CURRENCIES,
 } from '@/lib/categories-data';
-import { Plus, Calculator, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Calculator, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
 import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -55,8 +55,11 @@ import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/ven
 import VendorAutocomplete from './VendorAutocomplete';
 import AccountAutocomplete from './AccountAutocomplete';
 import FxEstimateDisplay from '@/components/forms/FxEstimateDisplay';
-import { FxInfoDisplay, FxRateInput } from '@/components/fx';
+import { FxInfoDisplay, FxRateInput, ExchangeRateDialog } from '@/components/fx';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { getRate, getLatestRate, upsertRate } from '@/services/ExchangeRateService';
+import { getUserSettings } from '@/utils/storage-utils';
+import { roundToCurrencyPrecision } from '@/types/fx';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -177,9 +180,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   };
   const [currencies, setCurrencies] = useState<string[]>(() => loadCurrencies());
   const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
+  const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
   const [newCurrency, setNewCurrency] = useState({ code: '', country: '', rate: '' });
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [calcExpr, setCalcExpr] = useState('');
+  const [manualExchangeRate, setManualExchangeRate] = useState<string>('');
 
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState<Partial<Record<keyof Transaction, boolean>>>({});
@@ -254,6 +259,37 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       source: 'manual',
     };
   });
+
+  // FX state derived from editedTransaction
+  const baseCurrency = getUserSettings()?.currency || 'SAR';
+  const needsFxConversion = editedTransaction.currency?.toUpperCase() !== baseCurrency.toUpperCase();
+  
+  // Calculate converted amount based on manual rate or lookup
+  const currentRate = manualExchangeRate ? parseFloat(manualExchangeRate) : null;
+  const convertedAmount = useMemo(() => {
+    if (!needsFxConversion) return editedTransaction.amount;
+    if (currentRate && currentRate > 0) {
+      return roundToCurrencyPrecision(Math.abs(editedTransaction.amount) * currentRate, baseCurrency);
+    }
+    // Try to get rate from permanent lookup
+    const lookupResult = getRate(editedTransaction.currency || '', baseCurrency, editedTransaction.date || new Date().toISOString());
+    if (lookupResult) {
+      return roundToCurrencyPrecision(Math.abs(editedTransaction.amount) * lookupResult.rate, baseCurrency);
+    }
+    return null;
+  }, [needsFxConversion, editedTransaction.amount, editedTransaction.currency, editedTransaction.date, currentRate, baseCurrency]);
+
+  // Auto-populate rate from lookup when currency changes
+  useEffect(() => {
+    if (needsFxConversion && !manualExchangeRate) {
+      const lookupResult = getLatestRate(editedTransaction.currency || '', baseCurrency);
+      if (lookupResult) {
+        setManualExchangeRate(lookupResult.rate.toString());
+      }
+    } else if (!needsFxConversion) {
+      setManualExchangeRate('');
+    }
+  }, [editedTransaction.currency, baseCurrency, needsFxConversion]);
 
   useEffect(() => {
     if (transaction && fieldConfidences) {
@@ -349,6 +385,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       const arr: CustomCurrency[] = raw ? JSON.parse(raw) : [];
       arr.push(currencyObj);
       safeStorage.setItem(CUSTOM_CURRENCIES_KEY, JSON.stringify(arr));
+      
+      // Also save the rate to ExchangeRateService for permanent lookup
+      if (currencyObj.conversionRate && currencyObj.conversionRate > 0) {
+        upsertRate(
+          currencyObj.code,
+          baseCurrency,
+          currencyObj.conversionRate,
+          new Date().toISOString().split('T')[0],
+          'manual'
+        );
+        // Set the manual rate in form
+        setManualExchangeRate(currencyObj.conversionRate.toString());
+      }
     } catch {
       // ignore
     }
@@ -514,6 +563,26 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       finalTransaction.date = toISOFormat(finalTransaction.date);
     }
 
+    // Apply manual exchange rate if provided
+    const rateValue = manualExchangeRate ? parseFloat(manualExchangeRate) : null;
+    if (needsFxConversion && rateValue && rateValue > 0) {
+      finalTransaction.fxRateToBase = rateValue;
+      finalTransaction.amountInBase = roundToCurrencyPrecision(Math.abs(rawAmount) * rateValue, baseCurrency);
+      finalTransaction.baseCurrency = baseCurrency;
+      finalTransaction.fxSource = 'manual';
+      finalTransaction.fxLockedAt = new Date().toISOString();
+      finalTransaction.fxPair = `${finalTransaction.currency}->${baseCurrency}`;
+      
+      // Also save rate to permanent lookup for future use
+      upsertRate(
+        finalTransaction.currency || '',
+        baseCurrency,
+        rateValue,
+        finalTransaction.date,
+        'manual'
+      );
+    }
+
     onSave(finalTransaction);
     setShowFeedback(true);
   };
@@ -601,7 +670,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             className={cn(
               'w-full text-sm',
               inputPadding,
-              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+              'rounded-md border-border focus:ring-ring',
               darkFieldClass,
               hasLowConfidence('currency', fieldConfidences) && 'border-warning'
             )}
@@ -618,19 +687,62 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             ))}
           </SelectContent>
         </Select>
-        <Button type="button" variant="outline" size="icon" onClick={() => setAddCurrencyOpen(true)}>
+        <Button type="button" variant="outline" size="icon" onClick={() => setAddCurrencyOpen(true)} title="Add new currency">
           <Plus className="size-4" />
         </Button>
+        {needsFxConversion && (
+          <Button type="button" variant="outline" size="icon" onClick={() => setEditRateDialogOpen(true)} title="Edit exchange rate">
+            <Pencil className="size-4" />
+          </Button>
+        )}
         {renderFeedbackIcons('currency')}
       </div>
       </div>
 
-      {/* FX Estimate Display - shows converted amount preview for new transactions */}
-      <FxEstimateDisplay
-        amount={Math.abs(editedTransaction.amount)}
-        currency={editedTransaction.currency}
-        date={editedTransaction.date}
-      />
+      {/* Editable Exchange Rate field - only visible when currency differs from base */}
+      {needsFxConversion && (
+        <div className={rowClass}>
+          <label className={labelClass} htmlFor="transaction-exchange-rate">Rate</label>
+          <div className="flex w-full items-center gap-1">
+            <Input
+              id="transaction-exchange-rate"
+              type="number"
+              step="0.00000001"
+              min="0"
+              value={manualExchangeRate}
+              onChange={(e) => setManualExchangeRate(e.target.value)}
+              placeholder={`1 ${editedTransaction.currency || 'USD'} = ? ${baseCurrency}`}
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-border focus:ring-ring',
+                darkFieldClass
+              )}
+            />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              1 {editedTransaction.currency} = {manualExchangeRate || '?'} {baseCurrency}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Converted Amount display - read-only calculated field */}
+      {needsFxConversion && (
+        <div className={rowClass}>
+          <label className={labelClass}>Converted</label>
+          <div className="flex w-full items-center">
+            <div className={cn(
+              'w-full text-sm px-3 py-2 rounded-md bg-muted border border-border',
+              convertedAmount === null && 'text-muted-foreground'
+            )}>
+              {convertedAmount !== null 
+                ? `${convertedAmount.toFixed(2)} ${baseCurrency}`
+                : 'Rate required'
+              }
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FX Info Display - shows saved FX metadata for existing transactions */}
       {transaction && transaction.baseCurrency && 
@@ -645,6 +757,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </CollapsibleContent>
         </Collapsible>
       )}
+
+      {/* Exchange Rate Edit Dialog */}
+      <ExchangeRateDialog
+        open={editRateDialogOpen}
+        onOpenChange={setEditRateDialogOpen}
+        defaultFromCurrency={editedTransaction.currency}
+        onSave={(rate) => {
+          setManualExchangeRate(rate.rate.toString());
+        }}
+      />
 
       <Dialog open={addCurrencyOpen} onOpenChange={setAddCurrencyOpen}>
         <DialogContent className="sm:max-w-md">
