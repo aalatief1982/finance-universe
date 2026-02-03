@@ -9,9 +9,10 @@
  * 1. Budget CRUD with soft-delete and migration support
  * 2. Period-based budget retrieval (weekly, monthly, yearly)
  * 3. Spending calculations with transfer exclusion
- * 4. Budget progress tracking with threshold alerts
- * 5. Category hierarchy budget aggregation
- * 6. Alert creation, dismissal, and persistence
+ * 4. FX-aware spending using amountInBase for multi-currency support
+ * 5. Budget progress tracking with threshold alerts
+ * 6. Category hierarchy budget aggregation
+ * 7. Alert creation, dismissal, and persistence
  * 
  * @storage-keys
  * - xpensia_budgets: Budget definitions
@@ -24,12 +25,13 @@
  * 
  * @review-checklist
  * - [ ] Transfer exclusion in spending calculations (lines 262-268)
+ * - [ ] FX-aware spending uses amountInBase when available
  * - [ ] Category tree cache invalidation
  * - [ ] Alert threshold duplicate prevention
  * - [ ] Period date range accuracy
  * 
  * @created 2024
- * @modified 2025-01-30
+ * @modified 2025-02-03
  */
 
 import { safeStorage } from "@/utils/safe-storage";
@@ -41,9 +43,26 @@ import { transactionService } from './TransactionService';
 import { Transaction, Category } from '@/types/transaction';
 import { initBudgetMigrations } from '@/utils/budget-migration';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { getUserSettings } from '@/utils/storage-utils';
 
 const STORAGE_KEY = 'xpensia_budgets';
 const ALERTS_STORAGE_KEY = 'xpensia_budget_alerts';
+
+/**
+ * Result of FX-aware spending calculation
+ */
+interface FxAwareSpendingResult {
+  /** Total spent in base currency (excludes unconverted) */
+  spent: number;
+  /** Number of transactions with missing amountInBase */
+  unconvertedCount: number;
+  /** Currencies that couldn't be converted */
+  unconvertedCurrencies: string[];
+  /** Spending by native currency for unconverted transactions */
+  unconvertedByNative: Record<string, number>;
+  /** Whether all transactions are fully converted */
+  isFullyConverted: boolean;
+}
 
 /**
  * Cache for category tree traversal.
@@ -349,6 +368,8 @@ export class BudgetService {
    * - Only counts tx.type === 'expense' (line 303)
    * - Uses Math.abs to ensure positive spending value
    * - Transfers are EXCLUDED (filtered in getTransactionsForBudget)
+   * 
+   * @deprecated Use getSpentAmountFxAware for multi-currency support
    */
   getSpentAmount(budget: Budget): number {
     const transactions = this.getTransactionsForBudget(budget);
@@ -363,6 +384,56 @@ export class BudgetService {
     }, 0);
   }
 
+  /**
+   * Get FX-aware spent amount for a budget using amountInBase.
+   * Tracks unconverted transactions separately for dashboard warnings.
+   * 
+   * @param budget - Budget to calculate spending for
+   * @returns FxAwareSpendingResult with spent amount and unconverted tracking
+   * 
+   * @review-focus
+   * - Uses amountInBase when available for accurate multi-currency totals
+   * - Tracks unconverted transactions separately
+   * - Transfers are EXCLUDED (filtered in getTransactionsForBudget)
+   */
+  getSpentAmountFxAware(budget: Budget): FxAwareSpendingResult {
+    const transactions = this.getTransactionsForBudget(budget);
+    
+    let spent = 0;
+    let unconvertedCount = 0;
+    const unconvertedCurrenciesSet = new Set<string>();
+    const unconvertedByNative: Record<string, number> = {};
+
+    transactions.forEach(tx => {
+      if (tx.type !== 'expense') return;
+
+      const hasValidConversion = tx.amountInBase != null && tx.fxSource !== 'missing';
+      
+      if (hasValidConversion) {
+        // Use converted amount in base currency
+        spent += Math.abs(tx.amountInBase!);
+      } else {
+        // Track unconverted transaction
+        unconvertedCount++;
+        const currency = tx.currency || 'Unknown';
+        unconvertedCurrenciesSet.add(currency);
+        
+        if (!unconvertedByNative[currency]) {
+          unconvertedByNative[currency] = 0;
+        }
+        unconvertedByNative[currency] += Math.abs(tx.amount);
+      }
+    });
+
+    return {
+      spent,
+      unconvertedCount,
+      unconvertedCurrencies: Array.from(unconvertedCurrenciesSet),
+      unconvertedByNative,
+      isFullyConverted: unconvertedCount === 0,
+    };
+  }
+
   // ============================================================================
   // SECTION: Budget Progress Tracking
   // PURPOSE: Calculate comprehensive progress metrics for budgets
@@ -370,22 +441,25 @@ export class BudgetService {
   // ============================================================================
 
   /**
-   * Get comprehensive budget progress metrics.
+   * Get comprehensive budget progress metrics with FX-awareness.
+   * Uses amountInBase for multi-currency spending calculations.
    * 
    * @param budget - Budget to calculate progress for
-   * @returns BudgetProgress object with all metrics
+   * @returns BudgetProgress object with all metrics including FX status
    * 
    * @review-focus
-   * - percentUsed calculation (line 327)
-   * - dailyBudgetRemaining for pacing (line 330)
-   * - triggeredAlerts based on thresholds (lines 333-334)
+   * - Uses getSpentAmountFxAware for multi-currency support
+   * - Includes unconverted transaction tracking
+   * - percentUsed calculation based on base currency totals
+   * - dailyBudgetRemaining for pacing
+   * - triggeredAlerts based on thresholds
    */
   getBudgetProgress(budget: Budget): BudgetProgress {
-    const spent = this.getSpentAmount(budget);
+    const fxSpending = this.getSpentAmountFxAware(budget);
     const { start, end } = getPeriodDates(budget.period, budget.year, budget.periodIndex);
     const daysRemaining = getDaysRemainingInPeriod(end);
-    const remaining = Math.max(0, budget.amount - spent);
-    const percentUsed = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+    const remaining = Math.max(0, budget.amount - fxSpending.spent);
+    const percentUsed = budget.amount > 0 ? (fxSpending.spent / budget.amount) * 100 : 0;
     
     // Calculate daily budget remaining
     const dailyBudgetRemaining = daysRemaining > 0 ? remaining / daysRemaining : 0;
@@ -397,15 +471,20 @@ export class BudgetService {
     return {
       budgetId: budget.id,
       budgeted: budget.amount,
-      spent,
+      spent: fxSpending.spent,
       remaining,
       percentUsed,
       periodStart: start,
       periodEnd: end,
-      isOverBudget: spent > budget.amount,
+      isOverBudget: fxSpending.spent > budget.amount,
       daysRemaining,
       dailyBudgetRemaining,
       triggeredAlerts,
+      // FX-aware fields
+      unconvertedCount: fxSpending.unconvertedCount,
+      unconvertedCurrencies: fxSpending.unconvertedCurrencies,
+      isFullyConverted: fxSpending.isFullyConverted,
+      unconvertedByNative: fxSpending.unconvertedByNative,
     };
   }
 
@@ -422,11 +501,11 @@ export class BudgetService {
   }
 
   /**
-   * Get aggregated yearly budget progress.
+   * Get aggregated yearly budget progress with FX-awareness.
    * Combines all yearly budgets for a given year.
    * 
    * @param year - Target year (defaults to current year)
-   * @returns Aggregated progress or null if no yearly budgets exist
+   * @returns Aggregated progress with FX status or null if no yearly budgets exist
    */
   getYearlyProgress(year?: number): BudgetProgress | null {
     const targetYear = year || new Date().getFullYear();
@@ -436,9 +515,29 @@ export class BudgetService {
     
     if (yearlyBudgets.length === 0) return null;
     
-    // Aggregate all yearly budgets
+    // Aggregate all yearly budgets using FX-aware spending
     const totalBudgeted = yearlyBudgets.reduce((sum, b) => sum + b.amount, 0);
-    const totalSpent = yearlyBudgets.reduce((sum, b) => sum + this.getSpentAmount(b), 0);
+    
+    // Aggregate FX-aware spending across all yearly budgets
+    let totalSpent = 0;
+    let totalUnconvertedCount = 0;
+    const allUnconvertedCurrencies = new Set<string>();
+    const aggregatedUnconvertedByNative: Record<string, number> = {};
+    
+    yearlyBudgets.forEach(budget => {
+      const fxSpending = this.getSpentAmountFxAware(budget);
+      totalSpent += fxSpending.spent;
+      totalUnconvertedCount += fxSpending.unconvertedCount;
+      
+      fxSpending.unconvertedCurrencies.forEach(c => allUnconvertedCurrencies.add(c));
+      
+      Object.entries(fxSpending.unconvertedByNative).forEach(([currency, amount]) => {
+        if (!aggregatedUnconvertedByNative[currency]) {
+          aggregatedUnconvertedByNative[currency] = 0;
+        }
+        aggregatedUnconvertedByNative[currency] += amount;
+      });
+    });
     
     const { start, end } = getPeriodDates('yearly', targetYear);
     const daysRemaining = getDaysRemainingInPeriod(end);
@@ -457,6 +556,11 @@ export class BudgetService {
       daysRemaining,
       dailyBudgetRemaining: daysRemaining > 0 ? remaining / daysRemaining : 0,
       triggeredAlerts: [],
+      // FX-aware fields
+      unconvertedCount: totalUnconvertedCount,
+      unconvertedCurrencies: Array.from(allUnconvertedCurrencies),
+      isFullyConverted: totalUnconvertedCount === 0,
+      unconvertedByNative: aggregatedUnconvertedByNative,
     };
   }
 
