@@ -46,6 +46,8 @@ import DateField from './forms/DateField';
 import DescriptionField from './forms/DescriptionField';
 import NotesField from './forms/NotesField';
 import FormActions from './forms/FormActions';
+import FxEstimateDisplay from './forms/FxEstimateDisplay';
+import { FxRateInput } from '@/components/fx';
 
 interface ExpenseFormProps {
   onSubmit: (values: TransactionFormValues) => void;
@@ -66,10 +68,15 @@ const ExpenseForm = ({
   });
   
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
+  const [manualRateDialogOpen, setManualRateDialogOpen] = useState(false);
+  const [manualFxRate, setManualFxRate] = useState<number | undefined>(undefined);
   
-  // Watch the transaction type to conditionally render fields
+  // Watch fields for FX estimate
   const transactionType = form.watch("type") as TransactionType;
   const selectedCategory = form.watch("category");
+  const watchedAmount = form.watch("amount");
+  const watchedCurrency = form.watch("currency");
+  const watchedDate = form.watch("date");
   
   // Update available subcategories when category changes
   // Note: form is excluded from deps to prevent render loops - we use form.getValues() inside
@@ -94,8 +101,18 @@ const ExpenseForm = ({
   }, [selectedCategory]);
 
   const handleSubmit = (values: TransactionFormValues) => {
-    onSubmit(values);
+    // Pass manual rate if set
+    const submissionValues = manualFxRate 
+      ? { ...values, _manualFxRate: manualFxRate }
+      : values;
+    onSubmit(submissionValues as TransactionFormValues);
     form.reset();
+    setManualFxRate(undefined);
+  };
+
+  const handleManualRateConfirm = (rate: number) => {
+    setManualFxRate(rate);
+    setManualRateDialogOpen(false);
   };
 
   return (
@@ -127,6 +144,25 @@ const ExpenseForm = ({
                 {/* Currency */}
                 <CurrencySelector form={form} />
               </div>
+              
+              {/* FX Estimate Display */}
+              <FxEstimateDisplay
+                amount={typeof watchedAmount === 'number' ? watchedAmount : undefined}
+                currency={typeof watchedCurrency === 'string' ? watchedCurrency : undefined}
+                date={typeof watchedDate === 'string' ? watchedDate : undefined}
+                onRequestManualRate={() => setManualRateDialogOpen(true)}
+              />
+              
+              {/* Manual Rate Dialog */}
+              <FxRateInput
+                isOpen={manualRateDialogOpen}
+                onOpenChange={setManualRateDialogOpen}
+                amount={typeof watchedAmount === 'number' ? watchedAmount : 0}
+                fromCurrency={typeof watchedCurrency === 'string' ? watchedCurrency : 'USD'}
+                toCurrency={form.getValues().currency || 'SAR'}
+                onConfirm={handleManualRateConfirm}
+                initialRate={manualFxRate}
+              />
               
               {/* Accounts Section */}
               <div className="grid grid-cols-1 gap-4">
