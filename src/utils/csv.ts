@@ -7,6 +7,7 @@
  * @responsibilities
  * 1. Convert transactions to CSV with escaped fields
  * 2. Parse CSV rows into Transaction objects
+ * 3. Include FX fields for multi-currency support
  *
  * @dependencies
  * - uuid: ID generation for imported rows
@@ -17,19 +18,24 @@
  * @review-checklist
  * - [ ] Required fields validated on import
  * - [ ] CSV escaping handles quotes and newlines
+ * - [ ] FX fields exported for audit trail
  */
 
 export interface CsvConversionOptions {
   delimiter?: string;
+  /** Include FX columns in export (default: true) */
+  includeFxFields?: boolean;
 }
 
-import { Transaction, TransactionType, TransactionSource } from '@/types/transaction';
+import { Transaction, TransactionType, TransactionSource, FxSource } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Convert an array of transactions to a CSV string.
+ * Includes FX fields for multi-currency audit trail.
+ * 
  * @param transactions Array of Transaction objects
- * @param options Optional delimiter configuration
+ * @param options Optional delimiter and FX field configuration
  */
 export const convertTransactionsToCsv = (
   transactions: Transaction[],
@@ -38,8 +44,10 @@ export const convertTransactionsToCsv = (
   if (!transactions || transactions.length === 0) return '';
 
   const delimiter = options.delimiter || ',';
+  const includeFxFields = options.includeFxFields !== false;
 
-  const headers = [
+  // Base headers
+  const baseHeaders = [
     'id',
     'title',
     'amount',
@@ -61,6 +69,18 @@ export const convertTransactionsToCsv = (
     'createdAt'
   ];
 
+  // FX-specific headers for multi-currency audit trail
+  const fxHeaders = [
+    'baseCurrency',
+    'amountInBase',
+    'fxRateToBase',
+    'fxSource',
+    'fxLockedAt',
+    'fxPair'
+  ];
+
+  const headers = includeFxFields ? [...baseHeaders, ...fxHeaders] : baseHeaders;
+
   const escape = (value: any) => {
     if (value === undefined || value === null) return '';
     const str = String(value)
@@ -79,6 +99,8 @@ export const convertTransactionsToCsv = (
 /**
  * Parse a CSV string into an array of Transaction objects.
  * Only rows containing the required fields are returned.
+ * Supports FX fields for multi-currency import.
+ * 
  * Required fields: title, amount, date, type, category
  */
 export const parseCsvTransactions = (fileData: string): Transaction[] => {
@@ -167,6 +189,7 @@ export const parseCsvTransactions = (fileData: string): Transaction[] => {
       currency: row.currency || 'USD',
     };
 
+    // Optional base fields
     if (row.subcategory) txn.subcategory = row.subcategory;
     if (row.notes) txn.notes = row.notes;
     if (row.currency) txn.currency = row.currency;
@@ -179,6 +202,14 @@ export const parseCsvTransactions = (fileData: string): Transaction[] => {
     if (row.vendor) txn.vendor = row.vendor;
     if (row.account) txn.account = row.account;
     if (row.createdAt) txn.createdAt = row.createdAt;
+
+    // FX fields for multi-currency support
+    if (row.baseCurrency) txn.baseCurrency = row.baseCurrency;
+    if (row.amountInBase) txn.amountInBase = parseFloat(row.amountInBase);
+    if (row.fxRateToBase) txn.fxRateToBase = parseFloat(row.fxRateToBase);
+    if (row.fxSource) txn.fxSource = row.fxSource as FxSource;
+    if (row.fxLockedAt) txn.fxLockedAt = row.fxLockedAt;
+    if (row.fxPair) txn.fxPair = row.fxPair;
 
     transactions.push(txn);
   }
