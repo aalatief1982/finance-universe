@@ -18,20 +18,28 @@
  */
 import React, { ReactNode } from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
-import type { ControllerRenderProps, FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import { cn } from '@/lib/utils';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
+interface FormFieldRenderProps {
+  value: unknown;
+  onChange: (value: unknown) => void;
+  onBlur: () => void;
+  name: string;
+  ref: React.Ref<unknown>;
+}
+
 interface EnhancedFormFieldProps<TFieldValues extends FieldValues> {
   form: UseFormReturn<TFieldValues>;
-  name: Path<TFieldValues>;
+  name: keyof TFieldValues & string;
   label?: string;
   description?: string;
   required?: boolean;
   showValidationState?: boolean;
   className?: string;
   children: (
-    field: ControllerRenderProps<TFieldValues, Path<TFieldValues>>,
+    field: FormFieldRenderProps,
     fieldState: 'default' | 'error' | 'success' | 'loading'
   ) => ReactNode;
 }
@@ -90,7 +98,7 @@ const EnhancedFormField = <TFieldValues extends FieldValues>({
           )}
           <FormControl>
             <div className="relative">
-              {children(field, fieldState)}
+              {children(field as FormFieldRenderProps, fieldState)}
               <StateIcon />
             </div>
           </FormControl>

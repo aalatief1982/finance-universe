@@ -77,7 +77,8 @@ export function SpendingTrendChart({
   const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (!active || !payload?.length) return null;
     
-    const data = payload[0]?.payload as SpendingTrendPoint | undefined;
+    const rawPayload = payload[0]?.payload;
+    const data: SpendingTrendPoint | undefined = rawPayload && typeof rawPayload === 'object' ? rawPayload as unknown as SpendingTrendPoint : undefined;
     if (!data) return null;
     
     return (

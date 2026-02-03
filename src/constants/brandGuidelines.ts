@@ -95,7 +95,8 @@ export const BRAND_GUIDELINES = {
 // Utility functions for consistent messaging
 export const getBrandMessage = (type: keyof typeof BRAND_GUIDELINES.messaging, key: string): string => {
   const messages = BRAND_GUIDELINES.messaging[type];
-  return (messages as any).examples?.[key] || `${type} message for ${key}`;
+  const messagesWithExamples = messages as { examples?: Record<string, string> };
+  return messagesWithExamples.examples?.[key] || `${type} message for ${key}`;
 };
 
 export const getBrandClass = (element: keyof typeof BRAND_GUIDELINES.typography.hierarchy): string => {
