@@ -25,6 +25,7 @@ describe('storage-utils', () => {
         date: '2024-01-01',
         type: 'expense' as const,
         source: 'manual' as const,
+        currency: 'USD',
       },
     ];
     storeTransactions(transactions);

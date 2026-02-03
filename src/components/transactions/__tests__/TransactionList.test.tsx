@@ -18,6 +18,7 @@ describe('TransactionList', () => {
     date: '2024-05-01',
     type: 'income',
     source: 'manual',
+    currency: 'USD',
   };
 
   it('renders transaction title, amount and category', () => {

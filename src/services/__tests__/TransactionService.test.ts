@@ -23,6 +23,7 @@ describe('TransactionService', () => {
         date: '2024-01-15',
         type: 'expense' as const,
         source: 'manual' as const,
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(expense);
@@ -44,6 +45,7 @@ describe('TransactionService', () => {
         date: '2024-01-01',
         type: 'income' as const,
         source: 'manual' as const,
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(income);
@@ -67,6 +69,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'Checking',
         toAccount: 'Savings',
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(transfer);
@@ -89,6 +92,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'Account A',
         toAccount: 'Account B',
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(transfer) as Transaction[];
@@ -107,6 +111,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'Checking',
         toAccount: 'Savings',
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(transfer) as Transaction[];
@@ -126,6 +131,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'Checking',
         toAccount: 'Savings',
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(transfer) as Transaction[];
@@ -145,6 +151,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'A',
         toAccount: 'B',
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(transfer) as Transaction[];
@@ -163,6 +170,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'Checking',
         toAccount: 'Savings',
+        currency: 'USD',
       };
 
       const result = transactionService.addTransaction(transfer) as Transaction[];
@@ -185,6 +193,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'A',
         toAccount: 'B',
+        currency: 'USD',
       };
 
       const created = transactionService.addTransaction(transfer) as Transaction[];
@@ -210,6 +219,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'A',
         toAccount: 'B',
+        currency: 'USD',
       };
 
       const created = transactionService.addTransaction(transfer) as Transaction[];
@@ -237,6 +247,7 @@ describe('TransactionService', () => {
         source: 'manual' as const,
         fromAccount: 'A',
         toAccount: 'B',
+        currency: 'USD',
       };
 
       const created = transactionService.addTransaction(transfer) as Transaction[];
@@ -260,6 +271,7 @@ describe('TransactionService', () => {
         date: '2024-01-15',
         type: 'expense' as const,
         source: 'manual' as const,
+        currency: 'USD',
       };
       const expense2 = {
         title: 'Expense 2',
@@ -268,6 +280,7 @@ describe('TransactionService', () => {
         date: '2024-01-16',
         type: 'expense' as const,
         source: 'manual' as const,
+        currency: 'USD',
       };
 
       const created1 = transactionService.addTransaction(expense1) as Transaction;
@@ -290,6 +303,7 @@ describe('TransactionService', () => {
         date: '2024-01-15',
         type: 'expense' as const,
         source: 'manual' as const,
+        currency: 'USD',
       };
 
       const created = transactionService.addTransaction(expense) as Transaction;

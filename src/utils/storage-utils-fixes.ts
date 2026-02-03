@@ -39,7 +39,8 @@ export const validateTransactionForStorage = (transaction: unknown): Transaction
     source: record.source === 'manual' || record.source === 'import' || record.source === 'sms' || record.source === 'telegram'
       ? record.source
       : 'manual',
-    fromAccount: getString(record.fromAccount) || (resolvedType !== 'income' ? 'Main Account' : undefined)
+    fromAccount: getString(record.fromAccount) || (resolvedType !== 'income' ? 'Main Account' : undefined),
+    currency: getString(record.currency) || 'SAR',
   };
   
   // Optional fields

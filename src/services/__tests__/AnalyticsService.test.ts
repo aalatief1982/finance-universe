@@ -14,6 +14,7 @@ describe('AnalyticsService', () => {
     date: '2024-01-15',
     type: 'expense',
     source: 'manual',
+    currency: 'USD',
     ...overrides,
   });
 
