@@ -14,8 +14,15 @@
 - [x] Updated `src/App.tsx` - Added FX migration and cache cleanup on startup
 - [x] All tests passing
 
-### 🔲 Phase 2: TransactionService Integration (NEXT)
-### 🔲 Phase 3: Transaction Entry UI
+### ✅ Phase 2: TransactionService Integration (COMPLETED)
+- [x] Updated `src/services/TransactionService.ts`
+  - `addTransaction()` now applies FX conversion at save time
+  - `updateTransaction()` recalculates FX when amount/currency changes
+  - `updateTransfer()` applies FX to both legs with correct signs
+  - Added optional `manualFxRate` parameter for manual rate entry
+- [x] All 13 TransactionService tests passing
+
+### 🔲 Phase 3: Transaction Entry UI (NEXT)
 ### 🔲 Phase 4: Dashboard & Analytics
 ### 🔲 Phase 5: Budget & Account Integration
 ### 🔲 Phase 6: Export & Final Polish
