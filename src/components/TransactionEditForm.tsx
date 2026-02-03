@@ -60,6 +60,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { getRate, getLatestRate, upsertRate } from '@/services/ExchangeRateService';
 import { getUserSettings } from '@/utils/storage-utils';
 import { roundToCurrencyPrecision } from '@/types/fx';
+import { generateDefaultTitle } from '@/components/transaction-utils';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -100,14 +101,6 @@ function areDrivenFieldsEqual(
     }
   }
   return true;
-}
-
-export function generateDefaultTitle(txn: Transaction): string {
-  const label = txn.vendor?.trim() || (txn.subcategory && txn.subcategory !== 'none' ? txn.subcategory : '');
-  const amount = txn.amount ? parseFloat(txn.amount.toString()).toFixed(2) : '';
-  const currency = txn.currency?.toUpperCase() || '';
-
-  return label && amount && currency ? `${label} - ${amount} ${currency}` : '';
 }
 
 function toISOFormat(input: string): string {
@@ -204,7 +197,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
 
   const [vendors, setVendors] = useState<string[]>(() => {
-    const builtIn = Object.keys((vendorData as any) || {});
+    const builtIn = Object.keys((vendorData as Record<string, unknown>) || {});
     const stored = Object.keys(loadVendorFallbacks());
     return Array.from(new Set([...builtIn, ...stored]));
   });
@@ -230,7 +223,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       const mappedVendor = remapVendor(transaction.vendor);
       const mappedFromAccount = remapFromAccount(transaction.fromAccount);
       const displayDate = transaction.date ? toISOFormat(transaction.date) : '';
-      const rawMessage = (transaction as any).rawMessage || transaction.details?.rawMessage || '';
+      const rawMessage =
+        typeof (transaction as { rawMessage?: unknown }).rawMessage === 'string'
+          ? (transaction as { rawMessage?: string }).rawMessage
+          : transaction.details?.rawMessage || '';
 
       return {
         ...transaction,
@@ -289,7 +285,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     } else if (!needsFxConversion) {
       setManualExchangeRate('');
     }
-  }, [editedTransaction.currency, baseCurrency, needsFxConversion]);
+  }, [editedTransaction.currency, baseCurrency, needsFxConversion, manualExchangeRate]);
 
   useEffect(() => {
     if (transaction && fieldConfidences) {
@@ -524,7 +520,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     addSuggestionsFeedbackEntry({
       field,
       positive,
-      value: (editedTransaction as any)[field],
+      value: editedTransaction[field],
       timestamp: new Date().toISOString(),
     });
     setFeedbackGiven(prev => ({ ...prev, [field]: true }));
@@ -729,7 +725,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       {/* Converted Amount display - read-only calculated field */}
       {needsFxConversion && (
         <div className={rowClass}>
-          <label className={labelClass}>Converted</label>
+          <span className={labelClass}>Converted</span>
           <div className="flex w-full items-center">
             <div className={cn(
               'w-full text-sm px-3 py-2 rounded-md bg-muted border border-border',

@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Trash2, Download, Bug } from 'lucide-react';
 import { appUpdateService, OTADebugInfo, UpdateStatus } from '@/services/AppUpdateService';
 import { Capacitor } from '@capacitor/core';
-import { getLastStoredError, clearStoredError } from '@/components/ErrorBoundary';
+import { getLastStoredError, clearStoredError } from '@/components/error-boundary-utils';
 
 interface StoredError {
   route: string;

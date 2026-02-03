@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell, type TooltipProps } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { MonthlyData } from '@/services/AnalyticsService';
 
@@ -15,12 +15,12 @@ const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'
 
 const MonthlyTrendsChart = ({ monthlyData }: MonthlyTrendsChartProps) => {
   // Custom tooltip for the chart
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-popover border border-border p-2 rounded-md shadow-sm text-sm">
           <p className="font-medium">{label}</p>
-          <p className="text-primary">{formatCurrency(payload[0].value as number)}</p>
+          <p className="text-primary">{formatCurrency(Number(payload[0].value))}</p>
         </div>
       );
     }
