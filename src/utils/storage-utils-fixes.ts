@@ -52,6 +52,7 @@ export const validateTransactionForStorage = (transaction: unknown): Transaction
   if (getString(record.country)) validatedTransaction.country = getString(record.country);
   if (getString(record.description)) validatedTransaction.description = getString(record.description);
   if (getString(record.originalCurrency)) validatedTransaction.originalCurrency = getString(record.originalCurrency);
+  if (getString(record.vendor)) validatedTransaction.vendor = getString(record.vendor);
   
   // Convert any smsDetails to the details.sms format
   if (isRecord(record.smsDetails)) {
