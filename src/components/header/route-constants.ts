@@ -24,6 +24,7 @@ export const routeTitleMap: Record<string, string> = {
   "/budget/report": "Budget vs Actual",
   "/budget/insights": "Suggestions & Insights",
   "/exchange-rates": "Exchange Rates",
+  "/about": "About",
 };
 
 // Navigation items that appear in the header
@@ -82,6 +83,13 @@ export const getNavItems = () => {
       path: "/profile",
       icon: "User",
       description: "Manage your profile",
+    },
+    {
+      title: "About",
+      path: "/about",
+      icon: "Info",
+      description: "Learn about Xpensia",
+      mobileOnly: true,
     },
   ];
 
