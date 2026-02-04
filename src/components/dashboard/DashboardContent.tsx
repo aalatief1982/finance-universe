@@ -26,6 +26,7 @@ import { generateChartData } from '@/lib/mock-data';
 import { motion } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
 import { AnalyticsService } from '@/services/AnalyticsService';
+import { getUserSettings } from '@/utils/storage-utils';
 
 interface DashboardContentProps {
   transactions: Transaction[];

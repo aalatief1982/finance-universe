@@ -20,6 +20,7 @@
  */
 
 import { getUserSettings } from '@/utils/storage-utils';
+import { safeStorage } from '@/utils/safe-storage';
 import { Transaction } from '@/types/transaction';
 import {
   FxSource,
@@ -46,6 +47,16 @@ const DEFAULT_FX_PREFERENCES = {
  * Defaults to 'SAR' if not set.
  */
 export const getBaseCurrency = (): string => {
+  try {
+    const storedUser = safeStorage.getItem('user');
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser) as { preferences?: { currency?: string }; settings?: { currency?: string } };
+      const userCurrency = parsed?.preferences?.currency || parsed?.settings?.currency;
+      if (userCurrency) return userCurrency;
+    }
+  } catch {
+    // ignore parsing errors and fall back to settings
+  }
   const settings = getUserSettings();
   return settings?.currency || 'SAR';
 };
@@ -80,9 +91,10 @@ export const applyFxConversion = (
   amount: number,
   transactionCurrency: string,
   transactionDate: string,
-  manualRate?: number
+  manualRate?: number,
+  baseCurrencyOverride?: string
 ): FxConversionResult => {
-  const baseCurrency = getBaseCurrency();
+  const baseCurrency = baseCurrencyOverride || getBaseCurrency();
   const now = new Date().toISOString();
 
   // STEP 1: Same currency - no conversion needed (identity)
@@ -344,7 +356,8 @@ export const ensureFxFields = (transaction: Transaction, manualRate?: number): T
     Math.abs(transaction.amount),
     transactionCurrency,
     transactionDate,
-    manualRate
+    manualRate,
+    transaction.baseCurrency
   );
 
   const amountInBase = fxResult.fields.amountInBase !== null

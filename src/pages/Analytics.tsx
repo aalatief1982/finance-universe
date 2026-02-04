@@ -51,6 +51,7 @@ import { AnalyticsService } from '@/services/AnalyticsService';
 import { transactionService } from '@/services/TransactionService';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from '@/components/ui/use-toast';
+import { getUserSettings } from '@/utils/storage-utils';
 
 const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 
