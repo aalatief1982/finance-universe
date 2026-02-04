@@ -64,7 +64,7 @@ const tips = [
 const Analytics: React.FC = () => {
   const { transactions } = useTransactions();
   const { user } = useUser();
-  const baseCurrency = user?.preferences?.currency || user?.settings?.currency || getUserSettings().currency || 'USD';
+  const baseCurrency = user?.settings?.currency || 'USD';
 
   useEffect(() => {
     logAnalyticsEvent('view_analytics',{
