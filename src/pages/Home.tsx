@@ -55,6 +55,7 @@ import { AnalyticsService } from "@/services/AnalyticsService";
 import { DatePicker } from "@/components/ui/date-picker";
 import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
 import { formatCurrency } from "@/lib/formatters";
+import { getUserSettings } from "@/utils/storage-utils";
 
 const Home = () => {
   const { transactions, addTransaction } = useTransactions();
@@ -85,7 +86,7 @@ const Home = () => {
   const [activeTab, setActiveTab] = React.useState("trends");
 
   // Get user's base currency
-  const baseCurrency = user?.settings?.currency || 'USD';
+  const baseCurrency = user?.preferences?.currency || getUserSettings().currency || 'USD';
 
   const handleAddTransaction = () => {
     navigate("/edit-transaction");
