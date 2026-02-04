@@ -20,6 +20,7 @@
  */
 
 import { getUserSettings } from '@/utils/storage-utils';
+import { Transaction } from '@/types/transaction';
 import {
   FxSource,
   FxFallbackMode,
@@ -321,4 +322,43 @@ export const getFxSourceLabel = (source: FxSource): string => {
     default:
       return 'Unknown';
   }
+};
+
+/**
+ * Ensure a transaction has FX fields populated.
+ * Recomputes FX fields if missing or when a manual rate is provided.
+ */
+export const ensureFxFields = (transaction: Transaction, manualRate?: number): Transaction => {
+  const hasFxFields =
+    transaction.fxSource !== undefined &&
+    transaction.baseCurrency !== undefined &&
+    transaction.amountInBase !== undefined;
+
+  if (hasFxFields && manualRate === undefined) {
+    return transaction;
+  }
+
+  const transactionCurrency = transaction.currency || getBaseCurrency();
+  const transactionDate = transaction.date || new Date().toISOString().split('T')[0];
+  const fxResult = applyFxConversion(
+    Math.abs(transaction.amount),
+    transactionCurrency,
+    transactionDate,
+    manualRate
+  );
+
+  const amountInBase = fxResult.fields.amountInBase !== null
+    ? (transaction.amount < 0 ? -Math.abs(fxResult.fields.amountInBase) : Math.abs(fxResult.fields.amountInBase))
+    : null;
+
+  return {
+    ...transaction,
+    currency: fxResult.fields.currency,
+    baseCurrency: fxResult.fields.baseCurrency,
+    amountInBase,
+    fxRateToBase: fxResult.fields.fxRateToBase,
+    fxSource: fxResult.fields.fxSource,
+    fxLockedAt: fxResult.fields.fxLockedAt,
+    fxPair: fxResult.fields.fxPair,
+  };
 };

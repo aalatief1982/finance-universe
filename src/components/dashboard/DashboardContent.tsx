@@ -46,16 +46,14 @@ const DashboardContent = ({
   
   // Defensive check for transactions array
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
+  const baseCurrency = user?.settings?.currency || 'USD';
+  const fxSummary = React.useMemo(() => {
+    return AnalyticsService.getFxAwareTotals(safeTransactions, baseCurrency);
+  }, [safeTransactions, baseCurrency]);
   
-  // Calculate financial summary with safer approach
-  const income = safeTransactions
-    .filter(t => t && typeof t.amount === 'number' && t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0);
-  
-  const expenses = safeTransactions
-    .filter(t => t && typeof t.amount === 'number' && t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  
+  const income = fxSummary.income;
+  const expenses = fxSummary.expenses;
   const balance = income - expenses;
 
   // Calculate previous month's balance with defensive approach
@@ -77,13 +75,12 @@ const DashboardContent = ({
     }
   });
 
-  const previousIncome = lastMonthTransactions
-    .filter(t => t && typeof t.amount === 'number' && t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0);
+  const previousFxSummary = React.useMemo(() => {
+    return AnalyticsService.getFxAwareTotals(lastMonthTransactions, baseCurrency);
+  }, [lastMonthTransactions, baseCurrency]);
   
-  const previousExpenses = lastMonthTransactions
-    .filter(t => t && typeof t.amount === 'number' && t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const previousIncome = previousFxSummary.income;
+  const previousExpenses = previousFxSummary.expenses;
   
   const previousBalance = previousIncome - previousExpenses;
 
@@ -93,8 +90,8 @@ const DashboardContent = ({
   
   try {
     const chartData = generateChartData(safeTransactions);
-    categoryData = chartData.categoryData || [];
-    subcategoryData = AnalyticsService.getSubcategoryData(safeTransactions).slice(0, 10);
+    categoryData = AnalyticsService.getFxAwareCategoryData(safeTransactions, baseCurrency) || chartData.categoryData || [];
+    subcategoryData = AnalyticsService.getFxAwareSubcategoryData(safeTransactions, baseCurrency).slice(0, 10);
   } catch (error) {
     if (import.meta.env.MODE === 'development') {
       console.error('Error generating chart data:', error);

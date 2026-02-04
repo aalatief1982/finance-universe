@@ -42,6 +42,7 @@ import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTempla
 import { loadKeywordBank, saveKeywordBank, KeywordEntry } from './keywordBankUtils';
 import { storeTransaction } from '@/utils/storage-utils';
 import { toast } from '@/components/ui/use-toast';
+import { ensureFxFields } from '@/services/FxConversionService';
 
 // ============================================================================
 // SECTION: Save Options Interface
@@ -102,11 +103,11 @@ export function saveTransactionWithLearning(
     return;
   }
 
-  const newTransaction: Transaction = {
+  const newTransaction: Transaction = ensureFxFields({
     ...transaction,
     id: transaction.id || uuidv4(),
     source: transaction.source || 'manual'
-  };
+  });
 
   // Persist transaction
   if (isNew) {
