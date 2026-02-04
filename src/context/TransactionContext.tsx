@@ -22,6 +22,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
 import { getStoredTransactions, storeTransactions, storeTransaction, removeTransaction } from '@/utils/storage-utils';
+import { ensureFxFields } from '@/services/FxConversionService';
 
 interface TransactionSummary {
   income: number;
@@ -101,7 +102,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const addTransactions = (newTransactions: Transaction[]) => {
     // Ensure all transactions have required fields
-    const validTransactions = newTransactions.map(transaction => ({
+    const validTransactions = newTransactions.map(transaction => ensureFxFields({
       ...transaction,
       id: transaction.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       source: transaction.source || 'manual'
@@ -120,11 +121,11 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const addTransaction = (transaction: Transaction) => {
     // Ensure transaction has required fields
-    const validTransaction = {
+    const validTransaction = ensureFxFields({
       ...transaction,
       id: transaction.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       source: transaction.source || 'manual'
-    };
+    });
     
     // Update state
     setTransactions(prevTransactions => {
@@ -139,8 +140,9 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const updateTransaction = (updatedTransaction: Transaction) => {
     setTransactions(prevTransactions => {
+      const nextTransaction = ensureFxFields(updatedTransaction);
       const updatedTransactions = prevTransactions.map(transaction => 
-        transaction.id === updatedTransaction.id ? updatedTransaction : transaction
+        transaction.id === nextTransaction.id ? nextTransaction : transaction
       );
       
       // Store in local storage

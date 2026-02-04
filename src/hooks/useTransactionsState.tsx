@@ -37,6 +37,7 @@ import {
   getCategoryHierarchy
 } from '@/utils/storage-utils';
 import { useTransactions } from '@/context/TransactionContext';
+import { ensureFxFields } from '@/services/FxConversionService';
 
 export function useTransactionsState() {
   // Get user context for currency preferences
@@ -75,7 +76,7 @@ export function useTransactionsState() {
   const handleAddTransaction = useCallback((formData: any) => {
     const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
     
-    const newTransaction: Transaction = {
+    const newTransaction: Transaction = ensureFxFields({
       id: uuidv4(),
       title: formData.title,
       amount: formData.amount,
@@ -89,7 +90,7 @@ export function useTransactionsState() {
       description: formData.description,
       person: formData.person,
       currency: formData.currency || userCurrency
-    };
+    }, formData._manualFxRate);
 
     // Persist and update global state
     contextAddTransaction(newTransaction);
@@ -103,7 +104,7 @@ export function useTransactionsState() {
 
     const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
 
-    const updatedTransaction: Transaction = {
+    const updatedTransaction: Transaction = ensureFxFields({
       ...currentTransaction,
       title: formData.title,
       amount: formData.amount,
@@ -116,7 +117,7 @@ export function useTransactionsState() {
       description: formData.description,
       person: formData.person,
       currency: formData.currency
-    };
+    }, formData._manualFxRate);
 
     // Record category change if different from original
     if (updatedTransaction.category !== currentTransaction.category) {

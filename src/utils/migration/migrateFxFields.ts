@@ -98,7 +98,7 @@ export const migrateFxFields = (): { migrated: number; total: number } => {
   }
 
   try {
-    const stored = safeStorage.getItem('transactions');
+    const stored = safeStorage.getItem('xpensia_transactions');
     if (!stored) {
       // No transactions to migrate, mark as done
       safeStorage.setItem(MIGRATION_KEY, 'true');
@@ -174,7 +174,7 @@ export const migrateFxFields = (): { migrated: number; total: number } => {
 
     // Save migrated transactions
     if (migratedCount > 0) {
-      safeStorage.setItem('transactions', JSON.stringify(transactions));
+      safeStorage.setItem('xpensia_transactions', JSON.stringify(transactions));
       if (import.meta.env.MODE === 'development') {
         console.log(`[Migration] Added FX fields to ${migratedCount} transactions`);
       }
