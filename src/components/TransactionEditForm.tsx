@@ -59,6 +59,7 @@ import { FxInfoDisplay, FxRateInput, ExchangeRateDialog } from '@/components/fx'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getRate, getLatestRate, upsertRate } from '@/services/ExchangeRateService';
 import { getUserSettings } from '@/utils/storage-utils';
+import { applyFxConversion } from '@/services/FxConversionService';
 import { roundToCurrencyPrecision } from '@/types/fx';
 import { generateDefaultTitle } from '@/components/transaction-utils';
 
@@ -559,17 +560,34 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       finalTransaction.date = toISOFormat(finalTransaction.date);
     }
 
-    // Apply manual exchange rate if provided
-    const rateValue = manualExchangeRate ? parseFloat(manualExchangeRate) : null;
-    if (needsFxConversion && rateValue && rateValue > 0) {
-      finalTransaction.fxRateToBase = rateValue;
-      finalTransaction.amountInBase = roundToCurrencyPrecision(Math.abs(rawAmount) * rateValue, baseCurrency);
-      finalTransaction.baseCurrency = baseCurrency;
-      finalTransaction.fxSource = 'manual';
-      finalTransaction.fxLockedAt = new Date().toISOString();
-      finalTransaction.fxPair = `${finalTransaction.currency}->${baseCurrency}`;
-      
-      // Also save rate to permanent lookup for future use
+    const rateValue = manualExchangeRate ? parseFloat(manualExchangeRate) : undefined;
+    const shouldRecalculateFx =
+      rateValue !== undefined ||
+      finalTransaction.amountInBase === null ||
+      finalTransaction.amountInBase === undefined ||
+      finalTransaction.fxSource === undefined ||
+      finalTransaction.fxSource === 'missing';
+
+    if (shouldRecalculateFx) {
+      const fxResult = applyFxConversion(
+        Math.abs(rawAmount),
+        finalTransaction.currency || baseCurrency,
+        finalTransaction.date,
+        rateValue
+      );
+
+      finalTransaction.currency = fxResult.fields.currency;
+      finalTransaction.baseCurrency = fxResult.fields.baseCurrency;
+      finalTransaction.amountInBase = fxResult.fields.amountInBase !== null
+        ? (finalTransaction.amount < 0 ? -Math.abs(fxResult.fields.amountInBase) : Math.abs(fxResult.fields.amountInBase))
+        : null;
+      finalTransaction.fxRateToBase = fxResult.fields.fxRateToBase;
+      finalTransaction.fxSource = fxResult.fields.fxSource;
+      finalTransaction.fxLockedAt = fxResult.fields.fxLockedAt;
+      finalTransaction.fxPair = fxResult.fields.fxPair;
+    }
+
+    if (rateValue !== undefined && rateValue > 0) {
       upsertRate(
         finalTransaction.currency || '',
         baseCurrency,
