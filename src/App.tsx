@@ -10,7 +10,7 @@ import {
 import { appUpdateService } from '@/services/AppUpdateService';
 import { ThemeProvider } from "@/components/theme-provider";
 import { fixCorruptedCurrencyCodes } from '@/utils/migration/fixCurrencyCodes';
-import { migrateFxFields } from '@/utils/migration/migrateFxFields';
+import { migrateFxFields, repairBaseCurrencyFxFields } from '@/utils/migration/migrateFxFields';
 import { cleanExpiredRates } from '@/utils/fx/fx-cache';
 import Home from './pages/Home';
 
@@ -530,6 +530,8 @@ function App() {
       
       // FX fields migration (adds baseCurrency, amountInBase, etc. to existing transactions)
       migrateFxFields();
+      // Repair base-currency transactions incorrectly marked as missing
+      repairBaseCurrencyFxFields();
       
       // Clean expired FX rates from cache
       cleanExpiredRates();

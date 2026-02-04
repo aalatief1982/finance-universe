@@ -21,6 +21,7 @@ import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import PageHeader from '@/components/layout/PageHeader';
 import { useTransactions } from '@/context/TransactionContext';
+import { useUser } from '@/context/UserContext';
 import {
   ToggleGroup,
   ToggleGroupItem
@@ -50,6 +51,7 @@ import { AnalyticsService } from '@/services/AnalyticsService';
 import { transactionService } from '@/services/TransactionService';
 import { formatCurrency } from '@/lib/formatters';
 import { toast } from '@/components/ui/use-toast';
+import { getUserSettings } from '@/utils/storage-utils';
 
 const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 
@@ -61,6 +63,8 @@ const tips = [
 
 const Analytics: React.FC = () => {
   const { transactions } = useTransactions();
+  const { user } = useUser();
+  const baseCurrency = user?.preferences?.currency || user?.settings?.currency || getUserSettings().currency || 'USD';
 
   useEffect(() => {
     logAnalyticsEvent('view_analytics',{
@@ -135,8 +139,8 @@ const Analytics: React.FC = () => {
   }, [filteredTransactions]);
 
   const topCategories = React.useMemo(() => {
-    return AnalyticsService.getCategoryData(filteredTransactions).slice(0, 5);
-  }, [filteredTransactions]);
+    return AnalyticsService.getFxAwareCategoryData(filteredTransactions, baseCurrency).slice(0, 5);
+  }, [filteredTransactions, baseCurrency]);
 
   // Monthly balance (EXCLUDES transfers) - uses converted amounts
   const monthlyBalance = React.useMemo(() => {

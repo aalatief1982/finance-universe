@@ -31,6 +31,12 @@ const MIGRATION_KEY = 'xpensia_migration_fx_v1';
  */
 const getBaseCurrencyForMigration = (): string => {
   try {
+    const storedUser = safeStorage.getItem('user');
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser) as { preferences?: { currency?: string }; settings?: { currency?: string } };
+      const userCurrency = parsed?.preferences?.currency || parsed?.settings?.currency;
+      if (userCurrency) return userCurrency;
+    }
     const settings = getUserSettings();
     return settings?.currency || 'SAR';
   } catch {
@@ -98,7 +104,7 @@ export const migrateFxFields = (): { migrated: number; total: number } => {
   }
 
   try {
-    const stored = safeStorage.getItem('transactions');
+    const stored = safeStorage.getItem('xpensia_transactions');
     if (!stored) {
       // No transactions to migrate, mark as done
       safeStorage.setItem(MIGRATION_KEY, 'true');
@@ -174,7 +180,7 @@ export const migrateFxFields = (): { migrated: number; total: number } => {
 
     // Save migrated transactions
     if (migratedCount > 0) {
-      safeStorage.setItem('transactions', JSON.stringify(transactions));
+      safeStorage.setItem('xpensia_transactions', JSON.stringify(transactions));
       if (import.meta.env.MODE === 'development') {
         console.log(`[Migration] Added FX fields to ${migratedCount} transactions`);
       }
@@ -194,6 +200,66 @@ export const migrateFxFields = (): { migrated: number; total: number } => {
     }
     // Don't mark as done on error - will retry next startup
     return { migrated: 0, total: 0 };
+  }
+};
+
+const FX_REPAIR_MIGRATION_KEY = 'xpensia_migration_fx_v2_base_fix';
+
+/**
+ * Repair base-currency transactions that were incorrectly marked as missing.
+ */
+export const repairBaseCurrencyFxFields = (): { repaired: number; total: number } => {
+  const migrationDone = safeStorage.getItem(FX_REPAIR_MIGRATION_KEY);
+  if (migrationDone === 'true') {
+    return { repaired: 0, total: 0 };
+  }
+
+  try {
+    const stored = safeStorage.getItem('xpensia_transactions');
+    if (!stored) {
+      safeStorage.setItem(FX_REPAIR_MIGRATION_KEY, 'true');
+      return { repaired: 0, total: 0 };
+    }
+
+    const transactions = JSON.parse(stored);
+    if (!Array.isArray(transactions)) {
+      safeStorage.setItem(FX_REPAIR_MIGRATION_KEY, 'true');
+      return { repaired: 0, total: 0 };
+    }
+
+    const baseCurrency = getBaseCurrencyForMigration().toUpperCase();
+    let repairedCount = 0;
+
+    transactions.forEach((tx: Transaction) => {
+      const txCurrency = (tx.currency || baseCurrency).toUpperCase();
+      if (txCurrency !== baseCurrency) return;
+
+      const needsRepair =
+        tx.amountInBase == null ||
+        tx.fxSource === 'missing' ||
+        tx.baseCurrency?.toUpperCase() !== baseCurrency;
+
+      if (!needsRepair) return;
+
+      tx.currency = txCurrency;
+      tx.baseCurrency = baseCurrency;
+      tx.amountInBase = tx.amount;
+      tx.fxRateToBase = 1;
+      tx.fxSource = 'identity';
+      tx.fxLockedAt = tx.fxLockedAt || tx.createdAt || new Date().toISOString();
+      tx.fxPair = null;
+      repairedCount++;
+    });
+
+    if (repairedCount > 0) {
+      safeStorage.setItem('xpensia_transactions', JSON.stringify(transactions));
+    }
+
+    safeStorage.setItem(FX_REPAIR_MIGRATION_KEY, 'true');
+
+    return { repaired: repairedCount, total: transactions.length };
+  } catch {
+    return { repaired: 0, total: 0 };
   }
 };
 

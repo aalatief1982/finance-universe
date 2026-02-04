@@ -20,6 +20,8 @@
  */
 
 import { getUserSettings } from '@/utils/storage-utils';
+import { safeStorage } from '@/utils/safe-storage';
+import { Transaction } from '@/types/transaction';
 import {
   FxSource,
   FxFallbackMode,
@@ -45,6 +47,16 @@ const DEFAULT_FX_PREFERENCES = {
  * Defaults to 'SAR' if not set.
  */
 export const getBaseCurrency = (): string => {
+  try {
+    const storedUser = safeStorage.getItem('user');
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser) as { preferences?: { currency?: string }; settings?: { currency?: string } };
+      const userCurrency = parsed?.preferences?.currency || parsed?.settings?.currency;
+      if (userCurrency) return userCurrency;
+    }
+  } catch {
+    // ignore parsing errors and fall back to settings
+  }
   const settings = getUserSettings();
   return settings?.currency || 'SAR';
 };
@@ -79,9 +91,10 @@ export const applyFxConversion = (
   amount: number,
   transactionCurrency: string,
   transactionDate: string,
-  manualRate?: number
+  manualRate?: number,
+  baseCurrencyOverride?: string
 ): FxConversionResult => {
-  const baseCurrency = getBaseCurrency();
+  const baseCurrency = baseCurrencyOverride || getBaseCurrency();
   const now = new Date().toISOString();
 
   // STEP 1: Same currency - no conversion needed (identity)
@@ -321,4 +334,44 @@ export const getFxSourceLabel = (source: FxSource): string => {
     default:
       return 'Unknown';
   }
+};
+
+/**
+ * Ensure a transaction has FX fields populated.
+ * Recomputes FX fields if missing or when a manual rate is provided.
+ */
+export const ensureFxFields = (transaction: Transaction, manualRate?: number): Transaction => {
+  const hasFxFields =
+    transaction.fxSource !== undefined &&
+    transaction.baseCurrency !== undefined &&
+    transaction.amountInBase !== undefined;
+
+  if (hasFxFields && manualRate === undefined) {
+    return transaction;
+  }
+
+  const transactionCurrency = transaction.currency || getBaseCurrency();
+  const transactionDate = transaction.date || new Date().toISOString().split('T')[0];
+  const fxResult = applyFxConversion(
+    Math.abs(transaction.amount),
+    transactionCurrency,
+    transactionDate,
+    manualRate,
+    transaction.baseCurrency
+  );
+
+  const amountInBase = fxResult.fields.amountInBase !== null
+    ? (transaction.amount < 0 ? -Math.abs(fxResult.fields.amountInBase) : Math.abs(fxResult.fields.amountInBase))
+    : null;
+
+  return {
+    ...transaction,
+    currency: fxResult.fields.currency,
+    baseCurrency: fxResult.fields.baseCurrency,
+    amountInBase,
+    fxRateToBase: fxResult.fields.fxRateToBase,
+    fxSource: fxResult.fields.fxSource,
+    fxLockedAt: fxResult.fields.fxLockedAt,
+    fxPair: fxResult.fields.fxPair,
+  };
 };
