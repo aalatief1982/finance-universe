@@ -116,13 +116,13 @@ const Analytics: React.FC = () => {
     });
   }, [transactions, range, customStart, customEnd]);
 
-  // Budget data (EXCLUDES transfers)
+  // Budget data (EXCLUDES transfers) - uses converted amounts
   const budgetData = React.useMemo(() => {
     const categories = transactionService.getCategories().filter(c => c.metadata?.budget);
     return categories.map(cat => {
       const spent = filteredTransactions
         .filter(t => t.category === cat.name && t.type === 'expense')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        .reduce((sum, t) => sum + Math.abs(t.amountInBase ?? t.amount), 0);
       const budget = cat.metadata?.budget || 0;
       const percentUsed = budget ? (spent / budget) * 100 : 0;
       return {
@@ -138,7 +138,7 @@ const Analytics: React.FC = () => {
     return AnalyticsService.getCategoryData(filteredTransactions).slice(0, 5);
   }, [filteredTransactions]);
 
-  // Monthly balance (EXCLUDES transfers)
+  // Monthly balance (EXCLUDES transfers) - uses converted amounts
   const monthlyBalance = React.useMemo(() => {
     const grouped: Record<string, { income: number; expense: number }> = {};
     filteredTransactions.forEach(tx => {
@@ -148,10 +148,14 @@ const Analytics: React.FC = () => {
       const d = new Date(tx.date);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
       if (!grouped[key]) grouped[key] = { income: 0, expense: 0 };
+      
+      // Use converted amount (amountInBase) or fallback to amount
+      const effectiveAmount = tx.amountInBase ?? tx.amount;
+      
       if (tx.type === 'income') {
-        grouped[key].income += Math.abs(tx.amount);
+        grouped[key].income += Math.abs(effectiveAmount);
       } else if (tx.type === 'expense') {
-        grouped[key].expense += Math.abs(tx.amount);
+        grouped[key].expense += Math.abs(effectiveAmount);
       }
     });
     return Object.entries(grouped)

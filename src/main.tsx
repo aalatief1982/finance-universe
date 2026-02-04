@@ -10,6 +10,7 @@ import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initi
 import { initializeCapacitor } from './lib/capacitor-init'
 import { demoTransactionService } from './services/DemoTransactionService'
 import { backgroundVendorSyncService } from './services/BackgroundVendorSyncService'
+import { runMigrations } from './utils/migration/runMigrations'
 import { AppLoader } from './components/AppLoader'
 
 import { Capacitor } from '@capacitor/core'
@@ -26,6 +27,10 @@ const AppWithLoader: React.FC = () => {
     const initialize = async () => {
       try {
         await initializeXpensiaStorageDefaults()
+        
+        // Run data migrations before seeding demo transactions
+        runMigrations()
+        
         demoTransactionService.seedDemoTransactions()
         setupGlobalErrorHandlers()
         
