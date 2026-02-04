@@ -102,22 +102,31 @@ export class AnalyticsService {
     let unconvertedCount = 0;
     const unconvertedCurrenciesSet = new Set<string>();
     const unconvertedByNative: Record<string, { income: number; expenses: number }> = {};
+    const normalizedBase = baseCurrency.toUpperCase();
 
     transactions.forEach(t => {
       // Skip transfers - they don't affect income/expense totals
       if (t.type === 'transfer') return;
 
-      const hasValidConversion = t.amountInBase != null && t.fxSource !== 'missing';
+      // Smart fallback: handle pre-migration data where fxSource is undefined
+      // If fxSource is undefined but currency matches base, treat as identity
+      const txCurrency = (t.currency || normalizedBase).toUpperCase();
+      const isBaseCurrencyMatch = txCurrency === normalizedBase;
+      
+      const hasValidConversion = 
+        (t.amountInBase != null && t.fxSource !== 'missing') ||
+        (t.fxSource === undefined && isBaseCurrencyMatch);
       
       if (hasValidConversion) {
-        // Use converted amount in base currency
+        // Use converted amount, or fall back to amount for unmigrated base-currency txns
+        const effectiveAmount = t.amountInBase ?? t.amount;
         if (t.type === 'income') {
-          income += Math.abs(t.amountInBase!);
+          income += Math.abs(effectiveAmount);
         } else if (t.type === 'expense') {
-          expenses += Math.abs(t.amountInBase!);
+          expenses += Math.abs(effectiveAmount);
         }
       } else {
-        // Track unconverted transaction
+        // Track unconverted transaction (only foreign currency without rate)
         unconvertedCount++;
         const currency = t.currency || 'Unknown';
         unconvertedCurrenciesSet.add(currency);
@@ -172,12 +181,13 @@ export class AnalyticsService {
    * @param transactions - Array of transactions
    * @returns Category data with base currency amounts
    */
-  static getFxAwareCategoryData(transactions: Transaction[]): FxAwareCategoryData[] {
+  static getFxAwareCategoryData(transactions: Transaction[], baseCurrency?: string): FxAwareCategoryData[] {
     const categoryMap: Record<string, { 
       converted: number; 
       unconverted: number; 
       unconvertedCurrency?: string;
     }> = {};
+    const normalizedBase = (baseCurrency || 'USD').toUpperCase();
 
     transactions
       .filter(t => t.type === 'expense')
@@ -188,10 +198,16 @@ export class AnalyticsService {
           categoryMap[category] = { converted: 0, unconverted: 0 };
         }
 
-        const hasValidConversion = t.amountInBase != null && t.fxSource !== 'missing';
+        // Smart fallback for pre-migration data
+        const txCurrency = (t.currency || normalizedBase).toUpperCase();
+        const isBaseCurrencyMatch = txCurrency === normalizedBase;
+        const hasValidConversion = 
+          (t.amountInBase != null && t.fxSource !== 'missing') ||
+          (t.fxSource === undefined && isBaseCurrencyMatch);
         
         if (hasValidConversion) {
-          categoryMap[category].converted += Math.abs(t.amountInBase!);
+          const effectiveAmount = t.amountInBase ?? t.amount;
+          categoryMap[category].converted += Math.abs(effectiveAmount);
         } else {
           categoryMap[category].unconverted += Math.abs(t.amount);
           categoryMap[category].unconvertedCurrency = t.currency;
@@ -235,12 +251,13 @@ export class AnalyticsService {
    * Generate FX-aware subcategory data using amountInBase.
    * EXCLUDES transfers from calculations.
    */
-  static getFxAwareSubcategoryData(transactions: Transaction[]): FxAwareCategoryData[] {
+  static getFxAwareSubcategoryData(transactions: Transaction[], baseCurrency?: string): FxAwareCategoryData[] {
     const subcategoryMap: Record<string, { 
       converted: number; 
       unconverted: number; 
       unconvertedCurrency?: string;
     }> = {};
+    const normalizedBase = (baseCurrency || 'USD').toUpperCase();
 
     transactions
       .filter(t => t.type === 'expense' && t.subcategory && !isNaN(t.amount))
@@ -251,10 +268,16 @@ export class AnalyticsService {
           subcategoryMap[subcategory] = { converted: 0, unconverted: 0 };
         }
 
-        const hasValidConversion = t.amountInBase != null && t.fxSource !== 'missing';
+        // Smart fallback for pre-migration data
+        const txCurrency = (t.currency || normalizedBase).toUpperCase();
+        const isBaseCurrencyMatch = txCurrency === normalizedBase;
+        const hasValidConversion = 
+          (t.amountInBase != null && t.fxSource !== 'missing') ||
+          (t.fxSource === undefined && isBaseCurrencyMatch);
         
         if (hasValidConversion) {
-          const amount = Math.abs(t.amountInBase!);
+          const effectiveAmount = t.amountInBase ?? t.amount;
+          const amount = Math.abs(effectiveAmount);
           if (!isNaN(amount) && isFinite(amount)) {
             subcategoryMap[subcategory].converted += amount;
           }
@@ -332,13 +355,15 @@ export class AnalyticsService {
    */
   static getFxAwareTimelineData(
     transactions: Transaction[], 
-    range: string
+    range: string,
+    baseCurrency?: string
   ): Array<{ date: string; income: number; expense: number; balance: number; hasUnconverted?: boolean }> {
     const grouped = new Map<number, { 
       income: number; 
       expense: number; 
       hasUnconverted: boolean;
     }>();
+    const normalizedBase = (baseCurrency || 'USD').toUpperCase();
 
     transactions.forEach((tx) => {
       // Skip transfers and invalid transactions
@@ -355,16 +380,25 @@ export class AnalyticsService {
 
       const existing = grouped.get(key) || { income: 0, expense: 0, hasUnconverted: false };
       
-      const hasValidConversion = tx.amountInBase != null && tx.fxSource !== 'missing';
-      const amount = hasValidConversion ? Math.abs(tx.amountInBase!) : Math.abs(tx.amount);
+      // Smart fallback for pre-migration data
+      const txCurrency = (tx.currency || normalizedBase).toUpperCase();
+      const isBaseCurrencyMatch = txCurrency === normalizedBase;
+      const hasValidConversion = 
+        (tx.amountInBase != null && tx.fxSource !== 'missing') ||
+        (tx.fxSource === undefined && isBaseCurrencyMatch);
+      
+      const effectiveAmount = hasValidConversion 
+        ? Math.abs(tx.amountInBase ?? tx.amount) 
+        : Math.abs(tx.amount);
 
       if (tx.type === 'income') {
-        existing.income += amount;
+        existing.income += effectiveAmount;
       } else if (tx.type === 'expense') {
-        existing.expense += amount;
+        existing.expense += effectiveAmount;
       }
 
-      if (!hasValidConversion) {
+      // Only flag as unconverted if truly missing (foreign currency without rate)
+      if (!hasValidConversion && !isBaseCurrencyMatch) {
         existing.hasUnconverted = true;
       }
 

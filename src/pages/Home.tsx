@@ -48,13 +48,13 @@ import { format } from "date-fns";
 import ResponsiveFAB from "@/components/dashboard/ResponsiveFAB";
 import AvatarGreeting from "@/components/dashboard/AvatarGreeting";
 import PageHeader from "@/components/layout/PageHeader";
-import { v4 as uuidv4 } from "uuid";
 import { Transaction } from "@/types/transaction";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AnalyticsService } from "@/services/AnalyticsService";
 import { DatePicker } from "@/components/ui/date-picker";
 import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
+import { formatCurrency } from "@/lib/formatters";
 
 const Home = () => {
   const { transactions, addTransaction } = useTransactions();
@@ -152,30 +152,30 @@ const Home = () => {
 
   const expensesBySubcategory = React.useMemo(() => {
     try {
-      return AnalyticsService.getFxAwareSubcategoryData(filteredTransactions);
+      return AnalyticsService.getFxAwareSubcategoryData(filteredTransactions, baseCurrency);
     } catch {
       console.warn('[Home] Failed to get subcategory data');
       return [];
     }
-  }, [filteredTransactions]);
+  }, [filteredTransactions, baseCurrency]);
 
   const expensesByCategory = React.useMemo(() => {
     try {
-      return AnalyticsService.getFxAwareCategoryData(filteredTransactions);
+      return AnalyticsService.getFxAwareCategoryData(filteredTransactions, baseCurrency);
     } catch {
       return [];
     }
-  }, [filteredTransactions]);
+  }, [filteredTransactions, baseCurrency]);
 
   // FX-aware timeline data (EXCLUDES transfers)
   const timelineData = React.useMemo(() => {
     try {
-      return AnalyticsService.getFxAwareTimelineData(filteredTransactions, range || 'month');
+      return AnalyticsService.getFxAwareTimelineData(filteredTransactions, range || 'month', baseCurrency);
     } catch (err) {
       console.warn('[Home] Failed to compute timeline data:', err);
       return [];
     }
-  }, [filteredTransactions, range]);
+  }, [filteredTransactions, range, baseCurrency]);
 
   return (
     <Layout withPadding={false} fullWidth>
@@ -353,22 +353,33 @@ const Home = () => {
                             {formatDisplayTitle(transaction)}
                           </span>
                         </div>
-                        <div
-                          className={
-                            transaction.amount < 0
-                              ? "text-red-600 font-semibold"
-                              : "text-green-600 font-semibold"
-                          }
-                        >
-                          {transaction.amount < 0 ? "−" : "+"}
-                          {Math.abs(transaction.amount).toLocaleString(
-                            undefined,
-                            {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            },
-                          )}
-                        </div>
+                        {/* Display converted amount (amountInBase) with original as secondary */}
+                        {(() => {
+                          const displayAmount = transaction.amountInBase ?? transaction.amount;
+                          const txCurrency = (transaction.currency || baseCurrency).toUpperCase();
+                          const showOriginal = txCurrency !== baseCurrency.toUpperCase() && transaction.amountInBase != null;
+                          const isNegative = transaction.type === 'expense' || transaction.amount < 0;
+                          
+                          return (
+                            <div className="text-right">
+                              <div
+                                className={
+                                  isNegative
+                                    ? "text-red-600 font-semibold"
+                                    : "text-green-600 font-semibold"
+                                }
+                              >
+                                {isNegative ? "−" : "+"}
+                                {formatCurrency(Math.abs(displayAmount), baseCurrency)}
+                              </div>
+                              {showOriginal && (
+                                <div className="text-xs text-muted-foreground">
+                                  ({formatCurrency(Math.abs(transaction.amount), transaction.currency)})
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         {formatTxnDate(transaction.date)} •{" "}
