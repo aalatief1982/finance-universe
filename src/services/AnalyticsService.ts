@@ -104,6 +104,8 @@ export class AnalyticsService {
     const unconvertedByNative: Record<string, { income: number; expenses: number }> = {};
     const normalizedBase = baseCurrency.toUpperCase();
 
+    console.log('[FX-DEBUG] AnalyticsService.getFxAwareTotals | baseCurrency:', baseCurrency, '| txCount:', transactions.length);
+
     transactions.forEach(t => {
       // Skip transfers - they don't affect income/expense totals
       if (t.type === 'transfer') return;
@@ -144,6 +146,8 @@ export class AnalyticsService {
     });
 
     const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0;
+
+    console.log('[FX-DEBUG] AnalyticsService.getFxAwareTotals RESULT | income:', income, '| expenses:', expenses, '| unconverted:', unconvertedCount, '| currencies:', Array.from(unconvertedCurrenciesSet));
 
     return {
       income,

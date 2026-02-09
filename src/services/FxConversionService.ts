@@ -335,6 +335,7 @@ export const ensureFxFields = (transaction: Transaction, manualRate?: number): T
     transaction.amountInBase !== undefined;
 
   if (hasFxFields && manualRate === undefined) {
+    console.log('[FX-DEBUG] ensureFxFields SKIP (already has FX) |', transaction.currency, '→', transaction.baseCurrency, '| fxSource:', transaction.fxSource, '| amountInBase:', transaction.amountInBase);
     return transaction;
   }
 
@@ -350,6 +351,8 @@ export const ensureFxFields = (transaction: Transaction, manualRate?: number): T
   const amountInBase = fxResult.fields.amountInBase !== null
     ? (transaction.amount < 0 ? -Math.abs(fxResult.fields.amountInBase) : Math.abs(fxResult.fields.amountInBase))
     : null;
+
+  console.log('[FX-DEBUG] ensureFxFields APPLIED |', transactionCurrency, '→', fxResult.fields.baseCurrency, '| fxSource:', fxResult.fields.fxSource, '| amountInBase:', amountInBase, '| rate:', fxResult.fields.fxRateToBase);
 
   return {
     ...transaction,

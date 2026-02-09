@@ -134,6 +134,8 @@ const Home = () => {
     return AnalyticsService.getFxAwareTotals(filteredTransactions, baseCurrency);
   }, [filteredTransactions, baseCurrency]);
 
+  console.log('[FX-DEBUG] Home.tsx | baseCurrency:', baseCurrency, '| income:', fxSummary.income, '| expenses:', fxSummary.expenses, '| unconvertedCount:', fxSummary.unconvertedCount);
+
   // Calculate balance separately (income - expenses for display)
   const balance = React.useMemo(() => {
     return fxSummary.income - fxSummary.expenses;
