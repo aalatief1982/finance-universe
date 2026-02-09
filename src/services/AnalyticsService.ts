@@ -118,6 +118,8 @@ export class AnalyticsService {
       const hasValidConversion = 
         (t.amountInBase != null && t.fxSource !== 'missing') ||
         (t.fxSource === undefined && isBaseCurrencyMatch);
+
+      console.log('[FX-DEBUG] getFxAwareTotals TX |', t.title, '| currency:', t.currency, '| txCurrency:', txCurrency, '| baseCurrency:', normalizedBase, '| amountInBase:', t.amountInBase, '| fxSource:', t.fxSource, '| hasValidConversion:', hasValidConversion, '| amount:', t.amount);
       
       if (hasValidConversion) {
         // Use converted amount, or fall back to amount for unmigrated base-currency txns
