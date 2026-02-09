@@ -63,7 +63,8 @@ const tips = [
 const Analytics: React.FC = () => {
   const { transactions } = useTransactions();
   const { user } = useUser();
-  const baseCurrency = user?.settings?.currency || 'USD';
+  const baseCurrency = user?.preferences?.currency || 'SAR';
+  console.log('[FX-DEBUG] Analytics.tsx baseCurrency:', baseCurrency, '| source:', user?.preferences?.currency ? 'user.preferences' : 'fallback');
 
   useEffect(() => {
     logAnalyticsEvent('view_analytics',{

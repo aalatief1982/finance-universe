@@ -47,7 +47,7 @@ const DashboardContent = ({
   // Defensive check for transactions array
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
 
-  const baseCurrency = user?.settings?.currency || 'USD';
+  const baseCurrency = user?.preferences?.currency || 'SAR';
   const fxSummary = React.useMemo(() => {
     return AnalyticsService.getFxAwareTotals(safeTransactions, baseCurrency);
   }, [safeTransactions, baseCurrency]);
