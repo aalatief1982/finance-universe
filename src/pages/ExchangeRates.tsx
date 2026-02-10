@@ -8,6 +8,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
+import { XpensiaLogo } from '@/components/header/XpensiaLogo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -112,6 +113,9 @@ const ExchangeRates: React.FC = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
+            <div className="cursor-pointer" onClick={() => navigate('/')}>
+              <XpensiaLogo className="h-8 w-8" />
+            </div>
             <div>
               <h1 className="text-lg font-semibold">Exchange Rates</h1>
               <p className="text-xs text-muted-foreground">Base: {baseCurrency}</p>
