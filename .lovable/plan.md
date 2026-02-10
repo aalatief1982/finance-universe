@@ -1,78 +1,94 @@
 
 
-# Diagnostic Logging + Critical Currency Path Bug Fix
+# Root Cause Found: `validateTransactionForStorage()` Strips All FX Fields
 
-## Critical Bug Found
+## The Bug
 
-The app has **two different currency paths** on the User object, and different pages read from different ones:
+The function `validateTransactionForStorage()` in `src/utils/storage-utils-fixes.ts` (lines 30-75) creates a **brand new object** with only a whitelist of fields. It completely **drops** all FX fields:
 
-| Page | Code | Path Used |
-|------|------|-----------|
-| Home.tsx | `user?.preferences?.currency` | Correct (where Settings page writes) |
-| Analytics.tsx | `user?.settings?.currency` | Wrong (likely undefined, falls back to USD) |
-| DashboardContent.tsx | `user?.settings?.currency` | Wrong (same issue) |
-| FxConversionService.ts | `getUserSettings().currency` | Separate path via storage-utils |
+- `amountInBase` -- DROPPED
+- `fxSource` -- DROPPED
+- `fxRateToBase` -- DROPPED
+- `baseCurrency` -- DROPPED
+- `fxLockedAt` -- DROPPED
+- `fxPair` -- DROPPED
 
-The User type has both `settings.currency` and `preferences.currency` as separate fields. The Settings page writes to `preferences.currency`, but Analytics and DashboardContent read from `settings.currency` which is likely never populated -- so they default to `'USD'` instead of `'SAR'`.
+### Data Flow Proving the Bug
 
-This means:
-- `ensureFxFields()` converts correctly using `getUserSettings().currency` (which returns SAR)
-- But Analytics reads `baseCurrency = 'USD'` from the wrong path
-- The `hasValidConversion` check then compares SAR transactions against USD base, marking them as "unconverted"
+```text
+1. User saves transaction
+2. ensureFxFields() adds FX fields          --> amountInBase: -1125, fxSource: 'manual'  (CORRECT)
+3. contextAddTransaction() stores in state  --> FX fields present in React state          (CORRECT)
+4. storeTransaction() persists to storage   --> validateTransactionForStorage() STRIPS FX (BUG)
+5. On next render/reload, getStoredTransactions() loads from localStorage WITHOUT FX     (BROKEN)
+6. AnalyticsService sees amountInBase: undefined, fxSource: undefined                    (BROKEN)
+7. Cards show 0, warnings appear, foreign amounts unconverted                            (BROKEN)
+```
+
+The console logs confirm this exactly:
+- `ensureFxFields SKIP (already has FX) | USD -> SAR | fxSource: manual | amountInBase: -1125` -- Fields exist in memory
+- `getFxAwareTotals TX | Electricity | amountInBase: undefined | fxSource: undefined` -- Fields missing when read back
 
 ## Fix Plan
 
-### Step 1: Standardize baseCurrency access across all pages
+### Step 1: Add FX fields to `validateTransactionForStorage()` (THE FIX)
 
-Create a single helper or use a consistent path everywhere. Fix these files:
+**File:** `src/utils/storage-utils-fixes.ts`
 
-**`src/pages/Analytics.tsx` (line 66):**
-```
-// Before
-const baseCurrency = user?.settings?.currency || 'USD';
+Add FX field preservation to the validated transaction object. After line 43 (`currency`), add:
 
-// After  
-const baseCurrency = user?.preferences?.currency || getUserSettings().currency || 'SAR';
-```
-
-**`src/components/dashboard/DashboardContent.tsx` (line 50):**
-```
-// Before
-const baseCurrency = user?.settings?.currency || 'USD';
-
-// After
-const baseCurrency = user?.preferences?.currency || getUserSettings().currency || 'SAR';
+```typescript
+// FX conversion fields (preserve if present)
+baseCurrency: getString(record.baseCurrency) || undefined,
+amountInBase: typeof record.amountInBase === 'number' ? record.amountInBase : (record.amountInBase === null ? null : undefined),
+fxRateToBase: typeof record.fxRateToBase === 'number' ? record.fxRateToBase : (record.fxRateToBase === null ? null : undefined),
+fxSource: getString(record.fxSource) || undefined,
+fxLockedAt: getString(record.fxLockedAt) || (record.fxLockedAt === null ? null : undefined),
+fxPair: getString(record.fxPair) || (record.fxPair === null ? null : undefined),
 ```
 
-### Step 2: Add diagnostic logging at 4 key checkpoints
+Also preserve transfer fields and other missing optional fields:
+```typescript
+transferId: getString(record.transferId) || undefined,
+transferDirection: record.transferDirection === 'out' || record.transferDirection === 'in' ? record.transferDirection : undefined,
+account: getString(record.account) || undefined,
+isSample: typeof record.isSample === 'boolean' ? record.isSample : undefined,
+createdAt: getString(record.createdAt) || undefined,
+```
 
-All logs prefixed with `[FX-DEBUG]` for easy console filtering.
+### Step 2: Add a diagnostic log to confirm fields survive storage round-trip
 
-| # | File | Location | What to Log |
-|---|------|----------|-------------|
-| 1 | `FxConversionService.ts` | `ensureFxFields()` | currency, baseCurrency, fxSource, amountInBase result |
-| 2 | `AnalyticsService.ts` | `getFxAwareTotals()` | baseCurrency used, transaction count, valid/unconverted split, final totals |
-| 3 | `Home.tsx` | After fxSummary computation | baseCurrency, income, expenses, unconvertedCount |
-| 4 | `Analytics.tsx` | After baseCurrency assignment | baseCurrency value and source |
+**File:** `src/utils/storage-utils.ts`
 
-### Step 3: Remove migration dependency
+In `storeTransaction()`, after validation, log:
 
-No migration needed. The `ensureFxFields()` function already correctly populates FX fields for new transactions. The bug is purely in the **reading** side using the wrong currency path.
+```typescript
+console.log('[FX-DEBUG] storeTransaction | id:', validatedTransaction.id, '| fxSource:', validatedTransaction.fxSource, '| amountInBase:', validatedTransaction.amountInBase);
+```
+
+### Step 3: No other changes needed
+
+All the other code is correct:
+- `ensureFxFields()` correctly computes FX fields
+- `AnalyticsService.getFxAwareTotals()` correctly reads `amountInBase` and `fxSource`
+- `Home.tsx` correctly displays `amountInBase` with fallback
+- `Analytics.tsx` correctly uses `amountInBase ?? amount`
+
+The ONLY problem is that FX fields are stripped during storage validation.
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/pages/Analytics.tsx` | Fix baseCurrency path + add debug log |
-| `src/components/dashboard/DashboardContent.tsx` | Fix baseCurrency path |
-| `src/services/FxConversionService.ts` | Add debug log in ensureFxFields |
-| `src/services/AnalyticsService.ts` | Add debug log in getFxAwareTotals |
-| `src/pages/Home.tsx` | Add debug log after fxSummary |
+| `src/utils/storage-utils-fixes.ts` | Add FX fields and other missing fields to validation whitelist |
+| `src/utils/storage-utils.ts` | Add diagnostic log in `storeTransaction()` |
 
 ## Expected Result
 
-After this fix:
-- All pages read currency from the same correct path (`preferences.currency`)
-- SAR transactions are recognized as base currency (identity) and included in totals
-- EGP transactions with valid `amountInBase` are included in totals
-- Console logs show the complete data pipeline for verification
+After this single fix:
+- FX fields survive the storage round-trip
+- `amountInBase` is present when transactions are loaded
+- Cards show correct converted totals
+- Analytics uses converted amounts
+- Foreign currency transactions display properly with original amount as secondary
+- The "missing exchange rate" warning only appears for truly unconverted transactions
