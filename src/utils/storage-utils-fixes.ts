@@ -41,6 +41,19 @@ export const validateTransactionForStorage = (transaction: unknown): Transaction
       : 'manual',
     fromAccount: getString(record.fromAccount) || (resolvedType !== 'income' ? 'Main Account' : undefined),
     currency: getString(record.currency) || 'SAR',
+    // FX conversion fields (preserve if present)
+    baseCurrency: getString(record.baseCurrency) || undefined,
+    amountInBase: typeof record.amountInBase === 'number' ? record.amountInBase : (record.amountInBase === null ? null : undefined),
+    fxRateToBase: typeof record.fxRateToBase === 'number' ? record.fxRateToBase : (record.fxRateToBase === null ? null : undefined),
+    fxSource: (['identity', 'cached', 'api', 'manual', 'missing'] as const).includes(record.fxSource as any) ? (record.fxSource as Transaction['fxSource']) : undefined,
+    fxLockedAt: getString(record.fxLockedAt) || (record.fxLockedAt === null ? null : undefined),
+    fxPair: getString(record.fxPair) || (record.fxPair === null ? null : undefined),
+    // Transfer & metadata fields
+    transferId: getString(record.transferId) || undefined,
+    transferDirection: record.transferDirection === 'out' || record.transferDirection === 'in' ? record.transferDirection : undefined,
+    account: getString(record.account) || undefined,
+    isSample: typeof record.isSample === 'boolean' ? record.isSample : undefined,
+    createdAt: getString(record.createdAt) || undefined,
   };
   
   // Optional fields

@@ -153,6 +153,7 @@ export const storeTransaction = (transaction: unknown): void => {
   try {
     // Use the validation function from storage-utils-fixes.ts to ensure all required fields are present
     const validatedTransaction = validateTransactionForStorage(transaction);
+    console.log('[FX-DEBUG] storeTransaction | id:', validatedTransaction.id, '| fxSource:', (validatedTransaction as any).fxSource, '| amountInBase:', (validatedTransaction as any).amountInBase);
     
     const transactions = getStoredTransactions();
     
