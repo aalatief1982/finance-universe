@@ -11,6 +11,8 @@ export default defineConfig({
     },
     // Keep these conditions to properly resolve Capacitor plugins
     conditions: ['web', 'browser', 'default'],
+    // Prevent duplicate React instances from Capacitor/Ionic plugins
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   optimizeDeps: {
     include: ['firebase/app', 'firebase/auth', 'firebase/analytics', '@capgo/capacitor-updater'],
