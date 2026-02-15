@@ -1,53 +1,59 @@
 
 
-# Add "+" Button to Account Selector on Set Budget Page
+# Admin-Only Visibility for Template Stats and OTA Debug Sections
 
-## What Changes
+## The Challenge
 
-When the budget scope is "Account", the account dropdown on the Set Budget page will get a "+" button next to it -- identical to the Transaction page's "From Account" field. Clicking it opens a dialog to add a new account (Name + IBAN), which saves to the same `xpensia_accounts` localStorage key via `addUserAccount()`. The new account immediately appears in the dropdown.
+Your app currently runs without a backend authentication system (no Supabase auth). This means there is no server-side way to verify "who is the admin." We need a practical, lightweight approach that balances security with your current architecture.
 
-## UI Change
+## Recommended Approach: Secret Gesture + Encrypted localStorage Flag
 
-**Current:**
-```text
-[ Select Account          v ]
-```
+Since these sections only display **read-only diagnostic info** (not sensitive user data or destructive actions), a client-side admin mode is acceptable here. The risk is low -- worst case, someone sees template stats or OTA bundle info.
 
-**After:**
-```text
-[ Select Account          v ] [+]
-```
+### How It Works
 
-Clicking [+] opens a dialog with Name (required) and IBAN (optional) fields, matching the Transaction page dialog exactly.
+1. **Hidden activation gesture**: Tap the version number at the bottom of Settings **5 times quickly** (like Android's "Developer Options").
+2. **PIN prompt**: After the 5 taps, a dialog asks for a 4-6 digit PIN that only you know.
+3. **Persistent flag**: On correct PIN, a hashed value is stored in localStorage so you don't need to re-enter it every session.
+4. **Sections hidden by default**: `TemplateStatsSection` and `OTADebugSection` only render when admin mode is active.
+5. **Deactivate option**: A small "Exit Admin Mode" button appears when active, clearing the flag.
+
+### Why This Over Other Options
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **Secret gesture + PIN (recommended)** | No backend needed, invisible to users, quick to implement | Client-side only (acceptable for diagnostic data) |
+| Supabase auth + roles table | Proper security, server-validated | Requires full auth setup -- overkill for hiding diagnostic panels |
+| Environment variable | Simple | Can't toggle per-device, requires rebuild |
+| URL parameter | Very simple | Easily discoverable, no persistence |
 
 ## Technical Details
 
-**File to modify:** `src/pages/budget/SetBudgetPage.tsx`
+### 1. Create admin utility (`src/utils/admin-utils.ts`)
 
-### 1. Add imports
-- `Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter` from `@/components/ui/dialog`
-- `Plus` from `lucide-react`
-- `addUserAccount, getStoredAccounts` from `@/lib/account-utils`
+- `ADMIN_PIN_HASH`: A SHA-256 hash of your chosen PIN, stored as a constant (not the plain PIN)
+- `isAdminMode()`: Checks localStorage for `xpensia_admin_mode` with the correct hash
+- `activateAdminMode(pin: string)`: Hashes the input, compares to `ADMIN_PIN_HASH`, sets localStorage if match
+- `deactivateAdminMode()`: Clears the localStorage key
+- Uses the existing `crypto-js` dependency for SHA-256 hashing
 
-### 2. Add state variables (inside `SetBudgetPage` component)
-- `addAccountOpen` (boolean) -- controls dialog visibility
-- `newAccount` (`{ name: string; iban: string }`) -- dialog form state
+### 2. Modify `src/pages/Settings.tsx`
 
-### 3. Add `handleSaveAccount` function
-- Validates name is not empty
-- Calls `addUserAccount({ name, iban })` -- same function used by Transaction page, writes to same `xpensia_accounts` localStorage key
-- Refreshes the accounts list so the new account appears in the targets list
-- Auto-selects the new account as `targetId`
-- Closes dialog and resets form
+- Add state: `adminMode` (boolean), `tapCount` (number), `lastTapTime` (number), `showPinDialog` (boolean)
+- On the **version text** section (line 955-961): attach an `onClick` handler that counts rapid taps (within 500ms). After 5 taps, open the PIN dialog.
+- Wrap `TemplateStatsSection` and `OTADebugSection` in `{adminMode && <TemplateStatsSection />}` and `{adminMode && <OTADebugSection />}`
+- When admin mode is active, show a subtle "Admin Mode" badge near the version and an "Exit" button
 
-### 4. Modify the account Select UI (around line 648)
-- Wrap the existing `<Select>` in a `<div className="flex items-center gap-1">`
-- Add a `<Button variant="outline" size="icon">` with `<Plus>` icon, visible only when `scope === 'account'`
+### 3. PIN Dialog
 
-### 5. Add the Dialog JSX
-- Reuse the same dialog structure from `TransactionEditForm.tsx` (Name + IBAN fields)
-- Place it at the end of the component's JSX
+- Simple dialog with a numeric input field
+- On submit, call `activateAdminMode(pin)` -- if it returns true, set `adminMode = true`
+- Wrong PIN shows a toast error, dialog stays open
 
-### Key Detail: Shared Storage
-Both the Transaction page and Set Budget page use `addUserAccount()` from `@/lib/account-utils`, which writes to the `xpensia_accounts` localStorage key. This ensures accounts added from either page appear in both picklists automatically.
+### Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/utils/admin-utils.ts` | **Create** -- admin mode check, activate, deactivate with hashed PIN |
+| `src/pages/Settings.tsx` | **Modify** -- add tap-to-unlock on version, conditionally render admin sections, add PIN dialog |
 
