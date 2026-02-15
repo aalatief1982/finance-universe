@@ -98,6 +98,9 @@ import { appUpdateService } from '@/services/AppUpdateService';
 import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
 import { useSmsPermission } from '@/hooks/useSmsPermission';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
+import { isAdminMode, activateAdminMode, deactivateAdminMode } from '@/utils/admin-utils';
+import { Badge } from '@/components/ui/badge';
+import { ShieldCheck } from 'lucide-react';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -150,6 +153,45 @@ const Settings = () => {
   // SMS busy state for loading overlay
   const [smsBusy, setSmsBusy] = useState(false);
   const [smsBusyMessage, setSmsBusyMessage] = useState('');
+
+  // Admin mode state
+  const [adminMode, setAdminMode] = useState(() => isAdminMode());
+  const [adminTapCount, setAdminTapCount] = useState(0);
+  const [lastAdminTap, setLastAdminTap] = useState(0);
+  const [showPinDialog, setShowPinDialog] = useState(false);
+  const [adminPin, setAdminPin] = useState('');
+
+  const handleVersionTap = () => {
+    const now = Date.now();
+    if (now - lastAdminTap < 500) {
+      const newCount = adminTapCount + 1;
+      setAdminTapCount(newCount);
+      if (newCount >= 5) {
+        setAdminTapCount(0);
+        setShowPinDialog(true);
+      }
+    } else {
+      setAdminTapCount(1);
+    }
+    setLastAdminTap(now);
+  };
+
+  const handlePinSubmit = () => {
+    if (activateAdminMode(adminPin)) {
+      setAdminMode(true);
+      setShowPinDialog(false);
+      setAdminPin('');
+      toast({ title: 'Admin mode activated' });
+    } else {
+      toast({ title: 'Invalid PIN', variant: 'destructive' });
+    }
+  };
+
+  const handleExitAdminMode = () => {
+    deactivateAdminMode();
+    setAdminMode(false);
+    toast({ title: 'Admin mode deactivated' });
+  };
 
   const { hasPermission: hasSmsPermission, refreshPermission } = useSmsPermission();
   const { updateUserPreferences } = useUser();
@@ -949,19 +991,55 @@ const Settings = () => {
           </div>
         </section>
 
-        {/* Template Stats Section */}
-        <TemplateStatsSection />
+        {/* Template Stats Section - admin only */}
+        {adminMode && <TemplateStatsSection />}
 
         <section className="bg-card rounded-lg p-4 mt-6">
           <div className="text-center">
-            <p className="text-sm text-muted-foreground">
+            <p 
+              className="text-sm text-muted-foreground cursor-default select-none"
+              onClick={handleVersionTap}
+            >
               Version {appVersion || '...'}
             </p>
+            {adminMode && (
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <Badge variant="outline" className="text-xs">
+                  <ShieldCheck className="h-3 w-3 mr-1" />
+                  Admin Mode
+                </Badge>
+                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleExitAdminMode}>
+                  Exit
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* OTA Debug Section - only shows on native */}
-        <OTADebugSection />
+        {/* OTA Debug Section - admin only, native only */}
+        {adminMode && <OTADebugSection />}
+
+        {/* Admin PIN Dialog */}
+        <Dialog open={showPinDialog} onOpenChange={setShowPinDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enter Admin PIN</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input
+                type="password"
+                inputMode="numeric"
+                value={adminPin}
+                onChange={(e) => setAdminPin(e.target.value)}
+                placeholder="Enter PIN"
+                onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()}
+              />
+              <Button onClick={handlePinSubmit} className="w-full">
+                Unlock
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
       </motion.div>
       </div>
