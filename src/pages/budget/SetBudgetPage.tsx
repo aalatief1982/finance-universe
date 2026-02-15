@@ -28,7 +28,9 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { formatCurrency } from '@/utils/format-utils';
+import { addUserAccount, getStoredAccounts } from '@/lib/account-utils';
 import { budgetService } from '@/services/BudgetService';
 import { 
   findParentPeriodBudget, 
@@ -59,7 +61,8 @@ import {
   Calendar,
   PiggyBank,
   Info,
-  ArrowUp
+  ArrowUp,
+  Plus
 } from 'lucide-react';
 
 const PERIODS: { value: BudgetPeriod; label: string }[] = [
@@ -148,9 +151,41 @@ const SetBudgetPage = () => {
     existingBudget?.alertThresholds || [...DEFAULT_ALERT_THRESHOLDS]
   );
   const [propagateUp, setPropagateUp] = React.useState(false);
+  const [addAccountOpen, setAddAccountOpen] = React.useState(false);
+  const [newAccount, setNewAccount] = React.useState({ name: '', iban: '' });
+  const [accountsRefreshKey, setAccountsRefreshKey] = React.useState(0);
 
-  // Data
-  const accounts = React.useMemo(() => accountService.getAccounts(), []);
+  // Data - merge service accounts with user-stored accounts
+  const accounts = React.useMemo(() => {
+    const serviceAccounts = accountService.getAccounts();
+    const storedAccounts = getStoredAccounts();
+    // Merge: start with service accounts, add any stored accounts not already present
+    const existingNames = new Set(serviceAccounts.map(a => a.name.toLowerCase()));
+    const additional = storedAccounts
+      .filter(sa => !existingNames.has(sa.name.toLowerCase()))
+      .map((sa, i) => ({ id: `stored_${sa.name}_${i}`, name: sa.name, type: 'Bank' as const, currency: 'USD', initialBalance: 0, startDate: '' }));
+    return [...serviceAccounts, ...additional];
+  }, [accountsRefreshKey]);
+
+  // Handle saving a new account from the dialog
+  const handleSaveNewAccount = () => {
+    if (!newAccount.name.trim()) return;
+    addUserAccount({ name: newAccount.name.trim(), iban: newAccount.iban.trim() || undefined });
+    setAccountsRefreshKey(k => k + 1);
+    // Auto-select the new account
+    const updatedAccounts = accountService.getAccounts();
+    const storedAccounts = getStoredAccounts();
+    const existingNames = new Set(updatedAccounts.map(a => a.name.toLowerCase()));
+    const additional = storedAccounts
+      .filter(sa => !existingNames.has(sa.name.toLowerCase()))
+      .map((sa, i) => ({ id: `stored_${sa.name}_${i}`, name: sa.name }));
+    const allAccounts = [...updatedAccounts, ...additional];
+    const match = allAccounts.find(a => a.name.toLowerCase() === newAccount.name.trim().toLowerCase());
+    if (match) setTargetId(match.id);
+    setNewAccount({ name: '', iban: '' });
+    setAddAccountOpen(false);
+    toast({ title: 'Account added successfully' });
+  };
   const existingBudgets = React.useMemo(() => budgetService.getBudgets(), []);
 
   // Get category hierarchy and convert to flat structure for budget selection
@@ -583,6 +618,7 @@ const SetBudgetPage = () => {
   const periodLabel = formatPeriodLabel(period, year, periodIndex);
 
   return (
+    <>
     <Layout showBack>
       <div className="container px-4 py-6 pb-24 space-y-6 max-w-lg mx-auto">
         <div>
@@ -645,37 +681,44 @@ const SetBudgetPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Select value={targetId} onValueChange={setTargetId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={`Select ${scope}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {scope === 'subcategory' ? (
-                    parentCategories.map(parent => {
-                      const children = targets.filter(t => t.parentId === parent.id);
-                      if (children.length === 0) return null;
-                      return (
-                        <React.Fragment key={parent.id}>
-                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                            {parent.name}
-                          </div>
-                          {children.map(child => (
-                            <SelectItem key={child.id} value={child.id}>
-                              <span className="pl-2">{child.name}</span>
-                            </SelectItem>
-                          ))}
-                        </React.Fragment>
-                      );
-                    })
-                  ) : (
-                    targets.map(target => (
-                      <SelectItem key={target.id} value={target.id}>
-                        {target.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-1">
+                <Select value={targetId} onValueChange={setTargetId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={`Select ${scope}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {scope === 'subcategory' ? (
+                      parentCategories.map(parent => {
+                        const children = targets.filter(t => t.parentId === parent.id);
+                        if (children.length === 0) return null;
+                        return (
+                          <React.Fragment key={parent.id}>
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                              {parent.name}
+                            </div>
+                            {children.map(child => (
+                              <SelectItem key={child.id} value={child.id}>
+                                <span className="pl-2">{child.name}</span>
+                              </SelectItem>
+                            ))}
+                          </React.Fragment>
+                        );
+                      })
+                    ) : (
+                      targets.map(target => (
+                        <SelectItem key={target.id} value={target.id}>
+                          {target.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {scope === 'account' && (
+                  <Button variant="outline" size="icon" type="button" onClick={() => setAddAccountOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
 
               {/* Existing budget actions - Edit or Delete */}
               {existingBudgetMatch && !isEditMode && (
@@ -1059,6 +1102,40 @@ const SetBudgetPage = () => {
         )}
       </div>
     </Layout>
+
+      {/* Add Account Dialog */}
+      <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Add New Account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-account-name">Account Name *</Label>
+              <Input
+                id="new-account-name"
+                value={newAccount.name}
+                onChange={e => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g. My Savings"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-account-iban">IBAN (optional)</Label>
+              <Input
+                id="new-account-iban"
+                value={newAccount.iban}
+                onChange={e => setNewAccount(prev => ({ ...prev, iban: e.target.value }))}
+                placeholder="e.g. SA0380000000608010167519"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddAccountOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveNewAccount} disabled={!newAccount.name.trim()}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
