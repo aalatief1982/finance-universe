@@ -1,94 +1,53 @@
 
 
-# Root Cause Found: `validateTransactionForStorage()` Strips All FX Fields
+# Add "+" Button to Account Selector on Set Budget Page
 
-## The Bug
+## What Changes
 
-The function `validateTransactionForStorage()` in `src/utils/storage-utils-fixes.ts` (lines 30-75) creates a **brand new object** with only a whitelist of fields. It completely **drops** all FX fields:
+When the budget scope is "Account", the account dropdown on the Set Budget page will get a "+" button next to it -- identical to the Transaction page's "From Account" field. Clicking it opens a dialog to add a new account (Name + IBAN), which saves to the same `xpensia_accounts` localStorage key via `addUserAccount()`. The new account immediately appears in the dropdown.
 
-- `amountInBase` -- DROPPED
-- `fxSource` -- DROPPED
-- `fxRateToBase` -- DROPPED
-- `baseCurrency` -- DROPPED
-- `fxLockedAt` -- DROPPED
-- `fxPair` -- DROPPED
+## UI Change
 
-### Data Flow Proving the Bug
-
+**Current:**
 ```text
-1. User saves transaction
-2. ensureFxFields() adds FX fields          --> amountInBase: -1125, fxSource: 'manual'  (CORRECT)
-3. contextAddTransaction() stores in state  --> FX fields present in React state          (CORRECT)
-4. storeTransaction() persists to storage   --> validateTransactionForStorage() STRIPS FX (BUG)
-5. On next render/reload, getStoredTransactions() loads from localStorage WITHOUT FX     (BROKEN)
-6. AnalyticsService sees amountInBase: undefined, fxSource: undefined                    (BROKEN)
-7. Cards show 0, warnings appear, foreign amounts unconverted                            (BROKEN)
+[ Select Account          v ]
 ```
 
-The console logs confirm this exactly:
-- `ensureFxFields SKIP (already has FX) | USD -> SAR | fxSource: manual | amountInBase: -1125` -- Fields exist in memory
-- `getFxAwareTotals TX | Electricity | amountInBase: undefined | fxSource: undefined` -- Fields missing when read back
-
-## Fix Plan
-
-### Step 1: Add FX fields to `validateTransactionForStorage()` (THE FIX)
-
-**File:** `src/utils/storage-utils-fixes.ts`
-
-Add FX field preservation to the validated transaction object. After line 43 (`currency`), add:
-
-```typescript
-// FX conversion fields (preserve if present)
-baseCurrency: getString(record.baseCurrency) || undefined,
-amountInBase: typeof record.amountInBase === 'number' ? record.amountInBase : (record.amountInBase === null ? null : undefined),
-fxRateToBase: typeof record.fxRateToBase === 'number' ? record.fxRateToBase : (record.fxRateToBase === null ? null : undefined),
-fxSource: getString(record.fxSource) || undefined,
-fxLockedAt: getString(record.fxLockedAt) || (record.fxLockedAt === null ? null : undefined),
-fxPair: getString(record.fxPair) || (record.fxPair === null ? null : undefined),
+**After:**
+```text
+[ Select Account          v ] [+]
 ```
 
-Also preserve transfer fields and other missing optional fields:
-```typescript
-transferId: getString(record.transferId) || undefined,
-transferDirection: record.transferDirection === 'out' || record.transferDirection === 'in' ? record.transferDirection : undefined,
-account: getString(record.account) || undefined,
-isSample: typeof record.isSample === 'boolean' ? record.isSample : undefined,
-createdAt: getString(record.createdAt) || undefined,
-```
+Clicking [+] opens a dialog with Name (required) and IBAN (optional) fields, matching the Transaction page dialog exactly.
 
-### Step 2: Add a diagnostic log to confirm fields survive storage round-trip
+## Technical Details
 
-**File:** `src/utils/storage-utils.ts`
+**File to modify:** `src/pages/budget/SetBudgetPage.tsx`
 
-In `storeTransaction()`, after validation, log:
+### 1. Add imports
+- `Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter` from `@/components/ui/dialog`
+- `Plus` from `lucide-react`
+- `addUserAccount, getStoredAccounts` from `@/lib/account-utils`
 
-```typescript
-console.log('[FX-DEBUG] storeTransaction | id:', validatedTransaction.id, '| fxSource:', validatedTransaction.fxSource, '| amountInBase:', validatedTransaction.amountInBase);
-```
+### 2. Add state variables (inside `SetBudgetPage` component)
+- `addAccountOpen` (boolean) -- controls dialog visibility
+- `newAccount` (`{ name: string; iban: string }`) -- dialog form state
 
-### Step 3: No other changes needed
+### 3. Add `handleSaveAccount` function
+- Validates name is not empty
+- Calls `addUserAccount({ name, iban })` -- same function used by Transaction page, writes to same `xpensia_accounts` localStorage key
+- Refreshes the accounts list so the new account appears in the targets list
+- Auto-selects the new account as `targetId`
+- Closes dialog and resets form
 
-All the other code is correct:
-- `ensureFxFields()` correctly computes FX fields
-- `AnalyticsService.getFxAwareTotals()` correctly reads `amountInBase` and `fxSource`
-- `Home.tsx` correctly displays `amountInBase` with fallback
-- `Analytics.tsx` correctly uses `amountInBase ?? amount`
+### 4. Modify the account Select UI (around line 648)
+- Wrap the existing `<Select>` in a `<div className="flex items-center gap-1">`
+- Add a `<Button variant="outline" size="icon">` with `<Plus>` icon, visible only when `scope === 'account'`
 
-The ONLY problem is that FX fields are stripped during storage validation.
+### 5. Add the Dialog JSX
+- Reuse the same dialog structure from `TransactionEditForm.tsx` (Name + IBAN fields)
+- Place it at the end of the component's JSX
 
-## Files to Modify
+### Key Detail: Shared Storage
+Both the Transaction page and Set Budget page use `addUserAccount()` from `@/lib/account-utils`, which writes to the `xpensia_accounts` localStorage key. This ensures accounts added from either page appear in both picklists automatically.
 
-| File | Change |
-|------|--------|
-| `src/utils/storage-utils-fixes.ts` | Add FX fields and other missing fields to validation whitelist |
-| `src/utils/storage-utils.ts` | Add diagnostic log in `storeTransaction()` |
-
-## Expected Result
-
-After this single fix:
-- FX fields survive the storage round-trip
-- `amountInBase` is present when transactions are loaded
-- Cards show correct converted totals
-- Analytics uses converted amounts
-- Foreign currency transactions display properly with original amount as secondary
-- The "missing exchange rate" warning only appears for truly unconverted transactions
