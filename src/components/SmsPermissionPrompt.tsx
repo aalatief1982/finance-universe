@@ -16,7 +16,7 @@
  * - [ ] Props have sensible defaults
  * - [ ] Component renders without crashing
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -54,6 +54,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   const [busyMessage, setBusyMessage] = useState('');
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
   const [showImportScopeDialog, setShowImportScopeDialog] = useState(false);
+  const hasTransitionedRef = useRef(false);
   const navigate = useNavigate();
 
   const { refreshPermission } = useSmsPermission();
@@ -80,6 +81,17 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
     setBusyMessage('Importing SMS messages...');
 
     try {
+      const transitionOnce = (path: string, options?: Record<string, unknown>) => {
+        if (hasTransitionedRef.current) {
+          console.log('[SmsPermissionPrompt] Skipping duplicate transition to', path);
+          return false;
+        }
+
+        hasTransitionedRef.current = true;
+        navigate(path, options);
+        return true;
+      };
+
       await updateUserPreferences({
         sms: {
           ...user?.preferences?.sms,
@@ -101,6 +113,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         await smsPermissionService.initSmsListener();
         await new Promise((res) => setTimeout(res, 500));
 
+        // Invoke flow coordinator immediately after permission-confirmed setup.
         const flowDecision = getNextSmsFlowStep({
           onboardingState: safeStorage.getItem('xpensia_onb_done') === 'true' ? 'subsequent_run' : 'not_completed',
           permissionState: 'granted',
@@ -109,12 +122,13 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         });
 
         if (flowDecision.nextStep === 'route_sms_providers' && flowDecision.route) {
-          navigate(flowDecision.route);
+          transitionOnce(flowDecision.route);
           console.log('[SmsPermissionPrompt] Provider setup required before import. Routing to /sms-providers.');
           return;
         }
 
-        await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
+        // Providers are configured, continue existing SMS flow (/process-sms or vendor mapping flow).
+        await SmsImportService.checkForNewMessages(transitionOnce, { auto: false, usePermissionDate: true });
         console.log('[SmsPermissionPrompt] Initial SMS import completed');
       } catch (importErr) {
         console.warn('[SmsPermissionPrompt] Error during initial SMS import:', importErr);
