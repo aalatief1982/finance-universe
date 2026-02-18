@@ -2,6 +2,7 @@ import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect, useState } from 'react';
 import {
   BrowserRouter,
+  Navigate,
   Routes,
   Route,
   useNavigate,
@@ -63,16 +64,12 @@ import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 
-// Synchronous guard - checks during render so there's no flash of the home screen
+// Synchronous onboarding guard - use render-time redirect to avoid route flash.
 const OnboardingGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
   const done = safeStorage.getItem('xpensia_onb_done') === 'true';
-  React.useEffect(() => {
-    if (!done) {
-      navigate('/onboarding', { replace: true });
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  if (!done) return null;
+  if (!done) {
+    return <Navigate to="/onboarding" replace />;
+  }
   return <>{children}</>;
 };
 
@@ -395,19 +392,15 @@ function AppWrapper() {
 }
 
 function AppRoutes() {
+  const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
+
   return (
     <>
       <AppWrapper />
       <Routes>
         <Route
           path="/"
-          element={
-            <OnboardingGuard>
-              <ErrorBoundary name="Home Page">
-                <Home />
-              </ErrorBoundary>
-            </OnboardingGuard>
-          }
+          element={<Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />}
         />
         <Route
           path="/home"

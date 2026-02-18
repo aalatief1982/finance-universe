@@ -44,6 +44,7 @@ import { ChevronRight } from "lucide-react";
 import { TYPE_ICON_MAP } from "@/constants/typeIconMap";
 import { CATEGORY_ICON_MAP } from "@/constants/categoryIconMap";
 import { format } from "date-fns";
+import { endOfDay, startOfDay } from 'date-fns';
 
 import ResponsiveFAB from "@/components/dashboard/ResponsiveFAB";
 import AvatarGreeting from "@/components/dashboard/AvatarGreeting";
@@ -103,25 +104,29 @@ const Home = () => {
 
     switch (range) {
       case "day":
-        start.setHours(0, 0, 0, 0);
+        start = startOfDay(now);
+        end = endOfDay(now);
         break;
       case "week":
         start.setDate(now.getDate() - 6);
-        start.setHours(0, 0, 0, 0);
+        start = startOfDay(start);
+        end = endOfDay(now);
         break;
       case "month":
-        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        start = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+        end = endOfDay(now);
         break;
       case "year":
-        start = new Date(now.getFullYear(), 0, 1);
+        start = startOfDay(new Date(now.getFullYear(), 0, 1));
+        end = endOfDay(now);
         break;
       case "custom":
-        if (customStart) start = new Date(customStart);
-        if (customEnd) end = new Date(customEnd);
+        if (customStart) start = startOfDay(new Date(customStart));
+        if (customEnd) end = endOfDay(new Date(customEnd));
         break;
     }
 
-    const toDate = range === "custom" ? end : now;
+    const toDate = range === "custom" ? end : endOfDay(now);
 
     return transactions.filter((t) => {
       const d = new Date(t.date);

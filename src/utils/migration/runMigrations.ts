@@ -146,30 +146,7 @@ export const runMigrations = (): void => {
     }
   }
 
-  // Migration 2: Remove isSample demo transactions
-  if (!completed.includes('remove_sample_transactions_v1')) {
-    try {
-      const stored = safeStorage.getItem('transactions') || safeStorage.getItem('xpensia_transactions');
-      const key = safeStorage.getItem('transactions') !== null ? 'transactions' : 'xpensia_transactions';
-      if (stored) {
-        const txs = JSON.parse(stored);
-        if (Array.isArray(txs)) {
-          const filtered = txs.filter((t: { isSample?: boolean }) => !t.isSample);
-          if (filtered.length !== txs.length) {
-            safeStorage.setItem(key, JSON.stringify(filtered));
-            if (import.meta.env.MODE === 'development') {
-              console.log(`[Migration] remove_sample_transactions_v1: removed ${txs.length - filtered.length} sample transactions`);
-            }
-          }
-        }
-      }
-    } catch {
-      // Ignore
-    }
-    markMigrationComplete('remove_sample_transactions_v1');
-  }
-
-  // Migration 3: Reset SMS lookback from old 6-month default to 1 month
+  // Migration 2: Reset SMS lookback from old 6-month default to 1 month
   if (!completed.includes('reset_sms_lookback_v1')) {
     try {
       const stored = safeStorage.getItem('xpensia_sms_period_months');
@@ -186,6 +163,7 @@ export const runMigrations = (): void => {
   }
 
   // Add future migrations here...
+
 };
 
 /**
