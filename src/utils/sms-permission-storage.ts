@@ -1,5 +1,6 @@
 
 import { safeStorage } from "@/utils/safe-storage";
+import { getSmsLookbackMonths } from "@/lib/env";
 
 // Storage keys for SMS permission date tracking
 const SMS_PERMISSION_GRANT_DATE_KEY = 'xpensia_sms_permission_grant_date';
@@ -76,18 +77,25 @@ export const setLastAutoImportDate = (date: string): void => {
 export const getAutoImportStartDate = (): Date => {
   const permissionDate = getSmsPermissionGrantDate();
   const lastImportDate = getLastAutoImportDate();
+  const lookbackMonths = Math.max(1, getSmsLookbackMonths());
   
   // Use the later of permission grant date or last import date
   let startDate: Date;
   
+  const getPermissionLookbackDate = (dateIso: string): Date => {
+    const baseline = new Date(dateIso);
+    baseline.setMonth(baseline.getMonth() - lookbackMonths);
+    return baseline;
+  };
+
   if (lastImportDate && permissionDate) {
     const lastImport = new Date(lastImportDate);
-    const permission = new Date(permissionDate);
+    const permission = getPermissionLookbackDate(permissionDate);
     startDate = lastImport > permission ? lastImport : permission;
   } else if (lastImportDate) {
     startDate = new Date(lastImportDate);
   } else if (permissionDate) {
-    startDate = new Date(permissionDate);
+    startDate = getPermissionLookbackDate(permissionDate);
   } else {
     // Fallback to 30 days ago if no dates are available
     startDate = new Date();
@@ -97,6 +105,11 @@ export const getAutoImportStartDate = (): Date => {
   // Validate the date is not in the future
   const now = new Date();
   if (startDate > now) {
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+  }
+
+  if (isNaN(startDate.getTime())) {
     startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
   }
