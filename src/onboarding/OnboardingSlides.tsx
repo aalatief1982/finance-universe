@@ -120,7 +120,10 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
           <SwiperSlide key={i}>
             <div className="flex flex-col flex-1 min-h-0 h-full transition-all duration-700 animate-fade-in">
               {/* Header with icon and gradient */}
-              <div className={`relative pt-16 pb-4 bg-gradient-to-b ${slide.gradient} shrink-0`}>
+              <div
+                className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0`}
+                style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3.5rem)' }}
+              >
                 <div className="flex flex-col items-center text-center px-4">
                   <div className="mb-3 p-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
                     <div className="text-primary">
@@ -158,7 +161,10 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                 </div>
               </div>
               {/* Action section */}
-              <div className="px-4 pb-4 safe-area-inset-bottom pt-2 shrink-0">
+              <div
+                className="px-4 pt-2 shrink-0"
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+              >
                 {i === slides.length - 1 ? (
                   <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
                     <Button 
