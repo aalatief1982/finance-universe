@@ -189,7 +189,7 @@ const Home = () => {
           <ToggleGroup
             type="single"
             value={range}
-            onValueChange={(val) => setRange(val as Range)}
+            onValueChange={(val) => { if (val) setRange(val as Range); }}
             className="w-full bg-muted p-1 text-muted-foreground rounded-md"
           >
             {["day", "week", "month", "year"].map((r) => (

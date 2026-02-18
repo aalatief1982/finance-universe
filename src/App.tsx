@@ -63,10 +63,22 @@ import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 
+// Synchronous guard - checks during render so there's no flash of the home screen
+const OnboardingGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
+  const done = safeStorage.getItem('xpensia_onb_done') === 'true';
+  React.useEffect(() => {
+    if (!done) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!done) return null;
+  return <>{children}</>;
+};
+
 function AppWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
-  const showOnboarding = safeStorage.getItem('xpensia_onb_done') !== 'true';
   const navigateRef = React.useRef(navigate);
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const hasScheduledSmsPrompt = React.useRef(false);
@@ -320,11 +332,7 @@ function AppWrapper() {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (showOnboarding && location.pathname !== '/onboarding') {
-      navigate('/onboarding', { replace: true });
-    }
-  }, [showOnboarding, location.pathname, navigate]);
+
 
   useEffect(() => {
     const checkAndMaybeShowSmsPrompt = async () => {
@@ -394,17 +402,21 @@ function AppRoutes() {
         <Route
           path="/"
           element={
-            <ErrorBoundary name="Home Page">
-              <Home />
-            </ErrorBoundary>
+            <OnboardingGuard>
+              <ErrorBoundary name="Home Page">
+                <Home />
+              </ErrorBoundary>
+            </OnboardingGuard>
           }
         />
         <Route
           path="/home"
           element={
-            <ErrorBoundary name="Home Page">
-              <Home />
-            </ErrorBoundary>
+            <OnboardingGuard>
+              <ErrorBoundary name="Home Page">
+                <Home />
+              </ErrorBoundary>
+            </OnboardingGuard>
           }
         />
         <Route

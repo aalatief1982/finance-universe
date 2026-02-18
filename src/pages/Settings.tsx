@@ -70,7 +70,7 @@ import {
   Unlock,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
-import { demoTransactionService } from "@/services/DemoTransactionService";
+
 import { useToast, toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -601,26 +601,7 @@ const Settings = () => {
     fileInput.click();
   };
 
-  const handleClearSampleData = () => {
-    const confirmClear = window.confirm(
-      'Are you sure you want to clear the sample data?'
-    );
-    if (!confirmClear) return;
 
-    try {
-      demoTransactionService.clearDemoTransactions();
-      toast({
-        title: 'Sample data cleared',
-        description: 'Demo transactions have been removed.',
-      });
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-      toast({
-        title: 'Failed to clear sample data',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleBetaSubmit = () => {
     handleBetaCodeSubmit(
@@ -931,22 +912,7 @@ const Settings = () => {
             </div>
           </LockedFeature>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Clear Sample Data</p>
-              <p className="text-sm text-muted-foreground">
-                Remove seeded demo transactions
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleClearSampleData}
-              className="gap-2 text-destructive"
-            >
-              <Trash2 size={16} />
-              Clear Sample Data
-            </Button>
-          </div>
+
 
           <div className="flex items-center justify-between">
             <div>
