@@ -38,10 +38,8 @@ import React, { createContext, useState, useEffect, useContext, useCallback } fr
 import { User, UserContextType } from './types';
 import { toast } from '@/hooks/use-toast';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { ENABLE_SUPABASE_AUTH, ENABLE_DEMO_MODE } from '@/lib/env';
+import { ENABLE_SUPABASE_AUTH } from '@/lib/env';
 import {
-  setDemoMode,
-  isDemoMode,
   getVerificationAttemptsRemaining,
   getMaxVerificationAttempts,
   updateUserProfileInSupabase
@@ -143,7 +141,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isVerifying: false,
     verificationAttemptsRemaining: getVerificationAttemptsRemaining(),
     maxVerificationAttempts: getMaxVerificationAttempts(),
-    isDemoMode: isDemoMode()
+    isDemoMode: false
   });
   
   // ============================================================================
@@ -187,10 +185,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
   
-  // Set demo mode based on environment
-  useEffect(() => {
-    setDemoMode(ENABLE_DEMO_MODE);
-  }, []);
   
   // ============================================================================
   // SECTION: Auth Initialization
@@ -221,7 +215,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...prev,
       verificationAttemptsRemaining: getVerificationAttemptsRemaining(),
       maxVerificationAttempts: getMaxVerificationAttempts(),
-      isDemoMode: isDemoMode()
+      isDemoMode: false
     }));
   }, []);
   
@@ -466,18 +460,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser({ avatar: avatarUrl });
   }, [updateUser]);
   
-  // Function to toggle demo mode
-  const setDemoModeEnabled = useCallback((enabled: boolean) => {
-    setDemoMode(enabled);
-    updateAuthState();
-    
-    toast({
-      title: enabled ? "Demo Mode Enabled" : "Demo Mode Disabled",
-      description: enabled 
-        ? "Using mock authentication. Verification code is 1234." 
-        : "Using real authentication services."
-    });
-  }, [updateAuthState]);
+  // Demo mode is disabled — kept as no-op to satisfy context type contract
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const setDemoModeEnabled = useCallback((_enabled: boolean) => {}, []);
   
   // ============================================================================
   // SECTION: Provider Render
