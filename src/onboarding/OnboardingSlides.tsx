@@ -86,7 +86,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
       {/* Progress indicator */}
-      <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2 pt-[calc(var(--safe-area-top)+8px)]">
+      <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2 pt-[max(6px,var(--safe-area-top))]">
         <div className="flex space-x-2 pt-2">
           {slides.map((_, i) => (
             <div
@@ -121,7 +121,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
             <div className="flex flex-col flex-1 min-h-0 h-full transition-all duration-700 animate-fade-in">
               {/* Header with icon and gradient */}
               <div
-                className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-[calc(var(--safe-area-top)+3.5rem)]`}
+                className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-[calc(var(--safe-area-top)+2rem)]`}
               >
                 <div className="flex flex-col items-center text-center px-4">
                   <div className="mb-3 p-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">

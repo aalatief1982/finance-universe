@@ -28,7 +28,7 @@ const AppWithLoader: React.FC = () => {
       try {
         await initializeXpensiaStorageDefaults()
         
-        // Run data migrations before seeding demo transactions
+        // Run data migrations before app initialization completes
         runMigrations()
         
         setupGlobalErrorHandlers()
