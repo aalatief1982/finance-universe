@@ -9,6 +9,7 @@ import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults'
 import { initializeCapacitor } from './lib/capacitor-init'
 import { demoTransactionService } from './services/DemoTransactionService'
+import { appMode } from './utils/app-mode'
 import { backgroundVendorSyncService } from './services/BackgroundVendorSyncService'
 import { runMigrations } from './utils/migration/runMigrations'
 import { AppLoader } from './components/AppLoader'
@@ -32,6 +33,8 @@ const AppWithLoader: React.FC = () => {
         runMigrations()
         
         demoTransactionService.seedDemoTransactions()
+        // Set mode to demo on first launch if not already set
+        appMode.initializeIfAbsent('demo')
         setupGlobalErrorHandlers()
         
         // Start background vendor sync
@@ -43,6 +46,7 @@ const AppWithLoader: React.FC = () => {
         }
         // Fallback initialization
         demoTransactionService.seedDemoTransactions()
+        appMode.initializeIfAbsent('demo')
         setupGlobalErrorHandlers()
         backgroundVendorSyncService.initialize()
       } finally {

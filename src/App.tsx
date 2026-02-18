@@ -62,6 +62,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
+import { DemoBanner } from '@/components/DemoBanner';
 
 function AppWrapper() {
   const navigate = useNavigate();
@@ -390,6 +391,7 @@ function AppRoutes() {
   return (
     <>
       <AppWrapper />
+      <DemoBanner />
       <Routes>
         <Route
           path="/"
