@@ -34,6 +34,7 @@ import { safeStorage } from '@/utils/safe-storage';
 import { toast } from '@/hooks/use-toast';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import SmsImportService from '@/services/SmsImportService';
+import { getNextSmsFlowStep, resolveProviderSelectionState } from '@/services/SmsFlowCoordinator';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useNavigate } from 'react-router-dom';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
@@ -99,6 +100,20 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         console.log('[SmsPermissionPrompt] Initializing SMS listener and triggering initial import...');
         await smsPermissionService.initSmsListener();
         await new Promise((res) => setTimeout(res, 500));
+
+        const flowDecision = getNextSmsFlowStep({
+          onboardingState: safeStorage.getItem('xpensia_onb_done') === 'true' ? 'subsequent_run' : 'not_completed',
+          permissionState: 'granted',
+          providerSelectionState: resolveProviderSelectionState(user?.smsProviders),
+          autoImportEnabled: true,
+        });
+
+        if (flowDecision.nextStep === 'route_sms_providers' && flowDecision.route) {
+          navigate(flowDecision.route);
+          console.log('[SmsPermissionPrompt] Provider setup required before import. Routing to /sms-providers.');
+          return;
+        }
+
         await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
         console.log('[SmsPermissionPrompt] Initial SMS import completed');
       } catch (importErr) {
