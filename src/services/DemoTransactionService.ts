@@ -7,25 +7,31 @@
  * @responsibilities
  * 1. Generate randomized demo transactions across categories
  * 2. Avoid seeding when real transactions already exist
- * 3. Persist seeded data to the demo namespace (xpensia_tx_demo)
- * 4. Never mix demo data into the real transaction key
+ * 3. Persist seeded data and initialization flag
  *
  * @storage-keys
- * - xpensia_tx_demo: demo transaction data
  * - xpensia_demo_transactions_initialized: seed guard flag
  *
  * @dependencies
  * - categories-data.ts: category hierarchy
- * - demo-storage.ts: demo namespace persistence
- * - app-mode.ts: mode flag management
+ * - storage-utils.ts: transaction persistence
  * - safe-storage.ts: storage wrapper
+ *
+ * @review-tags
+ * - @risk: seed runs only once per install
+ * - @data-integrity: amounts respect transaction type sign
+ *
+ * @review-checklist
+ * - [ ] Seed skips if transactions exist
+ * - [ ] Transfer amounts include positive/negative variants
+ * - [ ] Date generation stays within expected range
  */
 
 import { safeStorage } from "@/utils/safe-storage";
 import { Transaction, TransactionType } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import { getCategoryHierarchy, CURRENCIES } from '@/lib/categories-data';
-import { demoStorage } from '@/utils/demo-storage';
+import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 
 const FROM_ACCOUNTS = [
   'SAB Bank Debit',
@@ -53,12 +59,14 @@ const VENDORS = [
 const INIT_FLAG_KEY = 'xpensia_demo_transactions_initialized';
 
 class DemoTransactionService {
-  /**
-   * Seed demo transactions into the demo namespace (xpensia_tx_demo).
-   * Skips if already seeded. Never touches xpensia_transactions.
-   */
   seedDemoTransactions(): void {
     if (safeStorage.getItem(INIT_FLAG_KEY)) {
+      return;
+    }
+
+    const existing = getStoredTransactions();
+    if (existing.length > 0) {
+      safeStorage.setItem(INIT_FLAG_KEY, 'true');
       return;
     }
 
@@ -71,7 +79,8 @@ class DemoTransactionService {
 
     const randomDate = () => {
       const time = start.getTime() + Math.random() * (end.getTime() - start.getTime());
-      return new Date(time).toISOString().split('T')[0];
+      const d = new Date(time);
+      return d.toISOString().split('T')[0];
     };
 
     const randomAmount = (type: TransactionType) => {
@@ -107,39 +116,17 @@ class DemoTransactionService {
       });
     }
 
-    demoStorage.setTransactions(newTransactions);
+    storeTransactions([...existing, ...newTransactions]);
     safeStorage.setItem(INIT_FLAG_KEY, 'true');
   }
 
-  /**
-   * Get all demo transactions from the demo namespace.
-   */
-  getDemoTransactions(): Transaction[] {
-    return demoStorage.getTransactions();
-  }
-
-  /**
-   * Returns true if the demo namespace has any data.
-   */
-  hasDemoData(): boolean {
-    return demoStorage.hasData();
-  }
-
-  /**
-   * Clear demo transactions and switch app mode to real.
-   * Does NOT reseed. Call seedDemoTransactions() after this to reseed.
-   */
   clearDemoTransactions(): void {
-    demoStorage.clear();
-  }
-
-  /**
-   * Reset demo data: clear and reseed.
-   */
-  resetDemoTransactions(): void {
-    demoStorage.clear();
-    safeStorage.removeItem(INIT_FLAG_KEY);
-    this.seedDemoTransactions();
+    const existing = getStoredTransactions();
+    const filtered = existing.filter(t => !t.isSample);
+    storeTransactions(filtered);
+    // Maintain the initialization flag so that demo data is not reseeded
+    // when the application reloads after clearing sample transactions.
+    safeStorage.setItem(INIT_FLAG_KEY, 'true');
   }
 }
 

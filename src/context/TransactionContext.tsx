@@ -4,22 +4,25 @@
  *              and computed summaries used across the application.
  *
  * @responsibilities
- * - Load and persist transactions to local storage (demo or real namespace)
+ * - Load and persist transactions to local storage
  * - Provide CRUD helpers for transaction state
  * - Expose summary/grouping utilities for UI consumption
- * - Manage demo ↔ real mode switching
  *
  * @dependencies
- * - storage-utils.ts: real transaction persistence and StorageEvent dispatch
- * - demo-storage.ts: demo namespace read/write
- * - app-mode.ts: mode flag management
+ * - storage-utils.ts: local storage persistence and StorageEvent dispatch
+ *
+ * @review-tags
+ * - @side-effects: writes to storage and listens for storage events
+ * - @performance: summary calculations iterate over full transaction lists
+ *
+ * @review-checklist
+ * - [ ] StorageEvent handler stays in sync with storage keys
+ * - [ ] Summary calculations exclude transfers where required
  */
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
-import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
+import { getStoredTransactions, storeTransactions, storeTransaction, removeTransaction } from '@/utils/storage-utils';
 import { ensureFxFields } from '@/services/FxConversionService';
-import { appMode, AppMode } from '@/utils/app-mode';
-import { demoStorage, DEMO_STORAGE_KEY } from '@/utils/demo-storage';
 
 interface TransactionSummary {
   income: number;
@@ -49,8 +52,6 @@ interface SmsMessageInput {
 
 interface TransactionContextType {
   transactions: Transaction[];
-  appMode: AppMode;
-  exitDemoMode: () => void;
   addTransactions: (newTransactions: Transaction[]) => void;
   updateTransaction: (updatedTransaction: Transaction) => void;
   deleteTransaction: (transactionId: string) => void;
@@ -64,186 +65,205 @@ interface TransactionContextType {
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
-/**
- * Load transactions from the correct namespace for the current mode.
- */
-function loadTransactionsForMode(mode: AppMode): Transaction[] {
-  return mode === 'demo' ? demoStorage.getTransactions() : getStoredTransactions();
-}
-
 export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentMode, setCurrentMode] = useState<AppMode>(appMode.get());
-  const [transactions, setTransactions] = useState<Transaction[]>(() =>
-    loadTransactionsForMode(appMode.get())
-  );
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   // ============================================================================
-  // SECTION: Storage Sync
-  // PURPOSE: React to storage events from the same or other tabs/windows
+  // SECTION: Storage Initialization + Sync
+  // PURPOSE: Load transactions and listen for external storage updates
+  // REVIEW: Ensure storage key matches storage-utils constants
   // ============================================================================
 
+  // Load transactions from local storage on component mount
+  useEffect(() => {
+    const storedTransactions = getStoredTransactions();
+    setTransactions(storedTransactions);
+  }, []);
+
+  // Listen for storage changes from other tabs or manual dispatch
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === 'xpensia_transactions' && currentMode === 'real') {
+      if (event.key === 'xpensia_transactions') {
         setTransactions(getStoredTransactions());
-      }
-      if (event.key === DEMO_STORAGE_KEY && currentMode === 'demo') {
-        setTransactions(demoStorage.getTransactions());
-      }
-      if (event.key === 'xpensia_app_mode') {
-        const newMode = (event.newValue === 'real' ? 'real' : 'demo') as AppMode;
-        setCurrentMode(newMode);
-        setTransactions(loadTransactionsForMode(newMode));
       }
     };
 
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [currentMode]);
-
-  // ============================================================================
-  // SECTION: Mode Management
-  // ============================================================================
-
-  const exitDemoMode = useCallback(() => {
-    appMode.activateReal();
-    setCurrentMode('real');
-    setTransactions(getStoredTransactions());
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
-
-  /**
-   * Switch to real mode on first user write. Called internally before writes.
-   */
-  const ensureRealMode = useCallback((): boolean => {
-    if (currentMode === 'demo') {
-      appMode.activateReal();
-      setCurrentMode('real');
-      return true; // switched
-    }
-    return false;
-  }, [currentMode]);
 
   // ============================================================================
   // SECTION: CRUD Helpers
+  // PURPOSE: Maintain local state and persist updates
+  // REVIEW: Ensure ID and source defaults are applied consistently
   // ============================================================================
 
-  const addTransactions = useCallback((newTransactions: Transaction[]) => {
-    const switched = ensureRealMode();
+  const addTransactions = (newTransactions: Transaction[]) => {
+    // Ensure all transactions have required fields
+    const validTransactions = newTransactions.map(transaction => ensureFxFields({
+      ...transaction,
+      id: transaction.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      source: transaction.source || 'manual'
+    }));
 
-    const validTransactions = newTransactions.map(t =>
-      ensureFxFields({
-        ...t,
-        id: t.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        source: t.source || 'manual',
-      })
-    );
+    // Update state
+    setTransactions(prevTransactions => {
+      const updatedTransactions = [...validTransactions, ...prevTransactions];
 
-    setTransactions(prev => {
-      // After switching modes, prev still holds demo transactions — start fresh
-      const base = switched ? getStoredTransactions() : prev;
-      const updated = [...validTransactions, ...base];
-      storeTransactions(updated);
-      return updated;
+      // Store in local storage
+      storeTransactions(updatedTransactions);
+
+      return updatedTransactions;
     });
-  }, [ensureRealMode]);
+  };
 
-  const addTransaction = useCallback((transaction: Transaction) => {
-    const switched = ensureRealMode();
-
+  const addTransaction = (transaction: Transaction) => {
+    // Ensure transaction has required fields
     const validTransaction = ensureFxFields({
       ...transaction,
       id: transaction.id || `transaction-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      source: transaction.source || 'manual',
+      source: transaction.source || 'manual'
     });
+    
+    // Update state
+    setTransactions(prevTransactions => {
+      const updatedTransactions = [validTransaction, ...prevTransactions];
 
-    setTransactions(prev => {
-      const base = switched ? getStoredTransactions() : prev;
-      const updated = [validTransaction, ...base];
-      storeTransactions(updated);
-      return updated;
+      // Store in local storage
+      storeTransactions(updatedTransactions);
+
+      return updatedTransactions;
     });
-  }, [ensureRealMode]);
+  };
 
-  const updateTransaction = useCallback((updatedTransaction: Transaction) => {
-    // Updates only make sense in real mode; if somehow called in demo mode, switch silently
-    ensureRealMode();
-
-    setTransactions(prev => {
-      const next = ensureFxFields(updatedTransaction);
-      const updated = prev.map(t => t.id === next.id ? next : t);
-      storeTransactions(updated);
-      return updated;
+  const updateTransaction = (updatedTransaction: Transaction) => {
+    setTransactions(prevTransactions => {
+      const nextTransaction = ensureFxFields(updatedTransaction);
+      const updatedTransactions = prevTransactions.map(transaction => 
+        transaction.id === nextTransaction.id ? nextTransaction : transaction
+      );
+      
+      // Store in local storage
+      storeTransactions(updatedTransactions);
+      
+      return updatedTransactions;
     });
-  }, [ensureRealMode]);
+  };
 
-  const deleteTransaction = useCallback((transactionId: string) => {
-    setTransactions(prev => {
-      const filtered = prev.filter(t => t.id !== transactionId);
-      if (currentMode === 'real') {
-        storeTransactions(filtered);
-      } else {
-        demoStorage.setTransactions(filtered);
-      }
-      return filtered;
+  const deleteTransaction = (transactionId: string) => {
+    setTransactions(prevTransactions => {
+      const filteredTransactions = prevTransactions.filter(transaction => transaction.id !== transactionId);
+      
+      // Store in local storage
+      storeTransactions(filteredTransactions);
+      
+      return filteredTransactions;
     });
-  }, [currentMode]);
+  };
 
-  const clearTransactions = useCallback(() => {
+  const clearTransactions = () => {
     setTransactions([]);
-    if (currentMode === 'real') {
-      storeTransactions([]);
-    } else {
-      demoStorage.clear();
-    }
-  }, [currentMode]);
+    
+    // Clear from local storage
+    storeTransactions([]);
+  };
 
+  // Mock methods for wireframes
   // ============================================================================
   // SECTION: Summary + Grouping Helpers
+  // PURPOSE: Provide basic aggregates for UI display
+  // REVIEW: Expense totals should use absolute amounts
   // ============================================================================
 
-  const getTransactionsSummary = (): TransactionSummary => ({
-    income: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
-    expenses: Math.abs(transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0)),
-    balance: transactions.reduce((sum, t) => sum + Number(t.amount), 0),
-  });
+  const getTransactionsSummary = () => {
+    return {
+      income: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0),
+      expenses: Math.abs(transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0)),
+      balance: transactions.reduce((sum, t) => sum + Number(t.amount), 0),
+    };
+  };
 
   const getTransactionsByCategory = (): CategorySummary[] => {
+    // Group by category logic would go here
     const categorized: Record<string, Transaction[]> = {};
-    transactions.forEach(t => {
-      const cat = t.category || 'Uncategorized';
-      if (!categorized[cat]) categorized[cat] = [];
-      categorized[cat].push(t);
+    
+    transactions.forEach(transaction => {
+      const category = transaction.category || 'Uncategorized';
+      if (!categorized[category]) {
+        categorized[category] = [];
+      }
+      categorized[category].push(transaction);
     });
+    
     return Object.entries(categorized).map(([category, txns]) => {
       const total = txns.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
-      return { name: category, category, transactions: txns, total, value: total };
+      return {
+        name: category,
+        category,
+        transactions: txns,
+        total,
+        value: total
+      };
     });
   };
 
   const getTransactionsByTimePeriod = (period = 'month'): TimePeriodData[] => {
+    // Time period grouping logic
     const now = new Date();
     let startDate: Date;
+    
     switch (period) {
-      case 'week': startDate = new Date(now); startDate.setDate(now.getDate() - 7); break;
-      case 'year': startDate = new Date(now); startDate.setFullYear(now.getFullYear() - 1); break;
-      default: startDate = new Date(now); startDate.setMonth(now.getMonth() - 1);
+      case 'week':
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'year':
+        startDate = new Date(now);
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 1);
     }
-    const periodTx = transactions.filter(t => {
-      const d = new Date(t.date);
-      return d >= startDate && d <= now;
+    
+    // Filter transactions in the period
+    const periodTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= startDate && transactionDate <= now;
     });
-    const grouped: Record<string, { income: number; expense: number }> = {};
-    periodTx.forEach(t => {
-      const key = new Date(t.date).toISOString().split('T')[0];
-      if (!grouped[key]) grouped[key] = { income: 0, expense: 0 };
-      if (t.type === 'income') grouped[key].income += Math.abs(Number(t.amount));
-      else grouped[key].expense += Math.abs(Number(t.amount));
+    
+    // Group by date and calculate income/expense
+    const groupedByDate: Record<string, { income: number; expense: number }> = {};
+    
+    periodTransactions.forEach(t => {
+      const dateKey = new Date(t.date).toISOString().split('T')[0];
+      if (!groupedByDate[dateKey]) {
+        groupedByDate[dateKey] = { income: 0, expense: 0 };
+      }
+      if (t.type === 'income') {
+        groupedByDate[dateKey].income += Math.abs(Number(t.amount));
+      } else {
+        groupedByDate[dateKey].expense += Math.abs(Number(t.amount));
+      }
     });
-    return Object.entries(grouped).map(([date, data]) => ({ date, ...data }));
+    
+    return Object.entries(groupedByDate).map(([date, data]) => ({
+      date,
+      income: data.income,
+      expense: data.expense
+    }));
   };
 
-  const processTransactionsFromSMS = (messages: SmsMessageInput[]): Transaction[] =>
-    messages.map(msg => ({
+  const processTransactionsFromSMS = (messages: SmsMessageInput[]): Transaction[] => {
+    // SMS processing logic would go here
+    // This is a mock implementation
+    return messages.map(msg => ({
       id: `sms-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: msg.body?.substring(0, 30) || 'SMS Transaction',
       amount: -Math.abs(Math.random() * 100),
@@ -252,14 +272,14 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       date: new Date().toISOString().split('T')[0],
       fromAccount: 'Bank Account',
       currency: 'USD',
-      source: 'sms',
+      description: msg.body || '',
+      source: 'sms'
     }));
+  };
 
   return (
     <TransactionContext.Provider value={{
       transactions,
-      appMode: currentMode,
-      exitDemoMode,
       addTransactions,
       updateTransaction,
       deleteTransaction,
@@ -268,7 +288,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       getTransactionsByCategory,
       getTransactionsByTimePeriod,
       processTransactionsFromSMS,
-      addTransaction,
+      addTransaction
     }}>
       {children}
     </TransactionContext.Provider>
@@ -283,4 +303,6 @@ export const useTransactions = (): TransactionContextType => {
   return context;
 };
 
-export const useOptionalTransactions = () => useContext(TransactionContext);
+export const useOptionalTransactions = () => {
+  return useContext(TransactionContext);
+};

@@ -20,7 +20,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, UploadCloud, Database, Unlock, RefreshCw } from 'lucide-react';
+import { Download, UploadCloud, Database, Trash2, Lock, Unlock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,11 +30,9 @@ import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils'
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
 import type { Transaction } from '@/types/transaction';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
-import { useDemoMode } from '@/hooks/useDemoMode';
 
 const DataManagementSettings = () => {
   const { toast } = useToast();
-  const { isDemoMode } = useDemoMode();
   const [betaDialogOpen, setBetaDialogOpen] = useState(false);
   const [betaCode, setBetaCode] = useState('');
   const [isBetaActive, setIsBetaActive] = useState(() => {
@@ -113,7 +111,7 @@ const DataManagementSettings = () => {
             title: "Import successful",
             description: `Added ${data.length} transactions successfully.`,
           });
-          // storeTransactions dispatches a StorageEvent — TransactionContext will re-read automatically
+          setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
           toast({
             title: "Import failed",
@@ -129,25 +127,33 @@ const DataManagementSettings = () => {
     fileInput.click();
   };
 
-  const handleResetDemoData = () => {
-    const confirmReset = window.confirm(
-      'This will restore the original demo transactions. Continue?'
+  const handleClearSampleData = () => {
+    const confirmClear = window.confirm(
+      'Are you sure you want to clear the sample data?'
     );
-    if (!confirmReset) return;
+    if (!confirmClear) return;
 
     try {
-      demoTransactionService.resetDemoTransactions();
-
-      logAnalyticsEvent('reset_demo_data', { success: true });
-
-      toast({
-        title: 'Demo data restored',
-        description: 'The original demo transactions have been restored.',
+      demoTransactionService.clearDemoTransactions();
+      
+      // Log clear sample data event
+      logAnalyticsEvent('clear_sample_data', {
+        success: true
       });
-    } catch (error) {
-      logAnalyticsEvent('reset_demo_data', { success: false });
+      
       toast({
-        title: 'Failed to reset demo data',
+        title: 'Sample data cleared',
+        description: 'Demo transactions have been removed.',
+      });
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      logAnalyticsEvent('clear_sample_data', {
+        success: false,
+        error: error.message
+      });
+      
+      toast({
+        title: 'Failed to clear sample data',
         variant: 'destructive',
       });
     }
@@ -218,18 +224,16 @@ const DataManagementSettings = () => {
             </Button>
           </div>
 
-          {isDemoMode && (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Reset Demo Data</p>
-                <p className="text-sm text-muted-foreground">Restore the original demo transactions</p>
-              </div>
-              <Button variant="outline" onClick={handleResetDemoData} className="gap-2">
-                <RefreshCw size={16} />
-                Reset Demo Data
-              </Button>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Clear Sample Data</p>
+              <p className="text-sm text-muted-foreground">Remove seeded demo transactions</p>
             </div>
-          )}
+            <Button variant="outline" onClick={handleClearSampleData} className="gap-2 text-destructive">
+              <Trash2 size={16} />
+              Clear Sample Data
+            </Button>
+          </div>
 
           <div className="flex items-center justify-between">
             <div>
@@ -239,7 +243,7 @@ const DataManagementSettings = () => {
               </p>
             </div>
             {isBetaActive ? (
-              <div className="flex items-center text-success">
+              <div className="flex items-center text-green-600">
                 <Unlock className="h-4 w-4 mr-2" />
                 <span className="text-sm font-medium">Active</span>
               </div>
