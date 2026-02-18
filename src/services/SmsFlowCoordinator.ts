@@ -1,4 +1,5 @@
 import { safeStorage } from '@/utils/safe-storage';
+import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
 
 export type OnboardingState = 'not_completed' | 'first_run_post_onboarding' | 'subsequent_run';
 export type SmsPermissionState = 'granted' | 'not_granted';
@@ -60,8 +61,12 @@ export const resolveProviderSelectionState = (userSmsProviders?: string[]): Prov
       return 'empty';
     }
 
-    if (isNonEmptyStringArray(parsedProviders) || hasSelectedProviderObjects(parsedProviders)) {
+    if (smsProviderSelectionService.hasConfiguredProviders()) {
       return 'configured';
+    }
+
+    if (isNonEmptyStringArray(parsedProviders) || hasSelectedProviderObjects(parsedProviders)) {
+      return 'invalid';
     }
 
     return 'empty';

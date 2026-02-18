@@ -57,6 +57,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import SmsImportService from '@/services/SmsImportService';
+import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
 import { getNextSmsFlowStep, resolveProviderSelectionState, type OnboardingState, type SmsPermissionState } from '@/services/SmsFlowCoordinator';
 import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
 import { useUser } from './context/UserContext';
@@ -336,6 +337,7 @@ function AppWrapper() {
       const permissionStatus = await smsPermissionService.checkPermissionStatus();
       const permissionState: SmsPermissionState = permissionStatus.granted ? 'granted' : 'not_granted';
 
+      await smsProviderSelectionService.hydrateProvidersFromStableStorage();
       const providerSelectionState = resolveProviderSelectionState(user?.smsProviders);
 
       const flowDecision = getNextSmsFlowStep({

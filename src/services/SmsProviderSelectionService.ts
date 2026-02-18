@@ -29,6 +29,7 @@
  */
 
 import { safeStorage } from "@/utils/safe-storage";
+import { safePreferences } from '@/utils/safe-storage';
 import { ErrorType } from '@/types/error';
 import { handleError } from '@/utils/error-utils';
 import { Capacitor } from '@capacitor/core';
@@ -48,8 +49,10 @@ export interface DetectedProvider {
 }
 
 const SMS_PROVIDERS_STORAGE_KEY = 'sms_providers';
+const LEGACY_SMS_PROVIDERS_STORAGE_KEY = 'smsProviders';
 const SMS_START_DATE_STORAGE_KEY = 'sms_start_date';
 const DETECTED_PROVIDERS_STORAGE_KEY = 'detected_sms_providers';
+const SMS_SENDER_IMPORT_MAP_STORAGE_KEY = 'xpensia_sms_sender_import_map';
 
 class SmsProviderSelectionService {
   // Default SMS providers
@@ -61,6 +64,88 @@ class SmsProviderSelectionService {
     { id: "mobile-banking", name: "Mobile Banking", pattern: "You spent $AMOUNT at...", isSelected: false }
   ];
   
+  private isValidProvider(provider: unknown): provider is SmsProvider {
+    if (!provider || typeof provider !== 'object') {
+      return false;
+    }
+
+    const candidate = provider as Partial<SmsProvider>;
+    return (
+      typeof candidate.id === 'string' &&
+      typeof candidate.name === 'string' &&
+      typeof candidate.pattern === 'string' &&
+      typeof candidate.isSelected === 'boolean'
+    );
+  }
+
+  private parseStoredProviders(storedProviders: string | null): SmsProvider[] | null {
+    if (!storedProviders) {
+      return null;
+    }
+
+    const parsed = JSON.parse(storedProviders);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    if (!parsed.every((provider) => this.isValidProvider(provider))) {
+      return null;
+    }
+
+    return parsed;
+  }
+
+  private hasLegacyProviderOrSenderState(): boolean {
+    const legacyProviders = safeStorage.getItem(LEGACY_SMS_PROVIDERS_STORAGE_KEY);
+    if (legacyProviders) {
+      return true;
+    }
+
+    const senderMapRaw = safeStorage.getItem(SMS_SENDER_IMPORT_MAP_STORAGE_KEY);
+    if (!senderMapRaw) {
+      return false;
+    }
+
+    try {
+      const senderMap = JSON.parse(senderMapRaw);
+      if (!senderMap || Array.isArray(senderMap) || typeof senderMap !== 'object') {
+        return true;
+      }
+
+      return Object.entries(senderMap).some(
+        ([sender, date]) =>
+          typeof sender !== 'string' ||
+          sender.trim().length === 0 ||
+          typeof date !== 'string' ||
+          Number.isNaN(new Date(date).getTime())
+      );
+    } catch {
+      return true;
+    }
+  }
+
+  async hydrateProvidersFromStableStorage(): Promise<void> {
+    try {
+      const preferenceValue = await safePreferences.get({ key: SMS_PROVIDERS_STORAGE_KEY });
+      const storedProviders = safeStorage.getItem(SMS_PROVIDERS_STORAGE_KEY);
+
+      if (!storedProviders && preferenceValue.value) {
+        safeStorage.setItem(SMS_PROVIDERS_STORAGE_KEY, preferenceValue.value);
+        return;
+      }
+
+      if (storedProviders && preferenceValue.value !== storedProviders) {
+        await safePreferences.set({ key: SMS_PROVIDERS_STORAGE_KEY, value: storedProviders });
+      }
+    } catch (error) {
+      handleError({
+        type: ErrorType.STORAGE,
+        message: 'Failed to hydrate SMS providers from stable storage',
+        originalError: error
+      });
+    }
+  }
+
   // Get all available SMS providers
   getSmsProviders(): SmsProvider[] {
     try {
@@ -68,8 +153,11 @@ class SmsProviderSelectionService {
       if (!storedProviders) {
         return this.defaultProviders;
       }
-      
-      const providers = JSON.parse(storedProviders);
+
+      const providers = this.parseStoredProviders(storedProviders);
+      if (!providers) {
+        return this.defaultProviders;
+      }
       
       // Merge with detected providers to highlight detected ones
       const detectedProviders = this.getDetectedProviders();
@@ -91,7 +179,10 @@ class SmsProviderSelectionService {
   // Save selected SMS providers
   saveSelectedProviders(providers: SmsProvider[]): void {
     try {
-      safeStorage.setItem(SMS_PROVIDERS_STORAGE_KEY, JSON.stringify(providers));
+      const serializedProviders = JSON.stringify(providers);
+      safeStorage.setItem(SMS_PROVIDERS_STORAGE_KEY, serializedProviders);
+      void safePreferences.set({ key: SMS_PROVIDERS_STORAGE_KEY, value: serializedProviders });
+      safeStorage.removeItem(LEGACY_SMS_PROVIDERS_STORAGE_KEY);
     } catch (error) {
       handleError({
         type: ErrorType.STORAGE,
@@ -169,10 +260,26 @@ class SmsProviderSelectionService {
     }
   }
   
+  hasConfiguredProviders(): boolean {
+    try {
+      if (this.hasLegacyProviderOrSenderState()) {
+        return false;
+      }
+
+      const providers = this.parseStoredProviders(safeStorage.getItem(SMS_PROVIDERS_STORAGE_KEY));
+      if (!providers || providers.length === 0) {
+        return false;
+      }
+
+      return providers.some((provider) => provider.isSelected);
+    } catch {
+      return false;
+    }
+  }
+
   // Check if SMS provider selection is completed
   isProviderSelectionCompleted(): boolean {
-    const selectedProviders = this.getSelectedProviders();
-    return selectedProviders.length > 0;
+    return this.hasConfiguredProviders();
   }
   
   // NEW METHODS FOR PROVIDER DETECTION
