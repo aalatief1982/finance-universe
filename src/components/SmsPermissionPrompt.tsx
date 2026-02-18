@@ -180,7 +180,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
     }
 
     try {
-      const REQUEST_TIMEOUT = 15000; // ms
+      const REQUEST_TIMEOUT = 30000; // ms — increased from 15s to give users time to read the dialog
       type TimeoutResult = { timedOut: true };
       const timeoutPromise = new Promise<TimeoutResult>(resolve =>
         setTimeout(() => resolve({ timedOut: true }), REQUEST_TIMEOUT)
@@ -192,9 +192,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       if ('timedOut' in result) {
         console.warn('[SmsPermissionPrompt] requestPermission timed out after', REQUEST_TIMEOUT, 'ms');
         toast({
-          title: 'Request timed out',
-          description: 'Permission dialog did not return. Please try again or enable SMS permission from Settings.',
-          variant: 'destructive'
+          title: 'Still waiting…',
+          description: 'The permission dialog is still open. Please accept or deny it, or enable SMS from Settings later.',
         });
         try {
           logAnalyticsEvent('sms_permission_request_timed_out');
@@ -378,6 +377,15 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
               <p className="text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">Your Privacy Matters:</span>{' '}
                 All processing happens on your device. We only read financial messages and never access personal conversations.
+              </p>
+            </div>
+
+            {/* First scan scope note */}
+            <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">First scan:</span>{' '}
+                We'll look back 30 days to give you a feel for how SMS import works. You stay in full control.
               </p>
             </div>
           </div>

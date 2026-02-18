@@ -35,8 +35,6 @@ export interface Transaction {
   person?: string;
   metadata?: Record<string, unknown>;
   createdAt?: string;
-  /** Indicates whether the transaction was seeded as a demo sample */
-  isSample?: boolean;
   updatedAt?: string;
 }
 

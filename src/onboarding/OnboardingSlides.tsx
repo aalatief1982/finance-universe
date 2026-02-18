@@ -86,7 +86,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
       {/* Progress indicator */}
-      <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2 pt-4 safe-area-inset-top">
+      <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}>
         <div className="flex space-x-2 pt-2">
           {slides.map((_, i) => (
             <div

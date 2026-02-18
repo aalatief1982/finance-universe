@@ -20,11 +20,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, UploadCloud, Database, Trash2, Lock, Unlock } from 'lucide-react';
+import { Download, UploadCloud, Database, Unlock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { demoTransactionService } from '@/services/DemoTransactionService';
 import { useToast } from '@/hooks/use-toast';
 import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
@@ -111,7 +110,7 @@ const DataManagementSettings = () => {
             title: "Import successful",
             description: `Added ${data.length} transactions successfully.`,
           });
-          setTimeout(() => window.location.reload(), 1500);
+          window.dispatchEvent(new StorageEvent('storage', { key: 'xpensia_transactions' }));
         } catch (error) {
           toast({
             title: "Import failed",
@@ -127,37 +126,7 @@ const DataManagementSettings = () => {
     fileInput.click();
   };
 
-  const handleClearSampleData = () => {
-    const confirmClear = window.confirm(
-      'Are you sure you want to clear the sample data?'
-    );
-    if (!confirmClear) return;
 
-    try {
-      demoTransactionService.clearDemoTransactions();
-      
-      // Log clear sample data event
-      logAnalyticsEvent('clear_sample_data', {
-        success: true
-      });
-      
-      toast({
-        title: 'Sample data cleared',
-        description: 'Demo transactions have been removed.',
-      });
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error) {
-      logAnalyticsEvent('clear_sample_data', {
-        success: false,
-        error: error.message
-      });
-      
-      toast({
-        title: 'Failed to clear sample data',
-        variant: 'destructive',
-      });
-    }
-  };
 
   const handleBetaCodeSubmit = () => {
     if (betaCode === '0599572215') {
@@ -224,16 +193,7 @@ const DataManagementSettings = () => {
             </Button>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Clear Sample Data</p>
-              <p className="text-sm text-muted-foreground">Remove seeded demo transactions</p>
-            </div>
-            <Button variant="outline" onClick={handleClearSampleData} className="gap-2 text-destructive">
-              <Trash2 size={16} />
-              Clear Sample Data
-            </Button>
-          </div>
+
 
           <div className="flex items-center justify-between">
             <div>

@@ -61,7 +61,7 @@ export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY');
 // Feature flags
 export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
 export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRATION', 'true') === 'true';
-export const ENABLE_DEMO_MODE = getEnvironmentVariable('ENABLE_DEMO_MODE', 'false') === 'true';  // Set to false for real device testing
+
 
 // Configuration options
 export const DEFAULT_CURRENCY = getEnvironmentVariable('DEFAULT_CURRENCY', 'USD');
@@ -75,8 +75,9 @@ export const CLOUD_FUNCTIONS_BASE_URL = getEnvironmentVariable(
 );
 
 // Default SMS look-back period (in months) used when no user preference is set
+// Changed from 6 to 1 month (~30 days) for a lighter initial "glimpse" import
 export const VITE_SMS_LOOKBACK_MONTHS = parseInt(
-  getEnvironmentVariable('SMS_LOOKBACK_MONTHS', '6'),
+  getEnvironmentVariable('SMS_LOOKBACK_MONTHS', '1'),
   10
 );
 

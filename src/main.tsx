@@ -8,7 +8,7 @@ import { getFriendlyMessage } from './utils/errorMapper'
 import { ErrorType, ErrorSeverity } from './types/error'
 import { initializeXpensiaStorageDefaults } from './lib/smart-paste-engine/initializeXpensiaStorageDefaults'
 import { initializeCapacitor } from './lib/capacitor-init'
-import { demoTransactionService } from './services/DemoTransactionService'
+
 import { backgroundVendorSyncService } from './services/BackgroundVendorSyncService'
 import { runMigrations } from './utils/migration/runMigrations'
 import { AppLoader } from './components/AppLoader'
@@ -31,7 +31,6 @@ const AppWithLoader: React.FC = () => {
         // Run data migrations before seeding demo transactions
         runMigrations()
         
-        demoTransactionService.seedDemoTransactions()
         setupGlobalErrorHandlers()
         
         // Start background vendor sync
@@ -42,7 +41,6 @@ const AppWithLoader: React.FC = () => {
           console.error('[Init] Initialization error:', err)
         }
         // Fallback initialization
-        demoTransactionService.seedDemoTransactions()
         setupGlobalErrorHandlers()
         backgroundVendorSyncService.initialize()
       } finally {
