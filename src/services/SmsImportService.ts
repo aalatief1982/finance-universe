@@ -35,6 +35,7 @@ import {
 } from '@/utils/storage-utils';
 import { getAutoImportStartDate, setLastAutoImportDate } from '@/utils/sms-permission-storage';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { smsProviderSelectionService } from './SmsProviderSelectionService';
 
 // Flags to ensure auto import prompts only appear once per session
 // and track whether the user accepted the auto import prompt
@@ -66,6 +67,13 @@ export class SmsImportService {
     };
 
     try {
+      await smsProviderSelectionService.hydrateProvidersFromStableStorage();
+
+      if (!smsProviderSelectionService.hasConfiguredProviders()) {
+        safeNavigate('/sms-providers');
+        return;
+      }
+
       await logAnalyticsEvent('app_start');
       const { auto = false, usePermissionDate = false } = opts || {};
 

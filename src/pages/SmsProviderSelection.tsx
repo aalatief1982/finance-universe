@@ -43,6 +43,8 @@ const SmsProviderSelection = () => {
     const loadProviders = async () => {
       setIsLoading(true);
       try {
+        await smsProviderSelectionService.hydrateProvidersFromStableStorage();
+
         // Get initial providers
         let loadedProviders = smsProviderSelectionService.getSmsProviders();
         
@@ -120,8 +122,9 @@ const SmsProviderSelection = () => {
       return;
     }
 
-    // In a real app, this would save the selection to state/local storage
-    // Already saving through service, but we'll also save to localStorage for backward compatibility
+    smsProviderSelectionService.saveSelectedProviders(providers);
+
+    // Legacy storage is still updated for users on older app versions.
     safeStorage.setItem('smsProviders', JSON.stringify(
       selectedProviders.map(p => ({ id: p.id, name: p.name }))
     ));

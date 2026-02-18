@@ -5,6 +5,8 @@ import { safeStorage } from '@/utils/safe-storage';
 describe('SmsFlowCoordinator', () => {
   beforeEach(() => {
     safeStorage.removeItem('sms_providers');
+    safeStorage.removeItem('smsProviders');
+    safeStorage.removeItem('xpensia_sms_sender_import_map');
   });
 
   it('routes first run with granted permission and no providers to provider setup', () => {
@@ -50,12 +52,36 @@ describe('SmsFlowCoordinator', () => {
     expect(resolveProviderSelectionState()).toBe('invalid');
   });
 
+
+  it('treats provider payload with no selected providers as empty', () => {
+    safeStorage.setItem(
+      'sms_providers',
+      JSON.stringify([
+        { id: 'provider-1', name: 'Provider 1', pattern: 'test', isSelected: false },
+      ])
+    );
+
+    expect(resolveProviderSelectionState()).toBe('empty');
+  });
+
+  it('treats legacy provider key as invalid to force migration', () => {
+    safeStorage.setItem(
+      'sms_providers',
+      JSON.stringify([
+        { id: 'provider-1', name: 'Provider 1', pattern: 'test', isSelected: true },
+      ])
+    );
+    safeStorage.setItem('smsProviders', JSON.stringify([{ id: 'legacy', name: 'Legacy' }]));
+
+    expect(resolveProviderSelectionState()).toBe('invalid');
+  });
+
   it('treats selected provider objects as configured', () => {
     safeStorage.setItem(
       'sms_providers',
       JSON.stringify([
-        { id: 'provider-1', isSelected: false },
-        { id: 'provider-2', isSelected: true },
+        { id: 'provider-1', name: 'Provider 1', pattern: 'test', isSelected: false },
+        { id: 'provider-2', name: 'Provider 2', pattern: 'test', isSelected: true },
       ])
     );
 

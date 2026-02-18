@@ -10,12 +10,30 @@ import {
   extractVendorName,
   inferIndirectFields
 } from '@/lib/smart-paste-engine/suggestionEngine';
+import { smsProviderSelectionService } from '../SmsProviderSelectionService';
 
 vi.mock('../SmsReaderService');
 vi.mock('@/utils/storage-utils');
 vi.mock('@/lib/smart-paste-engine/suggestionEngine');
+vi.mock('../SmsProviderSelectionService', () => ({
+  smsProviderSelectionService: {
+    hydrateProvidersFromStableStorage: vi.fn().mockResolvedValue(undefined),
+    hasConfiguredProviders: vi.fn().mockReturnValue(true),
+  },
+}));
+
 
 describe('SmsImportService.checkForNewMessages', () => {
+  it('redirects to provider setup when providers are not configured', async () => {
+    (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
+    const navigate = vi.fn();
+
+    await SmsImportService.checkForNewMessages(navigate);
+
+    expect(navigate).toHaveBeenCalledWith('/sms-providers');
+    expect(SmsReaderService.readSmsMessages).not.toHaveBeenCalled();
+  });
+
   it('navigates to vendor mapping with parsed messages', async () => {
     const messages = [
       { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() },
