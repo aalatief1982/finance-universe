@@ -52,6 +52,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   const [isBusy, setIsBusy] = useState(false);
   const [busyMessage, setBusyMessage] = useState('');
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
+  const [showImportScopeDialog, setShowImportScopeDialog] = useState(false);
   const navigate = useNavigate();
 
   const { refreshPermission } = useSmsPermission();
@@ -59,6 +60,60 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   useEffect(() => {
     console.log('SmsPermissionPrompt rendered with open:', open);
   }, [open]);
+
+  const completePermissionGrantFlow = async () => {
+    console.log('[SmsPermissionPrompt] permission granted — opening 30-day import scope dialog');
+    safeStorage.setItem('sms_prompt_shown', 'true');
+    onOpenChange(false);
+    setShowImportScopeDialog(true);
+    try {
+      refreshPermission();
+    } catch (e) {
+      void e;
+    }
+  };
+
+  const handleConfirmImportScope = async () => {
+    setShowImportScopeDialog(false);
+    setIsBusy(true);
+    setBusyMessage('Importing SMS messages...');
+
+    try {
+      await updateUserPreferences({
+        sms: {
+          ...user?.preferences?.sms,
+          autoDetectProviders: user?.preferences?.sms?.autoDetectProviders ?? true,
+          showDetectionNotifications: user?.preferences?.sms?.showDetectionNotifications ?? true,
+          autoImport: true,
+          backgroundSmsEnabled: true,
+        }
+      });
+
+      try {
+        logAnalyticsEvent('sms_permission_granted');
+      } catch (e) {
+        console.warn('[SmsPermissionPrompt] analytics error', e);
+      }
+
+      try {
+        console.log('[SmsPermissionPrompt] Initializing SMS listener and triggering initial import...');
+        await smsPermissionService.initSmsListener();
+        await new Promise((res) => setTimeout(res, 500));
+        await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
+        console.log('[SmsPermissionPrompt] Initial SMS import completed');
+      } catch (importErr) {
+        console.warn('[SmsPermissionPrompt] Error during initial SMS import:', importErr);
+      }
+
+      toast({
+        title: 'SMS Import Enabled! 🎉',
+        description: 'Your transactions will now be imported automatically.'
+      });
+    } finally {
+      setIsBusy(false);
+      setBusyMessage('');
+    }
+  };
 
   const openAppSettingsFallback = async () => {
     console.log('[SmsPermissionPrompt] openAppSettingsFallback called');
@@ -109,6 +164,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
 
     // Add a one-time listener for app resume so we can immediately check permission when app regains focus
     let resumeListener: PluginListenerHandle | null = null;
+    let resolveByResume: ((value: { grantedOnResume: true }) => void) | null = null;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const Plugins = (window as any).Plugins ?? (window as any).CapacitorPlugins ?? null;
@@ -119,47 +175,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
             const canonicalStatus = await smsPermissionService.checkPermissionStatus();
             console.log('[SmsPermissionPrompt] canonical status on resume:', canonicalStatus);
             if (canonicalStatus.granted) {
-              // persist preferences and then import
-              try {
-                setIsBusy(true);
-                setBusyMessage('Importing SMS messages...');
-                await updateUserPreferences({
-                  sms: {
-                    ...user?.preferences?.sms,
-                    autoDetectProviders: user?.preferences?.sms?.autoDetectProviders ?? true,
-                    showDetectionNotifications: user?.preferences?.sms?.showDetectionNotifications ?? true,
-                    autoImport: true,
-                    backgroundSmsEnabled: true,
-                  }
-                });
-                safeStorage.setItem('sms_prompt_shown', 'true');
-                // refresh permission hook so other components update immediately
-                try { refreshPermission(); } catch (e) { /* ignore */ }
-                // telemetry
-                try { logAnalyticsEvent('sms_permission_granted'); } catch (e) { console.warn('[SmsPermissionPrompt] analytics error', e); }
-
-                // Initialize listener and perform import
-                try {
-                  console.log('[SmsPermissionPrompt] Initializing SMS listener and triggering initial import...');
-                  await smsPermissionService.initSmsListener();
-                  // small delay to ensure listener is ready
-                  await new Promise((res) => setTimeout(res, 500));
-                  await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
-                  console.log('[SmsPermissionPrompt] Initial SMS import completed');
-                } catch (importErr) {
-                  console.warn('[SmsPermissionPrompt] Error during initial SMS import:', importErr);
-                }
-
-                toast({
-                  title: 'SMS Import Enabled! 🎉',
-                  description: 'Your transactions will now be imported automatically.'
-                });
-
-                onOpenChange(false);
-              } finally {
-                setIsBusy(false);
-                setBusyMessage('');
-              }
+              resolveByResume?.({ grantedOnResume: true });
             } else if (canonicalStatus.permanentlyDenied) {
               setPermanentlyDenied(true);
             }
@@ -182,12 +198,26 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
     try {
       const REQUEST_TIMEOUT = 30000; // ms — increased from 15s to give users time to read the dialog
       type TimeoutResult = { timedOut: true };
+      type ResumeResult = { grantedOnResume: true };
       const timeoutPromise = new Promise<TimeoutResult>(resolve =>
         setTimeout(() => resolve({ timedOut: true }), REQUEST_TIMEOUT)
       );
+      const grantedOnResumePromise = new Promise<ResumeResult>((resolve) => {
+        resolveByResume = resolve;
+      });
 
       // Race the real permission request against a client-side timeout to avoid hanging forever
-      const result = await Promise.race([smsPermissionService.requestPermission(), timeoutPromise]);
+      const result = await Promise.race([
+        smsPermissionService.requestPermission(),
+        timeoutPromise,
+        grantedOnResumePromise,
+      ]);
+
+      if ('grantedOnResume' in result) {
+        console.log('[SmsPermissionPrompt] permission confirmed on app resume — continuing immediately');
+        await completePermissionGrantFlow();
+        return;
+      }
 
       if ('timedOut' in result) {
         console.warn('[SmsPermissionPrompt] requestPermission timed out after', REQUEST_TIMEOUT, 'ms');
@@ -217,51 +247,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       console.log('[SmsPermissionPrompt] canonical permission status after request:', canonicalStatus);
 
       if (canonicalStatus.granted) {
-        console.log('[SmsPermissionPrompt] canonical status: granted — updating preferences');
-        updateUserPreferences({
-          sms: {
-            ...user?.preferences?.sms,
-            autoDetectProviders: user?.preferences?.sms?.autoDetectProviders ?? true,
-            showDetectionNotifications: user?.preferences?.sms?.showDetectionNotifications ?? true,
-            autoImport: true,
-            backgroundSmsEnabled: true,
-          }
-        });
-
-        toast({
-          title: 'SMS Import Enabled! 🎉',
-          description: 'Your transactions will now be imported automatically.'
-        });
-
-        safeStorage.setItem('sms_prompt_shown', 'true');
-        console.log('[SmsPermissionPrompt] sms_prompt_shown set to true (canonical granted)');
-        // refresh permission hook so UI updates instantly
-        try { refreshPermission(); } catch (e) { /* ignore */ }
-        try { logAnalyticsEvent('sms_permission_granted'); } catch (e) { console.warn('[SmsPermissionPrompt] analytics error', e); }
-
-        // Initialize listener and trigger initial SMS import with blocking spinner
-        try {
-          setIsBusy(true);
-          setBusyMessage('Importing SMS messages...');
-          
-          console.log('[SmsPermissionPrompt] Initializing SMS listener and triggering initial import...');
-          await smsPermissionService.initSmsListener();
-          
-          // Small delay to ensure listener is ready
-          await new Promise(r => setTimeout(r, 500));
-          await SmsImportService.checkForNewMessages(navigate, { 
-            auto: false, 
-            usePermissionDate: true 
-          });
-          console.log('[SmsPermissionPrompt] Initial SMS import completed successfully');
-        } catch (initErr) {
-          console.warn('[SmsPermissionPrompt] Error during SMS import:', initErr);
-        } finally {
-          setIsBusy(false);
-          setBusyMessage('');
-        }
-
-        onOpenChange(false);
+        await completePermissionGrantFlow();
       } else {
         // Not granted — check if permanently denied
         if (canonicalStatus.permanentlyDenied) {
@@ -380,14 +366,6 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
               </p>
             </div>
 
-            {/* First scan scope note */}
-            <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
-              <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-              <p className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">First scan:</span>{' '}
-                We'll look back 30 days to give you a feel for how SMS import works. You stay in full control.
-              </p>
-            </div>
           </div>
         </AlertDialogHeader>
 
@@ -424,6 +402,22 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       </AlertDialogContent>
       {/* Use shared LoadingOverlay for both requesting and importing */}
       <LoadingOverlay isOpen={isRequesting || isBusy} message={isRequesting ? 'Completing permission flow…' : busyMessage} />
+
+      <AlertDialog open={showImportScopeDialog} onOpenChange={setShowImportScopeDialog}>
+        <AlertDialogContent className="max-w-[340px] rounded-2xl">
+          <AlertDialogHeader className="space-y-3">
+            <AlertDialogTitle className="text-center text-lg">Permission Granted ✅</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm text-muted-foreground">
+              To set up your history, Xpensia will now read financial SMS from the last 30 days.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button onClick={handleConfirmImportScope} className="w-full">
+              Continue
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AlertDialog>
   );
 };
