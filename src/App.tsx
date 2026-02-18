@@ -26,6 +26,7 @@ import EditTransaction from './pages/EditTransaction';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
+import SmsProviderSelection from '@/pages/SmsProviderSelection';
 import CustomParsingRules from '@/pages/CustomParsingRules';
 import ProcessVendors from '@/pages/sms/ProcessVendors';
 import VendorCategorization from '@/pages/sms/VendorCategorization';
@@ -501,6 +502,14 @@ function AppRoutes() {
           }
         />
         <Route path="/process-sms" element={<ProcessSmsMessages />} />
+        <Route
+          path="/sms-providers"
+          element={
+            <OnboardingGuard>
+              <SmsProviderSelection />
+            </OnboardingGuard>
+          }
+        />
         <Route path="/sms/process-vendors" element={<ProcessVendors />} />
         <Route path="/sms/vendors" element={<VendorCategorization />} />
         <Route path="/vendor-mapping" element={<VendorMapping />} />
