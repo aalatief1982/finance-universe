@@ -57,6 +57,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import SmsImportService from '@/services/SmsImportService';
+import { getNextSmsFlowStep, resolveProviderSelectionState, type OnboardingState, type SmsPermissionState } from '@/services/SmsFlowCoordinator';
 import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
 import { useUser } from './context/UserContext';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
@@ -321,14 +322,50 @@ function AppWrapper() {
 
   useEffect(() => {
     if (!ENABLE_SMS_INTEGRATION) return;
-    if (user?.preferences?.sms?.autoImport) {
-      // Use permission-based date for automatic import
-      SmsImportService.checkForNewMessages(navigateRef.current, { 
-        auto: true, 
-        usePermissionDate: true 
+    let isCancelled = false;
+
+    const runStartupSmsFlow = async () => {
+      const onboardingState: OnboardingState =
+        safeStorage.getItem('xpensia_onb_done') === 'true'
+          ? (safeStorage.getItem('xpensia_onb_just_completed') === 'true'
+            ? 'first_run_post_onboarding'
+            : 'subsequent_run')
+          : 'not_completed';
+
+      const { smsPermissionService } = await import('@/services/SmsPermissionService');
+      const permissionStatus = await smsPermissionService.checkPermissionStatus();
+      const permissionState: SmsPermissionState = permissionStatus.granted ? 'granted' : 'not_granted';
+
+      const providerSelectionState = resolveProviderSelectionState(user?.smsProviders);
+
+      const flowDecision = getNextSmsFlowStep({
+        onboardingState,
+        permissionState,
+        providerSelectionState,
+        autoImportEnabled: Boolean(user?.preferences?.sms?.autoImport),
       });
-    }
-  }, [user]);
+
+      if (isCancelled) return;
+
+      if (flowDecision.nextStep === 'route_sms_providers' && flowDecision.route && location.pathname !== flowDecision.route) {
+        navigateRef.current(flowDecision.route);
+        return;
+      }
+
+      if (flowDecision.shouldTriggerAutoImport) {
+        SmsImportService.checkForNewMessages(navigateRef.current, {
+          auto: true,
+          usePermissionDate: true,
+        });
+      }
+    };
+
+    void runStartupSmsFlow();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user, location.pathname]);
 
 
 

@@ -1,0 +1,64 @@
+import { describe, expect, it, beforeEach } from 'vitest';
+import { getNextSmsFlowStep, resolveProviderSelectionState } from '@/services/SmsFlowCoordinator';
+import { safeStorage } from '@/utils/safe-storage';
+
+describe('SmsFlowCoordinator', () => {
+  beforeEach(() => {
+    safeStorage.removeItem('sms_providers');
+  });
+
+  it('routes first run with granted permission and no providers to provider setup', () => {
+    const decision = getNextSmsFlowStep({
+      onboardingState: 'first_run_post_onboarding',
+      permissionState: 'granted',
+      providerSelectionState: 'missing',
+      autoImportEnabled: true,
+    });
+
+    expect(decision.nextStep).toBe('route_sms_providers');
+    expect(decision.route).toBe('/sms-providers');
+    expect(decision.shouldTriggerAutoImport).toBe(false);
+  });
+
+  it('routes subsequent runs when provider config is invalid', () => {
+    const decision = getNextSmsFlowStep({
+      onboardingState: 'subsequent_run',
+      permissionState: 'granted',
+      providerSelectionState: 'invalid',
+      autoImportEnabled: true,
+    });
+
+    expect(decision.nextStep).toBe('route_sms_providers');
+    expect(decision.shouldTriggerAutoImport).toBe(false);
+  });
+
+  it('continues flow when providers are configured and permission granted', () => {
+    const decision = getNextSmsFlowStep({
+      onboardingState: 'subsequent_run',
+      permissionState: 'granted',
+      providerSelectionState: 'configured',
+      autoImportEnabled: true,
+    });
+
+    expect(decision.nextStep).toBe('continue_existing_flow');
+    expect(decision.shouldTriggerAutoImport).toBe(true);
+  });
+
+  it('treats malformed provider storage as invalid', () => {
+    safeStorage.setItem('sms_providers', '{broken-json');
+
+    expect(resolveProviderSelectionState()).toBe('invalid');
+  });
+
+  it('treats selected provider objects as configured', () => {
+    safeStorage.setItem(
+      'sms_providers',
+      JSON.stringify([
+        { id: 'provider-1', isSelected: false },
+        { id: 'provider-2', isSelected: true },
+      ])
+    );
+
+    expect(resolveProviderSelectionState()).toBe('configured');
+  });
+});
