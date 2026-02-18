@@ -19,11 +19,66 @@ vi.mock('../SmsProviderSelectionService', () => ({
   smsProviderSelectionService: {
     hydrateProvidersFromStableStorage: vi.fn().mockResolvedValue(undefined),
     hasConfiguredProviders: vi.fn().mockReturnValue(true),
+    getSelectedProviders: vi.fn().mockReturnValue([{ id: 'bank-abc', name: 'Bank ABC', pattern: 'alert', isSelected: true }]),
+    detectProviderFromMessage: vi.fn().mockReturnValue('bank-abc'),
   },
 }));
 
 
 describe('SmsImportService.checkForNewMessages', () => {
+
+  it('blocks strict auto-import and routes to provider setup when no providers are configured', async () => {
+    (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
+    const navigate = vi.fn();
+
+    await SmsImportService.checkForNewMessages(navigate, { auto: true, usePermissionDate: true });
+
+    expect(navigate).toHaveBeenCalledWith('/sms-providers');
+    expect(SmsReaderService.readSmsMessages).not.toHaveBeenCalled();
+  });
+
+  it('filters out messages that do not match configured providers', async () => {
+    const messages = [
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() },
+      { sender: 'OTHER', message: 'Paid 20 SAR at Dominoes', date: new Date().toISOString() }
+    ];
+
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK', 'OTHER']);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date(0).toISOString(), OTHER: new Date(0).toISOString() });
+    (setSelectedSmsSenders as Mock).mockImplementation(() => {});
+
+    (smsProviderSelectionService.detectProviderFromMessage as Mock)
+      .mockImplementation((message: string) => message.includes('Starbucks') ? 'bank-abc' : null);
+
+    (extractVendorName as Mock).mockImplementation((msg: string) => {
+      if (msg.includes('Starbucks')) return 'Starbucks';
+      if (msg.includes('Dominoes')) return 'Dominoes';
+      return '';
+    });
+    (inferIndirectFields as Mock).mockReturnValue({ category: 'Food', subcategory: 'Fast Food', type: 'expense' });
+
+    const navigate = vi.fn();
+
+    await SmsImportService.checkForNewMessages(navigate);
+
+    expect(navigate).toHaveBeenCalledWith('/vendor-mapping', {
+      state: {
+        messages: [messages[0]],
+        vendorMap: { Starbucks: 'Starbucks' },
+        keywordMap: [
+          {
+            keyword: 'Starbucks',
+            mappings: [
+              { field: 'category', value: 'Food' },
+              { field: 'subcategory', value: 'Fast Food' },
+              { field: 'type', value: 'expense' }
+            ]
+          }
+        ]
+      }
+    });
+  });
   it('redirects to provider setup when providers are not configured', async () => {
     (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
     const navigate = vi.fn();

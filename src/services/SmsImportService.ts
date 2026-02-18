@@ -44,8 +44,27 @@ let autoPromptAccepted: boolean | null = null;
 
 let autoAlertShown = false;
 
+type AutoImportPolicy = 'strict' | 'permissive';
+
+// Auto-import policy is strict by default:
+// - strict: import only messages that match configured providers
+// - permissive: import any financial sender during auto-import
+const AUTO_IMPORT_POLICY: AutoImportPolicy = 'strict';
+
 export class SmsImportService {
   private static importLock = false;
+
+  private static isSenderAllowedByConfiguredProviders(sender: string, message: string): boolean {
+    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
+    if (selectedProviders.length === 0) {
+      return false;
+    }
+
+    const selectedProviderIds = new Set(selectedProviders.map((provider) => provider.id));
+    const matchedProviderId = smsProviderSelectionService.detectProviderFromMessage(message, sender);
+
+    return Boolean(matchedProviderId && selectedProviderIds.has(matchedProviderId));
+  }
 
   static async checkForNewMessages(
     navigate?: ((path: string, options?: any) => void) | undefined,
@@ -69,7 +88,8 @@ export class SmsImportService {
     try {
       await smsProviderSelectionService.hydrateProvidersFromStableStorage();
 
-      if (!smsProviderSelectionService.hasConfiguredProviders()) {
+      const hasConfiguredProviders = smsProviderSelectionService.hasConfiguredProviders();
+      if (!hasConfiguredProviders) {
         safeNavigate('/sms-providers');
         return;
       }
@@ -84,15 +104,11 @@ export class SmsImportService {
         return;
       }
 
-      // Original logic for manual import (unchanged)
-      // For automatic import, check all senders. For manual, use selected senders only.
+      // Manual import reads from selected senders; auto import scans and applies policy filtering.
       let senders: string[] = getSelectedSmsSenders();
       if (auto && senders.length === 0) {
-        // Auto mode: read from all senders, then filter by financial content
+        // Auto mode scans across senders and applies provider/financial filtering.
         senders = [];
-        if (import.meta.env.MODE === 'development') {
-          // console.log('[SMS Auto Import] No selected senders. Will check all senders for financial messages.');
-        }
       } else if (!auto && senders.length === 0) {
         return;
       }
@@ -118,13 +134,28 @@ export class SmsImportService {
 
       // Filter messages by date and financial content
       const filteredMessages = messages.filter(msg => {
-        // For auto mode, accept all financial messages regardless of sender selection
+        const isFinancial = isFinancialTransactionMessage(msg.message);
+
         if (auto) {
-          // Import financial messages from any sender
-          return isFinancialTransactionMessage(msg.message);
+          if (!isFinancial) {
+            return false;
+          }
+
+          if (AUTO_IMPORT_POLICY === 'strict') {
+            return this.isSenderAllowedByConfiguredProviders(msg.sender, msg.message);
+          }
+
+          return true;
         }
 
-        // For manual mode, use existing date filtering
+        if (!isFinancial) {
+          return false;
+        }
+
+        if (!this.isSenderAllowedByConfiguredProviders(msg.sender, msg.message)) {
+          return false;
+        }
+
         const lastForSender = senderMap[msg.sender];
         const senderDate = lastForSender ? new Date(lastForSender) : defaultStart;
         return new Date(msg.date).getTime() > senderDate.getTime();
@@ -196,6 +227,11 @@ export class SmsImportService {
     navigate: (path: string, options?: any) => void
   ): Promise<void> {
     try {
+      if (AUTO_IMPORT_POLICY === 'strict' && !smsProviderSelectionService.hasConfiguredProviders()) {
+        navigate('/sms-providers');
+        return;
+      }
+
       const startDate = getAutoImportStartDate();
       
       if (import.meta.env.MODE === 'development') {
@@ -215,10 +251,20 @@ export class SmsImportService {
         return;
       }
 
-      // Filter for financial messages only
-      const filteredMessages = messages.filter(msg => 
-        isFinancialTransactionMessage(msg.message)
-      );
+      // Auto-import policy:
+      // - strict: only financial messages from configured providers
+      // - permissive: all financial messages
+      const filteredMessages = messages.filter((msg) => {
+        if (!isFinancialTransactionMessage(msg.message)) {
+          return false;
+        }
+
+        if (AUTO_IMPORT_POLICY === 'strict') {
+          return this.isSenderAllowedByConfiguredProviders(msg.sender, msg.message);
+        }
+
+        return true;
+      });
 
       if (filteredMessages.length === 0) {
         if (import.meta.env.MODE === 'development') {
