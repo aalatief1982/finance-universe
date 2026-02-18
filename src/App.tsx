@@ -354,7 +354,7 @@ function AppWrapper() {
         return;
       }
 
-      if (flowDecision.shouldTriggerAutoImport) {
+      if (flowDecision.shouldTriggerAutoImport && providerSelectionState === 'configured') {
         SmsImportService.checkForNewMessages(navigateRef.current, {
           auto: true,
           usePermissionDate: true,
