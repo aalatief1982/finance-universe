@@ -1,6 +1,6 @@
 import { safeStorage } from "@/utils/safe-storage";
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { ENABLE_SUPABASE_AUTH, ENABLE_DEMO_MODE } from '@/lib/env';
+import { ENABLE_SUPABASE_AUTH } from '@/lib/env';
 import { User } from './types';
 import { toast } from '@/hooks/use-toast';
 import {

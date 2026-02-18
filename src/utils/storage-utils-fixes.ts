@@ -52,7 +52,7 @@ export const validateTransactionForStorage = (transaction: unknown): Transaction
     transferId: getString(record.transferId) || undefined,
     transferDirection: record.transferDirection === 'out' || record.transferDirection === 'in' ? record.transferDirection : undefined,
     account: getString(record.account) || undefined,
-    isSample: typeof record.isSample === 'boolean' ? record.isSample : undefined,
+    
     createdAt: getString(record.createdAt) || undefined,
   };
   
