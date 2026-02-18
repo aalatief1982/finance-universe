@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import SmsImportService from '../SmsImportService';
 import { SmsReaderService } from '../SmsReaderService';
 import {
@@ -10,11 +10,13 @@ import {
   extractVendorName,
   inferIndirectFields
 } from '@/lib/smart-paste-engine/suggestionEngine';
+import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { smsProviderSelectionService } from '../SmsProviderSelectionService';
 
 vi.mock('../SmsReaderService');
 vi.mock('@/utils/storage-utils');
 vi.mock('@/lib/smart-paste-engine/suggestionEngine');
+vi.mock('@/lib/smart-paste-engine/messageFilter');
 vi.mock('../SmsProviderSelectionService', () => ({
   smsProviderSelectionService: {
     hydrateProvidersFromStableStorage: vi.fn().mockResolvedValue(undefined),
@@ -26,6 +28,15 @@ vi.mock('../SmsProviderSelectionService', () => ({
 
 
 describe('SmsImportService.checkForNewMessages', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(true);
+    (smsProviderSelectionService.getSelectedProviders as Mock).mockReturnValue([
+      { id: 'bank-abc', name: 'Bank ABC', pattern: 'alert', isSelected: true },
+    ]);
+    (smsProviderSelectionService.detectProviderFromMessage as Mock).mockReturnValue('bank-abc');
+    (isFinancialTransactionMessage as Mock).mockReturnValue(true);
+  });
 
   it('blocks strict auto-import and routes to provider setup when no providers are configured', async () => {
     (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
@@ -81,11 +92,31 @@ describe('SmsImportService.checkForNewMessages', () => {
   });
   it('redirects to provider setup when providers are not configured', async () => {
     (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue([
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() },
+    ]);
     const navigate = vi.fn();
 
     await SmsImportService.checkForNewMessages(navigate);
 
     expect(navigate).toHaveBeenCalledWith('/sms-providers');
+    expect(navigate).not.toHaveBeenCalledWith('/vendor-mapping', expect.anything());
+    expect(SmsReaderService.readSmsMessages).not.toHaveBeenCalled();
+  });
+
+  it('never bypasses provider setup in auto mode when providers are missing', async () => {
+    (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue([
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() },
+    ]);
+    const navigate = vi.fn();
+
+    await SmsImportService.checkForNewMessages(navigate, { auto: true });
+
+    expect(navigate).toHaveBeenCalledWith('/sms-providers');
+    expect(navigate).not.toHaveBeenCalledWith('/vendor-mapping', expect.anything());
     expect(SmsReaderService.readSmsMessages).not.toHaveBeenCalled();
   });
 
@@ -154,13 +185,16 @@ describe('SmsImportService.checkForNewMessages', () => {
 
     const navigate = vi.fn();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
 
     await SmsImportService.checkForNewMessages(navigate, { auto: true });
 
     expect(confirmSpy).toHaveBeenCalled();
+    expect(alertSpy).toHaveBeenCalled();
     expect(navigate).toHaveBeenCalled();
 
     confirmSpy.mockRestore();
+    alertSpy.mockRestore();
   });
 
   it('does not prompt when no new messages are found in auto mode', async () => {
@@ -172,6 +206,7 @@ describe('SmsImportService.checkForNewMessages', () => {
     (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
     (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date().toISOString() });
     (setSelectedSmsSenders as Mock).mockImplementation(() => {});
+    (isFinancialTransactionMessage as Mock).mockReturnValue(false);
 
     const navigate = vi.fn();
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
