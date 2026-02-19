@@ -141,6 +141,32 @@ describe('App startup SMS flow integration', () => {
     expect(decision.route).toBe('/process-sms');
   });
 
+
+  it('treats legacy sms_providers object payload as migration-required and routes to sender discovery', async () => {
+    safeStorage.setItem(
+      'sms_providers',
+      JSON.stringify([{ id: 'BANK', name: 'Legacy Bank', pattern: 'bank', isSelected: true }])
+    );
+    (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
+
+    const decision = await evaluateStartupFlow({ permissionGranted: true });
+
+    expect(decision.nextStep).toBe('route_sender_discovery');
+    expect(decision.route).toBe('/process-sms');
+    expect(smsProviderSelectionService.hasConfiguredProviders).toHaveBeenCalled();
+  });
+
+  it('keeps legacy smsProviders data out of startup decisions and avoids dummy provider simulation', async () => {
+    safeStorage.setItem('smsProviders', JSON.stringify([{ id: 'dummy-provider', isSelected: true }]));
+
+    const decision = await evaluateStartupFlow({ permissionGranted: true });
+
+    expect(decision.nextStep).toBe('route_sender_discovery');
+    expect(decision.route).toBe('/process-sms');
+    expect(safeStorage.getItem('sms_providers')).toBeNull();
+    expect(smsProviderSelectionService.hasConfiguredProviders).not.toHaveBeenCalled();
+  });
+
   it('waits for permission when denied and does not route to sender discovery screen', async () => {
     safeStorage.setItem('sms_providers', '{broken-json');
 

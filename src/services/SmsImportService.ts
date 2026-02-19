@@ -144,12 +144,20 @@ export class SmsImportService {
     return defaultStart;
   }
 
+  private static resolveCheckpointDate(checkpoint: string | undefined, fallback: Date): Date {
+    if (!checkpoint) {
+      return fallback;
+    }
+
+    const parsedCheckpoint = new Date(checkpoint);
+    return Number.isNaN(parsedCheckpoint.getTime()) ? fallback : parsedCheckpoint;
+  }
+
   private static computeScanStartDate(senders: string[], senderMap: Record<string, string>): Date {
     const defaultStart = this.getDefaultStartDate();
-    const senderDates = senders.map((sender) => {
-      const checkpoint = senderMap[sender];
-      return checkpoint ? new Date(checkpoint) : defaultStart;
-    });
+    const senderDates = senders.map((sender) =>
+      this.resolveCheckpointDate(senderMap[sender], defaultStart)
+    );
 
     if (senderDates.length === 0) {
       return defaultStart;
@@ -176,8 +184,7 @@ export class SmsImportService {
         return false;
       }
 
-      const checkpoint = senderMap[msg.sender];
-      const senderCutoff = checkpoint ? new Date(checkpoint) : fallbackStartDate;
+      const senderCutoff = this.resolveCheckpointDate(senderMap[msg.sender], fallbackStartDate);
       return new Date(msg.date).getTime() > senderCutoff.getTime();
     });
   }
