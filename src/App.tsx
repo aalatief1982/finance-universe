@@ -89,6 +89,10 @@ function AppWrapper() {
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const hasScheduledSmsPrompt = React.useRef(false);
   const { theme, resolvedTheme } = useTheme();
+  const previousThemeRef = React.useRef<{ theme?: string; resolvedTheme?: string }>({
+    theme,
+    resolvedTheme,
+  });
   useEffect(() => {
     navigateRef.current = navigate;
   }, [navigate]);
@@ -148,6 +152,38 @@ function AppWrapper() {
   useEffect(() => {
     void applyStatusBarForRoute(location.pathname);
   }, [applyStatusBarForRoute, location.pathname]);
+
+  useEffect(() => {
+    const hasThemeContext = typeof theme !== 'undefined' || typeof resolvedTheme !== 'undefined';
+
+    if (hasThemeContext) {
+      const previousTheme = previousThemeRef.current;
+      const didThemeChange = previousTheme.theme !== theme || previousTheme.resolvedTheme !== resolvedTheme;
+
+      previousThemeRef.current = { theme, resolvedTheme };
+
+      if (didThemeChange) {
+        void applyStatusBarForRoute(location.pathname);
+      }
+
+      return;
+    }
+
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleThemeChange = () => {
+      void applyStatusBarForRoute(location.pathname);
+    };
+
+    mediaQuery.addEventListener('change', handleThemeChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleThemeChange);
+    };
+  }, [applyStatusBarForRoute, location.pathname, resolvedTheme, theme]);
 
   // SMS Auto-Import functionality - placeholder for future queue functionality if needed
 
