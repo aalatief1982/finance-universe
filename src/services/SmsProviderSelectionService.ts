@@ -25,7 +25,7 @@
  * @review-checklist
  * - [ ] Provider list merges detected metadata
  * - [ ] Storage errors emit ErrorType.STORAGE
- * - [ ] Default providers remain selectable
+ * - [ ] Provider list loads from persisted mappings only
  */
 
 import { safeStorage } from "@/utils/safe-storage";
@@ -55,15 +55,6 @@ const DETECTED_PROVIDERS_STORAGE_KEY = 'detected_sms_providers';
 const SMS_SENDER_IMPORT_MAP_STORAGE_KEY = 'xpensia_sms_sender_import_map';
 
 class SmsProviderSelectionService {
-  // Default SMS providers
-  private defaultProviders: SmsProvider[] = [
-    { id: "bank-abc", name: "Bank ABC", pattern: "Transaction alert: $AMOUNT at...", isSelected: false },
-    { id: "credit-xyz", name: "Credit Card XYZ", pattern: "Your card was charged $AMOUNT...", isSelected: false },
-    { id: "investment", name: "Investment Corp", pattern: "Portfolio update: $AMOUNT deposited...", isSelected: false },
-    { id: "digital-wallet", name: "Digital Wallet", pattern: "Payment of $AMOUNT received...", isSelected: false },
-    { id: "mobile-banking", name: "Mobile Banking", pattern: "You spent $AMOUNT at...", isSelected: false }
-  ];
-  
   private isValidProvider(provider: unknown): provider is SmsProvider {
     if (!provider || typeof provider !== 'object') {
       return false;
@@ -151,12 +142,12 @@ class SmsProviderSelectionService {
     try {
       const storedProviders = safeStorage.getItem(SMS_PROVIDERS_STORAGE_KEY);
       if (!storedProviders) {
-        return this.defaultProviders;
+        return [];
       }
 
       const providers = this.parseStoredProviders(storedProviders);
       if (!providers) {
-        return this.defaultProviders;
+        return [];
       }
       
       // Merge with detected providers to highlight detected ones
@@ -172,7 +163,7 @@ class SmsProviderSelectionService {
         message: 'Failed to load SMS providers from storage',
         originalError: error
       });
-      return this.defaultProviders;
+      return [];
     }
   }
   
@@ -426,25 +417,6 @@ class SmsProviderSelectionService {
   // Method to check if we're in a native environment (needed for actual SMS access)
   isNativeEnvironment(): boolean {
     return Capacitor.isNativePlatform();
-  }
-  
-  // Simulate provider detection for web environment (development/testing)
-  simulateProviderDetection(): SmsProvider[] {
-    // Only use in web environment
-    if (this.isNativeEnvironment()) {
-      return this.getSmsProviders();
-    }
-    
-    // Simulate detected providers
-    const mockDetectedProviders: DetectedProvider[] = [
-      { id: "bank-abc", count: 5, lastSeen: new Date() },
-      { id: "credit-xyz", count: 3, lastSeen: new Date() }
-    ];
-    
-    this.saveDetectedProviders(mockDetectedProviders);
-    
-    // Auto-select them
-    return this.autoSelectDetectedProviders();
   }
 }
 

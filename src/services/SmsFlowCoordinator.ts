@@ -92,6 +92,16 @@ export const getNextSmsFlowStep = ({
   }
 
   if (providerSelectionState !== 'configured') {
+    if (
+      onboardingState === 'first_run_post_onboarding' &&
+      (providerSelectionState === 'missing' || providerSelectionState === 'empty')
+    ) {
+      return {
+        nextStep: 'continue_existing_flow',
+        shouldTriggerAutoImport: autoImportEnabled,
+      };
+    }
+
     return {
       nextStep: 'route_sms_providers',
       route: '/sms-providers',
