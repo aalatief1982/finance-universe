@@ -90,7 +90,7 @@ export class SmsImportService {
     return matchedSenders;
   }
 
-  private static isSenderAllowedByConfiguredProviders(
+  private static isSenderAllowedByConfiguredSenders(
     message: SmsEntry,
     allowedSenders: Set<string>,
     senderVendorMappings: Record<string, Record<string, string>>
@@ -150,7 +150,7 @@ export class SmsImportService {
     const senderVendorMappings = getSmsSenderVendorMap();
 
     return messages.filter((msg) => {
-      if (!this.isSenderAllowedByConfiguredProviders(msg, allowedSenders, senderVendorMappings)) {
+      if (!this.isSenderAllowedByConfiguredSenders(msg, allowedSenders, senderVendorMappings)) {
         return false;
       }
 

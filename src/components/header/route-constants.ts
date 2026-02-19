@@ -7,7 +7,7 @@ export const routeTitleMap: Record<string, string> = {
   "/process-sms": "Import SMS",
   "/settings": "Settings",
   "/profile": "Profile",
-  "/sms-providers": "SMS Providers",
+  "/sms-providers": "SMS Senders (Advanced, Legacy)",
   "/wireframes": "Wireframes",
   "/wireframes/dashboard": "Dashboard",
   "/wireframes/onboarding": "Onboarding",

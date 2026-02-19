@@ -5,7 +5,7 @@ export type OnboardingState = 'not_completed' | 'first_run_post_onboarding' | 's
 export type SmsPermissionState = 'granted' | 'not_granted';
 export type ProviderSelectionState = 'configured' | 'missing' | 'invalid' | 'empty';
 
-export type SmsFlowStep = 'route_sms_providers' | 'continue_existing_flow' | 'wait_for_permission_or_onboarding';
+export type SmsFlowStep = 'route_sender_discovery' | 'continue_existing_flow' | 'wait_for_permission_or_onboarding';
 
 export interface SmsFlowInput {
   onboardingState: OnboardingState;
@@ -16,7 +16,7 @@ export interface SmsFlowInput {
 
 export interface SmsFlowDecision {
   nextStep: SmsFlowStep;
-  route?: '/sms-providers';
+  route?: '/process-sms';
   shouldTriggerAutoImport: boolean;
 }
 
@@ -76,7 +76,8 @@ export const resolveProviderSelectionState = (userSmsProviders?: string[]): Prov
 };
 
 /**
- * Coordinator for startup SMS flow so every app launch follows the same routing rules.
+ * Coordinator for startup SMS flow so every app launch follows the same canonical route order:
+ * /process-sms -> /vendor-mapping -> /review-sms-transactions.
  */
 export const getNextSmsFlowStep = ({
   onboardingState,
@@ -103,8 +104,8 @@ export const getNextSmsFlowStep = ({
     }
 
     return {
-      nextStep: 'route_sms_providers',
-      route: '/sms-providers',
+      nextStep: 'route_sender_discovery',
+      route: '/process-sms',
       shouldTriggerAutoImport: false,
     };
   }
