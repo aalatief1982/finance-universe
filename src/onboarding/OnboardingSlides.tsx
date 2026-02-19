@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, EffectFade } from 'swiper/modules';
+import { EffectFade } from 'swiper/modules';
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 
 import 'swiper/css';
-import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 
 interface Slide {
@@ -52,7 +51,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
-  const onboardingPaginationBottomOffset = 'calc(env(safe-area-inset-bottom, 0px) + 2px)';
 
   useEffect(() => {
     setIsVisible(true);
@@ -97,19 +95,11 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
       </div>
       <Swiper
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
-        pagination={{ 
-          clickable: true,
-          bulletClass: 'swiper-pagination-bullet opacity-60',
-          bulletActiveClass: 'swiper-pagination-bullet-active opacity-100 !bg-primary'
-        }}
-        modules={[Pagination, EffectFade]}
+        modules={[EffectFade]}
         effect="fade"
         fadeEffect={{ crossFade: true }}
         className="h-full"
-        style={{
-          height: '100%',
-          '--swiper-pagination-bottom': onboardingPaginationBottomOffset,
-        }}
+        style={{ height: '100%' }}
         speed={600}
       >
         {slides.map((slide, i) => (
