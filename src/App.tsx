@@ -92,6 +92,30 @@ function AppWrapper() {
   }, [navigate]);
   const { user } = useUser();
 
+  const initializeDefaultStatusBar = React.useCallback(async () => {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
+      return;
+    }
+
+    try {
+      await StatusBar.setOverlaysWebView({ overlay: false });
+      await StatusBar.setBackgroundColor({ color: '#0097a0' });
+      await StatusBar.setStyle({ style: Style.Dark });
+    } catch (err) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('[STATUS] Error setting up default status bar:', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (location.pathname === '/onboarding') {
+      return;
+    }
+
+    void initializeDefaultStatusBar();
+  }, [initializeDefaultStatusBar, location.pathname]);
+
   // SMS Auto-Import functionality - placeholder for future queue functionality if needed
 
   useEffect(() => {
@@ -108,21 +132,6 @@ function AppWrapper() {
       try {
         if (import.meta.env.MODE === 'development') {
           // console.log('[SMS] Setting up listener...');
-        }
-        
-        if (platform === 'android') {
-          if (import.meta.env.MODE === 'development') {
-            // console.log('[INIT] Native platform detected. Setting up status bar...');
-          }
-          try {
-            await StatusBar.setOverlaysWebView({ overlay: false });
-            await StatusBar.setBackgroundColor({ color: '#0097a0' });
-            await StatusBar.setStyle({ style: Style.Dark });
-          } catch (err) {
-            if (import.meta.env.MODE === 'development') {
-              console.error('[STATUS] Error setting up status bar:', err);
-            }
-          }
         }
         
         try {
