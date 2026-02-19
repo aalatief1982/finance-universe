@@ -98,33 +98,42 @@ function AppWrapper() {
   }, [navigate]);
   const { user } = useUser();
 
-  const shouldUseDarkStatusBarIcons = React.useCallback(() => {
-    if (resolvedTheme === 'light') return true;
-    if (resolvedTheme === 'dark') return false;
-
-    if (theme === 'light') return true;
-    if (theme === 'dark') return false;
-
-    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-      return !window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDarkModeActive = React.useCallback(() => {
+    if (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')) {
+      return true;
     }
 
-    return true;
+    if (resolvedTheme === 'dark') return true;
+    if (resolvedTheme === 'light') return false;
+
+    if (theme === 'dark') return true;
+    if (theme === 'light') return false;
+
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    return false;
   }, [resolvedTheme, theme]);
 
-  const applyOnboardingStatusBar = React.useCallback(async () => {
-    const useDarkIcons = shouldUseDarkStatusBarIcons();
+  const applyStatusBarAppearance = React.useCallback(async ({ onboarding }: { onboarding: boolean }) => {
+    const darkMode = isDarkModeActive();
+    const statusBarBackgroundColor = onboarding
+      ? (darkMode ? '#06263b' : '#e8f7f8')
+      : (darkMode ? '#020817' : '#f8fafc');
+
     await StatusBar.setOverlaysWebView({ overlay: false });
-    await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: useDarkIcons ? Style.Dark : Style.Light });
-  }, [shouldUseDarkStatusBarIcons]);
+    await StatusBar.setBackgroundColor({ color: statusBarBackgroundColor });
+    await StatusBar.setStyle({ style: darkMode ? Style.Light : Style.Dark });
+  }, [isDarkModeActive]);
+
+  const applyOnboardingStatusBar = React.useCallback(async () => {
+    await applyStatusBarAppearance({ onboarding: true });
+  }, [applyStatusBarAppearance]);
 
   const applyDefaultStatusBar = React.useCallback(async () => {
-    const useDarkIcons = shouldUseDarkStatusBarIcons();
-    await StatusBar.setOverlaysWebView({ overlay: false });
-    await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: useDarkIcons ? Style.Dark : Style.Light });
-  }, [shouldUseDarkStatusBarIcons]);
+    await applyStatusBarAppearance({ onboarding: false });
+  }, [applyStatusBarAppearance]);
 
   const applyStatusBarForRoute = React.useCallback(async (pathname: string) => {
     if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
