@@ -3,13 +3,16 @@ import SmsImportService from '../SmsImportService';
 import { SmsReaderService } from '../SmsReaderService';
 import {
   getSelectedSmsSenders,
-  getSmsSenderImportMap
+  getSmsSenderImportMap,
+  getSmsSenderVendorMap,
+  setSelectedSmsSenders
 } from '@/utils/storage-utils';
 import {
   extractVendorName,
   inferIndirectFields
 } from '@/lib/smart-paste-engine/suggestionEngine';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
+import { safeStorage } from '@/utils/safe-storage';
 
 vi.mock('../SmsReaderService');
 vi.mock('@/utils/storage-utils');
@@ -20,6 +23,7 @@ describe('SmsImportService.checkForNewMessages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (isFinancialTransactionMessage as Mock).mockReturnValue(true);
+    (getSmsSenderVendorMap as Mock).mockReturnValue({});
   });
 
   it('routes to process-sms when no sender selection exists', async () => {
@@ -94,5 +98,30 @@ describe('SmsImportService.checkForNewMessages', () => {
 
     confirmSpy.mockRestore();
     alertSpy.mockRestore();
+  });
+
+  it('converts legacy selected providers to sender allowlist when sender IDs match', async () => {
+    const now = Date.now();
+    const messages = [
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date(now).toISOString() }
+    ];
+
+    safeStorage.setItem('sms_providers', JSON.stringify([
+      { id: 'BANK', name: 'Bank Provider', pattern: 'bank', isSelected: true }
+    ]));
+
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as Mock).mockReturnValue([]);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date(now - 3600000).toISOString() });
+    (extractVendorName as Mock).mockReturnValue('Starbucks');
+    (inferIndirectFields as Mock).mockReturnValue({});
+
+    const navigate = vi.fn();
+    await SmsImportService.checkForNewMessages(navigate);
+
+    expect(setSelectedSmsSenders).toHaveBeenCalledWith(['BANK']);
+    expect(navigate).toHaveBeenCalledWith('/vendor-mapping', expect.anything());
+
+    safeStorage.removeItem('sms_providers');
   });
 });

@@ -46,6 +46,7 @@ const USER_SETTINGS_STORAGE_KEY = 'xpensia_user_settings';
 const LOCALE_SETTINGS_STORAGE_KEY = 'xpensia_locale_settings';
 const STRUCTURE_KEY = 'xpensia_structure_templates';
 const SMS_SENDER_IMPORT_MAP_KEY = 'xpensia_sms_sender_import_map';
+const SMS_SENDER_VENDOR_MAP_KEY = 'xpensia_sms_sender_vendor_map';
 
 
 // ============================================================================
@@ -580,4 +581,34 @@ export const updateSmsSenderImportDates = (updates: Record<string, string>): voi
     map[sender] = date;
   });
   setInStorage(SMS_SENDER_IMPORT_MAP_KEY, map);
+};
+
+export const getSmsSenderVendorMap = (): Record<string, Record<string, string>> => {
+  return getFromStorage<Record<string, Record<string, string>>>(SMS_SENDER_VENDOR_MAP_KEY, {});
+};
+
+export const updateSmsSenderVendorMappings = (
+  updates: Record<string, Record<string, string>>
+): void => {
+  const current = getSmsSenderVendorMap();
+
+  Object.entries(updates).forEach(([sender, mappings]) => {
+    if (!sender || !mappings || typeof mappings !== 'object') {
+      return;
+    }
+
+    if (!current[sender]) {
+      current[sender] = {};
+    }
+
+    Object.entries(mappings).forEach(([vendorToken, mappedVendor]) => {
+      if (!vendorToken) {
+        return;
+      }
+
+      current[sender][vendorToken.toLowerCase()] = mappedVendor;
+    });
+  });
+
+  setInStorage(SMS_SENDER_VENDOR_MAP_KEY, current);
 };

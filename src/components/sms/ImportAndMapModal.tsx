@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/accordion';
 import { getCategoryHierarchy } from '@/lib/category-utils';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
+import { updateSmsSenderVendorMappings } from '@/utils/storage-utils';
 
 export interface ProcessedSmsEntry {
   message: string;
@@ -108,6 +109,23 @@ const ImportAndMapModal: React.FC<ImportAndMapModalProps> = ({
         ],
       });
     });
+
+    const senderVendorUpdates: Record<string, Record<string, string>> = {};
+    messages.forEach((m) => {
+      if (!m.sender) return;
+      const extracted = extractVendorName(m.message);
+      if (!extracted) return;
+
+      const mappedVendor = vendorMap[extracted];
+      if (!mappedVendor) return;
+
+      if (!senderVendorUpdates[m.sender]) {
+        senderVendorUpdates[m.sender] = {};
+      }
+
+      senderVendorUpdates[m.sender][extracted] = mappedVendor;
+    });
+    updateSmsSenderVendorMappings(senderVendorUpdates);
 
     onComplete(vendorMap, keywordMap);
   };

@@ -42,7 +42,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { ArrowLeft, Trash2, Ban } from 'lucide-react';
-import { updateSmsSenderImportDates } from '@/utils/storage-utils';
+import { updateSmsSenderImportDates, updateSmsSenderVendorMappings } from '@/utils/storage-utils';
 
 interface VendorMappingEntry {
   vendor: string;
@@ -238,6 +238,24 @@ const VendorMapping: React.FC = () => {
     });
 
     const allMessages = state?.messages || [];
+
+    const senderVendorUpdates: Record<string, Record<string, string>> = {};
+    allMessages.forEach((m: any) => {
+      if (!m.sender) return;
+      const extracted = extractVendorName(m.message);
+      if (!extracted) return;
+
+      const mappedVendor = vendorMap[extracted];
+      if (!mappedVendor) return;
+
+      if (!senderVendorUpdates[m.sender]) {
+        senderVendorUpdates[m.sender] = {};
+      }
+
+      senderVendorUpdates[m.sender][extracted] = mappedVendor;
+    });
+    updateSmsSenderVendorMappings(senderVendorUpdates);
+
     const allowed = new Set(vendors.filter(v => !v.skipped).map(v => v.vendor));
     const messages = allMessages.filter((m: any) => {
       const extracted = extractVendorName(m.message);
