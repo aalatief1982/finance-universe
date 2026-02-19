@@ -61,6 +61,8 @@ export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY');
 // Feature flags
 export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
 export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRATION', 'true') === 'true';
+export const ENABLE_SMS_SENDER_FIRST_FLOW_V2 =
+  getEnvironmentVariable('SMS_SENDER_FIRST_FLOW_V2', 'false') === 'true';
 
 
 // Configuration options
@@ -105,4 +107,30 @@ export const getSmsLookbackMonths = (): number => {
   }
 
   return VITE_SMS_LOOKBACK_MONTHS;
+};
+
+export const isSmsSenderFirstFlowV2Enabled = (): boolean => {
+  try {
+    const localOverride = safeStorage.getItem('xpensia_feature_sms_sender_first_flow_v2');
+    if (localOverride === 'true') return true;
+    if (localOverride === 'false') return false;
+  } catch {
+    // Ignore storage errors and fall back to environment default
+  }
+
+  return ENABLE_SMS_SENDER_FIRST_FLOW_V2;
+};
+
+export const consumeSmsSenderFirstFlowV2RollbackToggle = (): boolean => {
+  try {
+    const rollbackFlag = safeStorage.getItem('xpensia_sms_sender_first_flow_v2_rollback_once') === 'true';
+    if (rollbackFlag) {
+      safeStorage.removeItem('xpensia_sms_sender_first_flow_v2_rollback_once');
+      return true;
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
 };

@@ -24,6 +24,7 @@ describe('SmsImportService.checkForNewMessages', () => {
     vi.clearAllMocks();
     (isFinancialTransactionMessage as Mock).mockReturnValue(true);
     (getSmsSenderVendorMap as Mock).mockReturnValue({});
+    (getSmsSenderImportMap as Mock).mockReturnValue({});
   });
 
   it('routes to process-sms when no sender selection exists', async () => {
