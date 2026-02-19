@@ -99,8 +99,13 @@ function AppWrapper() {
   const { user } = useUser();
 
   const isDarkModeActive = React.useCallback(() => {
-    if (typeof document !== 'undefined' && document.documentElement.classList.contains('dark')) {
-      return true;
+    if (typeof document !== 'undefined') {
+      if (document.documentElement.classList.contains('dark')) {
+        return true;
+      }
+      if (document.documentElement.classList.contains('light')) {
+        return false;
+      }
     }
 
     if (resolvedTheme === 'dark') return true;
