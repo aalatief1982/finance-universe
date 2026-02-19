@@ -54,6 +54,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+  const onboardingPaginationBottomOffset = 'calc(env(safe-area-inset-bottom, 0px) + 2px)';
 
   useEffect(() => {
     setIsVisible(true);
@@ -125,7 +126,10 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
         effect="fade"
         fadeEffect={{ crossFade: true }}
         className="h-full"
-        style={{ height: '100%' }}
+        style={{
+          height: '100%',
+          '--swiper-pagination-bottom': onboardingPaginationBottomOffset,
+        }}
         speed={600}
       >
         {slides.map((slide, i) => (
