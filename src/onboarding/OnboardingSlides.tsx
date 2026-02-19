@@ -127,8 +127,8 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                 </div>
               </div>
               {/* Image section */}
-              <div className="flex-1 flex items-center justify-center px-4 min-h-0">
-                <div className="relative w-full max-w-xs h-full max-h-[40vh] flex items-center justify-center">
+              <div className="flex-1 flex items-center justify-center px-4 min-h-0 overflow-hidden">
+                <div className="relative w-full max-w-xs flex items-center justify-center" style={{ maxHeight: '42vh' }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-2xl transform rotate-1" />
                   <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit flex items-center justify-center">
                     <img
@@ -146,7 +146,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                 </div>
               </div>
               {/* Action section */}
-              <div className="px-4 pt-2 pb-4 shrink-0">
+              <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
                 {i === slides.length - 1 ? (
                   <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
                     <Button 
