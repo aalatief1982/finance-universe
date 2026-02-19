@@ -28,9 +28,12 @@
 import { SmsReaderService, SmsEntry } from './SmsReaderService';
 import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine/suggestionEngine';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
+import { safeStorage } from '@/utils/safe-storage';
 import {
   getSelectedSmsSenders,
-  getSmsSenderImportMap
+  getSmsSenderImportMap,
+  getSmsSenderVendorMap,
+  setSelectedSmsSenders
 } from '@/utils/storage-utils';
 import { getAutoImportStartDate, setLastAutoImportDate } from '@/utils/sms-permission-storage';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
@@ -42,7 +45,79 @@ let autoPromptAccepted: boolean | null = null;
 
 let autoAlertShown = false;
 
+interface LegacySmsProviderSelection {
+  id: string;
+  name: string;
+  isSelected: boolean;
+}
+
 export class SmsImportService {
+  private static getLegacySelectedProviderCandidates(): string[] {
+    try {
+      const raw = safeStorage.getItem('sms_providers');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as LegacySmsProviderSelection[];
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed
+        .filter((provider) => provider && provider.isSelected)
+        .flatMap((provider) => [provider.id, provider.name])
+        .filter((value): value is string => typeof value === 'string' && value.trim().length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  private static getConfiguredSendersFromSelection(availableSenders: string[]): string[] {
+    const selectedSenders = getSelectedSmsSenders();
+    if (selectedSenders.length > 0) {
+      return selectedSenders;
+    }
+
+    const candidates = this.getLegacySelectedProviderCandidates();
+    if (candidates.length === 0 || availableSenders.length === 0) {
+      return [];
+    }
+
+    const matchedSenders = availableSenders.filter((sender) =>
+      candidates.some((candidate) => sender.toLowerCase() === candidate.toLowerCase())
+    );
+
+    if (matchedSenders.length > 0) {
+      setSelectedSmsSenders(matchedSenders);
+    }
+
+    return matchedSenders;
+  }
+
+  private static isSenderAllowedByConfiguredProviders(
+    message: SmsEntry,
+    allowedSenders: Set<string>,
+    senderVendorMappings: Record<string, Record<string, string>>
+  ): boolean {
+    if (!allowedSenders.has(message.sender)) {
+      return false;
+    }
+
+    const senderMapping = senderVendorMappings[message.sender];
+    const hasConfiguredSenderVendorMappings = Object.keys(senderVendorMappings).length > 0;
+
+    if (!hasConfiguredSenderVendorMappings) {
+      return true;
+    }
+
+    if (senderMapping && Object.keys(senderMapping).length > 0) {
+      return true;
+    }
+
+    const extractedVendor = extractVendorName(message.message)?.toLowerCase();
+    if (!extractedVendor) {
+      return false;
+    }
+
+    return !!senderMapping?.[extractedVendor];
+  }
+
   private static importLock = false;
 
   private static getDefaultStartDate(): Date {
@@ -72,9 +147,10 @@ export class SmsImportService {
     fallbackStartDate: Date
   ): SmsEntry[] {
     const allowedSenders = new Set(senders);
+    const senderVendorMappings = getSmsSenderVendorMap();
 
     return messages.filter((msg) => {
-      if (!allowedSenders.has(msg.sender)) {
+      if (!this.isSenderAllowedByConfiguredProviders(msg, allowedSenders, senderVendorMappings)) {
         return false;
       }
 
@@ -118,13 +194,12 @@ export class SmsImportService {
         return;
       }
 
-      const senders = getSelectedSmsSenders();
+      const senderMap = getSmsSenderImportMap();
+      const senders = this.getConfiguredSendersFromSelection(Object.keys(senderMap));
       if (senders.length === 0) {
         safeNavigate('/process-sms');
         return;
       }
-
-      const senderMap = getSmsSenderImportMap();
       const defaultStart = this.getDefaultStartDate();
       const startDate = this.computeScanStartDate(senders, senderMap);
 
@@ -166,7 +241,7 @@ export class SmsImportService {
       const keywordMap: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
 
       filteredMessages.forEach(msg => {
-        const rawVendor = extractVendorName(msg.message);
+        const rawVendor = extractVendorName(msg.message) || msg.sender;
         const inferred = inferIndirectFields(msg.message, { vendor: rawVendor });
         if (rawVendor && !vendorMap[rawVendor]) {
           vendorMap[rawVendor] = rawVendor;
@@ -180,7 +255,7 @@ export class SmsImportService {
         }
       });
 
-      if (filteredMessages.length === 0 || Object.keys(vendorMap).length === 0) {
+      if (filteredMessages.length === 0) {
         return;
       }
 
@@ -202,13 +277,12 @@ export class SmsImportService {
     navigate: (path: string, options?: any) => void
   ): Promise<void> {
     try {
-      const senders = getSelectedSmsSenders();
+      const senderMap = getSmsSenderImportMap();
+      const senders = this.getConfiguredSendersFromSelection(Object.keys(senderMap));
       if (senders.length === 0) {
         navigate('/process-sms');
         return;
       }
-
-      const senderMap = getSmsSenderImportMap();
       const permissionStartDate = getAutoImportStartDate();
       const senderCheckpointStartDate = this.computeScanStartDate(senders, senderMap);
       const startDate = new Date(
@@ -268,7 +342,7 @@ export class SmsImportService {
       const keywordMap: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
 
       filteredMessages.forEach(msg => {
-        const rawVendor = extractVendorName(msg.message);
+        const rawVendor = extractVendorName(msg.message) || msg.sender;
         const inferred = inferIndirectFields(msg.message, { vendor: rawVendor });
         if (rawVendor && !vendorMap[rawVendor]) {
           vendorMap[rawVendor] = rawVendor;

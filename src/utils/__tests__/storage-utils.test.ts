@@ -6,6 +6,8 @@ import {
   saveStructureTemplate,
   getStructureTemplates,
   safeSetItem,
+  getSmsSenderVendorMap,
+  updateSmsSenderVendorMappings,
 } from '../storage-utils';
 import { StructureTemplateEntry } from '@/types/template';
 
@@ -72,4 +74,25 @@ describe('storage-utils', () => {
     const templates = getStructureTemplates();
     expect(templates).toEqual([]);
   });
+
+  it('merges sender vendor mappings and normalizes vendor token keys', () => {
+    updateSmsSenderVendorMappings({
+      BANK: { Starbucks: 'Starbucks KSA' }
+    });
+    updateSmsSenderVendorMappings({
+      BANK: { DOMINOS: 'Dominos' },
+      CARD: { Amazon: 'Amazon SA' }
+    });
+
+    expect(getSmsSenderVendorMap()).toEqual({
+      BANK: {
+        starbucks: 'Starbucks KSA',
+        dominos: 'Dominos'
+      },
+      CARD: {
+        amazon: 'Amazon SA'
+      }
+    });
+  });
+
 });
