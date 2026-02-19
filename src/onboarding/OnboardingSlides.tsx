@@ -62,7 +62,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
       if (Capacitor.isNativePlatform?.()) {
         try {
           await StatusBar.setOverlaysWebView({ overlay: false });
-          await StatusBar.setBackgroundColor({ color: '#009fa8' });
+          await StatusBar.setBackgroundColor({ color: '#0097a0' });
           await StatusBar.setStyle({ style: Style.Dark });
         } catch (error) {
           void error;
@@ -77,11 +77,11 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
     window.addEventListener('resize', setVh);
     return () => {
       window.removeEventListener('resize', setVh);
-      // Restore overlay/transparent mode for the rest of the app
+      // Restore to app default (teal solid, same as global setup in App.tsx)
       if (Capacitor.isNativePlatform?.()) {
-        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-        StatusBar.setBackgroundColor({ color: '#00000000' }).catch(() => {});
-        StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+        StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: '#0097a0' }).catch(() => {});
+        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
       }
     };
   }, []);
