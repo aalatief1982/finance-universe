@@ -174,7 +174,12 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
               {/* Action section */}
               <div
                 className="px-4 pt-2 shrink-0"
-                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+                style={{
+                  paddingBottom:
+                    i === slides.length - 1
+                      ? 'calc(env(safe-area-inset-bottom, 0px) + 1rem)'
+                      : 'env(safe-area-inset-bottom, 0px)'
+                }}
               >
                 {i === slides.length - 1 ? (
                   <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
