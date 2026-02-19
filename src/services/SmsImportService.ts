@@ -30,12 +30,10 @@ import { extractVendorName, inferIndirectFields } from '@/lib/smart-paste-engine
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import {
   getSelectedSmsSenders,
-  getSmsSenderImportMap,
-  setSelectedSmsSenders
+  getSmsSenderImportMap
 } from '@/utils/storage-utils';
 import { getAutoImportStartDate, setLastAutoImportDate } from '@/utils/sms-permission-storage';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
-import { smsProviderSelectionService } from './SmsProviderSelectionService';
 
 // Flags to ensure auto import prompts only appear once per session
 // and track whether the user accepted the auto import prompt
@@ -44,26 +42,50 @@ let autoPromptAccepted: boolean | null = null;
 
 let autoAlertShown = false;
 
-type AutoImportPolicy = 'strict' | 'permissive';
-
-// Auto-import policy is strict by default:
-// - strict: import only messages that match configured providers
-// - permissive: import any financial sender during auto-import
-const AUTO_IMPORT_POLICY: AutoImportPolicy = 'strict';
-
 export class SmsImportService {
   private static importLock = false;
 
-  private static isSenderAllowedByConfiguredProviders(sender: string, message: string): boolean {
-    const selectedProviders = smsProviderSelectionService.getSelectedProviders();
-    if (selectedProviders.length === 0) {
-      return false;
+  private static getDefaultStartDate(): Date {
+    const defaultStart = new Date();
+    defaultStart.setMonth(defaultStart.getMonth() - 6);
+    return defaultStart;
+  }
+
+  private static computeScanStartDate(senders: string[], senderMap: Record<string, string>): Date {
+    const defaultStart = this.getDefaultStartDate();
+    const senderDates = senders.map((sender) => {
+      const checkpoint = senderMap[sender];
+      return checkpoint ? new Date(checkpoint) : defaultStart;
+    });
+
+    if (senderDates.length === 0) {
+      return defaultStart;
     }
 
-    const selectedProviderIds = new Set(selectedProviders.map((provider) => provider.id));
-    const matchedProviderId = smsProviderSelectionService.detectProviderFromMessage(message, sender);
+    return new Date(Math.min(...senderDates.map((date) => date.getTime())));
+  }
 
-    return Boolean(matchedProviderId && selectedProviderIds.has(matchedProviderId));
+  private static filterMessagesBySelectedSendersAndCutoff(
+    messages: SmsEntry[],
+    senders: string[],
+    senderMap: Record<string, string>,
+    fallbackStartDate: Date
+  ): SmsEntry[] {
+    const allowedSenders = new Set(senders);
+
+    return messages.filter((msg) => {
+      if (!allowedSenders.has(msg.sender)) {
+        return false;
+      }
+
+      if (!isFinancialTransactionMessage(msg.message)) {
+        return false;
+      }
+
+      const checkpoint = senderMap[msg.sender];
+      const senderCutoff = checkpoint ? new Date(checkpoint) : fallbackStartDate;
+      return new Date(msg.date).getTime() > senderCutoff.getTime();
+    });
   }
 
   static async checkForNewMessages(
@@ -86,14 +108,6 @@ export class SmsImportService {
     };
 
     try {
-      await smsProviderSelectionService.hydrateProvidersFromStableStorage();
-
-      const hasConfiguredProviders = smsProviderSelectionService.hasConfiguredProviders();
-      if (!hasConfiguredProviders) {
-        safeNavigate('/sms-providers');
-        return;
-      }
-
       await logAnalyticsEvent('app_start');
       const { auto = false, usePermissionDate = false } = opts || {};
 
@@ -104,64 +118,25 @@ export class SmsImportService {
         return;
       }
 
-      // Manual import reads from selected senders; auto import scans and applies policy filtering.
-      let senders: string[] = getSelectedSmsSenders();
-      if (auto && senders.length === 0) {
-        // Auto mode scans across senders and applies provider/financial filtering.
-        senders = [];
-      } else if (!auto && senders.length === 0) {
+      const senders = getSelectedSmsSenders();
+      if (senders.length === 0) {
+        safeNavigate('/process-sms');
         return;
       }
 
       const senderMap = getSmsSenderImportMap();
-
-      // Determine the earliest date we need to scan from based on the
-      // per-sender import map. Any sender without a stored date defaults to
-      // six months ago. We then use the earliest of these dates when querying
-      // the device to reduce the search range.
-      const defaultStart = new Date();
-      defaultStart.setMonth(defaultStart.getMonth() - 6);
-      const senderDates = senders.map(s =>
-        senderMap[s] ? new Date(senderMap[s]) : defaultStart
-      );
-      const startDate =
-        senderDates.length > 0
-          ? new Date(Math.min(...senderDates.map(d => d.getTime())))
-          : defaultStart;
+      const defaultStart = this.getDefaultStartDate();
+      const startDate = this.computeScanStartDate(senders, senderMap);
 
       const messages: SmsEntry[] = await SmsReaderService.readSmsMessages({ startDate, senders });
       if (!messages || messages.length === 0) return;
 
-      // Filter messages by date and financial content
-      const filteredMessages = messages.filter(msg => {
-        const isFinancial = isFinancialTransactionMessage(msg.message);
-
-        if (auto) {
-          if (!isFinancial) {
-            return false;
-          }
-
-          if (AUTO_IMPORT_POLICY === 'strict') {
-            return this.isSenderAllowedByConfiguredProviders(msg.sender, msg.message);
-          }
-
-          return true;
-        }
-
-        if (!isFinancial) {
-          return false;
-        }
-
-        if (!this.isSenderAllowedByConfiguredProviders(msg.sender, msg.message)) {
-          return false;
-        }
-
-        const lastForSender = senderMap[msg.sender];
-        const senderDate = lastForSender ? new Date(lastForSender) : defaultStart;
-        return new Date(msg.date).getTime() > senderDate.getTime();
-      });
-
-      setSelectedSmsSenders(senders);
+      const filteredMessages = this.filterMessagesBySelectedSendersAndCutoff(
+        messages,
+        senders,
+        senderMap,
+        defaultStart
+      );
 
       if (filteredMessages.length === 0) return;
 
@@ -227,21 +202,28 @@ export class SmsImportService {
     navigate: (path: string, options?: any) => void
   ): Promise<void> {
     try {
-      if (AUTO_IMPORT_POLICY === 'strict' && !smsProviderSelectionService.hasConfiguredProviders()) {
-        navigate('/sms-providers');
+      const senders = getSelectedSmsSenders();
+      if (senders.length === 0) {
+        navigate('/process-sms');
         return;
       }
 
-      const startDate = getAutoImportStartDate();
+      const senderMap = getSmsSenderImportMap();
+      const permissionStartDate = getAutoImportStartDate();
+      const senderCheckpointStartDate = this.computeScanStartDate(senders, senderMap);
+      const startDate = new Date(
+        Math.min(permissionStartDate.getTime(), senderCheckpointStartDate.getTime())
+      );
       
       if (import.meta.env.MODE === 'development') {
         // console.log('[SMS Auto Import] Using permission-based start date:', startDate.toISOString());
       }
 
-      // Read messages from all senders since the permission grant date
+      // Read messages from selected senders and let checkpoint filtering
+      // keep only new messages for each sender.
       const messages: SmsEntry[] = await SmsReaderService.readSmsMessages({ 
         startDate, 
-        senders: [] // Empty array means all senders
+        senders
       });
 
       if (!messages || messages.length === 0) {
@@ -251,20 +233,12 @@ export class SmsImportService {
         return;
       }
 
-      // Auto-import policy:
-      // - strict: only financial messages from configured providers
-      // - permissive: all financial messages
-      const filteredMessages = messages.filter((msg) => {
-        if (!isFinancialTransactionMessage(msg.message)) {
-          return false;
-        }
-
-        if (AUTO_IMPORT_POLICY === 'strict') {
-          return this.isSenderAllowedByConfiguredProviders(msg.sender, msg.message);
-        }
-
-        return true;
-      });
+      const filteredMessages = this.filterMessagesBySelectedSendersAndCutoff(
+        messages,
+        senders,
+        senderMap,
+        this.getDefaultStartDate()
+      );
 
       if (filteredMessages.length === 0) {
         if (import.meta.env.MODE === 'development') {
