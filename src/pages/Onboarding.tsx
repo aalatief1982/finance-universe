@@ -61,16 +61,18 @@ const Onboarding = () => {
   };
 
   return (
-    <Layout
-      hideNavigation
-      showHeader={false}
-      withPadding={false}
-      fullWidth
-      className="w-full overflow-hidden"
-      safeAreaPadding={false}
-    >
-      <OnboardingSlides onComplete={handleComplete} />
-    </Layout>
+    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
+      <Layout
+        hideNavigation
+        showHeader={false}
+        withPadding={false}
+        fullWidth
+        className="w-full h-full overflow-hidden"
+        safeAreaPadding={false}
+      >
+        <OnboardingSlides onComplete={handleComplete} />
+      </Layout>
+    </div>
   );
 };
 

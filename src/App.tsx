@@ -115,9 +115,9 @@ function AppWrapper() {
             // console.log('[INIT] Native platform detected. Setting up status bar...');
           }
           try {
-            await StatusBar.setOverlaysWebView({ overlay: true });
-            await StatusBar.setBackgroundColor({ color: '#00000000' });
-            await StatusBar.setStyle({ style: Style.Light });
+            await StatusBar.setOverlaysWebView({ overlay: false });
+            await StatusBar.setBackgroundColor({ color: '#0097a0' });
+            await StatusBar.setStyle({ style: Style.Dark });
           } catch (err) {
             if (import.meta.env.MODE === 'development') {
               console.error('[STATUS] Error setting up status bar:', err);
