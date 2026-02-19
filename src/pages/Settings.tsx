@@ -73,6 +73,7 @@ import { smsPermissionService } from "@/services/SmsPermissionService";
 
 import { useToast, toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
+import { useTheme } from "next-themes";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
 import { LockedFeature } from "@/components/ui/locked-feature";
@@ -114,6 +115,7 @@ const Settings = () => {
   } = useUser();
 
   const navigate = useNavigate();
+  const { setTheme: setNextTheme } = useTheme();
 
   const [notificationsAllowed, setNotificationsAllowed] = useState(
     typeof Notification !== 'undefined' && Notification.permission === "granted"
@@ -457,6 +459,8 @@ const Settings = () => {
     } as any;
 
     updateUser({ preferences: { ...user?.preferences, ...updated } });
+
+    setNextTheme(theme);
 
     persistCurrency(currency);
 
