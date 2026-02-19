@@ -56,6 +56,11 @@ describe('SmsImportService.checkForNewMessages', () => {
 
     await SmsImportService.checkForNewMessages(navigate);
 
+    expect(SmsReaderService.readSmsMessages).toHaveBeenCalledWith({
+      startDate: expect.any(Date),
+      senders: ['BANK'],
+    });
+
     expect(navigate).toHaveBeenCalledWith('/vendor-mapping', {
       state: {
         messages: [messages[0]],
@@ -72,6 +77,20 @@ describe('SmsImportService.checkForNewMessages', () => {
         ]
       }
     });
+
+    const [, navigationPayload] = navigate.mock.calls[0];
+    expect(navigationPayload.state.messages).toEqual([messages[0]]);
+    expect(navigationPayload.state.vendorMap).toEqual({ Starbucks: 'Starbucks' });
+    expect(navigationPayload.state.keywordMap).toEqual([
+      {
+        keyword: 'Starbucks',
+        mappings: [
+          { field: 'category', value: 'Food' },
+          { field: 'subcategory', value: 'Coffee' },
+          { field: 'type', value: 'expense' },
+        ],
+      },
+    ]);
   });
 
   it('prompts user only when auto mode has new filtered messages', async () => {
@@ -124,5 +143,67 @@ describe('SmsImportService.checkForNewMessages', () => {
     expect(navigate).toHaveBeenCalledWith('/vendor-mapping', expect.anything());
 
     safeStorage.removeItem('sms_providers');
+  });
+
+  it('does not auto-create dummy provider IDs when legacy providers do not match senders', async () => {
+    const now = Date.now();
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue([
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date(now).toISOString() },
+    ]);
+
+    safeStorage.setItem(
+      'sms_providers',
+      JSON.stringify([{ id: 'dummy-provider-id', name: 'Dummy Provider', pattern: 'dummy', isSelected: true }])
+    );
+
+    (getSelectedSmsSenders as Mock).mockReturnValue([]);
+    const navigate = vi.fn();
+
+    await SmsImportService.checkForNewMessages(navigate);
+
+    expect(setSelectedSmsSenders).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/process-sms');
+    expect(SmsReaderService.readSmsMessages).not.toHaveBeenCalled();
+
+    safeStorage.removeItem('sms_providers');
+  });
+
+  it('falls back safely when sender map has malformed checkpoint dates', async () => {
+    const messages = [
+      { sender: 'BANK', message: 'Paid 10 SAR at Starbucks', date: new Date().toISOString() },
+    ];
+
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue(messages);
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: 'not-a-date' });
+    (extractVendorName as Mock).mockReturnValue('Starbucks');
+    (inferIndirectFields as Mock).mockReturnValue({});
+
+    const navigate = vi.fn();
+
+    await SmsImportService.checkForNewMessages(navigate);
+
+    expect(SmsReaderService.readSmsMessages).toHaveBeenCalledWith({
+      startDate: expect.any(Date),
+      senders: ['BANK'],
+    });
+    expect(navigate).toHaveBeenCalledWith('/vendor-mapping', expect.any(Object));
+  });
+
+  it('ignores legacy smsProviders key and routes safely to sender discovery', async () => {
+    safeStorage.setItem(
+      'smsProviders',
+      JSON.stringify([{ id: 'BANK', name: 'Legacy Bank', isSelected: true }])
+    );
+    (getSelectedSmsSenders as Mock).mockReturnValue([]);
+
+    const navigate = vi.fn();
+    await SmsImportService.checkForNewMessages(navigate);
+
+    expect(setSelectedSmsSenders).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/process-sms');
+    expect(SmsReaderService.readSmsMessages).not.toHaveBeenCalled();
+
+    safeStorage.removeItem('smsProviders');
   });
 });
