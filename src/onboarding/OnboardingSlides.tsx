@@ -3,8 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, EffectFade } from 'swiper/modules';
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
-import { StatusBar, Style } from '@capacitor/status-bar';
 
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -58,18 +56,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
 
   useEffect(() => {
     setIsVisible(true);
-    // Status bar: teal background + dark icons for onboarding (matches app primary)
-    (async () => {
-      if (Capacitor.isNativePlatform?.()) {
-        try {
-          await StatusBar.setOverlaysWebView({ overlay: false });
-          await StatusBar.setBackgroundColor({ color: '#0097a0' });
-          await StatusBar.setStyle({ style: Style.Dark });
-        } catch (error) {
-          void error;
-        }
-      }
-    })();
     // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)
     const setVh = () => {
       document.documentElement.style.setProperty('--vh-onb', `${window.innerHeight * 0.01}px`);
@@ -78,12 +64,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
     window.addEventListener('resize', setVh);
     return () => {
       window.removeEventListener('resize', setVh);
-      // Restore to app default (teal solid, same as global setup in App.tsx)
-      if (Capacitor.isNativePlatform?.()) {
-        StatusBar.setOverlaysWebView({ overlay: false }).catch(() => {});
-        StatusBar.setBackgroundColor({ color: '#0097a0' }).catch(() => {});
-        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-      }
     };
   }, []);
 
