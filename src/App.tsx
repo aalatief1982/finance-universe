@@ -72,6 +72,8 @@ import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 
+const WHITE_STATUS_BAR_STYLE = Style.Light;
+
 // Synchronous onboarding guard - use render-time redirect to avoid route flash.
 const OnboardingGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const done = safeStorage.getItem('xpensia_onb_done') === 'true';
@@ -95,13 +97,13 @@ function AppWrapper() {
   const applyOnboardingStatusBar = React.useCallback(async () => {
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: Style.Light });
+    await StatusBar.setStyle({ style: WHITE_STATUS_BAR_STYLE });
   }, []);
 
   const applyDefaultStatusBar = React.useCallback(async () => {
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: Style.Light });
+    await StatusBar.setStyle({ style: WHITE_STATUS_BAR_STYLE });
   }, []);
 
   const applyStatusBarForRoute = React.useCallback(async (pathname: string) => {
@@ -129,6 +131,26 @@ function AppWrapper() {
 
   useEffect(() => {
     void applyStatusBarForRoute(location.pathname);
+  }, [applyStatusBarForRoute, location.pathname]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
+      return;
+    }
+
+    let listener: { remove: () => void } | null = null;
+
+    CapacitorApp.addListener('appStateChange', async (state) => {
+      if (state.isActive) {
+        await applyStatusBarForRoute(location.pathname);
+      }
+    }).then((handle) => {
+      listener = handle;
+    });
+
+    return () => {
+      listener?.remove();
+    };
   }, [applyStatusBarForRoute, location.pathname]);
 
   // SMS Auto-Import functionality - placeholder for future queue functionality if needed
