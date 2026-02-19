@@ -71,6 +71,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
+import { useTheme } from 'next-themes';
 
 // Synchronous onboarding guard - use render-time redirect to avoid route flash.
 const OnboardingGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -87,22 +88,39 @@ function AppWrapper() {
   const navigateRef = React.useRef(navigate);
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const hasScheduledSmsPrompt = React.useRef(false);
+  const { theme, resolvedTheme } = useTheme();
   useEffect(() => {
     navigateRef.current = navigate;
   }, [navigate]);
   const { user } = useUser();
 
+  const shouldUseDarkStatusBarIcons = React.useCallback(() => {
+    if (resolvedTheme === 'light') return true;
+    if (resolvedTheme === 'dark') return false;
+
+    if (theme === 'light') return true;
+    if (theme === 'dark') return false;
+
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+      return !window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    return true;
+  }, [resolvedTheme, theme]);
+
   const applyOnboardingStatusBar = React.useCallback(async () => {
+    const useDarkIcons = shouldUseDarkStatusBarIcons();
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: Style.Default });
-  }, []);
+    await StatusBar.setStyle({ style: useDarkIcons ? Style.Dark : Style.Light });
+  }, [shouldUseDarkStatusBarIcons]);
 
   const applyDefaultStatusBar = React.useCallback(async () => {
+    const useDarkIcons = shouldUseDarkStatusBarIcons();
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: Style.Default });
-  }, []);
+    await StatusBar.setStyle({ style: useDarkIcons ? Style.Dark : Style.Light });
+  }, [shouldUseDarkStatusBarIcons]);
 
   const applyStatusBarForRoute = React.useCallback(async (pathname: string) => {
     if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
