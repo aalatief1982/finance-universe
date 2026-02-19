@@ -95,13 +95,13 @@ function AppWrapper() {
   const applyOnboardingStatusBar = React.useCallback(async () => {
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: Style.Dark });
+    await StatusBar.setStyle({ style: Style.Light });
   }, []);
 
   const applyDefaultStatusBar = React.useCallback(async () => {
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: '#0097a0' });
-    await StatusBar.setStyle({ style: Style.Dark });
+    await StatusBar.setStyle({ style: Style.Light });
   }, []);
 
   const applyStatusBarForRoute = React.useCallback(async (pathname: string) => {
