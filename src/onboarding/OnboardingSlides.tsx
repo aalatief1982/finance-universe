@@ -156,15 +156,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                 </div>
               </div>
               {/* Action section */}
-              <div
-                className="px-4 pt-2 shrink-0"
-                style={{
-                  paddingBottom:
-                    i === slides.length - 1
-                      ? 'calc(env(safe-area-inset-bottom, 0px) + 1rem)'
-                      : 'env(safe-area-inset-bottom, 0px)'
-                }}
-              >
+              <div className="px-4 pt-2 pb-4 shrink-0">
                 {i === slides.length - 1 ? (
                   <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
                     <Button 
@@ -179,7 +171,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                     </p>
                   </div>
                 ) : (
-                  <div className="h-16 flex items-center justify-center pb-4">
+                  <div className="h-16 flex items-center justify-center">
                     <p className="text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.5s' }}>
                       Swipe to continue
                     </p>
