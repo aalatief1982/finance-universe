@@ -223,6 +223,17 @@ Additional log markers are emitted to help verify the SMS workflow:
 Use `adb logcat | grep AIS-` while testing to see these markers.
 
 
+### Canonical SMS route order
+
+The primary sender-based SMS import journey follows this route order:
+
+1. `/process-sms` (discover/select senders and read SMS)
+2. `/vendor-mapping` (map vendors and inferred fields)
+3. `/review-sms-transactions` (final review before saving)
+
+The legacy `/sms-providers` route is retained only for advanced/legacy sender settings.
+
+
 ## Deletion confirmation with AlertDialog
 
 Use `AlertDialog` from shadcn-ui to confirm destructive actions such as deleting a transaction. The dialog should wrap a delete button and ask the user for confirmation before proceeding. A typical structure is:

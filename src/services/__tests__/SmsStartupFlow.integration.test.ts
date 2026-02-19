@@ -99,18 +99,18 @@ describe('App startup SMS flow integration', () => {
     expect(decision.shouldTriggerAutoImport).toBe(true);
   });
 
-  it('routes subsequent run with cleared providers to provider setup', async () => {
+  it('routes subsequent run with cleared providers to sender discovery', async () => {
     const decision = await evaluateStartupFlow({
       onboardingDone: true,
       justCompleted: false,
       permissionGranted: true,
     });
 
-    expect(decision.nextStep).toBe('route_sms_providers');
-    expect(decision.route).toBe('/sms-providers');
+    expect(decision.nextStep).toBe('route_sender_discovery');
+    expect(decision.route).toBe('/process-sms');
   });
 
-  it('skips provider screen on subsequent run when providers are configured', async () => {
+  it('skips sender discovery screen on subsequent run when providers are configured', async () => {
     const decision = await evaluateStartupFlow({
       onboardingDone: true,
       justCompleted: false,
@@ -123,25 +123,25 @@ describe('App startup SMS flow integration', () => {
     expect(decision.shouldTriggerAutoImport).toBe(true);
   });
 
-  it('forces provider setup when provider storage is corrupted', async () => {
+  it('forces sender discovery when provider storage is corrupted', async () => {
     safeStorage.setItem('sms_providers', '{broken-json');
 
     const decision = await evaluateStartupFlow({ permissionGranted: true });
 
-    expect(decision.nextStep).toBe('route_sms_providers');
-    expect(decision.route).toBe('/sms-providers');
+    expect(decision.nextStep).toBe('route_sender_discovery');
+    expect(decision.route).toBe('/process-sms');
   });
 
-  it('forces provider setup when provider storage is empty', async () => {
+  it('forces sender discovery when provider storage is empty', async () => {
     safeStorage.setItem('sms_providers', JSON.stringify([]));
 
     const decision = await evaluateStartupFlow({ permissionGranted: true });
 
-    expect(decision.nextStep).toBe('route_sms_providers');
-    expect(decision.route).toBe('/sms-providers');
+    expect(decision.nextStep).toBe('route_sender_discovery');
+    expect(decision.route).toBe('/process-sms');
   });
 
-  it('waits for permission when denied and does not route to provider screen', async () => {
+  it('waits for permission when denied and does not route to sender discovery screen', async () => {
     safeStorage.setItem('sms_providers', '{broken-json');
 
     const decision = await evaluateStartupFlow({ permissionGranted: false });

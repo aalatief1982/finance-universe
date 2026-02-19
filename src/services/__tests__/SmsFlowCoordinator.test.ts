@@ -30,7 +30,7 @@ describe('SmsFlowCoordinator', () => {
       autoImportEnabled: true,
     });
 
-    expect(decision.nextStep).toBe('route_sms_providers');
+    expect(decision.nextStep).toBe('route_sender_discovery');
     expect(decision.shouldTriggerAutoImport).toBe(false);
   });
 

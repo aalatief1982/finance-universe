@@ -121,13 +121,14 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           autoImportEnabled: true,
         });
 
-        if (flowDecision.nextStep === 'route_sms_providers' && flowDecision.route) {
+        if (flowDecision.nextStep === 'route_sender_discovery' && flowDecision.route) {
           transitionOnce(flowDecision.route);
-          console.log('[SmsPermissionPrompt] Provider setup required before import. Routing to /sms-providers.');
+          console.log('[SmsPermissionPrompt] Sender discovery required before import. Routing to /process-sms.');
           return;
         }
 
-        // Providers are configured, continue existing SMS flow (/process-sms or vendor mapping flow).
+        // Sender discovery prerequisites are met, continue canonical SMS flow
+        // /process-sms -> /vendor-mapping -> /review-sms-transactions.
         await SmsImportService.checkForNewMessages(transitionOnce, { auto: false, usePermissionDate: true });
         console.log('[SmsPermissionPrompt] Initial SMS import completed');
       } catch (importErr) {

@@ -349,7 +349,7 @@ function AppWrapper() {
 
       if (isCancelled) return;
 
-      if (flowDecision.nextStep === 'route_sms_providers' && flowDecision.route && location.pathname !== flowDecision.route) {
+      if (flowDecision.nextStep === 'route_sender_discovery' && flowDecision.route && location.pathname !== flowDecision.route) {
         navigateRef.current(flowDecision.route);
         return;
       }
@@ -540,6 +540,7 @@ function AppRoutes() {
             </ErrorBoundary>
           }
         />
+        {/* Canonical SMS flow order: /process-sms -> /vendor-mapping -> /review-sms-transactions */}
         <Route path="/process-sms" element={<ProcessSmsMessages />} />
         <Route
           path="/sms-providers"

@@ -89,6 +89,8 @@ const ProcessSmsMessages: React.FC = () => {
   const [mapOpen, setMapOpen] = useState(false);
   const [showInitialDialog, setShowInitialDialog] = useState(false);
 
+  // Canonical SMS import flow order: /process-sms -> /vendor-mapping -> /review-sms-transactions.
+
   const resumeHistoryImport = () => {
     const progress = loadImportProgress();
     if (!progress) {
@@ -274,7 +276,43 @@ const handleReadSms = async () => {
     }
   };
 
+  const canProceedToMapping = selectedSenders.length > 0 && filteredMessages.length > 0;
+
+  const persistSelectionAndProgress = (vendorMap: Record<string, string>) => {
+    setSelectedSmsSenders(selectedSenders);
+
+    const progress = loadImportProgress();
+    if (progress) {
+      progress.vendorMappings = vendorMap;
+      saveImportProgress(progress);
+      clearImportProgress();
+    }
+  };
+
+  const ensureFlowPreconditions = (): boolean => {
+    if (selectedSenders.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Select at least one sender',
+        description: 'Choose one or more senders before continuing to vendor mapping.',
+      });
+      return false;
+    }
+
+    if (filteredMessages.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No messages ready',
+        description: 'Read SMS and keep at least one financial message selected to continue.',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleProceed = () => {
+    if (!ensureFlowPreconditions()) return;
     const vendorMap: Record<string, string> = {};
     const keywordMap: { keyword: string; mappings: { field: string; value: string }[] }[] = [];
 
@@ -295,14 +333,7 @@ const handleReadSms = async () => {
       }
     });
 
-    setSelectedSmsSenders(selectedSenders);
-
-    const progress = loadImportProgress();
-    if (progress) {
-      progress.vendorMappings = vendorMap;
-      saveImportProgress(progress);
-      clearImportProgress();
-    }
+    persistSelectionAndProgress(vendorMap);
 
     navigate('/vendor-mapping', {
       state: {
@@ -363,11 +394,19 @@ const handleReadSms = async () => {
               </div>
 
               <div className="flex flex-col gap-2 mt-4">
-                <Button className="w-full" onClick={handleProceed}>
-                  Proceed to Vendor Mapping
+                <Button className="w-full" onClick={handleProceed} disabled={!canProceedToMapping}>
+                  Proceed to Sender-Based Vendor Mapping
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => setMapOpen(true)}>
-                  Quick Map &amp; Review
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={!canProceedToMapping}
+                  onClick={() => {
+                    if (!ensureFlowPreconditions()) return;
+                    setMapOpen(true);
+                  }}
+                >
+                  Quick Map &amp; Review (Sender Import)
                 </Button>
               </div>
             </AccordionContent>
@@ -418,14 +457,9 @@ const handleReadSms = async () => {
         onOpenChange={setMapOpen}
         messages={filteredMessages}
         onComplete={(vendorMap, keywordMap) => {
+          if (!ensureFlowPreconditions()) return;
           setMapOpen(false);
-          setSelectedSmsSenders(selectedSenders);
-          const progress = loadImportProgress();
-          if (progress) {
-            progress.vendorMappings = vendorMap;
-            saveImportProgress(progress);
-            clearImportProgress();
-          }
+          persistSelectionAndProgress(vendorMap);
           navigate('/review-sms-transactions', {
             state: {
               messages: filteredMessages,
@@ -448,7 +482,7 @@ const handleReadSms = async () => {
           <DialogHeader>
             <DialogTitle>Importing SMS</DialogTitle>
             <DialogDescription>
-              Xpensia will read new SMS messages from your saved senders and process them as if you pressed &quot;Read SMS&quot;.
+              Xpensia will now import from your saved SMS senders and continue to vendor mapping for review.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
