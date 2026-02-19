@@ -129,7 +129,7 @@ function AppWrapper() {
 
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: statusBarBackgroundColor });
-    await StatusBar.setStyle({ style: darkMode ? Style.Light : Style.Dark });
+    await StatusBar.setStyle({ style: darkMode ? Style.Dark : Style.Light });
   }, [isDarkModeActive]);
 
   const applyOnboardingStatusBar = React.useCallback(async () => {
