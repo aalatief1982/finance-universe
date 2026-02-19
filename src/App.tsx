@@ -124,8 +124,8 @@ function AppWrapper() {
   const applyStatusBarAppearance = React.useCallback(async ({ onboarding }: { onboarding: boolean }) => {
     const darkMode = isDarkModeActive();
     const statusBarBackgroundColor = onboarding
-      ? (darkMode ? '#06263b' : '#e8f7f8')
-      : (darkMode ? '#020817' : '#f8fafc');
+      ? (darkMode ? '#06263b' : '#0097a0')
+      : (darkMode ? '#020817' : '#0097a0');
 
     await StatusBar.setOverlaysWebView({ overlay: false });
     await StatusBar.setBackgroundColor({ color: statusBarBackgroundColor });
