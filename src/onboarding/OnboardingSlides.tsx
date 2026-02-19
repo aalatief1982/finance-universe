@@ -57,13 +57,13 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
 
   useEffect(() => {
     setIsVisible(true);
-    // Status bar logic: overlay, transparent, light style
+    // Status bar: teal background + dark icons for onboarding (matches app primary)
     (async () => {
       if (Capacitor.isNativePlatform?.()) {
         try {
-          await StatusBar.setOverlaysWebView({ overlay: true });
-          await StatusBar.setBackgroundColor({ color: '#00000000' });
-          await StatusBar.setStyle({ style: Style.Light });
+          await StatusBar.setOverlaysWebView({ overlay: false });
+          await StatusBar.setBackgroundColor({ color: '#009fa8' });
+          await StatusBar.setStyle({ style: Style.Dark });
         } catch (error) {
           void error;
         }
@@ -77,16 +77,28 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
     window.addEventListener('resize', setVh);
     return () => {
       window.removeEventListener('resize', setVh);
-      // No-op: app shell will re-apply global status bar settings
+      // Restore overlay/transparent mode for the rest of the app
+      if (Capacitor.isNativePlatform?.()) {
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: '#00000000' }).catch(() => {});
+        StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+      }
     };
   }, []);
 
   return (
-    <div className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden">
+    <div
+      className="relative w-full bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden"
+      style={{
+        height: '100dvh',
+        marginTop: 'calc(-1 * env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+      }}
+    >
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
       {/* Progress indicator */}
-      <div className="absolute top-0 z-10 left-1/2 transform -translate-x-1/2 pt-[max(6px,var(--safe-area-top))]">
+      <div className="absolute top-0 z-10 left-1/2 -translate-x-1/2 pt-2">
         <div className="flex space-x-2 pt-2">
           {slides.map((_, i) => (
             <div
@@ -121,7 +133,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
             <div className="flex flex-col flex-1 min-h-0 h-full transition-all duration-700 animate-fade-in">
               {/* Header with icon and gradient */}
               <div
-                className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-[calc(var(--safe-area-top)+2rem)]`}
+                className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-8`}
               >
                 <div className="flex flex-col items-center text-center px-4">
                   <div className="mb-3 p-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
@@ -161,7 +173,8 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
               </div>
               {/* Action section */}
               <div
-                className="px-4 pt-2 shrink-0 pb-[calc(var(--safe-area-bottom)+1rem)]"
+                className="px-4 pt-2 shrink-0"
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
               >
                 {i === slides.length - 1 ? (
                   <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
