@@ -92,29 +92,44 @@ function AppWrapper() {
   }, [navigate]);
   const { user } = useUser();
 
-  const initializeDefaultStatusBar = React.useCallback(async () => {
+  const applyOnboardingStatusBar = React.useCallback(async () => {
+    await StatusBar.setOverlaysWebView({ overlay: false });
+    await StatusBar.setBackgroundColor({ color: '#0097a0' });
+    await StatusBar.setStyle({ style: Style.Dark });
+  }, []);
+
+  const applyDefaultStatusBar = React.useCallback(async () => {
+    await StatusBar.setOverlaysWebView({ overlay: false });
+    await StatusBar.setBackgroundColor({ color: '#0097a0' });
+    await StatusBar.setStyle({ style: Style.Dark });
+  }, []);
+
+  const applyStatusBarForRoute = React.useCallback(async (pathname: string) => {
     if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') {
       return;
     }
 
     try {
-      await StatusBar.setOverlaysWebView({ overlay: false });
-      await StatusBar.setBackgroundColor({ color: '#0097a0' });
-      await StatusBar.setStyle({ style: Style.Dark });
+      // Single owner for status bar state:
+      // - entering onboarding route: AppWrapper applies onboarding status bar state
+      // - leaving onboarding route: AppWrapper restores default app status bar state
+      // - normal routes: AppWrapper keeps default app status bar state
+      if (pathname === '/onboarding') {
+        await applyOnboardingStatusBar();
+        return;
+      }
+
+      await applyDefaultStatusBar();
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
-        console.error('[STATUS] Error setting up default status bar:', err);
+        console.error('[STATUS] Error applying route status bar state:', err);
       }
     }
-  }, []);
+  }, [applyDefaultStatusBar, applyOnboardingStatusBar]);
 
   useEffect(() => {
-    if (location.pathname === '/onboarding') {
-      return;
-    }
-
-    void initializeDefaultStatusBar();
-  }, [initializeDefaultStatusBar, location.pathname]);
+    void applyStatusBarForRoute(location.pathname);
+  }, [applyStatusBarForRoute, location.pathname]);
 
   // SMS Auto-Import functionality - placeholder for future queue functionality if needed
 
