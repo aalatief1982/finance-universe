@@ -87,4 +87,33 @@ describe('SmsFlowCoordinator', () => {
 
     expect(resolveProviderSelectionState()).toBe('configured');
   });
+
+  it('routes first run to sender discovery when v2 flow is enabled', () => {
+    const decision = getNextSmsFlowStep({
+      onboardingState: 'first_run_post_onboarding',
+      permissionState: 'granted',
+      providerSelectionState: 'missing',
+      autoImportEnabled: true,
+      smsSenderFirstFlowV2Enabled: true,
+    });
+
+    expect(decision.nextStep).toBe('route_sender_discovery');
+    expect(decision.route).toBe('/process-sms');
+    expect(decision.shouldTriggerAutoImport).toBe(false);
+  });
+
+  it('uses legacy routing once when rollback toggle is consumed', () => {
+    const decision = getNextSmsFlowStep({
+      onboardingState: 'first_run_post_onboarding',
+      permissionState: 'granted',
+      providerSelectionState: 'missing',
+      autoImportEnabled: true,
+      smsSenderFirstFlowV2Enabled: true,
+      rollbackToLegacyRoutingOnce: true,
+    });
+
+    expect(decision.nextStep).toBe('continue_existing_flow');
+    expect(decision.shouldTriggerAutoImport).toBe(true);
+  });
+
 });

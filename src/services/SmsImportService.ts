@@ -52,6 +52,13 @@ interface LegacySmsProviderSelection {
 }
 
 export class SmsImportService {
+
+  private static logImportDecision(decision: string, details: Record<string, unknown> = {}): void {
+    void logAnalyticsEvent('sms_import_sender_decision', {
+      decision,
+      ...details,
+    });
+  }
   private static getLegacySelectedProviderCandidates(): string[] {
     try {
       const raw = safeStorage.getItem('sms_providers');
@@ -71,11 +78,16 @@ export class SmsImportService {
   private static getConfiguredSendersFromSelection(availableSenders: string[]): string[] {
     const selectedSenders = getSelectedSmsSenders();
     if (selectedSenders.length > 0) {
+      this.logImportDecision('use_selected_senders', { count: selectedSenders.length });
       return selectedSenders;
     }
 
     const candidates = this.getLegacySelectedProviderCandidates();
     if (candidates.length === 0 || availableSenders.length === 0) {
+      this.logImportDecision('no_sender_candidates', {
+        candidateCount: candidates.length,
+        availableSenderCount: availableSenders.length,
+      });
       return [];
     }
 
@@ -85,6 +97,12 @@ export class SmsImportService {
 
     if (matchedSenders.length > 0) {
       setSelectedSmsSenders(matchedSenders);
+      this.logImportDecision('migrate_legacy_provider_matches', { count: matchedSenders.length });
+    } else {
+      this.logImportDecision('legacy_candidates_without_matches', {
+        candidateCount: candidates.length,
+        availableSenderCount: availableSenders.length,
+      });
     }
 
     return matchedSenders;
@@ -197,6 +215,7 @@ export class SmsImportService {
       const senderMap = getSmsSenderImportMap();
       const senders = this.getConfiguredSendersFromSelection(Object.keys(senderMap));
       if (senders.length === 0) {
+        this.logImportDecision('route_to_process_sms_no_senders');
         safeNavigate('/process-sms');
         return;
       }
@@ -280,6 +299,7 @@ export class SmsImportService {
       const senderMap = getSmsSenderImportMap();
       const senders = this.getConfiguredSendersFromSelection(Object.keys(senderMap));
       if (senders.length === 0) {
+        this.logImportDecision('route_to_process_sms_no_senders_permission_date');
         navigate('/process-sms');
         return;
       }

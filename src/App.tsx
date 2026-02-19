@@ -59,7 +59,12 @@ import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
 import SmsImportService from '@/services/SmsImportService';
 import { smsProviderSelectionService } from '@/services/SmsProviderSelectionService';
 import { getNextSmsFlowStep, resolveProviderSelectionState, type OnboardingState, type SmsPermissionState } from '@/services/SmsFlowCoordinator';
-import { ENABLE_SMS_INTEGRATION } from '@/lib/env';
+import { migrateSmsFlowSchema } from '@/services/SmsFlowMigrationService';
+import {
+  ENABLE_SMS_INTEGRATION,
+  consumeSmsSenderFirstFlowV2RollbackToggle,
+  isSmsSenderFirstFlowV2Enabled,
+} from '@/lib/env';
 import { useUser } from './context/UserContext';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { toast } from '@/components/ui/use-toast';
@@ -337,6 +342,25 @@ function AppWrapper() {
       const permissionStatus = await smsPermissionService.checkPermissionStatus();
       const permissionState: SmsPermissionState = permissionStatus.granted ? 'granted' : 'not_granted';
 
+      const smsSenderFirstFlowV2Enabled = isSmsSenderFirstFlowV2Enabled();
+      const rollbackToLegacyRoutingOnce = consumeSmsSenderFirstFlowV2RollbackToggle();
+
+      if (smsSenderFirstFlowV2Enabled) {
+        const migrationResult = await migrateSmsFlowSchema();
+        if (!migrationResult.ok) {
+          safeStorage.setItem('xpensia_sms_flow_read_only', 'true');
+          toast({
+            variant: 'destructive',
+            title: 'SMS import is temporarily in read-only mode',
+            description: 'We could not complete SMS flow migration. You can review senders, but imports are paused until this is resolved.',
+          });
+          navigateRef.current('/process-sms');
+          return;
+        }
+
+        safeStorage.removeItem('xpensia_sms_flow_read_only');
+      }
+
       await smsProviderSelectionService.hydrateProvidersFromStableStorage();
       const providerSelectionState = resolveProviderSelectionState(user?.smsProviders);
 
@@ -345,6 +369,8 @@ function AppWrapper() {
         permissionState,
         providerSelectionState,
         autoImportEnabled: Boolean(user?.preferences?.sms?.autoImport),
+        smsSenderFirstFlowV2Enabled,
+        rollbackToLegacyRoutingOnce,
       });
 
       if (isCancelled) return;

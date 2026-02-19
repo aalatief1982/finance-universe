@@ -12,6 +12,8 @@ export interface SmsFlowInput {
   permissionState: SmsPermissionState;
   providerSelectionState: ProviderSelectionState;
   autoImportEnabled: boolean;
+  smsSenderFirstFlowV2Enabled?: boolean;
+  rollbackToLegacyRoutingOnce?: boolean;
 }
 
 export interface SmsFlowDecision {
@@ -84,6 +86,8 @@ export const getNextSmsFlowStep = ({
   permissionState,
   providerSelectionState,
   autoImportEnabled,
+  smsSenderFirstFlowV2Enabled = false,
+  rollbackToLegacyRoutingOnce = false,
 }: SmsFlowInput): SmsFlowDecision => {
   if (onboardingState === 'not_completed' || permissionState !== 'granted') {
     return {
@@ -93,6 +97,14 @@ export const getNextSmsFlowStep = ({
   }
 
   if (providerSelectionState !== 'configured') {
+    if (smsSenderFirstFlowV2Enabled && !rollbackToLegacyRoutingOnce) {
+      return {
+        nextStep: 'route_sender_discovery',
+        route: '/process-sms',
+        shouldTriggerAutoImport: false,
+      };
+    }
+
     if (
       onboardingState === 'first_run_post_onboarding' &&
       (providerSelectionState === 'missing' || providerSelectionState === 'empty')
