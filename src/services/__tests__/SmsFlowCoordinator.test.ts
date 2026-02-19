@@ -9,7 +9,7 @@ describe('SmsFlowCoordinator', () => {
     safeStorage.removeItem('xpensia_sms_sender_import_map');
   });
 
-  it('routes first run with granted permission and no providers to provider setup', () => {
+  it('continues first run with granted permission and no providers to sender scan flow', () => {
     const decision = getNextSmsFlowStep({
       onboardingState: 'first_run_post_onboarding',
       permissionState: 'granted',
@@ -17,9 +17,9 @@ describe('SmsFlowCoordinator', () => {
       autoImportEnabled: true,
     });
 
-    expect(decision.nextStep).toBe('route_sms_providers');
-    expect(decision.route).toBe('/sms-providers');
-    expect(decision.shouldTriggerAutoImport).toBe(false);
+    expect(decision.nextStep).toBe('continue_existing_flow');
+    expect(decision.route).toBeUndefined();
+    expect(decision.shouldTriggerAutoImport).toBe(true);
   });
 
   it('routes subsequent runs when provider config is invalid', () => {

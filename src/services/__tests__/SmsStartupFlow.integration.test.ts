@@ -87,15 +87,16 @@ describe('App startup SMS flow integration', () => {
     (smsProviderSelectionService.hasConfiguredProviders as Mock).mockReturnValue(false);
   });
 
-  it('routes first run with granted permission and missing providers to provider setup', async () => {
+  it('continues first run with granted permission and missing providers to sender scan flow', async () => {
     const decision = await evaluateStartupFlow({
       onboardingDone: true,
       justCompleted: true,
       permissionGranted: true,
     });
 
-    expect(decision.nextStep).toBe('route_sms_providers');
-    expect(decision.route).toBe('/sms-providers');
+    expect(decision.nextStep).toBe('continue_existing_flow');
+    expect(decision.route).toBeUndefined();
+    expect(decision.shouldTriggerAutoImport).toBe(true);
   });
 
   it('routes subsequent run with cleared providers to provider setup', async () => {
