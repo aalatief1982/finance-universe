@@ -431,43 +431,6 @@ declare module '@radix-ui/react-checkbox' {
   export const Indicator: React.ForwardRefExoticComponent<CheckboxIndicatorProps & React.RefAttributes<HTMLSpanElement>>;
 }
 
-// Define types for react-router-dom
-declare module 'react-router-dom' {
-  export interface NavigateOptions {
-    replace?: boolean;
-    state?: unknown;
-  }
-
-  export interface Location {
-    pathname: string;
-    search: string;
-    hash: string;
-    state: unknown;
-  }
-
-  export interface NavigateFunction {
-    (to: string | number, options?: NavigateOptions): void;
-  }
-
-  export function useNavigate(): NavigateFunction;
-  export function useLocation(): Location;
-  export function useParams(): Record<string, string>;
-  export function useSearchParams(): [URLSearchParams, (nextInit: URLSearchParams) => void];
-
-  export function Link(props: {
-    to: string;
-    replace?: boolean;
-    state?: unknown;
-    className?: string;
-    children: React.ReactNode;
-    [key: string]: unknown;
-  }): JSX.Element;
-
-  export function BrowserRouter(props: { children: React.ReactNode }): JSX.Element;
-  export function Route(props: { path: string; element: React.ReactNode }): JSX.Element;
-  export function Routes(props: { children: React.ReactNode }): JSX.Element;
-}
-
 // Define types for recharts
 declare module 'recharts' {
   export interface LegendProps {
