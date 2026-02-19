@@ -14,17 +14,17 @@
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
 
-        <!-- Add these to support translucent status bar -->
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- Keep a solid native baseline before JS status-bar overrides are applied -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">@android:color/black</item>
     </style>
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
 
-        <!-- Optional: make splash screen also use transparent status bar -->
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- Match runtime theme baseline to avoid splash-to-app status-bar jumps -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">@android:color/black</item>
     </style>
 
 </resources>
