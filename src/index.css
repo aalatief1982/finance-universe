@@ -123,6 +123,11 @@
 }
  
 @layer base {
+  html {
+    /* Prevent layout width jumps when vertical scrollbars appear/disappear. */
+    scrollbar-gutter: stable both-edges;
+  }
+
   * {
     @apply border-border;
   }
