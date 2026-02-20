@@ -6,9 +6,8 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
-import { XpensiaLogo } from '@/components/header/XpensiaLogo';
+import { Plus, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
+import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -26,16 +25,13 @@ import { ExchangeRate } from '@/models/exchange-rate';
 import {
   getAllExchangeRates,
   deleteExchangeRate,
-  getUniqueCurrencyPairs,
 } from '@/services/ExchangeRateService';
 import ExchangeRateDialog from '@/components/fx/ExchangeRateDialog';
 import { toast } from '@/components/ui/use-toast';
-import { formatCurrency } from '@/utils/format-utils';
 
 const ExchangeRates: React.FC = () => {
-  const navigate = useNavigate();
   const baseCurrency = getUserSettings()?.currency || 'SAR';
-  
+
   const [rates, setRates] = useState<ExchangeRate[]>(() => getAllExchangeRates());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRate, setEditingRate] = useState<ExchangeRate | undefined>();
@@ -105,31 +101,19 @@ const ExchangeRates: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background border-b">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="cursor-pointer" onClick={() => navigate('/')}>
-              <XpensiaLogo className="h-8 w-8" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold">Exchange Rates</h1>
-              <p className="text-xs text-muted-foreground">Base: {baseCurrency}</p>
-            </div>
+    <Layout showBack>
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Exchange Rates</h2>
+            <p className="text-xs text-muted-foreground">Base: {baseCurrency}</p>
           </div>
           <Button onClick={handleAddNew} size="sm">
             <Plus className="h-4 w-4 mr-1" />
             Add Rate
           </Button>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="p-4 space-y-4">
         {Object.keys(groupedRates).length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
@@ -208,7 +192,6 @@ const ExchangeRates: React.FC = () => {
         )}
       </div>
 
-      {/* Add/Edit Dialog */}
       <ExchangeRateDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -216,13 +199,12 @@ const ExchangeRates: React.FC = () => {
         onSave={handleSave}
       />
 
-      {/* Delete Confirmation */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Exchange Rate</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this rate? This won't affect historical
+              Are you sure you want to delete this rate? This won&apos;t affect historical
               transactions that already used this rate.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -232,7 +214,7 @@ const ExchangeRates: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </Layout>
   );
 };
 

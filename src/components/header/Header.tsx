@@ -29,7 +29,11 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
     routeTitleMap[location.pathname] ||
     (location.pathname.startsWith('/edit-transaction') ? 'Transaction' : 'Xpensia');
   const isLandingPage = location.pathname === '/';
+  const isHomeRoute = location.pathname === '/' || location.pathname === '/home';
   const isAuthPage = location.pathname === '/onboarding';
+  const firstName = auth.user?.fullName?.split(' ')[0] || 'there';
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
   // Show navigation on all pages except landing and onboarding
   const shouldShowNavigation =
     showNavigation &&
@@ -61,6 +65,11 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
               </Button>
             )}
             <LogoLink isLandingPage={isLandingPage} currentPageTitle={currentPageTitle} />
+            {isHomeRoute && (
+              <span className="ml-2 text-sm text-muted-foreground hidden sm:inline">
+                {`${greeting}, ${firstName}`}
+              </span>
+            )}
             {shouldShowNavigation && <MainNavigation />}
           </div>
           <div className="flex items-center">

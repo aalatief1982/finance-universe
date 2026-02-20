@@ -47,8 +47,6 @@ import { format } from "date-fns";
 import { endOfDay, startOfDay } from 'date-fns';
 
 import ResponsiveFAB from "@/components/dashboard/ResponsiveFAB";
-import AvatarGreeting from "@/components/dashboard/AvatarGreeting";
-import PageHeader from "@/components/layout/PageHeader";
 import { Transaction } from "@/types/transaction";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -188,8 +186,6 @@ const Home = () => {
   return (
     <Layout withPadding={false} fullWidth>
       <div className="container px-1">
-        <PageHeader title={<AvatarGreeting user={user} />} />
-
         <div className="my-2">
           <ToggleGroup
             type="single"
