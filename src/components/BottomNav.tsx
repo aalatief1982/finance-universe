@@ -31,7 +31,7 @@ const BottomNav: React.FC = () => {
   const location = useLocation();
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border">
-      <ul className="flex justify-around py-2">
+      <ul className="flex justify-around py-2 pb-[calc(0.5rem+var(--safe-area-bottom))]">
         {navItems.map(({ name, path, icon: Icon, color }) => (
           <li key={path}>
             <Link
