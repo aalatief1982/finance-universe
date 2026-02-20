@@ -70,7 +70,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
       className="relative w-full bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden"
       style={{
         height: '100dvh',
-        marginTop: 'calc(-1 * env(safe-area-inset-top, 0px))',
         paddingTop: 'env(safe-area-inset-top, 0px)',
       }}
     >
