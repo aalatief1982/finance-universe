@@ -60,6 +60,9 @@ const Home = () => {
   const { transactions, addTransaction } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
+  const firstName = user?.fullName?.split(' ')[0] || 'there';
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
   
   // State to dismiss the unconverted warning
   const [dismissedWarning, setDismissedWarning] = useState(false);
@@ -186,6 +189,10 @@ const Home = () => {
   return (
     <Layout withPadding={false} fullWidth>
       <div className="container px-1">
+        <div className="px-[var(--page-padding-x)] pt-2 pb-1">
+          <h1 className="text-lg font-semibold tracking-tight">{`${greeting}, ${firstName}`}</h1>
+        </div>
+
         <div className="my-2">
           <ToggleGroup
             type="single"
