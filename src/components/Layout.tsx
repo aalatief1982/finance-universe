@@ -59,7 +59,7 @@ const Layout = ({
   return (
     <div
       className={cn(
-        isOnboardingLayout ? "min-h-screen flex flex-col" : "h-[100dvh] flex flex-col overflow-hidden",
+        isOnboardingLayout ? "min-h-screen flex flex-col" : "min-h-[100dvh] flex flex-col",
         showHeader && "pt-[var(--header-height)]",
         !showHeader && safeAreaPadding && "pt-[var(--safe-area-top)]",
         className
@@ -76,10 +76,9 @@ const Layout = ({
         >
           <div
             className={cn(
-              "h-full overflow-y-auto",
+              "h-full",
               withPadding && "p-page",
               !fullWidth && "max-w-[var(--content-max-width)] mx-auto",
-              !hideNavigation && isMobile && "pb-20",
               isResponsiveMobile && safeAreaPadding && "pb-safe-bottom"
             )}
           >

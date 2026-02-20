@@ -1,91 +1,137 @@
 
+# Fix: Status Bar Not Showing Teal (#0097A0) in Light Mode
 
-# Fix: Header & Footer Jitter on Android During Scroll
+## Problem
 
-## Root Cause
+The status bar appears in a light/white color across the splash screen, onboarding, and all app pages when in light mode. Dark mode works correctly.
 
-This app does **not** use Ionic components (IonPage/IonContent). It's a plain React + Capacitor app where:
+Two separate layers are responsible:
 
-- **Header** (`position: fixed; top: 0`) and **BottomNav** (`position: fixed; bottom: 0`) float over the page
-- The **body** is the scroll container — content overflows the viewport and the browser scrolls the entire document
+### Layer 1: Native Android Splash Screen
 
-On Android WebView, body-level scrolling causes `position: fixed` elements to "repaint late" during fast flings. The compositor doesn't always keep fixed elements locked to the viewport during body scroll, producing the visible jitter/shake you see compared to WhatsApp (which uses a contained scroll area, not body scroll).
+**Files:** `android/app/src/main/res/values-v23/styles.xml` and `android/app/src/main/res/values/styles.xml`
 
-The existing GPU-promotion CSS (`transform-gpu`, `will-change-transform`, `backface-visibility: hidden`) on Header and BottomNav helps but cannot fully solve the problem when the body itself is scrolling.
+During the native splash screen (before the WebView loads), Android uses the theme defined in these XML files. The light-mode variant sets:
 
-## The Fix
-
-**Convert the Layout from body-scroll to contained-scroll.**
-
-Instead of letting content overflow the viewport and relying on body scroll, make the Layout root a viewport-sized flex container with `overflow: hidden`, and let only the main content area scroll via `overflow-y: auto`.
-
-This is the same pattern WhatsApp and other native-feeling apps use: the outer shell is locked to the viewport, and only the content pane scrolls.
-
-### What changes in `src/components/Layout.tsx`
-
-**Change 1 — Root div: lock to viewport height (non-onboarding only)**
-
-```
-Before:  "min-h-[100dvh] flex flex-col"
-After:   "h-[100dvh] flex flex-col overflow-hidden"
+```xml
+<item name="android:statusBarColor">@android:color/white</item>
 ```
 
-This prevents the body from ever scrolling on app pages. The onboarding path (`isOnboardingLayout`) keeps its existing `min-h-screen` — completely untouched.
+This makes the status bar white during the splash. The dark-mode variant (`values-night-v23`) uses black, which is why dark mode looks fine.
 
-**Change 2 — Main content wrapper: make it the scroll container**
+### Layer 2: Capacitor JavaScript (After WebView Loads)
 
-```
-Before:  <div className="h-full ...">
-After:   <div className="h-full overflow-y-auto ...">
-```
+**File:** `src/App.tsx` lines 126-128
 
-This `div` wrapping page content becomes the only scrolling element. Since Header and BottomNav are `position: fixed` and sit outside this scroll container's paint area, they cannot jitter.
+Once the app loads, the JavaScript status bar logic sets theme-aware colors instead of the requested teal:
 
-**Change 3 — Bottom padding for BottomNav clearance**
-
-Currently `pb-safe-bottom` only accounts for the device home indicator (~34px), not the full BottomNav height (~56px + safe area). Content at the bottom gets hidden behind the nav bar.
-
-```
-Before:  isResponsiveMobile && safeAreaPadding && "pb-safe-bottom"
-After:   !hideNavigation && isMobile && "pb-20",
-         isResponsiveMobile && safeAreaPadding && "pb-safe-bottom"
+```tsx
+const statusBarBackgroundColor = onboarding
+  ? (darkMode ? '#06263b' : '#e8f7f8')   // light mode = pale teal
+  : (darkMode ? '#020817' : '#f8fafc');   // light mode = near white
 ```
 
-`pb-20` (80px) covers the BottomNav + safe area on all Android devices. When `hideNavigation` is true (onboarding), this padding is skipped.
+Both light-mode values are essentially white/very pale, not the requested `#0097a0`.
 
-## Files Changed
+---
 
-| File | What Changes |
-|---|---|
-| `src/components/Layout.tsx` | 3 small changes (root height, scroll container, bottom padding) |
+## Fix Plan
 
-**No other files are modified.** No changes to:
-- Onboarding components, CSS, or routing
-- Header.tsx or BottomNav.tsx
-- Any page component (Home, Transactions, Analytics, etc.)
-- Global CSS or index.css
-- Navigation architecture or routing
+### Change 1: `src/App.tsx` (lines 126-128)
 
-## Why This Works
+Replace the theme-aware colors with the requested teal for light mode:
 
-- **Body never scrolls** on app pages, so Android WebView's compositor has no reason to repaint fixed elements
-- Header and BottomNav remain `position: fixed` with their existing GPU-promotion CSS — they're now truly static because no ancestor is scrolling
-- The contained scroll area (`overflow-y-auto`) is a standard scrolling context that Android WebView handles smoothly
-- Onboarding is completely isolated — it uses the `isOnboardingLayout` branch which stays at `min-h-screen` with no scroll changes
+```
+Before:
+  const statusBarBackgroundColor = onboarding
+    ? (darkMode ? '#06263b' : '#e8f7f8')
+    : (darkMode ? '#020817' : '#f8fafc');
 
-## Why It Won't Break Anything
+After:
+  const statusBarBackgroundColor = onboarding
+    ? (darkMode ? '#06263b' : '#0097a0')
+    : (darkMode ? '#020817' : '#0097a0');
+```
 
-- All existing page content renders identically — it's the same flex layout, just the scroll target moves from body to a content div
-- `ScrollToTop` component (already in App.tsx) may need the scroll target adjusted, but since it likely calls `window.scrollTo`, pages will still reset on navigation via the `AnimatePresence` key change
-- Modals, dropdowns, and popovers from Radix UI use portals — they render outside the scroll container and are unaffected
-- Desktop: BottomNav is hidden (`md:hidden`), and the contained scroll behaves identically to body scroll on desktop browsers
+Both onboarding and default pages will show teal `#0097a0` in light mode. Dark mode colors remain unchanged.
 
-## Verification
+The `Style.Dark` (dark icons) is already correctly applied for light mode on line 132 — dark icons on teal background has good contrast.
 
-After building the APK:
-1. Open any page with scrollable content (Home, Transactions)
-2. Fast-fling scroll up and down
-3. Header and BottomNav should remain perfectly stable — no shake, no lag, no repaint flicker
-4. Last items in lists should be fully visible above the bottom nav
-5. Onboarding slides should look and behave exactly as before
+### Change 2: `android/app/src/main/res/values-v23/styles.xml`
 
+Change the native splash status bar color from white to teal so the splash screen also shows the correct color before JavaScript runs:
+
+```
+Before:
+  <item name="android:statusBarColor">@android:color/white</item>
+  (appears in both AppTheme.NoActionBar and AppTheme.NoActionBarLaunch)
+
+After:
+  <item name="android:statusBarColor">#FF0097A0</item>
+  (both styles)
+```
+
+Note: Android XML requires `#AARRGGBB` format, so `#FF0097A0` is fully opaque teal.
+
+Also update `windowLightStatusBar` to `false` since we want light/white icons on the teal background during splash:
+
+```
+Before:
+  <item name="android:windowLightStatusBar">true</item>
+
+After:
+  <item name="android:windowLightStatusBar">false</item>
+```
+
+Wait -- actually the JS code uses `Style.Dark` for light mode (line 132), which means **dark icons** on the status bar. For consistency between the native splash and JS:
+- If `Style.Dark` = dark icons: `windowLightStatusBar` should be `true` (Android's naming is inverted -- `true` means dark icons)
+- So keep `windowLightStatusBar` as `true` -- just change the background color
+
+Corrected change for `values-v23/styles.xml`:
+
+```xml
+<!-- Both styles: only change statusBarColor, keep windowLightStatusBar=true -->
+<item name="android:statusBarColor">#FF0097A0</item>
+<item name="android:windowLightStatusBar">true</item>
+```
+
+### Change 3: `android/app/src/main/res/values/styles.xml` (base theme)
+
+For pre-API-23 devices, update the fallback status bar color in both `AppTheme.NoActionBar` and `AppTheme.NoActionBarLaunch`:
+
+```
+Before:
+  <item name="android:statusBarColor">@android:color/black</item>
+
+After:
+  <item name="android:statusBarColor">#FF0097A0</item>
+```
+
+---
+
+## Build Error Note
+
+The current build error (`ENOENT: failed opening cache/package/version dir for package capacitor-background-sms-listener`) is a `bun install` cache issue with local file-path packages (`file:capacitor-background-sms-listener` and `file:./capacitor-sms-reader`). This is unrelated to the status bar changes and is a pre-existing infrastructure issue. The status bar fixes are pure color value changes and will not affect this.
+
+---
+
+## Summary
+
+| File | Change | Scope |
+|---|---|---|
+| `src/App.tsx` line 127-128 | Light mode colors from `#e8f7f8`/`#f8fafc` to `#0097a0` | All pages after WebView loads |
+| `android/app/src/main/res/values-v23/styles.xml` | `statusBarColor` from `@android:color/white` to `#FF0097A0` | Native splash + app theme (API 23+) |
+| `android/app/src/main/res/values/styles.xml` | `statusBarColor` from `@android:color/black` to `#FF0097A0` | Fallback for pre-API-23 |
+
+## What Is NOT Changed
+- Dark mode colors -- remain as-is (working correctly)
+- `values-night-v23/styles.xml` -- dark mode native theme untouched
+- `OnboardingSlides.tsx` -- no changes needed
+- `Layout.tsx`, `index.css` -- untouched
+- No global CSS changes
+
+## Test Checklist
+- Splash screen: status bar is teal with dark icons in light mode
+- Onboarding slides: status bar stays teal in light mode
+- Home/other pages: status bar stays teal in light mode
+- Dark mode: all screens unchanged (dark status bar as before)
