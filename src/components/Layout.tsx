@@ -59,7 +59,7 @@ const Layout = ({
   return (
     <div
       className={cn(
-        isOnboardingLayout ? "min-h-screen flex flex-col" : "min-h-[100dvh] flex flex-col",
+        isOnboardingLayout ? "min-h-screen flex flex-col" : "h-[100dvh] overflow-hidden flex flex-col",
         showHeader && "pt-[var(--header-height)]",
         !showHeader && safeAreaPadding && "pt-[var(--safe-area-top)]",
         className
@@ -67,10 +67,10 @@ const Layout = ({
     >
       {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} />}
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <main
           className={cn(
-            "flex-1 w-full",
+            "flex-1 w-full min-h-0 overflow-y-auto overscroll-y-none",
             !fullWidth && "container"
           )}
         >
