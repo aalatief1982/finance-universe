@@ -67,26 +67,23 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
 
   return (
     <div
-      className="relative w-full bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden"
-      style={{
-        height: '100dvh',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-      }}
+      className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-      {/* Progress indicator */}
-      <div className="absolute top-0 z-10 left-1/2 -translate-x-1/2 pt-2">
-        <div className="flex space-x-2 pt-2">
+      {/* Pagination dots */}
+      <div
+        className="absolute left-1/2 z-20 -translate-x-1/2"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
+      >
+        <div className="flex items-center space-x-2">
           {slides.map((_, i) => (
             <div
               key={i}
-              className={`h-1 rounded-full transition-all duration-300 ${
+              className={`h-2 w-2 rounded-full transition-all duration-300 ${
                 i === index 
-                  ? 'w-8 bg-primary' 
-                  : i < index 
-                    ? 'w-2 bg-primary/60' 
-                    : 'w-2 bg-muted'
+                  ? 'bg-primary' 
+                  : 'bg-muted-foreground/50'
               }`}
             />
           ))}
@@ -145,7 +142,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                 </div>
               </div>
               {/* Action section */}
-              <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}>
+              <div className="px-4 pt-2 shrink-0" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2.5rem)' }}>
                 {i === slides.length - 1 ? (
                   <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
                     <Button 
