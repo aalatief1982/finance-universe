@@ -23,7 +23,7 @@ const PageHeader = ({
   const navigate = useNavigate();
 
   return (
-    <div className="sticky top-[calc(var(--header-height)+var(--safe-area-top))] z-20 bg-background/95 backdrop-blur-xl border-b transform-gpu will-change-transform">
+    <div className="sticky top-[calc(var(--header-height)+var(--safe-area-top))] z-20 bg-background border-b transform-gpu will-change-transform isolate [backface-visibility:hidden]">
       <div className="px-[var(--page-padding-x)] py-1.5">
         <div className={cn("flex items-center justify-between gap-2", className)}>
           <div className="flex items-center gap-2">
