@@ -20,7 +20,6 @@ import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import Layout from '@/components/Layout';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
@@ -61,17 +60,8 @@ const Onboarding = () => {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}>
-      <Layout
-        hideNavigation
-        showHeader={false}
-        withPadding={false}
-        fullWidth
-        className="w-full h-full overflow-hidden"
-        safeAreaPadding={false}
-      >
-        <OnboardingSlides onComplete={handleComplete} />
-      </Layout>
+    <div className="fixed inset-0 overflow-hidden">
+      <OnboardingSlides onComplete={handleComplete} />
     </div>
   );
 };
