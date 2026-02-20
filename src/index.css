@@ -129,7 +129,6 @@
   body {
     @apply bg-background text-foreground overflow-x-hidden;
     font-family: 'Lato-Black', sans-serif;
-    padding-top: var(--safe-area-top); /* Add padding for mobile notches */
   }
   h1 {
     @apply text-2xl font-bold;
