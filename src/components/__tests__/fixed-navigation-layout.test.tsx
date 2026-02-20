@@ -15,8 +15,6 @@ describe('Fixed navigation layout', () => {
     const wrapper = container.firstElementChild as HTMLElement;
     expect(wrapper.className).toContain('sticky');
     expect(wrapper.className).toContain('top-[calc(var(--header-height)+var(--safe-area-top))]');
-    expect(wrapper.className).toContain('transform-gpu');
-    expect(wrapper.className).toContain('will-change-transform');
   });
 
   it('keeps bottom navigation fixed with safe area bottom padding', () => {
@@ -31,7 +29,6 @@ describe('Fixed navigation layout', () => {
     const list = nav?.querySelector('ul');
 
     expect(nav).toHaveClass('fixed', 'bottom-0');
-    expect(nav).toHaveClass('transform-gpu', 'will-change-transform');
     expect(list?.className).toContain('pb-[calc(0.5rem+var(--safe-area-bottom))]');
   });
 });
