@@ -78,7 +78,7 @@ const Layout = ({
               "h-full",
               withPadding && "p-page",
               !fullWidth && "max-w-[var(--content-max-width)] mx-auto",
-              isResponsiveMobile && safeAreaPadding && "pb-safe-bottom"
+              isResponsiveMobile && safeAreaPadding && (hideNavigation ? "pb-safe-bottom" : "pb-[calc(4rem+var(--safe-area-bottom))]")
             )}
           >
             <AnimatePresence mode="wait" initial={false}>
