@@ -54,11 +54,12 @@ const Layout = ({
   const isMobile = useIsMobile();
   const { isMobile: isResponsiveMobile } = useResponsive();
   const location = useLocation();
+  const isOnboardingStyleLayout = !showHeader && hideNavigation;
   
   return (
     <div
       className={cn(
-        "min-h-screen flex flex-col",
+        isOnboardingStyleLayout ? "min-h-screen flex flex-col" : "min-h-[100dvh] flex flex-col",
         showHeader && "pt-[var(--header-height)]",
         !showHeader && safeAreaPadding && "pt-[var(--safe-area-top)]",
         className
