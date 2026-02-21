@@ -502,7 +502,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
       }}
     >
       {isMobile ? mobileView : desktopView}
-      <AlertDialogContent>
+      <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle>
             Are you sure you want to delete this transaction?

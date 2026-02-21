@@ -209,7 +209,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
       </div>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-sm">
           <DialogHeader>
             <DialogTitle>Are you sure you want to delete this transaction?</DialogTitle>
           </DialogHeader>

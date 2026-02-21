@@ -128,7 +128,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
       />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Vendor</DialogTitle>
           </DialogHeader>

@@ -180,7 +180,7 @@ const LearningEngineSettings = () => {
                   <span>Clear Data</span>
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Clear learning data?</AlertDialogTitle>
                   <AlertDialogDescription>

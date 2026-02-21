@@ -202,7 +202,7 @@ export const UpdateDialog: React.FC<UpdateDialogProps> = ({
         if (!nextOpen) handleClose();
       }}
     >
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {phase === 'success' ? 'Update Complete' : 'Update Available'}

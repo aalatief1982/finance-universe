@@ -80,7 +80,7 @@ const TransactionHeader: React.FC<TransactionHeaderProps> = ({
               </TooltipTrigger>
               <TooltipContent>Add a new transaction</TooltipContent>
             </Tooltip>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
               <ExpenseForm 
                 onSubmit={onAddTransaction} 
                 categories={categories}

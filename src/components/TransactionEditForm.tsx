@@ -753,7 +753,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       />
 
       <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Account</DialogTitle>
           </DialogHeader>
@@ -789,7 +789,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       </Dialog>
 
       <Dialog open={addCategoryOpen} onOpenChange={setAddCategoryOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Category</DialogTitle>
           </DialogHeader>
@@ -853,7 +853,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       </Dialog>
 
       <Dialog open={addPersonOpen} onOpenChange={setAddPersonOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Person</DialogTitle>
           </DialogHeader>
@@ -889,7 +889,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       </Dialog>
 
       <Dialog open={addVendorOpen} onOpenChange={setAddVendorOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Vendor</DialogTitle>
           </DialogHeader>
@@ -966,7 +966,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       </Dialog>
 
       <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
-        <DialogContent className="sm:max-w-xs">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-sm">
           <DialogHeader>
             <DialogTitle>Calculator</DialogTitle>
           </DialogHeader>

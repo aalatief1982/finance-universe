@@ -478,7 +478,7 @@ const handleReadSms = async () => {
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md">
           <DialogHeader>
             <DialogTitle>Importing SMS</DialogTitle>
             <DialogDescription>
