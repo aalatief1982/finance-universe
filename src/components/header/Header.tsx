@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { navigateBackSafely } from '@/utils/navigation';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/context/UserContext';
 import { AuthHeader } from './AuthHeader';
@@ -54,7 +55,7 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackSafely(navigate)}
                 className="mr-2"
               >
                 <ArrowLeft size={20} />

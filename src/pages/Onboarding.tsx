@@ -56,7 +56,7 @@ const Onboarding = () => {
       timestamp: Date.now()
     });
     
-    navigate('/home');
+    navigate('/home', { replace: true });
   };
 
   return (
