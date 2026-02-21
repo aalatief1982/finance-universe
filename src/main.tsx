@@ -19,6 +19,10 @@ import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 import React, { useState, useEffect } from 'react'
 
+type XpensiaWindow = Window & {
+  __xpensiaHideInitialLoading?: () => void
+}
+
 // AppWithLoader component definition
 const AppWithLoader: React.FC = () => {
   const [initializing, setInitializing] = useState(true);
@@ -126,6 +130,16 @@ function setupGlobalErrorHandlers() {
 
   const root = createRoot(document.getElementById("root")!)
   root.render(<AppWithLoader />)
+
+  const hideInitialLoading = () => {
+    (window as XpensiaWindow).__xpensiaHideInitialLoading?.()
+  }
+
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(hideInitialLoading)
+  } else {
+    setTimeout(hideInitialLoading, 0)
+  }
 })()
 
 if (Capacitor.isNativePlatform()) {
