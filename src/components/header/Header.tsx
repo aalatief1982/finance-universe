@@ -17,9 +17,10 @@ interface HeaderProps {
   className?: string;
   showNavigation?: boolean;
   showBack?: boolean;
+  onBack?: () => void;
 }
 
-const Header = ({ className, showNavigation = true, showBack = false }: HeaderProps) => {
+const Header = ({ className, showNavigation = true, showBack = false, onBack }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { auth } = useUser();
@@ -55,7 +56,13 @@ const Header = ({ className, showNavigation = true, showBack = false }: HeaderPr
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigateBackSafely(navigate)}
+                onClick={() => {
+                  if (onBack) {
+                    onBack();
+                    return;
+                  }
+                  navigateBackSafely(navigate);
+                }}
                 className="mr-2"
               >
                 <ArrowLeft size={20} />
