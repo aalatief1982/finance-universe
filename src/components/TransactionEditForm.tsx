@@ -383,7 +383,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         updated.subcategory = 'none';
       }
 
-      if (!titleManuallyEdited) {
+      if (field !== 'title' && !titleManuallyEdited) {
         updated.title = generateDefaultTitle(updated);
       }
 
