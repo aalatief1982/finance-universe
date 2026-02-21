@@ -4,6 +4,7 @@ export const routeTitleMap: Record<string, string> = {
   "/home": "Xpensia",
   "/transactions": "Transactions",
   "/analytics": "Analytics",
+  "/budget": "Budgets",
   "/process-sms": "Import SMS",
   "/settings": "Settings",
   "/profile": "Profile",
