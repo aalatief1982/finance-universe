@@ -18,7 +18,7 @@ interface HeaderProps {
   showNavigation?: boolean;
   showBack?: boolean;
   onBack?: () => void;
-  onLogoClick?: () => void;
+  onLogoClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 const Header = ({ className, showNavigation = true, showBack = false, onBack, onLogoClick }: HeaderProps) => {
