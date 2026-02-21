@@ -18,7 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Transaction } from '@/types/transaction';
@@ -72,6 +72,7 @@ const EditTransaction = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
 
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
@@ -87,7 +88,6 @@ const EditTransaction = () => {
   const fieldConfidences = state?.fieldConfidences;
   const isNewTransaction = !transaction;
 
-  const blocker = useBlocker(isDirty && !saving);
 
   if (import.meta.env.MODE === 'development') {
     // console.log('[EditTransaction] Component initialized with state:', {
@@ -104,7 +104,7 @@ const EditTransaction = () => {
     // });
   }
 
-  const requestNavigation = React.useCallback((action: () => void) => {
+  const confirmDiscardIfDirty = React.useCallback((action: () => void) => {
     if (isDirty && !saving) {
       setPendingNavigation(() => action);
       setShowUnsavedDialog(true);
@@ -113,6 +113,10 @@ const EditTransaction = () => {
 
     action();
   }, [isDirty, saving]);
+
+  const guardedNavigateBack = React.useCallback(() => {
+    confirmDiscardIfDirty(() => navigate(-1));
+  }, [confirmDiscardIfDirty, navigate]);
 
   const handleSave = (editedTransaction: Transaction) => {
     setSaving(true);
@@ -135,27 +139,23 @@ const EditTransaction = () => {
   };
 
   const handleDiscardChanges = () => {
+    const nextNavigation = pendingNavigation;
     setShowUnsavedDialog(false);
+    setPendingNavigation(null);
     setIsDirty(false);
-    if (blocker.state === 'blocked') {
-      blocker.proceed();
+
+    if (nextNavigation) {
+      nextNavigation();
       return;
     }
+
     navigate(-1);
   };
 
   const handleStayOnPage = () => {
     setShowUnsavedDialog(false);
-    if (blocker.state === 'blocked') {
-      blocker.reset();
-    }
+    setPendingNavigation(null);
   };
-
-  useEffect(() => {
-    if (blocker.state === 'blocked') {
-      setShowUnsavedDialog(true);
-    }
-  }, [blocker.state]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
@@ -169,12 +169,7 @@ const EditTransaction = () => {
           return;
         }
 
-        if (isDirty && !saving) {
-          setShowUnsavedDialog(true);
-          return;
-        }
-
-        navigate(-1);
+        confirmDiscardIfDirty(() => navigate(-1));
       });
 
       if (!isMounted) {
@@ -196,7 +191,7 @@ const EditTransaction = () => {
       isMounted = false;
       teardown?.();
     };
-  }, [isDirty, navigate, saving, showUnsavedDialog]);
+  }, [confirmDiscardIfDirty, navigate, showUnsavedDialog]);
 
   useEffect(() => {
     if (isSuggested) {
@@ -217,7 +212,7 @@ const EditTransaction = () => {
   }, [isSuggested, matchDetails, toast]);
 
   return (
-    <Layout showBack withPadding={false} fullWidth>
+    <Layout showBack withPadding={false} fullWidth onBack={guardedNavigateBack}>
       <LoadingOverlay isOpen={saving} message="Saving..." />
       <motion.div
         initial={{ opacity: 0 }}
@@ -304,7 +299,7 @@ const EditTransaction = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
             <AlertDialogDescription>
-              You have unsaved changes. Do you want to stay and keep editing, or discard your changes?
+              You have unsaved changes. Discard them?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

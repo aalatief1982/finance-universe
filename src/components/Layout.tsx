@@ -39,6 +39,7 @@ interface LayoutProps {
    * Useful for pages that need to manage safe areas themselves.
    */
   safeAreaPadding?: boolean;
+  onBack?: () => void;
 }
 
 const Layout = ({
@@ -50,6 +51,7 @@ const Layout = ({
   fullWidth = false,
   showBack = false,
   safeAreaPadding = true,
+  onBack,
 }: LayoutProps) => {
   const isMobile = useIsMobile();
   const { isMobile: isResponsiveMobile } = useResponsive();
@@ -65,7 +67,7 @@ const Layout = ({
         className
       )}
     >
-      {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} />}
+      {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} onBack={onBack} />}
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <main
