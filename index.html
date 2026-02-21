@@ -20,8 +20,8 @@
     <link rel="icon" href="/xpensia-icon.png" type="image/png" />
   </head>
 
-  <body>
-    <div id="root">
+  <body style="background: hsl(210, 20%, 98%);">
+    <div id="root" style="background: hsl(210, 20%, 98%);">
       <!-- Initial loading screen before React loads -->
       <div id="initial-loading" style="
         position: fixed;
@@ -77,15 +77,21 @@
     </style>
     
     <script>
-      // Remove initial loading screen when React loads
-      window.addEventListener('load', () => {
-        setTimeout(() => {
+      // Explicit hide signal called by React after first render is queued.
+      // Idempotent and safe if called multiple times.
+      window.__xpensiaHideInitialLoading = (() => {
+        let hidden = false;
+
+        return () => {
+          if (hidden) return;
+          hidden = true;
+
           const initialLoading = document.getElementById('initial-loading');
-          if (initialLoading) {
-            initialLoading.style.display = 'none';
+          if (initialLoading && initialLoading.parentNode) {
+            initialLoading.parentNode.removeChild(initialLoading);
           }
-        }, 100);
-      });
+        };
+      })();
     </script>
     
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
