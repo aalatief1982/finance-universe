@@ -103,7 +103,7 @@ const createInitialTransactionState = (transaction?: Transaction): Transaction =
   return {
     id: '',
     title: '',
-    amount: 0,
+    amount: Number.NaN,
     type: 'expense',
     category: 'Uncategorized',
     subcategory: 'none',
@@ -559,6 +559,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     }
 
     const rawAmount = parseFloat(String(finalTransaction.amount));
+    if (Number.isNaN(rawAmount)) return;
     finalTransaction.amount = finalTransaction.type === 'expense' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
 
     if (typeof finalTransaction.date === 'string') {
@@ -1042,9 +1043,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               id="transaction-amount"
               type="number"
               step="0.01"
-              value={editedTransaction.amount}
+              value={Number.isNaN(editedTransaction.amount) ? '' : editedTransaction.amount}
               isAutoFilled={isDriven('amount', drivenFields)}
-              onChange={(e) => handleChange('amount', parseFloat(e.target.value))}
+              onChange={(e) => handleChange('amount', e.target.value === '' ? Number.NaN : parseFloat(e.target.value))}
             placeholder="0.00"
             required
             title={hasLowConfidence('amount', fieldConfidences) ? 'Low confidence' : undefined}
