@@ -12,10 +12,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CURRENCIES } from '@/lib/categories-data';
+import { Plus } from 'lucide-react';
 import { getUserSettings } from '@/utils/storage-utils';
 import { ExchangeRate } from '@/models/exchange-rate';
 import { addExchangeRate, updateExchangeRate } from '@/services/ExchangeRateService';
+import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
+import { getAvailableCurrencies } from '@/lib/currency-utils';
 import { toast } from '@/components/ui/use-toast';
 
 interface ExchangeRateDialogProps {
@@ -42,6 +44,10 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
   const [rate, setRate] = useState('');
   const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
+  const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
+  const [availableCurrencies, setAvailableCurrencies] = useState<string[]>(() =>
+    getAvailableCurrencies().filter((c) => c !== baseCurrency)
+  );
 
   // Reset form when dialog opens or existingRate changes
   useEffect(() => {
@@ -59,6 +65,10 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
       }
     }
   }, [open, existingRate, defaultFromCurrency]);
+
+  useEffect(() => {
+    setAvailableCurrencies(getAvailableCurrencies().filter((c) => c !== baseCurrency));
+  }, [baseCurrency, open]);
 
   const handleSave = () => {
     if (!fromCurrency.trim()) {
@@ -108,7 +118,6 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
   };
 
   const isEditing = !!existingRate;
-  const availableCurrencies = CURRENCIES.filter((c) => c !== baseCurrency);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -128,18 +137,29 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
                 className="bg-muted"
               />
             ) : (
-              <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                <SelectTrigger id="from-currency">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCurrencies.map((currency) => (
-                    <SelectItem key={currency} value={currency}>
-                      {currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-1">
+                <Select value={fromCurrency} onValueChange={setFromCurrency}>
+                  <SelectTrigger id="from-currency" className="w-full">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCurrencies.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        {currency}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setAddCurrencyOpen(true)}
+                  title="Add new currency"
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
             )}
           </div>
 
@@ -203,6 +223,16 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AddCurrencyDialog
+        open={addCurrencyOpen}
+        onOpenChange={setAddCurrencyOpen}
+        onSaved={(currency) => {
+          const refreshed = getAvailableCurrencies().filter((c) => c !== baseCurrency);
+          setAvailableCurrencies(refreshed);
+          setFromCurrency(currency.code);
+        }}
+      />
     </Dialog>
   );
 };
