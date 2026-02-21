@@ -18,9 +18,10 @@ interface HeaderProps {
   showNavigation?: boolean;
   showBack?: boolean;
   onBack?: () => void;
+  onLogoClick?: () => void;
 }
 
-const Header = ({ className, showNavigation = true, showBack = false, onBack }: HeaderProps) => {
+const Header = ({ className, showNavigation = true, showBack = false, onBack, onLogoClick }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { auth } = useUser();
@@ -68,7 +69,11 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack }: 
                 <ArrowLeft size={20} />
               </Button>
             )}
-            <LogoLink isLandingPage={isLandingPage} currentPageTitle={currentPageTitle} />
+            <LogoLink
+              isLandingPage={isLandingPage}
+              currentPageTitle={currentPageTitle}
+              onClick={onLogoClick}
+            />
             {shouldShowNavigation && <MainNavigation />}
           </div>
           <div className="flex items-center">

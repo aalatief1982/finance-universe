@@ -17,7 +17,7 @@
  * - [ ] Navigation hooks are wired correctly
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -73,6 +73,11 @@ const EditTransaction = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
+  const [allowNextNav, setAllowNextNav] = useState(false);
+
+  const isDirtyRef = useRef(isDirty);
+  const savingRef = useRef(saving);
+  const showUnsavedDialogRef = useRef(showUnsavedDialog);
 
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
@@ -105,6 +110,12 @@ const EditTransaction = () => {
   }
 
   const confirmDiscardIfDirty = React.useCallback((action: () => void) => {
+    if (allowNextNav) {
+      setAllowNextNav(false);
+      action();
+      return;
+    }
+
     if (isDirty && !saving) {
       setPendingNavigation(() => action);
       setShowUnsavedDialog(true);
@@ -112,7 +123,7 @@ const EditTransaction = () => {
     }
 
     action();
-  }, [isDirty, saving]);
+  }, [allowNextNav, isDirty, saving]);
 
   const guardedNavigateBack = React.useCallback(() => {
     confirmDiscardIfDirty(() => navigate(-1));
@@ -142,7 +153,7 @@ const EditTransaction = () => {
     const nextNavigation = pendingNavigation;
     setShowUnsavedDialog(false);
     setPendingNavigation(null);
-    setIsDirty(false);
+    setAllowNextNav(true);
 
     if (nextNavigation) {
       nextNavigation();
@@ -158,40 +169,40 @@ const EditTransaction = () => {
   };
 
   useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
+
+  useEffect(() => {
+    savingRef.current = saving;
+  }, [saving]);
+
+  useEffect(() => {
+    showUnsavedDialogRef.current = showUnsavedDialog;
+  }, [showUnsavedDialog]);
+
+  useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
       return;
     }
 
-    let isMounted = true;
-    const setupBackHandler = async () => {
-      const backListener = await CapacitorApp.addListener('backButton', () => {
-        if (!isMounted || showUnsavedDialog) {
-          return;
-        }
-
-        confirmDiscardIfDirty(() => navigate(-1));
-      });
-
-      if (!isMounted) {
-        backListener.remove();
+    const backListenerPromise = CapacitorApp.addListener('backButton', () => {
+      if (showUnsavedDialogRef.current) {
         return;
       }
 
-      return () => {
-        backListener.remove();
-      };
-    };
+      if (isDirtyRef.current && !savingRef.current) {
+        setPendingNavigation(() => () => navigate(-1));
+        setShowUnsavedDialog(true);
+        return;
+      }
 
-    let teardown: (() => void) | undefined;
-    setupBackHandler().then((cleanup) => {
-      teardown = cleanup;
+      navigate(-1);
     });
 
     return () => {
-      isMounted = false;
-      teardown?.();
+      void backListenerPromise.then((listener) => listener.remove());
     };
-  }, [confirmDiscardIfDirty, navigate, showUnsavedDialog]);
+  }, [navigate]);
 
   useEffect(() => {
     if (isSuggested) {
@@ -212,7 +223,13 @@ const EditTransaction = () => {
   }, [isSuggested, matchDetails, toast]);
 
   return (
-    <Layout showBack withPadding={false} fullWidth onBack={guardedNavigateBack}>
+    <Layout
+      showBack
+      withPadding={false}
+      fullWidth
+      onBack={guardedNavigateBack}
+      onLogoClick={() => confirmDiscardIfDirty(() => navigate('/'))}
+    >
       <LoadingOverlay isOpen={saving} message="Saving..." />
       <motion.div
         initial={{ opacity: 0 }}

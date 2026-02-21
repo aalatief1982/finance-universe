@@ -7,16 +7,17 @@ import { XpensiaLogo } from './XpensiaLogo';
 interface LogoLinkProps {
   isLandingPage: boolean;
   currentPageTitle: string;
+  onClick?: () => void;
 }
 
-export const LogoLink: React.FC<LogoLinkProps> = ({ isLandingPage, currentPageTitle }) => {
+export const LogoLink: React.FC<LogoLinkProps> = ({ isLandingPage, currentPageTitle, onClick }) => {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Link to="/" className="flex items-center space-x-2">
+      <Link to="/" className="flex items-center space-x-2" onClick={onClick}>
         <XpensiaLogo />
         <span className="text-xl font-semibold tracking-tight">
           {isLandingPage ? 'Xpensia' : currentPageTitle}
