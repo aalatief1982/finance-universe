@@ -19,8 +19,8 @@ interface BudgetLayoutProps {
 
 export function BudgetLayout({ 
   children, 
-  title, 
-  description,
+  title: _title,
+  description: _description,
   showPeriodFilter = true,
   showAddButton = true,
   headerActions,
@@ -33,15 +33,8 @@ export function BudgetLayout({
     <Layout withPadding={false} showBack fullWidth>
       <div className="container px-1">
         <div className="px-[var(--page-padding-x)] pb-24">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-xl font-bold">{title}</h1>
-              {description && (
-                <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
+          {(headerActions || showAddButton) && (
+            <div className="flex items-center justify-end gap-2 mb-4">
               {headerActions}
               {showAddButton && (
                 <Button size="sm" onClick={() => navigate('/budget/set')}>
@@ -50,7 +43,7 @@ export function BudgetLayout({
                 </Button>
               )}
             </div>
-          </div>
+          )}
 
           {/* Navigation Tabs */}
           <BudgetNav className="mb-4" />
