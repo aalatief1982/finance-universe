@@ -19,7 +19,6 @@
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
-import PageHeader from '@/components/layout/PageHeader';
 import { useTransactions } from '@/context/TransactionContext';
 import { useUser } from '@/context/UserContext';
 import {
@@ -201,9 +200,7 @@ const Analytics: React.FC = () => {
   return (
     <Layout withPadding={false} showBack fullWidth>
       <div className="container px-1">
-        <PageHeader title={null} />
-
-        <div className="sticky top-[calc(var(--header-height)+var(--safe-area-top))] z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 -mt-[7px] space-y-2">
+        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 space-y-2">
           <ToggleGroup
             type="single"
             value={range}
