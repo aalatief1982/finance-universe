@@ -33,7 +33,7 @@ const TransactionDialog = ({ isOpen, onClose, onSubmit }: TransactionDialogProps
   if (!isOpen) return null;
   
   return (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
       <ExpenseForm 
         onSubmit={onSubmit} 
         categories={CATEGORIES}

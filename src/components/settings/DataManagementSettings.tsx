@@ -214,7 +214,7 @@ const DataManagementSettings = () => {
                     Activate Beta Features
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Enter Beta Code</DialogTitle>
                   </DialogHeader>

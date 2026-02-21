@@ -36,7 +36,7 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       {/* Reduce top padding for better alignment */}
-      <DialogContent className="sm:max-w-md pt-2">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto pt-2">
         {origin === 'ml' && (
           <p className="text-yellow-600 text-xs mb-2">
             AI-generated fields – please verify.

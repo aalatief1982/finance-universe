@@ -41,7 +41,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
             <TooltipContent>Add new transaction</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <SheetContent side="bottom" className="rounded-t-xl">
+        <SheetContent side="bottom" className="rounded-t-xl max-h-[85dvh] overflow-y-auto">
           <div className="py-4 px-2">
             <h3 className="text-lg font-medium mb-4">Transaction Actions</h3>
             <div className="grid grid-cols-3 gap-4">

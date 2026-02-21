@@ -119,7 +119,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
                     <Trash2 size={16} />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete transaction</AlertDialogTitle>
                     <AlertDialogDescription>

@@ -262,6 +262,7 @@ const SetBudgetPage = () => {
 
   // State for cascade confirmation dialog
   const [showCascadeConfirm, setShowCascadeConfirm] = React.useState(false);
+  const [pendingDeleteAction, setPendingDeleteAction] = React.useState<null | 'existing' | 'editing'>(null);
 
   // Check for parent period budget and calculate if current amount exceeds allocation
   const parentPeriodWarning = React.useMemo(() => {
@@ -595,19 +596,27 @@ const SetBudgetPage = () => {
 
   // Delete existing budget
   const handleDeleteExisting = () => {
-    if (existingBudgetMatch && confirm('Are you sure you want to delete this budget?')) {
-      budgetService.deleteBudget(existingBudgetMatch.id);
-      toast({ title: 'Budget deleted' });
-      // Reset form or refresh
-      window.location.reload();
+    if (existingBudgetMatch) {
+      setPendingDeleteAction('existing');
     }
   };
 
   // Handle delete
   const handleDelete = () => {
     if (!editId) return;
-    
-    if (confirm('Are you sure you want to delete this budget?')) {
+
+    setPendingDeleteAction('editing');
+  };
+
+  const handleConfirmDelete = () => {
+    if (pendingDeleteAction === 'existing' && existingBudgetMatch) {
+      budgetService.deleteBudget(existingBudgetMatch.id);
+      toast({ title: 'Budget deleted' });
+      window.location.reload();
+      return;
+    }
+
+    if (pendingDeleteAction === 'editing' && editId) {
       budgetService.deleteBudget(editId);
       toast({ title: 'Budget deleted' });
       navigate('/budget');
@@ -1061,51 +1070,75 @@ const SetBudgetPage = () => {
           </Button>
         </div>
 
-        {/* Cascade Confirmation Dialog for yearly budgets */}
-        {showCascadeConfirm && (
-          <div className="fixed inset-0 bg-background/80 flex items-center justify-center z-50 p-4">
-            <Card className="max-w-md w-full">
-              <CardHeader>
-                <CardTitle>Distribute to Child Periods?</CardTitle>
-                <CardDescription>
-                  Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters, months, and weeks.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>• 4 quarterly budgets: ~{formatCurrency(amount / 4, currency)} each</p>
-                <p>• 12 monthly budgets: ~{formatCurrency(amount / 12, currency)} each</p>
-                <p>• 52 weekly budgets: ~{formatCurrency(amount / 52, currency)} each</p>
-              </CardContent>
-              <div className="flex gap-2 p-6 pt-0">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => {
-                    setShowCascadeConfirm(false);
-                    handleSave(false);
-                  }}
-                >
-                  Just Yearly
-                </Button>
-                <Button 
-                  className="flex-1"
-                  onClick={() => {
-                    setShowCascadeConfirm(false);
-                    handleSave(true);
-                  }}
-                >
-                  Distribute All
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
     </Layout>
 
+      <Dialog open={showCascadeConfirm} onOpenChange={setShowCascadeConfirm}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Distribute to Child Periods?</DialogTitle>
+          </DialogHeader>
+          <CardDescription>
+            Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters, months, and weeks.
+          </CardDescription>
+          <CardContent className="space-y-2 px-0 text-sm text-muted-foreground">
+            <p>• 4 quarterly budgets: ~{formatCurrency(amount / 4, currency)} each</p>
+            <p>• 12 monthly budgets: ~{formatCurrency(amount / 12, currency)} each</p>
+            <p>• 52 weekly budgets: ~{formatCurrency(amount / 52, currency)} each</p>
+          </CardContent>
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setShowCascadeConfirm(false);
+                handleSave(false);
+              }}
+            >
+              Just Yearly
+            </Button>
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setShowCascadeConfirm(false);
+                handleSave(true);
+              }}
+            >
+              Distribute All
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={pendingDeleteAction !== null} onOpenChange={(open) => !open && setPendingDeleteAction(null)}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete budget?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete this budget? This action cannot be undone.
+          </p>
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => setPendingDeleteAction(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                handleConfirmDelete();
+                setPendingDeleteAction(null);
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add Account Dialog */}
       <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Account</DialogTitle>
           </DialogHeader>

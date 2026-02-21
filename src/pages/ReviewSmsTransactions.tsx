@@ -623,7 +623,7 @@ const toggleSkipAll = () => {
           <AlertDialogTrigger asChild>
             <Button className="w-full mt-4">Confirm All</Button>
           </AlertDialogTrigger>
-          <AlertDialogContent>
+          <AlertDialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
             <AlertDialogHeader>
               <AlertDialogTitle>
                 Confirm {transactions.length} Transactions

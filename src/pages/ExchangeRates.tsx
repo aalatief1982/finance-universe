@@ -193,7 +193,7 @@ const ExchangeRates: React.FC = () => {
       />
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Exchange Rate</AlertDialogTitle>
             <AlertDialogDescription>

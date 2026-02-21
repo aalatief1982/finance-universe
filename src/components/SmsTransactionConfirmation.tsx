@@ -339,7 +339,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
       </div>
 
       <Dialog open={isEditing} onOpenChange={(open) => !open && handleCancelEdit()}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Transaction</DialogTitle>
           </DialogHeader>
@@ -501,7 +501,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
       </Dialog>
 
       <Dialog open={addPersonOpen} onOpenChange={setAddPersonOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Person</DialogTitle>
           </DialogHeader>

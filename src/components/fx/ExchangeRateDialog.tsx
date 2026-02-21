@@ -121,7 +121,7 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Exchange Rate' : 'Add Exchange Rate'}</DialogTitle>
         </DialogHeader>

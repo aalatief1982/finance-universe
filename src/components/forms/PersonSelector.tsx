@@ -85,7 +85,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       />
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Person</DialogTitle>
           </DialogHeader>

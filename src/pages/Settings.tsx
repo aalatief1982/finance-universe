@@ -937,7 +937,7 @@ const Settings = () => {
                     Activate Beta Features
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Enter Beta Code</DialogTitle>
                   </DialogHeader>
@@ -991,7 +991,7 @@ const Settings = () => {
 
         {/* Admin PIN Dialog */}
         <Dialog open={showPinDialog} onOpenChange={setShowPinDialog}>
-          <DialogContent>
+          <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Enter Admin PIN</DialogTitle>
             </DialogHeader>
@@ -1015,7 +1015,7 @@ const Settings = () => {
       </div>
       
       <AlertDialog open={showUnsavedPrompt} onOpenChange={setShowUnsavedPrompt}>
-        <AlertDialogContent>
+        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
             <AlertDialogDescription>
