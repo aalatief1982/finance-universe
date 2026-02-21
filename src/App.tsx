@@ -72,6 +72,7 @@ import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 import { useTheme } from 'next-themes';
+import { trackNavigationPath } from '@/utils/navigation';
 
 // Synchronous onboarding guard - use render-time redirect to avoid route flash.
 const OnboardingGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -166,6 +167,10 @@ function AppWrapper() {
   useEffect(() => {
     void applyStatusBarForRoute(location.pathname);
   }, [applyStatusBarForRoute, location.pathname]);
+
+  useEffect(() => {
+    trackNavigationPath(location.pathname);
+  }, [location.pathname]);
 
   useEffect(() => {
     const hasThemeContext = typeof theme !== 'undefined' || typeof resolvedTheme !== 'undefined';
@@ -598,7 +603,7 @@ function AppRoutes() {
           path="/onboarding"
           element={
             <ErrorBoundary name="Onboarding Page">
-              <Onboarding />
+              {onboardingDone ? <Navigate to="/home" replace /> : <Onboarding />}
             </ErrorBoundary>
           }
         />

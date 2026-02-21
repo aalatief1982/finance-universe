@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { navigateBackSafely } from '@/utils/navigation';
 
 interface PageHeaderProps {
   title: React.ReactNode;
@@ -31,7 +32,7 @@ const PageHeader = ({
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(-1)}
+                onClick={() => navigateBackSafely(navigate)}
                 className="flex lg:hidden"
               >
                 <ArrowLeft className="h-4 w-4" />
