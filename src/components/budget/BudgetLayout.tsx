@@ -32,9 +32,9 @@ export function BudgetLayout({
   return (
     <Layout withPadding={false} showBack fullWidth>
       <div className="container px-1">
-        <div className="px-[var(--page-padding-x)] pb-24">
+        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 space-y-2">
           {(headerActions || showAddButton) && (
-            <div className="flex items-center justify-end gap-2 mb-4">
+            <div className="flex items-center justify-end gap-2">
               {headerActions}
               {showAddButton && (
                 <Button size="sm" onClick={() => navigate('/budget/set')}>
@@ -46,7 +46,7 @@ export function BudgetLayout({
           )}
 
           {/* Navigation Tabs */}
-          <BudgetNav className="mb-4" />
+          <BudgetNav />
 
           {/* Period Filter */}
           {showPeriodFilter && (
@@ -57,12 +57,15 @@ export function BudgetLayout({
               periodLabel={periodLabel}
               onPeriodChange={setPeriod}
               onNavigate={navigatePeriod}
-              className="mb-6"
             />
           )}
+        </div>
 
-          {/* Page Content */}
-          {children}
+        <div className="px-[var(--page-padding-x)] pt-2 mt-1">
+          <div className={showAddButton ? 'pb-24' : 'pb-20'}>
+            {/* Page Content */}
+            {children}
+          </div>
         </div>
       </div>
 
