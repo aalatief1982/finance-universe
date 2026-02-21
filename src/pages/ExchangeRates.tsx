@@ -10,6 +10,7 @@ import { Plus, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ResponsiveFAB from '@/components/dashboard/ResponsiveFAB';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -103,14 +104,7 @@ const ExchangeRates: React.FC = () => {
   return (
     <Layout withPadding={false} showBack fullWidth>
       <div className="container px-1">
-        <div className="px-[var(--page-padding-x)] pt-0 pb-24 space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs text-muted-foreground">Base: {baseCurrency}</p>
-            <Button onClick={handleAddNew} size="sm">
-              <Plus className="h-4 w-4 mr-1" />
-              Add Rate
-            </Button>
-          </div>
+        <div className="px-[var(--page-padding-x)] pt-2 pb-24 space-y-4">
 
           {Object.keys(groupedRates).length === 0 ? (
             <Card>
@@ -213,6 +207,8 @@ const ExchangeRates: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ResponsiveFAB onClick={handleAddNew} />
     </Layout>
   );
 };
