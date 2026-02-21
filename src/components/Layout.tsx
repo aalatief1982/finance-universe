@@ -40,7 +40,7 @@ interface LayoutProps {
    */
   safeAreaPadding?: boolean;
   onBack?: () => void;
-  onLogoClick?: () => void;
+  onLogoClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 const Layout = ({
