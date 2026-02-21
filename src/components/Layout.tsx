@@ -40,6 +40,7 @@ interface LayoutProps {
    */
   safeAreaPadding?: boolean;
   onBack?: () => void;
+  onLogoClick?: () => void;
 }
 
 const Layout = ({
@@ -52,6 +53,7 @@ const Layout = ({
   showBack = false,
   safeAreaPadding = true,
   onBack,
+  onLogoClick,
 }: LayoutProps) => {
   const isMobile = useIsMobile();
   const { isMobile: isResponsiveMobile } = useResponsive();
@@ -67,7 +69,14 @@ const Layout = ({
         className
       )}
     >
-      {showHeader && <Header showNavigation={!hideNavigation} showBack={showBack} onBack={onBack} />}
+      {showHeader && (
+        <Header
+          showNavigation={!hideNavigation}
+          showBack={showBack}
+          onBack={onBack}
+          onLogoClick={onLogoClick}
+        />
+      )}
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <main
