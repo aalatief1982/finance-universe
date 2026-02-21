@@ -18,7 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Transaction } from '@/types/transaction';
@@ -72,7 +72,6 @@ const EditTransaction = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
 
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
@@ -88,7 +87,7 @@ const EditTransaction = () => {
   const fieldConfidences = state?.fieldConfidences;
   const isNewTransaction = !transaction;
 
-  const isHandlingDiscardRef = React.useRef(false);
+  const blocker = useBlocker(isDirty && !saving);
 
   if (import.meta.env.MODE === 'development') {
     // console.log('[EditTransaction] Component initialized with state:', {
@@ -138,102 +137,25 @@ const EditTransaction = () => {
   const handleDiscardChanges = () => {
     setShowUnsavedDialog(false);
     setIsDirty(false);
-    const action = pendingNavigation;
-    setPendingNavigation(null);
-    isHandlingDiscardRef.current = true;
-    action?.();
-    window.setTimeout(() => {
-      isHandlingDiscardRef.current = false;
-    }, 0);
+    if (blocker.state === 'blocked') {
+      blocker.proceed();
+      return;
+    }
+    navigate(-1);
   };
 
   const handleStayOnPage = () => {
     setShowUnsavedDialog(false);
-    setPendingNavigation(null);
+    if (blocker.state === 'blocked') {
+      blocker.reset();
+    }
   };
 
   useEffect(() => {
-    if (!isDirty || saving) {
-      return;
+    if (blocker.state === 'blocked') {
+      setShowUnsavedDialog(true);
     }
-
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [isDirty, saving]);
-
-  useEffect(() => {
-    const handleDocumentNavigationAttempt = (event: MouseEvent) => {
-      if (!isDirty || saving) {
-        return;
-      }
-
-      const target = event.target as HTMLElement | null;
-      const anchor = target?.closest('a[href]') as HTMLAnchorElement | null;
-      if (!anchor) {
-        return;
-      }
-
-      if (
-        anchor.target === '_blank' ||
-        anchor.hasAttribute('download') ||
-        event.metaKey ||
-        event.ctrlKey ||
-        event.shiftKey ||
-        event.altKey
-      ) {
-        return;
-      }
-
-      const url = new URL(anchor.href, window.location.href);
-      if (url.origin !== window.location.origin) {
-        return;
-      }
-
-      const nextPath = `${url.pathname}${url.search}${url.hash}`;
-      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      if (nextPath === currentPath) {
-        return;
-      }
-
-      event.preventDefault();
-      requestNavigation(() => navigate(nextPath));
-    };
-
-    document.addEventListener('click', handleDocumentNavigationAttempt, true);
-    return () => {
-      document.removeEventListener('click', handleDocumentNavigationAttempt, true);
-    };
-  }, [isDirty, navigate, requestNavigation, saving]);
-
-  useEffect(() => {
-    if (!isDirty || saving) {
-      return;
-    }
-
-    const popMarker = { editTransactionGuard: true };
-    window.history.pushState(popMarker, '', window.location.href);
-
-    const handlePopState = () => {
-      if (isHandlingDiscardRef.current || !isDirty || saving) {
-        return;
-      }
-
-      window.history.pushState(popMarker, '', window.location.href);
-      requestNavigation(() => navigate(-1));
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [isDirty, navigate, requestNavigation, saving]);
+  }, [blocker.state]);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
@@ -248,7 +170,7 @@ const EditTransaction = () => {
         }
 
         if (isDirty && !saving) {
-          requestNavigation(() => navigate(-1));
+          setShowUnsavedDialog(true);
           return;
         }
 
@@ -274,7 +196,7 @@ const EditTransaction = () => {
       isMounted = false;
       teardown?.();
     };
-  }, [isDirty, navigate, requestNavigation, saving, showUnsavedDialog]);
+  }, [isDirty, navigate, saving, showUnsavedDialog]);
 
   useEffect(() => {
     if (isSuggested) {
