@@ -104,6 +104,16 @@ const EditTransaction = () => {
     // });
   }
 
+  const requestNavigation = React.useCallback((action: () => void) => {
+    if (isDirty && !saving) {
+      setPendingNavigation(() => action);
+      setShowUnsavedDialog(true);
+      return;
+    }
+
+    action();
+  }, [isDirty, saving]);
+
   const handleSave = (editedTransaction: Transaction) => {
     setSaving(true);
     try {
