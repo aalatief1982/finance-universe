@@ -75,7 +75,64 @@ interface TransactionEditFormProps {
   fieldConfidences?: Partial<Record<keyof Transaction, number>>;
   /** Called when user starts editing any field */
   onEditStart?: () => void;
+  /** Called when form dirty state changes */
+  onDirtyChange?: (isDirty: boolean) => void;
 }
+
+const createInitialTransactionState = (transaction?: Transaction): Transaction => {
+  if (transaction) {
+    const mappedVendor = remapVendor(transaction.vendor);
+    const mappedFromAccount = remapFromAccount(transaction.fromAccount);
+    const displayDate = transaction.date ? toISOFormat(transaction.date) : '';
+    const rawMessage =
+      typeof (transaction as { rawMessage?: unknown }).rawMessage === 'string'
+        ? (transaction as { rawMessage?: string }).rawMessage
+        : transaction.details?.rawMessage || '';
+
+    return {
+      ...transaction,
+      vendor: mappedVendor,
+      fromAccount: mappedFromAccount,
+      title: transaction.title?.trim() || generateDefaultTitle(transaction),
+      date: displayDate,
+      description: transaction.description?.trim() || rawMessage,
+      toAccount: transaction.toAccount || '',
+    };
+  }
+
+  return {
+    id: '',
+    title: '',
+    amount: 0,
+    type: 'expense',
+    category: 'Uncategorized',
+    subcategory: 'none',
+    date: new Date().toISOString().split('T')[0],
+    fromAccount: 'Cash',
+    toAccount: '',
+    currency: 'SAR',
+    description: '',
+    notes: '',
+    source: 'manual',
+  };
+};
+
+const serializeTransactionForDirtyCheck = (tx: Transaction) =>
+  JSON.stringify({
+    title: tx.title || '',
+    amount: Number(tx.amount || 0),
+    type: tx.type || 'expense',
+    category: tx.category || 'Uncategorized',
+    subcategory: tx.subcategory || 'none',
+    date: tx.date || '',
+    fromAccount: tx.fromAccount || '',
+    toAccount: tx.toAccount || '',
+    currency: tx.currency || 'SAR',
+    description: tx.description || '',
+    notes: tx.notes || '',
+    person: tx.person || '',
+    vendor: tx.vendor || '',
+  });
 
 function isDriven(
   field: keyof Transaction,
@@ -145,6 +202,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   showNotes = true,
   fieldConfidences = {},
   onEditStart,
+  onDirtyChange,
 }) => {
   // Serialize fieldConfidences to prevent object reference changes triggering re-renders
   const fieldConfidencesKey = JSON.stringify(fieldConfidences);
@@ -199,43 +257,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     toAccount: false
   });
 
-  const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
-    if (transaction) {
-      const mappedVendor = remapVendor(transaction.vendor);
-      const mappedFromAccount = remapFromAccount(transaction.fromAccount);
-      const displayDate = transaction.date ? toISOFormat(transaction.date) : '';
-      const rawMessage =
-        typeof (transaction as { rawMessage?: unknown }).rawMessage === 'string'
-          ? (transaction as { rawMessage?: string }).rawMessage
-          : transaction.details?.rawMessage || '';
-
-      return {
-        ...transaction,
-        vendor: mappedVendor,
-        fromAccount: mappedFromAccount,
-        title: transaction.title?.trim() || generateDefaultTitle(transaction),
-        date: displayDate,
-        description: transaction.description?.trim() || rawMessage,
-        toAccount: transaction.toAccount || '',
-      };
-    }
-
-    return {
-      id: '',
-      title: '',
-      amount: 0,
-      type: 'expense',
-      category: 'Uncategorized',
-      subcategory: 'none',
-      date: new Date().toISOString().split('T')[0],
-      fromAccount: 'Cash',
-      toAccount: '',
-      currency: 'SAR',
-      description: '',
-      notes: '',
-      source: 'manual',
-    };
-  });
+  const [initialTransactionState, setInitialTransactionState] = useState<Transaction>(() =>
+    createInitialTransactionState(transaction)
+  );
+  const [editedTransaction, setEditedTransaction] = useState<Transaction>(() =>
+    createInitialTransactionState(transaction)
+  );
 
   // FX state derived from editedTransaction
   const baseCurrency = getUserSettings()?.currency || 'SAR';
@@ -267,6 +294,21 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       setManualExchangeRate('');
     }
   }, [editedTransaction.currency, baseCurrency, needsFxConversion, manualExchangeRate]);
+
+  useEffect(() => {
+    const nextInitialState = createInitialTransactionState(transaction);
+    setInitialTransactionState(nextInitialState);
+    setEditedTransaction(nextInitialState);
+    setTitleManuallyEdited(false);
+    setDescriptionManuallyEdited(false);
+    onDirtyChange?.(false);
+  }, [transaction, onDirtyChange]);
+
+  useEffect(() => {
+    const initialSerialized = serializeTransactionForDirtyCheck(initialTransactionState);
+    const editedSerialized = serializeTransactionForDirtyCheck(editedTransaction);
+    onDirtyChange?.(initialSerialized !== editedSerialized);
+  }, [editedTransaction, initialTransactionState, onDirtyChange]);
 
   useEffect(() => {
     if (transaction && fieldConfidences) {

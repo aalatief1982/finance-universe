@@ -18,7 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Transaction } from '@/types/transaction';
@@ -36,6 +36,18 @@ import { LearnedEntry } from '@/types/learning';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 interface EditTransactionState {
   transaction?: Transaction;
@@ -58,6 +70,8 @@ const EditTransaction = () => {
   const { learnFromTransaction } = useLearningEngine();
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
@@ -72,6 +86,8 @@ const EditTransaction = () => {
   const confidenceScore = state?.confidence;
   const fieldConfidences = state?.fieldConfidences;
   const isNewTransaction = !transaction;
+
+  const blocker = useBlocker(isDirty && !saving);
 
   if (import.meta.env.MODE === 'development') {
     // console.log('[EditTransaction] Component initialized with state:', {
@@ -102,10 +118,75 @@ const EditTransaction = () => {
         combineToasts: true,
       });
       logAnalyticsEvent('edit_transaction');
+      setIsDirty(false);
     } finally {
       setSaving(false);
     }
   };
+
+  const handleDiscardChanges = () => {
+    setShowUnsavedDialog(false);
+    setIsDirty(false);
+    if (blocker.state === 'blocked') {
+      blocker.proceed();
+      return;
+    }
+    navigate(-1);
+  };
+
+  const handleStayOnPage = () => {
+    setShowUnsavedDialog(false);
+    if (blocker.state === 'blocked') {
+      blocker.reset();
+    }
+  };
+
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      setShowUnsavedDialog(true);
+    }
+  }, [blocker.state]);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    let isMounted = true;
+    const setupBackHandler = async () => {
+      const backListener = await CapacitorApp.addListener('backButton', () => {
+        if (!isMounted || showUnsavedDialog) {
+          return;
+        }
+
+        if (isDirty && !saving) {
+          setShowUnsavedDialog(true);
+          return;
+        }
+
+        navigate(-1);
+      });
+
+      if (!isMounted) {
+        backListener.remove();
+        return;
+      }
+
+      return () => {
+        backListener.remove();
+      };
+    };
+
+    let teardown: (() => void) | undefined;
+    setupBackHandler().then((cleanup) => {
+      teardown = cleanup;
+    });
+
+    return () => {
+      isMounted = false;
+      teardown?.();
+    };
+  }, [isDirty, navigate, saving, showUnsavedDialog]);
 
   useEffect(() => {
     if (isSuggested) {
@@ -193,10 +274,35 @@ const EditTransaction = () => {
               showNotes={false}
               fieldConfidences={fieldConfidences}
               onEditStart={() => setIsEditing(true)}
+              onDirtyChange={setIsDirty}
             />
           </CardContent>
         </Card>
       </motion.div>
+
+      <AlertDialog
+        open={showUnsavedDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleStayOnPage();
+            return;
+          }
+          setShowUnsavedDialog(true);
+        }}
+      >
+        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Do you want to stay and keep editing, or discard your changes?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleStayOnPage}>Stay</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDiscardChanges}>Discard</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
