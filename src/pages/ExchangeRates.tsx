@@ -101,95 +101,94 @@ const ExchangeRates: React.FC = () => {
   };
 
   return (
-    <Layout showBack>
-      <div className="space-y-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold">Exchange Rates</h2>
+    <Layout withPadding={false} showBack fullWidth>
+      <div className="container px-1">
+        <div className="px-[var(--page-padding-x)] pt-0 pb-24 space-y-4">
+          <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">Base: {baseCurrency}</p>
+            <Button onClick={handleAddNew} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              Add Rate
+            </Button>
           </div>
-          <Button onClick={handleAddNew} size="sm">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Rate
-          </Button>
-        </div>
 
-        {Object.keys(groupedRates).length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <ArrowRightLeft className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No Exchange Rates</h3>
-              <p className="text-muted-foreground mb-4">
-                Add exchange rates to convert transactions to {baseCurrency}
-              </p>
-              <Button onClick={handleAddNew}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add First Rate
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          Object.entries(groupedRates).map(([pairKey, pairRates]) => {
-            const [from, to] = pairKey.split(':');
-            return (
-              <Card key={pairKey}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <span className="font-mono">{from}</span>
-                    <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-mono">{to}</span>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      ({pairRates.length} rate{pairRates.length !== 1 ? 's' : ''})
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {pairRates.map((rate, index) => (
-                    <div
-                      key={rate.id}
-                      className={`flex items-center justify-between p-3 rounded-lg ${
-                        index === 0 ? 'bg-primary/5 border border-primary/20' : 'bg-muted/50'
-                      }`}
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            1 {from} = {rate.rate.toFixed(4)} {to}
-                          </span>
-                          {index === 0 && (
-                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                              Latest
+          {Object.keys(groupedRates).length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <ArrowRightLeft className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Exchange Rates</h3>
+                <p className="text-muted-foreground mb-4">
+                  Add exchange rates to convert transactions to {baseCurrency}
+                </p>
+                <Button onClick={handleAddNew}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add First Rate
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            Object.entries(groupedRates).map(([pairKey, pairRates]) => {
+              const [from, to] = pairKey.split(':');
+              return (
+                <Card key={pairKey}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <span className="font-mono">{from}</span>
+                      <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-mono">{to}</span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({pairRates.length} rate{pairRates.length !== 1 ? 's' : ''})
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {pairRates.map((rate, index) => (
+                      <div
+                        key={rate.id}
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          index === 0 ? 'bg-primary/5 border border-primary/20' : 'bg-muted/50'
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              1 {from} = {rate.rate.toFixed(4)} {to}
                             </span>
-                          )}
+                            {index === 0 && (
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                Latest
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Effective: {formatDate(rate.effectiveDate)}
+                            {rate.notes && ` • ${rate.notes}`}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          Effective: {formatDate(rate.effectiveDate)}
-                          {rate.notes && ` • ${rate.notes}`}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(rate)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(rate)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEdit(rate)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(rate)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
+                    ))}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
       </div>
 
       <ExchangeRateDialog

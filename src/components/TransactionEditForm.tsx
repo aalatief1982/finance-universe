@@ -38,7 +38,6 @@ import {
   getSubcategoriesForCategory,
   getCategoryHierarchy,
   PEOPLE,
-  CURRENCIES,
 } from '@/lib/categories-data';
 import { Plus, Calculator, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
@@ -62,6 +61,8 @@ import { getUserSettings } from '@/utils/storage-utils';
 import { applyFxConversion } from '@/services/FxConversionService';
 import { roundToCurrencyPrecision } from '@/types/fx';
 import { generateDefaultTitle } from '@/components/transaction-utils';
+import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
+import { CustomCurrency, getAvailableCurrencies } from '@/lib/currency-utils';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -152,30 +153,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
-  const CUSTOM_CURRENCIES_KEY = 'xpensia_custom_currencies';
-  type CustomCurrency = {
-    code: string;
-    country: string;
-    conversionRate?: number;
-    isCustom: boolean;
-  };
-  const loadCurrencies = (): string[] => {
-    const base = [...CURRENCIES];
-    try {
-      const raw = safeStorage.getItem(CUSTOM_CURRENCIES_KEY);
-      if (raw) {
-        const custom: CustomCurrency[] = JSON.parse(raw);
-        base.push(...custom.map(c => c.code));
-      }
-    } catch {
-      // ignore
-    }
-    return base;
-  };
-  const [currencies, setCurrencies] = useState<string[]>(() => loadCurrencies());
+  const [currencies, setCurrencies] = useState<string[]>(() => getAvailableCurrencies());
   const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
   const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
-  const [newCurrency, setNewCurrency] = useState({ code: '', country: '', rate: '' });
   const [calculatorOpen, setCalculatorOpen] = useState(false);
   const [calcExpr, setCalcExpr] = useState('');
   const [manualExchangeRate, setManualExchangeRate] = useState<string>('');
@@ -369,39 +349,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     });
   };
 
-  const handleSaveCurrency = () => {
-    if (!newCurrency.code.trim() || !newCurrency.country.trim()) return;
-    const currencyObj: CustomCurrency = {
-      code: newCurrency.code.trim().toUpperCase(),
-      country: newCurrency.country.trim(),
-      conversionRate: newCurrency.rate ? parseFloat(newCurrency.rate) : undefined,
-      isCustom: true,
-    };
-    try {
-      const raw = safeStorage.getItem(CUSTOM_CURRENCIES_KEY);
-      const arr: CustomCurrency[] = raw ? JSON.parse(raw) : [];
-      arr.push(currencyObj);
-      safeStorage.setItem(CUSTOM_CURRENCIES_KEY, JSON.stringify(arr));
-      
-      // Also save the rate to ExchangeRateService for permanent lookup
-      if (currencyObj.conversionRate && currencyObj.conversionRate > 0) {
-        upsertRate(
-          currencyObj.code,
-          baseCurrency,
-          currencyObj.conversionRate,
-          new Date().toISOString().split('T')[0],
-          'manual'
-        );
-        // Set the manual rate in form
-        setManualExchangeRate(currencyObj.conversionRate.toString());
-      }
-    } catch {
-      // ignore
+  const handleSaveCurrency = (currencyObj: CustomCurrency) => {
+    // Also save the rate to ExchangeRateService for permanent lookup
+    if (currencyObj.conversionRate && currencyObj.conversionRate > 0) {
+      upsertRate(
+        currencyObj.code,
+        baseCurrency,
+        currencyObj.conversionRate,
+        new Date().toISOString().split('T')[0],
+        'manual'
+      );
+      // Set the manual rate in form
+      setManualExchangeRate(currencyObj.conversionRate.toString());
     }
-    setCurrencies(prev => [...prev, currencyObj.code]);
+
+    setCurrencies(getAvailableCurrencies());
     handleChange('currency', currencyObj.code);
-    setNewCurrency({ code: '', country: '', rate: '' });
-    setAddCurrencyOpen(false);
   };
 
   const handleSaveAccount = () => {
@@ -782,54 +745,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         }}
       />
 
-      <Dialog open={addCurrencyOpen} onOpenChange={setAddCurrencyOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Currency</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="new-currency-code">
-                Short Name*
-              </label>
-              <Input
-                id="new-currency-code"
-                value={newCurrency.code}
-                onChange={e => setNewCurrency(prev => ({ ...prev, code: e.target.value }))}
-                className={darkFieldClass}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground" htmlFor="new-currency-country">
-                Country*
-              </label>
-              <Input
-                id="new-currency-country"
-                value={newCurrency.country}
-                onChange={e => setNewCurrency(prev => ({ ...prev, country: e.target.value }))}
-                className={darkFieldClass}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-currency-rate">
-                Conversion Rate
-              </label>
-              <Input
-                id="new-currency-rate"
-                type="number"
-                step="0.0001"
-                value={newCurrency.rate}
-                onChange={e => setNewCurrency(prev => ({ ...prev, rate: e.target.value }))}
-                className={darkFieldClass}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAddCurrencyOpen(false)}>Cancel</Button>
-            <Button type="button" onClick={handleSaveCurrency}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddCurrencyDialog
+        open={addCurrencyOpen}
+        onOpenChange={setAddCurrencyOpen}
+        onSaved={handleSaveCurrency}
+        inputClassName={darkFieldClass}
+      />
 
       <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
         <DialogContent className="sm:max-w-md">
