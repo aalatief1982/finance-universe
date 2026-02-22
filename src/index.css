@@ -73,6 +73,7 @@
     --header-height: 4rem; /* Adjusted header height */
     --safe-area-top: env(safe-area-inset-top, 0px); /* For mobile notches and status bars */
     --safe-area-bottom: env(safe-area-inset-bottom, 0px); /* For mobile home indicator */
+    --bottom-nav-height: 0px;
     --card-gap: 0.5rem;
     --section-gap: 0.75rem;
     --form-gap: 0.5rem;

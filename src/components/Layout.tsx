@@ -90,7 +90,7 @@ const Layout = ({
               "h-full",
               withPadding && "p-page",
               !fullWidth && "max-w-[var(--content-max-width)] mx-auto",
-              isResponsiveMobile && safeAreaPadding && "pb-safe-bottom"
+              isResponsiveMobile && safeAreaPadding && "pb-[calc(var(--bottom-nav-height,0px)+0.5rem)]"
             )}
           >
             <AnimatePresence mode="wait" initial={false}>

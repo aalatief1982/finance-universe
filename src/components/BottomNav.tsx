@@ -29,8 +29,36 @@ const navItems = [
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
+
+  const navRef = React.useRef<HTMLElement>(null);
+
+  React.useEffect(() => {
+    const updateBottomNavHeight = () => {
+      const navHeight = navRef.current?.offsetHeight ?? 0;
+      document.documentElement.style.setProperty('--bottom-nav-height', `${navHeight}px`);
+    };
+
+    updateBottomNavHeight();
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateBottomNavHeight) : null;
+    if (navRef.current && resizeObserver) {
+      resizeObserver.observe(navRef.current);
+    }
+
+    window.addEventListener('resize', updateBottomNavHeight);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateBottomNavHeight);
+      document.documentElement.style.setProperty('--bottom-nav-height', '0px');
+    };
+  }, []);
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border will-change-transform [transform:translateZ(0)] [backface-visibility:hidden]">
+    <nav
+      ref={navRef}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border will-change-transform [transform:translateZ(0)] [backface-visibility:hidden]"
+    >
       <ul className="flex justify-around pt-2 pb-[calc(0.5rem+var(--safe-area-bottom))]">
         {navItems.map(({ name, path, icon: Icon, color }) => (
           <li key={path}>
