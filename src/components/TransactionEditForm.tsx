@@ -30,8 +30,8 @@
  * - [ ] Vendor/account remaps saved only when user confirms
  */
 
-import { safeStorage } from "@/utils/safe-storage";
-import React, { useState, useEffect, useMemo } from 'react';
+import { safeStorage } from '@/utils/safe-storage';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import {
   getCategoriesForType,
@@ -39,23 +39,58 @@ import {
   getCategoryHierarchy,
   PEOPLE,
 } from '@/lib/categories-data';
-import { Plus, Calculator, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
+import {
+  Plus,
+  Calculator,
+  ThumbsUp,
+  ThumbsDown,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+} from 'lucide-react';
 import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { addSuggestionsFeedbackEntry } from '@/utils/suggestions-feedback-log';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import vendorData from '@/data/ksa_all_vendors_clean_final.json';
-import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
+import {
+  loadVendorFallbacks,
+  addUserVendor,
+} from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import { getVendorData } from '@/services/VendorSyncService';
 import VendorAutocomplete from './VendorAutocomplete';
 import FxEstimateDisplay from '@/components/forms/FxEstimateDisplay';
-import { FxInfoDisplay, FxRateInput, ExchangeRateDialog } from '@/components/fx';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { getRate, getLatestRate, upsertRate } from '@/services/ExchangeRateService';
+import {
+  FxInfoDisplay,
+  FxRateInput,
+  ExchangeRateDialog,
+} from '@/components/fx';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  getRate,
+  getLatestRate,
+  upsertRate,
+} from '@/services/ExchangeRateService';
 import { getUserSettings } from '@/utils/storage-utils';
 import { applyFxConversion } from '@/services/FxConversionService';
 import { roundToCurrencyPrecision } from '@/types/fx';
@@ -65,6 +100,12 @@ import { CustomCurrency, getAvailableCurrencies } from '@/lib/currency-utils';
 import { accountService } from '@/services/AccountService';
 import { Account } from '@/models/account';
 import AddAccountDialog from '@/components/budget/AddAccountDialog';
+import {
+  TransactionValidationError,
+  TransactionValidationErrors,
+  validateTransaction,
+} from '@/lib/transaction-validation';
+import { toast } from '@/components/ui/use-toast';
 
 const dedupeVendorsCaseInsensitive = (vendorList: string[]) => {
   const seen = new Set<string>();
@@ -98,7 +139,9 @@ interface TransactionEditFormProps {
   onDirtyChange?: (isDirty: boolean) => void;
 }
 
-const createInitialTransactionState = (transaction?: Transaction): Transaction => {
+const createInitialTransactionState = (
+  transaction?: Transaction,
+): Transaction => {
   if (transaction) {
     const mappedVendor = remapVendor(transaction.vendor);
     const mappedFromAccount = remapFromAccount(transaction.fromAccount);
@@ -124,7 +167,7 @@ const createInitialTransactionState = (transaction?: Transaction): Transaction =
     title: '',
     amount: Number.NaN,
     type: 'expense',
-    category: 'Uncategorized',
+    category: '',
     subcategory: 'none',
     date: new Date().toISOString().split('T')[0],
     fromAccount: '',
@@ -141,7 +184,7 @@ const serializeTransactionForDirtyCheck = (tx: Transaction) =>
     title: tx.title || '',
     amount: Number(tx.amount || 0),
     type: tx.type || 'expense',
-    category: tx.category || 'Uncategorized',
+    category: tx.category || '',
     subcategory: tx.subcategory || 'none',
     date: tx.date || '',
     fromAccount: tx.fromAccount || '',
@@ -155,22 +198,22 @@ const serializeTransactionForDirtyCheck = (tx: Transaction) =>
 
 function isDriven(
   field: keyof Transaction,
-  drivenFields: Partial<Record<keyof Transaction, boolean>>
+  drivenFields: Partial<Record<keyof Transaction, boolean>>,
 ) {
-  return !!drivenFields[field]
+  return !!drivenFields[field];
 }
 
 function hasLowConfidence(
   field: keyof Transaction,
-  scores: Partial<Record<keyof Transaction, number>>
+  scores: Partial<Record<keyof Transaction, number>>,
 ) {
-  const score = scores[field]
-  return score !== undefined && score < 0.6
+  const score = scores[field];
+  return score !== undefined && score < 0.6;
 }
 
 function areDrivenFieldsEqual(
   next: Partial<Record<keyof Transaction, boolean>>,
-  prev: Partial<Record<keyof Transaction, boolean>>
+  prev: Partial<Record<keyof Transaction, boolean>>,
 ) {
   const keys = new Set([...Object.keys(next), ...Object.keys(prev)]);
   for (const key of keys) {
@@ -190,7 +233,8 @@ function toISOFormat(input: string): string {
     const dd = rawDay.padStart(2, '0');
     const mm = rawMonth.padStart(2, '0');
     let yyyy = rawYear;
-    if (yyyy.length === 2) yyyy = parseInt(yyyy) < 50 ? `20${yyyy}` : `19${yyyy}`;
+    if (yyyy.length === 2)
+      yyyy = parseInt(yyyy) < 50 ? `20${yyyy}` : `19${yyyy}`;
     return `${yyyy}-${mm}-${dd}`;
   }
   const ymd = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
@@ -210,8 +254,12 @@ function remapVendor(vendor?: string): string {
 
 function remapFromAccount(fromAccount?: string): string {
   if (!fromAccount) return '';
-  const map = JSON.parse(safeStorage.getItem('xpensia_fromaccount_map') || '{}');
-  return map[fromAccount] && map[fromAccount].trim() !== '' ? map[fromAccount] : fromAccount;
+  const map = JSON.parse(
+    safeStorage.getItem('xpensia_fromaccount_map') || '{}',
+  );
+  return map[fromAccount] && map[fromAccount].trim() !== ''
+    ? map[fromAccount]
+    : fromAccount;
 }
 
 const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
@@ -226,11 +274,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   // Serialize fieldConfidences to prevent object reference changes triggering re-renders
   const fieldConfidencesKey = JSON.stringify(fieldConfidences);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
-  const [descriptionManuallyEdited, setDescriptionManuallyEdited] = useState(false);
-  const [drivenFields, setDrivenFields] = useState<Partial<Record<keyof Transaction, boolean>>>({});
+  const [descriptionManuallyEdited, setDescriptionManuallyEdited] =
+    useState(false);
+  const [drivenFields, setDrivenFields] = useState<
+    Partial<Record<keyof Transaction, boolean>>
+  >({});
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
-  const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
-  const [currencies, setCurrencies] = useState<string[]>(() => getAvailableCurrencies());
+  const [availableSubcategories, setAvailableSubcategories] = useState<
+    string[]
+  >([]);
+  const [currencies, setCurrencies] = useState<string[]>(() =>
+    getAvailableCurrencies(),
+  );
   const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
   const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
@@ -238,10 +293,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [manualExchangeRate, setManualExchangeRate] = useState<string>('');
 
   const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackGiven, setFeedbackGiven] = useState<Partial<Record<keyof Transaction, boolean>>>({});
-  const [accounts, setAccounts] = useState<Account[]>(() => accountService.getAccounts());
+  const [feedbackGiven, setFeedbackGiven] = useState<
+    Partial<Record<keyof Transaction, boolean>>
+  >({});
+  const [accounts, setAccounts] = useState<Account[]>(() =>
+    accountService.getAccounts(),
+  );
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [accountTargetField, setAccountTargetField] = useState<'fromAccount' | 'toAccount'>('fromAccount');
+  const [accountTargetField, setAccountTargetField] = useState<
+    'fromAccount' | 'toAccount'
+  >('fromAccount');
 
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [newCategory, setNewCategory] = useState<{
@@ -252,62 +313,107 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const [people, setPeople] = useState<string[]>(() => getPeopleNames());
   const [addPersonOpen, setAddPersonOpen] = useState(false);
-  const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
+  const [newPerson, setNewPerson] = useState<{
+    name: string;
+    relation: string;
+  }>({ name: '', relation: '' });
 
   const [vendors, setVendors] = useState<string[]>(() => {
     const syncedVendors = getVendorData();
-    const builtIn = Object.keys(syncedVendors || (vendorData as Record<string, unknown>) || {});
+    const builtIn = Object.keys(
+      syncedVendors || (vendorData as Record<string, unknown>) || {},
+    );
     const stored = Object.keys(loadVendorFallbacks());
     return dedupeVendorsCaseInsensitive([...builtIn, ...stored]);
   });
   const [addVendorOpen, setAddVendorOpen] = useState(false);
-  const [newVendor, setNewVendor] = useState<{ name: string; type: TransactionType; category: string; subcategory: string }>(
-    { name: '', type: 'expense', category: '', subcategory: '' }
-  );
-  const [vendorAvailableSubcategories, setVendorAvailableSubcategories] = useState<string[]>([]);
+  const [newVendor, setNewVendor] = useState<{
+    name: string;
+    type: TransactionType;
+    category: string;
+    subcategory: string;
+  }>({ name: '', type: 'expense', category: '', subcategory: '' });
+  const [vendorAvailableSubcategories, setVendorAvailableSubcategories] =
+    useState<string[]>([]);
 
   // Track user interactions to prevent auto-opening dropdowns
-  const [userInteractions, setUserInteractions] = useState<{ vendor: boolean }>({
-    vendor: false,
-  });
+  const [userInteractions, setUserInteractions] = useState<{ vendor: boolean }>(
+    {
+      vendor: false,
+    },
+  );
 
-  const [initialTransactionState, setInitialTransactionState] = useState<Transaction>(() =>
-    createInitialTransactionState(transaction)
-  );
+  const [initialTransactionState, setInitialTransactionState] =
+    useState<Transaction>(() => createInitialTransactionState(transaction));
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() =>
-    createInitialTransactionState(transaction)
+    createInitialTransactionState(transaction),
   );
+  const [formErrors, setFormErrors] = useState<TransactionValidationErrors>({});
+  const [touchedFields, setTouchedFields] = useState<
+    Partial<Record<keyof Transaction, boolean>>
+  >({});
+  const fieldRefs = useRef<
+    Partial<Record<keyof Transaction, HTMLElement | null>>
+  >({});
 
   // FX state derived from editedTransaction
   const baseCurrency = getUserSettings()?.currency || 'SAR';
-  const needsFxConversion = editedTransaction.currency?.toUpperCase() !== baseCurrency.toUpperCase();
-  
+  const needsFxConversion =
+    editedTransaction.currency?.toUpperCase() !== baseCurrency.toUpperCase();
+
   // Calculate converted amount based on manual rate or lookup
-  const currentRate = manualExchangeRate ? parseFloat(manualExchangeRate) : null;
+  const currentRate = manualExchangeRate
+    ? parseFloat(manualExchangeRate)
+    : null;
   const convertedAmount = useMemo(() => {
     if (!needsFxConversion) return editedTransaction.amount;
     if (currentRate && currentRate > 0) {
-      return roundToCurrencyPrecision(Math.abs(editedTransaction.amount) * currentRate, baseCurrency);
+      return roundToCurrencyPrecision(
+        Math.abs(editedTransaction.amount) * currentRate,
+        baseCurrency,
+      );
     }
     // Try to get rate from permanent lookup
-    const lookupResult = getRate(editedTransaction.currency || '', baseCurrency, editedTransaction.date || new Date().toISOString());
+    const lookupResult = getRate(
+      editedTransaction.currency || '',
+      baseCurrency,
+      editedTransaction.date || new Date().toISOString(),
+    );
     if (lookupResult) {
-      return roundToCurrencyPrecision(Math.abs(editedTransaction.amount) * lookupResult.rate, baseCurrency);
+      return roundToCurrencyPrecision(
+        Math.abs(editedTransaction.amount) * lookupResult.rate,
+        baseCurrency,
+      );
     }
     return null;
-  }, [needsFxConversion, editedTransaction.amount, editedTransaction.currency, editedTransaction.date, currentRate, baseCurrency]);
+  }, [
+    needsFxConversion,
+    editedTransaction.amount,
+    editedTransaction.currency,
+    editedTransaction.date,
+    currentRate,
+    baseCurrency,
+  ]);
 
   // Auto-populate rate from lookup when currency changes
   useEffect(() => {
     if (needsFxConversion && !manualExchangeRate) {
-      const lookupResult = getLatestRate(editedTransaction.currency || '', baseCurrency);
+      const lookupResult = getLatestRate(
+        editedTransaction.currency || '',
+        baseCurrency,
+      );
       if (lookupResult) {
         setManualExchangeRate(lookupResult.rate.toString());
       }
     } else if (!needsFxConversion) {
       setManualExchangeRate('');
     }
-  }, [editedTransaction.currency, baseCurrency, needsFxConversion, manualExchangeRate]);
+  }, [
+    editedTransaction.currency,
+    baseCurrency,
+    needsFxConversion,
+    manualExchangeRate,
+  ]);
 
   useEffect(() => {
     const nextInitialState = createInitialTransactionState(transaction);
@@ -315,30 +421,35 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setEditedTransaction(nextInitialState);
     setTitleManuallyEdited(false);
     setDescriptionManuallyEdited(false);
+    setFormErrors({});
+    setTouchedFields({});
     onDirtyChange?.(false);
   }, [transaction, onDirtyChange]);
 
   useEffect(() => {
-    const initialSerialized = serializeTransactionForDirtyCheck(initialTransactionState);
-    const editedSerialized = serializeTransactionForDirtyCheck(editedTransaction);
+    const initialSerialized = serializeTransactionForDirtyCheck(
+      initialTransactionState,
+    );
+    const editedSerialized =
+      serializeTransactionForDirtyCheck(editedTransaction);
     onDirtyChange?.(initialSerialized !== editedSerialized);
   }, [editedTransaction, initialTransactionState, onDirtyChange]);
 
   useEffect(() => {
     if (transaction && fieldConfidences) {
       const driven: Partial<Record<keyof Transaction, boolean>> = {};
-      
+
       // Use fieldConfidences to determine which fields were driven by smart paste
       Object.keys(fieldConfidences).forEach((field) => {
         const confidence = fieldConfidences[field as keyof Transaction];
-        
+
         // Field is driven if it has a confidence score (regardless of value)
         if (confidence !== undefined && confidence > 0) {
           driven[field as keyof Transaction] = true;
         }
       });
-      
-      setDrivenFields(prev => {
+
+      setDrivenFields((prev) => {
         if (areDrivenFieldsEqual(driven, prev)) {
           return prev;
         }
@@ -352,22 +463,25 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   useEffect(() => {
     const categories = getCategoriesForType(editedTransaction.type) || [];
     setAvailableCategories(categories);
-    const subcategories = getSubcategoriesForCategory(editedTransaction.category) || [];
+    const subcategories =
+      getSubcategoriesForCategory(editedTransaction.category) || [];
     setAvailableSubcategories(subcategories);
   }, [editedTransaction.type, editedTransaction.category]);
-
 
   useEffect(() => {
     const loadVendorList = () => {
       const syncedVendors = getVendorData();
-      const builtIn = Object.keys(syncedVendors || (vendorData as Record<string, unknown>) || {});
+      const builtIn = Object.keys(
+        syncedVendors || (vendorData as Record<string, unknown>) || {},
+      );
       const stored = Object.keys(loadVendorFallbacks());
       setVendors(dedupeVendorsCaseInsensitive([...builtIn, ...stored]));
     };
 
     loadVendorList();
     window.addEventListener('vendorDataUpdated', loadVendorList);
-    return () => window.removeEventListener('vendorDataUpdated', loadVendorList);
+    return () =>
+      window.removeEventListener('vendorDataUpdated', loadVendorList);
   }, []);
 
   // Update vendor subcategories when vendor category changes
@@ -375,30 +489,44 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     if (newVendor.category) {
       const subcategories = getSubcategoriesForCategory(newVendor.category);
       setVendorAvailableSubcategories(subcategories);
-      
+
       // Reset subcategory if it's no longer valid
-      if (newVendor.subcategory && !subcategories.includes(newVendor.subcategory)) {
-        setNewVendor(prev => ({ ...prev, subcategory: '' }));
+      if (
+        newVendor.subcategory &&
+        !subcategories.includes(newVendor.subcategory)
+      ) {
+        setNewVendor((prev) => ({ ...prev, subcategory: '' }));
       }
     } else {
       setVendorAvailableSubcategories([]);
-      setNewVendor(prev => ({ ...prev, subcategory: '' }));
+      setNewVendor((prev) => ({ ...prev, subcategory: '' }));
     }
   }, [newVendor.category, newVendor.subcategory]);
 
-  const handleChange = (field: keyof Transaction, value: string | number | TransactionType) => {
+  const handleChange = (
+    field: keyof Transaction,
+    value: string | number | TransactionType,
+  ) => {
     // Call onEditStart when user starts editing
     onEditStart?.();
 
-    setEditedTransaction(prev => {
+    setEditedTransaction((prev) => {
       const updated = { ...prev, [field]: value };
 
       if (drivenFields[field]) {
-        setDrivenFields(prev => ({ ...prev, [field]: false }));
+        setDrivenFields((prev) => ({ ...prev, [field]: false }));
       }
 
+      setFormErrors((prev) => {
+        if (!prev[field]) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+      setTouchedFields((prev) => ({ ...prev, [field]: true }));
+
       if (field === 'type') {
-        updated.category = 'Uncategorized';
+        updated.category = '';
         updated.subcategory = 'none';
         if (value !== 'transfer') {
           updated.toAccount = '';
@@ -406,7 +534,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       }
 
       if (field === 'category') {
-        const subcategories = getSubcategoriesForCategory(value as string) || [];
+        const subcategories =
+          getSubcategoriesForCategory(value as string) || [];
         setAvailableSubcategories(subcategories);
         updated.subcategory = 'none';
       }
@@ -427,7 +556,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         baseCurrency,
         currencyObj.conversionRate,
         new Date().toISOString().split('T')[0],
-        'manual'
+        'manual',
       );
       // Set the manual rate in form
       setManualExchangeRate(currencyObj.conversionRate.toString());
@@ -449,7 +578,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const normalizedSubcategory = newCategory.subcategory.trim();
 
     let cat = hierarchy.find(
-      (c) => c.type === newCategory.type && c.name.toLowerCase() === normalizedCategory.toLowerCase()
+      (c) =>
+        c.type === newCategory.type &&
+        c.name.toLowerCase() === normalizedCategory.toLowerCase(),
     );
 
     if (!cat) {
@@ -465,7 +596,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
     if (normalizedSubcategory) {
       const exists = cat.subcategories.some(
-        (sc) => sc.name.toLowerCase() === normalizedSubcategory.toLowerCase()
+        (sc) => sc.name.toLowerCase() === normalizedSubcategory.toLowerCase(),
       );
       if (!exists) {
         cat.subcategories.push({
@@ -476,18 +607,30 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       }
     }
 
-    safeStorage.setItem('xpensia_category_hierarchy', JSON.stringify(hierarchy));
+    safeStorage.setItem(
+      'xpensia_category_hierarchy',
+      JSON.stringify(hierarchy),
+    );
 
     setAvailableCategories(getCategoriesForType(editedTransaction.type));
-    setAvailableSubcategories(getSubcategoriesForCategory(editedTransaction.category));
+    setAvailableSubcategories(
+      getSubcategoriesForCategory(editedTransaction.category),
+    );
 
-    setNewCategory({ type: editedTransaction.type, category: '', subcategory: '' });
+    setNewCategory({
+      type: editedTransaction.type,
+      category: '',
+      subcategory: '',
+    });
     setAddCategoryOpen(false);
   };
 
   const handleSavePerson = () => {
     if (!newPerson.name.trim()) return;
-    addUserPerson({ name: newPerson.name.trim(), relation: newPerson.relation.trim() || undefined });
+    addUserPerson({
+      name: newPerson.name.trim(),
+      relation: newPerson.relation.trim() || undefined,
+    });
     setPeople(getPeopleNames());
     handleChange('person', newPerson.name.trim());
     setNewPerson({ name: '', relation: '' });
@@ -501,9 +644,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       category: newVendor.category.trim(),
       subcategory: newVendor.subcategory.trim(),
     });
-    setVendors(prev => dedupeVendorsCaseInsensitive([...prev, newVendor.name.trim()]));
+    setVendors((prev) =>
+      dedupeVendorsCaseInsensitive([...prev, newVendor.name.trim()]),
+    );
     handleChange('vendor', newVendor.name.trim());
-    
+
     // Set the category and subcategory from the new vendor
     if (newVendor.category.trim()) {
       handleChange('category', newVendor.category.trim());
@@ -511,20 +656,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         handleChange('subcategory', newVendor.subcategory.trim());
       }
     }
-    
+
     setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
     setAddVendorOpen(false);
   };
 
   const handleCalcInput = (val: string) => {
-    setCalcExpr(prev => prev + val);
+    setCalcExpr((prev) => prev + val);
   };
 
   const clearCalc = () => setCalcExpr('');
 
   const evaluateCalc = () => {
     try {
-       
       const result = Function(`return (${calcExpr || 0})`)();
       setCalcExpr(String(result));
     } catch {
@@ -534,7 +678,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const handleUseCalc = () => {
     try {
-       
       const result = Function(`return (${calcExpr || 0})`)();
       handleChange('amount', parseFloat(result));
     } catch {
@@ -551,11 +694,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       value: editedTransaction[field],
       timestamp: new Date().toISOString(),
     });
-    setFeedbackGiven(prev => ({ ...prev, [field]: true }));
+    setFeedbackGiven((prev) => ({ ...prev, [field]: true }));
   };
 
   const renderFeedbackIcons = (field: keyof Transaction) => {
-    if (!showFeedback || !isDriven(field, drivenFields) || feedbackGiven[field]) {
+    if (
+      !showFeedback ||
+      !isDriven(field, drivenFields) ||
+      feedbackGiven[field]
+    ) {
       return null;
     }
     return (
@@ -572,6 +719,33 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     );
   };
 
+  const focusFirstInvalidField = (errors: TransactionValidationErrors) => {
+    const firstInvalidField = (Object.keys(errors) as (keyof Transaction)[])[0];
+    if (!firstInvalidField) return;
+
+    const target = fieldRefs.current[firstInvalidField];
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (typeof target.focus === 'function') {
+      target.focus();
+    }
+  };
+
+  const handleValidationFailure = (errors: TransactionValidationErrors) => {
+    setFormErrors(errors);
+    const nextTouched: Partial<Record<keyof Transaction, boolean>> = {};
+    (Object.keys(errors) as (keyof Transaction)[]).forEach((key) => {
+      nextTouched[key] = true;
+    });
+    setTouchedFields((prev) => ({ ...prev, ...nextTouched }));
+    toast({
+      title: 'Please fill required fields',
+      description: 'Please fill required fields',
+    });
+    focusFirstInvalidField(errors);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalTransaction = { ...editedTransaction };
@@ -581,14 +755,29 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     }
 
     const rawAmount = parseFloat(String(finalTransaction.amount));
-    if (Number.isNaN(rawAmount)) return;
-    finalTransaction.amount = finalTransaction.type === 'expense' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+    if (!Number.isNaN(rawAmount)) {
+      finalTransaction.amount =
+        finalTransaction.type === 'expense'
+          ? -Math.abs(rawAmount)
+          : Math.abs(rawAmount);
+    }
 
     if (typeof finalTransaction.date === 'string') {
       finalTransaction.date = toISOFormat(finalTransaction.date);
     }
 
-    const rateValue = manualExchangeRate ? parseFloat(manualExchangeRate) : undefined;
+    const preSubmitErrors = validateTransaction(
+      finalTransaction,
+      finalTransaction.type,
+    );
+    if (Object.keys(preSubmitErrors).length > 0) {
+      handleValidationFailure(preSubmitErrors);
+      return;
+    }
+
+    const rateValue = manualExchangeRate
+      ? parseFloat(manualExchangeRate)
+      : undefined;
     const shouldRecalculateFx =
       rateValue !== undefined ||
       finalTransaction.amountInBase === null ||
@@ -601,14 +790,17 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         Math.abs(rawAmount),
         finalTransaction.currency || baseCurrency,
         finalTransaction.date,
-        rateValue
+        rateValue,
       );
 
       finalTransaction.currency = fxResult.fields.currency;
       finalTransaction.baseCurrency = fxResult.fields.baseCurrency;
-      finalTransaction.amountInBase = fxResult.fields.amountInBase !== null
-        ? (finalTransaction.amount < 0 ? -Math.abs(fxResult.fields.amountInBase) : Math.abs(fxResult.fields.amountInBase))
-        : null;
+      finalTransaction.amountInBase =
+        fxResult.fields.amountInBase !== null
+          ? finalTransaction.amount < 0
+            ? -Math.abs(fxResult.fields.amountInBase)
+            : Math.abs(fxResult.fields.amountInBase)
+          : null;
       finalTransaction.fxRateToBase = fxResult.fields.fxRateToBase;
       finalTransaction.fxSource = fxResult.fields.fxSource;
       finalTransaction.fxLockedAt = fxResult.fields.fxLockedAt;
@@ -621,45 +813,65 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         baseCurrency,
         rateValue,
         finalTransaction.date,
-        'manual'
+        'manual',
       );
     }
 
-    onSave(finalTransaction);
-    setShowFeedback(true);
+    try {
+      onSave(finalTransaction);
+      setFormErrors({});
+      setTouchedFields({});
+      setShowFeedback(true);
+    } catch (error) {
+      if (error instanceof TransactionValidationError) {
+        handleValidationFailure(error.errors);
+        return;
+      }
+
+      throw error;
+    }
   };
 
   const rowClass = cn('flex items-center', compact ? 'gap-1' : 'gap-2');
   const labelClass = cn(
     compact ? 'w-24 md:w-28' : 'w-32',
-    'inline-flex shrink-0 items-center text-sm font-semibold text-foreground'
+    'inline-flex shrink-0 items-center text-sm font-semibold text-foreground',
   );
   const inputPadding = compact ? 'py-1 px-2' : 'py-2 px-3';
   const darkFieldClass =
     'bg-background text-foreground border-border placeholder:text-muted-foreground';
   const formClass = cn(
     'bg-card p-4 rounded-md shadow-sm',
-    compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28'
+    compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28',
   );
+
+  const hasError = (field: keyof Transaction) =>
+    Boolean(touchedFields[field] && formErrors[field]);
 
   return (
     <form onSubmit={handleSubmit} className={formClass}>
-
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-type">Type*</label>
+        <label className={labelClass} htmlFor="transaction-type">
+          Type*
+        </label>
 
         <Select
           value={editedTransaction.type}
-          onValueChange={(value) => handleChange('type', value as TransactionType)}
+          onValueChange={(value) =>
+            handleChange('type', value as TransactionType)
+          }
         >
           <SelectTrigger
+            ref={(el) => {
+              fieldRefs.current.type = el;
+            }}
             id="transaction-type"
             className={cn(
               'w-full text-sm',
               inputPadding,
               'rounded-md border-border focus:ring-ring',
               darkFieldClass,
-              
+              hasError('type') && 'border-destructive',
             )}
             isAutoFilled={isDriven('type', drivenFields)}
           >
@@ -668,17 +880,26 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <SelectContent>
             <SelectItem value="expense">Expense</SelectItem>
             <SelectItem value="income">Income</SelectItem>
-          <SelectItem value="transfer">Transfer</SelectItem>
-        </SelectContent>
+            <SelectItem value="transfer">Transfer</SelectItem>
+          </SelectContent>
         </Select>
         {renderFeedbackIcons('type')}
       </div>
-
+      {hasError('type') && (
+        <p className="text-xs text-destructive ml-[calc(6rem)]">
+          {formErrors.type}
+        </p>
+      )}
 
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-title">Title*</label>
+        <label className={labelClass} htmlFor="transaction-title">
+          Title*
+        </label>
 
         <Input
+          ref={(el) => {
+            fieldRefs.current.title = el;
+          }}
           id="transaction-title"
           value={editedTransaction.title || ''}
           onChange={(e) => {
@@ -692,59 +913,94 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             'w-full text-sm',
             inputPadding,
             'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-            darkFieldClass
+            darkFieldClass,
+            hasError('title') && 'border-destructive',
           )}
         />
         {renderFeedbackIcons('title')}
       </div>
-
+      {hasError('title') && (
+        <p className="text-xs text-destructive ml-[calc(6rem)]">
+          {formErrors.title}
+        </p>
+      )}
 
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-currency">Currency*</label>
+        <label className={labelClass} htmlFor="transaction-currency">
+          Currency*
+        </label>
 
         <div className="flex w-full items-center gap-1">
           <Select
             value={editedTransaction.currency || 'SAR'}
             onValueChange={(value) => handleChange('currency', value)}
           >
-          <SelectTrigger
-            id="transaction-currency"
-            className={cn(
-              'w-full text-sm',
-              inputPadding,
-              'rounded-md border-border focus:ring-ring',
-              darkFieldClass,
-              hasLowConfidence('currency', fieldConfidences) && 'border-warning'
-            )}
-            isAutoFilled={isDriven('currency', drivenFields)}
-            title={hasLowConfidence('currency', fieldConfidences) ? 'Low confidence' : undefined}
+            <SelectTrigger
+              ref={(el) => {
+                fieldRefs.current.currency = el;
+              }}
+              id="transaction-currency"
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-border focus:ring-ring',
+                darkFieldClass,
+                hasError('currency') && 'border-destructive',
+                hasLowConfidence('currency', fieldConfidences) &&
+                  'border-warning',
+              )}
+              isAutoFilled={isDriven('currency', drivenFields)}
+              title={
+                hasLowConfidence('currency', fieldConfidences)
+                  ? 'Low confidence'
+                  : undefined
+              }
+            >
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((currency) => (
+                <SelectItem key={currency} value={currency}>
+                  {currency}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setAddCurrencyOpen(true)}
+            title="Add new currency"
           >
-            <SelectValue placeholder="Select currency" />
-          </SelectTrigger>
-          <SelectContent>
-            {currencies.map((currency) => (
-              <SelectItem key={currency} value={currency}>
-                {currency}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button type="button" variant="outline" size="icon" onClick={() => setAddCurrencyOpen(true)} title="Add new currency">
-          <Plus className="size-4" />
-        </Button>
-        {needsFxConversion && (
-          <Button type="button" variant="outline" size="icon" onClick={() => setEditRateDialogOpen(true)} title="Edit exchange rate">
-            <Pencil className="size-4" />
+            <Plus className="size-4" />
           </Button>
+          {needsFxConversion && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setEditRateDialogOpen(true)}
+              title="Edit exchange rate"
+            >
+              <Pencil className="size-4" />
+            </Button>
+          )}
+          {renderFeedbackIcons('currency')}
+        </div>
+        {hasError('currency') && (
+          <p className="text-xs text-destructive ml-[calc(6rem)]">
+            {formErrors.currency}
+          </p>
         )}
-        {renderFeedbackIcons('currency')}
-      </div>
       </div>
 
       {/* Editable Exchange Rate field - only visible when currency differs from base */}
       {needsFxConversion && (
         <div className={rowClass}>
-          <label className={labelClass} htmlFor="transaction-exchange-rate">Rate</label>
+          <label className={labelClass} htmlFor="transaction-exchange-rate">
+            Rate
+          </label>
           <div className="flex w-full items-center gap-1">
             <Input
               id="transaction-exchange-rate"
@@ -758,11 +1014,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'w-full text-sm',
                 inputPadding,
                 'rounded-md border-border focus:ring-ring',
-                darkFieldClass
+                darkFieldClass,
               )}
             />
             <span className="text-xs text-muted-foreground whitespace-nowrap">
-              1 {editedTransaction.currency} = {manualExchangeRate || '?'} {baseCurrency}
+              1 {editedTransaction.currency} = {manualExchangeRate || '?'}{' '}
+              {baseCurrency}
             </span>
           </div>
         </div>
@@ -773,32 +1030,35 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <div className={rowClass}>
           <span className={labelClass}>Converted</span>
           <div className="flex w-full items-center">
-            <div className={cn(
-              'w-full text-sm px-3 py-2 rounded-md bg-muted border border-border',
-              convertedAmount === null && 'text-muted-foreground'
-            )}>
-              {convertedAmount !== null 
+            <div
+              className={cn(
+                'w-full text-sm px-3 py-2 rounded-md bg-muted border border-border',
+                convertedAmount === null && 'text-muted-foreground',
+              )}
+            >
+              {convertedAmount !== null
                 ? `${convertedAmount.toFixed(2)} ${baseCurrency}`
-                : 'Rate required'
-              }
+                : 'Rate required'}
             </div>
           </div>
         </div>
       )}
 
       {/* FX Info Display - shows saved FX metadata for existing transactions */}
-      {transaction && transaction.baseCurrency && 
-       transaction.currency?.toUpperCase() !== transaction.baseCurrency?.toUpperCase() && (
-        <Collapsible className="mt-2">
-          <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-            <span>FX Details</span>
-            <ChevronDown className="size-3" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-2">
-            <FxInfoDisplay transaction={transaction} size="sm" />
-          </CollapsibleContent>
-        </Collapsible>
-      )}
+      {transaction &&
+        transaction.baseCurrency &&
+        transaction.currency?.toUpperCase() !==
+          transaction.baseCurrency?.toUpperCase() && (
+          <Collapsible className="mt-2">
+            <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+              <span>FX Details</span>
+              <ChevronDown className="size-3" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2">
+              <FxInfoDisplay transaction={transaction} size="sm" />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
       {/* Exchange Rate Edit Dialog */}
       <ExchangeRateDialog
@@ -833,16 +1093,25 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-category-type">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-category-type"
+              >
                 Type*
               </label>
               <Select
                 value={newCategory.type}
                 onValueChange={(val) =>
-                  setNewCategory((prev) => ({ ...prev, type: val as TransactionType }))
+                  setNewCategory((prev) => ({
+                    ...prev,
+                    type: val as TransactionType,
+                  }))
                 }
               >
-                <SelectTrigger id="new-category-type" className={cn('w-full', darkFieldClass)}>
+                <SelectTrigger
+                  id="new-category-type"
+                  className={cn('w-full', darkFieldClass)}
+                >
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -853,34 +1122,50 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               </Select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-category-name">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-category-name"
+              >
                 Category*
               </label>
               <Input
                 id="new-category-name"
                 value={newCategory.category}
                 onChange={(e) =>
-                  setNewCategory((prev) => ({ ...prev, category: e.target.value }))
+                  setNewCategory((prev) => ({
+                    ...prev,
+                    category: e.target.value,
+                  }))
                 }
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-category-subcategory">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-category-subcategory"
+              >
                 Subcategory
               </label>
               <Input
                 id="new-category-subcategory"
                 value={newCategory.subcategory}
                 onChange={(e) =>
-                  setNewCategory((prev) => ({ ...prev, subcategory: e.target.value }))
+                  setNewCategory((prev) => ({
+                    ...prev,
+                    subcategory: e.target.value,
+                  }))
                 }
                 className={darkFieldClass}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAddCategoryOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAddCategoryOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="button" onClick={handleSaveCategory}>
@@ -897,31 +1182,52 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-person-name">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-person-name"
+              >
                 Name*
               </label>
               <Input
                 id="new-person-name"
                 value={newPerson.name}
-                onChange={e => setNewPerson(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setNewPerson((prev) => ({ ...prev, name: e.target.value }))
+                }
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-person-relation">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-person-relation"
+              >
                 Relation
               </label>
               <Input
                 id="new-person-relation"
                 value={newPerson.relation}
-                onChange={e => setNewPerson(prev => ({ ...prev, relation: e.target.value }))}
+                onChange={(e) =>
+                  setNewPerson((prev) => ({
+                    ...prev,
+                    relation: e.target.value,
+                  }))
+                }
                 className={darkFieldClass}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAddPersonOpen(false)}>Cancel</Button>
-            <Button type="button" onClick={handleSavePerson}>Save</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAddPersonOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSavePerson}>
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -933,22 +1239,43 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-name">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-vendor-name"
+              >
                 Vendor Name*
               </label>
               <Input
                 id="new-vendor-name"
                 value={newVendor.name}
-                onChange={e => setNewVendor(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setNewVendor((prev) => ({ ...prev, name: e.target.value }))
+                }
                 className={darkFieldClass}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-type">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-vendor-type"
+              >
                 Type*
               </label>
-              <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType, category: '', subcategory: '' }))}>
-                <SelectTrigger id="new-vendor-type" className={cn('w-full', darkFieldClass)}>
+              <Select
+                value={newVendor.type}
+                onValueChange={(val) =>
+                  setNewVendor((prev) => ({
+                    ...prev,
+                    type: val as TransactionType,
+                    category: '',
+                    subcategory: '',
+                  }))
+                }
+              >
+                <SelectTrigger
+                  id="new-vendor-type"
+                  className={cn('w-full', darkFieldClass)}
+                >
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -959,15 +1286,30 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               </Select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-category">
+              <label
+                className="mb-1 block text-sm font-medium dark:text-white"
+                htmlFor="new-vendor-category"
+              >
                 Category*
               </label>
-              <Select value={newVendor.category} onValueChange={val => setNewVendor(prev => ({ ...prev, category: val, subcategory: '' }))}>
-                <SelectTrigger id="new-vendor-category" className={cn('w-full', darkFieldClass)}>
+              <Select
+                value={newVendor.category}
+                onValueChange={(val) =>
+                  setNewVendor((prev) => ({
+                    ...prev,
+                    category: val,
+                    subcategory: '',
+                  }))
+                }
+              >
+                <SelectTrigger
+                  id="new-vendor-category"
+                  className={cn('w-full', darkFieldClass)}
+                >
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
-                  {getCategoriesForType(newVendor.type).map(category => (
+                  {getCategoriesForType(newVendor.type).map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
                     </SelectItem>
@@ -977,16 +1319,30 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             </div>
             {vendorAvailableSubcategories.length > 0 && (
               <div>
-                <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-vendor-subcategory">
+                <label
+                  className="mb-1 block text-sm font-medium dark:text-white"
+                  htmlFor="new-vendor-subcategory"
+                >
                   Subcategory
                 </label>
-                <Select value={newVendor.subcategory || "none"} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val === "none" ? "" : val }))}>
-                  <SelectTrigger id="new-vendor-subcategory" className={cn('w-full', darkFieldClass)}>
+                <Select
+                  value={newVendor.subcategory || 'none'}
+                  onValueChange={(val) =>
+                    setNewVendor((prev) => ({
+                      ...prev,
+                      subcategory: val === 'none' ? '' : val,
+                    }))
+                  }
+                >
+                  <SelectTrigger
+                    id="new-vendor-subcategory"
+                    className={cn('w-full', darkFieldClass)}
+                  >
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     <SelectItem value="none">None</SelectItem>
-                    {vendorAvailableSubcategories.map(subcategory => (
+                    {vendorAvailableSubcategories.map((subcategory) => (
                       <SelectItem key={subcategory} value={subcategory}>
                         {subcategory}
                       </SelectItem>
@@ -997,8 +1353,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             )}
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAddVendorOpen(false)}>Cancel</Button>
-            <Button type="button" onClick={handleSaveVendor}>Save</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAddVendorOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSaveVendor}>
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1011,62 +1375,124 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <div className="space-y-2 py-2">
             <Input readOnly value={calcExpr} className={darkFieldClass} />
             <div className="grid grid-cols-4 gap-2 text-sm">
-              {['7','8','9','/','4','5','6','*','1','2','3','-','0','.','C','+'].map(ch => (
-                <Button key={ch} type="button" variant="secondary" size="sm" onClick={() => {
-                  if (ch === 'C') return clearCalc();
-                  handleCalcInput(ch);
-                }}>
+              {[
+                '7',
+                '8',
+                '9',
+                '/',
+                '4',
+                '5',
+                '6',
+                '*',
+                '1',
+                '2',
+                '3',
+                '-',
+                '0',
+                '.',
+                'C',
+                '+',
+              ].map((ch) => (
+                <Button
+                  key={ch}
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    if (ch === 'C') return clearCalc();
+                    handleCalcInput(ch);
+                  }}
+                >
                   {ch}
                 </Button>
               ))}
-              <Button type="button" variant="default" className="col-span-4" onClick={evaluateCalc}>=</Button>
+              <Button
+                type="button"
+                variant="default"
+                className="col-span-4"
+                onClick={evaluateCalc}
+              >
+                =
+              </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setCalculatorOpen(false)}>Cancel</Button>
-            <Button type="button" onClick={handleUseCalc}>Use</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCalculatorOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleUseCalc}>
+              Use
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-amount">Amount*</label>
+        <label className={labelClass} htmlFor="transaction-amount">
+          Amount*
+        </label>
 
         <div className="flex w-full items-center gap-1">
-            <Input
-              id="transaction-amount"
-              type="number"
-              step="0.01"
-              value={Number.isNaN(editedTransaction.amount) ? '' : editedTransaction.amount}
-              isAutoFilled={isDriven('amount', drivenFields)}
-              onChange={(e) => handleChange('amount', e.target.value === '' ? Number.NaN : parseFloat(e.target.value))}
+          <Input
+            ref={(el) => {
+              fieldRefs.current.amount = el;
+            }}
+            id="transaction-amount"
+            type="number"
+            step="0.01"
+            value={
+              Number.isNaN(editedTransaction.amount)
+                ? ''
+                : editedTransaction.amount
+            }
+            isAutoFilled={isDriven('amount', drivenFields)}
+            onChange={(e) =>
+              handleChange(
+                'amount',
+                e.target.value === '' ? Number.NaN : parseFloat(e.target.value),
+              )
+            }
             placeholder="0.00"
             required
-            title={hasLowConfidence('amount', fieldConfidences) ? 'Low confidence' : undefined}
-          className={cn(
-            'w-full text-sm rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-            inputPadding
-          ,
-            darkFieldClass,
-            hasLowConfidence('amount', fieldConfidences) && 'border-amber-500'
-          )}
-        />
+            title={
+              hasLowConfidence('amount', fieldConfidences)
+                ? 'Low confidence'
+                : undefined
+            }
+            className={cn(
+              'w-full text-sm rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+              inputPadding,
+              darkFieldClass,
+              hasError('amount') && 'border-destructive',
+              hasLowConfidence('amount', fieldConfidences) &&
+                'border-amber-500',
+            )}
+          />
           <Button
             type="button"
             variant="outline"
             size="icon"
             onClick={() => setCalculatorOpen(true)}
           >
-          <Calculator className="size-4" />
-        </Button>
-        {renderFeedbackIcons('amount')}
+            <Calculator className="size-4" />
+          </Button>
+          {renderFeedbackIcons('amount')}
         </div>
       </div>
-
+      {hasError('amount') && (
+        <p className="text-xs text-destructive ml-[calc(6rem)]">
+          {formErrors.amount}
+        </p>
+      )}
 
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-from-account">From Account*</label>
+        <label className={labelClass} htmlFor="transaction-from-account">
+          From Account*
+        </label>
 
         <div className="flex w-full items-center gap-1">
           <Select
@@ -1074,20 +1500,29 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('fromAccount', value)}
           >
             <SelectTrigger
+              ref={(el) => {
+                fieldRefs.current.fromAccount = el;
+              }}
               id="transaction-from-account"
               className={cn(
                 'w-full text-sm',
                 inputPadding,
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass,
-                hasLowConfidence('fromAccount', fieldConfidences) && 'border-amber-500'
+                hasError('fromAccount') && 'border-destructive',
+                hasLowConfidence('fromAccount', fieldConfidences) &&
+                  'border-amber-500',
               )}
-              title={hasLowConfidence('fromAccount', fieldConfidences) ? 'Low confidence' : undefined}
+              title={
+                hasLowConfidence('fromAccount', fieldConfidences)
+                  ? 'Low confidence'
+                  : undefined
+              }
             >
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
-              {accounts.map(account => (
+              {accounts.map((account) => (
                 <SelectItem key={account.id} value={account.name}>
                   {account.name}
                 </SelectItem>
@@ -1118,64 +1553,83 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           {renderFeedbackIcons('fromAccount')}
         </div>
       </div>
-
-      {editedTransaction.type === 'transfer' && (
-        <div className={rowClass}>
-          <label className={labelClass} htmlFor="transaction-to-account">To Account*</label>
-
-          <div className="flex w-full items-center gap-1">
-            <Select
-              value={editedTransaction.toAccount || ''}
-              onValueChange={(value) => handleChange('toAccount', value)}
-            >
-              <SelectTrigger
-                id="transaction-to-account"
-                className={cn(
-                  'w-full text-sm',
-                  inputPadding,
-                  'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                  darkFieldClass
-                )}
-              >
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map(account => (
-                  <SelectItem key={account.id} value={account.name}>
-                    {account.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                setAccountTargetField('toAccount');
-                setAddAccountOpen(true);
-              }}
-              title="Add account"
-            >
-              <Plus className="size-4" />
-            </Button>
-            <input
-              tabIndex={-1}
-              autoComplete="off"
-              value={editedTransaction.toAccount || ''}
-              onChange={() => undefined}
-              required
-              className="absolute h-0 w-0 opacity-0 pointer-events-none"
-              aria-hidden="true"
-            />
-            {renderFeedbackIcons('toAccount')}
-          </div>
-        </div>
+      {hasError('fromAccount') && (
+        <p className="text-xs text-destructive ml-[calc(6rem)]">
+          {formErrors.fromAccount}
+        </p>
       )}
 
+      {editedTransaction.type === 'transfer' && (
+        <>
+          <div className={rowClass}>
+            <label className={labelClass} htmlFor="transaction-to-account">
+              To Account*
+            </label>
+
+            <div className="flex w-full items-center gap-1">
+              <Select
+                value={editedTransaction.toAccount || ''}
+                onValueChange={(value) => handleChange('toAccount', value)}
+              >
+                <SelectTrigger
+                  ref={(el) => {
+                    fieldRefs.current.toAccount = el;
+                  }}
+                  id="transaction-to-account"
+                  className={cn(
+                    'w-full text-sm',
+                    inputPadding,
+                    'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                    darkFieldClass,
+                    hasError('toAccount') && 'border-destructive',
+                  )}
+                >
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.name}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setAccountTargetField('toAccount');
+                  setAddAccountOpen(true);
+                }}
+                title="Add account"
+              >
+                <Plus className="size-4" />
+              </Button>
+              <input
+                tabIndex={-1}
+                autoComplete="off"
+                value={editedTransaction.toAccount || ''}
+                onChange={() => undefined}
+                required
+                className="absolute h-0 w-0 opacity-0 pointer-events-none"
+                aria-hidden="true"
+              />
+              {renderFeedbackIcons('toAccount')}
+            </div>
+          </div>
+          {hasError('toAccount') && (
+            <p className="text-xs text-destructive ml-[calc(6rem)]">
+              {formErrors.toAccount}
+            </p>
+          )}
+        </>
+      )}
 
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-category">Category*</label>
+        <label className={labelClass} htmlFor="transaction-category">
+          Category*
+        </label>
 
         <div className="flex w-full items-center gap-1">
           <Select
@@ -1183,16 +1637,25 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onValueChange={(value) => handleChange('category', value)}
           >
             <SelectTrigger
+              ref={(el) => {
+                fieldRefs.current.category = el;
+              }}
               id="transaction-category"
               className={cn(
                 'w-full text-sm',
                 inputPadding,
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass,
-                hasLowConfidence('category', fieldConfidences) && 'border-amber-500'
+                hasError('category') && 'border-destructive',
+                hasLowConfidence('category', fieldConfidences) &&
+                  'border-amber-500',
               )}
               isAutoFilled={isDriven('category', drivenFields)}
-              title={hasLowConfidence('category', fieldConfidences) ? 'Low confidence' : undefined}
+              title={
+                hasLowConfidence('category', fieldConfidences)
+                  ? 'Low confidence'
+                  : undefined
+              }
             >
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -1209,7 +1672,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             variant="outline"
             size="icon"
             onClick={() => {
-              setNewCategory({ type: editedTransaction.type, category: '', subcategory: '' });
+              setNewCategory({
+                type: editedTransaction.type,
+                category: '',
+                subcategory: '',
+              });
               setAddCategoryOpen(true);
             }}
           >
@@ -1218,9 +1685,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           {renderFeedbackIcons('category')}
         </div>
       </div>
+      {hasError('category') && (
+        <p className="text-xs text-destructive ml-[calc(6rem)]">
+          {formErrors.category}
+        </p>
+      )}
 
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-subcategory">Subcategory</label>
+        <label className={labelClass} htmlFor="transaction-subcategory">
+          Subcategory
+        </label>
 
         <div className="flex w-full items-center gap-1">
           {availableSubcategories.length > 0 ? (
@@ -1236,10 +1710,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                     inputPadding,
                     'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                     darkFieldClass,
-                    hasLowConfidence('subcategory', fieldConfidences) && 'border-amber-500'
+                    hasLowConfidence('subcategory', fieldConfidences) &&
+                      'border-amber-500',
                   )}
                   isAutoFilled={isDriven('subcategory', drivenFields)}
-                  title={hasLowConfidence('subcategory', fieldConfidences) ? 'Low confidence' : undefined}
+                  title={
+                    hasLowConfidence('subcategory', fieldConfidences)
+                      ? 'Low confidence'
+                      : undefined
+                  }
                 >
                   <SelectValue placeholder="Select subcategory" />
                 </SelectTrigger>
@@ -1255,14 +1734,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               {renderFeedbackIcons('subcategory')}
             </>
           ) : (
-            <div className={cn('flex-1 text-sm text-muted-foreground', inputPadding)}>N/A</div>
+            <div
+              className={cn(
+                'flex-1 text-sm text-muted-foreground',
+                inputPadding,
+              )}
+            >
+              N/A
+            </div>
           )}
         </div>
       </div>
 
-
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-person">Person (Optional)</label>
+        <label className={labelClass} htmlFor="transaction-person">
+          Person (Optional)
+        </label>
 
         <div className="flex w-full items-center gap-1">
           <Select
@@ -1275,7 +1762,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'w-full text-sm',
                 inputPadding,
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                darkFieldClass
+                darkFieldClass,
               )}
               isAutoFilled={isDriven('person', drivenFields)}
             >
@@ -1290,23 +1777,29 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               ))}
             </SelectContent>
           </Select>
-          <Button type="button" variant="outline" size="icon" onClick={() => setAddPersonOpen(true)}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setAddPersonOpen(true)}
+          >
             <Plus className="size-4" />
           </Button>
           {renderFeedbackIcons('person')}
         </div>
       </div>
 
-
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-vendor">Vendor</label>
+        <label className={labelClass} htmlFor="transaction-vendor">
+          Vendor
+        </label>
 
         <div className="flex w-full items-center gap-1">
           <VendorAutocomplete
             inputId="transaction-vendor"
             value={editedTransaction.vendor || ''}
             onChange={(value) => {
-              setUserInteractions(prev => ({ ...prev, vendor: true }));
+              setUserInteractions((prev) => ({ ...prev, vendor: true }));
               handleChange('vendor', value);
             }}
             vendors={vendors}
@@ -1318,39 +1811,54 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               'w-full text-sm',
               inputPadding,
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass
+              darkFieldClass,
             )}
           />
           {renderFeedbackIcons('vendor')}
         </div>
       </div>
 
-
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-date">Date*</label>
+        <label className={labelClass} htmlFor="transaction-date">
+          Date*
+        </label>
 
         <Input
+          ref={(el) => {
+            fieldRefs.current.date = el;
+          }}
           id="transaction-date"
           type="date"
           value={editedTransaction.date || ''}
           onChange={(e) => handleChange('date', e.target.value)}
           isAutoFilled={isDriven('date', drivenFields)}
-          title={hasLowConfidence('date', fieldConfidences) ? 'Low confidence' : undefined}
+          title={
+            hasLowConfidence('date', fieldConfidences)
+              ? 'Low confidence'
+              : undefined
+          }
           required
           className={cn(
             'w-full text-sm',
             inputPadding,
             'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             darkFieldClass,
-            hasLowConfidence('date', fieldConfidences) && 'border-amber-500'
+            hasError('date') && 'border-destructive',
+            hasLowConfidence('date', fieldConfidences) && 'border-amber-500',
           )}
         />
         {renderFeedbackIcons('date')}
       </div>
-
+      {hasError('date') && (
+        <p className="text-xs text-destructive ml-[calc(6rem)]">
+          {formErrors.date}
+        </p>
+      )}
 
       <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-description">Description (Optional)</label>
+        <label className={labelClass} htmlFor="transaction-description">
+          Description (Optional)
+        </label>
 
         <Textarea
           id="transaction-description"
@@ -1366,16 +1874,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             'w-full text-sm min-h-[72px] h-[clamp(72px,10vh,120px)] max-h-[120px]',
             inputPadding,
             'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-            darkFieldClass
+            darkFieldClass,
+            hasError('title') && 'border-destructive',
           )}
         />
         {renderFeedbackIcons('description')}
       </div>
 
-
       {showNotes && (
         <div className={rowClass}>
-          <label className={labelClass} htmlFor="transaction-notes">Notes (Optional)</label>
+          <label className={labelClass} htmlFor="transaction-notes">
+            Notes (Optional)
+          </label>
 
           <Textarea
             id="transaction-notes"
@@ -1388,7 +1898,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               'w-full text-sm',
               inputPadding,
               'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass
+              darkFieldClass,
             )}
           />
           {renderFeedbackIcons('notes')}
@@ -1400,7 +1910,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           type="submit"
           className={cn(
             'bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-md',
-            compact ? 'py-2' : 'py-3'
+            compact ? 'py-2' : 'py-3',
           )}
         >
           {transaction ? 'Update Transaction' : 'Create Transaction'}
