@@ -11,7 +11,7 @@ vi.mock('@/utils/firebase-analytics', () => ({
 }));
 
 // Import after mocks
-import { transactionFormSchema, DEFAULT_FORM_VALUES } from '../transaction-form-schema';
+import { transactionFormSchema, DEFAULT_FORM_VALUES, validateTransactionForm } from '../transaction-form-schema';
 import { transactionService } from '@/services/TransactionService';
 import { Transaction } from '@/types/transaction';
 
@@ -47,8 +47,8 @@ describe('TransactionForm + Service Integration', () => {
         title: 'Salary',
         amount: 5000,
         type: 'income' as const,
-        fromAccount: '',
-        toAccount: 'Bank',
+        fromAccount: 'Bank',
+        toAccount: '',
         category: 'Salary',
         subcategory: '',
         date: '2024-01-15',
@@ -82,13 +82,13 @@ describe('TransactionForm + Service Integration', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should require toAccount for income', () => {
+    it('should require fromAccount for income', () => {
       const formData = {
         title: 'Interest',
         amount: 15,
         type: 'income' as const,
         fromAccount: '',
-        toAccount: '',
+        toAccount: 'Savings',
         category: 'Interest',
         subcategory: '',
         date: '2024-01-15',
@@ -167,6 +167,29 @@ describe('TransactionForm + Service Integration', () => {
       expect(result.success).toBe(false);
     });
   });
+
+
+
+    it('should return unified validation errors for missing required fields', () => {
+      const errors = validateTransactionForm({
+        title: '',
+        amount: 0,
+        type: 'transfer',
+        fromAccount: '',
+        toAccount: '',
+        category: '',
+        date: '',
+        currency: '',
+      }, 'transfer');
+
+      expect(errors.title).toBeDefined();
+      expect(errors.amount).toBeDefined();
+      expect(errors.fromAccount).toBeDefined();
+      expect(errors.toAccount).toBeDefined();
+      expect(errors.category).toBeDefined();
+      expect(errors.currency).toBeDefined();
+      expect(errors.date).toBeDefined();
+    });
 
   describe('Form to service integration', () => {
     it('should create expense transaction from valid form data', () => {

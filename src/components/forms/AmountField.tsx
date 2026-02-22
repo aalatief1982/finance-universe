@@ -44,7 +44,7 @@ const AmountField: React.FC<AmountFieldProps> = ({
       control={form.control}
       name="amount"
       render={({ field }) => (
-        <FormItem>
+        <FormItem data-field="amount">
           <FormLabel>Amount*</FormLabel>
           <FormControl>
             <Input

@@ -16,20 +16,19 @@
  * - [ ] Props have sensible defaults
  * - [ ] Component renders without crashing
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useForm } from 'react-hook-form';
+import { useForm, type FieldErrors, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
 import { TransactionType } from '@/types/transaction';
-import { 
-  transactionFormSchema, 
-  TransactionFormValues, 
-  DEFAULT_FORM_VALUES 
+import {
+  transactionFormSchema,
+  TransactionFormValues,
+  DEFAULT_FORM_VALUES,
+  validateTransactionForm,
 } from './forms/transaction-form-schema';
 import { getSubcategoriesForCategory } from '@/lib/categories-data';
 
@@ -56,55 +55,113 @@ interface ExpenseFormProps {
   onCancel?: () => void;
 }
 
+const REQUIRED_FIELD_ORDER: FieldPath<TransactionFormValues>[] = [
+  'title',
+  'amount',
+  'fromAccount',
+  'toAccount',
+  'category',
+  'currency',
+  'date',
+];
+
 const ExpenseForm = ({
   onSubmit,
   categories,
   defaultValues = DEFAULT_FORM_VALUES,
   onCancel,
 }: ExpenseFormProps) => {
+  const { toast } = useToast();
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
     defaultValues,
   });
-  
+
+  const formElementRef = useRef<HTMLFormElement>(null);
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
   const [manualRateDialogOpen, setManualRateDialogOpen] = useState(false);
   const [manualFxRate, setManualFxRate] = useState<number | undefined>(undefined);
-  
+
   // Watch fields for FX estimate
-  const transactionType = form.watch("type") as TransactionType;
-  const selectedCategory = form.watch("category");
-  const watchedAmount = form.watch("amount");
-  const watchedCurrency = form.watch("currency");
-  const watchedDate = form.watch("date");
-  
+  const transactionType = form.watch('type') as TransactionType;
+  const selectedCategory = form.watch('category');
+  const watchedAmount = form.watch('amount');
+  const watchedCurrency = form.watch('currency');
+  const watchedDate = form.watch('date');
+
+  // keep prop as part of public API for compatibility
+  void categories;
+
   // Update available subcategories when category changes
-  // Note: form is excluded from deps to prevent render loops - we use form.getValues() inside
   useEffect(() => {
     if (selectedCategory) {
       const subcategories = getSubcategoriesForCategory(selectedCategory as string);
       setAvailableSubcategories(subcategories);
-      
+
       // If current subcategory is not available, reset it to "none"
       const currentSubcategory = form.getValues().subcategory;
-      if (currentSubcategory && currentSubcategory !== "none" && !subcategories.includes(currentSubcategory)) {
-        form.setValue("subcategory", "none");
+      if (currentSubcategory && currentSubcategory !== 'none' && !subcategories.includes(currentSubcategory)) {
+        form.setValue('subcategory', 'none');
       }
     } else {
       setAvailableSubcategories([]);
       const currentSubcategory = form.getValues().subcategory;
-      if (currentSubcategory !== "none") {
-        form.setValue("subcategory", "none");
+      if (currentSubcategory !== 'none') {
+        form.setValue('subcategory', 'none');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
+  const scrollToInvalidField = (fieldName: FieldPath<TransactionFormValues>) => {
+    const root = formElementRef.current;
+    if (!root) return;
+
+    const target =
+      root.querySelector<HTMLElement>(`[name="${fieldName}"]`) ||
+      root.querySelector<HTMLElement>(`[data-field="${fieldName}"] button`) ||
+      root.querySelector<HTMLElement>(`[data-field="${fieldName}"] input`) ||
+      root.querySelector<HTMLElement>(`[data-field="${fieldName}"]`);
+
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if ('focus' in target) {
+        target.focus({ preventScroll: true });
+      }
+    }
+  };
+
+  const handleInvalidSubmit = (errors: FieldErrors<TransactionFormValues>) => {
+    const values = form.getValues();
+    const validationErrors = validateTransactionForm(values, values.type);
+
+    Object.entries(validationErrors).forEach(([name, message]) => {
+      if (!message) return;
+      form.setError(name as FieldPath<TransactionFormValues>, { type: 'manual', message });
+
+      const fieldName = name as FieldPath<TransactionFormValues>;
+      form.setValue(fieldName, form.getValues(fieldName), { shouldTouch: true, shouldValidate: false });
+    });
+
+    if (Object.keys(errors).length > 0 || Object.keys(validationErrors).length > 0) {
+      toast({
+        title: 'Please fill required fields',
+        variant: 'destructive',
+      });
+
+      const firstInvalidField = REQUIRED_FIELD_ORDER.find(
+        (field) => errors[field] || validationErrors[field]
+      );
+
+      if (firstInvalidField) {
+        scrollToInvalidField(firstInvalidField);
+      }
+    }
+  };
+
   const handleSubmit = (values: TransactionFormValues) => {
     // Pass manual rate if set
-    const submissionValues = manualFxRate 
-      ? { ...values, _manualFxRate: manualFxRate }
-      : values;
+    const submissionValues = manualFxRate ? { ...values, _manualFxRate: manualFxRate } : values;
     onSubmit(submissionValues as TransactionFormValues);
     form.reset();
     setManualFxRate(undefined);
@@ -125,26 +182,26 @@ const ExpenseForm = ({
       <Card className="border border-border shadow-sm max-h-[80vh] overflow-y-auto">
         <CardHeader>
           <CardTitle className="text-xl font-medium text-center">
-            {defaultValues.title ? "Edit Transaction" : "Add New Transaction"}
+            {defaultValues.title ? 'Edit Transaction' : 'Add New Transaction'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit, handleInvalidSubmit)} className="space-y-4">
               {/* Transaction Type */}
               <TransactionTypeSelector form={form} />
-              
+
               {/* Title */}
               <TitleField form={form} />
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Amount */}
                 <AmountField form={form} />
-                
+
                 {/* Currency */}
                 <CurrencySelector form={form} />
               </div>
-              
+
               {/* FX Estimate Display */}
               <FxEstimateDisplay
                 amount={typeof watchedAmount === 'number' ? watchedAmount : undefined}
@@ -152,7 +209,7 @@ const ExpenseForm = ({
                 date={typeof watchedDate === 'string' ? watchedDate : undefined}
                 onRequestManualRate={() => setManualRateDialogOpen(true)}
               />
-              
+
               {/* Manual Rate Dialog */}
               <FxRateInput
                 isOpen={manualRateDialogOpen}
@@ -163,24 +220,20 @@ const ExpenseForm = ({
                 onConfirm={handleManualRateConfirm}
                 initialRate={manualFxRate}
               />
-              
+
               {/* Accounts Section */}
               <div className="grid grid-cols-1 gap-4">
-                {/* From Account */}
-                {(transactionType === 'expense' || transactionType === 'transfer') && (
-                  <AccountSelector form={form} isFromAccount={true} />
-                )}
-                
-                {/* To Account - Shown for Income and Transfer */}
-                {(transactionType === 'income' || transactionType === 'transfer') && (
-                  <AccountSelector form={form} isFromAccount={false} />
+                <AccountSelector form={form} isFromAccount={true} isRequired={true} />
+
+                {transactionType === 'transfer' && (
+                  <AccountSelector form={form} isFromAccount={false} isRequired={true} />
                 )}
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {/* Category */}
                 <CategorySelector form={form} transactionType={transactionType} />
-                
+
                 {/* Show either Subcategory or Date depending on whether subcategories are available */}
                 {selectedCategory && availableSubcategories.length > 0 ? (
                   <SubcategorySelector form={form} availableSubcategories={availableSubcategories} />
@@ -188,21 +241,19 @@ const ExpenseForm = ({
                   <DateField form={form} />
                 )}
               </div>
-              
+
               {/* Date - Show in another row if subcategory is shown */}
-              {selectedCategory && availableSubcategories.length > 0 && (
-                <DateField form={form} />
-              )}
-              
+              {selectedCategory && availableSubcategories.length > 0 && <DateField form={form} />}
+
               {/* Person */}
               <PersonSelector form={form} />
-              
+
               {/* Description */}
               <DescriptionField form={form} />
-              
+
               {/* Notes */}
               <NotesField form={form} />
-              
+
               {/* Form Actions */}
               <FormActions onCancel={onCancel} isUpdate={!!defaultValues.title} />
             </form>
