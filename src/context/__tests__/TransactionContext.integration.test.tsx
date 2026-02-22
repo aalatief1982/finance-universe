@@ -3,6 +3,7 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { createStorageMock } from '@/test/storage-mock';
 import { Transaction } from '@/types/transaction';
+import { TransactionValidationError } from '@/lib/transaction-validation';
 
 // Mock storage before imports
 const storageMock = createStorageMock();
@@ -12,7 +13,11 @@ vi.stubGlobal('localStorage', storageMock);
 import { TransactionProvider, useTransactions } from '../TransactionContext';
 
 // Test component to access context
-const TestComponent = ({ onMount }: { onMount: (ctx: ReturnType<typeof useTransactions>) => void }) => {
+const TestComponent = ({
+  onMount,
+}: {
+  onMount: (ctx: ReturnType<typeof useTransactions>) => void;
+}) => {
   const context = useTransactions();
   React.useEffect(() => {
     onMount(context);
@@ -32,8 +37,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       const transaction: Transaction = {
@@ -60,6 +69,41 @@ describe('TransactionContext Integration', () => {
       expect(storageMock.setItem).toHaveBeenCalled();
     });
 
+    it('should block persistence when required category is missing', async () => {
+      let contextRef: ReturnType<typeof useTransactions>;
+
+      render(
+        <TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
+      );
+
+      const transaction: Transaction = {
+        id: 'tx-missing-category',
+        title: 'Missing Category',
+        amount: -10,
+        type: 'expense',
+        category: '',
+        date: '2024-01-15',
+        fromAccount: 'Cash',
+        currency: 'USD',
+        source: 'manual',
+      };
+
+      expect(() => {
+        act(() => {
+          contextRef!.addTransaction(transaction);
+        });
+      }).toThrow(TransactionValidationError);
+
+      expect(contextRef!.transactions).toHaveLength(0);
+      expect(storageMock.setItem).not.toHaveBeenCalled();
+    });
+
     it('should load transactions from localStorage on mount', async () => {
       // Pre-populate storage
       const existingTransactions: Transaction[] = [
@@ -76,12 +120,15 @@ describe('TransactionContext Integration', () => {
         },
       ];
 
-      storageMock.setItem('xpensia_transactions', JSON.stringify(existingTransactions));
+      storageMock.setItem(
+        'xpensia_transactions',
+        JSON.stringify(existingTransactions),
+      );
 
       render(
         <TransactionProvider>
           <TestComponent onMount={() => {}} />
-        </TransactionProvider>
+        </TransactionProvider>,
       );
 
       await waitFor(() => {
@@ -94,8 +141,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       const transaction: Transaction = {
@@ -135,8 +186,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       const transaction: Transaction = {
@@ -175,8 +230,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       act(() => {
@@ -204,8 +263,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       act(() => {
@@ -233,8 +296,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       act(() => {
@@ -283,7 +350,9 @@ describe('TransactionContext Integration', () => {
         expect(food?.transactions.length).toBe(2);
         expect(food?.total).toBe(-150);
 
-        const transport = byCategory.find((c: any) => c.category === 'Transport');
+        const transport = byCategory.find(
+          (c: any) => c.category === 'Transport',
+        );
         expect(transport?.transactions.length).toBe(1);
       });
     });
@@ -295,8 +364,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       const transactions: Transaction[] = [
@@ -338,8 +411,12 @@ describe('TransactionContext Integration', () => {
 
       render(
         <TransactionProvider>
-          <TestComponent onMount={(ctx) => { contextRef = ctx; }} />
-        </TransactionProvider>
+          <TestComponent
+            onMount={(ctx) => {
+              contextRef = ctx;
+            }}
+          />
+        </TransactionProvider>,
       );
 
       act(() => {

@@ -34,15 +34,27 @@
  * - @review-focus: Learning trigger conditions (lines 58-134)
  */
 
-import { safeStorage } from "@/utils/safe-storage";
+import { safeStorage } from '@/utils/safe-storage';
 import { Transaction } from '@/types/transaction';
-import { validateTransactionInput } from '../transaction-validator';
 import { v4 as uuidv4 } from 'uuid';
-import { extractTemplateStructure, saveNewTemplate, loadTemplateBank, saveTemplateBank, getTemplateKey } from './templateUtils';
-import { loadKeywordBank, saveKeywordBank, KeywordEntry } from './keywordBankUtils';
-import { storeTransaction } from '@/utils/storage-utils';
+import {
+  extractTemplateStructure,
+  saveNewTemplate,
+  loadTemplateBank,
+  saveTemplateBank,
+  getTemplateKey,
+} from './templateUtils';
+import {
+  loadKeywordBank,
+  saveKeywordBank,
+  KeywordEntry,
+} from './keywordBankUtils';
 import { toast } from '@/components/ui/use-toast';
 import { ensureFxFields } from '@/services/FxConversionService';
+import {
+  TransactionValidationError,
+  validateTransaction,
+} from '@/lib/transaction-validation';
 
 // ============================================================================
 // SECTION: Save Options Interface
@@ -70,10 +82,10 @@ interface SaveOptions {
 /**
  * Save a transaction with optional learning from raw SMS.
  * Performs validation, persistence, and template/keyword learning.
- * 
+ *
  * @param transaction - Transaction to save
  * @param options - Save configuration including callbacks
- * 
+ *
  * @side-effects
  * - Persists transaction to storage
  * - Updates template bank (if smart-paste)
@@ -83,7 +95,7 @@ interface SaveOptions {
  */
 export function saveTransactionWithLearning(
   transaction: Transaction,
-  options: SaveOptions
+  options: SaveOptions,
 ) {
   const {
     rawMessage,
@@ -98,15 +110,15 @@ export function saveTransactionWithLearning(
     combineToasts = false,
   } = options;
 
-  // Validate before any persistence
-  if (!validateTransactionInput(transaction)) {
-    return;
+  const errors = validateTransaction(transaction, transaction.type);
+  if (Object.keys(errors).length > 0) {
+    throw new TransactionValidationError(errors);
   }
 
   const newTransaction: Transaction = ensureFxFields({
     ...transaction,
     id: transaction.id || uuidv4(),
-    source: transaction.source || 'manual'
+    source: transaction.source || 'manual',
   });
 
   // Persist transaction
@@ -115,8 +127,6 @@ export function saveTransactionWithLearning(
   } else {
     updateTransaction(newTransaction);
   }
-
-  storeTransaction(newTransaction);
 
   // ============================================================================
   // SECTION: Smart Paste Learning
@@ -128,13 +138,27 @@ export function saveTransactionWithLearning(
     learnFromTransaction(rawMessage, newTransaction, senderHint || '');
 
     // Extract and save template structure
-    const { structure, placeholders, hash: templateHash } = extractTemplateStructure(rawMessage);
+    const {
+      structure,
+      placeholders,
+      hash: templateHash,
+    } = extractTemplateStructure(rawMessage);
     const fields = Object.keys(placeholders);
 
-    const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
+    const key = getTemplateKey(
+      senderHint,
+      newTransaction.fromAccount,
+      templateHash,
+    );
     const bank = loadTemplateBank();
     if (!bank[key]) {
-      saveNewTemplate(structure, fields, rawMessage, senderHint, newTransaction.fromAccount);
+      saveNewTemplate(
+        structure,
+        fields,
+        rawMessage,
+        senderHint,
+        newTransaction.fromAccount,
+      );
     }
 
     if (!silent && showPatternToast && !combineToasts) {
@@ -150,9 +174,11 @@ export function saveTransactionWithLearning(
     // REVIEW: Avoid duplicate mappings in existing entries
     // ============================================================================
 
-    const keyword = placeholders?.vendor?.toLowerCase() || newTransaction.vendor.toLowerCase();
+    const keyword =
+      placeholders?.vendor?.toLowerCase() ||
+      newTransaction.vendor.toLowerCase();
     const keywordBank = loadKeywordBank();
-    const existing = keywordBank.find(k => k.keyword === keyword);
+    const existing = keywordBank.find((k) => k.keyword === keyword);
 
     const newMappings: KeywordEntry['mappings'] = [
       { field: 'category', value: newTransaction.category },
@@ -160,8 +186,10 @@ export function saveTransactionWithLearning(
     ];
 
     if (existing) {
-      newMappings.forEach(mapping => {
-        const alreadyMapped = existing.mappings.some(m => m.field === mapping.field);
+      newMappings.forEach((mapping) => {
+        const alreadyMapped = existing.mappings.some(
+          (m) => m.field === mapping.field,
+        );
         if (!alreadyMapped) existing.mappings.push(mapping);
       });
     } else {
@@ -182,7 +210,9 @@ export function saveTransactionWithLearning(
       placeholders?.vendor &&
       transaction.vendor !== placeholders.vendor
     ) {
-      const vendorMap = JSON.parse(safeStorage.getItem('xpensia_vendor_map') || '{}');
+      const vendorMap = JSON.parse(
+        safeStorage.getItem('xpensia_vendor_map') || '{}',
+      );
       vendorMap[placeholders.vendor] = transaction.vendor;
       safeStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
     }
@@ -194,16 +224,27 @@ export function saveTransactionWithLearning(
       placeholders?.account &&
       transaction.fromAccount !== placeholders.account
     ) {
-      const fromAccountMap = JSON.parse(safeStorage.getItem('xpensia_fromaccount_map') || '{}');
+      const fromAccountMap = JSON.parse(
+        safeStorage.getItem('xpensia_fromaccount_map') || '{}',
+      );
       fromAccountMap[placeholders.account] = transaction.fromAccount;
-      safeStorage.setItem('xpensia_fromaccount_map', JSON.stringify(fromAccountMap));
+      safeStorage.setItem(
+        'xpensia_fromaccount_map',
+        JSON.stringify(fromAccountMap),
+      );
     }
 
     // Default From Account Mapping - store for template defaults
     if (templateHash && newTransaction.fromAccount) {
       const templates = loadTemplateBank();
-      const key = getTemplateKey(senderHint, newTransaction.fromAccount, templateHash);
-      const target = templates[key] || templates[getTemplateKey(senderHint, undefined, templateHash)];
+      const key = getTemplateKey(
+        senderHint,
+        newTransaction.fromAccount,
+        templateHash,
+      );
+      const target =
+        templates[key] ||
+        templates[getTemplateKey(senderHint, undefined, templateHash)];
       if (target && !target.defaultValues?.fromAccount) {
         target.defaultValues = {
           ...target.defaultValues,
@@ -223,7 +264,11 @@ export function saveTransactionWithLearning(
   if (!silent) {
     if (combineToasts) {
       let description = `Your transaction has been successfully ${isNew ? 'created' : 'updated'}.`;
-      if (rawMessage && newTransaction.source === 'smart-paste' && showPatternToast) {
+      if (
+        rawMessage &&
+        newTransaction.source === 'smart-paste' &&
+        showPatternToast
+      ) {
         description += ' Pattern saved for learning.';
       }
       toast({
