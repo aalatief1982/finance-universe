@@ -135,6 +135,17 @@ const dedupeVendorsCaseInsensitive = (vendorList: string[]) => {
   return deduped;
 };
 
+const parseAmountToNullableNumber = (value: string | number): number | null => {
+  const parsedAmount = parseAmount(value);
+  return Number.isFinite(parsedAmount) ? parsedAmount : null;
+};
+
+const getAmountValidationError = (amountNumber: number | null): string | undefined => {
+  if (amountNumber === null) return 'Amount is required';
+  if (amountNumber <= 0) return 'Amount must be greater than 0';
+  return undefined;
+};
+
 interface TransactionEditFormProps {
   transaction?: Transaction;
   onSave: (transaction: Transaction) => void;
@@ -359,11 +370,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() =>
     createInitialTransactionState(transaction),
   );
-  const [amountInputValue, setAmountInputValue] = useState<string>(() => {
+  const [amountText, setAmountText] = useState<string>(() => {
     const initialState = createInitialTransactionState(transaction);
     return Number.isFinite(initialState.amount)
       ? String(initialState.amount)
       : '';
+  });
+  const [amountNumber, setAmountNumber] = useState<number | null>(() => {
+    const initialState = createInitialTransactionState(transaction);
+    return parseAmountToNullableNumber(initialState.amount);
   });
   const [formErrors, setFormErrors] = useState<TransactionValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<
@@ -436,11 +451,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const nextInitialState = createInitialTransactionState(transaction);
     setInitialTransactionState(nextInitialState);
     setEditedTransaction(nextInitialState);
-    setAmountInputValue(
+    setAmountText(
       Number.isFinite(nextInitialState.amount)
         ? String(nextInitialState.amount)
         : '',
     );
+    setAmountNumber(parseAmountToNullableNumber(nextInitialState.amount));
     setTitleManuallyEdited(false);
     setDescriptionManuallyEdited(false);
     setFormErrors({});
@@ -558,15 +574,30 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
       if (field === 'amount') {
         const rawInput = String(value ?? '');
-        setAmountInputValue(rawInput);
-        updated.amount = parseAmount(rawInput);
+        const parsedAmount = parseAmountToNullableNumber(rawInput);
+
+        setAmountText(rawInput);
+        setAmountNumber(parsedAmount);
+        updated.amount = parsedAmount ?? Number.NaN;
       }
 
       if (field !== 'title' && !titleManuallyEdited) {
         updated.title = generateDefaultTitle(updated);
       }
 
-      setFormErrors(validateTransactionForm(updated, updated.type));
+      const validationErrors = validateTransactionForm(updated, updated.type);
+      delete validationErrors.amount;
+
+      const nextAmountValue =
+        field === 'amount'
+          ? parseAmountToNullableNumber(String(value ?? ''))
+          : parseAmountToNullableNumber(updated.amount);
+      const amountError = getAmountValidationError(nextAmountValue);
+      if (amountError) {
+        validationErrors.amount = amountError;
+      }
+
+      setFormErrors(validationErrors);
 
       return updated;
     });
@@ -774,22 +805,36 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       finalTransaction.title = generateDefaultTitle(finalTransaction);
     }
 
-    const rawAmount = parseAmount(finalTransaction.amount ?? '');
+    const canonicalAmount = amountNumber;
 
     const preSubmitErrors = validateTransactionForm(
       finalTransaction,
       finalTransaction.type,
     );
+    delete preSubmitErrors.amount;
+
+    const amountError = getAmountValidationError(canonicalAmount);
+    if (amountError) {
+      preSubmitErrors.amount = amountError;
+    }
+
     if (Object.keys(preSubmitErrors).length > 0) {
       handleValidationFailure(preSubmitErrors);
       return;
     }
 
-    if (!Number.isNaN(rawAmount)) {
+    if (canonicalAmount !== null) {
       finalTransaction.amount =
         finalTransaction.type === 'expense'
-          ? -Math.abs(rawAmount)
-          : Math.abs(rawAmount);
+          ? -Math.abs(canonicalAmount)
+          : Math.abs(canonicalAmount);
+
+      if (!titleManuallyEdited) {
+        finalTransaction.title = generateDefaultTitle({
+          ...finalTransaction,
+          amount: canonicalAmount,
+        });
+      }
     }
 
     if (typeof finalTransaction.date === 'string') {
@@ -808,7 +853,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
     if (shouldRecalculateFx) {
       const fxResult = applyFxConversion(
-        Math.abs(rawAmount),
+        Math.abs(canonicalAmount ?? 0),
         finalTransaction.currency || baseCurrency,
         finalTransaction.date,
         rateValue,
@@ -1440,7 +1485,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             id="transaction-amount"
             type="text"
             inputMode="decimal"
-            value={amountInputValue}
+            value={amountText}
             isAutoFilled={isDriven('amount', drivenFields)}
             onChange={(e) =>
               handleChange(
