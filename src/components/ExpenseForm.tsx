@@ -19,19 +19,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useForm, type FieldErrors, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
 import { TransactionType } from '@/types/transaction';
 import {
   transactionFormSchema,
@@ -81,7 +71,6 @@ const ExpenseForm = ({
   defaultValues = DEFAULT_FORM_VALUES,
   onCancel,
 }: ExpenseFormProps) => {
-  const { toast } = useToast();
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
     defaultValues,
@@ -91,8 +80,6 @@ const ExpenseForm = ({
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
   const [manualRateDialogOpen, setManualRateDialogOpen] = useState(false);
   const [manualFxRate, setManualFxRate] = useState<number | undefined>(undefined);
-  const [missingRequiredFields, setMissingRequiredFields] = useState<string[]>([]);
-  const [showMissingRequiredDialog, setShowMissingRequiredDialog] = useState(false);
 
   // Watch fields for FX estimate
   const transactionType = form.watch('type') as TransactionType;
@@ -143,7 +130,7 @@ const ExpenseForm = ({
     }
   };
 
-  const handleInvalidSubmit = (errors: FieldErrors<TransactionFormValues>) => {
+  const applyValidationErrors = (errors: FieldErrors<TransactionFormValues>) => {
     const values = form.getValues();
     const validationErrors = validateTransactionForm(values, values.type);
 
@@ -159,37 +146,23 @@ const ExpenseForm = ({
       const invalidFieldOrder = REQUIRED_FIELD_ORDER.filter(
         (field) => errors[field] || validationErrors[field]
       );
-      const fieldLabels: Record<FieldPath<TransactionFormValues>, string> = {
-        title: 'Title',
-        amount: 'Amount',
-        fromAccount: 'From Account',
-        toAccount: 'To Account',
-        category: 'Category',
-        subcategory: 'Subcategory',
-        currency: 'Currency',
-        date: 'Date',
-        type: 'Type',
-        description: 'Description',
-        notes: 'Notes',
-        person: 'Person',
-      };
-
-      setMissingRequiredFields(invalidFieldOrder.map((field) => fieldLabels[field] || field));
-      setShowMissingRequiredDialog(true);
 
       const firstInvalidField = invalidFieldOrder[0];
       if (firstInvalidField) {
         scrollToInvalidField(firstInvalidField);
       }
 
-      toast({
-        title: 'Please fill required fields',
-        variant: 'destructive',
-      });
+      return false;
     }
+
+    return true;
   };
 
   const handleSubmit = (values: TransactionFormValues) => {
+    if (!applyValidationErrors({})) {
+      return;
+    }
+
     // Pass manual rate if set
     const submissionValues = manualFxRate ? { ...values, _manualFxRate: manualFxRate } : values;
     onSubmit(submissionValues as TransactionFormValues);
@@ -217,7 +190,7 @@ const ExpenseForm = ({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit, handleInvalidSubmit)} className="space-y-4">
+            <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit, applyValidationErrors)} className="space-y-4">
               {/* Transaction Type */}
               <TransactionTypeSelector form={form} />
 
@@ -287,29 +260,6 @@ const ExpenseForm = ({
               {/* Form Actions */}
               <FormActions onCancel={onCancel} isUpdate={!!defaultValues.title} />
             </form>
-
-          <AlertDialog open={showMissingRequiredDialog} onOpenChange={setShowMissingRequiredDialog}>
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Missing Required Fields</AlertDialogTitle>
-                <AlertDialogDescription asChild>
-                  <div>
-                    <p>Please complete the required fields before saving:</p>
-                    <ul className="mt-2 list-disc pl-5">
-                      {missingRequiredFields.map((field) => (
-                        <li key={field}>{field}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogAction onClick={() => setShowMissingRequiredDialog(false)}>
-                  OK
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
           </Form>
         </CardContent>
       </Card>

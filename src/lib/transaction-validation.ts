@@ -24,6 +24,8 @@ const isMissingSelection = (value: unknown): boolean => {
   const normalized = value.trim().toLowerCase();
   return (
     normalized === 'none' ||
+    normalized === 'n/a' ||
+    normalized === 'na' ||
     normalized === 'select' ||
     normalized === 'select...' ||
     normalized.startsWith('select ')
@@ -42,8 +44,10 @@ export const validateTransaction = (
   if (isMissingSelection(tx.currency)) errors.currency = 'Currency is required';
 
   const numericAmount = Number(tx.amount);
-  if (!Number.isFinite(numericAmount) || numericAmount === 0) {
+  if (!Number.isFinite(numericAmount)) {
     errors.amount = 'Amount is required';
+  } else if (numericAmount <= 0) {
+    errors.amount = 'Amount must be greater than 0';
   }
 
   if (isBlank(tx.date)) errors.date = 'Date is required';
