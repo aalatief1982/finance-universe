@@ -38,20 +38,19 @@ const SubcategorySelector: React.FC<SubcategorySelectorProps> = ({
     <FormField
       control={form.control}
       name="subcategory"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Subcategory</FormLabel>
+      render={({ field, fieldState }) => (
+        <FormItem data-field="subcategory">
+          <FormLabel>Subcategory*</FormLabel>
           <Select
-            value={field.value || "none"}
+            value={field.value || ''}
             onValueChange={field.onChange}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className={fieldState.error ? 'border-destructive' : undefined}>
                 <SelectValue placeholder="Select subcategory" />
               </SelectTrigger>
             </FormControl>
             <SelectContent className="max-h-[300px]">
-              <SelectItem value="none">None</SelectItem>
               {availableSubcategories.map(subcategory => (
                 <SelectItem key={subcategory} value={subcategory}>
                   {subcategory}

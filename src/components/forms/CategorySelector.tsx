@@ -33,7 +33,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ form, transactionTy
             value={field.value || ''}
             onValueChange={(value) => {
               field.onChange(value);
-              form.setValue('subcategory', 'none');
+              form.setValue('subcategory', '');
             }}
           >
             <FormControl>

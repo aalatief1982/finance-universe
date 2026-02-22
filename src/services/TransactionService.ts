@@ -48,6 +48,7 @@ import { transactionAnalyticsService } from './TransactionAnalyticsService';
 import { processSmsEntries } from './SmsProcessingService';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { applyFxConversion, getBaseCurrency } from './FxConversionService';
+import { TransactionValidationError, validateTransaction } from '@/lib/transaction-validation';
 
 class TransactionService {
 
@@ -106,6 +107,10 @@ class TransactionService {
    * - Category forced to "Transfer" for transfer entries
    */
   addTransaction(transaction: Omit<Transaction, 'id'>, manualFxRate?: number): Transaction | Transaction[] {
+    const validationErrors = validateTransaction(transaction, transaction.type);
+    if (Object.keys(validationErrors).length > 0) {
+      throw new TransactionValidationError(validationErrors);
+    }
     // Ensure currency is set (default to user's base currency)
     const transactionCurrency = transaction.currency || getBaseCurrency();
     const transactionDate = transaction.date || new Date().toISOString().split('T')[0];
@@ -254,6 +259,11 @@ class TransactionService {
     const needsFxRecalc = amountChanged || currencyChanged;
 
     let updatedTransaction: Transaction = { ...oldTransaction, ...updates };
+
+    const validationErrors = validateTransaction(updatedTransaction, updatedTransaction.type);
+    if (Object.keys(validationErrors).length > 0) {
+      throw new TransactionValidationError(validationErrors);
+    }
 
     // Recalculate FX if needed
     if (needsFxRecalc) {
