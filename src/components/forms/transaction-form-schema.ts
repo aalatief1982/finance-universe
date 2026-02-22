@@ -20,6 +20,64 @@
 import { z } from 'zod';
 import { getPeopleNames } from '@/lib/people-utils';
 
+type TransactionValidationInput = {
+  title?: string;
+  amount?: number;
+  type?: 'expense' | 'income' | 'transfer';
+  fromAccount?: string;
+  toAccount?: string;
+  category?: string;
+  date?: string;
+  currency?: string;
+};
+
+export type TransactionValidationErrors = Partial<Record<keyof TransactionValidationInput, string>>;
+
+export const validateTransactionForm = (
+  values: Partial<TransactionValidationInput>,
+  txType: NonNullable<TransactionValidationInput['type']> = values.type || 'expense'
+): TransactionValidationErrors => {
+  const errors: TransactionValidationErrors = {};
+
+  if (!values.title || values.title.trim().length < 2) {
+    errors.title = 'Title must be at least 2 characters.';
+  }
+
+  if (typeof values.amount !== 'number' || Number.isNaN(values.amount)) {
+    errors.amount = 'Amount must be greater than 0.';
+  } else if (values.amount < 0.01) {
+    errors.amount = 'Amount must be greater than 0.';
+  } else if (values.amount > 999999.99) {
+    errors.amount = 'Amount cannot exceed 999,999.99';
+  }
+
+  if (!values.category || values.category.trim().length < 1) {
+    errors.category = 'Please select a category.';
+  }
+
+  if (!values.date || values.date.trim().length < 1) {
+    errors.date = 'Please select a date.';
+  }
+
+  if (!values.currency || values.currency.trim().length < 1) {
+    errors.currency = 'Please select a currency.';
+  }
+
+  if (!values.fromAccount || values.fromAccount.trim().length < 1) {
+    errors.fromAccount = 'From Account is required.';
+  }
+
+  if (txType === 'transfer') {
+    if (!values.toAccount || values.toAccount.trim().length < 1) {
+      errors.toAccount = 'To Account is required for transfers.';
+    } else if (values.fromAccount && values.fromAccount === values.toAccount) {
+      errors.toAccount = 'Transfer accounts must be different.';
+    }
+  }
+
+  return errors;
+};
+
 export const transactionFormSchema = z.object({
   title: z.string().min(2, {
     message: "Title must be at least 2 characters.",
@@ -45,41 +103,17 @@ export const transactionFormSchema = z.object({
   currency: z.string().min(1, {
     message: "Please select a currency.",
   }),
-}).refine(data => {
-  if (data.type === 'expense') {
-    return !!data.fromAccount;
-  }
-  return true;
-}, {
-  message: "From Account is required for expenses",
-  path: ["fromAccount"]
-}).refine(data => {
-  if (data.type === 'income') {
-    return !!data.toAccount;
-  }
-  return true;
-}, {
-  message: "To Account is required for income",
-  path: ["toAccount"]
-}).refine(data => {
-  // If transaction type is transfer, both accounts are required
-  if (data.type === 'transfer') {
-    if (!data.toAccount) return false;
-    if (!data.fromAccount) return false;
-  }
-  return true;
-}, {
-  message: "Both From and To accounts are required for transfers",
-  path: ["toAccount"]
-}).refine(data => {
-  // If transaction type is transfer, accounts must be different
-  if (data.type === 'transfer' && data.fromAccount && data.toAccount) {
-    return data.fromAccount !== data.toAccount;
-  }
-  return true;
-}, {
-  message: "Transfer accounts must be different",
-  path: ["toAccount"]
+}).superRefine((data, ctx) => {
+  const errors = validateTransactionForm(data, data.type);
+
+  Object.entries(errors).forEach(([fieldName, message]) => {
+    if (!message) return;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [fieldName],
+      message,
+    });
+  });
 });
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>;

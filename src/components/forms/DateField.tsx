@@ -3,18 +3,6 @@
  * @description UI component for DateField.
  *
  * @module components/forms/DateField
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
  */
 
 import React from 'react';
@@ -32,15 +20,13 @@ interface DateFieldProps {
   form: UseFormReturn<TransactionFormValues>;
 }
 
-const DateField: React.FC<DateFieldProps> = ({
-  form
-}) => {
+const DateField: React.FC<DateFieldProps> = ({ form }) => {
   return (
     <FormField
       control={form.control}
       name="date"
-      render={({ field }) => (
-        <FormItem>
+      render={({ field, fieldState }) => (
+        <FormItem data-field="date">
           <FormLabel>Date*</FormLabel>
           <FormControl>
             <Popover>
@@ -48,15 +34,12 @@ const DateField: React.FC<DateFieldProps> = ({
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full pl-3 text-left font-normal",
-                    !field.value && "text-muted-foreground"
+                    'w-full pl-3 text-left font-normal',
+                    !field.value && 'text-muted-foreground',
+                    fieldState.error && 'border-destructive'
                   )}
                 >
-                  {field.value ? (
-                    format(new Date(field.value), "PPP")
-                  ) : (
-                    <span>Select date</span>
-                  )}
+                  {field.value ? format(new Date(field.value), 'PPP') : <span>Select date</span>}
                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>

@@ -3,18 +3,6 @@
  * @description UI component for CurrencySelector.
  *
  * @module components/forms/CurrencySelector
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
  */
 
 import React from 'react';
@@ -22,32 +10,28 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues, CURRENCIES } from './transaction-form-schema';
+import { cn } from '@/lib/utils';
 
 interface CurrencySelectorProps {
   form: UseFormReturn<TransactionFormValues>;
 }
 
-const CurrencySelector: React.FC<CurrencySelectorProps> = ({
-  form
-}) => {
+const CurrencySelector: React.FC<CurrencySelectorProps> = ({ form }) => {
   return (
     <FormField
       control={form.control}
       name="currency"
-      render={({ field }) => (
-        <FormItem>
+      render={({ field, fieldState }) => (
+        <FormItem data-field="currency">
           <FormLabel>Currency*</FormLabel>
-          <Select
-            value={field.value}
-            onValueChange={field.onChange}
-          >
+          <Select value={field.value} onValueChange={field.onChange}>
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className={cn(fieldState.error && 'border-destructive')}>
                 <SelectValue placeholder="Select currency" />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {CURRENCIES.map(currency => (
+              {CURRENCIES.map((currency) => (
                 <SelectItem key={currency.code} value={currency.code}>
                   {currency.code} - {currency.name}
                 </SelectItem>
