@@ -33,6 +33,7 @@ import { Account } from '@/models/account';
 import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import AddAccountDialog from '@/components/budget/AddAccountDialog';
 import { 
   Plus,
   Edit2,
@@ -127,26 +128,20 @@ const AccountsPage = () => {
   };
 
   const handleSave = () => {
+    if (!editingAccount) return;
     if (!form.name.trim()) {
       toast({ title: 'Account name is required', variant: 'destructive' });
       return;
     }
 
     const existingAccount = accountService.getAccountByName(form.name);
-    if (existingAccount && existingAccount.id !== editingAccount?.id) {
+    if (existingAccount && existingAccount.id !== editingAccount.id) {
       toast({ title: 'An account with this name already exists', variant: 'destructive' });
       return;
     }
 
-    if (editingAccount) {
-      accountService.updateAccount(editingAccount.id, form);
-      toast({ title: 'Account updated successfully' });
-    } else {
-      const newAccount: Account = { id: uuidv4(), ...form };
-      accountService.addAccount(newAccount);
-      toast({ title: 'Account created successfully' });
-    }
-
+    accountService.updateAccount(editingAccount.id, form);
+    toast({ title: 'Account updated successfully' });
     refreshAccounts();
     setIsDialogOpen(false);
     resetForm();
@@ -321,18 +316,15 @@ const AccountsPage = () => {
         </div>
       )}
 
-      {/* Add/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Edit Dialog */}
+      <Dialog open={isDialogOpen && !!editingAccount} onOpenChange={setIsDialogOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingAccount ? 'Edit Account' : 'Add Account'}
+              Edit Account
             </DialogTitle>
             <DialogDescription>
-              {editingAccount 
-                ? 'Update your account details'
-                : 'Add a new financial account to track'
-              }
+              Update your account details
             </DialogDescription>
           </DialogHeader>
           
@@ -421,11 +413,22 @@ const AccountsPage = () => {
               Cancel
             </Button>
             <Button onClick={handleSave}>
-              {editingAccount ? 'Update' : 'Create'}
+              Update
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AddAccountDialog
+        open={isDialogOpen && !editingAccount}
+        onClose={() => {
+          setIsDialogOpen(false);
+          resetForm();
+        }}
+        onAccountCreated={() => {
+          refreshAccounts();
+        }}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
