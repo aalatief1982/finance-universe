@@ -40,7 +40,6 @@ import {
   PEOPLE,
 } from '@/lib/categories-data';
 import { Plus, Calculator, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
-import { getStoredAccounts, addUserAccount, Account } from '@/lib/account-utils';
 import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { addSuggestionsFeedbackEntry } from '@/utils/suggestions-feedback-log';
@@ -62,6 +61,9 @@ import { roundToCurrencyPrecision } from '@/types/fx';
 import { generateDefaultTitle } from '@/components/transaction-utils';
 import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
 import { CustomCurrency, getAvailableCurrencies } from '@/lib/currency-utils';
+import { accountService } from '@/services/AccountService';
+import { Account } from '@/models/account';
+import AddAccountDialog from '@/components/budget/AddAccountDialog';
 
 interface TransactionEditFormProps {
   transaction?: Transaction;
@@ -219,9 +221,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState<Partial<Record<keyof Transaction, boolean>>>({});
-  const [accounts, setAccounts] = useState<Account[]>(() => getStoredAccounts());
+  const [accounts, setAccounts] = useState<Account[]>(() => accountService.getAccounts());
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState<{ name: string; iban: string }>({ name: '', iban: '' });
+  const [accountTargetField, setAccountTargetField] = useState<'fromAccount' | 'toAccount'>('fromAccount');
 
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [newCategory, setNewCategory] = useState<{
@@ -402,14 +404,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     handleChange('currency', currencyObj.code);
   };
 
-  const handleSaveAccount = () => {
-    if (!newAccount.name.trim()) return;
-    const accountName = newAccount.name.trim();
-    addUserAccount({ name: accountName, iban: newAccount.iban.trim() || undefined });
-    setAccounts(getStoredAccounts());
-    handleChange('fromAccount', accountName);
-    setNewAccount({ name: '', iban: '' });
-    setAddAccountOpen(false);
+  const refreshAccounts = () => {
+    setAccounts(accountService.getAccounts());
   };
 
   const handleSaveCategory = () => {
@@ -788,41 +784,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         inputClassName={darkFieldClass}
       />
 
-      <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add Account</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-account-name">
-                Name*
-              </label>
-              <Input
-                id="new-account-name"
-                value={newAccount.name}
-                onChange={e => setNewAccount(prev => ({ ...prev, name: e.target.value }))}
-                className={darkFieldClass}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium dark:text-white" htmlFor="new-account-iban">
-                IBAN
-              </label>
-              <Input
-                id="new-account-iban"
-                value={newAccount.iban}
-                onChange={e => setNewAccount(prev => ({ ...prev, iban: e.target.value }))}
-                className={darkFieldClass}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAddAccountOpen(false)}>Cancel</Button>
-            <Button type="button" onClick={handleSaveAccount}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddAccountDialog
+        open={addAccountOpen}
+        onClose={() => setAddAccountOpen(false)}
+        onAccountCreated={(newAccount) => {
+          refreshAccounts();
+          handleChange(accountTargetField, newAccount.name);
+        }}
+      />
 
       <Dialog open={addCategoryOpen} onOpenChange={setAddCategoryOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
@@ -1086,12 +1055,24 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               {accounts.map(account => (
-                <SelectItem key={account.name} value={account.name}>
+                <SelectItem key={account.id} value={account.name}>
                   {account.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              setAccountTargetField('fromAccount');
+              setAddAccountOpen(true);
+            }}
+            title="Add account"
+          >
+            <Plus className="size-4" />
+          </Button>
           <input
             tabIndex={-1}
             autoComplete="off"
@@ -1127,12 +1108,24 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {accounts.map(account => (
-                  <SelectItem key={account.name} value={account.name}>
+                  <SelectItem key={account.id} value={account.name}>
                     {account.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                setAccountTargetField('toAccount');
+                setAddAccountOpen(true);
+              }}
+              title="Add account"
+            >
+              <Plus className="size-4" />
+            </Button>
             <input
               tabIndex={-1}
               autoComplete="off"
