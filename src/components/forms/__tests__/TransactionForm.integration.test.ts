@@ -191,6 +191,23 @@ describe('TransactionForm + Service Integration', () => {
       expect(errors.date).toBeDefined();
     });
 
+
+
+    it('should treat N/A subcategory as missing when subcategory is mandatory', () => {
+      const errors = validateTransactionForm({
+        title: 'Food order',
+        amount: 10,
+        type: 'expense',
+        fromAccount: 'Cash',
+        category: 'Other',
+        subcategory: 'N/A',
+        date: '2024-01-15',
+        currency: 'USD',
+      }, 'expense');
+
+      expect(errors.subcategory).toBeDefined();
+    });
+
   describe('Form to service integration', () => {
     it('should create expense transaction from valid form data', () => {
       const formData = {

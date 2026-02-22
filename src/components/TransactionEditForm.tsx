@@ -56,15 +56,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { addSuggestionsFeedbackEntry } from '@/utils/suggestions-feedback-log';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,7 +105,6 @@ import {
   TransactionValidationErrors,
   validateTransaction,
 } from '@/lib/transaction-validation';
-import { toast } from '@/components/ui/use-toast';
 
 const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
   'amount',
@@ -369,8 +359,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     createInitialTransactionState(transaction),
   );
   const [formErrors, setFormErrors] = useState<TransactionValidationErrors>({});
-  const [missingRequiredFields, setMissingRequiredFields] = useState<string[]>([]);
-  const [showMissingFieldsDialog, setShowMissingFieldsDialog] = useState(false);
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof Transaction, boolean>>
   >({});
@@ -761,27 +749,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       nextTouched[key] = true;
     });
     setTouchedFields((prev) => ({ ...prev, ...nextTouched }));
-    const fieldLabels: Partial<Record<keyof Transaction, string>> = {
-      title: 'Title',
-      amount: 'Amount',
-      fromAccount: 'From Account',
-      toAccount: 'To Account',
-      category: 'Category',
-      subcategory: 'Subcategory',
-      currency: 'Currency',
-      date: 'Date',
-    };
-    const sortedMissing = VALIDATION_FIELD_ORDER
-      .filter((field) => errors[field])
-      .map((field) => fieldLabels[field] || field);
-
-    setMissingRequiredFields(sortedMissing);
-    setShowMissingFieldsDialog(true);
-
-    toast({
-      title: 'Please fill required fields',
-      description: 'Please fill required fields',
-    });
     focusFirstInvalidField(errors);
   };
 
@@ -1965,29 +1932,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </Button>
       </div>
 
-      <AlertDialog
-        open={showMissingFieldsDialog}
-        onOpenChange={setShowMissingFieldsDialog}
-      >
-        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Missing Required Fields</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div>
-                <p>Please complete the required fields before saving:</p>
-                <ul className="mt-2 list-disc pl-5">
-                  {missingRequiredFields.map((field) => (
-                    <li key={field}>{field}</li>
-                  ))}
-                </ul>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction type="button">OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
     </form>
   );
