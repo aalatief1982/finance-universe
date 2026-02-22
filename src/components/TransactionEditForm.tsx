@@ -359,6 +359,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [editedTransaction, setEditedTransaction] = useState<Transaction>(() =>
     createInitialTransactionState(transaction),
   );
+  const [amountInputValue, setAmountInputValue] = useState<string>(() => {
+    const initialState = createInitialTransactionState(transaction);
+    return Number.isFinite(initialState.amount)
+      ? String(initialState.amount)
+      : '';
+  });
   const [formErrors, setFormErrors] = useState<TransactionValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof Transaction, boolean>>
@@ -430,6 +436,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const nextInitialState = createInitialTransactionState(transaction);
     setInitialTransactionState(nextInitialState);
     setEditedTransaction(nextInitialState);
+    setAmountInputValue(
+      Number.isFinite(nextInitialState.amount)
+        ? String(nextInitialState.amount)
+        : '',
+    );
     setTitleManuallyEdited(false);
     setDescriptionManuallyEdited(false);
     setFormErrors({});
@@ -546,7 +557,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       }
 
       if (field === 'amount') {
-        updated.amount = parseAmount(value as string | number);
+        const rawInput = String(value ?? '');
+        setAmountInputValue(rawInput);
+        updated.amount = parseAmount(rawInput);
       }
 
       if (field !== 'title' && !titleManuallyEdited) {
@@ -1425,13 +1438,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               fieldRefs.current.amount = el;
             }}
             id="transaction-amount"
-            type="number"
-            step="0.01"
-            value={
-              Number.isNaN(editedTransaction.amount)
-                ? ''
-                : editedTransaction.amount
-            }
+            type="text"
+            inputMode="decimal"
+            value={amountInputValue}
             isAutoFilled={isDriven('amount', drivenFields)}
             onChange={(e) =>
               handleChange(
