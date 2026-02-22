@@ -103,7 +103,7 @@ import AddAccountDialog from '@/components/budget/AddAccountDialog';
 import {
   TransactionValidationError,
   TransactionValidationErrors,
-  validateTransaction,
+  validateTransactionForm,
 } from '@/lib/transaction-validation';
 
 const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
@@ -527,12 +527,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         setDrivenFields((prev) => ({ ...prev, [field]: false }));
       }
 
-      setFormErrors((prev) => {
-        if (!prev[field]) return prev;
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
 
       if (field === 'type') {
@@ -553,6 +547,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       if (field !== 'title' && !titleManuallyEdited) {
         updated.title = generateDefaultTitle(updated);
       }
+
+      setFormErrors(validateTransactionForm(updated, updated.type));
 
       return updated;
     });
@@ -760,7 +756,21 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       finalTransaction.title = generateDefaultTitle(finalTransaction);
     }
 
-    const rawAmount = parseFloat(String(finalTransaction.amount));
+    const rawAmount = Number(
+      String(finalTransaction.amount ?? '')
+        .replace(/,/g, '')
+        .trim(),
+    );
+
+    const preSubmitErrors = validateTransactionForm(
+      finalTransaction,
+      finalTransaction.type,
+    );
+    if (Object.keys(preSubmitErrors).length > 0) {
+      handleValidationFailure(preSubmitErrors);
+      return;
+    }
+
     if (!Number.isNaN(rawAmount)) {
       finalTransaction.amount =
         finalTransaction.type === 'expense'
@@ -770,15 +780,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
     if (typeof finalTransaction.date === 'string') {
       finalTransaction.date = toISOFormat(finalTransaction.date);
-    }
-
-    const preSubmitErrors = validateTransaction(
-      finalTransaction,
-      finalTransaction.type,
-    );
-    if (Object.keys(preSubmitErrors).length > 0) {
-      handleValidationFailure(preSubmitErrors);
-      return;
     }
 
     const rateValue = manualExchangeRate
@@ -855,7 +856,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     Boolean(touchedFields[field] && formErrors[field]);
 
   return (
-    <form onSubmit={handleSubmit} className={formClass}>
+    <form onSubmit={handleSubmit} className={formClass} noValidate>
       <div className={rowClass}>
         <label className={labelClass} htmlFor="transaction-type">
           Type*
@@ -1670,55 +1671,51 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </label>
 
         <div className="flex w-full items-center gap-1">
-          {availableSubcategories.length > 0 ? (
-            <>
-              <Select
-                value={editedTransaction.subcategory || ''}
-                onValueChange={(value) => handleChange('subcategory', value)}
-              >
-                <SelectTrigger
-                  ref={(el) => {
-                    fieldRefs.current.subcategory = el;
-                  }}
-                  id="transaction-subcategory"
-                  className={cn(
-                    'w-full text-sm',
-                    inputPadding,
-                    'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                    darkFieldClass,
-                    hasError('subcategory') && 'border-destructive',
-                    hasLowConfidence('subcategory', fieldConfidences) &&
-                      'border-amber-500',
-                  )}
-                  isAutoFilled={isDriven('subcategory', drivenFields)}
-                  title={
-                    hasLowConfidence('subcategory', fieldConfidences)
-                      ? 'Low confidence'
-                      : undefined
-                  }
-                >
-                  <SelectValue placeholder="Select subcategory" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableSubcategories.map((subcategory) => (
-                    <SelectItem key={subcategory} value={subcategory}>
-                      {subcategory}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {renderFeedbackIcons('subcategory')}
-            </>
-          ) : (
-            <div
-              className={cn(
-                'flex-1 text-sm text-muted-foreground',
-                inputPadding,
-              )}
+          <>
+            <Select
+              value={editedTransaction.subcategory || ''}
+              onValueChange={(value) => handleChange('subcategory', value)}
+              disabled={availableSubcategories.length === 0}
             >
-              N/A
-            </div>
-          )}
+              <SelectTrigger
+                ref={(el) => {
+                  fieldRefs.current.subcategory = el;
+                }}
+                id="transaction-subcategory"
+                className={cn(
+                  'w-full text-sm',
+                  inputPadding,
+                  'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                  darkFieldClass,
+                  hasError('subcategory') && 'border-destructive',
+                  hasLowConfidence('subcategory', fieldConfidences) &&
+                    'border-amber-500',
+                )}
+                isAutoFilled={isDriven('subcategory', drivenFields)}
+                title={
+                  hasLowConfidence('subcategory', fieldConfidences)
+                    ? 'Low confidence'
+                    : undefined
+                }
+              >
+                <SelectValue
+                  placeholder={
+                    availableSubcategories.length > 0
+                      ? 'Select subcategory'
+                      : 'Select category first'
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {availableSubcategories.map((subcategory) => (
+                  <SelectItem key={subcategory} value={subcategory}>
+                    {subcategory}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {renderFeedbackIcons('subcategory')}
+          </>
         </div>
       </div>
       {hasError('subcategory') && (

@@ -19,15 +19,16 @@
 
 import { z } from 'zod';
 import { getPeopleNames } from '@/lib/people-utils';
-import { validateTransaction } from '@/lib/transaction-validation';
+import { validateTransactionForm as validateTransactionValues } from '@/lib/transaction-validation';
 
 type TransactionValidationInput = {
   title?: string;
-  amount?: number;
+  amount?: number | string;
   type?: 'expense' | 'income' | 'transfer';
   fromAccount?: string;
   toAccount?: string;
   category?: string;
+  subcategory?: string;
   date?: string;
   currency?: string;
 };
@@ -38,7 +39,7 @@ export const validateTransactionForm = (
   values: Partial<TransactionValidationInput>,
   txType: NonNullable<TransactionValidationInput['type']> = values.type || 'expense'
 ): TransactionValidationErrors => {
-  return validateTransaction(values as any, txType) as TransactionValidationErrors;
+  return validateTransactionValues(values as any, txType) as TransactionValidationErrors;
 };
 
 export const transactionFormSchema = z.object({
