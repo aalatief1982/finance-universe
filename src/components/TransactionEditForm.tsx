@@ -52,7 +52,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import VendorAutocomplete from './VendorAutocomplete';
-import AccountAutocomplete from './AccountAutocomplete';
 import FxEstimateDisplay from '@/components/forms/FxEstimateDisplay';
 import { FxInfoDisplay, FxRateInput, ExchangeRateDialog } from '@/components/fx';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -108,7 +107,7 @@ const createInitialTransactionState = (transaction?: Transaction): Transaction =
     category: 'Uncategorized',
     subcategory: 'none',
     date: new Date().toISOString().split('T')[0],
-    fromAccount: 'Cash',
+    fromAccount: '',
     toAccount: '',
     currency: 'SAR',
     description: '',
@@ -247,14 +246,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [vendorAvailableSubcategories, setVendorAvailableSubcategories] = useState<string[]>([]);
 
   // Track user interactions to prevent auto-opening dropdowns
-  const [userInteractions, setUserInteractions] = useState<{
-    vendor: boolean;
-    fromAccount: boolean;
-    toAccount: boolean;
-  }>({
+  const [userInteractions, setUserInteractions] = useState<{ vendor: boolean }>({
     vendor: false,
-    fromAccount: false,
-    toAccount: false
   });
 
   const [initialTransactionState, setInitialTransactionState] = useState<Transaction>(() =>
@@ -1074,27 +1067,39 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         <label className={labelClass} htmlFor="transaction-from-account">From Account*</label>
 
         <div className="flex w-full items-center gap-1">
-          <AccountAutocomplete
-            inputId="transaction-from-account"
+          <Select
             value={editedTransaction.fromAccount || ''}
-            onChange={(value) => {
-              setUserInteractions(prev => ({ ...prev, fromAccount: true }));
-              handleChange('fromAccount', value);
-            }}
-            accounts={accounts}
-            onAddClick={() => setAddAccountOpen(true)}
-            isAutoFilled={isDriven('fromAccount', drivenFields)}
-            hasLowConfidence={hasLowConfidence('fromAccount', fieldConfidences)}
-            placeholder="Start typing account name..."
+            onValueChange={(value) => handleChange('fromAccount', value)}
+          >
+            <SelectTrigger
+              id="transaction-from-account"
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                darkFieldClass,
+                hasLowConfidence('fromAccount', fieldConfidences) && 'border-amber-500'
+              )}
+              title={hasLowConfidence('fromAccount', fieldConfidences) ? 'Low confidence' : undefined}
+            >
+              <SelectValue placeholder="Select account" />
+            </SelectTrigger>
+            <SelectContent>
+              {accounts.map(account => (
+                <SelectItem key={account.name} value={account.name}>
+                  {account.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <input
+            tabIndex={-1}
+            autoComplete="off"
+            value={editedTransaction.fromAccount || ''}
+            onChange={() => undefined}
             required
-            userHasInteracted={userInteractions.fromAccount}
-            className={cn(
-              'w-full text-sm',
-              inputPadding,
-              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass,
-              hasLowConfidence('fromAccount', fieldConfidences) && 'border-amber-500'
-            )}
+            className="absolute h-0 w-0 opacity-0 pointer-events-none"
+            aria-hidden="true"
           />
           {renderFeedbackIcons('fromAccount')}
         </div>
@@ -1105,25 +1110,37 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           <label className={labelClass} htmlFor="transaction-to-account">To Account*</label>
 
           <div className="flex w-full items-center gap-1">
-          <AccountAutocomplete
-            inputId="transaction-to-account"
-            value={editedTransaction.toAccount || ''}
-            onChange={(value) => {
-                setUserInteractions(prev => ({ ...prev, toAccount: true }));
-                handleChange('toAccount', value);
-              }}
-              accounts={accounts}
-              onAddClick={() => setAddAccountOpen(true)}
-              isAutoFilled={isDriven('toAccount', drivenFields)}
-              placeholder="Start typing destination account..."
+            <Select
+              value={editedTransaction.toAccount || ''}
+              onValueChange={(value) => handleChange('toAccount', value)}
+            >
+              <SelectTrigger
+                id="transaction-to-account"
+                className={cn(
+                  'w-full text-sm',
+                  inputPadding,
+                  'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                  darkFieldClass
+                )}
+              >
+                <SelectValue placeholder="Select account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map(account => (
+                  <SelectItem key={account.name} value={account.name}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <input
+              tabIndex={-1}
+              autoComplete="off"
+              value={editedTransaction.toAccount || ''}
+              onChange={() => undefined}
               required
-              userHasInteracted={userInteractions.toAccount}
-              className={cn(
-                'w-full text-sm',
-                inputPadding,
-                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                darkFieldClass
-              )}
+              className="absolute h-0 w-0 opacity-0 pointer-events-none"
+              aria-hidden="true"
             />
             {renderFeedbackIcons('toAccount')}
           </div>
