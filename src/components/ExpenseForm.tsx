@@ -27,7 +27,6 @@ import {
   transactionFormSchema,
   TransactionFormValues,
   DEFAULT_FORM_VALUES,
-  validateTransactionForm,
 } from './forms/transaction-form-schema';
 import { getSubcategoriesForCategory } from '@/lib/categories-data';
 
@@ -112,15 +111,18 @@ const ExpenseForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
-  const scrollToInvalidField = (fieldName: FieldPath<TransactionFormValues>) => {
+  const scrollToFirstError = (errors: FieldErrors<TransactionFormValues>) => {
     const root = formElementRef.current;
     if (!root) return;
 
+    const firstField = REQUIRED_FIELD_ORDER.find((field) => errors[field]);
+    if (!firstField) return;
+
     const target =
-      root.querySelector<HTMLElement>(`[name="${fieldName}"]`) ||
-      root.querySelector<HTMLElement>(`[data-field="${fieldName}"] button`) ||
-      root.querySelector<HTMLElement>(`[data-field="${fieldName}"] input`) ||
-      root.querySelector<HTMLElement>(`[data-field="${fieldName}"]`);
+      root.querySelector<HTMLElement>(`[name="${firstField}"]`) ||
+      root.querySelector<HTMLElement>(`[data-field="${firstField}"] button`) ||
+      root.querySelector<HTMLElement>(`[data-field="${firstField}"] input`) ||
+      root.querySelector<HTMLElement>(`[data-field="${firstField}"]`);
 
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -130,39 +132,7 @@ const ExpenseForm = ({
     }
   };
 
-  const applyValidationErrors = (errors: FieldErrors<TransactionFormValues>) => {
-    const values = form.getValues();
-    const validationErrors = validateTransactionForm(values, values.type);
-
-    Object.entries(validationErrors).forEach(([name, message]) => {
-      if (!message) return;
-      form.setError(name as FieldPath<TransactionFormValues>, { type: 'manual', message });
-
-      const fieldName = name as FieldPath<TransactionFormValues>;
-      form.setValue(fieldName, form.getValues(fieldName), { shouldTouch: true, shouldValidate: false });
-    });
-
-    if (Object.keys(errors).length > 0 || Object.keys(validationErrors).length > 0) {
-      const invalidFieldOrder = REQUIRED_FIELD_ORDER.filter(
-        (field) => errors[field] || validationErrors[field]
-      );
-
-      const firstInvalidField = invalidFieldOrder[0];
-      if (firstInvalidField) {
-        scrollToInvalidField(firstInvalidField);
-      }
-
-      return false;
-    }
-
-    return true;
-  };
-
   const handleSubmit = (values: TransactionFormValues) => {
-    if (!applyValidationErrors({})) {
-      return;
-    }
-
     // Pass manual rate if set
     const submissionValues = manualFxRate ? { ...values, _manualFxRate: manualFxRate } : values;
     onSubmit(submissionValues as TransactionFormValues);
@@ -190,7 +160,7 @@ const ExpenseForm = ({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit, applyValidationErrors)} className="space-y-4">
+            <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit, scrollToFirstError)} className="space-y-4">
               {/* Transaction Type */}
               <TransactionTypeSelector form={form} />
 
