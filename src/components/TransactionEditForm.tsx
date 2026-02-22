@@ -50,6 +50,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/vendorFallbackUtils';
+import { getVendorData } from '@/services/VendorSyncService';
 import VendorAutocomplete from './VendorAutocomplete';
 import FxEstimateDisplay from '@/components/forms/FxEstimateDisplay';
 import { FxInfoDisplay, FxRateInput, ExchangeRateDialog } from '@/components/fx';
@@ -237,7 +238,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [newPerson, setNewPerson] = useState<{ name: string; relation: string }>({ name: '', relation: '' });
 
   const [vendors, setVendors] = useState<string[]>(() => {
-    const builtIn = Object.keys((vendorData as Record<string, unknown>) || {});
+    const syncedVendors = getVendorData();
+    const builtIn = Object.keys(syncedVendors || (vendorData as Record<string, unknown>) || {});
     const stored = Object.keys(loadVendorFallbacks());
     return Array.from(new Set([...builtIn, ...stored]));
   });
@@ -336,6 +338,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const subcategories = getSubcategoriesForCategory(editedTransaction.category) || [];
     setAvailableSubcategories(subcategories);
   }, [editedTransaction.type, editedTransaction.category]);
+
+
+  useEffect(() => {
+    const loadVendorList = () => {
+      const syncedVendors = getVendorData();
+      const builtIn = Object.keys(syncedVendors || (vendorData as Record<string, unknown>) || {});
+      const stored = Object.keys(loadVendorFallbacks());
+      setVendors(Array.from(new Set([...builtIn, ...stored])));
+    };
+
+    loadVendorList();
+    window.addEventListener('vendorDataUpdated', loadVendorList);
+    return () => window.removeEventListener('vendorDataUpdated', loadVendorList);
+  }, []);
 
   // Update vendor subcategories when vendor category changes
   useEffect(() => {
