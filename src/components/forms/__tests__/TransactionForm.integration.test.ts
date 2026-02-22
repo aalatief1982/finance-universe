@@ -192,6 +192,19 @@ describe('TransactionForm + Service Integration', () => {
     });
 
 
+    it('should reject negative amount in unified validation', () => {
+      const errors = validateTransactionForm({
+        title: 'Bad amount',
+        amount: -10,
+        type: 'expense',
+        fromAccount: 'Cash',
+        category: 'Food',
+        date: '2024-01-15',
+        currency: 'USD',
+      }, 'expense');
+
+      expect(errors.amount).toBe('Amount must be greater than 0');
+    });
 
     it('should treat N/A subcategory as missing when subcategory is mandatory', () => {
       const errors = validateTransactionForm({
@@ -199,7 +212,7 @@ describe('TransactionForm + Service Integration', () => {
         amount: 10,
         type: 'expense',
         fromAccount: 'Cash',
-        category: 'Other',
+        category: 'Food',
         subcategory: 'N/A',
         date: '2024-01-15',
         currency: 'USD',

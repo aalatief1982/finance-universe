@@ -46,7 +46,7 @@ export const validateTransaction = (
   const numericAmount = Number(tx.amount);
   if (!Number.isFinite(numericAmount)) {
     errors.amount = 'Amount is required';
-  } else if (Math.abs(numericAmount) <= 0) {
+  } else if (numericAmount <= 0) {
     errors.amount = 'Amount must be greater than 0';
   }
 
