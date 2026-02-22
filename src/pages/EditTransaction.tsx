@@ -32,6 +32,7 @@ import TransactionEditForm from '@/components/TransactionEditForm';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
 
 import SmartPasteSummary from '@/components/SmartPasteSummary';
+import { cn } from '@/lib/utils';
 import { LearnedEntry } from '@/types/learning';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
@@ -72,6 +73,9 @@ const EditTransaction = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  const [allowFormScroll, setAllowFormScroll] = useState(true);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [allowNextNav, setAllowNextNav] = useState(false);
 
@@ -222,6 +226,38 @@ const EditTransaction = () => {
     }
   }, [isSuggested, matchDetails, toast]);
 
+
+  useEffect(() => {
+    const container = formContainerRef.current;
+    const mainElement = container?.closest('main');
+
+    if (!container || !mainElement) {
+      return;
+    }
+
+    const syncScrollState = () => {
+      const availableHeight = mainElement.clientHeight;
+      const contentHeight = container.scrollHeight;
+      const shouldScroll = contentHeight > availableHeight;
+
+      setAllowFormScroll(shouldScroll);
+      mainElement.style.overflowY = shouldScroll ? 'auto' : 'hidden';
+    };
+
+    syncScrollState();
+
+    const resizeObserver = new ResizeObserver(syncScrollState);
+    resizeObserver.observe(container);
+    resizeObserver.observe(mainElement);
+    window.addEventListener('resize', syncScrollState);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', syncScrollState);
+      mainElement.style.overflowY = 'auto';
+    };
+  }, [transaction, isEditing, rawMessage, matchDetails]);
+
   return (
     <Layout
       showBack
@@ -235,7 +271,7 @@ const EditTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full px-1 space-y-4 dark:bg-black dark:text-white min-h-screen"
+        className="w-full px-1 space-y-3 dark:bg-black dark:text-white" ref={formContainerRef}
       >
 
         {rawMessage && (
@@ -288,7 +324,7 @@ const EditTransaction = () => {
         )}
 
         <Card className="w-full">
-          <CardContent className="pt-[var(--card-padding)]">
+          <CardContent className={cn('pt-[var(--card-padding)]', !allowFormScroll && 'pb-2')}>
             <TransactionEditForm
               transaction={transaction}
               onSave={handleSave}

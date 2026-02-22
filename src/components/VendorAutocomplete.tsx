@@ -17,7 +17,7 @@
  * - [ ] Component renders without crashing
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown } from 'lucide-react';
@@ -57,7 +57,6 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   inputId,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [filteredVendors, setFilteredVendors] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,20 +65,25 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
     setSearchTerm(value);
   }, [value]);
 
+  const sortedVendors = useMemo(
+    () => [...vendors].sort((a, b) => formatVendorDisplay(a).localeCompare(formatVendorDisplay(b))),
+    [vendors]
+  );
+
+  const shouldFilterBySearch = searchTerm.trim().length >= 3;
+  const filteredVendors = useMemo(() => {
+    if (!shouldFilterBySearch) {
+      return sortedVendors;
+    }
+
+    return sortedVendors.filter(vendor => normalize(vendor).includes(normalize(searchTerm)));
+  }, [searchTerm, shouldFilterBySearch, sortedVendors]);
+
   useEffect(() => {
-    if (searchTerm.length >= 3) {
-      const filtered = vendors
-        .filter(vendor => 
-          normalize(vendor).includes(normalize(searchTerm))
-        )
-        .slice(0, 4); // Limit to 4 results
-      setFilteredVendors(filtered);
-      setIsOpen(userHasInteracted);
-    } else {
-      setFilteredVendors([]);
+    if (!userHasInteracted) {
       setIsOpen(false);
     }
-  }, [searchTerm, vendors, userHasInteracted]);
+  }, [userHasInteracted]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -121,7 +125,7 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => {
-              if (searchTerm.length >= 3) {
+              if (userHasInteracted) {
                 setIsOpen(true);
               }
             }}
@@ -132,44 +136,45 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
               hasLowConfidence && 'border-amber-500'
             )}
           />
-          {searchTerm.length >= 3 && filteredVendors.length > 0 && (
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-muted"
+            onClick={() => setIsOpen(prev => !prev)}
+            aria-label="Toggle vendor picklist"
+          >
             <ChevronDown 
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" 
+              className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-180')}
             />
-          )}
+          </button>
         </div>
         <Button type="button" variant="outline" size="icon" onClick={onAddClick}>
           <Plus className="size-4" />
         </Button>
       </div>
 
-      {isOpen && filteredVendors.length > 0 && (
+      {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-40 overflow-y-auto">
-          {filteredVendors.map((vendor) => (
-            <div
-              key={vendor}
-              className="px-3 py-2 cursor-pointer hover:bg-muted text-sm border-b border-border last:border-b-0"
-              onClick={() => handleSelectVendor(vendor)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSelectVendor(vendor)}
-              role="button"
-              tabIndex={0}
-            >
-              {formatVendorDisplay(vendor)}
-            </div>
-          ))}
+          {filteredVendors.length > 0 ? (
+            filteredVendors.map((vendor) => (
+              <div
+                key={vendor}
+                className="px-3 py-2 cursor-pointer hover:bg-muted text-sm border-b border-border last:border-b-0"
+                onClick={() => handleSelectVendor(vendor)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSelectVendor(vendor)}
+                role="button"
+                tabIndex={0}
+              >
+                {formatVendorDisplay(vendor)}
+              </div>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-sm text-muted-foreground">No matches</div>
+          )}
         </div>
       )}
 
-      {userHasInteracted && searchTerm.trim().length < 3 && (
+      {userHasInteracted && !shouldFilterBySearch && (
         <div className="mt-1 px-1 text-xs text-muted-foreground">Type 3+ characters to search</div>
-      )}
-
-      {searchTerm.length >= 3 && filteredVendors.length === 0 && isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg">
-          <div className="px-3 py-2 text-sm text-muted-foreground">
-            No matches
-          </div>
-        </div>
       )}
     </div>
   );

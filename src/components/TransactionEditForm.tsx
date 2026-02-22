@@ -66,6 +66,23 @@ import { accountService } from '@/services/AccountService';
 import { Account } from '@/models/account';
 import AddAccountDialog from '@/components/budget/AddAccountDialog';
 
+const dedupeVendorsCaseInsensitive = (vendorList: string[]) => {
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+
+  vendorList.forEach((vendor) => {
+    const normalized = vendor.trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+
+    seen.add(normalized);
+    deduped.push(vendor.trim());
+  });
+
+  return deduped;
+};
+
 interface TransactionEditFormProps {
   transaction?: Transaction;
   onSave: (transaction: Transaction) => void;
@@ -241,7 +258,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const syncedVendors = getVendorData();
     const builtIn = Object.keys(syncedVendors || (vendorData as Record<string, unknown>) || {});
     const stored = Object.keys(loadVendorFallbacks());
-    return Array.from(new Set([...builtIn, ...stored]));
+    return dedupeVendorsCaseInsensitive([...builtIn, ...stored]);
   });
   const [addVendorOpen, setAddVendorOpen] = useState(false);
   const [newVendor, setNewVendor] = useState<{ name: string; type: TransactionType; category: string; subcategory: string }>(
@@ -345,7 +362,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       const syncedVendors = getVendorData();
       const builtIn = Object.keys(syncedVendors || (vendorData as Record<string, unknown>) || {});
       const stored = Object.keys(loadVendorFallbacks());
-      setVendors(Array.from(new Set([...builtIn, ...stored])));
+      setVendors(dedupeVendorsCaseInsensitive([...builtIn, ...stored]));
     };
 
     loadVendorList();
@@ -484,7 +501,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       category: newVendor.category.trim(),
       subcategory: newVendor.subcategory.trim(),
     });
-    setVendors(prev => Array.from(new Set([...prev, newVendor.name.trim()])));
+    setVendors(prev => dedupeVendorsCaseInsensitive([...prev, newVendor.name.trim()]));
     handleChange('vendor', newVendor.name.trim());
     
     // Set the category and subcategory from the new vendor
@@ -1346,7 +1363,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           rows={2}
           isAutoFilled={isDriven('description', drivenFields)}
           className={cn(
-            'w-full text-sm',
+            'w-full text-sm min-h-[72px] h-[clamp(72px,10vh,120px)] max-h-[120px]',
             inputPadding,
             'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             darkFieldClass
