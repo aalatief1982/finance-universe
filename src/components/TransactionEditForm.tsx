@@ -105,6 +105,7 @@ import {
   TransactionValidationErrors,
   validateTransactionForm,
 } from '@/lib/transaction-validation';
+import { parseAmount } from '@/lib/amount';
 
 const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
   'amount',
@@ -544,6 +545,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         updated.subcategory = '';
       }
 
+      if (field === 'amount') {
+        updated.amount = parseAmount(value as string | number);
+      }
+
       if (field !== 'title' && !titleManuallyEdited) {
         updated.title = generateDefaultTitle(updated);
       }
@@ -756,11 +761,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       finalTransaction.title = generateDefaultTitle(finalTransaction);
     }
 
-    const rawAmount = Number(
-      String(finalTransaction.amount ?? '')
-        .replace(/,/g, '')
-        .trim(),
-    );
+    const rawAmount = parseAmount(finalTransaction.amount ?? '');
 
     const preSubmitErrors = validateTransactionForm(
       finalTransaction,
@@ -849,14 +850,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     'bg-background text-foreground border-border placeholder:text-muted-foreground';
   const formClass = cn(
     'bg-card p-4 rounded-md shadow-sm',
-    compact ? 'space-y-1 pb-16' : 'space-y-2 pb-28',
+    compact ? 'space-y-1' : 'space-y-2',
   );
 
   const hasError = (field: keyof Transaction) =>
     Boolean(touchedFields[field] && formErrors[field]);
 
   return (
-    <form onSubmit={handleSubmit} className={formClass} noValidate>
+    <form
+      onSubmit={handleSubmit}
+      className={formClass}
+      style={{
+        paddingBottom:
+          'calc(var(--safe-area-bottom, 0px) + var(--bottom-nav-height, 0px) + 0.75rem)',
+      }}
+      noValidate
+    >
       <div className={rowClass}>
         <label className={labelClass} htmlFor="transaction-type">
           Type*
@@ -1427,7 +1436,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onChange={(e) =>
               handleChange(
                 'amount',
-                e.target.value === '' ? Number.NaN : parseFloat(e.target.value),
+                e.target.value,
               )
             }
             placeholder="0.00"

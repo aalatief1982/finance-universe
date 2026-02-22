@@ -1,5 +1,6 @@
 import { Transaction, TransactionType } from '@/types/transaction';
 import { getSubcategoriesForCategory } from '@/lib/categories-data';
+import { parseAmount } from '@/lib/amount';
 
 export type TransactionValidationErrors = Partial<
   Record<keyof Transaction, string>
@@ -51,7 +52,7 @@ export const validateTransactionForm = (
   if (isBlank(tx.title)) errors.title = 'Title is required';
   if (isMissingSelection(tx.currency)) errors.currency = 'Currency is required';
 
-  const numericAmount = Number(String(tx.amount ?? '').replace(/,/g, '').trim());
+  const numericAmount = parseAmount(tx.amount ?? '');
   if (!Number.isFinite(numericAmount)) {
     errors.amount = 'Amount is required';
   } else if (numericAmount <= 0) {
