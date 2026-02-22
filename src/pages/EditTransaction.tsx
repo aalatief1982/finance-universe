@@ -74,8 +74,6 @@ const EditTransaction = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
-  const formContainerRef = useRef<HTMLDivElement>(null);
-  const [allowFormScroll, setAllowFormScroll] = useState(true);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [allowNextNav, setAllowNextNav] = useState(false);
 
@@ -227,37 +225,6 @@ const EditTransaction = () => {
   }, [isSuggested, matchDetails, toast]);
 
 
-  useEffect(() => {
-    const container = formContainerRef.current;
-    const mainElement = container?.closest('main');
-
-    if (!container || !mainElement) {
-      return;
-    }
-
-    const syncScrollState = () => {
-      const availableHeight = mainElement.clientHeight;
-      const contentHeight = container.scrollHeight;
-      const shouldScroll = contentHeight > availableHeight;
-
-      setAllowFormScroll(shouldScroll);
-      mainElement.style.overflowY = shouldScroll ? 'auto' : 'hidden';
-    };
-
-    syncScrollState();
-
-    const resizeObserver = new ResizeObserver(syncScrollState);
-    resizeObserver.observe(container);
-    resizeObserver.observe(mainElement);
-    window.addEventListener('resize', syncScrollState);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', syncScrollState);
-      mainElement.style.overflowY = 'auto';
-    };
-  }, [transaction, isEditing, rawMessage, matchDetails]);
-
   return (
     <Layout
       showBack
@@ -271,7 +238,7 @@ const EditTransaction = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full px-1 space-y-3 dark:bg-black dark:text-white" ref={formContainerRef}
+        className="w-full px-1 space-y-3 dark:bg-black dark:text-white"
       >
 
         {rawMessage && (
@@ -324,7 +291,7 @@ const EditTransaction = () => {
         )}
 
         <Card className="w-full">
-          <CardContent className={cn('pt-[var(--card-padding)]', !allowFormScroll && 'pb-2')}>
+          <CardContent className={cn('pt-[var(--card-padding)]')}>
             <TransactionEditForm
               transaction={transaction}
               onSave={handleSave}
