@@ -19,6 +19,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useForm, type FieldErrors, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
@@ -56,13 +65,14 @@ interface ExpenseFormProps {
 }
 
 const REQUIRED_FIELD_ORDER: FieldPath<TransactionFormValues>[] = [
-  'title',
   'amount',
   'fromAccount',
   'toAccount',
   'category',
+  'subcategory',
   'currency',
   'date',
+  'title',
 ];
 
 const ExpenseForm = ({
@@ -81,6 +91,8 @@ const ExpenseForm = ({
   const [availableSubcategories, setAvailableSubcategories] = useState<string[]>([]);
   const [manualRateDialogOpen, setManualRateDialogOpen] = useState(false);
   const [manualFxRate, setManualFxRate] = useState<number | undefined>(undefined);
+  const [missingRequiredFields, setMissingRequiredFields] = useState<string[]>([]);
+  const [showMissingRequiredDialog, setShowMissingRequiredDialog] = useState(false);
 
   // Watch fields for FX estimate
   const transactionType = form.watch('type') as TransactionType;
@@ -98,16 +110,16 @@ const ExpenseForm = ({
       const subcategories = getSubcategoriesForCategory(selectedCategory as string);
       setAvailableSubcategories(subcategories);
 
-      // If current subcategory is not available, reset it to "none"
+      // If current subcategory is not available, clear it
       const currentSubcategory = form.getValues().subcategory;
-      if (currentSubcategory && currentSubcategory !== 'none' && !subcategories.includes(currentSubcategory)) {
-        form.setValue('subcategory', 'none');
+      if (currentSubcategory && !subcategories.includes(currentSubcategory)) {
+        form.setValue('subcategory', '');
       }
     } else {
       setAvailableSubcategories([]);
       const currentSubcategory = form.getValues().subcategory;
-      if (currentSubcategory !== 'none') {
-        form.setValue('subcategory', 'none');
+      if (currentSubcategory !== '') {
+        form.setValue('subcategory', '');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,18 +156,36 @@ const ExpenseForm = ({
     });
 
     if (Object.keys(errors).length > 0 || Object.keys(validationErrors).length > 0) {
+      const invalidFieldOrder = REQUIRED_FIELD_ORDER.filter(
+        (field) => errors[field] || validationErrors[field]
+      );
+      const fieldLabels: Record<FieldPath<TransactionFormValues>, string> = {
+        title: 'Title',
+        amount: 'Amount',
+        fromAccount: 'From Account',
+        toAccount: 'To Account',
+        category: 'Category',
+        subcategory: 'Subcategory',
+        currency: 'Currency',
+        date: 'Date',
+        type: 'Type',
+        description: 'Description',
+        notes: 'Notes',
+        person: 'Person',
+      };
+
+      setMissingRequiredFields(invalidFieldOrder.map((field) => fieldLabels[field] || field));
+      setShowMissingRequiredDialog(true);
+
+      const firstInvalidField = invalidFieldOrder[0];
+      if (firstInvalidField) {
+        scrollToInvalidField(firstInvalidField);
+      }
+
       toast({
         title: 'Please fill required fields',
         variant: 'destructive',
       });
-
-      const firstInvalidField = REQUIRED_FIELD_ORDER.find(
-        (field) => errors[field] || validationErrors[field]
-      );
-
-      if (firstInvalidField) {
-        scrollToInvalidField(firstInvalidField);
-      }
     }
   };
 
@@ -190,9 +220,6 @@ const ExpenseForm = ({
             <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit, handleInvalidSubmit)} className="space-y-4">
               {/* Transaction Type */}
               <TransactionTypeSelector form={form} />
-
-              {/* Title */}
-              <TitleField form={form} />
 
               <div className="grid grid-cols-2 gap-4">
                 {/* Amount */}
@@ -245,6 +272,9 @@ const ExpenseForm = ({
               {/* Date - Show in another row if subcategory is shown */}
               {selectedCategory && availableSubcategories.length > 0 && <DateField form={form} />}
 
+              {/* Title */}
+              <TitleField form={form} />
+
               {/* Person */}
               <PersonSelector form={form} />
 
@@ -257,6 +287,29 @@ const ExpenseForm = ({
               {/* Form Actions */}
               <FormActions onCancel={onCancel} isUpdate={!!defaultValues.title} />
             </form>
+
+          <AlertDialog open={showMissingRequiredDialog} onOpenChange={setShowMissingRequiredDialog}>
+            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Missing Required Fields</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div>
+                    <p>Please complete the required fields before saving:</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      {missingRequiredFields.map((field) => (
+                        <li key={field}>{field}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setShowMissingRequiredDialog(false)}>
+                  OK
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           </Form>
         </CardContent>
       </Card>
