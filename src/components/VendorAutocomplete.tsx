@@ -36,6 +36,14 @@ interface VendorAutocompleteProps {
   inputId?: string;
 }
 
+const normalize = (value: string) => value.trim().toLowerCase();
+
+export const formatVendorDisplay = (name: string) =>
+  name
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   value,
   onChange,
@@ -62,11 +70,11 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
     if (searchTerm.length >= 3) {
       const filtered = vendors
         .filter(vendor => 
-          vendor.toLowerCase().includes(searchTerm.toLowerCase())
+          normalize(vendor).includes(normalize(searchTerm))
         )
         .slice(0, 4); // Limit to 4 results
       setFilteredVendors(filtered);
-      setIsOpen(userHasInteracted && filtered.length > 0);
+      setIsOpen(userHasInteracted);
     } else {
       setFilteredVendors([]);
       setIsOpen(false);
@@ -113,11 +121,11 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => {
-              if (searchTerm.length >= 3 && filteredVendors.length > 0) {
+              if (searchTerm.length >= 3) {
                 setIsOpen(true);
               }
             }}
-            placeholder={searchTerm.length < 3 ? "Type 3+ characters to search vendors..." : placeholder}
+            placeholder={placeholder}
             isAutoFilled={isAutoFilled}
             className={cn(
               className,
@@ -137,7 +145,7 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
 
       {isOpen && filteredVendors.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-40 overflow-y-auto">
-          {filteredVendors.map((vendor, index) => (
+          {filteredVendors.map((vendor) => (
             <div
               key={vendor}
               className="px-3 py-2 cursor-pointer hover:bg-muted text-sm border-b border-border last:border-b-0"
@@ -146,16 +154,20 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
               role="button"
               tabIndex={0}
             >
-              {vendor}
+              {formatVendorDisplay(vendor)}
             </div>
           ))}
         </div>
       )}
 
+      {userHasInteracted && searchTerm.trim().length < 3 && (
+        <div className="mt-1 px-1 text-xs text-muted-foreground">Type 3+ characters to search</div>
+      )}
+
       {searchTerm.length >= 3 && filteredVendors.length === 0 && isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg">
           <div className="px-3 py-2 text-sm text-muted-foreground">
-            No vendors found
+            No matches
           </div>
         </div>
       )}
