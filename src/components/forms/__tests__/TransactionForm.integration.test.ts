@@ -221,6 +221,36 @@ describe('TransactionForm + Service Integration', () => {
       expect(errors.subcategory).toBeDefined();
     });
 
+    it('should require subcategory even when category is not selected yet', () => {
+      const errors = validateTransactionForm({
+        title: 'Pending transaction',
+        amount: 10,
+        type: 'expense',
+        fromAccount: 'Cash',
+        category: '',
+        subcategory: '',
+        date: '2024-01-15',
+        currency: 'USD',
+      }, 'expense');
+
+      expect(errors.subcategory).toBe('Subcategory is required');
+    });
+
+    it('should accept numeric amount provided as a formatted string', () => {
+      const errors = validateTransactionForm({
+        title: 'Salary',
+        amount: '500.00' as unknown as number,
+        type: 'income',
+        fromAccount: 'Bank',
+        category: 'Income',
+        subcategory: 'Salary',
+        date: '2024-01-15',
+        currency: 'USD',
+      }, 'income');
+
+      expect(errors.amount).toBeUndefined();
+    });
+
   describe('Form to service integration', () => {
     it('should create expense transaction from valid form data', () => {
       const formData = {

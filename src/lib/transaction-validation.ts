@@ -36,14 +36,22 @@ export const validateTransaction = (
   tx: Partial<Transaction>,
   mode?: TransactionType,
 ): TransactionValidationErrors => {
+  return validateTransactionForm(tx, mode);
+};
+
+export const validateTransactionForm = (
+  tx: Partial<Transaction>,
+  mode?: TransactionType,
+): TransactionValidationErrors => {
   const errors: TransactionValidationErrors = {};
   const type = mode || tx.type;
+  const normalizedType = String(type || '').trim().toLowerCase();
 
   if (!type) errors.type = 'Type is required';
   if (isBlank(tx.title)) errors.title = 'Title is required';
   if (isMissingSelection(tx.currency)) errors.currency = 'Currency is required';
 
-  const numericAmount = Number(tx.amount);
+  const numericAmount = Number(String(tx.amount ?? '').replace(/,/g, '').trim());
   if (!Number.isFinite(numericAmount)) {
     errors.amount = 'Amount is required';
   } else if (numericAmount <= 0) {
@@ -57,18 +65,24 @@ export const validateTransaction = (
     errors.category = 'Category is required';
   }
 
-  const availableSubcategories = tx.category
-    ? getSubcategoriesForCategory(tx.category)
-    : [];
-  const shouldRequireSubcategory = availableSubcategories.length > 0;
-  if (shouldRequireSubcategory && isMissingSelection(tx.subcategory)) {
+  if (isMissingSelection(tx.subcategory)) {
     errors.subcategory = 'Subcategory is required';
+  } else if (tx.category && getSubcategoriesForCategory(tx.category).length > 0) {
+    const availableSubcategories = getSubcategoriesForCategory(tx.category);
+    const normalizedSubcategory = String(tx.subcategory).trim().toLowerCase();
+    const hasMatch = availableSubcategories.some(
+      (subcategory) => subcategory.trim().toLowerCase() === normalizedSubcategory,
+    );
+
+    if (!hasMatch) {
+      errors.subcategory = 'Subcategory is required';
+    }
   }
 
-  if (type === 'transfer') {
+  if (normalizedType === 'transfer') {
     if (isMissingSelection(tx.toAccount)) {
       errors.toAccount = 'To account is required';
-    } else if (tx.fromAccount === tx.toAccount) {
+    } else if (String(tx.fromAccount).trim() === String(tx.toAccount).trim()) {
       errors.toAccount = 'To account must be different from from account';
     }
   }
