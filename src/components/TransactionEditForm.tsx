@@ -367,9 +367,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const [initialTransactionState, setInitialTransactionState] =
     useState<Transaction>(() => createInitialTransactionState(transaction));
-  const [editedTransaction, setEditedTransaction] = useState<Transaction>(() =>
-    createInitialTransactionState(transaction),
-  );
+  const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
+    const initial = createInitialTransactionState(transaction);
+    return { ...initial, amount: Number.isFinite(initial.amount) ? Math.abs(initial.amount) : initial.amount };
+  });
   const [amountText, setAmountText] = useState<string>(() => {
     const initialState = createInitialTransactionState(transaction);
     return Number.isFinite(initialState.amount)
@@ -451,13 +452,19 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   useEffect(() => {
     const nextInitialState = createInitialTransactionState(transaction);
     setInitialTransactionState(nextInitialState);
-    setEditedTransaction(nextInitialState);
+    setEditedTransaction({
+      ...nextInitialState,
+      amount: Number.isFinite(nextInitialState.amount) ? Math.abs(nextInitialState.amount) : nextInitialState.amount,
+    });
     setAmountText(
       Number.isFinite(nextInitialState.amount)
-        ? String(nextInitialState.amount)
+        ? String(Math.abs(nextInitialState.amount))
         : '',
     );
-    setAmountNumber(parseAmountToNullableNumber(nextInitialState.amount));
+    setAmountNumber(() => {
+      const parsed = parseAmountToNullableNumber(nextInitialState.amount);
+      return parsed !== null ? Math.abs(parsed) : null;
+    });
     setTitleManuallyEdited(false);
     setDescriptionManuallyEdited(false);
     setFormErrors({});
@@ -593,7 +600,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         field === 'amount'
           ? parseAmountToNullableNumber(String(value ?? ''))
           : parseAmountToNullableNumber(updated.amount);
-      const amountError = getAmountValidationError(nextAmountValue);
+      const amountError = getAmountValidationError(nextAmountValue !== null ? Math.abs(nextAmountValue) : null);
       if (amountError) {
         validationErrors.amount = amountError;
       }
