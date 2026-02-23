@@ -108,7 +108,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
         name="vendor"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Vendor</FormLabel>
+            <FormLabel>Payee</FormLabel>
             <div className="flex items-center gap-1">
               <FormControl>
                 <Input list="vendors-list" placeholder="e.g., Netflix" {...field} />
@@ -130,12 +130,12 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Vendor</DialogTitle>
+            <DialogTitle>Add Payee</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="vendor-selector-name">
-                Vendor Name*
+                Payee Name*
               </label>
               <Input
                 id="vendor-selector-name"

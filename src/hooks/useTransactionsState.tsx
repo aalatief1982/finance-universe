@@ -88,7 +88,6 @@ export function useTransactionsState() {
       fromAccount: formData.fromAccount || 'Cash', // Add default fromAccount
       toAccount: formData.toAccount,
       description: formData.description,
-      person: formData.person,
       currency: formData.currency || userCurrency
     }, formData._manualFxRate);
 
@@ -115,7 +114,6 @@ export function useTransactionsState() {
       fromAccount: formData.fromAccount || currentTransaction.fromAccount || 'Cash',
       toAccount: formData.toAccount,
       description: formData.description,
-      person: formData.person,
       currency: formData.currency
     }, formData._manualFxRate);
 

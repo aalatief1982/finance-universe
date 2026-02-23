@@ -35,7 +35,6 @@ import CategorySelector from './forms/CategorySelector';
 import SubcategorySelector from './forms/SubcategorySelector';
 import TransactionTypeSelector from './forms/TransactionTypeSelector';
 import AccountSelector from './forms/AccountSelector';
-import PersonSelector from './forms/PersonSelector';
 import CurrencySelector from './forms/CurrencySelector';
 import TitleField from './forms/TitleField';
 import AmountField from './forms/AmountField';
@@ -217,9 +216,6 @@ const ExpenseForm = ({
 
               {/* Title */}
               <TitleField form={form} />
-
-              {/* Person */}
-              <PersonSelector form={form} />
 
               {/* Description */}
               <DescriptionField form={form} />

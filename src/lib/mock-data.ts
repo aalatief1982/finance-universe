@@ -14,7 +14,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'income',
     fromAccount: 'Employer',
     toAccount: 'Bank Account',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   },
@@ -28,7 +27,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'expense',
     fromAccount: 'Bank Account',
     toAccount: 'Landlord',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   },
@@ -41,7 +39,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: '2023-04-05',
     type: 'expense',
     fromAccount: 'Bank Account',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   },
@@ -54,7 +51,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: '2023-04-07',
     type: 'expense',
     fromAccount: 'Credit Card',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   },
@@ -67,7 +63,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: '2023-04-10',
     type: 'expense',
     fromAccount: 'Credit Card',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   },
@@ -80,7 +75,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: '2023-04-15',
     type: 'expense',
     fromAccount: 'Cash',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   },
@@ -94,7 +88,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'income',
     fromAccount: 'Client',
     toAccount: 'Bank Account',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   },
@@ -107,7 +100,6 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
     date: '2023-04-25',
     type: 'expense',
     fromAccount: 'Bank Account',
-    person: 'none',
     currency: 'USD',
     source: 'manual'
   }

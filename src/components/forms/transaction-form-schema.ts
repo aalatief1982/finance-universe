@@ -18,7 +18,6 @@
  */
 
 import { z } from 'zod';
-import { getPeopleNames } from '@/lib/people-utils';
 import { validateTransactionForm as validateTransactionValues } from '@/lib/transaction-validation';
 
 type TransactionValidationInput = {
@@ -63,7 +62,6 @@ export const transactionFormSchema = z.object({
   }),
   description: z.string().optional(),
   notes: z.string().optional(),
-  person: z.string().optional(),
   currency: z.string().min(1, {
     message: "Please select a currency.",
   }),
@@ -93,7 +91,6 @@ export const DEFAULT_FORM_VALUES: Partial<TransactionFormValues> = {
   toAccount: "",
   description: "",
   notes: "",
-  person: "none",
   currency: "SAR",
 };
 
@@ -108,5 +105,3 @@ export const CURRENCIES = [
   { code: "BHD", name: "Bahraini Dinar" },
   { code: "AED", name: "UAE Dirham" }
 ];
-
-export const PEOPLE = getPeopleNames();

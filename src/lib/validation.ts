@@ -14,7 +14,6 @@ export const transactionSchema = z.object({
   toAccount: z.string().optional().nullable(),
   notes: z.string().optional(),
   description: z.string().optional(),
-  person: z.enum(["none"]).optional().nullable(),
   source: z.enum(["manual", "sms"]).optional(),
   originalCurrency: z.string().optional(),
   currency: z.string().optional().default("SAR"),
@@ -204,7 +203,6 @@ export type ValidatedBudget = z.infer<typeof budgetSchema>;
 export type ValidatedDataImport = z.infer<typeof dataImportSchema>;
 export type ValidatedTransactionCategoryChange = z.infer<typeof transactionCategoryChangeSchema>;
 
-// Update the Person type in the TransactionContext to handle validation
 export function validateNewTransaction(transaction: Omit<ValidatedTransaction, 'id'>) {
   try {
     // We need to create a new schema without the id field
@@ -218,7 +216,6 @@ export function validateNewTransaction(transaction: Omit<ValidatedTransaction, '
       toAccount: z.string().optional().nullable(),
       notes: z.string().optional(),
       description: z.string().optional(),
-      person: z.enum([ "none"]).optional().nullable(),
       source: z.enum(["manual", "sms"]).optional(),
       originalCurrency: z.string().optional(),
       currency: z.string().optional().default("SAR"),

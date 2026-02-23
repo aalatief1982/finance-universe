@@ -23,7 +23,6 @@ export function useTransactionsCrud() {
       notes,
       fromAccount,
       toAccount,
-      person,
       currency
     } = formData;
     
@@ -38,7 +37,6 @@ export function useTransactionsCrud() {
       notes,
       fromAccount,
       toAccount,
-      person,
       currency,
       source: 'manual'
     };
@@ -59,7 +57,6 @@ export function useTransactionsCrud() {
       notes,
       fromAccount,
       toAccount,
-      person,
       currency
     } = formData;
     
@@ -75,7 +72,6 @@ export function useTransactionsCrud() {
       notes,
       fromAccount,
       toAccount,
-      person,
       currency
     };
     
