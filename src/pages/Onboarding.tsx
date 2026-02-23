@@ -30,12 +30,16 @@ const Onboarding = () => {
 
   // Cleanup timeout on unmount
   useEffect(() => {
-    console.log('Onboarding component mounted');
+    console.trace('[TRACE][Onboarding] component mounted', {
+      timestamp: new Date().toISOString(),
+    });
     const timeoutId = timeoutRef.current;
 
     return () => {
       if (timeoutId) {
-        console.log('Clearing timeout on unmount');
+        console.trace('[TRACE][Onboarding] clearing timeout on unmount', {
+          timestamp: new Date().toISOString(),
+        });
         clearTimeout(timeoutId);
       }
     };
