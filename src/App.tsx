@@ -80,6 +80,16 @@ const traceAppRoot = (message: string, ...args: unknown[]) => {
   console.log(`${TRACE_PREFIX}[${now}ms] ${message}`, ...args);
 };
 
+const traceState = (message: string, payload?: Record<string, unknown>) => {
+  const timestamp = new Date().toISOString();
+  if (payload) {
+    console.log(`[TRACE][STATE][${timestamp}] ${message}`, payload);
+    return;
+  }
+
+  console.log(`[TRACE][STATE][${timestamp}] ${message}`);
+};
+
 // Synchronous onboarding guard - use render-time redirect to avoid route flash.
 const OnboardingGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const done = safeStorage.getItem('xpensia_onb_done') === 'true';
@@ -96,14 +106,74 @@ function AppWrapper() {
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const hasScheduledSmsPrompt = React.useRef(false);
   const { theme, resolvedTheme } = useTheme();
+  const previousPathRef = React.useRef(location.pathname);
+  const startupSnapshotLoggedRef = React.useRef(false);
   const previousThemeRef = React.useRef<{ theme?: string; resolvedTheme?: string }>({
     theme,
     resolvedTheme,
   });
+  const previousThemeTraceRef = React.useRef<{ theme?: string; resolvedTheme?: string }>({
+    theme,
+    resolvedTheme,
+  });
+  const { user, auth } = useUser();
+
+  traceState('AppWrapper render state', {
+    pathname: location.pathname,
+    theme,
+    resolvedTheme,
+  });
+
   useEffect(() => {
     navigateRef.current = navigate;
   }, [navigate]);
-  const { user } = useUser();
+
+  useEffect(() => {
+    if (previousPathRef.current !== location.pathname) {
+      traceState('location.pathname transition detected', {
+        from: previousPathRef.current,
+        to: location.pathname,
+      });
+      previousPathRef.current = location.pathname;
+      return;
+    }
+
+    traceState('location.pathname stable on effect run', {
+      pathname: location.pathname,
+    });
+  }, [location.pathname]);
+
+  useEffect(() => {
+    traceState('theme state transition check', {
+      previousTheme: previousThemeTraceRef.current.theme,
+      previousResolvedTheme: previousThemeTraceRef.current.resolvedTheme,
+      theme,
+      resolvedTheme,
+    });
+
+    previousThemeTraceRef.current = {
+      theme,
+      resolvedTheme,
+    };
+  }, [resolvedTheme, theme]);
+
+  useEffect(() => {
+    if (!location.pathname.startsWith('/onboarding') || startupSnapshotLoggedRef.current) {
+      return;
+    }
+
+    startupSnapshotLoggedRef.current = true;
+    const timestamp = new Date().toISOString();
+    console.groupCollapsed(`[TRACE][STATE][${timestamp}] startup snapshot`);
+    console.log('pathname', location.pathname);
+    console.log('onboardingDone', safeStorage.getItem('xpensia_onb_done') === 'true');
+    console.log('theme', theme);
+    console.log('resolvedTheme', resolvedTheme);
+    console.log('auth.isLoading', auth.isLoading);
+    console.log('auth.isAuthenticated', auth.isAuthenticated);
+    console.log('user.id', user?.id ?? null);
+    console.groupEnd();
+  }, [auth.isAuthenticated, auth.isLoading, location.pathname, resolvedTheme, theme, user?.id]);
 
   const isDarkModeActive = React.useCallback(() => {
     if (typeof document !== 'undefined') {
@@ -563,8 +633,30 @@ function AppWrapper() {
 function AppRoutes() {
   const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
   const location = useLocation();
+  const previousOnboardingDoneRef = React.useRef(onboardingDone);
 
   traceAppRoot(`AppRoutes render pathname=${location.pathname} onboardingDone=${onboardingDone}`);
+  traceState('AppRoutes render flags', {
+    onboardingDone,
+    pathname: location.pathname,
+  });
+
+  React.useEffect(() => {
+    if (previousOnboardingDoneRef.current !== onboardingDone) {
+      traceState('onboardingDone transition detected', {
+        from: previousOnboardingDoneRef.current,
+        to: onboardingDone,
+        pathname: location.pathname,
+      });
+      previousOnboardingDoneRef.current = onboardingDone;
+      return;
+    }
+
+    traceState('onboardingDone stable on effect run', {
+      value: onboardingDone,
+      pathname: location.pathname,
+    });
+  }, [location.pathname, onboardingDone]);
 
   if (onboardingDone && location.pathname.startsWith('/onboarding')) {
     traceAppRoot('AppRoutes redirect branch selected: /onboarding* -> /home');

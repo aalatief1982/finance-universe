@@ -64,6 +64,16 @@ import {
   updateDataManagement as updateDataManagementUtil
 } from './preferences-utils';
 
+const traceState = (message: string, payload?: Record<string, unknown>) => {
+  const timestamp = new Date().toISOString();
+  if (payload) {
+    console.log(`[TRACE][STATE][${timestamp}] ${message}`, payload);
+    return;
+  }
+
+  console.log(`[TRACE][STATE][${timestamp}] ${message}`);
+};
+
 // ============================================================================
 // SECTION: Default Preferences
 // PURPOSE: Define default values for new users
@@ -143,7 +153,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     maxVerificationAttempts: getMaxVerificationAttempts(),
     isDemoMode: false
   });
-  
+  const startupTraceRef = React.useRef({ authInitStarted: false });
+  const traceSetUser = useCallback((value: React.SetStateAction<User | null>, reason: string) => {
+    setUser(prev => {
+      const next = typeof value === 'function' ? (value as (prevState: User | null) => User | null)(prev) : value;
+      traceState('setUser update', {
+        reason,
+        previousUserId: prev?.id ?? null,
+        nextUserId: next?.id ?? null,
+        previousPhoneVerified: prev?.phoneVerified ?? null,
+        nextPhoneVerified: next?.phoneVerified ?? null,
+      });
+      return next;
+    });
+  }, []);
+  const traceSetAuth = useCallback((value: React.SetStateAction<typeof auth>, reason: string) => {
+    setAuth(prev => {
+      const next = typeof value === 'function' ? (value as (prevState: typeof auth) => typeof auth)(prev) : value;
+      traceState('setAuth update', {
+        reason,
+        prevIsLoading: prev.isLoading,
+        nextIsLoading: next.isLoading,
+        prevIsAuthenticated: prev.isAuthenticated,
+        nextIsAuthenticated: next.isAuthenticated,
+        prevIsVerifying: prev.isVerifying,
+        nextIsVerifying: next.isVerifying,
+      });
+      return next;
+    });
+  }, []);
+
   // ============================================================================
   // SECTION: Theme Management
   // PURPOSE: Handle theme preference and system theme detection
@@ -194,30 +233,47 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ============================================================================
   
   useEffect(() => {
+    traceState('auth initialization start', {
+      supabaseAuthEnabled: ENABLE_SUPABASE_AUTH,
+      supabaseConfigured: isSupabaseConfigured(),
+    });
+    startupTraceRef.current.authInitStarted = true;
+
     // First check localStorage for quicker initial render
     const localUser = getUserFromLocalStorage();
+    traceState('user hydration from local storage', {
+      found: Boolean(localUser),
+      userId: localUser?.id ?? null,
+      phoneVerified: localUser?.phoneVerified ?? null,
+    });
+
     if (localUser) {
-      setUser(localUser);
-      setAuth(prev => ({
+      traceSetUser(localUser, 'auth-init:hydrated-local-user');
+      traceSetAuth(prev => ({
         ...prev,
         isAuthenticated: localUser.phoneVerified || false,
         isLoading: ENABLE_SUPABASE_AUTH && isSupabaseConfigured() // Keep loading if we need to verify with Supabase
-      }));
+      }), 'auth-init:apply-local-auth-state');
     }
     
     // Then verify with Supabase if needed
-    checkSupabaseAuth(setUser, setAuth);
-  }, []);
+    void checkSupabaseAuth(
+      (value) => traceSetUser(value, 'auth-init:supabase-sync'),
+      (value) => traceSetAuth(value, 'auth-init:supabase-sync')
+    ).finally(() => {
+      traceState('auth initialization end');
+    });
+  }, [traceSetAuth, traceSetUser]);
   
   // Update authentication state with demo mode and attempts remaining
   const updateAuthState = useCallback(() => {
-    setAuth(prev => ({
+    traceSetAuth(prev => ({
       ...prev,
       verificationAttemptsRemaining: getVerificationAttemptsRemaining(),
       maxVerificationAttempts: getMaxVerificationAttempts(),
       isDemoMode: false
-    }));
-  }, []);
+    }), 'update-auth-state:refresh-attempts');
+  }, [traceSetAuth]);
   
   // ============================================================================
   // SECTION: User Persistence
@@ -260,7 +316,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // ============================================================================
   
   const updateUser = useCallback((userData: Partial<User>) => {
-    setUser(prevUser => {
+    traceSetUser(prevUser => {
       if (!prevUser) {
         const newUser: User = {
           id: userData.id || `user_${Date.now()}`,
@@ -310,8 +366,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       return updatedUser;
-    });
-  }, []);
+    }, 'update-user:merge-user-data');
+  }, [traceSetUser]);
   
   // ============================================================================
   // SECTION: Auth Functions
@@ -442,15 +498,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     
     // Update auth state to mark as authenticated
-    setAuth(prev => ({ 
+    traceSetAuth(prev => ({ 
       ...prev, 
       isAuthenticated: true,
       isVerifying: false
-    }));
+    }), 'complete-onboarding:set-authenticated');
     
     // Log in to ensure proper session state
     logIn();
-  }, [updateUser, logIn]);
+  }, [logIn, traceSetAuth, updateUser]);
   
   const isProfileComplete = useCallback((): boolean => {
     return isProfileCompleteUtil(user);
@@ -464,6 +520,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const setDemoModeEnabled = useCallback((_enabled: boolean) => {}, []);
   
+  useEffect(() => {
+    if (!startupTraceRef.current.authInitStarted) {
+      return;
+    }
+
+    traceState('auth.isLoading transition observed', {
+      authIsLoading: auth.isLoading,
+      authIsAuthenticated: auth.isAuthenticated,
+      authIsVerifying: auth.isVerifying,
+    });
+  }, [auth.isAuthenticated, auth.isLoading, auth.isVerifying]);
+
   // ============================================================================
   // SECTION: Provider Render
   // ============================================================================
