@@ -18,6 +18,7 @@
  */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTransactions } from '@/context/TransactionContext';
 import { BudgetLayout } from '@/components/budget/BudgetLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ interface Insight {
 
 const BudgetInsightsPage = () => {
   const navigate = useNavigate();
+  const { transactions } = useTransactions();
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
@@ -177,7 +179,7 @@ const BudgetInsightsPage = () => {
     result.sort((a, b) => order[a.type] - order[b.type]);
 
     return result;
-  }, [budgets, getBudgetDisplayName]);
+  }, [budgets, getBudgetDisplayName, transactions]);
 
   const getIcon = (type: Insight['type']) => {
     switch (type) {
@@ -215,7 +217,7 @@ const BudgetInsightsPage = () => {
     const atRisk = allProgress.filter(p => !p.isOverBudget && p.percentUsed > 80).length;
     
     return { overBudget, onTrack, atRisk, total: budgets.length };
-  }, [budgets]);
+  }, [budgets, transactions]);
 
   return (
     <BudgetLayout 

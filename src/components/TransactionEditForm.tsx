@@ -118,6 +118,15 @@ const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
   'title',
 ];
 
+const TITLE_DRIVING_FIELDS: (keyof Transaction)[] = [
+  'category',
+  'subcategory',
+  'vendor',
+  'amount',
+  'date',
+  'type',
+];
+
 const dedupeVendorsCaseInsensitive = (vendorList: string[]) => {
   const seen = new Set<string>();
   const deduped: string[] = [];
@@ -299,6 +308,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [initialTitle, setInitialTitle] = useState('');
   const [lastAutoTitle, setLastAutoTitle] = useState('');
   const [suggestedTitle, setSuggestedTitle] = useState('');
+  const [dismissedSuggestionSignature, setDismissedSuggestionSignature] =
+    useState('');
   const [descriptionManuallyEdited, setDescriptionManuallyEdited] =
     useState(false);
   const [drivenFields, setDrivenFields] = useState<
@@ -472,6 +483,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setInitialTitle(normalizedInitialTitle);
     setLastAutoTitle(normalizedInitialTitle);
     setSuggestedTitle('');
+    setDismissedSuggestionSignature('');
     setTitleManuallyEdited(Boolean(transaction && normalizedInitialTitle));
     setDescriptionManuallyEdited(false);
     setFormErrors({});
@@ -623,14 +635,43 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         updated.amount = parsedAmount ?? Number.NaN;
       }
 
-      if (field !== 'title' && !titleManuallyEdited) {
+      const nextSuggestionSignature = JSON.stringify({
+        type: updated.type || '',
+        category: updated.category || '',
+        subcategory: updated.subcategory || '',
+        vendor: updated.vendor || '',
+        amount:
+          field === 'amount'
+            ? parseAmountToNullableNumber(String(value ?? ''))
+            : parseAmountToNullableNumber(updated.amount),
+        date: updated.date || '',
+      });
+
+      if (field !== 'title') {
         const autoTitle = generateDefaultTitle(updated);
-        if (shouldAutoUpdateTitle(prev.title || '')) {
+        const canAutoApply =
+          !titleManuallyEdited && shouldAutoUpdateTitle(prev.title || '');
+
+        if (canAutoApply) {
           updated.title = autoTitle;
           setLastAutoTitle(autoTitle);
           setSuggestedTitle('');
-        } else {
+          setDismissedSuggestionSignature('');
+        } else if (
+          TITLE_DRIVING_FIELDS.includes(field) &&
+          autoTitle &&
+          autoTitle !== (updated.title || '') &&
+          dismissedSuggestionSignature !== nextSuggestionSignature
+        ) {
           setSuggestedTitle(autoTitle);
+        }
+
+        if (
+          TITLE_DRIVING_FIELDS.includes(field) &&
+          dismissedSuggestionSignature &&
+          dismissedSuggestionSignature !== nextSuggestionSignature
+        ) {
+          setDismissedSuggestionSignature('');
         }
       }
 
@@ -901,6 +942,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       ? parseFloat(manualExchangeRate)
       : undefined;
     const shouldRecalculateFx =
+      canonicalAmount !== Math.abs(initialTransactionState.amount || 0) ||
+      finalTransaction.currency !== initialTransactionState.currency ||
+      finalTransaction.date !== toISOFormat(initialTransactionState.date || '') ||
       rateValue !== undefined ||
       finalTransaction.amountInBase === null ||
       finalTransaction.amountInBase === undefined ||
@@ -1989,19 +2033,38 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       {!hasError('title') &&
         suggestedTitle &&
         suggestedTitle !== (editedTransaction.title || '') && (
-          <div className="ml-[calc(6rem)] text-xs text-muted-foreground flex items-center gap-2">
+          <div className="ml-[calc(6rem)] text-xs text-green-600 flex items-center gap-2">
             <span>Suggested: {suggestedTitle}</span>
             <button
               type="button"
               className="underline"
               onClick={() => {
-                setTitleManuallyEdited(false);
+                setTitleManuallyEdited(true);
                 setLastAutoTitle(suggestedTitle);
                 handleChange('title', suggestedTitle);
                 setSuggestedTitle('');
               }}
             >
               Apply
+            </button>
+            <button
+              type="button"
+              className="underline"
+              onClick={() => {
+                setDismissedSuggestionSignature(
+                  JSON.stringify({
+                    type: editedTransaction.type || '',
+                    category: editedTransaction.category || '',
+                    subcategory: editedTransaction.subcategory || '',
+                    vendor: editedTransaction.vendor || '',
+                    amount: amountNumber,
+                    date: editedTransaction.date || '',
+                  }),
+                );
+                setSuggestedTitle('');
+              }}
+            >
+              Dismiss
             </button>
           </div>
         )}
