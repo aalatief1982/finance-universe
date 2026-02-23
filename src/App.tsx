@@ -74,6 +74,12 @@ import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 import { useTheme } from 'next-themes';
 import { trackNavigationPath } from '@/utils/navigation';
 
+const TRACE_PREFIX = '[TRACE][APP_ROOT]';
+const traceAppRoot = (message: string, ...args: unknown[]) => {
+  const now = performance.now().toFixed(2);
+  console.log(`${TRACE_PREFIX}[${now}ms] ${message}`, ...args);
+};
+
 // Synchronous onboarding guard - use render-time redirect to avoid route flash.
 const OnboardingGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const done = safeStorage.getItem('xpensia_onb_done') === 'true';
@@ -558,7 +564,10 @@ function AppRoutes() {
   const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
   const location = useLocation();
 
+  traceAppRoot(`AppRoutes render pathname=${location.pathname} onboardingDone=${onboardingDone}`);
+
   if (onboardingDone && location.pathname.startsWith('/onboarding')) {
+    traceAppRoot('AppRoutes redirect branch selected: /onboarding* -> /home');
     return (
       <>
         <AppWrapper />
@@ -573,7 +582,10 @@ function AppRoutes() {
       <Routes>
         <Route
           path="/"
-          element={<Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />}
+          element={(
+            traceAppRoot(`AppRoutes redirect route "/" -> ${onboardingDone ? '/home' : '/onboarding'}`),
+            <Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />
+          )}
         />
         <Route
           path="/home"
@@ -613,13 +625,18 @@ function AppRoutes() {
           path="/onboarding"
           element={
             <ErrorBoundary name="Onboarding Page">
-              {onboardingDone ? <Navigate to="/home" replace /> : <Onboarding />}
+              {onboardingDone
+                ? (traceAppRoot('AppRoutes redirect route "/onboarding" -> /home'), <Navigate to="/home" replace />)
+                : <Onboarding />}
             </ErrorBoundary>
           }
         />
         <Route
           path="/onboarding/*"
-          element={<Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />}
+          element={(
+            traceAppRoot(`AppRoutes redirect route "/onboarding/*" -> ${onboardingDone ? '/home' : '/onboarding'}`),
+            <Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />
+          )}
         />
         <Route
           path="/import-transactions"
@@ -706,6 +723,14 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    traceAppRoot('App mounted');
+
+    return () => {
+      traceAppRoot('App unmounted');
+    };
+  }, []);
+
   const { updateStatus, showDialog, setShowDialog } = useAppUpdate({ 
     checkOnMount: true,
     checkInterval: 1000 * 60 * 60 // Check hourly
