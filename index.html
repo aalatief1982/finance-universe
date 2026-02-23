@@ -81,15 +81,31 @@
       // Idempotent and safe if called multiple times.
       window.__xpensiaHideInitialLoading = (() => {
         let hidden = false;
+        let traceCounter = 0;
+
+        const traceInitialLoading = (message, ...args) => {
+          traceCounter += 1;
+          const now = performance.now().toFixed(2);
+          console.log(`[TRACE][INITIAL_LOADING][${traceCounter}][${now}ms] ${message}`, ...args);
+        };
 
         return () => {
-          if (hidden) return;
+          if (hidden) {
+            traceInitialLoading('initial loading already hidden; skipping query/removal');
+            return;
+          }
+
+          traceInitialLoading('before querying #initial-loading for removal');
           hidden = true;
 
           const initialLoading = document.getElementById('initial-loading');
           if (initialLoading && initialLoading.parentNode) {
             initialLoading.parentNode.removeChild(initialLoading);
+            traceInitialLoading('after removal of #initial-loading');
+            return;
           }
+
+          traceInitialLoading('after removal attempt: #initial-loading was already absent');
         };
       })();
     </script>

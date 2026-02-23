@@ -20,9 +20,11 @@ import { Device } from '@capacitor/device'
 import React, { useState, useEffect } from 'react'
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]'
+let traceCounter = 0
 const traceAppRoot = (message: string, ...args: unknown[]) => {
+  traceCounter += 1
   const now = performance.now().toFixed(2)
-  console.log(`${TRACE_PREFIX}[${now}ms] ${message}`, ...args)
+  console.log(`${TRACE_PREFIX}[${traceCounter}][${now}ms] ${message}`, ...args)
 }
 
 type XpensiaWindow = Window & {
@@ -162,7 +164,9 @@ function setupGlobalErrorHandlers() {
 
   const hideInitialLoading = () => {
     traceAppRoot('hideInitialLoading start')
+    traceAppRoot('before __xpensiaHideInitialLoading?.() call')
     (window as XpensiaWindow).__xpensiaHideInitialLoading?.()
+    traceAppRoot('after __xpensiaHideInitialLoading?.() call')
     traceAppRoot('hideInitialLoading end')
   }
 
