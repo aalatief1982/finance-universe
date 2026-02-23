@@ -37,7 +37,6 @@ import {
   getCategoriesForType,
   getSubcategoriesForCategory,
   getCategoryHierarchy,
-  PEOPLE,
 } from '@/lib/categories-data';
 import {
   Plus,
@@ -48,7 +47,6 @@ import {
   ChevronUp,
   Pencil,
 } from 'lucide-react';
-import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import {
   Dialog,
   DialogContent,
@@ -182,8 +180,10 @@ const createInitialTransactionState = (
         ? (transaction as { rawMessage?: string }).rawMessage
         : transaction.details?.rawMessage || '';
 
+    const { person: _legacyPerson, ...transactionWithoutPerson } = transaction;
+
     return {
-      ...transaction,
+      ...transactionWithoutPerson,
       vendor: mappedVendor,
       fromAccount: mappedFromAccount,
       title: transaction.title?.trim() || generateDefaultTitle(transaction),
@@ -223,7 +223,6 @@ const serializeTransactionForDirtyCheck = (tx: Transaction) =>
     currency: tx.currency || 'SAR',
     description: tx.description || '',
     notes: tx.notes || '',
-    person: tx.person || '',
     vendor: tx.vendor || '',
   });
 
@@ -347,12 +346,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     subcategory: string;
   }>({ type: 'expense', category: '', subcategory: '' });
 
-  const [people, setPeople] = useState<string[]>(() => getPeopleNames());
-  const [addPersonOpen, setAddPersonOpen] = useState(false);
-  const [newPerson, setNewPerson] = useState<{
-    name: string;
-    relation: string;
-  }>({ name: '', relation: '' });
 
   const [vendors, setVendors] = useState<string[]>(() => {
     const syncedVendors = getVendorData();
@@ -770,17 +763,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setAddCategoryOpen(false);
   };
 
-  const handleSavePerson = () => {
-    if (!newPerson.name.trim()) return;
-    addUserPerson({
-      name: newPerson.name.trim(),
-      relation: newPerson.relation.trim() || undefined,
-    });
-    setPeople(getPeopleNames());
-    handleChange('person', newPerson.name.trim());
-    setNewPerson({ name: '', relation: '' });
-    setAddPersonOpen(false);
-  };
 
   const handleSaveVendor = () => {
     if (!newVendor.name.trim()) return;
@@ -890,6 +872,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalTransaction = { ...editedTransaction };
+    delete finalTransaction.person;
 
     if (!finalTransaction.title?.trim()) {
       finalTransaction.title = generateDefaultTitle(finalTransaction);
@@ -1317,67 +1300,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={addPersonOpen} onOpenChange={setAddPersonOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add Person</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-2">
-            <div>
-              <label
-                className="mb-1 block text-sm font-medium dark:text-white"
-                htmlFor="new-person-name"
-              >
-                Name*
-              </label>
-              <Input
-                id="new-person-name"
-                value={newPerson.name}
-                onChange={(e) =>
-                  setNewPerson((prev) => ({ ...prev, name: e.target.value }))
-                }
-                className={darkFieldClass}
-              />
-            </div>
-            <div>
-              <label
-                className="mb-1 block text-sm font-medium dark:text-white"
-                htmlFor="new-person-relation"
-              >
-                Relation
-              </label>
-              <Input
-                id="new-person-relation"
-                value={newPerson.relation}
-                onChange={(e) =>
-                  setNewPerson((prev) => ({
-                    ...prev,
-                    relation: e.target.value,
-                  }))
-                }
-                className={darkFieldClass}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setAddPersonOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleSavePerson}>
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={addVendorOpen} onOpenChange={setAddVendorOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Vendor</DialogTitle>
+            <DialogTitle>Add Payee</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
@@ -1385,7 +1311,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 className="mb-1 block text-sm font-medium dark:text-white"
                 htmlFor="new-vendor-name"
               >
-                Vendor Name*
+                Payee Name*
               </label>
               <Input
                 id="new-vendor-name"
@@ -1886,53 +1812,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           {formErrors.subcategory}
         </p>
       )}
-
-      <div className={rowClass}>
-        <label className={labelClass} htmlFor="transaction-person">
-          Person (Optional)
-        </label>
-
-        <div className="flex w-full items-center gap-1">
-          <Select
-            value={editedTransaction.person || 'none'}
-            onValueChange={(value) => handleChange('person', value)}
-          >
-            <SelectTrigger
-              id="transaction-person"
-              className={cn(
-                'w-full text-sm',
-                inputPadding,
-                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                darkFieldClass,
-              )}
-              isAutoFilled={isDriven('person', drivenFields)}
-            >
-              <SelectValue placeholder="Select person" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {people.map((person) => (
-                <SelectItem key={person} value={person}>
-                  {person}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setAddPersonOpen(true)}
-          >
-            <Plus className="size-4" />
-          </Button>
-          {renderFeedbackIcons('person')}
-        </div>
-      </div>
-
       <div className={rowClass}>
         <label className={labelClass} htmlFor="transaction-vendor">
-          Vendor
+          Payee
         </label>
 
         <div className="flex w-full items-center gap-1">

@@ -144,8 +144,7 @@ export const useSmartPaste = (
           date: new Date().toISOString(),
           description: vendorName,
           notes: 'Extracted from template',
-          source: 'smart-paste',
-          person: confirmedFields.person
+          source: 'smart-paste'
         };
 
         if (import.meta.env.MODE === 'development') {

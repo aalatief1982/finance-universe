@@ -60,7 +60,6 @@ export const validateTransactionForStorage = (transaction: unknown): Transaction
   if (getString(record.subcategory)) validatedTransaction.subcategory = getString(record.subcategory);
   if (getString(record.notes)) validatedTransaction.notes = getString(record.notes);
   if (getString(record.currency)) validatedTransaction.currency = getString(record.currency);
-  if (getString(record.person)) validatedTransaction.person = getString(record.person);
   if (getString(record.toAccount)) validatedTransaction.toAccount = getString(record.toAccount);
   if (getString(record.country)) validatedTransaction.country = getString(record.country);
   if (getString(record.description)) validatedTransaction.description = getString(record.description);

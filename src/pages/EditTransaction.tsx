@@ -274,11 +274,8 @@ const EditTransaction = () => {
                   <li>Amount: {matchDetails.entry.confirmedFields.amount} {matchDetails.entry.confirmedFields.currency}</li>
                   <li>Category: {matchDetails.entry.confirmedFields.category}</li>
                   <li>Account: {matchDetails.entry.confirmedFields.account}</li>
-                  {matchDetails.entry.confirmedFields.person && (
-                    <li>Person: {matchDetails.entry.confirmedFields.person}</li>
-                  )}
                   {matchDetails.entry.confirmedFields.vendor && (
-                    <li>Vendor: {matchDetails.entry.confirmedFields.vendor}</li>
+                    <li>Payee: {matchDetails.entry.confirmedFields.vendor}</li>
                   )}
                 </ul>
               </div>

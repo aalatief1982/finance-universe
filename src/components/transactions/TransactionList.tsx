@@ -441,12 +441,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
                                 <p className="text-sm text-muted-foreground">{transaction.fromAccount}</p>
                               </div>
                             )}
-                            {transaction.person && transaction.person !== 'none' && (
-                              <div>
-                                <h4 className="text-sm font-medium mb-1">Person</h4>
-                                <p className="text-sm text-muted-foreground">{transaction.person}</p>
-                              </div>
-                            )}
                             {transaction.subcategory && (
                               <div>
                                 <h4 className="text-sm font-medium mb-1">Subcategory</h4>

@@ -34,7 +34,6 @@ describe('TransactionForm + Service Integration', () => {
         date: '2024-01-15',
         description: 'Weekly groceries',
         notes: '',
-        person: '',
         currency: 'USD',
       };
 
@@ -54,7 +53,6 @@ describe('TransactionForm + Service Integration', () => {
         date: '2024-01-15',
         description: 'Monthly salary',
         notes: '',
-        person: '',
         currency: 'USD',
       };
 
@@ -74,7 +72,6 @@ describe('TransactionForm + Service Integration', () => {
         date: '2024-01-15',
         description: '',
         notes: '',
-        person: '',
         currency: 'USD',
       };
 
@@ -94,7 +91,6 @@ describe('TransactionForm + Service Integration', () => {
         date: '2024-01-15',
         description: '',
         notes: '',
-        person: '',
         currency: 'USD',
       };
 
@@ -114,7 +110,6 @@ describe('TransactionForm + Service Integration', () => {
         date: '2024-01-15',
         description: '',
         notes: '',
-        person: '',
         currency: 'USD',
       };
 

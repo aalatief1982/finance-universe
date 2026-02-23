@@ -85,6 +85,28 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
     }
   }, [userHasInteracted]);
 
+  const ensureInputVisible = () => {
+    inputRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest',
+    });
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    ensureInputVisible();
+
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const handleViewportResize = () => ensureInputVisible();
+    viewport.addEventListener('resize', handleViewportResize);
+
+    return () => viewport.removeEventListener('resize', handleViewportResize);
+  }, [isOpen]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -125,6 +147,7 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => {
+              ensureInputVisible();
               if (userHasInteracted) {
                 setIsOpen(true);
               }
@@ -139,8 +162,11 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
           <button
             type="button"
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-muted"
-            onClick={() => setIsOpen(prev => !prev)}
-            aria-label="Toggle vendor picklist"
+            onClick={() => {
+              ensureInputVisible();
+              setIsOpen(prev => !prev);
+            }}
+            aria-label="Toggle payee picklist"
           >
             <ChevronDown 
               className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-180')}

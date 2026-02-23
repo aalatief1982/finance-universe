@@ -28,7 +28,6 @@ function renderWithForm() {
         toAccount: '',
         description: '',
         notes: '',
-        person: 'none',
         currency: 'USD',
       },
     });
