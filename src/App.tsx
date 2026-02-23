@@ -556,6 +556,16 @@ function AppWrapper() {
 
 function AppRoutes() {
   const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
+  const location = useLocation();
+
+  if (onboardingDone && location.pathname.startsWith('/onboarding')) {
+    return (
+      <>
+        <AppWrapper />
+        <Navigate to="/home" replace />
+      </>
+    );
+  }
 
   return (
     <>
@@ -606,6 +616,10 @@ function AppRoutes() {
               {onboardingDone ? <Navigate to="/home" replace /> : <Onboarding />}
             </ErrorBoundary>
           }
+        />
+        <Route
+          path="/onboarding/*"
+          element={<Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />}
         />
         <Route
           path="/import-transactions"
