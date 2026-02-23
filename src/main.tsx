@@ -19,35 +19,62 @@ import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 import React, { useState, useEffect } from 'react'
 
+const TRACE_PREFIX = '[TRACE][APP_ROOT]'
+const traceAppRoot = (message: string, ...args: unknown[]) => {
+  const now = performance.now().toFixed(2)
+  console.log(`${TRACE_PREFIX}[${now}ms] ${message}`, ...args)
+}
+
 type XpensiaWindow = Window & {
   __xpensiaHideInitialLoading?: () => void
 }
 
 // AppWithLoader component definition
 const AppWithLoader: React.FC = () => {
-  const [initializing, setInitializing] = useState(true);
+  const [initializing, setInitializing] = useState(true)
+
+  useEffect(() => {
+    traceAppRoot('AppWithLoader mounted')
+
+    return () => {
+      traceAppRoot('AppWithLoader unmounted')
+    }
+  }, [])
+
+  useEffect(() => {
+    traceAppRoot(`AppWithLoader initializing state changed: ${initializing}`)
+  }, [initializing])
   
   useEffect(() => {
     const initialize = async () => {
+      traceAppRoot('AppWithLoader initialize start')
       try {
         await initializeXpensiaStorageDefaults()
+        traceAppRoot('initializeXpensiaStorageDefaults completed')
         
         // Run data migrations before app initialization completes
         runMigrations()
+        traceAppRoot('runMigrations completed')
         
         setupGlobalErrorHandlers()
+        traceAppRoot('setupGlobalErrorHandlers completed')
         
         // Start background vendor sync
         backgroundVendorSyncService.initialize()
+        traceAppRoot('backgroundVendorSyncService.initialize completed')
         
       } catch (err) {
+        traceAppRoot('AppWithLoader initialize error', err)
         if (import.meta.env.MODE === 'development') {
           console.error('[Init] Initialization error:', err)
         }
         // Fallback initialization
         setupGlobalErrorHandlers()
+        traceAppRoot('setupGlobalErrorHandlers completed (fallback)')
         backgroundVendorSyncService.initialize()
+        traceAppRoot('backgroundVendorSyncService.initialize completed (fallback)')
       } finally {
+        traceAppRoot('AppWithLoader initialize end')
         setInitializing(false)
       }
     }
@@ -129,10 +156,14 @@ function setupGlobalErrorHandlers() {
   }
 
   const root = createRoot(document.getElementById("root")!)
+  traceAppRoot('before root.render(<AppWithLoader />)')
   root.render(<AppWithLoader />)
+  traceAppRoot('after root.render(<AppWithLoader />)')
 
   const hideInitialLoading = () => {
+    traceAppRoot('hideInitialLoading start')
     (window as XpensiaWindow).__xpensiaHideInitialLoading?.()
+    traceAppRoot('hideInitialLoading end')
   }
 
   if (typeof window.requestAnimationFrame === 'function') {

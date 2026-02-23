@@ -19,6 +19,12 @@
 import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
 
+const TRACE_PREFIX = '[TRACE][APP_ROOT]';
+const traceAppRoot = (message: string, ...args: unknown[]) => {
+  const now = performance.now().toFixed(2);
+  console.log(`${TRACE_PREFIX}[${now}ms] ${message}`, ...args);
+};
+
 interface AppLoaderProps {
   children: React.ReactNode;
   isInitializing: boolean;
@@ -28,8 +34,25 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
+    traceAppRoot('AppLoader mounted');
+
+    return () => {
+      traceAppRoot('AppLoader unmounted');
+    };
+  }, []);
+
+  useEffect(() => {
+    traceAppRoot(`AppLoader isInitializing changed: ${isInitializing}`);
+  }, [isInitializing]);
+
+  useEffect(() => {
+    traceAppRoot(`AppLoader showSplash changed: ${showSplash}`);
+  }, [showSplash]);
+
+  useEffect(() => {
     if (!isInitializing) {
       // Show splash for minimum 1 second for better UX
+      traceAppRoot('AppLoader splash hide timer started (1000ms)');
       const timer = setTimeout(() => {
         setShowSplash(false);
       }, 1000);
