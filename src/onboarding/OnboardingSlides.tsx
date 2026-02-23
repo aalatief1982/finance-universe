@@ -57,17 +57,42 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
     console.trace('[TRACE][OnboardingSlides] component mounted', {
       timestamp: new Date().toISOString(),
     });
+
+    const logViewportMetrics = (phase: 'mount' | 'after-first-paint') => {
+      console.log(`[TRACE][OnboardingSlides] viewport metrics (${phase})`, {
+        innerHeight: window.innerHeight,
+        bodyScrollHeight: document.body.scrollHeight,
+        documentClientHeight: document.documentElement.clientHeight,
+      });
+    };
+
+    logViewportMetrics('mount');
+    const rafId = window.requestAnimationFrame(() => {
+      logViewportMetrics('after-first-paint');
+    });
+
     setIsVisible(true);
     // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)
     const setVh = () => {
-      document.documentElement.style.setProperty('--vh-onb', `${window.innerHeight * 0.01}px`);
+      const previousValue = document.documentElement.style.getPropertyValue('--vh-onb');
+      const nextValue = `${window.innerHeight * 0.01}px`;
+
+      console.log('[TRACE][OnboardingSlides] writing --vh-onb', {
+        previousValue,
+        nextValue,
+        innerHeight: window.innerHeight,
+      });
+
+      document.documentElement.style.setProperty('--vh-onb', nextValue);
     };
+
     setVh();
     window.addEventListener('resize', setVh);
     return () => {
       console.trace('[TRACE][OnboardingSlides] component unmounted', {
         timestamp: new Date().toISOString(),
       });
+      window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', setVh);
     };
   }, []);

@@ -731,6 +731,55 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const logClassDiagnostics = (source: string) => {
+      const rootElement = document.getElementById('root');
+      console.log('[TRACE][APP_ROOT] class/style mutation detected', {
+        source,
+        documentElementClassName: document.documentElement.className,
+        bodyClassName: document.body.className,
+        rootClassName: rootElement?.className ?? null,
+      });
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type !== 'attributes') {
+          return;
+        }
+
+        const target = mutation.target as Element;
+        const targetLabel =
+          target === document.documentElement
+            ? 'document.documentElement'
+            : target === document.body
+              ? 'document.body'
+              : target.id === 'root'
+                ? '#root'
+                : target.tagName.toLowerCase();
+
+        logClassDiagnostics(`${targetLabel}.${mutation.attributeName}`);
+      });
+    });
+
+    const targets: Element[] = [document.documentElement, document.body];
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      targets.push(rootElement);
+    }
+
+    targets.forEach((target) => {
+      observer.observe(target, {
+        attributes: true,
+        attributeFilter: ['class', 'style'],
+      });
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const { updateStatus, showDialog, setShowDialog } = useAppUpdate({ 
     checkOnMount: true,
     checkInterval: 1000 * 60 * 60 // Check hourly
