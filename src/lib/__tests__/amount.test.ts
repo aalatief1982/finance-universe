@@ -31,4 +31,45 @@ describe('transaction amount validation', () => {
 
     expect(errors.amount).toBeUndefined();
   });
+
+  it('accepts signed expense amounts used by persisted transactions', () => {
+    const errors = validateTransactionForm({
+      title: 'Groceries',
+      amount: -800,
+      type: 'expense',
+      fromAccount: 'Cash',
+      category: 'Food',
+      subcategory: 'Restaurant',
+      date: '2026-01-01',
+      currency: 'SAR',
+    });
+
+    expect(errors.amount).toBeUndefined();
+  });
+
+  it('still rejects empty/zero amounts', () => {
+    const emptyErrors = validateTransactionForm({
+      title: 'Groceries',
+      amount: '',
+      type: 'expense',
+      fromAccount: 'Cash',
+      category: 'Food',
+      subcategory: 'Restaurant',
+      date: '2026-01-01',
+      currency: 'SAR',
+    });
+    const zeroErrors = validateTransactionForm({
+      title: 'Groceries',
+      amount: 0,
+      type: 'expense',
+      fromAccount: 'Cash',
+      category: 'Food',
+      subcategory: 'Restaurant',
+      date: '2026-01-01',
+      currency: 'SAR',
+    });
+
+    expect(emptyErrors.amount).toBe('Amount is required');
+    expect(zeroErrors.amount).toBe('Amount must be greater than 0');
+  });
 });

@@ -53,9 +53,13 @@ export const validateTransactionForm = (
   if (isMissingSelection(tx.currency)) errors.currency = 'Currency is required';
 
   const numericAmount = parseAmount(tx.amount ?? '');
-  if (!Number.isFinite(numericAmount)) {
+  const normalizedAmount = Number.isFinite(numericAmount)
+    ? Math.abs(numericAmount)
+    : numericAmount;
+
+  if (!Number.isFinite(normalizedAmount)) {
     errors.amount = 'Amount is required';
-  } else if (numericAmount <= 0) {
+  } else if (normalizedAmount <= 0) {
     errors.amount = 'Amount must be greater than 0';
   }
 
