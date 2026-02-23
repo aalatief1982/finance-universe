@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectFade } from 'swiper/modules';
@@ -50,9 +50,13 @@ interface Props {
 const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const hasLoggedFirstSlideRender = useRef(false);
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   useEffect(() => {
+    console.trace('[TRACE][OnboardingSlides] component mounted', {
+      timestamp: new Date().toISOString(),
+    });
     setIsVisible(true);
     // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)
     const setVh = () => {
@@ -61,9 +65,29 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
     setVh();
     window.addEventListener('resize', setVh);
     return () => {
+      console.trace('[TRACE][OnboardingSlides] component unmounted', {
+        timestamp: new Date().toISOString(),
+      });
       window.removeEventListener('resize', setVh);
     };
   }, []);
+
+  useEffect(() => {
+    console.trace('[TRACE][OnboardingSlides] slide index changed', {
+      index,
+      timestamp: new Date().toISOString(),
+    });
+  }, [index]);
+
+  useEffect(() => {
+    if (!hasLoggedFirstSlideRender.current && index === 0) {
+      console.trace('[TRACE][OnboardingSlides] first slide rendered', {
+        index,
+        timestamp: new Date().toISOString(),
+      });
+      hasLoggedFirstSlideRender.current = true;
+    }
+  }, [index]);
 
   return (
     <div
@@ -132,9 +156,23 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                       alt={slide.title}
                       className="w-full h-auto max-h-[35vh] object-contain rounded-lg animate-scale-in"
                       style={{ animationDelay: '0.3s' }}
+                      onLoad={
+                        i === 0
+                          ? (event) => {
+                              const imageElement = event.currentTarget;
+                              console.trace('[TRACE][OnboardingSlides] slide image loaded', {
+                                slideIndex: i,
+                                imageUrl: imageElement.currentSrc || slide.image,
+                                naturalWidth: imageElement.naturalWidth,
+                                naturalHeight: imageElement.naturalHeight,
+                                timestamp: new Date().toISOString(),
+                              });
+                            }
+                          : undefined
+                      }
                       onError={
                         import.meta.env.MODE === 'development'
-                          ? () => console.error(`Failed to load image: ${slide.image}`)
+                          ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
                           : undefined
                       }
                     />
