@@ -296,6 +296,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   // Serialize fieldConfidences to prevent object reference changes triggering re-renders
   const fieldConfidencesKey = JSON.stringify(fieldConfidences);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
+  const [initialTitle, setInitialTitle] = useState('');
+  const [lastAutoTitle, setLastAutoTitle] = useState('');
+  const [suggestedTitle, setSuggestedTitle] = useState('');
   const [descriptionManuallyEdited, setDescriptionManuallyEdited] =
     useState(false);
   const [drivenFields, setDrivenFields] = useState<
@@ -451,6 +454,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   useEffect(() => {
     const nextInitialState = createInitialTransactionState(transaction);
+    const normalizedInitialTitle = nextInitialState.title?.trim() || '';
     setInitialTransactionState(nextInitialState);
     setEditedTransaction({
       ...nextInitialState,
@@ -465,12 +469,42 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       const parsed = parseAmountToNullableNumber(nextInitialState.amount);
       return parsed !== null ? Math.abs(parsed) : null;
     });
-    setTitleManuallyEdited(false);
+    setInitialTitle(normalizedInitialTitle);
+    setLastAutoTitle(normalizedInitialTitle);
+    setSuggestedTitle('');
+    setTitleManuallyEdited(Boolean(transaction && normalizedInitialTitle));
     setDescriptionManuallyEdited(false);
     setFormErrors({});
     setTouchedFields({});
     onDirtyChange?.(false);
   }, [transaction, onDirtyChange]);
+
+  const shouldAutoUpdateTitle = React.useCallback(
+    (currentTitle: string) => {
+      if (titleManuallyEdited) {
+        return false;
+      }
+
+      const normalizedTitle = currentTitle.trim();
+      const initialNormalized = initialTitle.trim();
+      const lastAutoNormalized = lastAutoTitle.trim();
+
+      if (!transaction) {
+        return true;
+      }
+
+      if (!initialNormalized) {
+        return true;
+      }
+
+      if (normalizedTitle === lastAutoNormalized) {
+        return true;
+      }
+
+      return normalizedTitle === initialNormalized && initialNormalized === lastAutoNormalized;
+    },
+    [initialTitle, lastAutoTitle, titleManuallyEdited, transaction],
+  );
 
   useEffect(() => {
     const initialSerialized = serializeTransactionForDirtyCheck(
@@ -590,7 +624,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       }
 
       if (field !== 'title' && !titleManuallyEdited) {
-        updated.title = generateDefaultTitle(updated);
+        const autoTitle = generateDefaultTitle(updated);
+        if (shouldAutoUpdateTitle(prev.title || '')) {
+          updated.title = autoTitle;
+          setLastAutoTitle(autoTitle);
+          setSuggestedTitle('');
+        } else {
+          setSuggestedTitle(autoTitle);
+        }
       }
 
       const validationErrors = validateTransactionForm(updated, updated.type);
@@ -840,10 +881,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           : Math.abs(canonicalAmount);
 
       if (!titleManuallyEdited) {
-        finalTransaction.title = generateDefaultTitle({
+        const autoTitle = generateDefaultTitle({
           ...finalTransaction,
           amount: canonicalAmount,
         });
+        if (shouldAutoUpdateTitle(finalTransaction.title || '')) {
+          finalTransaction.title = autoTitle;
+        } else {
+          setSuggestedTitle(autoTitle);
+        }
       }
     }
 
@@ -1919,6 +1965,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           value={editedTransaction.title || ''}
           onChange={(e) => {
             setTitleManuallyEdited(true);
+            setSuggestedTitle('');
             handleChange('title', e.target.value);
           }}
           isAutoFilled={isDriven('title', drivenFields)}
@@ -1939,6 +1986,25 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           {formErrors.title}
         </p>
       )}
+      {!hasError('title') &&
+        suggestedTitle &&
+        suggestedTitle !== (editedTransaction.title || '') && (
+          <div className="ml-[calc(6rem)] text-xs text-muted-foreground flex items-center gap-2">
+            <span>Suggested: {suggestedTitle}</span>
+            <button
+              type="button"
+              className="underline"
+              onClick={() => {
+                setTitleManuallyEdited(false);
+                setLastAutoTitle(suggestedTitle);
+                handleChange('title', suggestedTitle);
+                setSuggestedTitle('');
+              }}
+            >
+              Apply
+            </button>
+          </div>
+        )}
 
       <div className={rowClass}>
         <label className={labelClass} htmlFor="transaction-description">

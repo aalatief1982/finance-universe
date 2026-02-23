@@ -182,9 +182,47 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
 
     setTransactions((prevTransactions) => {
       const nextTransaction = ensureFxFields(updatedTransaction);
-      const updatedTransactions = prevTransactions.map((transaction) =>
-        transaction.id === nextTransaction.id ? nextTransaction : transaction,
-      );
+      const hasTransferPair =
+        nextTransaction.type === 'transfer' && !!nextTransaction.transferId;
+
+      const updatedTransactions = prevTransactions.map((transaction) => {
+        if (transaction.id === nextTransaction.id) {
+          return nextTransaction;
+        }
+
+        if (
+          hasTransferPair &&
+          transaction.transferId === nextTransaction.transferId &&
+          transaction.id !== nextTransaction.id
+        ) {
+          const absoluteAmount = Math.abs(nextTransaction.amount);
+          const isOutgoing = transaction.transferDirection === 'out';
+
+          return ensureFxFields({
+            ...transaction,
+            title: nextTransaction.title,
+            date: nextTransaction.date,
+            notes: nextTransaction.notes,
+            fromAccount: nextTransaction.fromAccount,
+            toAccount: nextTransaction.toAccount,
+            currency: nextTransaction.currency,
+            amount: isOutgoing ? -absoluteAmount : absoluteAmount,
+            amountInBase:
+              nextTransaction.amountInBase == null
+                ? nextTransaction.amountInBase
+                : isOutgoing
+                  ? -Math.abs(nextTransaction.amountInBase)
+                  : Math.abs(nextTransaction.amountInBase),
+            fxRateToBase: nextTransaction.fxRateToBase,
+            fxSource: nextTransaction.fxSource,
+            fxLockedAt: nextTransaction.fxLockedAt,
+            fxPair: nextTransaction.fxPair,
+            baseCurrency: nextTransaction.baseCurrency,
+          });
+        }
+
+        return transaction;
+      });
 
       // Store in local storage
       storeTransactions(updatedTransactions);
