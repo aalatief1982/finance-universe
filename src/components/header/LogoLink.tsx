@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { XpensiaLogo } from './XpensiaLogo';
+import { safeStorage } from '@/utils/safe-storage';
 
 interface LogoLinkProps {
   isLandingPage: boolean;
@@ -11,7 +12,16 @@ interface LogoLinkProps {
 }
 
 export const LogoLink: React.FC<LogoLinkProps> = ({ isLandingPage, currentPageTitle, onClick }) => {
+  const navigate = useNavigate();
+
   const handleLogoClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (safeStorage.getItem('xpensia_onb_done') === 'true') {
+      event.preventDefault();
+      event.stopPropagation();
+      navigate('/home', { replace: true });
+      return;
+    }
+
     if (!onClick) {
       return;
     }
