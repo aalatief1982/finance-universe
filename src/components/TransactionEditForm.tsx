@@ -373,12 +373,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [amountText, setAmountText] = useState<string>(() => {
     const initialState = createInitialTransactionState(transaction);
     return Number.isFinite(initialState.amount)
-      ? String(initialState.amount)
+      ? String(Math.abs(initialState.amount))
       : '';
   });
   const [amountNumber, setAmountNumber] = useState<number | null>(() => {
     const initialState = createInitialTransactionState(transaction);
-    return parseAmountToNullableNumber(initialState.amount);
+    const parsed = parseAmountToNullableNumber(initialState.amount);
+    return parsed !== null ? Math.abs(parsed) : null;
   });
   const [formErrors, setFormErrors] = useState<TransactionValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<
@@ -813,7 +814,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     );
     delete preSubmitErrors.amount;
 
-    const amountError = getAmountValidationError(canonicalAmount);
+    const amountError = getAmountValidationError(
+      canonicalAmount !== null ? Math.abs(canonicalAmount) : null
+    );
     if (amountError) {
       preSubmitErrors.amount = amountError;
     }
