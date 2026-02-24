@@ -28,16 +28,16 @@ import { UseFormReturn } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
 import { getFriendlyMessage } from '@/utils/errorMapper';
 
-interface UseAutoSaveOptions {
+export interface AutoSaveOptions<T> {
   delay?: number;
   enabled?: boolean;
-  onSave?: (data: unknown) => Promise<void>;
+  onSave?: (data: T) => Promise<void>;
   onError?: (error: Error) => void;
 }
 
-export const useAutoSave = (
-  form: UseFormReturn<unknown>,
-  options: UseAutoSaveOptions = {}
+export const useAutoSave = <T,>(
+  form: UseFormReturn<T>,
+  options: AutoSaveOptions<T> = {}
 ) => {
   const {
     delay = 2000,
@@ -48,58 +48,54 @@ export const useAutoSave = (
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
-  const debouncedSave = useCallback(async (data: unknown) => {
+  const debouncedSave = useCallback(async (data: T) => {
     if (!onSave || !enabled) return;
 
     setSaveStatus('saving');
-    
+
     try {
       await onSave(data);
       setSaveStatus('saved');
       setLastSaved(new Date());
-      
-      // Reset to idle after showing success state
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       setSaveStatus('error');
       const errorMessage = getFriendlyMessage(error);
-      
+
       if (onError) {
         onError(error as Error);
       } else {
         toast({
-          title: "Auto-save failed",
+          title: 'Auto-save failed',
           description: errorMessage,
-          variant: "destructive"
+          variant: 'destructive'
         });
       }
-      
-      // Reset to idle after showing error state
+
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
-  }, [onSave, enabled, onError, toast]);
+  }, [enabled, onError, onSave, toast]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    const subscription = form.watch();
-    
     const handleChange = () => {
-      // Clear previous timeout
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
-      // Set new timeout
       timeoutRef.current = setTimeout(() => {
         debouncedSave(form.getValues());
       }, delay);
     };
 
-    // Listen to form changes
+    const subscription = form.watch(() => {
+      handleChange();
+    });
+
     const observer = new MutationObserver(handleChange);
     const formElement = document.querySelector('form');
     if (formElement) {
@@ -108,6 +104,7 @@ export const useAutoSave = (
 
     return () => {
       observer.disconnect();
+      subscription.unsubscribe();
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
