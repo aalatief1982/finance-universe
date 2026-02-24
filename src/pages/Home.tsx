@@ -166,11 +166,13 @@ const Home = () => {
     <Layout withPadding={false} fullWidth>
       <div className="container px-1 pb-[calc(var(--bottom-nav-height,0px)+var(--safe-area-bottom)+0.5rem)]">
         <div className="px-[var(--page-padding-x)] pt-[clamp(0.375rem,1.2vh,0.875rem)] pb-1">
-          <Avatar className="h-9 w-9 mb-1">
-            {user?.avatar && <AvatarImage src={user.avatar} alt={firstName} />}
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <h1 className="text-lg font-semibold tracking-tight">{`${greeting}, ${firstName}`}</h1>
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar className="h-9 w-9 shrink-0">
+              {user?.avatar && <AvatarImage src={user.avatar} alt={firstName} />}
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <h1 className="text-lg font-semibold tracking-tight truncate">{`${greeting}, ${firstName}`}</h1>
+          </div>
         </div>
 
         <div className="my-2">
@@ -226,6 +228,7 @@ const Home = () => {
             income={homeSummary.income}
             expenses={homeSummary.expenses}
             balance={homeSummary.balance}
+            currencyCode={baseCurrency}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
