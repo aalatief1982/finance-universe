@@ -44,7 +44,6 @@ import { ChevronRight } from "lucide-react";
 import { TYPE_ICON_MAP } from "@/constants/typeIconMap";
 import { CATEGORY_ICON_MAP } from "@/constants/categoryIconMap";
 import { format } from "date-fns";
-import { endOfDay, startOfDay } from 'date-fns';
 
 import ResponsiveFAB from "@/components/dashboard/ResponsiveFAB";
 import { Transaction } from "@/types/transaction";
@@ -55,9 +54,11 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
 import { formatCurrency } from "@/lib/formatters";
 import { getUserSettings } from "@/utils/storage-utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getHomeFilteredTransactions, getHomeSummary, HomeDateRange } from "@/utils/home-transactions";
 
 const Home = () => {
-  const { transactions, addTransaction } = useTransactions();
+  const { transactions } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
   const firstName = user?.fullName?.split(' ')[0] || 'there';
@@ -72,7 +73,7 @@ const Home = () => {
     logFirebaseOnlyEvent('view_home', { timestamp: Date.now() });
   }, []);
 
-  type Range = "" | "day" | "week" | "month" | "year" | "custom";
+  type Range = HomeDateRange;
   const defaultEnd = React.useMemo(() => new Date(), []);
   const defaultStart = React.useMemo(() => {
     const d = new Date();
@@ -95,47 +96,20 @@ const Home = () => {
   };
 
   const filteredTransactions = React.useMemo(() => {
-    if (!range) {
-      return transactions;
-    }
-
-    const now = new Date();
-    let start = new Date(now);
-    let end = new Date(now);
-
-    switch (range) {
-      case "day":
-        start = startOfDay(now);
-        end = endOfDay(now);
-        break;
-      case "week":
-        start.setDate(now.getDate() - 6);
-        start = startOfDay(start);
-        end = endOfDay(now);
-        break;
-      case "month":
-        start = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
-        end = endOfDay(now);
-        break;
-      case "year":
-        start = startOfDay(new Date(now.getFullYear(), 0, 1));
-        end = endOfDay(now);
-        break;
-      case "custom":
-        if (customStart) start = startOfDay(new Date(customStart));
-        if (customEnd) end = endOfDay(new Date(customEnd));
-        break;
-    }
-
-    const toDate = range === "custom" ? end : endOfDay(now);
-
-    return transactions.filter((t) => {
-      const d = new Date(t.date);
-      return d >= start && d <= toDate;
+    return getHomeFilteredTransactions({
+      transactions,
+      baseCurrency,
+      range,
+      customStart,
+      customEnd,
     });
-  }, [transactions, range, customStart, customEnd]);
+  }, [transactions, baseCurrency, range, customStart, customEnd]);
 
   // Calculate FX-aware summary (EXCLUDES transfers from income/expense totals)
+  const homeSummary = React.useMemo(() => {
+    return getHomeSummary(filteredTransactions);
+  }, [filteredTransactions]);
+
   const fxSummary = React.useMemo(() => {
     return AnalyticsService.getFxAwareTotals(filteredTransactions, baseCurrency);
   }, [filteredTransactions, baseCurrency]);
@@ -143,9 +117,7 @@ const Home = () => {
   console.log('[FX-DEBUG] Home.tsx | baseCurrency:', baseCurrency, '| income:', fxSummary.income, '| expenses:', fxSummary.expenses, '| unconvertedCount:', fxSummary.unconvertedCount);
 
   // Calculate balance separately (income - expenses for display)
-  const balance = React.useMemo(() => {
-    return fxSummary.income - fxSummary.expenses;
-  }, [fxSummary]);
+  const initials = firstName.charAt(0).toUpperCase();
   const formatDisplayTitle = (txn: Transaction) => {
     const base = txn.title?.trim() || "Transaction";
     return txn.type === "expense" ? `${base} (Expense)` : base;
@@ -159,37 +131,45 @@ const Home = () => {
     }
   };
 
+  const analyticsTransactions = React.useMemo(() => {
+    return filteredTransactions.map(({ effectiveAmount, isUnconverted, ...transaction }) => transaction);
+  }, [filteredTransactions]);
+
   const expensesBySubcategory = React.useMemo(() => {
     try {
-      return AnalyticsService.getFxAwareSubcategoryData(filteredTransactions, baseCurrency);
+      return AnalyticsService.getFxAwareSubcategoryData(analyticsTransactions, baseCurrency);
     } catch {
       console.warn('[Home] Failed to get subcategory data');
       return [];
     }
-  }, [filteredTransactions, baseCurrency]);
+  }, [analyticsTransactions, baseCurrency]);
 
   const expensesByCategory = React.useMemo(() => {
     try {
-      return AnalyticsService.getFxAwareCategoryData(filteredTransactions, baseCurrency);
+      return AnalyticsService.getFxAwareCategoryData(analyticsTransactions, baseCurrency);
     } catch {
       return [];
     }
-  }, [filteredTransactions, baseCurrency]);
+  }, [analyticsTransactions, baseCurrency]);
 
   // FX-aware timeline data (EXCLUDES transfers)
   const timelineData = React.useMemo(() => {
     try {
-      return AnalyticsService.getFxAwareTimelineData(filteredTransactions, range || 'month', baseCurrency);
+      return AnalyticsService.getFxAwareTimelineData(analyticsTransactions, range || 'month', baseCurrency);
     } catch (err) {
       console.warn('[Home] Failed to compute timeline data:', err);
       return [];
     }
-  }, [filteredTransactions, range, baseCurrency]);
+  }, [analyticsTransactions, range, baseCurrency]);
 
   return (
     <Layout withPadding={false} fullWidth>
-      <div className="container px-1">
-        <div className="px-[var(--page-padding-x)] pt-2 pb-1">
+      <div className="container px-1 pb-[calc(var(--bottom-nav-height,0px)+var(--safe-area-bottom)+0.5rem)]">
+        <div className="px-[var(--page-padding-x)] pt-[clamp(0.375rem,1.2vh,0.875rem)] pb-1">
+          <Avatar className="h-9 w-9 mb-1">
+            {user?.avatar && <AvatarImage src={user.avatar} alt={firstName} />}
+            <AvatarFallback>{initials}</AvatarFallback>
+          </Avatar>
           <h1 className="text-lg font-semibold tracking-tight">{`${greeting}, ${firstName}`}</h1>
         </div>
 
@@ -243,9 +223,9 @@ const Home = () => {
           )}
 
           <DashboardStats
-            income={fxSummary.income}
-            expenses={fxSummary.expenses}
-            balance={balance}
+            income={homeSummary.income}
+            expenses={homeSummary.expenses}
+            balance={homeSummary.balance}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
@@ -366,7 +346,7 @@ const Home = () => {
                         </div>
                         {/* Display converted amount (amountInBase) with original as secondary */}
                         {(() => {
-                          const displayAmount = transaction.amountInBase ?? transaction.amount;
+                          const displayAmount = transaction.effectiveAmount;
                           const txCurrency = (transaction.currency || baseCurrency).toUpperCase();
                           const showOriginal = txCurrency !== baseCurrency.toUpperCase() && transaction.amountInBase != null;
                           const isNegative = transaction.type === 'expense' || transaction.amount < 0;
@@ -405,7 +385,7 @@ const Home = () => {
                 </p>
               )}
 
-              <div className="flex justify-start mt-3 mb-16">
+              <div className="flex justify-start mt-3 pb-[calc(var(--bottom-nav-height,0px)+var(--safe-area-bottom)+0.25rem)]">
                 <button
                   onClick={() => navigate("/transactions")}
                   aria-label="View full transaction history"
