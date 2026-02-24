@@ -51,6 +51,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
+  const shouldLogImageLoadErrors = import.meta.env.MODE === 'development';
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
 
   useEffect(() => {
@@ -196,7 +197,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                           : undefined
                       }
                       onError={
-                        import.meta.env.MODE === 'development'
+                        shouldLogImageLoadErrors
                           ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
                           : undefined
                       }
