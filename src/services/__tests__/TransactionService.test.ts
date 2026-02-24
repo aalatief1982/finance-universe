@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { createStorageMock } from '@/test/storage-mock';
 import { transactionService } from '../TransactionService';
 import { Transaction } from '@/types/transaction';
+import { makeValidExpenseTx, makeValidIncomeTx } from '@/test/transaction-factories';
 
 // Mock firebase-analytics to prevent actual analytics calls
 vi.mock('@/utils/firebase-analytics', () => ({
@@ -16,15 +17,13 @@ describe('TransactionService', () => {
 
   describe('Single Record Operations', () => {
     it('adds an expense and creates 1 record', () => {
-      const expense = {
+      const expense = makeValidExpenseTx({
         title: 'Groceries',
         amount: -50,
         category: 'Food',
+        subcategory: 'Misc',
         date: '2024-01-15',
-        type: 'expense' as const,
-        source: 'manual' as const,
-        currency: 'USD',
-      };
+      });
 
       const result = transactionService.addTransaction(expense);
 
@@ -38,15 +37,14 @@ describe('TransactionService', () => {
     });
 
     it('adds an income and creates 1 record', () => {
-      const income = {
+      const income = makeValidIncomeTx({
         title: 'Salary',
         amount: 5000,
         category: 'Income',
+        subcategory: 'Misc',
         date: '2024-01-01',
-        type: 'income' as const,
-        source: 'manual' as const,
-        currency: 'USD',
-      };
+        toAccount: 'Main Account',
+      });
 
       const result = transactionService.addTransaction(income);
 
@@ -64,6 +62,7 @@ describe('TransactionService', () => {
         title: 'Transfer to Savings',
         amount: 1000,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -87,6 +86,7 @@ describe('TransactionService', () => {
         title: 'Transfer',
         amount: 500,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -106,6 +106,7 @@ describe('TransactionService', () => {
         title: 'Transfer',
         amount: 500,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -126,6 +127,7 @@ describe('TransactionService', () => {
         title: 'Transfer',
         amount: 500,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -146,6 +148,7 @@ describe('TransactionService', () => {
         title: 'Transfer',
         amount: 500,
         category: 'SomeOtherCategory', // Even if user specifies different category
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -165,6 +168,7 @@ describe('TransactionService', () => {
         title: 'Transfer',
         amount: 200,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -188,6 +192,7 @@ describe('TransactionService', () => {
         title: 'Original Title',
         amount: 100,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -214,6 +219,7 @@ describe('TransactionService', () => {
         title: 'Transfer',
         amount: 100,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -242,6 +248,7 @@ describe('TransactionService', () => {
         title: 'Transfer',
         amount: 100,
         category: 'Transfer',
+        subcategory: 'Transfer',
         date: '2024-01-15',
         type: 'transfer' as const,
         source: 'manual' as const,
@@ -264,24 +271,20 @@ describe('TransactionService', () => {
 
   describe('Regular Transaction Operations', () => {
     it('updates a regular transaction without affecting others', () => {
-      const expense1 = {
+      const expense1 = makeValidExpenseTx({
         title: 'Expense 1',
         amount: -50,
         category: 'Food',
+        subcategory: 'Misc',
         date: '2024-01-15',
-        type: 'expense' as const,
-        source: 'manual' as const,
-        currency: 'USD',
-      };
-      const expense2 = {
+      });
+      const expense2 = makeValidExpenseTx({
         title: 'Expense 2',
         amount: -30,
         category: 'Transport',
+        subcategory: 'Misc',
         date: '2024-01-16',
-        type: 'expense' as const,
-        source: 'manual' as const,
-        currency: 'USD',
-      };
+      });
 
       const created1 = transactionService.addTransaction(expense1) as Transaction;
       transactionService.addTransaction(expense2);
@@ -296,15 +299,13 @@ describe('TransactionService', () => {
     });
 
     it('deletes a regular transaction', () => {
-      const expense = {
+      const expense = makeValidExpenseTx({
         title: 'Expense',
         amount: -50,
         category: 'Food',
+        subcategory: 'Misc',
         date: '2024-01-15',
-        type: 'expense' as const,
-        source: 'manual' as const,
-        currency: 'USD',
-      };
+      });
 
       const created = transactionService.addTransaction(expense) as Transaction;
       expect(transactionService.getAllTransactions()).toHaveLength(1);

@@ -13,6 +13,9 @@ vi.mock('@/utils/firebase-analytics', () => ({
 // Import after mocks
 import { transactionService } from '../TransactionService';
 import { processSmsEntries } from '../SmsProcessingService';
+import {
+  makeValidExpenseTx,
+} from '@/test/transaction-factories';
 
 describe('SMS Pipeline Integration', () => {
   beforeEach(() => {
@@ -112,10 +115,17 @@ describe('SMS Pipeline Integration', () => {
       // If valid transactions were parsed, they can be added
       parsedTransactions.forEach(tx => {
         if (tx.amount !== 0) {
-          transactionService.addTransaction({
-            ...tx,
+          transactionService.addTransaction(makeValidExpenseTx({
+            title: tx.title || 'SMS Transaction',
+            type: 'expense',
+            amount: tx.amount ? -Math.abs(tx.amount) : -1,
+            date: tx.date || new Date().toISOString().split('T')[0],
+            category: tx.category || 'Other',
+            subcategory: 'Misc',
+            fromAccount: 'Main Account',
+            currency: 'USD',
             source: 'sms-import',
-          });
+          }));
         }
       });
 

@@ -95,7 +95,7 @@ export const DEFAULT_FORM_VALUES: Partial<TransactionFormValues> = {
   toAccount: '',
   description: '',
   notes: '',
-  currency: 'SAR',
+  currency: 'USD',
 };
 
 export const ACCOUNTS = [
