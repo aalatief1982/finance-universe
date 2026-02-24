@@ -147,6 +147,18 @@ const parseAmountToNullableNumber = (value: string | number): number | null => {
   return Number.isFinite(parsedAmount) ? parsedAmount : null;
 };
 
+const normalizeText = (value?: string): string =>
+  (value || '').trim().toLowerCase();
+
+const normalizeTransactionForCompare = (tx: Partial<Transaction>) => ({
+  amount: parseAmountToNullableNumber(tx.amount ?? Number.NaN),
+  date: tx.date ? toISOFormat(String(tx.date)) : '',
+  categoryId: normalizeText(tx.category),
+  subcategoryId: normalizeText(tx.subcategory),
+  vendorName: normalizeText(tx.vendor),
+  type: normalizeText(tx.type),
+});
+
 const getAmountValidationError = (amountNumber: number | null): string | undefined => {
   if (amountNumber === null) return 'Amount is required';
   if (amountNumber <= 0) return 'Amount must be greater than 0';
@@ -304,6 +316,13 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   // Serialize fieldConfidences to prevent object reference changes triggering re-renders
   const fieldConfidencesKey = JSON.stringify(fieldConfidences);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(true);
+  const didMountRef = useRef(false);
+  const initialTitleDriversRef = useRef(
+    normalizeTransactionForCompare(createInitialTransactionState(transaction)),
+  );
+  const [hasUserEditedTitleDrivers, setHasUserEditedTitleDrivers] =
+    useState(false);
   const [initialTitle, setInitialTitle] = useState('');
   const [lastAutoTitle, setLastAutoTitle] = useState('');
   const [suggestedTitle, setSuggestedTitle] = useState('');
@@ -389,6 +408,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const parsed = parseAmountToNullableNumber(initialState.amount);
     return parsed !== null ? Math.abs(parsed) : null;
   });
+
+  const hydrationSnapshotKey = useMemo(() => {
+    const baseline = createInitialTransactionState(transaction);
+    return JSON.stringify({
+      ...normalizeTransactionForCompare(baseline),
+      title: (baseline.title || '').trim(),
+      fromAccount: normalizeText(baseline.fromAccount),
+      currency: normalizeText(baseline.currency),
+    });
+  }, [transaction]);
   const [formErrors, setFormErrors] = useState<TransactionValidationErrors>({});
   const [touchedFields, setTouchedFields] = useState<
     Partial<Record<keyof Transaction, boolean>>
@@ -457,8 +486,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   ]);
 
   useEffect(() => {
+    setIsHydrating(true);
     const nextInitialState = createInitialTransactionState(transaction);
     const normalizedInitialTitle = nextInitialState.title?.trim() || '';
+    initialTitleDriversRef.current =
+      normalizeTransactionForCompare(nextInitialState);
     setInitialTransactionState(nextInitialState);
     setEditedTransaction({
       ...nextInitialState,
@@ -477,12 +509,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setLastAutoTitle(normalizedInitialTitle);
     setSuggestedTitle('');
     setDismissedSuggestionSignature('');
-    setTitleManuallyEdited(Boolean(transaction && normalizedInitialTitle));
+    setHasUserEditedTitleDrivers(false);
+    setTitleManuallyEdited(false);
     setDescriptionManuallyEdited(false);
     setFormErrors({});
     setTouchedFields({});
     onDirtyChange?.(false);
-  }, [transaction, onDirtyChange]);
+
+    const hydrationTimeout = window.setTimeout(() => {
+      didMountRef.current = true;
+      setIsHydrating(false);
+    }, 0);
+
+    return () => window.clearTimeout(hydrationTimeout);
+  }, [hydrationSnapshotKey, onDirtyChange, transaction]);
 
   const shouldAutoUpdateTitle = React.useCallback(
     (currentTitle: string) => {
@@ -628,6 +668,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         updated.amount = parsedAmount ?? Number.NaN;
       }
 
+      let hasEditedTitleDrivers = hasUserEditedTitleDrivers;
+      if (
+        TITLE_DRIVING_FIELDS.includes(field) &&
+        !isHydrating &&
+        didMountRef.current
+      ) {
+        const updatedNormalized = normalizeTransactionForCompare(updated);
+        if (
+          JSON.stringify(updatedNormalized) !==
+          JSON.stringify(initialTitleDriversRef.current)
+        ) {
+          hasEditedTitleDrivers = true;
+          setHasUserEditedTitleDrivers(true);
+        }
+      }
+
       const nextSuggestionSignature = JSON.stringify({
         type: updated.type || '',
         category: updated.category || '',
@@ -642,21 +698,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
       if (field !== 'title') {
         const autoTitle = generateDefaultTitle(updated);
-        const canAutoApply =
-          !titleManuallyEdited && shouldAutoUpdateTitle(prev.title || '');
 
-        if (canAutoApply) {
-          updated.title = autoTitle;
-          setLastAutoTitle(autoTitle);
-          setSuggestedTitle('');
-          setDismissedSuggestionSignature('');
-        } else if (
+        if (
           TITLE_DRIVING_FIELDS.includes(field) &&
+          !titleManuallyEdited &&
+          hasEditedTitleDrivers &&
           autoTitle &&
           autoTitle !== (updated.title || '') &&
           dismissedSuggestionSignature !== nextSuggestionSignature
         ) {
           setSuggestedTitle(autoTitle);
+        } else if (TITLE_DRIVING_FIELDS.includes(field)) {
+          setSuggestedTitle('');
         }
 
         if (
@@ -1913,6 +1966,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </p>
       )}
       {!hasError('title') &&
+        !isHydrating &&
+        hasUserEditedTitleDrivers &&
+        !titleManuallyEdited &&
         suggestedTitle &&
         suggestedTitle !== (editedTransaction.title || '') && (
           <div className="ml-[calc(6rem)] text-xs text-green-600 flex items-center gap-2">
@@ -1921,7 +1977,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               type="button"
               className="underline"
               onClick={() => {
-                setTitleManuallyEdited(true);
+                setTitleManuallyEdited(false);
                 setLastAutoTitle(suggestedTitle);
                 handleChange('title', suggestedTitle);
                 setSuggestedTitle('');
@@ -1946,7 +2002,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 setSuggestedTitle('');
               }}
             >
-              Dismiss
+              Discard
             </button>
           </div>
         )}
