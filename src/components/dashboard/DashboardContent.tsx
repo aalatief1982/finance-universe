@@ -45,7 +45,7 @@ const DashboardContent = ({
   const { user } = useUser();
   
   // Defensive check for transactions array
-  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+  const safeTransactions = React.useMemo(() => (Array.isArray(transactions) ? transactions : []), [transactions]);
 
   const baseCurrency = user?.preferences?.currency || 'SAR';
   const fxSummary = React.useMemo(() => {
@@ -60,20 +60,22 @@ const DashboardContent = ({
   const today = new Date();
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   
-  const lastMonthTransactions = safeTransactions.filter(tx => {
-    // Skip invalid transactions
-    if (!tx || !tx.date) return false;
-    
-    try {
-      const txDate = new Date(tx.date);
-      return txDate < firstDayOfMonth;
-    } catch (error) {
-      if (import.meta.env.MODE === 'development') {
-        console.warn('Invalid date format in transaction:', tx);
+  const lastMonthTransactions = React.useMemo(() => {
+    return safeTransactions.filter(tx => {
+      // Skip invalid transactions
+      if (!tx || !tx.date) return false;
+
+      try {
+        const txDate = new Date(tx.date);
+        return txDate < firstDayOfMonth;
+      } catch (error) {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('Invalid date format in transaction:', tx);
+        }
+        return false;
       }
-      return false;
-    }
-  });
+    });
+  }, [safeTransactions, firstDayOfMonth]);
 
   const previousFxSummary = React.useMemo(() => {
     return AnalyticsService.getFxAwareTotals(lastMonthTransactions, baseCurrency);

@@ -23,7 +23,17 @@
  */
 import { useCallback, useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Transaction } from '@/types/transaction';
+import {
+  Transaction,
+  TransactionId,
+  TransactionType,
+  Category,
+  CategoryRule,
+  TransactionSummary,
+  CategorySummary,
+  TimePeriod,
+  TimePeriodData,
+} from '@/types/transaction';
 import { useTransactionsCrud } from './transactions/useTransactionsCrud';
 import { useTransactionsFilters } from './transactions/useTransactionsFilters';
 import { useTransactionsSorting } from './transactions/useTransactionsSorting';
@@ -40,6 +50,24 @@ import { useTransactions } from '@/context/TransactionContext';
 import { ensureFxFields } from '@/services/FxConversionService';
 
 export function useTransactionsState() {
+  type TransactionFormData = Pick<
+    Transaction,
+    'title' | 'amount' | 'category' | 'date' | 'notes' | 'fromAccount' | 'toAccount' | 'description' | 'currency'
+  > & {
+    _manualFxRate?: number;
+  };
+
+  const isTransactionFormData = (value: unknown): value is TransactionFormData => {
+    if (typeof value !== 'object' || value === null) return false;
+    const candidate = value as Record<string, unknown>;
+    return (
+      typeof candidate.title === 'string' &&
+      typeof candidate.amount === 'number' &&
+      typeof candidate.category === 'string' &&
+      typeof candidate.date === 'string'
+    );
+  };
+
   // Get user context for currency preferences
   const { user } = useUser();
   const userCurrency = user?.preferences?.currency || 'USD';
@@ -66,15 +94,16 @@ export function useTransactionsState() {
     setIsAddingExpense,
     isEditingExpense,
     setIsEditingExpense,
-    handleAddTransaction: baseCrudAddTransaction,
-    handleEditTransaction: baseCrudEditTransaction,
-    handleDeleteTransaction: baseCrudDeleteTransaction,
     openEditDialog
   } = useTransactionsCrud();
 
   // Override CRUD methods to use enhanced storage
   const handleAddTransaction = useCallback((formData: unknown) => {
-    const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
+    if (!isTransactionFormData(formData)) {
+      throw new Error('Invalid transaction form data');
+    }
+
+    const transactionType: TransactionType = formData.amount >= 0 ? 'income' : 'expense';
     
     const newTransaction: Transaction = ensureFxFields({
       id: uuidv4(),
@@ -100,8 +129,11 @@ export function useTransactionsState() {
 
   const handleEditTransaction = useCallback((formData: unknown) => {
     if (!currentTransaction) return null;
+    if (!isTransactionFormData(formData)) {
+      throw new Error('Invalid transaction form data');
+    }
 
-    const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
+    const transactionType: TransactionType = formData.amount >= 0 ? 'income' : 'expense';
 
     const updatedTransaction: Transaction = ensureFxFields({
       ...currentTransaction,
@@ -136,7 +168,7 @@ export function useTransactionsState() {
     return updatedTransaction;
   }, [currentTransaction, contextUpdateTransaction, setIsEditingExpense, setCurrentTransaction]);
 
-  const handleDeleteTransaction = useCallback((id: string) => {
+  const handleDeleteTransaction = useCallback((id: TransactionId) => {
     removeTransaction(id);
     contextDeleteTransaction(id);
   }, [contextDeleteTransaction]);
@@ -193,15 +225,13 @@ export function useTransactionsState() {
   // ============================================================================
 
   // Transaction summary calculations
-  const [transactionSummary, setTransactionSummary] = useState({
+  const [transactionSummary, setTransactionSummary] = useState<TransactionSummary>({
     income: 0,
     expenses: 0,
     balance: 0
   });
 
-  const [categoryBreakdown, setCategoryBreakdown] = useState<
-    { name: string; value: number }[]
-  >([]);
+  const [categoryBreakdown, setCategoryBreakdown] = useState<CategorySummary[]>([]);
 
   // Calculate transaction summary and category breakdown
   useEffect(() => {
@@ -231,10 +261,10 @@ export function useTransactionsState() {
     setTransactionSummary(summary);
 
     // Get category hierarchy for proper names
-    const categoryMap = new Map();
+    const categoryMap = new Map<string, string>();
     const categories = getStoredCategories();
     
-    categories.forEach(category => {
+    categories.forEach((category: Category) => {
       categoryMap.set(category.id, category.name);
     });
 
@@ -267,7 +297,7 @@ export function useTransactionsState() {
   }, [transactions]);
 
   // Calculate transactions by time period with enhanced category handling
-  const getTransactionsByTimePeriod = useCallback((period: 'week' | 'month' | 'year' = 'month') => {
+  const getTransactionsByTimePeriod = useCallback((period: Exclude<TimePeriod, 'all'> = 'month'): TimePeriodData[] => {
     const now = new Date();
     let startDate: Date;
     
@@ -333,8 +363,8 @@ export function useTransactionsState() {
   }, [transactions]);
 
   // Import transactions from SMS with enhanced storage
-  const importFromSMS = useCallback((smsTransactions: Omit<Transaction, 'id'>[]) => {
-    const newTransactions = smsTransactions.map(tx => ({
+  const importFromSMS = useCallback((smsTransactions: Omit<Transaction, 'id'>[]): Transaction[] => {
+    const newTransactions: Transaction[] = smsTransactions.map(tx => ({
       ...tx,
       id: uuidv4()
     }));
@@ -342,14 +372,14 @@ export function useTransactionsState() {
     // Apply category rules to auto-categorize transactions
     const categoryRules = getStoredCategoryRules();
     
-    const categorizedTransactions = newTransactions.map(transaction => {
+    const categorizedTransactions: Transaction[] = newTransactions.map(transaction => {
       // Default to uncategorized if no match is found
       let matchedCategory = transaction.category || 'Uncategorized';
       
       // Try to match title against category rules
       if (transaction.title) {
         // Sort rules by priority (highest first)
-        const sortedRules = [...categoryRules].sort((a, b) => b.priority - a.priority);
+        const sortedRules = [...categoryRules].sort((a: CategoryRule, b: CategoryRule) => b.priority - a.priority);
         
         for (const rule of sortedRules) {
           const { pattern, isRegex, categoryId } = rule;
@@ -396,7 +426,7 @@ export function useTransactionsState() {
     const categoryHierarchy = getCategoryHierarchy();
     const path: string[] = [];
     
-    const findCategory = (categories: unknown[], targetId: string): boolean => {
+    const findCategory = (categories: Category[], targetId: string): boolean => {
       for (const category of categories) {
         if (category.id === targetId) {
           path.unshift(category.name);
