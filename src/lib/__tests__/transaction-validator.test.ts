@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { Transaction } from '@/types/transaction';
+import type { TransactionFormValues } from '@/components/forms/transaction-form-schema';
 import {
   isValidAmount,
   isValidCategory,
@@ -18,9 +20,38 @@ vi.mock('@/components/ui/use-toast', () => ({
 vi.mock('@/lib/categories-data', () => ({
   getCategoriesForType: vi.fn(() => ['Food']),
   getSubcategoriesForCategory: vi.fn((category: string) =>
-    category === 'Food' ? ['Dining'] : []
+    category === 'Food' ? ['Dining'] : [],
   ),
 }));
+
+const buildTransaction = (overrides: Partial<Transaction> = {}): Transaction => ({
+  id: 't1',
+  title: 'Test',
+  amount: 25,
+  category: 'Food',
+  subcategory: 'Dining',
+  date: '2024-01-01',
+  type: 'expense',
+  source: 'manual',
+  fromAccount: 'Cash',
+  currency: 'SAR',
+  ...overrides,
+});
+
+const buildFormValues = (overrides: Partial<TransactionFormValues> = {}): TransactionFormValues => ({
+  title: 'Lunch',
+  amount: 25,
+  type: 'expense',
+  fromAccount: 'Cash',
+  toAccount: '',
+  category: 'Food',
+  subcategory: 'Dining',
+  date: '2024-01-01',
+  description: '',
+  notes: '',
+  currency: 'SAR',
+  ...overrides,
+});
 
 describe('transaction-validator', () => {
   it('validates amounts, dates, and types', () => {
@@ -38,21 +69,23 @@ describe('transaction-validator', () => {
     expect(isValidSubcategory('Food', 'Other')).toBe(false);
   });
 
-  it('returns false and calls toast for invalid transactions', () => {
-    const invalidTxn = {
-      id: 't1',
-      title: 'Test',
-      amount: 25,
-      category: 'Food',
-      subcategory: 'Invalid',
-      date: '2024-01-01',
-      type: 'expense',
-      source: 'manual',
-      fromAccount: 'Cash',
-    } as unknown as Transaction;
+  it('returns typed failure result and calls toast for invalid transactions', () => {
+    const invalidTxn = buildTransaction({ subcategory: 'Invalid' });
 
     const result = validateTransactionInput(invalidTxn);
-    expect(result).toBe(false);
+    expect(result.valid).toBe(false);
     expect(toastMock).toHaveBeenCalled();
+  });
+
+  it('accepts form-like payloads at unknown boundary and keeps typed output', () => {
+    const formValues = buildFormValues();
+
+    const result = validateTransactionInput(formValues as unknown);
+    expect(result.valid).toBe(true);
+
+    if (result.valid) {
+      expect(result.transaction.type).toBe('expense');
+      expect(result.transaction.category).toBe('Food');
+    }
   });
 });
