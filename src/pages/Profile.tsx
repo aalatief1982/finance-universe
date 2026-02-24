@@ -22,6 +22,7 @@ import { Camera, Trash2 } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -109,39 +110,10 @@ const Profile = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md mx-auto space-y-6"
+        className="mx-auto w-full max-w-2xl space-y-6 pb-[calc(var(--bottom-nav-height,72px)+env(safe-area-inset-bottom,0px)+16px)]"
       >
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-500 hover:bg-red-600">
-                  Delete Account
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-
-        <div className="bg-card rounded-lg border p-6 flex flex-col items-center text-center space-y-4">
+        <Card>
+          <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
           <div className="relative">
             <Avatar className="h-24 w-24">
 
@@ -167,16 +139,53 @@ const Profile = () => {
           </div>
 
           <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-        </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-red-200/70">
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-base text-red-600">Danger Zone</CardTitle>
+            <CardDescription>
+              Permanently remove your account and all associated data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-500 hover:bg-red-600">
+                    Delete Account
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
       </motion.div>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="px-6 pt-6">
             <DialogTitle>Edit Profile</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 px-6 py-4 overflow-y-auto">
             <div className="space-y-2">
 
               <Label htmlFor="fullName">Full Name<span className="text-red-500 ml-1">*</span></Label>
@@ -218,7 +227,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="px-6 py-4 border-t bg-background">
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
