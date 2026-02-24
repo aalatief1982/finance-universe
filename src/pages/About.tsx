@@ -7,13 +7,14 @@
 
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import "./About.css";
 
 const About = () => {
   return (
-    <Layout showBack>
-      <div className="space-y-8">
-        <header className="space-y-3">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+    <Layout showBack withPadding={false}>
+      <div className="aboutPageContent">
+        <header className="aboutPageHeader space-y-3">
+          <p className="aboutPageLabel text-sm font-semibold uppercase tracking-[0.2em]">
             About Xpensia
           </p>
           <h1 className="text-3xl font-semibold text-foreground">Smarter money tracking, made simple.</h1>
@@ -23,13 +24,13 @@ const About = () => {
           </p>
         </header>
 
-        <section className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
+        <section className="aboutPageSectionGrid">
+          <Card className="aboutPageCard">
+            <CardHeader className="aboutPageCardHeader">
               <CardTitle>What you can do</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <ul className="aboutPageList space-y-2 text-sm text-muted-foreground">
                 <li>Track expenses and income in a clean, searchable ledger.</li>
                 <li>Visualize trends with analytics and category insights.</li>
                 <li>Set budgets, monitor progress, and adjust spending quickly.</li>
@@ -38,12 +39,12 @@ const About = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="aboutPageCard">
+            <CardHeader className="aboutPageCardHeader">
               <CardTitle>How it works</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <ul className="aboutPageList space-y-2 text-sm text-muted-foreground">
                 <li>Organize transactions automatically with smart parsing tools.</li>
                 <li>Review, edit, and categorize entries in one streamlined workflow.</li>
                 <li>See your cash flow at a glance with dashboards and reports.</li>
@@ -52,8 +53,8 @@ const About = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="aboutPageCard">
+            <CardHeader className="aboutPageCardHeader">
               <CardTitle>Privacy & data</CardTitle>
             </CardHeader>
             <CardContent>
@@ -65,8 +66,8 @@ const About = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="aboutPageCard">
+            <CardHeader className="aboutPageCardHeader">
               <CardTitle>Support</CardTitle>
             </CardHeader>
             <CardContent>
