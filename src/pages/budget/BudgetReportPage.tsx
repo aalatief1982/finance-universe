@@ -96,8 +96,8 @@ const BudgetReportPage = () => {
     }
     
     const all = [...accounts, ...categories];
-    const t = all.find((a: any) => a.id === b.targetId);
-    const scopeName = t ? (t as any).name : b.targetId;
+    const t = all.find((a: unknown) => a.id === b.targetId);
+    const scopeName = t ? (t as unknown).name : b.targetId;
     
     return `${scopeName} • ${periodName}`;
   }, [accounts, categories]);

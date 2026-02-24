@@ -280,7 +280,7 @@ export const resetVerificationSession = (): void => {
  * @param userData User data to update
  * @returns Promise resolving to success status
  */
-export const updateUserProfileInSupabase = async (userId: string, userData: any): Promise<boolean> => {
+export const updateUserProfileInSupabase = async (userId: string, userData: unknown): Promise<boolean> => {
   try {
     if (!userId) {
       handleError(createError(

@@ -13,7 +13,7 @@ export function useTransactionsCrud() {
     setIsEditingExpense(true);
   }, []);
 
-  const handleAddTransaction = (formData: any) => {
+  const handleAddTransaction = (formData: unknown) => {
     // Extract only the properties that belong to Transaction type
     const {
       title,
@@ -45,7 +45,7 @@ export function useTransactionsCrud() {
     return newTransaction;
   };
 
-  const handleEditTransaction = (formData: any) => {
+  const handleEditTransaction = (formData: unknown) => {
     if (!currentTransaction) return null;
 
     // Extract only valid Transaction properties

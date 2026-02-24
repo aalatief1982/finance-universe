@@ -38,7 +38,7 @@ export const validateTransactionForm = (
   values: Partial<TransactionValidationInput>,
   txType: NonNullable<TransactionValidationInput['type']> = values.type || 'expense'
 ): TransactionValidationErrors => {
-  return validateTransactionValues(values as any, txType) as TransactionValidationErrors;
+  return validateTransactionValues(values, txType) as TransactionValidationErrors;
 };
 
 export const transactionFormSchema = z.object({

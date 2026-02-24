@@ -16,6 +16,13 @@
  * - [ ] Category IDs referenced by transactions exist in storage
  */
 export type TransactionType = 'income' | 'expense' | 'transfer';
+export type TransactionId = string;
+export type CategoryId = string;
+export type SubcategoryId = string;
+export type VendorName = string;
+export type AccountId = string;
+export type MoneyAmount = number;
+export type ISODateString = string;
 // Source type used throughout the app
 export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smart-paste' | 'sms-import';
 
@@ -39,17 +46,17 @@ export type FxSource = 'identity' | 'cached' | 'api' | 'manual' | 'missing';
  * - FX fields are populated at save time and locked for audit purposes
  */
 export interface Transaction {
-  id: string;
+  id: TransactionId;
   title: string;
-  amount: number;
-  category: string;
-  subcategory?: string;
-  date: string;
+  amount: MoneyAmount;
+  category: CategoryId;
+  subcategory?: SubcategoryId;
+  date: ISODateString;
   type: TransactionType;
   notes?: string;
   source: TransactionSource;
   details?: {
-    [key: string]: any;
+    [key: string]: unknown;
     sms?: {
       sender: string;
       message: string;
@@ -76,13 +83,13 @@ export interface Transaction {
   // =========================================================================
   
   person?: string;
-  fromAccount?: string;
-  toAccount?: string;
+  fromAccount?: AccountId;
+  toAccount?: AccountId;
   country?: string;
   description?: string;
   originalCurrency?: string;
-  vendor?: string;
-  account?: string;
+  vendor?: VendorName;
+  account?: AccountId;
   createdAt?: string;
   /** Unique ID linking both halves of a transfer transaction */
   transferId?: string;

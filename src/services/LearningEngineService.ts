@@ -137,7 +137,7 @@ export function suggestTransactionDetails(rawMessage: string): Partial<Transacti
 }
 
 // Mock implementations of missing methods to fix the type errors
-function learnFromTransaction(rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: any): void {
+function learnFromTransaction(rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: unknown): void {
   if (import.meta.env.MODE === 'development') {
     // console.log('Learning from transaction:', transaction);
   }
@@ -187,7 +187,7 @@ function extractAccountTokensWithPosition(msg: string): PositionedToken[] {
   return [];
 }
 
-function matchUsingTemplateStructure(text: string): any {
+function matchUsingTemplateStructure(text: string): unknown {
   return null;
 }
 
@@ -215,7 +215,7 @@ export const learningEngineService = {
   extractVendorTokensWithPosition,
   extractAccountTokensWithPosition,
   matchUsingTemplateStructure,
-  saveUserTraining: (data: any) => {
+  saveUserTraining: (data: unknown) => {
     // if (import.meta.env.MODE === 'development') console.log('Saving user training:', data)
   }
 };

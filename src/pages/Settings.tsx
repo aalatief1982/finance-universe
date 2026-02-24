@@ -337,7 +337,7 @@ const Settings = () => {
           path: fileName,
           data: csv,
           directory: Directory.Documents,
-          encoding: 'utf8' as any
+          encoding: 'utf8' as unknown
         });
         toast({
           title: 'Export successful',
@@ -394,8 +394,8 @@ const Settings = () => {
 
           if (!confirmImport) return;
 
-          const merged = [...existing, ...(data as any[])];
-          storeTransactions(merged as any);
+          const merged = [...existing, ...(data as unknown[])];
+          storeTransactions(merged as unknown);
           
           // Log import success
           logAnalyticsEvent('data_import', {

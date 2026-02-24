@@ -91,8 +91,8 @@ const BudgetDetailPage = () => {
     const accounts = accountService.getAccounts();
     const categories = transactionService.getCategories();
     const allTargets = [...accounts, ...categories];
-    const target = allTargets.find((t: any) => t.id === budget.targetId);
-    return target ? (target as any).name : budget.targetId;
+    const target = allTargets.find((t: unknown) => t.id === budget.targetId);
+    return target ? (target as unknown).name : budget.targetId;
   }, [budget]);
 
   // Build breadcrumb items

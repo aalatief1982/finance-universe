@@ -2,7 +2,7 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { getCategoriesForType, getSubcategoriesForCategory } from './categories-data';
 import { toast } from '@/components/ui/use-toast';
 
-export const isValidAmount = (amount: any): boolean => {
+export const isValidAmount = (amount: unknown): boolean => {
   return typeof amount === 'number' && !isNaN(amount) && Math.abs(amount) > 0;
 };
 
@@ -11,7 +11,7 @@ export const isValidDate = (dateStr: string): boolean => {
   return !isNaN(timestamp) && timestamp <= Date.now();
 };
 
-export const isValidType = (type: any): type is TransactionType => {
+export const isValidType = (type: unknown): type is TransactionType => {
   return type === 'income' || type === 'expense' || type === 'transfer';
 };
 

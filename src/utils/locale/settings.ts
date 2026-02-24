@@ -134,10 +134,10 @@ export const updateLocaleSettings = (settings: Partial<LocaleSettings>, syncUser
             language: settings.locale ? settings.locale.split('-')[0] : userSettings.language,
             displayOptions: {
               // Use type assertion to safely access properties that might not exist
-              defaultView: (displayOptions as any).defaultView || 'list',
-              compactMode: Boolean((displayOptions as any).compactMode),
-              showCategories: (displayOptions as any).showCategories === false ? false : true,
-              showTags: (displayOptions as any).showTags === false ? false : true,
+              defaultView: (displayOptions as unknown).defaultView || 'list',
+              compactMode: Boolean((displayOptions as unknown).compactMode),
+              showCategories: (displayOptions as unknown).showCategories === false ? false : true,
+              showTags: (displayOptions as unknown).showTags === false ? false : true,
               // Preserve weekStartsOn from settings.firstDayOfWeek
               weekStartsOn:
                 settings.firstDayOfWeek === 1

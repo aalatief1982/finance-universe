@@ -56,7 +56,7 @@ export const useSmartPaste = (
   const { toast } = useToast();
   const [matchOrigin, setMatchOrigin] = useState<"template" | "structure" | "ml" | "fallback" | undefined>();
   const [currentSenderHint, setCurrentSenderHint] = useState<string | undefined>();
-  const [structureMatch, setStructureMatch] = useState<any>(null);
+  const [structureMatch, setStructureMatch] = useState<Record<string, unknown> | null>(null);
   const navigate = useNavigate();
 
   if (import.meta.env.MODE === 'development') {

@@ -24,7 +24,7 @@
  * - [ ] Overall weighting matches UX expectations
  */
 
-export function getFieldConfidence(parsed: any): number {
+export function getFieldConfidence(parsed: unknown): number {
   const totalFields = ['amount', 'currency', 'date', 'type', 'category', 'subcategory', 'vendor', 'fromAccount'];
   const filledFields = totalFields.filter(field => {
     return parsed.directFields?.[field] || parsed.inferredFields?.[field] || parsed.defaultValues?.[field];
@@ -40,7 +40,7 @@ export function getTemplateConfidence(templateMatched: number, totalTemplates: n
   return templateMatched; // Simply return 1 if matched, 0 if not
 }
 
-export function getKeywordConfidence(transaction: any, keywordBank: any[]): number {
+export function getKeywordConfidence(transaction: unknown, keywordBank: unknown[]): number {
   let totalScore = 0;
   let sourceCount = 0;
 

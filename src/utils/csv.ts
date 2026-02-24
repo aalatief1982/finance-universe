@@ -81,7 +81,7 @@ export const convertTransactionsToCsv = (
 
   const headers = includeFxFields ? [...baseHeaders, ...fxHeaders] : baseHeaders;
 
-  const escape = (value: any) => {
+  const escape = (value: unknown) => {
     if (value === undefined || value === null) return '';
     const str = String(value)
       .replace(/"/g, '""')
@@ -90,7 +90,7 @@ export const convertTransactionsToCsv = (
   };
 
   const rows = transactions.map(txn =>
-    headers.map(h => escape((txn as any)[h])).join(delimiter)
+    headers.map(h => escape(txn[h as keyof typeof txn])).join(delimiter)
   );
 
   return [headers.join(delimiter), ...rows].join('\n');

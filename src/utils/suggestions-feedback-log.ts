@@ -2,7 +2,7 @@ import { safeStorage } from "@/utils/safe-storage";
 export interface SuggestionsFeedbackEntry {
   field: string;
   positive: boolean;
-  value?: any;
+  value?: unknown;
   timestamp: string;
 }
 

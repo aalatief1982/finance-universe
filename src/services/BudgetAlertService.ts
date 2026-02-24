@@ -70,8 +70,8 @@ export class BudgetAlertService {
         budgetName = 'Overall Budget';
       } else {
         const allTargets = [...accounts, ...categories];
-        const target = allTargets.find((t: any) => t.id === budget.targetId);
-        budgetName = target ? (target as any).name : budget.targetId;
+        const target = allTargets.find((t: unknown) => t.id === budget.targetId);
+        budgetName = target ? (target as unknown).name : budget.targetId;
       }
 
       // Determine severity

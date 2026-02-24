@@ -79,7 +79,7 @@ const determineFxFieldsForLegacyTx = (
 /**
  * Check if a transaction already has FX fields.
  */
-const hasFxFields = (tx: any): boolean => {
+const hasFxFields = (tx: Record<string, unknown>): boolean => {
   return (
     tx.baseCurrency !== undefined &&
     tx.fxSource !== undefined
@@ -115,7 +115,7 @@ export const migrateFxFields = (): { migrated: number; total: number } => {
     let migratedCount = 0;
 
     // Group transfers by transferId to process them together
-    const transferGroups = new Map<string, any[]>();
+    const transferGroups = new Map<string, Record<string, unknown>[]>();
 
     for (const tx of transactions) {
       if (tx.transferId) {

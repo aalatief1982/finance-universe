@@ -43,7 +43,7 @@ export interface AppError {
   message: string;
   severity?: ErrorSeverity;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   originalError?: unknown;
   timestamp?: number;
   isSilent?: boolean;  // Indicates if the error should be shown to the user

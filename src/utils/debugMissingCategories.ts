@@ -1,5 +1,5 @@
 // utils/debugMissingCategories.ts
-export function logTransactionsMissingCategory(transactions: any[]) {
+export function logTransactionsMissingCategory(transactions: Array<{ id?: string; title?: string; category?: string }>) {
   if (import.meta.env.MODE === 'development') {
     console.group(`[Validation] Scanning ${transactions.length} transactions for missing category/subcategory...`);
   }
