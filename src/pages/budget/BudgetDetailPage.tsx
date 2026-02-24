@@ -51,7 +51,7 @@ import {
 const BudgetDetailPage = () => {
   const { budgetId } = useParams();
   const navigate = useNavigate();
-  const { transactions: liveTransactions } = useTransactions();
+  useTransactions();
 
   // Load budget data
   const budget = React.useMemo(() => {
@@ -62,12 +62,12 @@ const BudgetDetailPage = () => {
   const progress = React.useMemo(() => {
     if (!budget) return null;
     return budgetService.getBudgetProgress(budget);
-  }, [budget, liveTransactions]);
+  }, [budget]);
 
   const transactions = React.useMemo(() => {
     if (!budget) return [];
     return budgetService.getTransactionsForBudget(budget);
-  }, [budget, liveTransactions]);
+  }, [budget]);
 
   // Get subcategory budgets if this is a category budget
   const subcategoryBudgets = React.useMemo(() => {
