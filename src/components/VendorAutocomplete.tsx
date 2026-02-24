@@ -58,6 +58,10 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(value);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [wasExplicitlyClosed, setWasExplicitlyClosed] = useState(false);
+  const [openAbove, setOpenAbove] = useState(false);
+  const [dropdownMaxHeight, setDropdownMaxHeight] = useState(240);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -86,26 +90,52 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   }, [userHasInteracted]);
 
   const ensureInputVisible = () => {
-    inputRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-      inline: 'nearest',
+    requestAnimationFrame(() => {
+      inputRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest',
+      });
     });
   };
 
+  const updateDropdownLayout = () => {
+    const inputEl = inputRef.current;
+    if (!inputEl) return;
+
+    const rect = inputEl.getBoundingClientRect();
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const spaceAbove = Math.max(0, rect.top - 8);
+    const spaceBelow = Math.max(0, viewportHeight - rect.bottom - 8);
+    const shouldOpenAbove = spaceBelow < 180 && spaceAbove > spaceBelow;
+    const availableSpace = shouldOpenAbove ? spaceAbove : spaceBelow;
+
+    setOpenAbove(shouldOpenAbove);
+    setDropdownMaxHeight(Math.max(120, Math.min(320, Math.floor(availableSpace))));
+  };
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen && !isInputFocused) return;
 
     ensureInputVisible();
+    updateDropdownLayout();
 
     const viewport = window.visualViewport;
-    if (!viewport) return;
+    const handleViewportChange = () => {
+      ensureInputVisible();
+      updateDropdownLayout();
+    };
 
-    const handleViewportResize = () => ensureInputVisible();
-    viewport.addEventListener('resize', handleViewportResize);
+    viewport?.addEventListener('resize', handleViewportChange);
+    viewport?.addEventListener('scroll', handleViewportChange);
+    window.addEventListener('resize', handleViewportChange);
 
-    return () => viewport.removeEventListener('resize', handleViewportResize);
-  }, [isOpen]);
+    return () => {
+      viewport?.removeEventListener('resize', handleViewportChange);
+      viewport?.removeEventListener('scroll', handleViewportChange);
+      window.removeEventListener('resize', handleViewportChange);
+    };
+  }, [isOpen, isInputFocused]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -121,6 +151,9 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchTerm(newValue);
+    if (!wasExplicitlyClosed) {
+      setIsOpen(true);
+    }
     onChange(newValue);
   };
 
@@ -133,6 +166,7 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       setIsOpen(false);
+      setWasExplicitlyClosed(true);
     }
   };
 
@@ -147,10 +181,15 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => {
+              setIsInputFocused(true);
               ensureInputVisible();
-              if (userHasInteracted) {
+              if (!wasExplicitlyClosed) {
                 setIsOpen(true);
               }
+            }}
+            onBlur={() => {
+              setIsInputFocused(false);
+              setWasExplicitlyClosed(false);
             }}
             placeholder={placeholder}
             isAutoFilled={isAutoFilled}
@@ -164,7 +203,13 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-muted"
             onClick={() => {
               ensureInputVisible();
-              setIsOpen(prev => !prev);
+              const nextOpen = !isOpen;
+              setIsOpen(nextOpen);
+              setWasExplicitlyClosed(!nextOpen);
+              if (nextOpen) {
+                updateDropdownLayout();
+                inputRef.current?.focus();
+              }
             }}
             aria-label="Toggle payee picklist"
           >
@@ -179,7 +224,13 @@ const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-40 overflow-y-auto">
+        <div
+          className={cn(
+            'absolute z-50 w-full bg-background border border-border rounded-md shadow-lg overflow-y-auto',
+            openAbove ? 'bottom-full mb-1' : 'mt-1'
+          )}
+          style={{ maxHeight: `${dropdownMaxHeight}px` }}
+        >
           {filteredVendors.length > 0 ? (
             filteredVendors.map((vendor) => (
               <div
