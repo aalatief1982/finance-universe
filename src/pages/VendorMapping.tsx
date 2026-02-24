@@ -63,6 +63,9 @@ const VendorMapping: React.FC = () => {
   const [vendors, setVendors] = useState<VendorMappingEntry[]>([]);
   const location = useLocation();
   const state = location.state as VendorLocationState | null;
+  const stateMessages = state?.messages;
+  const stateVendorMap = state?.vendorMap;
+  const stateKeywordMap = state?.keywordMap;
   if (import.meta.env.MODE === 'development') {
     // console.log('VendorMapping state:', state);
   }
@@ -70,8 +73,8 @@ const VendorMapping: React.FC = () => {
   const navigate = useNavigate();
 
   const hasRequiredState = useCallback(() => {
-    return !!state && (state?.messages?.length ?? 0) > 0;
-  }, [state]);
+    return !!state && (stateMessages?.length ?? 0) > 0;
+  }, [state, stateMessages]);
 
   const hasValidData = () => {
     return vendors.some(v => !v.skipped) && hasRequiredState();
@@ -91,9 +94,9 @@ const VendorMapping: React.FC = () => {
   useEffect(() => {
     if (!hasRequiredState()) return;
 
-    const incomingVendorMap = state?.vendorMap || {};
-    const incomingKeywordBank = state?.keywordMap || [];
-    const messages = state?.messages || [];
+    const incomingVendorMap = stateVendorMap || {};
+    const incomingKeywordBank = stateKeywordMap || [];
+    const messages = stateMessages || [];
 
     if (Object.keys(incomingVendorMap).length === 0 || messages.length === 0) {
       toast({
@@ -144,7 +147,7 @@ const VendorMapping: React.FC = () => {
     if (import.meta.env.MODE === 'development') {
       // console.log('VendorMapping vendors:', initialMappings);
     }
-  }, [hasRequiredState, location.state, toast]);
+  }, [hasRequiredState, stateKeywordMap, stateMessages, stateVendorMap, toast]);
 
   const handleVendorChange = (index: number, field: keyof VendorMappingEntry, value: string) => {
     setVendors(prev => {
