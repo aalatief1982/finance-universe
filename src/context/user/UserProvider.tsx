@@ -34,8 +34,8 @@
 
 import { safeStorage } from "@/utils/safe-storage";
 
-import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { User, UserContextType } from './types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { User } from './types';
 import { toast } from '@/hooks/use-toast';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { ENABLE_SUPABASE_AUTH } from '@/lib/env';
@@ -57,6 +57,7 @@ import {
 } from './auth-utils';
 import { safeSetItem } from '@/utils/storage-utils';
 import { updateCurrency as persistCurrency } from '@/utils/storage-utils';
+import { UserContext } from './UserContext.context';
 import {
   updateUserPreferences as updateUserPreferencesUtil,
   updateDisplayOptions as updateDisplayOptionsUtil,
@@ -100,42 +101,6 @@ const DEFAULT_PREFERENCES = {
     backgroundSmsEnabled: false
   }
 };
-
-// ============================================================================
-// SECTION: Context Default Value
-// PURPOSE: Provide type-safe defaults for context consumers
-// ============================================================================
-
-export const UserContext = createContext<UserContextType>({
-  user: null,
-  auth: {
-    isAuthenticated: false,
-    isLoading: false,
-    isVerifying: false,
-    isDemoMode: false
-  },
-  updateUser: () => {},
-  startPhoneVerification: async () => false,
-  confirmPhoneVerification: async () => false,
-  logIn: () => {},
-  logOut: () => {},
-  isLoading: false,
-  loadUserProfile: async () => null,
-  updateUserPreferences: () => {},
-  updateTheme: () => {},
-  updateCurrency: () => {},
-  updateLanguage: () => {},
-  updateNotificationSettings: () => {},
-  updateDisplayOptions: () => {},
-  updatePrivacySettings: () => {},
-  updateDataManagement: () => {},
-  completeOnboarding: () => {},
-  isProfileComplete: () => false,
-  updateAvatar: () => {},
-  getEffectiveTheme: () => 'light',
-  setDemoModeEnabled: () => {},
-  checkUserExists: async () => false,
-});
 
 // ============================================================================
 // SECTION: User Provider Component
@@ -517,7 +482,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [updateUser]);
   
   // Demo mode is disabled — kept as no-op to satisfy context type contract
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const setDemoModeEnabled = useCallback((_enabled: boolean) => {}, []);
   
   useEffect(() => {
@@ -569,4 +533,3 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useUser = () => useContext(UserContext);

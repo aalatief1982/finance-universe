@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatVendorDisplay } from './VendorAutocomplete.utils';
 
 interface VendorAutocompleteProps {
   value: string;
@@ -38,11 +39,6 @@ interface VendorAutocompleteProps {
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
-export const formatVendorDisplay = (name: string) =>
-  name
-    .trim()
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
 
 const VendorAutocomplete: React.FC<VendorAutocompleteProps> = ({
   value,
