@@ -111,7 +111,7 @@ export function parseTemplateKey(key: string): { sender: string; hash: string } 
  */
 export function loadTemplateBank(): Record<string, SmartPasteTemplate> {
   const raw = safeStorage.getItem(TEMPLATE_BANK_KEY);
-  let bank: any = raw ? JSON.parse(raw) : null;
+  let bank: unknown = raw ? JSON.parse(raw) : null;
 
   if (!bank) {
     const legacy = safeStorage.getItem('xpensia_structure_templates');

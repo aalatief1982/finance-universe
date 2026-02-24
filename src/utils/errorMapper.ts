@@ -17,7 +17,7 @@
  */
 
 export const getFriendlyMessage = (err: unknown): string => {
-  const message = typeof err === 'string' ? err : (err as any)?.message ?? '';
+  const message = typeof err === 'string' ? err : (typeof err === 'object' && err !== null && 'message' in err ? (err as { message?: string }).message : undefined) ?? '';
   if (message.toLowerCase().includes('permission')) {
     return 'SMS permission is required to continue.';
   }

@@ -220,13 +220,13 @@ class SmsPermissionService {
         let timedOut = false;
         const timer = new Promise(resolve => setTimeout(() => { timedOut = true; resolve({ __timedOut: true }); }, ms));
         try {
-          const res = await Promise.race([p, timer]) as any;
+          const res = await Promise.race([p, timer]) as unknown;
           if (res && res.__timedOut) {
-            return { __timedOut: true } as any;
+            return { __timedOut: true } as unknown;
           }
           return res as T;
         } catch (err) {
-          return { __timedOut: true } as any;
+          return { __timedOut: true } as unknown;
         }
       };
 
@@ -247,7 +247,7 @@ class SmsPermissionService {
 
         // Request reader permission with timeout
         const readerResult = await withTimeout(SmsReaderService.requestPermission(), 8000);
-        if ((readerResult as any)?.__timedOut) {
+        if ((readerResult as unknown)?.__timedOut) {
           if (import.meta.env.MODE === 'development') {
             console.warn('[SMS] SmsReaderService.requestPermission timed out');
           }
@@ -259,12 +259,12 @@ class SmsPermissionService {
 
         // Request listener permission with timeout
         const listenerResult = await withTimeout(smsListener.requestPermission(), 8000);
-        if ((listenerResult as any)?.__timedOut) {
+        if ((listenerResult as unknown)?.__timedOut) {
           if (import.meta.env.MODE === 'development') {
             console.warn('[SMS] smsListener.requestPermission timed out');
           }
           // continue to polling
-        } else if (!(listenerResult as any)?.granted) {
+        } else if (!(listenerResult as unknown)?.granted) {
           this.savePermissionStatus(false);
           // continue to polling to determine if user granted via system
         }

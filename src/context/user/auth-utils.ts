@@ -128,7 +128,7 @@ export const getUserFromLocalStorage = (): User | null => {
  */
 export const checkSupabaseAuth = async (
   setUser: (user: User) => void,
-  setAuth: (auth: any) => void
+  setAuth: (auth: unknown) => void
 ): Promise<void> => {
   if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
     try {
@@ -161,7 +161,7 @@ export const checkSupabaseAuth = async (
           };
           
           setUser(updatedUser);
-          setAuth((prev: any) => ({
+          setAuth((prev: unknown) => ({
             ...prev,
             isAuthenticated: updatedUser.phoneVerified,
             isLoading: false,
@@ -181,7 +181,7 @@ export const checkSupabaseAuth = async (
   }
   
   // If we get here, either Supabase auth failed or it's disabled
-  setAuth((prev: any) => ({ ...prev, isLoading: false }));
+  setAuth((prev: unknown) => ({ ...prev, isLoading: false }));
 };
 
 /**
@@ -206,12 +206,12 @@ export const getVerificationSessionTimeout = (): number => {
 export const startPhoneVerification = async (
   phoneNumber: string,
   setIsLoading: (isLoading: boolean) => void,
-  setAuth: (auth: any) => void,
+  setAuth: (auth: unknown) => void,
   updateUser: (userData: Partial<User>) => void,
   updateAuthState: () => void
 ): Promise<boolean> => {
   setIsLoading(true);
-  setAuth((prev: any) => ({ ...prev, isVerifying: true }));
+  setAuth((prev: unknown) => ({ ...prev, isVerifying: true }));
   
   try {
     // Check if we should use Supabase for verification
@@ -273,7 +273,7 @@ export const startPhoneVerification = async (
 export const confirmPhoneVerification = async (
   code: string,
   setIsLoading: (isLoading: boolean) => void,
-  setAuth: (auth: any) => void,
+  setAuth: (auth: unknown) => void,
   updateUser: (userData: Partial<User>) => void,
   updateAuthState: () => void
 ): Promise<boolean> => {
@@ -289,7 +289,7 @@ export const confirmPhoneVerification = async (
           phoneVerified: true,
           registrationStarted: true
         });
-        setAuth((prev: any) => ({ 
+        setAuth((prev: unknown) => ({ 
           ...prev, 
           isVerifying: false,
           isAuthenticated: true // Set authenticated when phone is verified
@@ -313,7 +313,7 @@ export const confirmPhoneVerification = async (
           phoneVerified: true,
           registrationStarted: true
         });
-        setAuth((prev: any) => ({ 
+        setAuth((prev: unknown) => ({ 
           ...prev, 
           isVerifying: false,
           isAuthenticated: true // Set authenticated when phone is verified in demo mode too
@@ -342,7 +342,7 @@ export const confirmPhoneVerification = async (
  */
 export const logIn = async (
   updateUser: (userData: Partial<User>) => void,
-  setAuth: (auth: any) => void,
+  setAuth: (auth: unknown) => void,
   user: User | null
 ): Promise<void> => {
   if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
@@ -350,7 +350,7 @@ export const logIn = async (
     // We just need to check if we're already authenticated
     const isAuthenticated = await isAuthenticatedWithSupabase();
     
-    setAuth((prev: any) => ({ 
+    setAuth((prev: unknown) => ({ 
       ...prev, 
       isAuthenticated: isAuthenticated || prev.isAuthenticated 
     }));
@@ -358,7 +358,7 @@ export const logIn = async (
     // When not using Supabase, handle auth state locally
     // Preserve existing isAuthenticated if already true (e.g., from completeOnboarding)
     // Otherwise, set based on phone verification
-    setAuth((prev: any) => ({ 
+    setAuth((prev: unknown) => ({ 
       ...prev, 
       isAuthenticated: prev.isAuthenticated || user?.phoneVerified || false
     }));
@@ -377,7 +377,7 @@ export const logIn = async (
  * @param setUser Function to set user state
  */
 export const logOut = async (
-  setAuth: (auth: any) => void,
+  setAuth: (auth: unknown) => void,
   setUser: (user: User | null) => void
 ): Promise<void> => {
   try {
@@ -387,7 +387,7 @@ export const logOut = async (
     }
     
     // Clear local state
-    setAuth((prev: any) => ({ 
+    setAuth((prev: unknown) => ({ 
       ...prev, 
       isAuthenticated: false,
       isDemoMode: isDemoMode()

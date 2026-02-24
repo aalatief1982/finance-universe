@@ -34,7 +34,7 @@ import { logToGoogleSheets } from './google-sheets';
  * Log to Firebase Analytics only (no Google Sheets).
  * Use for high-frequency events like screen views to avoid excessive API calls.
  */
-export async function logFirebaseOnlyEvent(name: string, params?: Record<string, any>) {
+export async function logFirebaseOnlyEvent(name: string, params?: Record<string, unknown>) {
   try {
     if (Capacitor.isNativePlatform()) {
       await FirebaseAnalytics.logEvent({ name, params });
@@ -55,7 +55,7 @@ export async function logFirebaseOnlyEvent(name: string, params?: Record<string,
  * Log to Google Sheets only (no Firebase).
  * Use for detailed debugging data like template matches and errors.
  */
-export async function logSheetsOnlyEvent(name: string, params?: Record<string, any>) {
+export async function logSheetsOnlyEvent(name: string, params?: Record<string, unknown>) {
   // Skip in test environment
   if (import.meta.env.MODE === 'test') return;
   
@@ -81,7 +81,7 @@ export async function logSheetsOnlyEvent(name: string, params?: Record<string, a
  * Also logs to Google Sheets with device information.
  * Errors are silently ignored unless in development mode.
  */
-export async function logAnalyticsEvent(name: string, params?: Record<string, any>) {
+export async function logAnalyticsEvent(name: string, params?: Record<string, unknown>) {
   try {
     // Get device information for Google Sheets logging
     const deviceInfo = await Device.getInfo();
@@ -104,7 +104,7 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, an
     }
 
     // Log to Google Sheets
-    const logEntry: any = {
+    const logEntry: Record<string, unknown> = {
       deviceName: deviceInfo.name || 'Unknown Device',
       event: name,
       parameters: JSON.stringify(params || {}),

@@ -38,7 +38,7 @@ export const useLearningEngine = () => {
    * Learn from a confirmed transaction
    */
   const learnFromTransaction = useCallback(
-    (rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: Partial<any>) => {
+    (rawMessage: string, transaction: Transaction, senderHint?: string, customFieldTokenMap?: Partial<unknown>) => {
       setIsLoading(true);
       try {
         learningEngineService.learnFromTransaction(rawMessage, transaction, senderHint, customFieldTokenMap);

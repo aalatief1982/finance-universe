@@ -31,12 +31,12 @@ import { getFriendlyMessage } from '@/utils/errorMapper';
 interface UseAutoSaveOptions {
   delay?: number;
   enabled?: boolean;
-  onSave?: (data: any) => Promise<void>;
+  onSave?: (data: unknown) => Promise<void>;
   onError?: (error: Error) => void;
 }
 
 export const useAutoSave = (
-  form: UseFormReturn<any>,
+  form: UseFormReturn<unknown>,
   options: UseAutoSaveOptions = {}
 ) => {
   const {
@@ -51,7 +51,7 @@ export const useAutoSave = (
   const timeoutRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  const debouncedSave = useCallback(async (data: any) => {
+  const debouncedSave = useCallback(async (data: unknown) => {
     if (!onSave || !enabled) return;
 
     setSaveStatus('saving');

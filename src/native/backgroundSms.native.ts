@@ -30,7 +30,7 @@ import { Capacitor } from '@capacitor/core';
 // Add a small cache and in-flight guard to avoid repeatedly calling native checkPermissionWithRationale
 let _lastPermissionCheckTime = 0;
 let _lastPermissionCheckResult: { granted: boolean; shouldShowRationale?: boolean } | null = null;
-let _permissionCheckInFlight: Promise<any> | null = null;
+let _permissionCheckInFlight: Promise<unknown> | null = null;
 const PERMISSION_CHECK_CACHE_TTL = 2000; // ms
 
 // Create a wrapper around the actual plugin with better error handling
@@ -67,7 +67,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       _permissionCheckInFlight = (async () => {
         try {
           const result = await BackgroundSmsListener.checkPermission();
-          _lastPermissionCheckResult = result as any;
+          _lastPermissionCheckResult = result as unknown;
           _lastPermissionCheckTime = Date.now();
           return result;
         } catch (err) {
@@ -110,7 +110,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       _permissionCheckInFlight = (async () => {
         try {
           const result = await BackgroundSmsListener.checkPermissionWithRationale();
-          _lastPermissionCheckResult = result as any;
+          _lastPermissionCheckResult = result as unknown;
           _lastPermissionCheckTime = Date.now();
           return result;
         } catch (err) {
@@ -145,7 +145,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
         // console.log('[SMS] Permission request result:', result);
       }
       // update cached result
-      _lastPermissionCheckResult = result as any;
+      _lastPermissionCheckResult = result as unknown;
       _lastPermissionCheckTime = Date.now();
       return result;
     } catch (err) {

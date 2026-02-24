@@ -50,7 +50,7 @@ export function isFinancialTransactionMessage(text: string): boolean {
   const fallbackKeywords = ["مبلغ", "حوالة", "رصيد", "بطاقة", "شراء", "تحويل", "دفع", "إيداع"];
   const financialKeywords = storedKeywords.length > 0 ? storedKeywords : fallbackKeywords;
 
-  const normalize = (str: any): string =>
+  const normalize = (str: unknown): string =>
     typeof str === 'string'
       ? str.normalize('NFC').replace(/\s+/g, '').trim().toLowerCase()
       : '';

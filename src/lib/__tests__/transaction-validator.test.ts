@@ -49,7 +49,7 @@ describe('transaction-validator', () => {
       type: 'expense',
       source: 'manual',
       fromAccount: 'Cash',
-    } as any;
+    } as unknown as Transaction;
 
     const result = validateTransactionInput(invalidTxn);
     expect(result).toBe(false);

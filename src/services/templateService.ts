@@ -63,7 +63,7 @@ export async function getTemplateStats(range: '7d' | '30d' | '90d' = '30d'): Pro
   const totalTemplates = templates.length;
 
   // Helper to parse meta numbers
-  const safeNum = (v: any) => (typeof v === 'number' ? v : 0);
+  const safeNum = (v: unknown) => (typeof v === 'number' ? v : 0);
 
   // Average fields
   const averageFields = totalTemplates === 0 ? 0 : templates.reduce((s, t) => s + (t.fields?.length || 0), 0) / totalTemplates;

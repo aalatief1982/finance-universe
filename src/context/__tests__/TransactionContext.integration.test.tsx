@@ -346,12 +346,12 @@ describe('TransactionContext Integration', () => {
         const byCategory = contextRef!.getTransactionsByCategory();
         expect(byCategory.length).toBe(2);
 
-        const food = byCategory.find((c: any) => c.category === 'Food');
+        const food = byCategory.find((c: { category: string; transactions: Transaction[] }) => c.category === 'Food');
         expect(food?.transactions.length).toBe(2);
         expect(food?.total).toBe(-150);
 
         const transport = byCategory.find(
-          (c: any) => c.category === 'Transport',
+          (c: { category: string; transactions: Transaction[] }) => c.category === 'Transport',
         );
         expect(transport?.transactions.length).toBe(1);
       });

@@ -72,8 +72,8 @@ export function migrateBudget(raw: Partial<Budget> & { scope?: string; period?: 
   if (scope === 'overall') targetId = '_overall';
   
   // Handle period migration: 'custom' becomes 'monthly'
-  let period = raw.period as BudgetPeriod;
-  if (period === 'custom' as any) {
+  let period = raw.period as BudgetPeriod | 'custom';
+  if (period === 'custom') {
     period = 'monthly';
   }
   

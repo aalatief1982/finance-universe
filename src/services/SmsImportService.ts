@@ -190,7 +190,7 @@ export class SmsImportService {
   }
 
   static async checkForNewMessages(
-    navigate?: ((path: string, options?: any) => void) | undefined,
+    navigate?: ((path: string, options?: unknown) => void) | undefined,
     opts?: { auto?: boolean; usePermissionDate?: boolean }
   ): Promise<void> {
     if (this.importLock) {
@@ -215,7 +215,7 @@ export class SmsImportService {
       // For permission-date-based import, use the dedicated logic
       // This handles both initial import after permission grant and subsequent auto imports
       if (usePermissionDate) {
-        await this.handleAutoImportWithPermissionDate(safeNavigate as any);
+        await this.handleAutoImportWithPermissionDate(safeNavigate as unknown);
         return;
       }
 
@@ -300,7 +300,7 @@ export class SmsImportService {
    * Handle automatic import using permission grant date
    */
   private static async handleAutoImportWithPermissionDate(
-    navigate: (path: string, options?: any) => void
+    navigate: (path: string, options?: unknown) => void
   ): Promise<void> {
     try {
       const senderMap = getSmsSenderImportMap();

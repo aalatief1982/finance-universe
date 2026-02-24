@@ -32,7 +32,7 @@ import { toast } from "@/hooks/use-toast";
 export const createError = (
   type: ErrorType,
   message: string,
-  details?: Record<string, any>,
+  details?: Record<string, unknown>,
   originalError?: unknown,
   severity?: ErrorSeverity,
   isSilent?: boolean
@@ -110,7 +110,7 @@ export const handleError = (
     info: console.info
   };
   
-  const logMethod = originalConsole[logLevel as keyof typeof originalConsole] as (...args: any[]) => void;
+  const logMethod = originalConsole[logLevel as keyof typeof originalConsole] as (...args: unknown[]) => void;
   
   if (import.meta.env.MODE === 'development') {
     logMethod(
@@ -145,7 +145,7 @@ export const handleError = (
  */
 export const handleValidationError = (
   message: string,
-  details?: Record<string, any>,
+  details?: Record<string, unknown>,
   isSilent?: boolean
 ): AppError => {
   const error = createError(
@@ -178,7 +178,7 @@ export const handleValidationError = (
 export const handleApiError = (
   message: string,
   statusCode?: number,
-  details?: Record<string, any>,
+  details?: Record<string, unknown>,
   originalError?: unknown
 ): AppError => {
   // Determine severity based on status code
@@ -212,7 +212,7 @@ export const handleApiError = (
  */
 export const handleNetworkError = (
   message: string = "Network connection issue detected",
-  details?: Record<string, any>,
+  details?: Record<string, unknown>,
   originalError?: unknown
 ): AppError => {
   const error = createError(
@@ -231,7 +231,7 @@ export const handleNetworkError = (
  */
 export const handleAuthError = (
   message: string = "Authentication failed",
-  details?: Record<string, any>,
+  details?: Record<string, unknown>,
   originalError?: unknown
 ): AppError => {
   const error = createError(

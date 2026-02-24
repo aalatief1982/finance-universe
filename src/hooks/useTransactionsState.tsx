@@ -73,7 +73,7 @@ export function useTransactionsState() {
   } = useTransactionsCrud();
 
   // Override CRUD methods to use enhanced storage
-  const handleAddTransaction = useCallback((formData: any) => {
+  const handleAddTransaction = useCallback((formData: unknown) => {
     const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
     
     const newTransaction: Transaction = ensureFxFields({
@@ -98,7 +98,7 @@ export function useTransactionsState() {
     return newTransaction;
   }, [contextAddTransaction, setIsAddingExpense, userCurrency]);
 
-  const handleEditTransaction = useCallback((formData: any) => {
+  const handleEditTransaction = useCallback((formData: unknown) => {
     if (!currentTransaction) return null;
 
     const transactionType: "income" | "expense" = formData.amount >= 0 ? "income" : "expense";
@@ -396,7 +396,7 @@ export function useTransactionsState() {
     const categoryHierarchy = getCategoryHierarchy();
     const path: string[] = [];
     
-    const findCategory = (categories: any[], targetId: string): boolean => {
+    const findCategory = (categories: unknown[], targetId: string): boolean => {
       for (const category of categories) {
         if (category.id === targetId) {
           path.unshift(category.name);

@@ -361,7 +361,7 @@ const handleReadSms = async () => {
       </Button>
 
       {messages.length > 0 && (
-        <ToggleGroup type="single" value={filter} onValueChange={(val) => setFilter((val as any) || 'all')} className="mb-4">
+        <ToggleGroup type="single" value={filter} onValueChange={(val) => setFilter((val as unknown) || 'all')} className="mb-4">
           <ToggleGroupItem value="all">All</ToggleGroupItem>
           <ToggleGroupItem value="matched">Matched</ToggleGroupItem>
           <ToggleGroupItem value="skipped">Skipped</ToggleGroupItem>
