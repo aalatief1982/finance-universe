@@ -47,7 +47,7 @@ interface Insight {
 
 const BudgetInsightsPage = () => {
   const navigate = useNavigate();
-  const { transactions } = useTransactions();
+  useTransactions();
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
@@ -179,7 +179,7 @@ const BudgetInsightsPage = () => {
     result.sort((a, b) => order[a.type] - order[b.type]);
 
     return result;
-  }, [budgets, getBudgetDisplayName, transactions]);
+  }, [budgets, getBudgetDisplayName]);
 
   const getIcon = (type: Insight['type']) => {
     switch (type) {
@@ -217,7 +217,7 @@ const BudgetInsightsPage = () => {
     const atRisk = allProgress.filter(p => !p.isOverBudget && p.percentUsed > 80).length;
     
     return { overBudget, onTrack, atRisk, total: budgets.length };
-  }, [budgets, transactions]);
+  }, [budgets]);
 
   return (
     <BudgetLayout 

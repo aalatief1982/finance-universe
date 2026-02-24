@@ -57,10 +57,10 @@ const DashboardContent = ({
   const balance = income - expenses;
 
   // Calculate previous month's balance with defensive approach
-  const today = new Date();
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  
   const lastMonthTransactions = React.useMemo(() => {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
     return safeTransactions.filter(tx => {
       // Skip invalid transactions
       if (!tx || !tx.date) return false;
@@ -75,7 +75,7 @@ const DashboardContent = ({
         return false;
       }
     });
-  }, [safeTransactions, firstDayOfMonth]);
+  }, [safeTransactions]);
 
   const previousFxSummary = React.useMemo(() => {
     return AnalyticsService.getFxAwareTotals(lastMonthTransactions, baseCurrency);

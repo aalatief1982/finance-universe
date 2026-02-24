@@ -153,25 +153,10 @@ const SetBudgetPage = () => {
   const [propagateUp, setPropagateUp] = React.useState(false);
   const [addAccountOpen, setAddAccountOpen] = React.useState(false);
   const [newAccount, setNewAccount] = React.useState({ name: '', iban: '' });
-  const [accountsRefreshKey, setAccountsRefreshKey] = React.useState(0);
-
-  // Data - merge service accounts with user-stored accounts
-  const accounts = React.useMemo(() => {
-    const serviceAccounts = accountService.getAccounts();
-    const storedAccounts = getStoredAccounts();
-    // Merge: start with service accounts, add any stored accounts not already present
-    const existingNames = new Set(serviceAccounts.map(a => a.name.toLowerCase()));
-    const additional = storedAccounts
-      .filter(sa => !existingNames.has(sa.name.toLowerCase()))
-      .map((sa, i) => ({ id: `stored_${sa.name}_${i}`, name: sa.name, type: 'Bank' as const, currency: 'USD', initialBalance: 0, startDate: '' }));
-    return [...serviceAccounts, ...additional];
-  }, [accountsRefreshKey]);
-
   // Handle saving a new account from the dialog
   const handleSaveNewAccount = () => {
     if (!newAccount.name.trim()) return;
     addUserAccount({ name: newAccount.name.trim(), iban: newAccount.iban.trim() || undefined });
-    setAccountsRefreshKey(k => k + 1);
     // Auto-select the new account
     const updatedAccounts = accountService.getAccounts();
     const storedAccounts = getStoredAccounts();
@@ -215,8 +200,18 @@ const SetBudgetPage = () => {
     switch (scope) {
       case 'overall':
         return []; // No target needed for overall
-      case 'account':
-        return accounts.map(a => ({ id: a.id, name: a.name, parentId: null }));
+      case 'account': {
+        const serviceAccounts = accountService.getAccounts();
+        const storedAccounts = getStoredAccounts();
+        const existingNames = new Set(serviceAccounts.map(a => a.name.toLowerCase()));
+        const additionalAccounts = storedAccounts
+          .filter(sa => !existingNames.has(sa.name.toLowerCase()))
+          .map((sa, i) => ({ id: `stored_${sa.name}_${i}`, name: sa.name, parentId: null }));
+        return [
+          ...serviceAccounts.map(a => ({ id: a.id, name: a.name, parentId: null })),
+          ...additionalAccounts,
+        ];
+      }
       case 'category':
         return parentCategories.map(c => ({ id: c.id, name: c.name, parentId: null }));
       case 'subcategory':
@@ -230,7 +225,7 @@ const SetBudgetPage = () => {
       default:
         return [];
     }
-  }, [scope, accounts, parentCategories, subcategories]);
+  }, [scope, parentCategories, subcategories]);
 
   // Calculate time-based cascade preview ONLY for overall + yearly scope
   const cascadePreview = React.useMemo(() => {

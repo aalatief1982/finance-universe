@@ -133,7 +133,7 @@ const BudgetReportPage = () => {
         };
       })
       .sort((a, b) => (a.periodIndex ?? 0) - (b.periodIndex ?? 0)); // Sort chronologically
-  }, [budgets, selectedPeriod, period, year, scopeFilter, getBudgetDisplayName, transactions]);
+  }, [budgets, selectedPeriod, period, year, scopeFilter, getBudgetDisplayName]);
 
   // Total summary
   const totalSummary = React.useMemo(() => {
@@ -196,7 +196,7 @@ const BudgetReportPage = () => {
         fill: CHART_COLORS[index % CHART_COLORS.length],
       };
     }).filter(c => c.value > 0);
-  }, [budgets, getBudgetDisplayName, transactions]);
+  }, [budgets, getBudgetDisplayName]);
 
   // Over-budget items
   const overBudgetItems = React.useMemo(() => {
