@@ -692,12 +692,13 @@ const Settings = () => {
 
         <section className="bg-card rounded-lg p-4 mt-6">
           <div className="text-center">
-            <p 
-              className="text-sm text-muted-foreground cursor-default select-none"
+            <button
+              type="button"
+              className="text-sm text-muted-foreground cursor-default select-none bg-transparent border-0 p-0"
               onClick={handleVersionTap}
             >
               Version {appVersion || '...'}
-            </p>
+            </button>
             {adminMode && (
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Badge variant="outline" className="text-xs">
