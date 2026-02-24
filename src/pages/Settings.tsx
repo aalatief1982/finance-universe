@@ -41,25 +41,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Sun,
   Moon,
-  Bell,
   Eye,
   MessageSquare,
   Download,
@@ -67,7 +57,6 @@ import {
   Database,
   Trash2,
   Lock,
-  Unlock,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 
@@ -77,11 +66,7 @@ import { useTheme } from "next-themes";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CURRENCIES } from "@/lib/categories-data";
 import { LockedFeature } from "@/components/ui/locked-feature";
-import {
-  isBetaActive,
-  handleLockedFeatureClick,
-  handleBetaCodeSubmit
-} from "@/utils/beta-utils";
+import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
 import {
   updateCurrency as persistCurrency,
@@ -92,7 +77,6 @@ import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
@@ -105,27 +89,15 @@ import { ShieldCheck } from 'lucide-react';
 
 const Settings = () => {
   const { toast } = useToast();
-  const {
-    user,
-    updateTheme,
-    updateCurrency,
-    updateDisplayOptions,
-    updateUser,
-    getEffectiveTheme,
-  } = useUser();
+  const { user, updateUser } = useUser();
 
   const navigate = useNavigate();
   const { setTheme: setNextTheme } = useTheme();
-
-  const [notificationsAllowed, setNotificationsAllowed] = useState(
-    typeof Notification !== 'undefined' && Notification.permission === "granted"
-  );
-
   const [theme, setTheme] = useState<"light" | "dark" | "system">(
     user?.preferences?.theme || "light",
   );
   const [currency, setCurrency] = useState(
-    user?.preferences?.currency || "USD",
+    user?.preferences?.currency || "SAR",
   );
   
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
@@ -141,13 +113,8 @@ const Settings = () => {
     "sunday" | "monday" | "saturday"
   >(user?.preferences?.displayOptions?.weekStartsOn || "sunday");
 
-  const [isDirty, setIsDirty] = useState(false);
-  const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
-  
   // Beta features state
-  const [betaDialogOpen, setBetaDialogOpen] = useState(false);
-  const [betaCode, setBetaCode] = useState('');
-  const [betaActive, setBetaActive] = useState(() => isBetaActive());
+  const betaActive = isBetaActive();
   
   // App version state
   const [appVersion, setAppVersion] = useState<string>('');
@@ -203,40 +170,11 @@ const Settings = () => {
     logFirebaseOnlyEvent('view_settings', { timestamp: Date.now() });
   }, []);
 
-  useEffect(() => {
-    const checkPermissions = async () => {
-      const platform = Capacitor.getPlatform();
-      if (platform === 'web' && typeof Notification !== 'undefined') {
-        setNotificationsAllowed(Notification.permission === 'granted');
-      } else {
-        try {
-          const status = await LocalNotifications.checkPermissions();
-          setNotificationsAllowed(status.display === 'granted');
-        } catch {
-          setNotificationsAllowed(false);
-        }
-      }
-    };
-
-    checkPermissions();
-  }, []);
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
 
   useEffect(() => {
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
-      setCurrency(user.preferences.currency || "USD");
+      setCurrency(user.preferences.currency || "SAR");
       if (user.preferences.sms) {
         const initialBg = user.preferences.sms.backgroundSmsEnabled || false;
         setBackgroundSmsEnabled(initialBg);
@@ -317,174 +255,56 @@ const Settings = () => {
     fetchVersion();
   }, []);
 
-  useEffect(() => {
-    const origTheme = user?.preferences?.theme || "light";
-    const origCurrency = user?.preferences?.currency || "USD";
-    const origAutoImport = user?.preferences?.sms?.autoImport || false;
-    const origBackground = baselineBackgroundSmsEnabled;
-    const origWeek = user?.preferences?.displayOptions?.weekStartsOn || "sunday";
+  const persistSettings = (overrides: {
+    theme?: "light" | "dark" | "system";
+    currency?: string;
+    autoImport?: boolean;
+    backgroundSmsEnabled?: boolean;
+    weekStartsOn?: "sunday" | "monday" | "saturday";
+  }) => {
+    const updatedTheme = overrides.theme ?? theme;
+    const updatedCurrency = overrides.currency ?? currency;
+    const updatedAutoImport = overrides.autoImport ?? autoImport;
+    const updatedBackgroundSmsEnabled = overrides.backgroundSmsEnabled ?? backgroundSmsEnabled;
+    const updatedWeekStartsOn = overrides.weekStartsOn ?? weekStartsOn;
 
-    const changed =
-      theme !== origTheme ||
-      currency !== origCurrency ||
-      autoImport !== origAutoImport ||
-      backgroundSmsEnabled !== origBackground ||
-      weekStartsOn !== origWeek;
+    updateUser({
+      preferences: {
+        ...user?.preferences,
+        theme: updatedTheme,
+        currency: updatedCurrency,
+        sms: {
+          ...user?.preferences?.sms,
+          backgroundSmsEnabled: updatedBackgroundSmsEnabled,
+          autoImport: updatedAutoImport,
+        },
+        displayOptions: {
+          ...user?.preferences?.displayOptions,
+          weekStartsOn: updatedWeekStartsOn,
+        },
+      },
+    });
 
-    setIsDirty(changed);
-  }, [theme, currency, autoImport, backgroundSmsEnabled, weekStartsOn, baselineBackgroundSmsEnabled, user]);
+    setNextTheme(updatedTheme);
+    persistCurrency(updatedCurrency);
+    logAnalyticsEvent('settings_saved');
+  };
 
   const handleThemeChange = (value: "light" | "dark" | "system") => {
     setTheme(value);
+    persistSettings({ theme: value });
     logFirebaseOnlyEvent('theme_change', { theme: value });
   };
 
   const handleCurrencyChange = (value: string) => {
     setCurrency(value);
+    persistSettings({ currency: value });
   };
 
-  const handleBackgroundSmsChange = async (checked: boolean) => {
-    const platform = Capacitor.getPlatform();
-
-    if (checked) {
-      if (platform === 'web') {
-        setBackgroundSmsEnabled(true);
-        return;
-      }
-
-      try {
-        const result = await smsPermissionService.requestPermission();
-        
-        // Always re-check canonical permission status after request
-        const canonicalStatus = await smsPermissionService.checkPermissionStatus();
-        console.log('[Settings] handleBackgroundSmsChange canonical status:', canonicalStatus);
-
-        if (!canonicalStatus.granted) {
-          setBackgroundSmsEnabled(false);
-          if (canonicalStatus.permanentlyDenied) {
-            toast({
-              title: 'SMS permission permanently denied',
-              description:
-                'Enable SMS permissions in your device Settings > Apps > Xpensia > Permissions to use background SMS reading.',
-              variant: 'destructive',
-            });
-          }
-          return;
-        }
-
-        setBackgroundSmsEnabled(true);
-        setAutoImport(true);
-
-        // Log auto-import enabled
-        logAnalyticsEvent('auto_import_enabled', { platform });
-
-        // Initialize listener and trigger initial import after grant
-        try {
-          console.log('[Settings] Initializing SMS listener and triggering import...');
-          await smsPermissionService.initSmsListener();
-          const SmsImportService = (await import('@/services/SmsImportService')).default;
-          setTimeout(async () => {
-            try {
-              await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
-              console.log('[Settings] Initial SMS import triggered');
-            } catch (e) {
-              console.warn('[Settings] Error during initial import:', e);
-            }
-          }, 500);
-        } catch (e) {
-          console.warn('[Settings] Error initializing listener:', e);
-        }
-
-        toast({
-          title: 'SMS Auto-Import Enabled! 🎉',
-          description: 'Your transactions will now be imported automatically.'
-        });
-      } catch {
-        setBackgroundSmsEnabled(false);
-      }
-    } else {
-      setBackgroundSmsEnabled(false);
-      // Log auto-import disabled
-      logAnalyticsEvent('auto_import_disabled', { platform });
-    }
-  };
-
-  const handleNotificationToggle = async (checked: boolean) => {
-    const platform = Capacitor.getPlatform();
-
-    if (checked) {
-      if (platform === 'web' && typeof Notification !== 'undefined') {
-        if (Notification.permission !== 'granted') {
-          const result = await Notification.requestPermission();
-          if (result !== 'granted') {
-            setNotificationsAllowed(false);
-            return;
-          }
-        }
-        setNotificationsAllowed(true);
-        return;
-      }
-
-      try {
-        const status = await LocalNotifications.checkPermissions();
-        if (status.display !== 'granted') {
-          const req = await LocalNotifications.requestPermissions();
-          if (req.display !== 'granted') {
-            setNotificationsAllowed(false);
-            return;
-          }
-        }
-        setNotificationsAllowed(true);
-      } catch {
-        setNotificationsAllowed(false);
-      }
-    } else {
-      setNotificationsAllowed(false);
-    }
-  };
-
-  const handleSaveSettings = () => {
-    const updated = {
-      theme,
-      currency,
-      sms: {
-        ...user?.preferences?.sms,
-        backgroundSmsEnabled,
-        autoImport,
-      },
-      displayOptions: {
-        ...user?.preferences?.displayOptions,
-        weekStartsOn,
-      },
-    } as any;
-
-    updateUser({ preferences: { ...user?.preferences, ...updated } });
-
-    setNextTheme(theme);
-
-    persistCurrency(currency);
-
-    logAnalyticsEvent('settings_saved');
-
-    toast({
-      title: "Settings saved successfully",
-    });
-
-    setIsDirty(false);
-  };
-
-  const handleSkipWithoutSave = () => {
-    setShowUnsavedPrompt(false);
-    setIsDirty(false);
-  };
-
-  const handleSaveAndProceed = () => {
-    handleSaveSettings();
-    setShowUnsavedPrompt(false);
-  };
 
   const updateWeekStartsOn = (value: "sunday" | "monday" | "saturday") => {
     setWeekStartsOn(value);
+    persistSettings({ weekStartsOn: value });
   };
 
   const handleExportData = async () => {
@@ -605,23 +425,6 @@ const Settings = () => {
     fileInput.click();
   };
 
-
-
-  const handleBetaSubmit = () => {
-    handleBetaCodeSubmit(
-      betaCode,
-      () => {
-        setBetaActive(true);
-        setBetaDialogOpen(false);
-        setBetaCode('');
-      },
-      () => {
-        setBetaDialogOpen(false);
-        setBetaCode('');
-      }
-    );
-  };
-
   return (
     <Layout showBack>
       <div className="px-1">
@@ -631,10 +434,6 @@ const Settings = () => {
         transition={{ duration: 0.5 }}
         className="space-y-6 pb-24 mt-2"
       >
-        <Button className="w-full mb-2" onClick={handleSaveSettings}>
-          Save Settings
-        </Button>
-        
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <Sun className="mr-2" size={20} />
@@ -725,38 +524,6 @@ const Settings = () => {
               <ToggleGroupItem value="saturday">Saturday</ToggleGroupItem>
             </ToggleGroup>
           </div>
-        </section>
-
-        <section className="space-y-4">
-          <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Bell className="mr-2" size={20} />
-            <span>Notification Settings</span>
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Manage notification preferences
-          </p>
-          
-          <LockedFeature
-            isLocked={!betaActive}
-            featureName="Enable Notifications"
-            onLockedClick={() => handleLockedFeatureClick('Enable Notifications')}
-          >
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="allow-notifications">
-                  Enable Notifications
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Allow this app to send you notifications
-                </p>
-              </div>
-              <Switch
-                id="allow-notifications"
-                checked={notificationsAllowed}
-                onCheckedChange={handleNotificationToggle}
-              />
-            </div>
-          </LockedFeature>
         </section>
 
         <section className="space-y-4">
@@ -918,47 +685,6 @@ const Settings = () => {
 
 
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Beta Features</p>
-              <p className="text-sm text-muted-foreground">
-                {betaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
-              </p>
-            </div>
-            {betaActive ? (
-              <div className="flex items-center text-green-600">
-                <Unlock className="h-4 w-4 mr-2" />
-                <span className="text-sm font-medium">Active</span>
-              </div>
-            ) : (
-              <Dialog open={betaDialogOpen} onOpenChange={setBetaDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    Activate Beta Features
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Enter Beta Code</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="betaCode">Beta Code</Label>
-                      <Input
-                        id="betaCode"
-                        value={betaCode}
-                        onChange={(e) => setBetaCode(e.target.value)}
-                        placeholder="Enter your beta code"
-                      />
-                    </div>
-                    <Button onClick={handleBetaSubmit} className="w-full">
-                      Activate Features
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
         </section>
 
         {/* Template Stats Section - admin only */}
@@ -1014,24 +740,6 @@ const Settings = () => {
       </motion.div>
       </div>
       
-      <AlertDialog open={showUnsavedPrompt} onOpenChange={setShowUnsavedPrompt}>
-        <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes. What would you like to do?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button variant="outline" onClick={handleSkipWithoutSave}>
-              Skip without Save
-            </Button>
-            <Button onClick={handleSaveAndProceed}>
-              Save and Proceed
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       <LoadingOverlay isOpen={smsBusy} message={smsBusyMessage} />
     </Layout>
   );
