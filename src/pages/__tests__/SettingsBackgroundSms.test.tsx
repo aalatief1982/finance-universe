@@ -1,10 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import { UserProvider, useUser } from '@/context/UserContext';
 import Settings from '../Settings';
-import { vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
 
 vi.mock('@/services/SmsPermissionService', () => ({
   smsPermissionService: {
@@ -26,7 +26,17 @@ const StateViewer = () => {
 };
 
 describe('Settings background SMS toggle', () => {
-  it('is disabled when feature is locked', () => {
+  beforeEach(() => {
+    localStorage.setItem('betaFeaturesActive', 'false');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        json: vi.fn().mockResolvedValue({ version: '1.0.0' }),
+      }),
+    );
+  });
+
+  it('is disabled when feature is locked', async () => {
     render(
       <UserProvider>
         <BrowserRouter>
@@ -36,7 +46,7 @@ describe('Settings background SMS toggle', () => {
       </UserProvider>
     );
 
-    const toggle = screen.getByLabelText(/enable background sms reading/i);
+    const toggle = await screen.findByLabelText(/enable sms auto-import/i);
     expect(toggle).toBeDisabled();
   });
 });

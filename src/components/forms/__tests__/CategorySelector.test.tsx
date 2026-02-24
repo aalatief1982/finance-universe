@@ -21,7 +21,7 @@ function renderWithForm() {
         title: '',
         amount: 0,
         category: '',
-        subcategory: 'none',
+        subcategory: '',
         date: '',
         type: 'expense',
         fromAccount: '',
@@ -62,6 +62,6 @@ describe('CategorySelector', () => {
     fireEvent.click(screen.getByRole('combobox'));
     fireEvent.click(screen.getByText(mockCategories[0]));
 
-    expect(spy).toHaveBeenCalledWith('subcategory', 'none');
+    expect(spy).toHaveBeenCalledWith('subcategory', '');
   });
 });

@@ -8,6 +8,10 @@ vi.mock('../SmsReaderService');
 vi.mock('@/lib/native/BackgroundSmsListener');
 vi.mock('@capacitor/core', () => ({
   Capacitor: {
+    registerPlugin: vi.fn(() => ({
+      addListener: vi.fn(async () => ({ remove: vi.fn() })),
+      removeAllListeners: vi.fn(async () => undefined),
+    })),
     isNativePlatform: vi.fn(() => true),
     getPlatform: vi.fn(() => 'android'),
   },
@@ -17,6 +21,10 @@ describe('SmsPermissionService.requestPermission', () => {
   it('requests both sms reader and listener permissions', async () => {
     (SmsReaderService.requestPermission as Mock).mockResolvedValue(true);
     (SmsReaderService.hasPermission as Mock).mockResolvedValue(false);
+    (SmsReaderService.checkPermissionWithRationale as Mock).mockResolvedValue({
+      granted: true,
+      shouldShowRationale: false,
+    });
 
     const requestPermission = vi.fn().mockResolvedValue({ granted: true });
     (loadSmsListener as Mock).mockResolvedValue({

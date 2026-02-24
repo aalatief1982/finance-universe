@@ -82,7 +82,7 @@ const traceState = (message: string, payload?: Record<string, unknown>) => {
 // ============================================================================
 
 const DEFAULT_PREFERENCES = {
-  currency: 'SAR',
+  currency: 'USD',
   theme: 'light' as const,
   notifications: true,
   language: 'en',
@@ -300,7 +300,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastActive: new Date(),
           registrationStarted: true, // Mark as started registration
           preferences: userData.preferences || {
-            currency: 'SAR',
+            currency: 'USD',
             theme: 'light',
             notifications: true,
             language: 'en',
@@ -481,8 +481,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateUser({ avatar: avatarUrl });
   }, [updateUser]);
   
-  // Demo mode is disabled — kept as no-op to satisfy context type contract
-  const setDemoModeEnabled = useCallback((_enabled: boolean) => {}, []);
+  const setDemoModeEnabled = useCallback((enabled: boolean) => {
+    traceSetAuth(
+      (prev) => ({
+        ...prev,
+        isDemoMode: enabled,
+      }),
+      'set-demo-mode',
+    );
+  }, [traceSetAuth]);
   
   useEffect(() => {
     if (!startupTraceRef.current.authInitStarted) {
@@ -532,4 +539,3 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </UserContext.Provider>
   );
 };
-

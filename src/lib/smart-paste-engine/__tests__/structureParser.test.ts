@@ -20,7 +20,13 @@ describe('parseSmsMessage', () => {
     expect(result.directFields.date).toBeUndefined();
   });
 
-  it('throws when raw message is empty', () => {
-    expect(() => parseSmsMessage('', sampleSender)).toThrow('Empty message passed to extractTemplateStructure');
+  it('returns an empty parse result when raw message is empty', () => {
+    const result = parseSmsMessage('', sampleSender);
+    expect(result).toMatchObject({
+      rawMessage: '',
+      template: '',
+      templateHash: '',
+      matched: false,
+    });
   });
 });
