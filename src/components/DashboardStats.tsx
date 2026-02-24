@@ -66,7 +66,7 @@ const DashboardStats = ({
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income</p>
                     <ArrowUpCircle className="text-success" size={20} />
                   </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-success">{formatValue(income)}</h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-success tabular-nums truncate">{formatValue(income)}</h3>
                   {renderSubtitle(income)}
                 </CardContent>
               </Card>
@@ -90,7 +90,7 @@ const DashboardStats = ({
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses</p>
                     <ArrowDownCircle className="text-destructive" size={20} />
                   </div>
-                  <h3 className="mt-1 text-left text-lg font-semibold text-destructive">{formatValue(Math.abs(expenses))}</h3>
+                  <h3 className="mt-1 text-left text-lg font-semibold text-destructive tabular-nums truncate">{formatValue(Math.abs(expenses))}</h3>
                   {renderSubtitle(expenses)}
                 </CardContent>
               </Card>
@@ -116,7 +116,7 @@ const DashboardStats = ({
                       {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
                   </div>
-                  <h3 className={`mt-1 text-left text-lg font-semibold ${balance >= 0 ? 'text-primary' : 'text-destructive'}`}>{formatValue(balance)}</h3>
+                  <h3 className={`mt-1 text-left text-lg font-semibold tabular-nums truncate ${balance >= 0 ? 'text-primary' : 'text-destructive'}`}>{formatValue(balance)}</h3>
                   {renderSubtitle(balance)}
                   {previousBalance !== undefined && (
                     <p className={`text-xs flex items-center mt-1 ${isPositiveChange ? 'text-success' : 'text-destructive'}`}>
