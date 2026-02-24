@@ -49,25 +49,25 @@ import {
 import { useTransactions } from '@/context/TransactionContext';
 import { ensureFxFields } from '@/services/FxConversionService';
 
+type TransactionFormData = Pick<
+  Transaction,
+  'title' | 'amount' | 'category' | 'date' | 'notes' | 'fromAccount' | 'toAccount' | 'description' | 'currency'
+> & {
+  _manualFxRate?: number;
+};
+
+const isTransactionFormData = (value: unknown): value is TransactionFormData => {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.title === 'string' &&
+    typeof candidate.amount === 'number' &&
+    typeof candidate.category === 'string' &&
+    typeof candidate.date === 'string'
+  );
+};
+
 export function useTransactionsState() {
-  type TransactionFormData = Pick<
-    Transaction,
-    'title' | 'amount' | 'category' | 'date' | 'notes' | 'fromAccount' | 'toAccount' | 'description' | 'currency'
-  > & {
-    _manualFxRate?: number;
-  };
-
-  const isTransactionFormData = (value: unknown): value is TransactionFormData => {
-    if (typeof value !== 'object' || value === null) return false;
-    const candidate = value as Record<string, unknown>;
-    return (
-      typeof candidate.title === 'string' &&
-      typeof candidate.amount === 'number' &&
-      typeof candidate.category === 'string' &&
-      typeof candidate.date === 'string'
-    );
-  };
-
   // Get user context for currency preferences
   const { user } = useUser();
   const userCurrency = user?.preferences?.currency || 'USD';
