@@ -20,8 +20,6 @@
  * - [ ] Summary calculations exclude transfers where required
  */
 import React, {
-  createContext,
-  useContext,
   useState,
   ReactNode,
   useEffect,
@@ -76,10 +74,7 @@ interface TransactionContextType {
   addTransaction: (transaction: Transaction) => void;
 }
 
-const TransactionContext = createContext<TransactionContextType | undefined>(
-  undefined,
-);
-
+import { TransactionContext } from './TransactionContext.context';
 export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -390,16 +385,3 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-export const useTransactions = (): TransactionContextType => {
-  const context = useContext(TransactionContext);
-  if (context === undefined) {
-    throw new Error(
-      'useTransactions must be used within a TransactionProvider',
-    );
-  }
-  return context;
-};
-
-export const useOptionalTransactions = () => {
-  return useContext(TransactionContext);
-};
