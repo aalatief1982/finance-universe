@@ -81,7 +81,7 @@ const traceState = (message: string, payload?: Record<string, unknown>) => {
 // ============================================================================
 
 const DEFAULT_PREFERENCES = {
-  currency: 'USD',
+  currency: 'SAR',
   theme: 'light' as const,
   notifications: true,
   language: 'en',
@@ -335,7 +335,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastActive: new Date(),
           registrationStarted: true, // Mark as started registration
           preferences: userData.preferences || {
-            currency: 'USD',
+            currency: 'SAR',
             theme: 'light',
             notifications: true,
             language: 'en',

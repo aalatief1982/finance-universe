@@ -473,7 +473,7 @@ export const getCategoryHierarchy = (): CategoryHierarchy[] => {
 // User settings storage functions
 export const getUserSettings = (): UserPreferences => {
   return getFromStorage<UserPreferences>(USER_SETTINGS_STORAGE_KEY, {
-    currency: 'USD',
+    currency: 'SAR',
     language: 'en',
     theme: 'light',
     notifications: {
@@ -516,7 +516,7 @@ export const storeUserSettings = (settings: UserPreferences): void => {
 export const getLocaleSettings = (): LocaleSettings => {
   return getFromStorage<LocaleSettings>(LOCALE_SETTINGS_STORAGE_KEY, {
     locale: 'en-US',
-    currency: 'USD',
+    currency: 'SAR',
     dateFormat: 'MM/dd/yyyy',
     timeFormat: 'h:mm a',
     firstDayOfWeek: 0,
