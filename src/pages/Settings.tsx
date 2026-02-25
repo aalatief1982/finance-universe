@@ -34,6 +34,13 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -57,6 +64,7 @@ import { useToast, toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { useTheme } from "next-themes";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { CURRENCIES } from "@/lib/categories-data";
 import { LockedFeature } from "@/components/ui/locked-feature";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
@@ -64,7 +72,6 @@ import {
   updateCurrency as persistCurrency,
   getStoredTransactions,
   storeTransactions,
-  getUserSettings,
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
@@ -79,8 +86,6 @@ import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { isAdminMode, activateAdminMode, deactivateAdminMode } from '@/utils/admin-utils';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck } from 'lucide-react';
-import CurrencySelect from '@/components/currency/CurrencySelect';
-import { SupportedCurrency } from '@/types/locale';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -91,10 +96,8 @@ const Settings = () => {
   const [theme, setTheme] = useState<"light" | "dark" | "system">(
     user?.preferences?.theme || "light",
   );
-  const legacySettingsCurrency = React.useMemo(() => getUserSettings().currency, []);
-
   const [currency, setCurrency] = useState(
-    user?.preferences?.currency || legacySettingsCurrency || "SAR",
+    user?.preferences?.currency || "SAR",
   );
   
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
@@ -171,18 +174,7 @@ const Settings = () => {
   useEffect(() => {
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
-      const resolvedCurrency = user.preferences.currency || legacySettingsCurrency || "SAR";
-      setCurrency(resolvedCurrency);
-
-      // One-time migration: hydrate user.preferences.currency from legacy settings key.
-      if (!user.preferences.currency && legacySettingsCurrency) {
-        updateUser({
-          preferences: {
-            ...user.preferences,
-            currency: legacySettingsCurrency,
-          },
-        });
-      }
+      setCurrency(user.preferences.currency || "SAR");
       if (user.preferences.sms) {
         const initialBg = user.preferences.sms.backgroundSmsEnabled || false;
         setBackgroundSmsEnabled(initialBg);
@@ -196,7 +188,7 @@ const Settings = () => {
         );
       }
     }
-  }, [legacySettingsCurrency, updateUser, user]);
+  }, [user]);
 
   useEffect(() => {
     const handleFocus = () => {
@@ -492,12 +484,18 @@ const Settings = () => {
 
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
-            <CurrencySelect
-              id="currency"
-              value={currency as SupportedCurrency}
-              onValueChange={handleCurrencyChange}
-              placeholder="Select currency"
-            />
+            <Select value={currency} onValueChange={handleCurrencyChange}>
+              <SelectTrigger id="currency" className="w-full">
+                <SelectValue placeholder="Select currency" />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((code) => (
+                  <SelectItem key={code} value={code}>
+                    {code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
         </section>

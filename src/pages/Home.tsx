@@ -53,6 +53,7 @@ import { AnalyticsService } from "@/services/AnalyticsService";
 import { DatePicker } from "@/components/ui/date-picker";
 import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
 import { formatCurrency } from "@/lib/formatters";
+import { getUserSettings } from "@/utils/storage-utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getHomeFilteredTransactions, getHomeSummary, HomeDateRange } from "@/utils/home-transactions";
 
@@ -87,18 +88,15 @@ const Home = () => {
   const [customEnd, setCustomEnd] = React.useState<Date | null>(defaultEnd);
   const [activeTab, setActiveTab] = React.useState("trends");
 
-  // Use Settings' default currency source (user.preferences.currency)
-  const baseCurrency = user?.preferences?.currency ?? "";
+  // Get user's base currency
+  const settingsCurrency = getUserSettings().currency;
+  const baseCurrency = settingsCurrency || user?.preferences?.currency || 'USD';
 
   const handleAddTransaction = () => {
     navigate("/edit-transaction");
   };
 
   const filteredTransactions = React.useMemo(() => {
-    if (!baseCurrency) {
-      return [];
-    }
-
     return getHomeFilteredTransactions({
       transactions,
       baseCurrency,
@@ -114,11 +112,13 @@ const Home = () => {
   }, [filteredTransactions]);
 
   const fxSummary = React.useMemo(() => {
-    if (!baseCurrency) {
-      return { income: 0, expenses: 0, unconvertedCount: 0, unconvertedCurrencies: [] };
-    }
     return AnalyticsService.getFxAwareTotals(filteredTransactions, baseCurrency);
   }, [filteredTransactions, baseCurrency]);
+
+  if (import.meta.env.DEV) {
+    console.debug('[CurrencySync][Home] stored default currency:', settingsCurrency, '| home baseCurrency:', baseCurrency);
+    console.debug('[FX-DEBUG] Home.tsx | baseCurrency:', baseCurrency, '| income:', fxSummary.income, '| expenses:', fxSummary.expenses, '| unconvertedCount:', fxSummary.unconvertedCount);
+  }
 
   // Calculate balance separately (income - expenses for display)
   const initials = firstName.charAt(0).toUpperCase();
@@ -140,10 +140,6 @@ const Home = () => {
   }, [filteredTransactions]);
 
   const expensesBySubcategory = React.useMemo(() => {
-    if (!baseCurrency) {
-      return [];
-    }
-
     try {
       return AnalyticsService.getFxAwareSubcategoryData(analyticsTransactions, baseCurrency);
     } catch {
@@ -153,10 +149,6 @@ const Home = () => {
   }, [analyticsTransactions, baseCurrency]);
 
   const expensesByCategory = React.useMemo(() => {
-    if (!baseCurrency) {
-      return [];
-    }
-
     try {
       return AnalyticsService.getFxAwareCategoryData(analyticsTransactions, baseCurrency);
     } catch {
@@ -166,10 +158,6 @@ const Home = () => {
 
   // FX-aware timeline data (EXCLUDES transfers)
   const timelineData = React.useMemo(() => {
-    if (!baseCurrency) {
-      return [];
-    }
-
     try {
       return AnalyticsService.getFxAwareTimelineData(analyticsTransactions, range || 'month', baseCurrency);
     } catch (err) {
