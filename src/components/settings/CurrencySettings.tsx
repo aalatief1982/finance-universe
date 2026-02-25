@@ -17,41 +17,27 @@
  * - [ ] Changes are persisted or bubbled up
  */
 
-// CurrencySettings.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Coins } from 'lucide-react';
+import CurrencySelect from '@/components/currency/CurrencySelect';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Coins } from 'lucide-react';
-import { getUserSettings, storeUserSettings, updateCurrency } from '@/utils/storage-utils';
 import { SupportedCurrency } from '@/types/locale';
-import { getAllCurrencies } from '@/utils/locale';
+import { getUserSettings, updateCurrency } from '@/utils/storage-utils';
 
 const CurrencySettings = () => {
   const [currency, setCurrency] = useState<SupportedCurrency>('USD');
-  const [currencies, setCurrencies] = useState<Array<{code: SupportedCurrency, name: string, symbol: string}>>([]);
-  
+
   useEffect(() => {
-    // Get user settings on component mount
     const userSettings = getUserSettings();
     setCurrency(userSettings.currency as SupportedCurrency);
-    
-    // Get all available currencies
-    const allCurrencies = getAllCurrencies();
-    setCurrencies(allCurrencies.map(curr => ({
-      code: curr.code,
-      name: curr.name,
-      symbol: curr.symbol
-    })));
   }, []);
-  
+
   const handleCurrencyChange = (newCurrency: SupportedCurrency) => {
     setCurrency(newCurrency);
-    
-    // Update currency in locale settings and user preferences
     updateCurrency(newCurrency);
   };
-  
+
   return (
     <Card className="border border-border shadow-sm">
       <CardHeader>
@@ -64,18 +50,12 @@ const CurrencySettings = () => {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="currency">Currency</Label>
-          <Select value={currency} onValueChange={handleCurrencyChange}>
-            <SelectTrigger id="currency" className="w-full">
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencies.map(curr => (
-                <SelectItem key={curr.code} value={curr.code}>
-                  {curr.symbol} {curr.name} ({curr.code})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CurrencySelect
+            id="currency"
+            value={currency}
+            onValueChange={handleCurrencyChange}
+            placeholder="Select currency"
+          />
         </div>
       </CardContent>
     </Card>
