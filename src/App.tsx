@@ -73,6 +73,9 @@ import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 import { useTheme } from 'next-themes';
 import { trackNavigationPath } from '@/utils/navigation';
+import DefaultCurrencyModal from '@/components/DefaultCurrencyModal';
+import { isDefaultCurrencySet, getDefaultCurrency } from '@/utils/default-currency';
+import { updateCurrency } from '@/utils/storage-utils';
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -104,6 +107,8 @@ function AppWrapper() {
   const location = useLocation();
   const navigateRef = React.useRef(navigate);
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
+  const [showDefaultCurrencyGate, setShowDefaultCurrencyGate] = useState(false);
+  const [selectedDefaultCurrency, setSelectedDefaultCurrency] = useState('');
   const hasScheduledSmsPrompt = React.useRef(false);
   const { theme, resolvedTheme } = useTheme();
   const previousPathRef = React.useRef(location.pathname);
@@ -117,6 +122,23 @@ function AppWrapper() {
     resolvedTheme,
   });
   const { user, auth } = useUser();
+  const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
+
+  const evaluateDefaultCurrencyGate = React.useCallback(() => {
+    const shouldShow = onboardingDone && !isDefaultCurrencySet();
+    setShowDefaultCurrencyGate(shouldShow);
+
+    if (shouldShow) {
+      setShowSmsPrompt(false);
+      setSelectedDefaultCurrency(getDefaultCurrency() ?? '');
+      return;
+    }
+
+    const storedCurrency = getDefaultCurrency();
+    if (storedCurrency) {
+      setSelectedDefaultCurrency(storedCurrency);
+    }
+  }, [onboardingDone]);
 
   traceState('AppWrapper render state', {
     pathname: location.pathname,
@@ -142,6 +164,20 @@ function AppWrapper() {
       pathname: location.pathname,
     });
   }, [location.pathname]);
+
+  useEffect(() => {
+    evaluateDefaultCurrencyGate();
+  }, [evaluateDefaultCurrencyGate, location.pathname]);
+
+  useEffect(() => {
+    const openGate = () => {
+      setShowDefaultCurrencyGate(true);
+      setShowSmsPrompt(false);
+    };
+
+    window.addEventListener('xpensia:open-default-currency-gate', openGate);
+    return () => window.removeEventListener('xpensia:open-default-currency-gate', openGate);
+  }, []);
 
   useEffect(() => {
     traceState('theme state transition check', {
@@ -575,6 +611,11 @@ function AppWrapper() {
       // Prevent double-scheduling
       if (hasScheduledSmsPrompt.current) return;
 
+      if (onboardingDone && !isDefaultCurrencySet()) {
+        setShowDefaultCurrencyGate(true);
+        return;
+      }
+
       const justCompleted = safeStorage.getItem('xpensia_onb_just_completed') === 'true';
       if (!justCompleted) return;
 
@@ -617,13 +658,26 @@ function AppWrapper() {
     };
 
     checkAndMaybeShowSmsPrompt();
-  }, [location.pathname]);
+  }, [location.pathname, onboardingDone]);
+
+  const handleSaveDefaultCurrency = React.useCallback(() => {
+    if (!selectedDefaultCurrency) return;
+
+    updateCurrency(selectedDefaultCurrency as Parameters<typeof updateCurrency>[0]);
+    setShowDefaultCurrencyGate(false);
+  }, [selectedDefaultCurrency]);
 
   return (
     <>
       <ScrollToTop />
+      <DefaultCurrencyModal
+        open={showDefaultCurrencyGate}
+        selectedCurrency={selectedDefaultCurrency}
+        onCurrencyChange={setSelectedDefaultCurrency}
+        onSave={handleSaveDefaultCurrency}
+      />
       <SmsPermissionPrompt 
-        open={showSmsPrompt} 
+        open={showSmsPrompt && !showDefaultCurrencyGate} 
         onOpenChange={setShowSmsPrompt} 
       />
     </>

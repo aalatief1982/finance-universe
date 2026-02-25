@@ -53,7 +53,7 @@ import { AnalyticsService } from "@/services/AnalyticsService";
 import { DatePicker } from "@/components/ui/date-picker";
 import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
 import { formatCurrency } from "@/lib/formatters";
-import { getUserSettings } from "@/utils/storage-utils";
+import { getDefaultCurrency, getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getHomeFilteredTransactions, getHomeSummary, HomeDateRange } from "@/utils/home-transactions";
 
@@ -88,9 +88,9 @@ const Home = () => {
   const [customEnd, setCustomEnd] = React.useState<Date | null>(defaultEnd);
   const [activeTab, setActiveTab] = React.useState("trends");
 
-  // Get user's base currency
-  const settingsCurrency = getUserSettings().currency;
-  const baseCurrency = settingsCurrency || user?.preferences?.currency || 'USD';
+  // Get user's default currency
+  const settingsCurrency = getDefaultCurrency();
+  const baseCurrency = settingsCurrency || user?.preferences?.currency || getCurrencyOrAppFallback();
 
   const handleAddTransaction = () => {
     navigate("/edit-transaction");
