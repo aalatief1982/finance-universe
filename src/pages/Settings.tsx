@@ -34,13 +34,6 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -64,7 +57,6 @@ import { useToast, toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { useTheme } from "next-themes";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { CURRENCIES } from "@/lib/categories-data";
 import { LockedFeature } from "@/components/ui/locked-feature";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
@@ -87,6 +79,8 @@ import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { isAdminMode, activateAdminMode, deactivateAdminMode } from '@/utils/admin-utils';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck } from 'lucide-react';
+import CurrencySelect from '@/components/currency/CurrencySelect';
+import { SupportedCurrency } from '@/types/locale';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -498,18 +492,12 @@ const Settings = () => {
 
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
-            <Select value={currency} onValueChange={handleCurrencyChange}>
-              <SelectTrigger id="currency" className="w-full">
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((code) => (
-                  <SelectItem key={code} value={code}>
-                    {code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CurrencySelect
+              id="currency"
+              value={currency as SupportedCurrency}
+              onValueChange={handleCurrencyChange}
+              placeholder="Select currency"
+            />
           </div>
 
         </section>
