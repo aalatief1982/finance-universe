@@ -1,73 +1,41 @@
 
 
-# Fix: Amount Validation Fails on Negative Expense Amounts
+# Fix Build Errors
 
-## Problem
+Two errors are blocking the build and preventing updates from going live.
 
-Expenses are stored with **negative** amounts (e.g., `-500`). When `TransactionEditForm` loads an expense:
+---
 
-1. `amountNumber` is initialized as `-500`
-2. On submit, `getAmountValidationError(-500)` checks `amountNumber <= 0` and returns the error
-3. The sign-flip to `-Math.abs(canonicalAmount)` happens on lines 826-830, **after** validation already rejected the value on line 816
+## Error 1: Local Capacitor Plugin Install Failure
 
-The validation and the sign conversion are in the wrong order.
+`package.json` has two local `file:` dependencies that can't be resolved in the cloud:
+- `capacitor-background-sms-listener`
+- `capacitor-sms-reader`
 
-## Fix
+These are only needed for native Android builds. The web app uses its own TypeScript wrappers (`Capacitor.registerPlugin()`) and never imports from these npm packages directly.
 
-In `TransactionEditForm.tsx`, validate against `Math.abs(canonicalAmount)` instead of the raw `canonicalAmount`. The validation should check whether the **absolute** amount is valid, since the sign is a function of the transaction type, not user input.
+**Fix:** Remove both entries from `package.json` dependencies.
 
-### Change 1: Fix `getAmountValidationError` call (line 816)
+---
 
-```
-// Before
-const amountError = getAmountValidationError(canonicalAmount);
+## Error 2: react-dnd TypeScript Error
 
-// After
-const amountError = getAmountValidationError(
-  canonicalAmount !== null ? Math.abs(canonicalAmount) : null
-);
-```
+`@types/react-dnd` uses a deprecated `module` keyword. The root `tsconfig.json` has `skipLibCheck: true` but `tsconfig.app.json` (used by Vite) does not.
 
-### Change 2: Fix initial `amountNumber` state (line 379-382)
+**Fix:** Add `"skipLibCheck": true` to `tsconfig.app.json` compilerOptions.
 
-When initializing from an existing expense transaction, store the absolute value so the display and validation both work with positive numbers:
-
-```
-// Before
-return parseAmountToNullableNumber(initialState.amount);
-
-// After  
-const parsed = parseAmountToNullableNumber(initialState.amount);
-return parsed !== null ? Math.abs(parsed) : null;
-```
-
-### Change 3: Fix `amountText` initialization (lines 373-377)
-
-Similarly, display the absolute value in the text input:
-
-```
-// Before
-return Number.isFinite(initialState.amount)
-  ? String(initialState.amount)
-  : '';
-
-// After
-return Number.isFinite(initialState.amount)
-  ? String(Math.abs(initialState.amount))
-  : '';
-```
-
-## Why This Works
-
-- The user always enters/sees **positive** amounts
-- The sign is determined by the transaction type (`expense` = negative, `income` = positive) and applied on line 826-830
-- Validation now checks the absolute value, which matches what the user entered
+---
 
 ## Files Changed
 
-- `src/components/TransactionEditForm.tsx` -- 3 small edits
+| File | Change |
+|------|--------|
+| `package.json` | Remove 2 local `file:` plugin dependencies |
+| `tsconfig.app.json` | Add `skipLibCheck: true` |
 
-## Risk
+## Impact
 
-Very low. Only changes how the amount is presented and validated in the edit form -- the final sign conversion logic is untouched.
+- No effect on the Android/native build (Gradle handles those plugins separately)
+- No effect on app functionality (the plugins are accessed via Capacitor's registerPlugin API, not npm imports)
+- Once fixed, the build will succeed and all pending code changes will go live immediately
 
