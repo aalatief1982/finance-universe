@@ -89,7 +89,8 @@ const Home = () => {
   const [activeTab, setActiveTab] = React.useState("trends");
 
   // Get user's base currency
-  const baseCurrency = user?.preferences?.currency || getUserSettings().currency || 'USD';
+  const settingsCurrency = getUserSettings().currency;
+  const baseCurrency = settingsCurrency || user?.preferences?.currency || 'USD';
 
   const handleAddTransaction = () => {
     navigate("/edit-transaction");
@@ -114,7 +115,10 @@ const Home = () => {
     return AnalyticsService.getFxAwareTotals(filteredTransactions, baseCurrency);
   }, [filteredTransactions, baseCurrency]);
 
-  console.log('[FX-DEBUG] Home.tsx | baseCurrency:', baseCurrency, '| income:', fxSummary.income, '| expenses:', fxSummary.expenses, '| unconvertedCount:', fxSummary.unconvertedCount);
+  if (import.meta.env.DEV) {
+    console.debug('[CurrencySync][Home] stored default currency:', settingsCurrency, '| home baseCurrency:', baseCurrency);
+    console.debug('[FX-DEBUG] Home.tsx | baseCurrency:', baseCurrency, '| income:', fxSummary.income, '| expenses:', fxSummary.expenses, '| unconvertedCount:', fxSummary.unconvertedCount);
+  }
 
   // Calculate balance separately (income - expenses for display)
   const initials = firstName.charAt(0).toUpperCase();

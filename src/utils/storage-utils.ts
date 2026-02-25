@@ -472,6 +472,68 @@ export const getCategoryHierarchy = (): CategoryHierarchy[] => {
 
 // User settings storage functions
 export const getUserSettings = (): UserPreferences => {
+  const storedSettings = safeStorage.getItem(USER_SETTINGS_STORAGE_KEY);
+
+  // Backward-compatibility: migrate legacy currency from `user.preferences`
+  // when dedicated user settings were not initialized yet.
+  if (!storedSettings) {
+    const legacyUser = safeStorage.getItem('user');
+    if (legacyUser) {
+      try {
+        const parsedLegacyUser = JSON.parse(legacyUser) as {
+          preferences?: { currency?: SupportedCurrency };
+        };
+        const legacyCurrency = parsedLegacyUser.preferences?.currency;
+        if (legacyCurrency) {
+          const defaults: UserPreferences = {
+            currency: legacyCurrency,
+            language: 'en',
+            theme: 'light',
+            notifications: {
+              enabled: true,
+              types: ['sms', 'budget', 'insights']
+            },
+            displayOptions: {
+              showCents: true,
+              weekStartsOn: 'sunday',
+              defaultView: 'list',
+              compactMode: false,
+              showCategories: true,
+              showTags: true
+            },
+            privacy: {
+              maskAmounts: false,
+              requireAuthForSensitiveActions: true,
+              dataSharing: 'none'
+            },
+            dataManagement: {
+              autoBackup: false,
+              backupFrequency: 'weekly',
+              dataRetention: 'forever'
+            },
+            sms: {
+              startDate: '',
+              autoDetectProviders: false,
+              showDetectionNotifications: false,
+              autoImport: false,
+              backgroundSmsEnabled: false,
+            }
+          };
+
+          setInStorage(USER_SETTINGS_STORAGE_KEY, defaults);
+
+          const localeSettings = getLocaleSettings();
+          storeLocaleSettings({
+            ...localeSettings,
+            currency: legacyCurrency
+          });
+        }
+      } catch {
+        // Ignore legacy parse issues and continue with defaults.
+      }
+    }
+  }
+
   return getFromStorage<UserPreferences>(USER_SETTINGS_STORAGE_KEY, {
     currency: 'USD',
     language: 'en',
