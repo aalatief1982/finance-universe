@@ -84,6 +84,7 @@ import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
 import { useSmsPermission } from '@/hooks/useSmsPermission';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { isAdminMode, activateAdminMode, deactivateAdminMode } from '@/utils/admin-utils';
+import { isDefaultCurrencySet } from '@/utils/default-currency';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck } from 'lucide-react';
 
@@ -563,6 +564,11 @@ const Settings = () => {
                         sms: { ...user?.preferences?.sms, autoImport: true, backgroundSmsEnabled: true }
                       });
                       setBaselineBackgroundSmsEnabled(true);
+                      return;
+                    }
+
+                    if (!isDefaultCurrencySet()) {
+                      window.dispatchEvent(new CustomEvent('xpensia:open-default-currency-gate'));
                       return;
                     }
 

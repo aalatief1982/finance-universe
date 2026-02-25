@@ -23,7 +23,7 @@
  */
 
 import { normalizeCurrencyCode, getCurrencyDisplayName, VALID_CURRENCY_CODES } from './currency-utils';
-import { getUserSettings } from '@/utils/storage-utils';
+import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 
 /**
  * Utility functions for formatting values
@@ -37,7 +37,7 @@ import { getUserSettings } from '@/utils/storage-utils';
  * @returns The currency symbol or code
  */
 export const getCurrencySymbol = (currencyCode?: string): string => {
-  const preferred = getUserSettings().currency || 'USD';
+  const preferred = getCurrencyOrAppFallback();
   const requested = currencyCode ?? preferred;
   try {
     const normalized = normalizeCurrencyCode(requested, preferred);
@@ -72,7 +72,7 @@ export const getCurrencySymbol = (currencyCode?: string): string => {
  * @returns Formatted currency string
  */
 export const formatCurrency = (amount: number, currency?: string): string => {
-  const preferred = getUserSettings().currency || 'USD';
+  const preferred = getCurrencyOrAppFallback();
   const requested = currency ?? preferred;
   try {
     // Normalize the currency code to handle Arabic names and invalid codes

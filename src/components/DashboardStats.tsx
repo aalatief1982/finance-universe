@@ -21,7 +21,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown } from 'lucide-react';
-import { getUserSettings } from '@/utils/storage-utils';
+import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DashboardStatsProps {
@@ -43,7 +43,7 @@ const formatNumericAmount = (amount: number, currencyCode?: string): string => {
     return '--';
   }
 
-  const code = currencyCode || getUserSettings().currency || 'USD';
+  const code = currencyCode || getCurrencyOrAppFallback();
   const cacheKey = `${code}|${amount}`;
   const cached = amountFormatterCache.get(cacheKey);
   if (cached) {
@@ -153,7 +153,7 @@ const DashboardStats = ({
   previousBalance,
   currencyCode,
 }: DashboardStatsProps) => {
-  const resolvedCurrency = currencyCode || getUserSettings().currency || 'USD';
+  const resolvedCurrency = currencyCode || getCurrencyOrAppFallback();
 
   React.useEffect(() => {
     if (!import.meta.env.DEV) return;
