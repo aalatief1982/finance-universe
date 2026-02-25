@@ -53,6 +53,13 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
   const hasLoggedFirstSlideRender = useRef(false);
   const shouldLogImageLoadErrors = import.meta.env.MODE === 'development';
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const handleCompleteOnce = React.useCallback(() => {
+    if (isCompleting) return;
+    setIsCompleting(true);
+    onComplete();
+  }, [isCompleting, onComplete]);
 
   useEffect(() => {
     console.trace('[TRACE][OnboardingSlides] component mounted', {
@@ -211,9 +218,10 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                   <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.4s' }}>
                     <Button 
                       className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 group" 
-                      onClick={onComplete}
+                      onClick={handleCompleteOnce}
+                      disabled={isCompleting}
                     >
-                      Start Your Journey
+                      {isCompleting ? 'Starting...' : 'Start Your Journey'}
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                     </Button>
                     <p className="text-xs text-muted-foreground text-center pb-2">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { BadgeDollarSign } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -24,6 +25,14 @@ interface DefaultCurrencyModalProps {
   onSave: () => void;
 }
 
+const CURRENCY_FLAGS: Record<string, string> = {
+  SAR: '🇸🇦',
+  EGP: '🇪🇬',
+  USD: '🇺🇸',
+  BHD: '🇧🇭',
+  AED: '🇦🇪',
+};
+
 const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
   open,
   selectedCurrency,
@@ -37,17 +46,22 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
         onEscapeKeyDown={(event) => event.preventDefault()}
       >
         <AlertDialogHeader>
-          <AlertDialogTitle>Choose your default currency</AlertDialogTitle>
+          <AlertDialogTitle>Set your default currency to continue</AlertDialogTitle>
           <AlertDialogDescription>
-            This is the currency used across dashboards and reports. Amounts in other currencies
-            will be converted to your default currency.
+            This is required before we can start tracking. All dashboard totals and reports will use
+            this currency by default.
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-2">
+        <div className="space-y-2 rounded-md border border-primary/20 bg-primary/5 p-3">
           <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
             <SelectTrigger id="default-currency-gate-select">
-              <SelectValue placeholder="Select currency" />
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-background text-sm" aria-hidden>
+                  {selectedCurrency ? CURRENCY_FLAGS[selectedCurrency] ?? '💱' : <BadgeDollarSign className="h-4 w-4" />}
+                </span>
+                <SelectValue placeholder="Select currency" />
+              </div>
             </SelectTrigger>
             <SelectContent>
               {CURRENCIES.map((code) => (

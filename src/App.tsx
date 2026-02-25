@@ -75,7 +75,6 @@ import { useTheme } from 'next-themes';
 import { trackNavigationPath } from '@/utils/navigation';
 import DefaultCurrencyModal from '@/components/DefaultCurrencyModal';
 import { isDefaultCurrencySet, getDefaultCurrency } from '@/utils/default-currency';
-import { updateCurrency } from '@/utils/storage-utils';
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -121,7 +120,7 @@ function AppWrapper() {
     theme,
     resolvedTheme,
   });
-  const { user, auth } = useUser();
+  const { user, auth, updateCurrency } = useUser();
   const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
 
   const evaluateDefaultCurrencyGate = React.useCallback(() => {
@@ -625,7 +624,7 @@ function AppWrapper() {
 
       console.log('[App] SMS prompt check:', { justCompleted, isNative, isAndroid, alreadyPrompted });
 
-      if (!isNative || !isAndroid || alreadyPrompted) {
+      if (alreadyPrompted) {
         safeStorage.removeItem('xpensia_onb_just_completed');
         return;
       }
@@ -649,23 +648,46 @@ function AppWrapper() {
       // Mark as scheduled to prevent double-triggering
       hasScheduledSmsPrompt.current = true;
 
-      setTimeout(() => {
-        // Clear flag only when actually showing prompt
-        safeStorage.removeItem('xpensia_onb_just_completed');
-        console.log('[App] Showing SMS permission prompt');
-        setShowSmsPrompt(true);
-      }, 3000);
+      // Clear flag and show prompt immediately once currency gate has been satisfied.
+      safeStorage.removeItem('xpensia_onb_just_completed');
+      console.log('[App] Showing SMS permission prompt immediately');
+      setShowSmsPrompt(true);
     };
 
     checkAndMaybeShowSmsPrompt();
   }, [location.pathname, onboardingDone]);
 
-  const handleSaveDefaultCurrency = React.useCallback(() => {
+  const handleSaveDefaultCurrency = React.useCallback(async () => {
     if (!selectedDefaultCurrency) return;
 
     updateCurrency(selectedDefaultCurrency as Parameters<typeof updateCurrency>[0]);
     setShowDefaultCurrencyGate(false);
-  }, [selectedDefaultCurrency]);
+
+    const justCompleted = safeStorage.getItem('xpensia_onb_just_completed') === 'true';
+    const isNative = Capacitor.isNativePlatform();
+    const isAndroid = Capacitor.getPlatform() === 'android';
+    const alreadyPrompted = safeStorage.getItem('sms_prompt_shown') === 'true';
+
+    if (!justCompleted || alreadyPrompted) {
+      return;
+    }
+
+    try {
+      const { smsPermissionService } = await import('@/services/SmsPermissionService');
+      const permissionStatus = await smsPermissionService.checkPermissionStatus();
+      if (permissionStatus.granted) {
+        safeStorage.setItem('sms_prompt_shown', 'true');
+        safeStorage.removeItem('xpensia_onb_just_completed');
+        return;
+      }
+    } catch (e) {
+      console.warn('[App] Error checking permission status after default currency save:', e);
+    }
+
+    hasScheduledSmsPrompt.current = true;
+    safeStorage.removeItem('xpensia_onb_just_completed');
+    setShowSmsPrompt(true);
+  }, [selectedDefaultCurrency, updateCurrency]);
 
   return (
     <>

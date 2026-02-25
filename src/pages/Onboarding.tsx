@@ -27,6 +27,7 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCompletedRef = useRef(false);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -50,6 +51,9 @@ const Onboarding = () => {
   }, [showSmsPrompt]);
 
   const handleComplete = () => {
+    if (hasCompletedRef.current) return;
+    hasCompletedRef.current = true;
+
     console.log('Onboarding completed');
     safeStorage.setItem('xpensia_onb_done', 'true');
     safeStorage.setItem('xpensia_onb_just_completed', 'true'); // New flag
@@ -60,7 +64,9 @@ const Onboarding = () => {
       timestamp: Date.now()
     });
     
-    navigate('/home', { replace: true });
+    timeoutRef.current = setTimeout(() => {
+      navigate('/home', { replace: true });
+    }, 250);
   };
 
   return (
