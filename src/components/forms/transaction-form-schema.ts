@@ -20,6 +20,7 @@
 import { z } from 'zod';
 import type { Transaction, TransactionType } from '@/types/transaction';
 import { validateTransactionForm as validateTransactionValues } from '@/lib/transaction-validation';
+import { CURRENCIES as CANONICAL_CURRENCIES } from '@/data/currencies';
 
 type TransactionFormValidationInput = Pick<
   Transaction,
@@ -102,10 +103,5 @@ export const ACCOUNTS = [
   'Cash', 'Bank Account', 'Credit Card', 'Savings', 'Investment', 'Other',
 ];
 
-export const CURRENCIES = [
-  { code: 'SAR', name: 'Saudi Riyal' },
-  { code: 'EGP', name: 'Egyptian Pound' },
-  { code: 'USD', name: 'US Dollar' },
-  { code: 'BHD', name: 'Bahraini Dinar' },
-  { code: 'AED', name: 'UAE Dirham' },
-];
+export const CURRENCIES = CANONICAL_CURRENCIES;
+

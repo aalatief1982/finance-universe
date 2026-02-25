@@ -6,6 +6,7 @@ const FALLBACK_CURRENCY = 'USD';
 
 type StoredSettings = {
   currency?: unknown;
+  defaultCurrency?: unknown;
 };
 
 const getStoredCurrencyValue = (): string | null => {
@@ -16,11 +17,15 @@ const getStoredCurrencyValue = (): string | null => {
     }
 
     const parsed = JSON.parse(raw) as StoredSettings;
-    if (typeof parsed.currency !== 'string') {
+    const candidate = typeof parsed.defaultCurrency === 'string'
+      ? parsed.defaultCurrency
+      : parsed.currency;
+
+    if (typeof candidate !== 'string') {
       return null;
     }
 
-    return parsed.currency.toUpperCase();
+    return candidate.toUpperCase();
   } catch {
     return null;
   }

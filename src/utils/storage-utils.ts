@@ -487,6 +487,7 @@ export const getUserSettings = (): UserPreferences => {
         if (legacyCurrency) {
           const defaults: UserPreferences = {
             currency: legacyCurrency,
+            defaultCurrency: legacyCurrency,
             language: 'en',
             theme: 'light',
             notifications: {
@@ -536,6 +537,7 @@ export const getUserSettings = (): UserPreferences => {
 
   return getFromStorage<UserPreferences>(USER_SETTINGS_STORAGE_KEY, {
     currency: 'USD',
+    defaultCurrency: 'USD',
     language: 'en',
     theme: 'light',
     notifications: {
@@ -600,7 +602,8 @@ export const updateCurrency = (currency: SupportedCurrency): void => {
   const userSettings = getUserSettings();
   storeUserSettings({
     ...userSettings,
-    currency
+    currency,
+    defaultCurrency: currency,
   });
   
   // Update in locale settings

@@ -1,5 +1,4 @@
 import React from 'react';
-import { BadgeDollarSign } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -9,14 +8,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { CURRENCIES } from '@/lib/categories-data';
+import { Plus } from 'lucide-react';
+import CurrencyCombobox from '@/components/currency/CurrencyCombobox';
+import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
+import type { CustomCurrency } from '@/lib/currency-utils';
 
 interface DefaultCurrencyModalProps {
   open: boolean;
@@ -25,61 +20,66 @@ interface DefaultCurrencyModalProps {
   onSave: () => void;
 }
 
-const CURRENCY_FLAGS: Record<string, string> = {
-  SAR: '🇸🇦',
-  EGP: '🇪🇬',
-  USD: '🇺🇸',
-  BHD: '🇧🇭',
-  AED: '🇦🇪',
-};
-
 const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
   open,
   selectedCurrency,
   onCurrencyChange,
   onSave,
 }) => {
+  const [addCurrencyOpen, setAddCurrencyOpen] = React.useState(false);
+
+  const handleSavedCurrency = (currency: CustomCurrency) => {
+    onCurrencyChange(currency.code);
+  };
+
   return (
-    <AlertDialog open={open}>
-      <AlertDialogContent
-        className="w-[calc(100%-2rem)] max-w-sm"
-        onEscapeKeyDown={(event) => event.preventDefault()}
-      >
-        <AlertDialogHeader>
-          <AlertDialogTitle>Set your default currency to continue</AlertDialogTitle>
-          <AlertDialogDescription>
-            This is required before we can start tracking. All dashboard totals and reports will use
-            this currency by default.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+    <>
+      <AlertDialog open={open}>
+        <AlertDialogContent
+          className="w-[calc(100%-2rem)] max-w-sm"
+          onEscapeKeyDown={(event) => event.preventDefault()}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle>Set your default currency to continue</AlertDialogTitle>
+            <AlertDialogDescription>
+              This is required before we can start tracking. All dashboard totals and reports will use
+              this currency by default.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-        <div className="space-y-2 rounded-md border border-primary/20 bg-primary/5 p-3">
-          <Select value={selectedCurrency} onValueChange={onCurrencyChange}>
-            <SelectTrigger id="default-currency-gate-select">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-background text-sm" aria-hidden>
-                  {selectedCurrency ? CURRENCY_FLAGS[selectedCurrency] ?? '💱' : <BadgeDollarSign className="h-4 w-4" />}
-                </span>
-                <SelectValue placeholder="Select currency" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {CURRENCIES.map((code) => (
-                <SelectItem key={code} value={code}>
-                  {code}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-2 rounded-md border border-primary/20 bg-primary/5 p-3">
+            <div className="flex items-center gap-2">
+              <CurrencyCombobox
+                id="default-currency-gate-select"
+                value={selectedCurrency}
+                onChange={onCurrencyChange}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setAddCurrencyOpen(true)}
+                aria-label="Add currency"
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+          </div>
 
-        <AlertDialogFooter>
-          <Button onClick={onSave} disabled={!selectedCurrency} className="w-full">
-            Save &amp; Continue
-          </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          <AlertDialogFooter>
+            <Button onClick={onSave} disabled={!selectedCurrency} className="w-full">
+              Save &amp; Continue
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AddCurrencyDialog
+        open={addCurrencyOpen}
+        onOpenChange={setAddCurrencyOpen}
+        onSaved={handleSavedCurrency}
+      />
+    </>
   );
 };
 

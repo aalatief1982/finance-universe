@@ -64,7 +64,7 @@ import { useToast, toast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { useTheme } from "next-themes";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { CURRENCIES } from "@/lib/categories-data";
+import CurrencyCombobox from "@/components/currency/CurrencyCombobox";
 import { LockedFeature } from "@/components/ui/locked-feature";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
 
@@ -485,18 +485,11 @@ const Settings = () => {
 
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
-            <Select value={currency} onValueChange={handleCurrencyChange}>
-              <SelectTrigger id="currency" className="w-full">
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((code) => (
-                  <SelectItem key={code} value={code}>
-                    {code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CurrencyCombobox
+              id="currency"
+              value={currency}
+              onChange={handleCurrencyChange}
+            />
           </div>
 
         </section>

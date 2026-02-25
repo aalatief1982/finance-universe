@@ -28,6 +28,7 @@
 import { safeStorage } from "@/utils/safe-storage";
 
 import { TransactionType } from '@/types/transaction';
+import { CURRENCIES as CANONICAL_CURRENCIES } from '@/data/currencies';
 import { getPeopleNames } from './people-utils';
 
 
@@ -78,6 +79,6 @@ export const getSubcategoriesForCategory = (categoryName: string): string[] => {
 };
 export const PEOPLE = getPeopleNames();
 
-export const CURRENCIES = ['SAR', 'EGP', 'USD', 'BHD', 'AED'];
+export const CURRENCIES = CANONICAL_CURRENCIES.map((currency) => currency.code);
 
 
