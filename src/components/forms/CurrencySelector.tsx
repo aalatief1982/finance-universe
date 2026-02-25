@@ -7,10 +7,10 @@
 
 import React from 'react';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
-import { TransactionFormValues, CURRENCIES } from './transaction-form-schema';
+import { TransactionFormValues } from './transaction-form-schema';
 import { cn } from '@/lib/utils';
+import CurrencyCombobox from '@/components/currency/CurrencyCombobox';
 
 interface CurrencySelectorProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -24,20 +24,13 @@ const CurrencySelector: React.FC<CurrencySelectorProps> = ({ form }) => {
       render={({ field, fieldState }) => (
         <FormItem data-field="currency">
           <FormLabel>Currency*</FormLabel>
-          <Select value={field.value} onValueChange={field.onChange}>
-            <FormControl>
-              <SelectTrigger className={cn(fieldState.error && 'border-destructive')}>
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {CURRENCIES.map((currency) => (
-                <SelectItem key={currency.code} value={currency.code}>
-                  {currency.code} - {currency.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FormControl>
+            <CurrencyCombobox
+              value={field.value}
+              onChange={field.onChange}
+              className={cn(fieldState.error && 'border-destructive')}
+            />
+          </FormControl>
           <FormMessage />
         </FormItem>
       )}

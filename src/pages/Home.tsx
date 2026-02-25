@@ -90,7 +90,7 @@ const Home = () => {
 
   // Get user's default currency
   const settingsCurrency = getDefaultCurrency();
-  const baseCurrency = user?.preferences?.currency || settingsCurrency || getCurrencyOrAppFallback();
+  const baseCurrency = settingsCurrency || user?.preferences?.currency || getCurrencyOrAppFallback();
 
   const handleAddTransaction = () => {
     navigate("/edit-transaction");

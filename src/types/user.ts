@@ -60,6 +60,7 @@ export interface FxUserPreferences {
 
 export interface UserPreferences {
   currency: string;
+  defaultCurrency?: string;
   language: string;
   theme: 'light' | 'dark' | 'system';
   notifications: {

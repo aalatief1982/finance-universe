@@ -94,7 +94,8 @@ import { applyFxConversion } from '@/services/FxConversionService';
 import { roundToCurrencyPrecision } from '@/types/fx';
 import { generateDefaultTitle } from '@/components/transaction-utils';
 import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
-import { CustomCurrency, getAvailableCurrencies } from '@/lib/currency-utils';
+import { CustomCurrency } from '@/lib/currency-utils';
+import CurrencyCombobox from '@/components/currency/CurrencyCombobox';
 import { accountService } from '@/services/AccountService';
 import { Account } from '@/models/account';
 import AddAccountDialog from '@/components/budget/AddAccountDialog';
@@ -337,9 +338,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [availableSubcategories, setAvailableSubcategories] = useState<
     string[]
   >([]);
-  const [currencies, setCurrencies] = useState<string[]>(() =>
-    getAvailableCurrencies(),
-  );
   const [addCurrencyOpen, setAddCurrencyOpen] = useState(false);
   const [editRateDialogOpen, setEditRateDialogOpen] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
@@ -753,7 +751,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       setManualExchangeRate(currencyObj.conversionRate.toString());
     }
 
-    setCurrencies(getAvailableCurrencies());
     handleChange('currency', currencyObj.code);
   };
 
@@ -1109,41 +1106,24 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </label>
 
         <div className="flex w-full items-center gap-1">
-          <Select
-            value={editedTransaction.currency || 'SAR'}
-            onValueChange={(value) => handleChange('currency', value)}
+          <div
+            ref={(el) => {
+              fieldRefs.current.currency = el;
+            }}
+            className="w-full"
           >
-            <SelectTrigger
-              ref={(el) => {
-                fieldRefs.current.currency = el;
-              }}
+            <CurrencyCombobox
               id="transaction-currency"
+              value={editedTransaction.currency || 'SAR'}
+              onChange={(value) => handleChange('currency', value)}
               className={cn(
                 'w-full text-sm',
                 inputPadding,
-                'rounded-md border-border focus:ring-ring',
-                darkFieldClass,
                 hasError('currency') && 'border-destructive',
-                hasLowConfidence('currency', fieldConfidences) &&
-                  'border-warning',
+                hasLowConfidence('currency', fieldConfidences) && 'border-warning',
               )}
-              isAutoFilled={isDriven('currency', drivenFields)}
-              title={
-                hasLowConfidence('currency', fieldConfidences)
-                  ? 'Low confidence'
-                  : undefined
-              }
-            >
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencies.map((currency) => (
-                <SelectItem key={currency} value={currency}>
-                  {currency}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            />
+          </div>
           <Button
             type="button"
             variant="outline"

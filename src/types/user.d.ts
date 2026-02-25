@@ -32,6 +32,7 @@ export interface User {
 
 export interface UserPreferences {
   currency: string;
+  defaultCurrency?: string;
   language: string;
   theme: 'light' | 'dark' | 'system';
   notifications: {
