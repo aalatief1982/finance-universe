@@ -72,6 +72,7 @@ import {
   updateCurrency as persistCurrency,
   getStoredTransactions,
   storeTransactions,
+  getUserSettings,
 } from "@/utils/storage-utils";
 import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
@@ -96,8 +97,10 @@ const Settings = () => {
   const [theme, setTheme] = useState<"light" | "dark" | "system">(
     user?.preferences?.theme || "light",
   );
+  const legacySettingsCurrency = React.useMemo(() => getUserSettings().currency, []);
+
   const [currency, setCurrency] = useState(
-    user?.preferences?.currency || "SAR",
+    user?.preferences?.currency || legacySettingsCurrency || "SAR",
   );
   
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
@@ -174,7 +177,18 @@ const Settings = () => {
   useEffect(() => {
     if (user?.preferences) {
       setTheme(user.preferences.theme || "light");
-      setCurrency(user.preferences.currency || "SAR");
+      const resolvedCurrency = user.preferences.currency || legacySettingsCurrency || "SAR";
+      setCurrency(resolvedCurrency);
+
+      // One-time migration: hydrate user.preferences.currency from legacy settings key.
+      if (!user.preferences.currency && legacySettingsCurrency) {
+        updateUser({
+          preferences: {
+            ...user.preferences,
+            currency: legacySettingsCurrency,
+          },
+        });
+      }
       if (user.preferences.sms) {
         const initialBg = user.preferences.sms.backgroundSmsEnabled || false;
         setBackgroundSmsEnabled(initialBg);
@@ -188,7 +202,7 @@ const Settings = () => {
         );
       }
     }
-  }, [user]);
+  }, [legacySettingsCurrency, updateUser, user]);
 
   useEffect(() => {
     const handleFocus = () => {
