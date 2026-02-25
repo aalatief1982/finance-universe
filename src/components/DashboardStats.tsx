@@ -154,6 +154,11 @@ const DashboardStats = ({
   currencyCode,
 }: DashboardStatsProps) => {
   const resolvedCurrency = currencyCode || getUserSettings().currency || 'USD';
+
+  React.useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    console.debug('[CurrencySync][DashboardStats] currency passed to formatter:', resolvedCurrency);
+  }, [resolvedCurrency]);
   const balanceChange = previousBalance !== undefined 
     ? ((balance - previousBalance) / Math.abs(previousBalance || 1)) * 100
     : 0;
