@@ -94,7 +94,13 @@ const EditTransaction = () => {
   const isSuggested = state?.isSuggested;
   const confidenceScore = state?.confidence;
   const fieldConfidences = state?.fieldConfidences;
-  const isNewTransaction = state?.mode === 'create' ? true : !transaction;
+  const isSmartEntryCreate = state?.mode === 'create';
+  const isNewTransaction = isSmartEntryCreate ? true : !transaction;
+  const transactionForForm = React.useMemo(() => {
+    if (!transaction) return transaction;
+    if (!isNewTransaction) return transaction;
+    return { ...transaction, id: '' };
+  }, [isNewTransaction, transaction]);
 
 
   if (import.meta.env.MODE === 'development') {
@@ -135,7 +141,11 @@ const EditTransaction = () => {
   const handleSave = (editedTransaction: Transaction) => {
     setSaving(true);
     try {
-      saveTransactionWithLearning(editedTransaction, {
+      const payload = isNewTransaction
+        ? { ...editedTransaction, id: '' }
+        : editedTransaction;
+
+      saveTransactionWithLearning(payload, {
         rawMessage,
         isNew: isNewTransaction,
         senderHint,
@@ -291,7 +301,7 @@ const EditTransaction = () => {
         <Card className="w-full">
           <CardContent className={cn('pt-[var(--card-padding)]')}>
             <TransactionEditForm
-              transaction={transaction}
+              transaction={transactionForForm}
               onSave={handleSave}
               compact
               showNotes={false}

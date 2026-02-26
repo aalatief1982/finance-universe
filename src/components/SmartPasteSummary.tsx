@@ -22,8 +22,8 @@ import { Card } from './ui/card';
 
 interface Props {
   confidence: number;
-  matchedCount: number;
-  totalTemplates: number;
+  matchedCount?: number;
+  totalTemplates?: number;
   fieldScore?: number;
   keywordScore?: number;
 }
@@ -63,9 +63,11 @@ const SmartPasteSummary: React.FC<Props> = ({
         <li>Saving helps improve similar message detection on this device.</li>
       </ul>
 
-      <p className="mt-2 text-xs text-muted-foreground">
-        Recognition context: {matchedCount} matched pattern(s) out of {totalTemplates} saved.
-      </p>
+      {typeof matchedCount === 'number' && typeof totalTemplates === 'number' && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          We used your past confirmations to improve this suggestion.
+        </p>
+      )}
     </Card>
   );
 };
