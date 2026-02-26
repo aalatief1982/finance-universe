@@ -73,76 +73,125 @@ const AutoFitAmount = ({
   value: string;
   className: string;
 }) => {
-  const containerRef = React.useRef<HTMLParagraphElement | null>(null);
+  const wrapperRef = React.useRef<HTMLDivElement | null>(null);
+  const textRef = React.useRef<HTMLParagraphElement | null>(null);
+  const frameRef = React.useRef<number | null>(null);
+  const isFramePendingRef = React.useRef(false);
+  const lastMeasuredWidthRef = React.useRef(0);
+  const lastMeasuredHeightRef = React.useRef(0);
+  const lastAppliedFontSizeRef = React.useRef(MAX_AMOUNT_FONT_SIZE);
   const [fontSize, setFontSize] = React.useState(MAX_AMOUNT_FONT_SIZE);
 
   React.useLayoutEffect(() => {
-    const element = containerRef.current;
-    if (!element || value === '--') {
+    const wrapper = wrapperRef.current;
+    const textElement = textRef.current;
+    if (!wrapper || !textElement || value === '--') {
       return;
     }
 
-    let rafId = 0;
-    const recalculate = () => {
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const computedStyles = window.getComputedStyle(element);
-        const availableWidth = element.clientWidth;
-        if (!availableWidth) {
-          return;
-        }
+    const EPSILON = 1;
 
-        const cacheKey = `${value}|${availableWidth}|${computedStyles.fontFamily}|${computedStyles.fontWeight}`;
-        const cached = fontSizeCache.get(cacheKey);
-        if (cached) {
-          setFontSize((prev) => (prev === cached ? prev : cached));
-          return;
-        }
+    const applyFontSize = (nextSize: number) => {
+      if (Math.abs(lastAppliedFontSizeRef.current - nextSize) < 0.01) {
+        return;
+      }
+      lastAppliedFontSizeRef.current = nextSize;
+      setFontSize(nextSize);
+    };
 
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        if (!context) {
-          return;
-        }
+    const runMeasurement = () => {
+      isFramePendingRef.current = false;
+      const computedStyles = window.getComputedStyle(textElement);
+      const availableWidth = wrapper.clientWidth;
+      if (!availableWidth) {
+        return;
+      }
 
-        let nextSize = MAX_AMOUNT_FONT_SIZE;
-        for (let size = MAX_AMOUNT_FONT_SIZE; size >= MIN_AMOUNT_FONT_SIZE; size -= 1) {
-          context.font = `${computedStyles.fontWeight} ${size}px ${computedStyles.fontFamily}`;
-          if (context.measureText(value).width <= availableWidth) {
-            nextSize = size;
-            break;
-          }
-          nextSize = MIN_AMOUNT_FONT_SIZE;
-        }
+      const cacheKey = `${value}|${availableWidth}|${computedStyles.fontFamily}|${computedStyles.fontWeight}`;
+      const cached = fontSizeCache.get(cacheKey);
+      if (cached) {
+        applyFontSize(cached);
+        return;
+      }
 
-        fontSizeCache.set(cacheKey, nextSize);
-        setFontSize((prev) => (prev === nextSize ? prev : nextSize));
-      });
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) {
+        return;
+      }
+
+      let nextSize = MAX_AMOUNT_FONT_SIZE;
+      for (let size = MAX_AMOUNT_FONT_SIZE; size >= MIN_AMOUNT_FONT_SIZE; size -= 1) {
+        context.font = `${computedStyles.fontWeight} ${size}px ${computedStyles.fontFamily}`;
+        if (context.measureText(value).width <= availableWidth) {
+          nextSize = size;
+          break;
+        }
+        nextSize = MIN_AMOUNT_FONT_SIZE;
+      }
+
+      fontSizeCache.set(cacheKey, nextSize);
+      applyFontSize(nextSize);
+    };
+
+    const scheduleMeasurement = () => {
+      if (isFramePendingRef.current) {
+        return;
+      }
+      isFramePendingRef.current = true;
+      frameRef.current = requestAnimationFrame(runMeasurement);
     };
 
     if (typeof ResizeObserver === 'undefined') {
-      setFontSize(MAX_AMOUNT_FONT_SIZE);
+      applyFontSize(MAX_AMOUNT_FONT_SIZE);
       return;
     }
 
-    const resizeObserver = new ResizeObserver(recalculate);
-    resizeObserver.observe(element);
-    recalculate();
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+
+      const { width, height } = entry.contentRect;
+      if (import.meta.env.DEV) {
+        console.debug('[DashboardStats][AutoFitAmount] observed size', { width, height, value });
+      }
+
+      const widthDelta = Math.abs(width - lastMeasuredWidthRef.current);
+      const heightDelta = Math.abs(height - lastMeasuredHeightRef.current);
+      if (widthDelta <= EPSILON && heightDelta <= EPSILON) {
+        return;
+      }
+
+      lastMeasuredWidthRef.current = width;
+      lastMeasuredHeightRef.current = height;
+      scheduleMeasurement();
+    });
+
+    resizeObserver.observe(wrapper);
+    scheduleMeasurement();
+
     return () => {
-      cancelAnimationFrame(rafId);
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+      isFramePendingRef.current = false;
       resizeObserver.disconnect();
     };
   }, [value]);
 
   return (
-    <p
-      ref={containerRef}
-      className={className}
-      style={{ fontSize: `${fontSize}px`, lineHeight: 1.2 }}
-      title={value}
-    >
-      {value}
-    </p>
+    <div ref={wrapperRef} className="w-full min-w-0">
+      <p
+        ref={textRef}
+        className={className}
+        style={{ fontSize: `${fontSize}px`, lineHeight: 1.2 }}
+        title={value}
+      >
+        {value}
+      </p>
+    </div>
   );
 };
 
