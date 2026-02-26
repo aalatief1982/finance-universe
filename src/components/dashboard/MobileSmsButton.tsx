@@ -32,7 +32,7 @@ const MobileSmsButton = () => {
       >
         <Link to="/import-transactions">
           <MessageSquare size={18} />
-          Paste & Parse
+          Smart Entry
         </Link>
       </Button>
     </div>

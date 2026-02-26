@@ -22,7 +22,7 @@ import { Home, Upload, List, LineChart } from 'lucide-react';
 
 const navItems = [
   { name: 'Home', path: '/home', icon: Home, color: 'text-primary' },
-  { name: 'Paste SMS', path: '/import-transactions', icon: Upload, color: 'text-success' },
+  { name: 'Smart Entry', path: '/import-transactions', icon: Upload, color: 'text-success' },
   { name: 'Transactions', path: '/transactions', icon: List, color: 'text-secondary' },
   { name: 'Analytics', path: '/analytics', icon: LineChart, color: 'text-accent' }
 ];

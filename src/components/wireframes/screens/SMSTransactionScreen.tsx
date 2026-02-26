@@ -195,7 +195,7 @@ const SMSTransactionScreen = ({ onComplete, onCancel }: SMSTransactionScreenProp
   
   return (
     <WireframeContainer>
-      <WireframeHeader title="Paste & Parse" />
+      <WireframeHeader title="Smart Entry" />
       
       <div className="p-4 space-y-6">
         <div className="text-center mb-4">
