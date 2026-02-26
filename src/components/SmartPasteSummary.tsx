@@ -28,30 +28,44 @@ interface Props {
   keywordScore?: number;
 }
 
-const SmartPasteSummary: React.FC<Props> = ({ 
-  confidence, 
-  matchedCount, 
-  totalTemplates, 
+const SmartPasteSummary: React.FC<Props> = ({
+  confidence,
+  matchedCount,
+  totalTemplates,
   fieldScore,
-  keywordScore 
+  keywordScore,
 }) => {
+  const qualityLabel =
+    confidence >= 0.8
+      ? 'Looks good'
+      : confidence >= 0.5
+      ? 'Needs quick review'
+      : 'Needs careful review';
+
   return (
     <Card className="bg-accent/10 border-l-4 border-accent text-accent-foreground p-[var(--card-padding)] text-sm rounded-md">
       <h2 className="font-semibold mb-2 text-accent">
-        🧠 SmartPaste Summary
+        Review before saving
       </h2>
-		<ul className="list-disc list-inside">
-		  <li>Parsed via <strong>Smart Paste</strong> input</li>
-		  <li>Checked against <strong>{totalTemplates}</strong> known templates</li>
-		  <li>📂 <strong>{matchedCount}</strong> templates matched</li>
-		  {typeof fieldScore === 'number' && (
-			<li>🧩 Field Completion Score: <strong>{(fieldScore * 100).toFixed(1)}%</strong></li>
-		  )}
-		  {typeof keywordScore === 'number' && (
-			<li>🏷️ Keyword Match Score: <strong>{(keywordScore * 100).toFixed(1)}%</strong></li>
-		  )}
-		  <li>📐 Final Confidence Score: <strong>{(confidence * 100).toFixed(1)}%</strong></li>
-		</ul>
+      <ul className="list-disc list-inside space-y-1">
+        <li>
+          Quality check: <strong>{qualityLabel}</strong>
+        </li>
+        <li>
+          Confidence estimate: <strong>{(confidence * 100).toFixed(0)}%</strong>
+        </li>
+        {typeof fieldScore === 'number' && fieldScore < 0.75 && (
+          <li>Some important details may still need confirmation.</li>
+        )}
+        {typeof keywordScore === 'number' && keywordScore < 0.5 && (
+          <li>Category may need review before you save.</li>
+        )}
+        <li>Saving helps improve similar message detection on this device.</li>
+      </ul>
+
+      <p className="mt-2 text-xs text-muted-foreground">
+        Recognition context: {matchedCount} matched pattern(s) out of {totalTemplates} saved.
+      </p>
     </Card>
   );
 };

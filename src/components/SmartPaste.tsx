@@ -63,6 +63,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [totalTemplates, setTotalTemplates] = useState<number | null>(null);
   const [fieldScore, setFieldScore] = useState<number | null>(null);
   const [keywordScore, setKeywordScore] = useState<number | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
     if (!text.trim()) {
       setMatchStatus('Paste a message to begin');
       setHasMatch(false);
+      setIsSubmitted(false);
       return;
     }
 
@@ -87,11 +89,11 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         );
         setHasMatch(true);
       } else {
-        setMatchStatus('No match yet');
+        setMatchStatus('No saved pattern found yet. We can still extract details from this message.');
         setHasMatch(false);
       }
     } catch {
-      setMatchStatus('No match yet');
+      setMatchStatus('No saved pattern found yet. We can still extract details from this message.');
       setHasMatch(false);
     }
   }, [text, senderHint]);
@@ -124,6 +126,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     // console.log("[SmartPaste] Submitting message:", text);
   }
   setIsProcessing(true);
+  setIsSubmitted(true);
   setError(null);
   setConfidence(null);
   setMatchOrigin(null);
@@ -315,52 +318,52 @@ const handleSubmit = async (e: React.FormEvent) => {
                 : 'text-destructive'
             }`}
           >
-            Confidence: {(confidence * 100).toFixed(0)}% -{' '}
+            How sure we are: {(confidence * 100).toFixed(0)}% ·{' '}
             {matchOrigin === 'template'
-              ? 'matched a saved template.'
+              ? 'Based on a saved pattern.'
               : matchOrigin === 'ml'
-              ? 'AI extracted.'
+              ? 'Estimated from message text.'
               : matchOrigin === 'fallback'
-              ? 'basic guess from text.'
-              : 'structure match.'}
+              ? 'Best effort guess from message text.'
+              : 'Detected from message structure.'}
           </p>
         )}
 
         {detectedTransactions.length > 0 && confidence !== null && (
           <Card className="p-3 bg-accent/10 border-accent/30">
-            <h3 className="text-sm font-medium mb-2">Extraction Summary</h3>
+            <h3 className="text-sm font-medium mb-2">What we found</h3>
             <div className="text-sm space-y-1">
               <p>
-                Source:{' '}
+                Detection basis:{' '}
                 <span className="font-medium">
                   {matchOrigin === 'template'
-                    ? 'Template'
+                    ? 'Based on your saved patterns'
                     : matchOrigin === 'fallback'
-                    ? 'Fallback'
+                    ? 'Estimated from message text'
                     : matchOrigin === 'ml'
-                    ? 'Manual/ML'
-                    : 'Structure'}
+                    ? 'Estimated from message text'
+                    : 'Detected from message structure'}
                 </span>
               </p>
               <p>
-                Key fields extracted:{' '}
+                Important details captured:{' '}
                 <span className="font-medium">{extractedFieldCount}/4</span>
               </p>
               <p>
-                Currency detected:{' '}
+                Currency:{' '}
                 <span className="font-medium">{detectedTransactions[0].currency || 'Unknown'}</span>
               </p>
               <p>
-                Confidence:{' '}
+                How sure we are:{' '}
                 <span className="font-medium">{(confidence * 100).toFixed(0)}%</span>
               </p>
-              {(matchedCount !== null || totalTemplates !== null || fieldScore !== null || keywordScore !== null) && (
+              {(matchedCount !== null || totalTemplates !== null) && (
                 <p className="text-muted-foreground">
-                  Templates: {matchedCount ?? 0}/{totalTemplates ?? 0} · Field score: {typeof fieldScore === 'number' ? `${(fieldScore * 100).toFixed(0)}%` : '—'} · Keyword score: {typeof keywordScore === 'number' ? `${(keywordScore * 100).toFixed(0)}%` : '—'}
+                  Saved patterns recognized: {matchedCount ?? 0}/{totalTemplates ?? 0}
                 </p>
               )}
               {detectedTransactions[0].category === 'Uncategorized' && (
-                <p className="text-warning">Warning: category could not be inferred.</p>
+                <p className="text-warning">Category still needs your confirmation.</p>
               )}
             </div>
           </Card>
@@ -370,7 +373,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       {detectedTransactions.length > 0 && (
         <div className="space-y-3 mt-2">
-          <h3 className="text-sm font-medium">Detected Transaction:</h3>
+          <h3 className="text-sm font-medium">Detected transaction preview</h3>
           {detectedTransactions.map((txn) => (
             <DetectedTransactionCard
               key={txn.id}
@@ -384,7 +387,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       )}
 
       <NoTransactionMessage
-        show={!isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
+        show={!isSubmitted && !isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
         message={matchStatus}
         matched={hasMatch}
       />
