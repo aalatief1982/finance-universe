@@ -8,10 +8,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import CurrencyCombobox from '@/components/currency/CurrencyCombobox';
-import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
-import type { CustomCurrency } from '@/lib/currency-utils';
 
 interface DefaultCurrencyModalProps {
   open: boolean;
@@ -26,7 +23,6 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
   onCurrencyChange,
   onSave,
 }) => {
-  const [addCurrencyOpen, setAddCurrencyOpen] = React.useState(false);
   const [submitAttempted, setSubmitAttempted] = React.useState(false);
   const [currencyTouched, setCurrencyTouched] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -40,11 +36,6 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
       setIsSaving(false);
     }
   }, [open]);
-
-  const handleSavedCurrency = (currency: CustomCurrency) => {
-    setCurrencyTouched(true);
-    onCurrencyChange(currency.code);
-  };
 
   const handleCurrencyChange = (currency: string) => {
     setCurrencyTouched(true);
@@ -93,23 +84,12 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
           </AlertDialogHeader>
 
           <div className="space-y-2 rounded-md border border-primary/20 bg-primary/5 p-3">
-            <div className="flex items-center gap-2">
-              <CurrencyCombobox
-                id="default-currency-gate-select"
-                value={selectedCurrency}
-                onChange={handleCurrencyChange}
-                className={showCurrencyError ? 'border-destructive text-destructive' : undefined}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => setAddCurrencyOpen(true)}
-                aria-label="Add currency"
-              >
-                <Plus className="size-4" />
-              </Button>
-            </div>
+            <CurrencyCombobox
+              id="default-currency-gate-select"
+              value={selectedCurrency}
+              onChange={handleCurrencyChange}
+              className={showCurrencyError ? 'border-destructive text-destructive' : undefined}
+            />
             {showCurrencyError ? (
               <p className="text-sm text-destructive" role="alert">
                 Please select a currency to continue.
@@ -124,12 +104,6 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <AddCurrencyDialog
-        open={addCurrencyOpen}
-        onOpenChange={setAddCurrencyOpen}
-        onSaved={handleSavedCurrency}
-      />
     </>
   );
 };
