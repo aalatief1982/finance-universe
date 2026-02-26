@@ -226,7 +226,7 @@ const createInitialTransactionState = (
 const serializeTransactionForDirtyCheck = (tx: Transaction) =>
   JSON.stringify({
     title: tx.title || '',
-    amount: Number(tx.amount || 0),
+    amount: Math.abs(Number(tx.amount || 0)),
     type: tx.type || 'expense',
     category: tx.category || '',
     subcategory: tx.subcategory || '',
@@ -398,7 +398,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [amountText, setAmountText] = useState<string>(() => {
     const initialState = createInitialTransactionState(transaction);
     return Number.isFinite(initialState.amount)
-      ? String(Math.abs(initialState.amount))
+      ? Math.abs(initialState.amount).toFixed(2)
       : '';
   });
   const [amountNumber, setAmountNumber] = useState<number | null>(() => {
@@ -496,7 +496,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     });
     setAmountText(
       Number.isFinite(nextInitialState.amount)
-        ? String(Math.abs(nextInitialState.amount))
+        ? Math.abs(nextInitialState.amount).toFixed(2)
         : '',
     );
     setAmountNumber(() => {

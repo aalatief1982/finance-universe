@@ -89,11 +89,11 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
         );
         setHasMatch(true);
       } else {
-        setMatchStatus('No saved pattern found yet. We can still extract details from this message.');
+        setMatchStatus('Ready to review. We can still extract transaction details from this message.');
         setHasMatch(false);
       }
     } catch {
-      setMatchStatus('No saved pattern found yet. We can still extract details from this message.');
+      setMatchStatus('Ready to review. We can still extract transaction details from this message.');
       setHasMatch(false);
     }
   }, [text, senderHint]);
@@ -302,7 +302,11 @@ const handleSubmit = async (e: React.FormEvent) => {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
-          <Button type="submit" disabled={isProcessing || !text.trim()}>
+          <Button
+            type="submit"
+            variant={detectedTransactions.length > 0 ? 'outline' : 'default'}
+            disabled={isProcessing || !text.trim()}
+          >
             {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Review Transaction
           </Button>
@@ -357,11 +361,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                 How sure we are:{' '}
                 <span className="font-medium">{(confidence * 100).toFixed(0)}%</span>
               </p>
-              {(matchedCount !== null || totalTemplates !== null) && (
-                <p className="text-muted-foreground">
-                  Saved patterns recognized: {matchedCount ?? 0}/{totalTemplates ?? 0}
-                </p>
-              )}
               {detectedTransactions[0].category === 'Uncategorized' && (
                 <p className="text-warning">Category still needs your confirmation.</p>
               )}
@@ -387,7 +386,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       )}
 
       <NoTransactionMessage
-        show={!isSubmitted && !isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
+        show={isSubmitted && !isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
         message={matchStatus}
         matched={hasMatch}
       />
