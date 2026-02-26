@@ -276,10 +276,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     logAnalyticsEvent('smart_paste_save');
 
-    toast({
-      title: "Transaction added",
-      description: `Added ${transaction.title || transaction.vendor} (${transaction.amount})`,
-    });
   };
 
   return (
