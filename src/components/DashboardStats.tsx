@@ -74,7 +74,8 @@ const AutoFitAmount = ({
   className: string;
 }) => {
   const textRef = React.useRef<HTMLParagraphElement | null>(null);
-  const lastAppliedFontSizeRef = React.useRef(MAX_AMOUNT_FONT_SIZE);
+  const lastAppliedFontSizeRef = React.useRef<number>(MAX_AMOUNT_FONT_SIZE);
+  const lastMeasuredWidthRef = React.useRef<number>(0);
   const [fontSize, setFontSize] = React.useState(MAX_AMOUNT_FONT_SIZE);
   const FONT_SIZE_EPSILON = 0.5;
 
@@ -89,44 +90,31 @@ const AutoFitAmount = ({
     let rafId: number | null = null;
     let isRecalculateQueued = false;
 
-    const scheduleRecalculate = () => {
-      if (isRecalculateQueued) {
+    const applyFontSize = (nextSize: number) => {
+      if (Math.abs(lastAppliedFontSizeRef.current - nextSize) <= FONT_SIZE_EPSILON) {
         return;
       }
-      isRecalculateQueued = true;
 
-      rafId = requestAnimationFrame(() => {
-        isRecalculateQueued = false;
-
-        const computedStyles = window.getComputedStyle(textElement);
-        const availableWidth = containerElement.clientWidth;
-        if (!availableWidth) {
-          return;
-        }
-
-        const cacheKey = `${value}|${availableWidth}|${computedStyles.fontFamily}|${computedStyles.fontWeight}`;
-        const cached = fontSizeCache.get(cacheKey);
-        if (cached !== undefined) {
-          if (Math.abs(lastAppliedFontSizeRef.current - cached) <= FONT_SIZE_EPSILON) {
-            return;
-          }
-
-          lastAppliedFontSizeRef.current = cached;
-          setFontSize((prev) => (Math.abs(prev - cached) <= FONT_SIZE_EPSILON ? prev : cached));
-          return;
-        }
+      lastAppliedFontSizeRef.current = nextSize;
+      setFontSize((prev) => (Math.abs(prev - nextSize) <= FONT_SIZE_EPSILON ? prev : nextSize));
+    };
 
     const runMeasurement = () => {
-      isFramePendingRef.current = false;
       const computedStyles = window.getComputedStyle(textElement);
-      const availableWidth = wrapper.clientWidth;
+      const availableWidth = Math.round(containerElement.clientWidth);
       if (!availableWidth) {
         return;
       }
 
+      if (Math.abs(availableWidth - lastMeasuredWidthRef.current) < 1) {
+        return;
+      }
+
+      lastMeasuredWidthRef.current = availableWidth;
+
       const cacheKey = `${value}|${availableWidth}|${computedStyles.fontFamily}|${computedStyles.fontWeight}`;
       const cached = fontSizeCache.get(cacheKey);
-      if (cached) {
+      if (cached !== undefined) {
         applyFontSize(cached);
         return;
       }
@@ -137,40 +125,39 @@ const AutoFitAmount = ({
         return;
       }
 
-      let nextSize = MAX_AMOUNT_FONT_SIZE;
+      let nextSize = MIN_AMOUNT_FONT_SIZE;
       for (let size = MAX_AMOUNT_FONT_SIZE; size >= MIN_AMOUNT_FONT_SIZE; size -= 1) {
         context.font = `${computedStyles.fontWeight} ${size}px ${computedStyles.fontFamily}`;
         if (context.measureText(value).width <= availableWidth) {
           nextSize = size;
           break;
         }
-        nextSize = MIN_AMOUNT_FONT_SIZE;
       }
 
       fontSizeCache.set(cacheKey, nextSize);
       applyFontSize(nextSize);
     };
 
-        fontSizeCache.set(cacheKey, nextSize);
-        if (Math.abs(lastAppliedFontSizeRef.current - nextSize) <= FONT_SIZE_EPSILON) {
-          return;
-        }
+    const scheduleRecalculate = () => {
+      if (isRecalculateQueued) {
+        return;
+      }
 
-        lastAppliedFontSizeRef.current = nextSize;
-        setFontSize((prev) => (Math.abs(prev - nextSize) <= FONT_SIZE_EPSILON ? prev : nextSize));
+      isRecalculateQueued = true;
+      rafId = requestAnimationFrame(() => {
+        isRecalculateQueued = false;
+        runMeasurement();
       });
     };
 
-    const recalculate = () => {
-      scheduleRecalculate();
-    };
-
     if (typeof ResizeObserver === 'undefined') {
-      applyFontSize(MAX_AMOUNT_FONT_SIZE);
+      setFontSize(MAX_AMOUNT_FONT_SIZE);
       return;
     }
 
-    const resizeObserver = new ResizeObserver(recalculate);
+    const resizeObserver = new ResizeObserver(() => {
+      scheduleRecalculate();
+    });
     resizeObserver.observe(containerElement);
     scheduleRecalculate();
 
