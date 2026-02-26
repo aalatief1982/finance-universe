@@ -1,73 +1,38 @@
 
 
-# Fix: Amount Validation Fails on Negative Expense Amounts
+# Fix: ResizeObserver Error Triggering "Something went wrong" Toast
 
-## Problem
+## Root Cause
 
-Expenses are stored with **negative** amounts (e.g., `-500`). When `TransactionEditForm` loads an expense:
+The `ResizeObserver loop completed with undelivered notifications` is a harmless browser notification, not an actual error. Every modern browser fires it when a ResizeObserver callback causes layout changes that can't complete in one animation frame. It's triggered by UI components like Radix dialogs and Recharts.
 
-1. `amountNumber` is initialized as `-500`
-2. On submit, `getAmountValidationError(-500)` checks `amountNumber <= 0` and returns the error
-3. The sign-flip to `-Math.abs(canonicalAmount)` happens on lines 826-830, **after** validation already rejected the value on line 816
+The global error handler in `AppWithLoader.tsx` catches this as a real error and calls `handleError()` which shows a destructive red toast. While the code deduplicates repeated errors, it still shows the toast on the **first** occurrence.
 
-The validation and the sign conversion are in the wrong order.
+## Change
 
-## Fix
+**File: `src/AppWithLoader.tsx`** (inside `setupGlobalErrorHandlers`, the `window.addEventListener('error', ...)` block around line 103)
 
-In `TransactionEditForm.tsx`, validate against `Math.abs(canonicalAmount)` instead of the raw `canonicalAmount`. The validation should check whether the **absolute** amount is valid, since the sign is a function of the transaction type, not user input.
+Add an early return after computing the signature when it equals `'resizeobserver_loop_notification'`:
 
-### Change 1: Fix `getAmountValidationError` call (line 816)
+```text
+const signature = buildErrorSignature(event.message, source, event.lineno, event.colno, stack)
 
-```
-// Before
-const amountError = getAmountValidationError(canonicalAmount);
+// --- ADD THIS ---
+if (signature === 'resizeobserver_loop_notification') {
+  event.preventDefault()
+  return   // Harmless browser noise - do not show toast
+}
+// --- END ---
 
-// After
-const amountError = getAmountValidationError(
-  canonicalAmount !== null ? Math.abs(canonicalAmount) : null
-);
-```
-
-### Change 2: Fix initial `amountNumber` state (line 379-382)
-
-When initializing from an existing expense transaction, store the absolute value so the display and validation both work with positive numbers:
-
-```
-// Before
-return parseAmountToNullableNumber(initialState.amount);
-
-// After  
-const parsed = parseAmountToNullableNumber(initialState.amount);
-return parsed !== null ? Math.abs(parsed) : null;
+const shouldNotify = shouldNotifyForSignature(signature, globalErrorLastSeen)
 ```
 
-### Change 3: Fix `amountText` initialization (lines 373-377)
+This completely suppresses the ResizeObserver error from reaching `handleError()` and showing a toast, while still allowing all real errors through.
 
-Similarly, display the absolute value in the text input:
+## Why this is safe
 
-```
-// Before
-return Number.isFinite(initialState.amount)
-  ? String(initialState.amount)
-  : '';
-
-// After
-return Number.isFinite(initialState.amount)
-  ? String(Math.abs(initialState.amount))
-  : '';
-```
-
-## Why This Works
-
-- The user always enters/sees **positive** amounts
-- The sign is determined by the transaction type (`expense` = negative, `income` = positive) and applied on line 826-830
-- Validation now checks the absolute value, which matches what the user entered
-
-## Files Changed
-
-- `src/components/TransactionEditForm.tsx` -- 3 small edits
-
-## Risk
-
-Very low. Only changes how the amount is presented and validated in the edit form -- the final sign conversion logic is untouched.
+- `ResizeObserver loop completed` is explicitly listed as [non-actionable by the W3C spec](https://github.com/w3c/csswg-drafts/issues/5765)
+- Chrome, Firefox, and Safari all fire it routinely
+- No application logic depends on this error
+- The signature detection already exists in `buildErrorSignature` -- we just need to act on it earlier
 
