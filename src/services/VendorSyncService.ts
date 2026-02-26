@@ -109,7 +109,7 @@ async function fetchVendorRegistry(): Promise<VendorRegistry | null> {
     console.warn('[VendorSync] Registry file is malformed');
     return null;
   } catch (error) {
-    console.error('[VendorSync] Error fetching registry:', error);
+    console.warn('[VendorSync] Error fetching registry:', error);
     return null;
   }
 }
@@ -142,7 +142,7 @@ async function fetchVendorDataFromDrive(fileId: string): Promise<VendorData | nu
     console.warn('[VendorSync] Invalid vendor data structure');
     return null;
   } catch (error) {
-    console.error('[VendorSync] Error fetching vendor data:', error);
+    console.warn('[VendorSync] Error fetching vendor data:', error);
     return null;
   }
 }
@@ -181,7 +181,7 @@ function replaceVendorDataToFallbacks(vendorData: VendorData): void {
       // );
     }
   } catch (error) {
-    console.error('[VendorSync] Error replacing fallbacks:', error);
+    console.warn('[VendorSync] Error replacing fallbacks:', error);
   }
 }
 

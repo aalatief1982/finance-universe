@@ -119,7 +119,7 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
 
           <AlertDialogFooter>
             <Button onClick={handleSaveClick} disabled={isSaving} className="w-full">
-              {isSaving ? 'Saving...' : 'Save &amp; Continue'}
+              {isSaving ? 'Saving...' : 'Save & Continue'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
