@@ -51,7 +51,7 @@ const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="h-[270px] w-full">
+    <div className="h-[270px] min-h-[270px] w-full">
       {data.length === 0 ? (
         <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
           No data available

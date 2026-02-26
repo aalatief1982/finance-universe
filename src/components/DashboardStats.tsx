@@ -116,21 +116,40 @@ const AutoFitAmount = ({
           return;
         }
 
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        if (!context) {
-          return;
-        }
+    const runMeasurement = () => {
+      isFramePendingRef.current = false;
+      const computedStyles = window.getComputedStyle(textElement);
+      const availableWidth = wrapper.clientWidth;
+      if (!availableWidth) {
+        return;
+      }
 
-        let nextSize = MAX_AMOUNT_FONT_SIZE;
-        for (let size = MAX_AMOUNT_FONT_SIZE; size >= MIN_AMOUNT_FONT_SIZE; size -= 1) {
-          context.font = `${computedStyles.fontWeight} ${size}px ${computedStyles.fontFamily}`;
-          if (context.measureText(value).width <= availableWidth) {
-            nextSize = size;
-            break;
-          }
-          nextSize = MIN_AMOUNT_FONT_SIZE;
+      const cacheKey = `${value}|${availableWidth}|${computedStyles.fontFamily}|${computedStyles.fontWeight}`;
+      const cached = fontSizeCache.get(cacheKey);
+      if (cached) {
+        applyFontSize(cached);
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      if (!context) {
+        return;
+      }
+
+      let nextSize = MAX_AMOUNT_FONT_SIZE;
+      for (let size = MAX_AMOUNT_FONT_SIZE; size >= MIN_AMOUNT_FONT_SIZE; size -= 1) {
+        context.font = `${computedStyles.fontWeight} ${size}px ${computedStyles.fontFamily}`;
+        if (context.measureText(value).width <= availableWidth) {
+          nextSize = size;
+          break;
         }
+        nextSize = MIN_AMOUNT_FONT_SIZE;
+      }
+
+      fontSizeCache.set(cacheKey, nextSize);
+      applyFontSize(nextSize);
+    };
 
         fontSizeCache.set(cacheKey, nextSize);
         if (Math.abs(lastAppliedFontSizeRef.current - nextSize) <= FONT_SIZE_EPSILON) {
@@ -147,7 +166,7 @@ const AutoFitAmount = ({
     };
 
     if (typeof ResizeObserver === 'undefined') {
-      setFontSize(MAX_AMOUNT_FONT_SIZE);
+      applyFontSize(MAX_AMOUNT_FONT_SIZE);
       return;
     }
 
