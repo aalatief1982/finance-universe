@@ -26,6 +26,10 @@
 import { ErrorType, AppError, ErrorSeverity, errorSeverityDefaults } from "@/types/error";
 import { toast } from "@/hooks/use-toast";
 
+const TOAST_DEDUPE_WINDOW_MS = 10_000;
+const toastDedupeMap = new Map<string, number>();
+const toastDiagnosticsLoggedSources = new Set<string>();
+
 /**
  * Creates a standardized application error with enhanced metadata
  */
@@ -122,9 +126,27 @@ export const handleError = (
       }
     );
   }
+
+  const sourceTag = typeof appError.details?.source === 'string' ? appError.details.source : 'UNKNOWN';
+
+  if (!toastDiagnosticsLoggedSources.has(sourceTag)) {
+    toastDiagnosticsLoggedSources.add(sourceTag);
+    console.error('[TOAST_ERROR]', {
+      source: sourceTag,
+      message: appError.message,
+      error: appError.originalError ?? error,
+    });
+    console.error(new Error(`[TOAST_STACK] ${sourceTag}`).stack);
+  }
+
+  const dedupeKey = `${sourceTag}::${appError.message}`;
+  const now = Date.now();
+  const lastToastAt = toastDedupeMap.get(dedupeKey) ?? 0;
+  const shouldShowToast = now - lastToastAt >= TOAST_DEDUPE_WINDOW_MS;
   
   // Show toast if requested and error is not silent
-  if (showToast && !appError.isSilent) {
+  if (showToast && !appError.isSilent && shouldShowToast) {
+    toastDedupeMap.set(dedupeKey, now);
     toast({
       title: getTitleFromErrorType(appError.type),
       description: appError.message,
