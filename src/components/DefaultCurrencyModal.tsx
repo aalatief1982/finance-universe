@@ -17,7 +17,7 @@ interface DefaultCurrencyModalProps {
   open: boolean;
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
-  onSave: () => void;
+  onSave: () => void | Promise<void>;
 }
 
 const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
@@ -27,9 +27,54 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
   onSave,
 }) => {
   const [addCurrencyOpen, setAddCurrencyOpen] = React.useState(false);
+  const [submitAttempted, setSubmitAttempted] = React.useState(false);
+  const [currencyTouched, setCurrencyTouched] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const showCurrencyError = !selectedCurrency && (submitAttempted || currencyTouched);
+
+  React.useEffect(() => {
+    if (!open) {
+      setSubmitAttempted(false);
+      setCurrencyTouched(false);
+      setIsSaving(false);
+    }
+  }, [open]);
 
   const handleSavedCurrency = (currency: CustomCurrency) => {
+    setCurrencyTouched(true);
     onCurrencyChange(currency.code);
+  };
+
+  const handleCurrencyChange = (currency: string) => {
+    setCurrencyTouched(true);
+    onCurrencyChange(currency);
+  };
+
+  const focusCurrencyDropdown = () => {
+    const trigger = document.getElementById('default-currency-gate-select');
+    if (!trigger) return;
+
+    trigger.focus();
+    trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  };
+
+  const handleSaveClick = async () => {
+    if (isSaving) return;
+
+    setSubmitAttempted(true);
+
+    if (!selectedCurrency) {
+      focusCurrencyDropdown();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await onSave();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -52,7 +97,8 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
               <CurrencyCombobox
                 id="default-currency-gate-select"
                 value={selectedCurrency}
-                onChange={onCurrencyChange}
+                onChange={handleCurrencyChange}
+                className={showCurrencyError ? 'border-destructive text-destructive' : undefined}
               />
               <Button
                 type="button"
@@ -64,11 +110,16 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
                 <Plus className="size-4" />
               </Button>
             </div>
+            {showCurrencyError ? (
+              <p className="text-sm text-destructive" role="alert">
+                Please select a currency to continue.
+              </p>
+            ) : null}
           </div>
 
           <AlertDialogFooter>
-            <Button onClick={onSave} disabled={!selectedCurrency} className="w-full">
-              Save &amp; Continue
+            <Button onClick={handleSaveClick} disabled={isSaving} className="w-full">
+              {isSaving ? 'Saving...' : 'Save &amp; Continue'}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
