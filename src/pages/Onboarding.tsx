@@ -26,23 +26,24 @@ import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 const Onboarding = () => {
   const navigate = useNavigate();
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const hasCompletedRef = useRef(false);
+  const hasNavigatedRef = useRef(false);
+  const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
     console.trace('[TRACE][Onboarding] component mounted', {
       timestamp: new Date().toISOString(),
     });
-    const timeoutId = timeoutRef.current;
-
     return () => {
-      if (timeoutId) {
-        console.trace('[TRACE][Onboarding] clearing timeout on unmount', {
-          timestamp: new Date().toISOString(),
-        });
-        clearTimeout(timeoutId);
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
       }
+
+      console.trace('[TRACE][Onboarding] component unmounted', {
+        timestamp: new Date().toISOString(),
+      });
     };
   }, []);
 
@@ -51,7 +52,9 @@ const Onboarding = () => {
   }, [showSmsPrompt]);
 
   const handleComplete = () => {
-    if (hasCompletedRef.current) return;
+    if (hasCompletedRef.current || hasNavigatedRef.current || isSubmitting) return;
+
+    setIsSubmitting(true);
     hasCompletedRef.current = true;
 
     console.log('Onboarding completed');
@@ -64,14 +67,17 @@ const Onboarding = () => {
       timestamp: Date.now()
     });
     
-    timeoutRef.current = setTimeout(() => {
-      navigate('/home', { replace: true });
-    }, 250);
+    if (!hasNavigatedRef.current) {
+      hasNavigatedRef.current = true;
+      navigationTimeoutRef.current = setTimeout(() => {
+        navigate('/home', { replace: true });
+      }, 180);
+    }
   };
 
   return (
     <div className="fixed inset-0 overflow-hidden">
-      <OnboardingSlides onComplete={handleComplete} />
+      <OnboardingSlides onComplete={handleComplete} isSubmitting={isSubmitting} />
     </div>
   );
 };

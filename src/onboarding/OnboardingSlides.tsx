@@ -45,21 +45,19 @@ const slides: Slide[] = [
 
 interface Props {
   onComplete: () => void;
+  isSubmitting?: boolean;
 }
 
-const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
+const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false }) => {
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
   const shouldLogImageLoadErrors = import.meta.env.MODE === 'development';
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
-  const [isCompleting, setIsCompleting] = useState(false);
-
   const handleCompleteOnce = React.useCallback(() => {
-    if (isCompleting) return;
-    setIsCompleting(true);
+    if (isSubmitting) return;
     onComplete();
-  }, [isCompleting, onComplete]);
+  }, [isSubmitting, onComplete]);
 
   useEffect(() => {
     console.trace('[TRACE][OnboardingSlides] component mounted', {
@@ -219,9 +217,9 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete }) => {
                     <Button 
                       className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 group" 
                       onClick={handleCompleteOnce}
-                      disabled={isCompleting}
+                      disabled={isSubmitting}
                     >
-                      {isCompleting ? 'Starting...' : 'Start Your Journey'}
+                      {isSubmitting ? 'Starting...' : 'Start Your Journey'}
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
                     </Button>
                     <p className="text-xs text-muted-foreground text-center pb-2">
