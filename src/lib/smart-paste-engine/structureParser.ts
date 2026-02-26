@@ -57,6 +57,16 @@ export interface ParsedField {
   source: 'direct' | 'inferred' | 'default'
 }
 
+
+function applyFromAccountRemapping(accountToken?: string): string | undefined {
+  if (!accountToken) return undefined;
+  const map = JSON.parse(safeStorage.getItem('xpensia_fromaccount_map') || '{}');
+  const mapped = map[accountToken];
+  if (typeof mapped !== 'string') return undefined;
+  const normalized = mapped.trim();
+  return normalized || undefined;
+}
+
 /**
  * Parse an SMS message into structured fields with confidence scores.
  *
@@ -185,6 +195,21 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
       if (import.meta.env.MODE === 'development') {
         // console.log('[SmartPaste] Normalized date:', directFields['date'].value);
       }
+    }
+  }
+
+  // Promote learned account remapping for exact account tokens when available.
+  // This lets repeated patterns auto-drive fromAccount even if sender context changes.
+  if (!directFields['fromAccount'] && directFields['account']) {
+    const mappedFromAccount = applyFromAccountRemapping(directFields['account'].value);
+    if (mappedFromAccount) {
+      const field = {
+        value: mappedFromAccount,
+        confidenceScore: computeConfidenceScore('default'),
+        source: 'default' as const,
+      };
+      directFields['fromAccount'] = field;
+      defaultValues['fromAccount'] = field;
     }
   }
 

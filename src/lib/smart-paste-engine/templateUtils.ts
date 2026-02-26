@@ -178,6 +178,25 @@ export function getTemplateByHash(
     foundKey = getTemplateKey(undefined, undefined, hash);
     template = templates[foundKey];
   }
+
+  // Fallback: if sender/account scoped key is unavailable, reuse any exact-hash
+  // template that has a learned fromAccount default.
+  if (!template) {
+    const exactHashCandidates = Object.entries(templates).filter(
+      ([candidateKey, candidateTemplate]) =>
+        parseTemplateKey(candidateKey).hash === hash &&
+        Boolean(candidateTemplate.defaultValues?.fromAccount),
+    );
+
+    if (exactHashCandidates.length > 0) {
+      exactHashCandidates.sort(
+        (a, b) =>
+          (b[1].meta?.usageCount || 0) - (a[1].meta?.usageCount || 0),
+      );
+      [foundKey, template] = exactHashCandidates[0];
+    }
+  }
+
   if (template) {
     ensureTemplateMeta(template);
     template.meta.lastUsedAt = new Date().toISOString();
