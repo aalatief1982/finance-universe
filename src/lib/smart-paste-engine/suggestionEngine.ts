@@ -284,33 +284,60 @@ export function inferIndirectFields(
  * - Falls back to "Company" for salary keywords
  */
 export function extractVendorName(message: string): string {
-  const match = message.match(
-    /(?:لدى|من|في|عند|من عند|تم الدفع لـ|تم الشراء من|at|from|paid to|purchased from)[:\s]*([^\n,؛;:-]+)/i
-  );
+  const normalizedMessage = message
+    .normalize('NFC')
+    .replace(/[\u200B-\u200D\uFEFF\u061C]/g, '');
 
-  if (match && match[1]) {
-    // Strip trailing date patterns like "on 2024" or "on 2024-01-02"
-    const candidate = match[1].trim().replace(/\s+on\s+\d{4}(-\d{2}(-\d{2})?)?.*$/i, '');
+  const captureCandidate = (value: string): string => {
+    const candidate = value.trim().replace(/\s+on\s+\d{4}(-\d{2}(-\d{2})?)?.*$/i, '');
 
     const isValidVendor =
       candidate.length > 2 &&
       isNaN(Number(candidate)) &&
       !/^\d{4}$/.test(candidate) &&
-      !candidate.toLowerCase().includes("sar") &&
+      !candidate.toLowerCase().includes('sar') &&
       !candidate.match(/^\*{2,}/) &&
       !candidate.match(/^\d+(?:[.,]\d+)?$/);
 
-    if (isValidVendor) return candidate;
+    return isValidVendor ? candidate : '';
+  };
+
+  const explicitLabel = normalizedMessage.match(
+    /(?:^|[\s\n])(?:لدى|merchant|vendor)\s*[:：]\s*([^\n,؛;]+)/i,
+  );
+  if (explicitLabel?.[1]) {
+    const explicitCandidate = captureCandidate(explicitLabel[1]);
+    if (explicitCandidate) return explicitCandidate;
+  }
+
+  const anchorPatterns = [
+    /(?:^|[\s\n])(?:من\s+عند|تم\s+الدفع\s+لـ|تم\s+الشراء\s+من|لدى|من|عند)\s*[:\s]\s*([^\n,؛;:-]+)/i,
+    /(?:\b)(?:at|from|paid to|purchased from)\s*[:\s]*([^\n,؛;:-]+)/i,
+  ];
+
+  for (const pattern of anchorPatterns) {
+    const match = normalizedMessage.match(pattern);
+    if (match?.[1]) {
+      const candidate = captureCandidate(match[1]);
+      if (candidate) return candidate;
+    }
+  }
+
+  const domainLike = normalizedMessage.match(
+    /(?:^|[\s\n:،؛;,])([a-z0-9][a-z0-9.-]*\.[a-z]{2,})(?=$|[\s\n،؛;,])/i,
+  );
+  if (domainLike?.[1]) {
+    return domainLike[1].toLowerCase();
   }
 
   // Fallback logic for salary transfers
-  const lowerText = message.toLowerCase();
-  if (lowerText.includes("راتب") || lowerText.includes("salary")) {
-    return "Company";
+  const lowerText = normalizedMessage.toLowerCase();
+  if (lowerText.includes('راتب') || lowerText.includes('salary')) {
+    return 'Company';
   }
 
   if (import.meta.env.MODE === 'development') {
-    console.warn("[extractVendorName] No valid vendor found for message:", message);
+    console.warn('[extractVendorName] No valid vendor found for message:', message);
   }
-  return "";
+  return '';
 }

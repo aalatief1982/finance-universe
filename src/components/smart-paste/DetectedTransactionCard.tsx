@@ -39,7 +39,7 @@ const DetectedTransactionCard = ({
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-[var(--card-padding)]">
-        <div className="flex justify-between items-start">
+        <div className="space-y-3">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-medium">{transaction.title}</h3>
@@ -75,13 +75,12 @@ const DetectedTransactionCard = ({
               )}
             </div>
           </div>
-          <Button 
-            size="sm" 
-            className="shrink-0"
+          <Button
+            className="w-full"
             onClick={() => onAddTransaction(transaction)}
           >
             <Plus className="h-4 w-4 mr-1" />
-            Add
+            Add Transaction
           </Button>
         </div>
       </CardContent>

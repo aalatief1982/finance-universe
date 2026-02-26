@@ -31,6 +31,17 @@ describe('suggestionEngine', () => {
     expect(extractVendorName('Paid to 1234 on 2024-01-02')).toBe('');
   });
 
+
+  it('extracts Arabic labeled merchant and avoids matching inside فيزا', () => {
+    const message = `شراء إنترنت
+بطاقة:5766 ;فيزا
+مبلغ:35 SAR
+لدى:bolt.eu
+رصيد:4212.31 SAR
+26/2/26 16:40`;
+    expect(extractVendorName(message)).toBe('bolt.eu');
+  });
+
   it('finds closest fallback vendor matches', () => {
     localStorage.setItem('xpensia_vendor_fallbacks', JSON.stringify(vendorFallbacks));
     const match = findClosestFallbackMatch('Acme Store Riyadh');

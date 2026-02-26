@@ -61,6 +61,7 @@ interface EditTransactionState {
   totalTemplates?: number;
   fieldScore?: number;
   keywordScore?: number;
+  mode?: 'create' | 'edit';
 }
 
 const EditTransaction = () => {
@@ -93,7 +94,7 @@ const EditTransaction = () => {
   const isSuggested = state?.isSuggested;
   const confidenceScore = state?.confidence;
   const fieldConfidences = state?.fieldConfidences;
-  const isNewTransaction = !transaction;
+  const isNewTransaction = state?.mode === 'create' ? true : !transaction;
 
 
   if (import.meta.env.MODE === 'development') {

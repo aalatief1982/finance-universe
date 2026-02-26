@@ -102,6 +102,7 @@ const ImportTransactions = () => {
         fieldConfidences,
         isSuggested: true,
         matchOrigin,
+        mode: 'create',
       },
     });
   };

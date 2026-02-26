@@ -626,6 +626,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     }
   }, [newVendor.category, newVendor.subcategory]);
 
+  const handleAmountBlur = () => {
+    if (amountNumber === null) {
+      setAmountText('');
+      return;
+    }
+
+    setAmountText(Math.abs(amountNumber).toFixed(2));
+  };
+
   const handleChange = (
     field: keyof Transaction,
     value: string | number | TransactionType,
@@ -1552,6 +1561,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 e.target.value,
               )
             }
+            onBlur={handleAmountBlur}
             placeholder="0.00"
             required
             title={
