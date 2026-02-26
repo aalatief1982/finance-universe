@@ -8,6 +8,29 @@ import { getLocaleSettings } from './settings';
 // Import currency data
 import { CURRENCY_INFO } from './data';
 
+const intlCurrencyValidityCache = new Map<string, boolean>();
+
+const isIntlCurrencyCodeSupported = (currencyCode: string): boolean => {
+  const normalized = currencyCode.toUpperCase();
+  if (intlCurrencyValidityCache.has(normalized)) {
+    return intlCurrencyValidityCache.get(normalized) as boolean;
+  }
+
+  let isValid = false;
+  try {
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: normalized,
+    }).format(1);
+    isValid = true;
+  } catch {
+    isValid = false;
+  }
+
+  intlCurrencyValidityCache.set(normalized, isValid);
+  return isValid;
+};
+
 /**
  * Gets the currency info for a currency code
  */
@@ -46,7 +69,23 @@ export const formatCurrency = (
 ): string => {
   try {
     const settings = getLocaleSettings();
-    const currencyCode = options?.currency || settings.currency;
+    const requestedCurrency = options?.currency || settings.currency;
+    const currencyCode = isIntlCurrencyCodeSupported(requestedCurrency)
+      ? requestedCurrency
+      : 'USD';
+
+    if (currencyCode !== requestedCurrency) {
+      handleError({
+        type: ErrorType.CURRENCY,
+        message: `Currency code "${requestedCurrency}" is not supported on this device. Falling back to USD.`,
+        details: {
+          source: 'FX_RATES',
+          requestedCurrency,
+          fallbackCurrency: currencyCode,
+        },
+      });
+    }
+
     const localeCode = options?.locale || settings.locale;
     const currencyInfo = getCurrencyInfo(currencyCode);
     const userPreferences = getUserSettings();
@@ -81,6 +120,9 @@ export const formatCurrency = (
     handleError({
       type: ErrorType.CURRENCY,
       message: 'Failed to format currency',
+      details: {
+        source: 'FX_RATES',
+      },
       originalError: error
     });
     
