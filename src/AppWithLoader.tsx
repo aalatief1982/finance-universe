@@ -10,6 +10,53 @@ import { backgroundVendorSyncService } from './services/BackgroundVendorSyncServ
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]'
 let traceCounter = 0
+const GLOBAL_ERROR_DEDUPE_WINDOW_MS = 10_000
+const globalErrorLastSeen = new Map<string, number>()
+const globalRejectionLastSeen = new Map<string, number>()
+
+const getErrorMessage = (value: unknown): string => {
+  if (value instanceof Error) {
+    return value.message
+  }
+  if (typeof value === 'string') {
+    return value
+  }
+  if (typeof value === 'object' && value !== null && 'message' in value) {
+    return String((value as { message?: unknown }).message ?? 'Unknown error')
+  }
+  return String(value ?? 'Unknown error')
+}
+
+const getErrorStack = (value: unknown): string | undefined => {
+  if (value instanceof Error) {
+    return value.stack
+  }
+  if (typeof value === 'object' && value !== null && 'stack' in value) {
+    return String((value as { stack?: unknown }).stack ?? '') || undefined
+  }
+  return undefined
+}
+
+const buildErrorSignature = (
+  message: string,
+  source: string,
+  lineno?: number,
+  colno?: number,
+  stack?: string
+): string => {
+  const stackKey = stack?.split('\n')[0] ?? ''
+  return `${message}|${source}|${lineno ?? 0}|${colno ?? 0}|${stackKey}`
+}
+
+const shouldNotifyForSignature = (signature: string, dedupeMap: Map<string, number>): boolean => {
+  const now = Date.now()
+  const lastSeenAt = dedupeMap.get(signature) ?? 0
+  const shouldNotify = now - lastSeenAt >= GLOBAL_ERROR_DEDUPE_WINDOW_MS
+  if (shouldNotify) {
+    dedupeMap.set(signature, now)
+  }
+  return shouldNotify
+}
 const traceAppRoot = (message: string, ...args: unknown[]) => {
   traceCounter += 1
   const now = performance.now().toFixed(2)
@@ -18,30 +65,74 @@ const traceAppRoot = (message: string, ...args: unknown[]) => {
 
 function setupGlobalErrorHandlers() {
   window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason
+    const message = getErrorMessage(reason)
+    const stack = getErrorStack(reason)
+    const source = 'unhandledrejection'
+    const signature = buildErrorSignature(message, source, undefined, undefined, stack)
+    const shouldNotify = shouldNotifyForSignature(signature, globalRejectionLastSeen)
+
+    if (shouldNotify) {
+      console.error('[GLOBAL_ERROR]', {
+        signature,
+        message,
+        source,
+        stack,
+      })
+    }
+
     handleError({
       type: ErrorType.UNKNOWN,
-      message: getFriendlyMessage(event.reason) || 'Unhandled Promise Rejection',
+      message: getFriendlyMessage(reason) || 'Unhandled Promise Rejection',
       severity: ErrorSeverity.ERROR,
-      details: { source: 'unhandledrejection', stack: event.reason?.stack },
-      originalError: event.reason
-    })
+      details: {
+        source,
+        signature,
+        stack,
+      },
+      originalError: reason
+    }, shouldNotify)
     event.preventDefault()
   })
 
   window.addEventListener('error', (event) => {
+    const fallbackError = new Error(`${event.message} (${event.filename}:${event.lineno}:${event.colno})`)
+    const originalError = event.error ?? fallbackError
+    const stack = getErrorStack(originalError) ?? getErrorStack(fallbackError)
+    const source = event.filename || 'window.onerror'
+    const signature = buildErrorSignature(event.message, source, event.lineno, event.colno, stack)
+    const shouldNotify = shouldNotifyForSignature(signature, globalErrorLastSeen)
+
+    if (shouldNotify) {
+      console.error('[GLOBAL_ERROR]', {
+        signature,
+        message: event.message,
+        source,
+        lineno: event.lineno,
+        colno: event.colno,
+        stack,
+      })
+    }
+
     handleError({
       type: ErrorType.UNKNOWN,
-      message: getFriendlyMessage(event.error) || 'Uncaught Error',
+      message: getFriendlyMessage(originalError) || 'Uncaught Error',
       severity: ErrorSeverity.CRITICAL,
       details: {
         source: 'window.onerror',
+        signature,
+        location: {
+          source,
+          lineno: event.lineno,
+          colno: event.colno,
+        },
         fileName: event.filename,
         lineNumber: event.lineno,
         columnNumber: event.colno,
-        stack: event.error?.stack
+        stack,
       },
-      originalError: event.error
-    })
+      originalError,
+    }, shouldNotify)
     event.preventDefault()
   })
 
