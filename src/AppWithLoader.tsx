@@ -44,6 +44,11 @@ const buildErrorSignature = (
   colno?: number,
   stack?: string
 ): string => {
+  const normalizedMessage = message.trim().toLowerCase()
+  if (normalizedMessage.includes('resizeobserver loop completed with undelivered notifications')) {
+    return 'resizeobserver_loop_notification'
+  }
+
   const stackKey = stack?.split('\n')[0] ?? ''
   return `${message}|${source}|${lineno ?? 0}|${colno ?? 0}|${stackKey}`
 }
