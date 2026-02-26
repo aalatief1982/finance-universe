@@ -276,13 +276,13 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Paste a message from your bank or SMS app to automatically extract transaction details.
+          Add a transaction by typing it, pasting an SMS, or using smart input methods.
         </p>
         <div className="grid gap-2">
-          <Label htmlFor="message">Bank/SMS Message</Label>
+          <Label htmlFor="message">Transaction details</Label>
           <Textarea
             id="message"
-            placeholder="Paste your message here..."
+            placeholder="Type or paste transaction details here…"
             value={text}
             onChange={(e) => setText(e.target.value)}
             className="min-h-[100px]"
@@ -293,7 +293,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         <div className="flex flex-col sm:flex-row sm:justify-start gap-2">
           <Button type="submit" disabled={isProcessing || !text.trim()}>
             {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Extract Transaction
+            Review Transaction
           </Button>
         </div>
 

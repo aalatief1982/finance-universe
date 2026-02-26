@@ -17,7 +17,7 @@ export const routeTitleMap: Record<string, string> = {
   "/wireframes/settings": "Settings",
   "/wireframes/sms-provider": "SMS Provider",
   "/wireframes/sms-transaction": "SMS Transaction",
-  "/import-transactions": "Paste & Parse",
+  "/import-transactions": "Smart Entry",
   "/review-sms-transactions": "Review Details",
   "/edit-transaction": "Transaction",
   "/budget/accounts": "Accounts & Balances",
@@ -56,7 +56,7 @@ export const getNavItems = () => {
       description: "View and manage your transactions",
     },
     {
-      title: "Paste & Parse",
+      title: "Smart Entry",
       path: "/import-transactions",
       icon: "Upload",
       description: "Import transactions from SMS or paste",
