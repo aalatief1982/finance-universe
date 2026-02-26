@@ -98,7 +98,7 @@
     "recharts": "^2.12.7",
     "sonner": "^1.5.0",
     "string-similarity": "^4.0.4",
-    "swiper": "^10.0.0",
+    "swiper": "^11.2.10",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",
