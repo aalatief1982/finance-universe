@@ -106,6 +106,12 @@ function setupGlobalErrorHandlers() {
     const stack = getErrorStack(originalError) ?? getErrorStack(fallbackError)
     const source = event.filename || 'window.onerror'
     const signature = buildErrorSignature(event.message, source, event.lineno, event.colno, stack)
+
+    if (signature === 'resizeobserver_loop_notification') {
+      event.preventDefault()
+      return // Harmless browser noise — do not show toast
+    }
+
     const shouldNotify = shouldNotifyForSignature(signature, globalErrorLastSeen)
 
     if (shouldNotify) {
