@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Transaction } from '@/types/transaction';
 import { Loader2 } from 'lucide-react';
 import { Label } from './ui/label';
+import { Card } from './ui/card';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
@@ -58,6 +59,10 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
   const [confidence, setConfidence] = useState<number | null>(null);
   const [matchOrigin, setMatchOrigin] = useState<'template' | 'structure' | 'ml' | 'fallback' | null>(null);
   const [fieldConfidences, setFieldConfidences] = useState<Record<string, number>>({});
+  const [matchedCount, setMatchedCount] = useState<number | null>(null);
+  const [totalTemplates, setTotalTemplates] = useState<number | null>(null);
+  const [fieldScore, setFieldScore] = useState<number | null>(null);
+  const [keywordScore, setKeywordScore] = useState<number | null>(null);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -122,6 +127,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   setError(null);
   setConfidence(null);
   setMatchOrigin(null);
+  setMatchedCount(null);
+  setTotalTemplates(null);
+  setFieldScore(null);
+  setKeywordScore(null);
   logAnalyticsEvent('smart_paste_sms');
 
   try {
@@ -153,28 +162,13 @@ const handleSubmit = async (e: React.FormEvent) => {
     setConfidence(confidence);
     setMatchOrigin(origin);
     setFieldConfidences(fieldConfidences || {});
+    setMatchedCount(matchedCount);
+    setTotalTemplates(totalTemplates);
+    setFieldScore(fieldScore);
+    setKeywordScore(keywordScore);
     
     if (import.meta.env.MODE === 'development') {
       // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
-    }
-
-    if (onTransactionsDetected) {
-      if (import.meta.env.MODE === 'development') {
-        // console.log("[SmartPaste] Final transaction inference:", transaction);
-        // console.log("[SmartPaste] Passing fieldConfidences:", fieldConfidences);
-      }
-      onTransactionsDetected(
-        [transaction],
-        text,
-        transaction.fromAccount,
-        confidence,
-        origin,
-        matchedCount,
-        totalTemplates,
-        fieldScore,
-        keywordScore,
-        fieldConfidences
-      );
     }
 
     if (parsed.matched) {
@@ -202,10 +196,24 @@ const handleSubmit = async (e: React.FormEvent) => {
     });
     setConfidence(null);
     setMatchOrigin(null);
+    setMatchedCount(null);
+    setTotalTemplates(null);
+    setFieldScore(null);
+    setKeywordScore(null);
   } finally {
     setIsProcessing(false);
   }
 };
+
+  const extractedFieldCount = detectedTransactions[0]
+    ? ['amount', 'date', 'vendor', 'category']
+        .filter((key) => {
+          const value = detectedTransactions[0][key as keyof Transaction];
+          if (typeof value === 'number') return value > 0;
+          return Boolean(value && String(value).trim() && value !== 'Uncategorized');
+        })
+        .length
+    : 0;
 
   const handlePaste = async () => {
     try {
@@ -255,10 +263,10 @@ const handleSubmit = async (e: React.FormEvent) => {
         senderHint,
         confidence || 0.95,
         matchOrigin || 'structure',
-        0,
-        0,
-        undefined,
-        undefined,
+        matchedCount || 0,
+        totalTemplates || 0,
+        fieldScore ?? undefined,
+        keywordScore ?? undefined,
         fieldConfidences
       );
     }
@@ -316,6 +324,46 @@ const handleSubmit = async (e: React.FormEvent) => {
               ? 'basic guess from text.'
               : 'structure match.'}
           </p>
+        )}
+
+        {detectedTransactions.length > 0 && confidence !== null && (
+          <Card className="p-3 bg-accent/10 border-accent/30">
+            <h3 className="text-sm font-medium mb-2">Extraction Summary</h3>
+            <div className="text-sm space-y-1">
+              <p>
+                Source:{' '}
+                <span className="font-medium">
+                  {matchOrigin === 'template'
+                    ? 'Template'
+                    : matchOrigin === 'fallback'
+                    ? 'Fallback'
+                    : matchOrigin === 'ml'
+                    ? 'Manual/ML'
+                    : 'Structure'}
+                </span>
+              </p>
+              <p>
+                Key fields extracted:{' '}
+                <span className="font-medium">{extractedFieldCount}/4</span>
+              </p>
+              <p>
+                Currency detected:{' '}
+                <span className="font-medium">{detectedTransactions[0].currency || 'Unknown'}</span>
+              </p>
+              <p>
+                Confidence:{' '}
+                <span className="font-medium">{(confidence * 100).toFixed(0)}%</span>
+              </p>
+              {(matchedCount !== null || totalTemplates !== null || fieldScore !== null || keywordScore !== null) && (
+                <p className="text-muted-foreground">
+                  Templates: {matchedCount ?? 0}/{totalTemplates ?? 0} · Field score: {typeof fieldScore === 'number' ? `${(fieldScore * 100).toFixed(0)}%` : '—'} · Keyword score: {typeof keywordScore === 'number' ? `${(keywordScore * 100).toFixed(0)}%` : '—'}
+                </p>
+              )}
+              {detectedTransactions[0].category === 'Uncategorized' && (
+                <p className="text-warning">Warning: category could not be inferred.</p>
+              )}
+            </div>
+          </Card>
         )}
       </form>
 
