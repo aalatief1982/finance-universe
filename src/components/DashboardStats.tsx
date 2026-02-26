@@ -73,29 +73,46 @@ const AutoFitAmount = ({
   value: string;
   className: string;
 }) => {
-  const containerRef = React.useRef<HTMLParagraphElement | null>(null);
+  const textRef = React.useRef<HTMLParagraphElement | null>(null);
+  const lastAppliedFontSizeRef = React.useRef(MAX_AMOUNT_FONT_SIZE);
   const [fontSize, setFontSize] = React.useState(MAX_AMOUNT_FONT_SIZE);
+  const FONT_SIZE_EPSILON = 0.5;
 
   React.useLayoutEffect(() => {
-    const element = containerRef.current;
-    if (!element || value === '--') {
+    const textElement = textRef.current;
+    const containerElement = textElement?.parentElement;
+
+    if (!textElement || !containerElement || value === '--') {
       return;
     }
 
-    let rafId = 0;
-    const recalculate = () => {
-      cancelAnimationFrame(rafId);
+    let rafId: number | null = null;
+    let isRecalculateQueued = false;
+
+    const scheduleRecalculate = () => {
+      if (isRecalculateQueued) {
+        return;
+      }
+      isRecalculateQueued = true;
+
       rafId = requestAnimationFrame(() => {
-        const computedStyles = window.getComputedStyle(element);
-        const availableWidth = element.clientWidth;
+        isRecalculateQueued = false;
+
+        const computedStyles = window.getComputedStyle(textElement);
+        const availableWidth = containerElement.clientWidth;
         if (!availableWidth) {
           return;
         }
 
         const cacheKey = `${value}|${availableWidth}|${computedStyles.fontFamily}|${computedStyles.fontWeight}`;
         const cached = fontSizeCache.get(cacheKey);
-        if (cached) {
-          setFontSize((prev) => (prev === cached ? prev : cached));
+        if (cached !== undefined) {
+          if (Math.abs(lastAppliedFontSizeRef.current - cached) <= FONT_SIZE_EPSILON) {
+            return;
+          }
+
+          lastAppliedFontSizeRef.current = cached;
+          setFontSize((prev) => (Math.abs(prev - cached) <= FONT_SIZE_EPSILON ? prev : cached));
           return;
         }
 
@@ -116,8 +133,17 @@ const AutoFitAmount = ({
         }
 
         fontSizeCache.set(cacheKey, nextSize);
-        setFontSize((prev) => (prev === nextSize ? prev : nextSize));
+        if (Math.abs(lastAppliedFontSizeRef.current - nextSize) <= FONT_SIZE_EPSILON) {
+          return;
+        }
+
+        lastAppliedFontSizeRef.current = nextSize;
+        setFontSize((prev) => (Math.abs(prev - nextSize) <= FONT_SIZE_EPSILON ? prev : nextSize));
       });
+    };
+
+    const recalculate = () => {
+      scheduleRecalculate();
     };
 
     if (typeof ResizeObserver === 'undefined') {
@@ -126,17 +152,20 @@ const AutoFitAmount = ({
     }
 
     const resizeObserver = new ResizeObserver(recalculate);
-    resizeObserver.observe(element);
-    recalculate();
+    resizeObserver.observe(containerElement);
+    scheduleRecalculate();
+
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       resizeObserver.disconnect();
     };
   }, [value]);
 
   return (
     <p
-      ref={containerRef}
+      ref={textRef}
       className={className}
       style={{ fontSize: `${fontSize}px`, lineHeight: 1.2 }}
       title={value}
