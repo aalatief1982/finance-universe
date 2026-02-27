@@ -18,14 +18,29 @@
  */
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import SmartPaste from '@/components/SmartPaste';
 import { Transaction } from '@/types/transaction';
 
+
+interface ImportTransactionsLocationState {
+  senderHint?: string;
+  sender?: string;
+}
+
 const ImportTransactions = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = (location.state as ImportTransactionsLocationState | null) || null;
+
+  const effectiveSenderHint =
+    locationState?.senderHint ||
+    locationState?.sender ||
+    new URLSearchParams(location.search).get('senderHint') ||
+    new URLSearchParams(location.search).get('sender') ||
+    undefined;
 
   if (import.meta.env.MODE === 'development') {
     // console.log('[ImportTransactions] Page initialized');
@@ -118,7 +133,10 @@ const ImportTransactions = () => {
           className="space-y-[calc(var(--section-gap)/2)]"
         >
           <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
-            <SmartPaste onTransactionsDetected={handleTransactionsDetected} />
+            <SmartPaste
+              senderHint={effectiveSenderHint}
+              onTransactionsDetected={handleTransactionsDetected}
+            />
           </div>
         </motion.div>
       </div>
