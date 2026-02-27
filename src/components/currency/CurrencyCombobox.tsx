@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { getAvailableCurrencyOptions, type AvailableCurrency } from '@/lib/currency-utils';
+import { formatCurrencyFlagCode, getAvailableCurrencyOptions, type AvailableCurrency } from '@/lib/currency-utils';
 
 interface CurrencyComboboxProps {
   value?: string;
@@ -52,7 +52,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
           className={cn('w-full min-w-0 justify-between font-normal', className)}
         >
           <span className="min-w-0 truncate text-left">
-            {selected ? `${selected.flag} ${selected.code} — ${selected.name}` : placeholder}
+            {selected ? formatCurrencyFlagCode(selected.code) : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -83,7 +83,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
                       value === currency.code ? 'opacity-100' : 'opacity-0',
                     )}
                   />
-                  {currency.flag} {currency.code} — {currency.name}
+                  {formatCurrencyFlagCode(currency.code)}
                 </CommandItem>
               ))}
             </CommandGroup>

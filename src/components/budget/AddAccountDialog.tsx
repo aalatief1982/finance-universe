@@ -37,9 +37,10 @@ interface AddAccountDialogProps {
   open: boolean;
   onClose: () => void;
   onAccountCreated: (newAccount: Account) => void;
+  initialAccount?: Account | null;
 }
 
-const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAccountCreated }) => {
+const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAccountCreated, initialAccount }) => {
   const today = React.useMemo(() => new Date().toISOString().split('T')[0], []);
   const [form, setForm] = React.useState<Omit<Account, 'id'>>({
     name: '',
@@ -52,6 +53,19 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
   React.useEffect(() => {
     if (!open) return;
+
+    if (initialAccount) {
+      setForm({
+        name: initialAccount.name,
+        type: initialAccount.type,
+        currency: initialAccount.currency,
+        initialBalance: initialAccount.initialBalance,
+        startDate: initialAccount.startDate,
+        tags: initialAccount.tags || [],
+      });
+      return;
+    }
+
     setForm({
       name: '',
       type: 'Bank',
@@ -60,7 +74,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
       startDate: today,
       tags: []
     });
-  }, [open, today]);
+  }, [open, today, initialAccount]);
 
   const handleSave = () => {
     if (!form.name.trim()) {
@@ -69,8 +83,21 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
     }
 
     const existingAccount = accountService.getAccountByName(form.name);
-    if (existingAccount) {
+    const isDuplicateName = existingAccount && existingAccount.id !== initialAccount?.id;
+    if (isDuplicateName) {
       toast({ title: 'An account with this name already exists', variant: 'destructive' });
+      return;
+    }
+
+    if (initialAccount?.id) {
+      const updatedAccount = accountService.updateAccount(initialAccount.id, form);
+      if (!updatedAccount) {
+        toast({ title: 'Failed to update account', variant: 'destructive' });
+        return;
+      }
+      toast({ title: 'Account updated successfully' });
+      onAccountCreated(updatedAccount);
+      onClose();
       return;
     }
 
@@ -81,11 +108,13 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
     onClose();
   };
 
+  const isEditing = Boolean(initialAccount?.id);
+
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Account</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Account' : 'Add Account'}</DialogTitle>
           <DialogDescription>
             Add a new financial account to track
           </DialogDescription>
@@ -176,7 +205,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
             Cancel
           </Button>
           <Button onClick={handleSave}>
-            Create
+            {isEditing ? 'Update' : 'Create'}
           </Button>
         </DialogFooter>
       </DialogContent>
