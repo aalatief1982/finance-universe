@@ -645,6 +645,8 @@ const toggleSkipAll = () => {
                   confidence: txn.confidence,
                   fieldConfidences: txn.fieldConfidences,
                   parsingStatus: txn.parsingStatus,
+                  origin: txn.inferenceDTO?.origin,
+                  matchOrigin: txn.inferenceDTO?.matchOrigin,
                   mode: 'create',
                   isSuggested: true,
                 });

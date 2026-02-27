@@ -64,7 +64,6 @@ import {
 } from '@/lib/env';
 import { useUser } from './context/UserContext';
 import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
-import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
@@ -384,13 +383,11 @@ function AppWrapper() {
                 // console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
               }
 
-              const inferenceDTO = normalizeInferenceDTO(
-                await buildInferenceDTO({
-                  rawMessage: body,
-                  senderHint: sender,
-                  source: 'sms',
-                })
-              );
+              const inferenceDTO = await buildInferenceDTO({
+                rawMessage: body,
+                senderHint: sender,
+                source: 'sms',
+              });
 
               // Handle background state
               const appState = await CapacitorApp.getState();
@@ -440,13 +437,11 @@ function AppWrapper() {
               const { sender, body } = statePayload.smsData;
               
               try {
-                const inferenceDTO = normalizeInferenceDTO(
-                  await buildInferenceDTO({
-                    rawMessage: body,
-                    senderHint: sender,
-                    source: 'sms',
-                  })
-                );
+                const inferenceDTO = await buildInferenceDTO({
+                  rawMessage: body,
+                  senderHint: sender,
+                  source: 'sms',
+                });
                 
                 if (import.meta.env.MODE === 'development') {
                   // console.log('[NOTIFICATION] SMS processed:', inferenceDTO);

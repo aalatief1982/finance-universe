@@ -23,6 +23,7 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import NERSmartPaste from '@/components/NERSmartPaste';
 import { Transaction } from '@/types/transaction';
+import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 
 // This page demonstrates SMS parsing using only the NER model.
 // When the transaction is saved the learning engine will still
@@ -70,23 +71,27 @@ const ImportTransactionsNER = () => {
       // fieldConfidences,
     // });
 
-    navigate('/edit-transaction', {
-      state: {
-        transaction: {
-          ...transaction,
-          rawMessage: rawMessage ?? '',
-        },
-        rawMessage,
-        senderHint,
-        confidence,
-        matchedCount,
-        totalTemplates,
-        fieldScore,
-        keywordScore,
-        fieldConfidences,
-        isSuggested: true,
-        matchOrigin,
+    const inferenceDTO = normalizeInferenceDTO({
+      transaction: {
+        ...transaction,
+        rawMessage: rawMessage ?? '',
       },
+      rawMessage,
+      senderHint,
+      confidence,
+      matchedCount,
+      totalTemplates,
+      fieldScore,
+      keywordScore,
+      fieldConfidences,
+      isSuggested: true,
+      origin: matchOrigin,
+      matchOrigin,
+      mode: 'create',
+    });
+
+    navigate('/edit-transaction', {
+      state: inferenceDTO,
     });
   };
 

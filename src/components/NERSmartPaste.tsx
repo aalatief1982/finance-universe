@@ -20,13 +20,14 @@ import React, { useState } from 'react';
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { Transaction, TransactionType } from '@/types/transaction';
+import { Transaction } from '@/types/transaction';
 import { Loader2 } from 'lucide-react';
 import { Label } from './ui/label';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 
 // SmartPaste component that uses regex-based extraction to parse transaction entities.
 // The learning engine will still learn from the saved transaction in the edit screen.
@@ -84,23 +85,12 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
         // console.log('[SmartPaste] Extracted entities:', parsed);
       }
 
-      const transaction: Transaction = {
-        id: `parsed-${Math.random().toString(36).substring(2, 9)}`,
-        title: parsed.vendor || 'Parsed Transaction',
-        amount: parseFloat(parsed.amount || '0'),
-        currency: parsed.currency || 'SAR',
-        type: (parsed.type as TransactionType) || 'expense',
-        vendor: parsed.vendor,
-        fromAccount: parsed.account,
-        date: parsed.date || new Date().toISOString(),
-        category: 'Uncategorized',
-        subcategory: 'Uncategorized',
-        source: 'smart-paste'
-      };
+      const result = await parseAndInferTransaction(text, senderHint);
+      const transaction = result.transaction;
       
       setDetectedTransactions([transaction]);
-      setConfidence(parsed.amount ? 0.75 : 0.3);
-      setMatchOrigin('ml');
+      setConfidence(result.confidence);
+      setMatchOrigin(result.origin);
       setHasMatch(!!parsed.amount);
 
       if (onTransactionsDetected) {
@@ -111,12 +101,12 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
           [transaction],
           text,
           senderHint,
-          parsed.amount ? 0.75 : 0.3,
-          'ml',
-          0,
-          0,
-          undefined,
-          undefined
+          result.confidence,
+          result.origin,
+          result.matchedCount,
+          result.totalTemplates,
+          result.fieldScore,
+          result.keywordScore
         );
       }
     } catch (err: unknown) {
@@ -171,8 +161,8 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
         [transaction],
         text,
         senderHint,
-        0.75,
-        'ml',
+        confidence || 0.95,
+        matchOrigin || 'structure',
         0,
         0,
         undefined,
@@ -240,7 +230,7 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
               transaction={txn}
               isSmartMatch={true}
               onAddTransaction={handleAddTransaction}
-              origin="structure"
+              origin={matchOrigin ?? undefined}
             />
           ))}
         </div>
