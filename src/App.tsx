@@ -49,9 +49,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
-import { v4 as uuidv4 } from 'uuid';
-import { Transaction } from '@/types/transaction';
-import { parseSmsMessage } from '@/lib/sms-parser';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
@@ -66,7 +63,8 @@ import {
   isSmsSenderFirstFlowV2Enabled,
 } from '@/lib/env';
 import { useUser } from './context/UserContext';
-import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
+import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
@@ -386,44 +384,13 @@ function AppWrapper() {
                 // console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
               }
 
-              let parsed;
-              try {
-                parsed = parseSmsMessage(body, sender);
-              } catch (err) {
-                if (import.meta.env.MODE === 'development') {
-                  console.error('[SMS] Error parsing message:', err)
-                }
-                toast({
-                  title: 'Unable to auto-parse. Please review manually.'
-                });
-                navigate('/edit-transaction', { state: { rawMessage: body } });
-                return;
-              }
-
-              const txn: Transaction = {
-                id: uuidv4(),
-                title: parsed?.description || `SMS from ${sender}`,
-                amount: parsed?.amount ?? 0,
-                category: parsed?.category || 'Uncategorized',
-                type: parsed?.type || (parsed?.amount && parsed.amount < 0 ? 'expense' : 'income'),
-                date: parsed?.date
-                  ? parsed.date.toISOString().split('T')[0]
-                  : new Date().toISOString().split('T')[0],
-                source: 'sms',
-                fromAccount: parsed?.fromAccount || sender,
-                toAccount: parsed?.toAccount,
-                details: {
-                  sms: {
-                    sender,
-                    message: body,
-                    timestamp: new Date().toISOString()
-                  },
-                  rawMessage: body
-                },
-                currency: parsed?.currency || 'SAR',
-                country: parsed?.country,
-                description: parsed?.description
-              }
+              const inferenceDTO = normalizeInferenceDTO(
+                await buildInferenceDTO({
+                  rawMessage: body,
+                  senderHint: sender,
+                  source: 'sms',
+                })
+              );
 
               // Handle background state
               const appState = await CapacitorApp.getState();
@@ -431,7 +398,7 @@ function AppWrapper() {
                 if (import.meta.env.MODE === 'development') {
                   // console.log('[NOTIFY] App active. Navigating to transaction.');
                 }
-                navigate('/edit-transaction', { state: { transaction: txn } });
+                navigate('/edit-transaction', { state: inferenceDTO });
               } else {
                 if (import.meta.env.MODE === 'development') {
                   // console.log('[NOTIFY] App backgrounded. Showing notification.');
@@ -473,31 +440,19 @@ function AppWrapper() {
               const { sender, body } = statePayload.smsData;
               
               try {
-                // Process SMS using the same backend function as SmartPaste
-                const result = await parseAndInferTransaction(body, sender);
-                
-                if (import.meta.env.MODE === 'development') {
-                  // console.log('[NOTIFICATION] SMS processed:', result);
-                }
-                
-                // Navigate to edit-transaction with the same state structure as ImportTransactions
-                navigate('/edit-transaction', {
-                  state: {
-                    transaction: {
-                      ...result.transaction,
-                      rawMessage: body,
-                    },
+                const inferenceDTO = normalizeInferenceDTO(
+                  await buildInferenceDTO({
                     rawMessage: body,
                     senderHint: sender,
-                    confidence: result.confidence,
-                    matchedCount: result.matchedCount,
-                    totalTemplates: result.totalTemplates,
-                    fieldScore: result.fieldScore,
-                    keywordScore: result.keywordScore,
-                    isSuggested: true,
-                    matchOrigin: result.origin,
-                  },
-                });
+                    source: 'sms',
+                  })
+                );
+                
+                if (import.meta.env.MODE === 'development') {
+                  // console.log('[NOTIFICATION] SMS processed:', inferenceDTO);
+                }
+                
+                navigate('/edit-transaction', { state: inferenceDTO });
               } catch (error) {
                 if (import.meta.env.MODE === 'development') {
                   console.error('[NOTIFICATION] Error processing SMS:', error);
