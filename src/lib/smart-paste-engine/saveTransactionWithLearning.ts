@@ -49,6 +49,15 @@ import {
   saveKeywordBank,
   KeywordEntry,
 } from './keywordBankUtils';
+import {
+  addUserVendor,
+  findVendorByNormalizedName,
+  isVendorNameValid,
+  normalizeVendorNameForCompare,
+  sanitizeVendorName,
+  loadVendorFallbacks,
+} from './vendorFallbackUtils';
+import { getVendorData } from '@/services/VendorSyncService';
 import { toast } from '@/components/ui/use-toast';
 import { ensureFxFields } from '@/services/FxConversionService';
 import {
@@ -115,8 +124,28 @@ export function saveTransactionWithLearning(
     throw new TransactionValidationError(errors);
   }
 
+  const sanitizedVendor = sanitizeVendorName(transaction.vendor || '');
+  const knownVendorNames = [
+    ...Object.keys(getVendorData() || {}),
+    ...Object.keys(loadVendorFallbacks()),
+  ];
+  const existingVendorName = findVendorByNormalizedName(
+    knownVendorNames,
+    sanitizedVendor,
+  );
+  const effectiveVendorName = existingVendorName || sanitizedVendor;
+
+  if (!existingVendorName && isVendorNameValid(sanitizedVendor)) {
+    addUserVendor(sanitizedVendor, {
+      type: transaction.type,
+      category: transaction.category,
+      subcategory: transaction.subcategory || 'none',
+    });
+  }
+
   const newTransaction: Transaction = ensureFxFields({
     ...transaction,
+    vendor: effectiveVendorName,
     id: transaction.id || uuidv4(),
     source: transaction.source || 'manual',
   });
@@ -204,16 +233,27 @@ export function saveTransactionWithLearning(
     // ============================================================================
 
     // Vendor Remapping - user corrected vendor name
+    const rawDetectedVendorToken =
+      typeof transaction.details?.detectedVendorToken === 'string'
+        ? transaction.details.detectedVendorToken
+        : placeholders?.vendor;
+
+    const normalizedDetectedToken = normalizeVendorNameForCompare(
+      rawDetectedVendorToken || '',
+    );
+    const normalizedConfirmedVendor = normalizeVendorNameForCompare(
+      newTransaction.vendor || '',
+    );
+
     if (
-      rawMessage &&
-      transaction.vendor &&
-      placeholders?.vendor &&
-      transaction.vendor !== placeholders.vendor
+      normalizedDetectedToken &&
+      isVendorNameValid(newTransaction.vendor || '') &&
+      normalizedDetectedToken !== normalizedConfirmedVendor
     ) {
       const vendorMap = JSON.parse(
         safeStorage.getItem('xpensia_vendor_map') || '{}',
       );
-      vendorMap[placeholders.vendor] = transaction.vendor;
+      vendorMap[normalizedDetectedToken] = newTransaction.vendor;
       safeStorage.setItem('xpensia_vendor_map', JSON.stringify(vendorMap));
     }
 

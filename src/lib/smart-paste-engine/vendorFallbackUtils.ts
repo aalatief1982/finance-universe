@@ -35,6 +35,40 @@ export interface VendorFallbackData {
 }
 
 const KEY = 'xpensia_vendor_fallbacks';
+const ZERO_WIDTH_CHARS = /[\u200B-\u200D\uFEFF]/g;
+
+export function normalizeVendorNameForCompare(value: string): string {
+  return value
+    .replace(ZERO_WIDTH_CHARS, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+export function sanitizeVendorName(value: string): string {
+  return value
+    .replace(ZERO_WIDTH_CHARS, '')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
+export function isVendorNameValid(value: string): boolean {
+  const cleaned = sanitizeVendorName(value);
+  if (cleaned.length < 2) return false;
+  if (!/[A-Za-z\u0600-\u06FF]/.test(cleaned)) return false;
+  if (/^[\d\s.,\-_/+()]+$/.test(cleaned)) return false;
+  return true;
+}
+
+export function findVendorByNormalizedName(
+  vendors: string[],
+  candidate: string,
+): string | undefined {
+  const normalizedCandidate = normalizeVendorNameForCompare(candidate);
+  return vendors.find(
+    (vendor) => normalizeVendorNameForCompare(vendor) === normalizedCandidate,
+  );
+}
 
 // ============================================================================
 // SECTION: Vendor Fallback CRUD
@@ -84,10 +118,18 @@ export function addUserVendor(
   data: Omit<VendorFallbackData, 'user'>,
   user: boolean = true
 ): void {
-  if (!name.trim()) return;
+  const sanitizedName = sanitizeVendorName(name);
+  if (!isVendorNameValid(sanitizedName)) return;
   const vendors = loadVendorFallbacks();
-  if (!vendors[name]) {
-    vendors[name] = { ...data, ...(user ? { user: true } : {}) } as VendorFallbackData;
+  const existingName = findVendorByNormalizedName(
+    Object.keys(vendors),
+    sanitizedName,
+  );
+  if (!existingName) {
+    vendors[sanitizedName] = {
+      ...data,
+      ...(user ? { user: true } : {}),
+    } as VendorFallbackData;
     saveVendorFallbacks(vendors);
   }
 }

@@ -22,6 +22,7 @@ import { safeStorage } from "@/utils/safe-storage";
 import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
+import { normalizeVendorNameForCompare } from './vendorFallbackUtils';
 //import { normalizeDate } from './dateUtils';
 
 
@@ -187,6 +188,10 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     });
   }
 
+  if (directFields['vendor']) {
+    directFields['vendor'].value = applyVendorMapping(directFields['vendor'].value);
+  }
+
   // Normalize known field names like 'date'
   if (directFields['date']) {
     const normalized = normalizeDate(directFields['date'].value);
@@ -261,5 +266,6 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
 
 function applyVendorMapping(vendor: string): string {
   const map = JSON.parse(safeStorage.getItem('xpensia_vendor_map') || '{}');
-  return map[vendor] || vendor;
+  const normalizedVendor = normalizeVendorNameForCompare(vendor || '');
+  return map[normalizedVendor] || map[vendor] || vendor;
 }
