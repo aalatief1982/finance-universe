@@ -31,7 +31,6 @@ import {
 import TransactionEditForm from '@/components/TransactionEditForm';
 import { useLearningEngine } from '@/hooks/useLearningEngine';
 
-import SmartPasteSummary from '@/components/SmartPasteSummary';
 import { cn } from '@/lib/utils';
 import { LearnedEntry } from '@/types/learning';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
@@ -71,7 +70,6 @@ const EditTransaction = () => {
   const { toast } = useToast();
   const { learnFromTransaction } = useLearningEngine();
   const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
 
@@ -92,7 +90,6 @@ const EditTransaction = () => {
   const rawMessage = state?.rawMessage;
   const senderHint = state?.senderHint;
   const isSuggested = state?.isSuggested;
-  const confidenceScore = state?.confidence;
   const fieldConfidences = state?.fieldConfidences;
   const isSmartEntryCreate = state?.mode === 'create';
   const isNewTransaction = isSmartEntryCreate ? true : !transaction;
@@ -113,7 +110,6 @@ const EditTransaction = () => {
       // rawMessage: rawMessage?.substring(0, 100),
       // senderHint,
       // isSuggested,
-      // confidenceScore,
       // fullLocationState: location.state
     // });
   }
@@ -260,18 +256,6 @@ const EditTransaction = () => {
           </div>
         )}
 
-        {!isEditing && confidenceScore !== undefined &&
-          state?.matchedCount !== undefined &&
-          state?.totalTemplates !== undefined && (
-            <SmartPasteSummary
-              confidence={confidenceScore}
-              matchedCount={state.matchedCount}
-              totalTemplates={state.totalTemplates}
-              fieldScore={state.fieldScore}
-              keywordScore={state.keywordScore}
-            />
-          )}
-
         {matchDetails?.entry && (
           <div className="border border-red-300 bg-red-50 dark:bg-red-950/20 p-4 rounded-md">
             <h3 className="text-red-600 dark:text-red-400 font-medium mb-2">Smart Matching Details</h3>
@@ -306,7 +290,6 @@ const EditTransaction = () => {
               compact
               showNotes={false}
               fieldConfidences={fieldConfidences}
-              onEditStart={() => setIsEditing(true)}
               onDirtyChange={setIsDirty}
             />
           </CardContent>
