@@ -73,6 +73,22 @@ export function getAvailableCurrencies(): string[] {
   return getAvailableCurrencyOptions().map((currency) => currency.code);
 }
 
+export function getCurrencyOptionByCode(currencyCode?: string): AvailableCurrency | undefined {
+  if (!currencyCode) return undefined;
+  const normalizedCode = currencyCode.trim().toUpperCase();
+  return getAvailableCurrencyOptions().find((currency) => currency.code === normalizedCode);
+}
+
+export function formatCurrencyFlagCode(currencyCode?: string, fallback = 'Select currency'): string {
+  const option = getCurrencyOptionByCode(currencyCode);
+  if (!option) {
+    const normalizedCode = currencyCode?.trim().toUpperCase();
+    return normalizedCode ? `🏳️ ${normalizedCode}` : fallback;
+  }
+
+  return `${option.flag} ${option.code}`;
+}
+
 export function addCustomCurrency(currency: CustomCurrency): CustomCurrency[] {
   const normalized = normalizeCustomCurrency(currency);
 

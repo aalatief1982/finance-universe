@@ -70,6 +70,9 @@ import vendorData from '@/data/ksa_all_vendors_clean_final.json';
 import {
   loadVendorFallbacks,
   addUserVendor,
+  findVendorByNormalizedName,
+  sanitizeVendorName,
+  saveVendorFallbacks,
 } from '@/lib/smart-paste-engine/vendorFallbackUtils';
 import { getVendorData } from '@/services/VendorSyncService';
 import VendorAutocomplete from './VendorAutocomplete';
@@ -353,6 +356,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     accountService.getAccounts(),
   );
   const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [accountToEdit, setAccountToEdit] = useState<Account | null>(null);
   const [accountTargetField, setAccountTargetField] = useState<
     'fromAccount' | 'toAccount'
   >('fromAccount');
@@ -374,6 +378,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     return dedupeVendorsCaseInsensitive([...builtIn, ...stored]);
   });
   const [addVendorOpen, setAddVendorOpen] = useState(false);
+  const [vendorToEdit, setVendorToEdit] = useState<string | null>(null);
   const [newVendor, setNewVendor] = useState<{
     name: string;
     type: TransactionType;
@@ -897,6 +902,43 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const handleSaveVendor = () => {
     if (!newVendor.name.trim()) return;
+
+    if (vendorToEdit) {
+      const sanitizedName = sanitizeVendorName(newVendor.name);
+      const fallbacks = loadVendorFallbacks();
+      const existingKey = findVendorByNormalizedName(
+        Object.keys(fallbacks),
+        vendorToEdit,
+      );
+
+      if (existingKey) {
+        delete fallbacks[existingKey];
+      }
+
+      fallbacks[sanitizedName] = {
+        type: newVendor.type,
+        category: newVendor.category.trim(),
+        subcategory: newVendor.subcategory.trim(),
+        user: true,
+      };
+      saveVendorFallbacks(fallbacks);
+
+      setVendors((prev) =>
+        dedupeVendorsCaseInsensitive([
+          ...prev.filter(
+            (vendorName) =>
+              vendorName.toLowerCase() !== vendorToEdit.toLowerCase(),
+          ),
+          sanitizedName,
+        ]),
+      );
+      handleChange('vendor', sanitizedName);
+      setVendorToEdit(null);
+      setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
+      setAddVendorOpen(false);
+      return;
+    }
+
     addUserVendor(newVendor.name.trim(), {
       type: newVendor.type,
       category: newVendor.category.trim(),
@@ -916,6 +958,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     }
 
     setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
+    setVendorToEdit(null);
     setAddVendorOpen(false);
   };
 
@@ -955,9 +998,41 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setFeedbackGiven((prev) => ({ ...prev, [field]: true }));
   };
 
-  const handleMissingInlineEdit = (entity: 'currency' | 'payee' | 'account') => {
-    // TODO(xpensia): Wire these field-level edit pencils to the dedicated edit flows when available.
-    console.info(`[TransactionEditForm] Inline ${entity} edit requested, but no edit flow is currently wired.`);
+  const handleCurrencyPencilClick = () => {
+    console.info('[UI] Currency pencil clicked');
+    setEditRateDialogOpen(true);
+  };
+
+  const handleAccountPencilClick = (field: 'fromAccount' | 'toAccount' = 'fromAccount') => {
+    console.info('[UI] Account pencil clicked');
+    const selectedAccountName = editedTransaction[field]?.trim();
+    if (!selectedAccountName) return;
+
+    const existingAccount = accountService.getAccountByName(selectedAccountName);
+    if (!existingAccount) return;
+
+    setAccountTargetField(field);
+    setAccountToEdit(existingAccount);
+    setAddAccountOpen(true);
+  };
+
+  const handlePayeePencilClick = () => {
+    console.info('[UI] Payee pencil clicked');
+    const selectedPayee = editedTransaction.vendor?.trim();
+    if (!selectedPayee) return;
+
+    const fallbacks = loadVendorFallbacks();
+    const existingKey = findVendorByNormalizedName(Object.keys(fallbacks), selectedPayee);
+    const fallback = existingKey ? fallbacks[existingKey] : undefined;
+
+    setVendorToEdit(existingKey || selectedPayee);
+    setNewVendor({
+      name: existingKey || selectedPayee,
+      type: fallback?.type || editedTransaction.type,
+      category: fallback?.category || editedTransaction.category || '',
+      subcategory: fallback?.subcategory || editedTransaction.subcategory || '',
+    });
+    setAddVendorOpen(true);
   };
 
   const renderFeedbackIcons = (field: keyof Transaction) => {
@@ -1225,20 +1300,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => setEditRateDialogOpen(true)}
+                onClick={handleCurrencyPencilClick}
                 title="Edit exchange rate"
-              >
-                <Pencil className="size-4" />
-              </Button>
-            )}
-            {!needsFxConversion && (
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => handleMissingInlineEdit('currency')}
-                title="Currency edit flow is not available yet"
-                aria-label="Currency edit flow is not available yet"
               >
                 <Pencil className="size-4" />
               </Button>
@@ -1337,7 +1400,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
       <AddAccountDialog
         open={addAccountOpen}
-        onClose={() => setAddAccountOpen(false)}
+        initialAccount={accountToEdit}
+        onClose={() => {
+          setAddAccountOpen(false);
+          setAccountToEdit(null);
+        }}
         onAccountCreated={(newAccount) => {
           refreshAccounts();
           handleChange(accountTargetField, newAccount.name);
@@ -1433,10 +1500,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={addVendorOpen} onOpenChange={setAddVendorOpen}>
+      <Dialog open={addVendorOpen} onOpenChange={(open) => {
+        setAddVendorOpen(open);
+        if (!open) {
+          setVendorToEdit(null);
+          setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
+        }
+      }}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Payee</DialogTitle>
+            <DialogTitle>{vendorToEdit ? 'Edit Payee' : 'Add Payee'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
@@ -1771,8 +1844,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => handleMissingInlineEdit('account')}
-              title={editedTransaction.fromAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
+              onClick={() => handleAccountPencilClick('fromAccount')}
+              title={editedTransaction.fromAccount ? 'Edit selected account' : 'Select an account to edit'}
               aria-label="Edit selected from account"
               disabled={!editedTransaction.fromAccount}
             >
@@ -1783,6 +1856,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               variant="outline"
               size="icon"
               onClick={() => {
+                setAccountToEdit(null);
                 setAccountTargetField('fromAccount');
                 setAddAccountOpen(true);
               }}
@@ -1851,8 +1925,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={() => handleMissingInlineEdit('account')}
-                  title={editedTransaction.toAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
+                  onClick={() => handleAccountPencilClick('toAccount')}
+                  title={editedTransaction.toAccount ? 'Edit selected account' : 'Select an account to edit'}
                   aria-label="Edit selected to account"
                   disabled={!editedTransaction.toAccount}
                 >
@@ -1863,6 +1937,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   variant="outline"
                   size="icon"
                   onClick={() => {
+                    setAccountToEdit(null);
                     setAccountTargetField('toAccount');
                     setAddAccountOpen(true);
                   }}
@@ -2029,7 +2104,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 handleChange('vendor', value);
               }}
               vendors={vendors}
-              onAddClick={() => setAddVendorOpen(true)}
+              onAddClick={() => {
+                setVendorToEdit(null);
+                setNewVendor({ name: '', type: editedTransaction.type, category: '', subcategory: '' });
+                setAddVendorOpen(true);
+              }}
               isAutoFilled={isDriven('vendor', drivenFields)}
               hasLowConfidence={hasLowConfidence('vendor', fieldConfidences)}
               userHasInteracted={userInteractions.vendor}
@@ -2046,8 +2125,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => handleMissingInlineEdit('payee')}
-              title={editedTransaction.vendor ? 'Payee edit flow is not available yet' : 'Select a payee to edit'}
+              onClick={handlePayeePencilClick}
+              title={editedTransaction.vendor ? 'Edit selected payee' : 'Select a payee to edit'}
               aria-label="Edit selected payee"
               disabled={!editedTransaction.vendor}
             >

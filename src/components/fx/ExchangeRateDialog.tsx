@@ -17,7 +17,7 @@ import { getUserSettings } from '@/utils/storage-utils';
 import { ExchangeRate } from '@/models/exchange-rate';
 import { addExchangeRate, updateExchangeRate } from '@/services/ExchangeRateService';
 import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
-import { getAvailableCurrencies } from '@/lib/currency-utils';
+import { formatCurrencyFlagCode, getAvailableCurrencies } from '@/lib/currency-utils';
 import { toast } from '@/components/ui/use-toast';
 
 interface ExchangeRateDialogProps {
@@ -132,7 +132,7 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
             {isEditing ? (
               <Input
                 id="from-currency"
-                value={fromCurrency}
+                value={formatCurrencyFlagCode(fromCurrency, '')}
                 disabled
                 className="bg-muted"
               />
@@ -145,7 +145,7 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
                   <SelectContent>
                     {availableCurrencies.map((currency) => (
                       <SelectItem key={currency} value={currency}>
-                        {currency}
+                        {formatCurrencyFlagCode(currency, currency)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -167,7 +167,7 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
             <Label htmlFor="to-currency">To Currency (Base)</Label>
             <Input
               id="to-currency"
-              value={baseCurrency}
+              value={formatCurrencyFlagCode(baseCurrency, '')}
               disabled
               className="bg-muted"
             />
