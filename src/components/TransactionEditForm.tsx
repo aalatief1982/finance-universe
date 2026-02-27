@@ -883,6 +883,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setFeedbackGiven((prev) => ({ ...prev, [field]: true }));
   };
 
+  const handleMissingInlineEdit = (entity: 'currency' | 'payee' | 'account') => {
+    // TODO(xpensia): Wire these field-level edit pencils to the dedicated edit flows when available.
+    console.info(`[TransactionEditForm] Inline ${entity} edit requested, but no edit flow is currently wired.`);
+  };
+
   const renderFeedbackIcons = (field: keyof Transaction) => {
     if (
       !showFeedback ||
@@ -1114,12 +1119,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           Currency*
         </label>
 
-        <div className="flex w-full items-center gap-1">
+        <div className="flex min-w-0 flex-1 items-center gap-1">
           <div
             ref={(el) => {
               fieldRefs.current.currency = el;
             }}
-            className="w-full"
+            className="min-w-0 flex-1"
           >
             <CurrencyCombobox
               id="transaction-currency"
@@ -1149,6 +1154,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               size="icon"
               onClick={() => setEditRateDialogOpen(true)}
               title="Edit exchange rate"
+            >
+              <Pencil className="size-4" />
+            </Button>
+          )}
+          {!needsFxConversion && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => handleMissingInlineEdit('currency')}
+              title="Currency edit flow is not available yet"
+              aria-label="Currency edit flow is not available yet"
             >
               <Pencil className="size-4" />
             </Button>
@@ -1600,41 +1617,54 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           From Account*
         </label>
 
-        <div className="flex w-full items-center gap-1">
-          <Select
-            value={editedTransaction.fromAccount || ''}
-            onValueChange={(value) => handleChange('fromAccount', value)}
-          >
-            <SelectTrigger
-              ref={(el) => {
-                fieldRefs.current.fromAccount = el;
-              }}
-              id="transaction-from-account"
-              className={cn(
-                'w-full text-sm',
-                inputPadding,
-                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                darkFieldClass,
-                hasError('fromAccount') && 'border-destructive',
-                hasLowConfidence('fromAccount', fieldConfidences) &&
-                  'border-amber-500',
-              )}
-              title={
-                hasLowConfidence('fromAccount', fieldConfidences)
-                  ? 'Low confidence'
-                  : undefined
-              }
+        <div className="flex min-w-0 flex-1 items-center gap-1">
+          <div className="min-w-0 flex-1">
+            <Select
+              value={editedTransaction.fromAccount || ''}
+              onValueChange={(value) => handleChange('fromAccount', value)}
             >
-              <SelectValue placeholder="Select account" />
-            </SelectTrigger>
-            <SelectContent>
-              {accounts.map((account) => (
-                <SelectItem key={account.id} value={account.name}>
-                  {account.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                ref={(el) => {
+                  fieldRefs.current.fromAccount = el;
+                }}
+                id="transaction-from-account"
+                className={cn(
+                  'w-full text-sm',
+                  inputPadding,
+                  'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                  darkFieldClass,
+                  hasError('fromAccount') && 'border-destructive',
+                  hasLowConfidence('fromAccount', fieldConfidences) &&
+                    'border-amber-500',
+                )}
+                title={
+                  hasLowConfidence('fromAccount', fieldConfidences)
+                    ? 'Low confidence'
+                    : undefined
+                }
+              >
+                <SelectValue placeholder="Select account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((account) => (
+                  <SelectItem key={account.id} value={account.name}>
+                    {account.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => handleMissingInlineEdit('account')}
+            title={editedTransaction.fromAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
+            aria-label="Edit selected from account"
+            disabled={!editedTransaction.fromAccount}
+          >
+            <Pencil className="size-4" />
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -1672,34 +1702,47 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               To Account*
             </label>
 
-            <div className="flex w-full items-center gap-1">
-              <Select
-                value={editedTransaction.toAccount || ''}
-                onValueChange={(value) => handleChange('toAccount', value)}
-              >
-                <SelectTrigger
-                  ref={(el) => {
-                    fieldRefs.current.toAccount = el;
-                  }}
-                  id="transaction-to-account"
-                  className={cn(
-                    'w-full text-sm',
-                    inputPadding,
-                    'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                    darkFieldClass,
-                    hasError('toAccount') && 'border-destructive',
-                  )}
+            <div className="flex min-w-0 flex-1 items-center gap-1">
+              <div className="min-w-0 flex-1">
+                <Select
+                  value={editedTransaction.toAccount || ''}
+                  onValueChange={(value) => handleChange('toAccount', value)}
                 >
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.name}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger
+                    ref={(el) => {
+                      fieldRefs.current.toAccount = el;
+                    }}
+                    id="transaction-to-account"
+                    className={cn(
+                      'w-full text-sm',
+                      inputPadding,
+                      'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                      darkFieldClass,
+                      hasError('toAccount') && 'border-destructive',
+                    )}
+                  >
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.name}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => handleMissingInlineEdit('account')}
+                title={editedTransaction.toAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
+                aria-label="Edit selected to account"
+                disabled={!editedTransaction.toAccount}
+              >
+                <Pencil className="size-4" />
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -1860,26 +1903,39 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           Payee
         </label>
 
-        <div className="flex w-full items-center gap-1">
-          <VendorAutocomplete
-            inputId="transaction-vendor"
-            value={editedTransaction.vendor || ''}
-            onChange={(value) => {
-              setUserInteractions((prev) => ({ ...prev, vendor: true }));
-              handleChange('vendor', value);
-            }}
-            vendors={vendors}
-            onAddClick={() => setAddVendorOpen(true)}
-            isAutoFilled={isDriven('vendor', drivenFields)}
-            hasLowConfidence={hasLowConfidence('vendor', fieldConfidences)}
-            userHasInteracted={userInteractions.vendor}
-            className={cn(
-              'w-full text-sm',
-              inputPadding,
-              'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-              darkFieldClass,
-            )}
-          />
+        <div className="flex min-w-0 flex-1 items-center gap-1">
+          <div className="min-w-0 flex-1">
+            <VendorAutocomplete
+              inputId="transaction-vendor"
+              value={editedTransaction.vendor || ''}
+              onChange={(value) => {
+                setUserInteractions((prev) => ({ ...prev, vendor: true }));
+                handleChange('vendor', value);
+              }}
+              vendors={vendors}
+              onAddClick={() => setAddVendorOpen(true)}
+              isAutoFilled={isDriven('vendor', drivenFields)}
+              hasLowConfidence={hasLowConfidence('vendor', fieldConfidences)}
+              userHasInteracted={userInteractions.vendor}
+              className={cn(
+                'w-full text-sm',
+                inputPadding,
+                'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                darkFieldClass,
+              )}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => handleMissingInlineEdit('payee')}
+            title={editedTransaction.vendor ? 'Payee edit flow is not available yet' : 'Select a payee to edit'}
+            aria-label="Edit selected payee"
+            disabled={!editedTransaction.vendor}
+          >
+            <Pencil className="size-4" />
+          </Button>
           {renderFeedbackIcons('vendor')}
         </div>
       </div>
