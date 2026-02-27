@@ -135,6 +135,8 @@ export async function parseAndInferTransaction(
   const parsed = parseSmsMessage(rawMessage, senderHint);
 
   // Build transaction from parsed fields
+  const detectedVendorToken = parsed.directFields.vendor?.value || '';
+
   const transaction: Transaction = {
     id: nanoid(),
     amount: parseFloat(parsed.directFields.amount?.value || '0'),
@@ -156,6 +158,10 @@ export async function parseAndInferTransaction(
     source: 'smart-paste',
     createdAt: new Date().toISOString(),
     title: '', // Editable in form later
+    details: {
+      rawMessage,
+      detectedVendorToken,
+    },
   };
 
   // Load inference data
