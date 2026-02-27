@@ -71,7 +71,7 @@ const CurrencySettings = () => {
             <SelectContent>
               {currencies.map(curr => (
                 <SelectItem key={curr.code} value={curr.code}>
-                  {curr.symbol} {curr.name} ({curr.code})
+                  {curr.code} — {curr.name}
                 </SelectItem>
               ))}
             </SelectContent>

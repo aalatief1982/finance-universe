@@ -105,6 +105,7 @@ import {
   validateTransactionForm,
 } from '@/lib/transaction-validation';
 import { parseAmount } from '@/lib/amount';
+import { v4 as uuidv4 } from 'uuid';
 
 const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
   'amount',
@@ -383,11 +384,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     useState<string[]>([]);
 
   // Track user interactions to prevent auto-opening dropdowns
-  const [userInteractions, setUserInteractions] = useState<{ vendor: boolean }>(
-    {
-      vendor: false,
-    },
-  );
+  const [userInteractions, setUserInteractions] = useState<{
+    vendor: boolean;
+    fromAccount: boolean;
+  }>({
+    vendor: false,
+    fromAccount: false,
+  });
+  const [fromAccountOpen, setFromAccountOpen] = useState(false);
 
   const [initialTransactionState, setInitialTransactionState] =
     useState<Transaction>(() => createInitialTransactionState(transaction));
@@ -406,6 +410,22 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const parsed = parseAmountToNullableNumber(initialState.amount);
     return parsed !== null ? Math.abs(parsed) : null;
   });
+
+  const normalizedFromAccountValue = normalizeText(editedTransaction.fromAccount);
+  const filteredFromAccounts = useMemo(() => {
+    const query = normalizeText(editedTransaction.fromAccount);
+
+    if (!query) {
+      return accounts;
+    }
+
+    return accounts.filter((account) =>
+      normalizeText(account.name).includes(query),
+    );
+  }, [accounts, editedTransaction.fromAccount]);
+  const hasFromAccountExactMatch = accounts.some(
+    (account) => normalizeText(account.name) === normalizedFromAccountValue,
+  );
 
   const hydrationSnapshotKey = useMemo(() => {
     const baseline = createInitialTransactionState(transaction);
@@ -557,6 +577,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       serializeTransactionForDirtyCheck(editedTransaction);
     onDirtyChange?.(initialSerialized !== editedSerialized);
   }, [editedTransaction, initialTransactionState, onDirtyChange]);
+
+  useEffect(() => {
+    if (!userInteractions.fromAccount) {
+      setFromAccountOpen(false);
+      return;
+    }
+
+    setFromAccountOpen(true);
+  }, [editedTransaction.fromAccount, userInteractions.fromAccount]);
 
   useEffect(() => {
     if (transaction && fieldConfidences) {
@@ -765,6 +794,49 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const refreshAccounts = () => {
     setAccounts(accountService.getAccounts());
+  };
+
+  const createAccountFromText = (rawName: string): Account | null => {
+    const accountName = rawName.trim();
+    if (!accountName) {
+      return null;
+    }
+
+    const existingAccount = accountService.getAccountByName(accountName);
+    if (existingAccount) {
+      return existingAccount;
+    }
+
+    const defaultCurrency = getUserSettings()?.currency || 'SAR';
+    const newAccount: Account = {
+      id: uuidv4(),
+      name: accountName,
+      type: 'Bank',
+      currency: defaultCurrency,
+      initialBalance: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      tags: [],
+    };
+
+    accountService.addAccount(newAccount);
+    refreshAccounts();
+
+    return newAccount;
+  };
+
+  const confirmFromAccountEntry = () => {
+    const accountName = editedTransaction.fromAccount?.trim();
+    if (!accountName) {
+      return;
+    }
+
+    const selectedAccount = createAccountFromText(accountName);
+    if (!selectedAccount) {
+      return;
+    }
+
+    handleChange('fromAccount', selectedAccount.name);
+    setFromAccountOpen(false);
   };
 
   const handleSaveCategory = () => {
@@ -1138,39 +1210,41 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               )}
             />
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setAddCurrencyOpen(true)}
-            title="Add new currency"
-          >
-            <Plus className="size-4" />
-          </Button>
-          {needsFxConversion && (
+          <div className="flex shrink-0 items-center gap-1">
             <Button
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => setEditRateDialogOpen(true)}
-              title="Edit exchange rate"
+              onClick={() => setAddCurrencyOpen(true)}
+              title="Add new currency"
             >
-              <Pencil className="size-4" />
+              <Plus className="size-4" />
             </Button>
-          )}
-          {!needsFxConversion && (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => handleMissingInlineEdit('currency')}
-              title="Currency edit flow is not available yet"
-              aria-label="Currency edit flow is not available yet"
-            >
-              <Pencil className="size-4" />
-            </Button>
-          )}
-          {renderFeedbackIcons('currency')}
+            {needsFxConversion && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setEditRateDialogOpen(true)}
+                title="Edit exchange rate"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            )}
+            {!needsFxConversion && (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => handleMissingInlineEdit('currency')}
+                title="Currency edit flow is not available yet"
+                aria-label="Currency edit flow is not available yet"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            )}
+            {renderFeedbackIcons('currency')}
+          </div>
         </div>
         {hasError('currency') && (
           <p className="text-xs text-destructive ml-[calc(6rem)]">
@@ -1617,66 +1691,107 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           From Account*
         </label>
 
-        <div className="flex min-w-0 flex-1 items-center gap-1">
-          <div className="min-w-0 flex-1">
-            <Select
+        <div className="flex w-full items-center gap-1">
+          <div className="relative min-w-0 flex-1">
+            <Input
+              ref={(el) => {
+                fieldRefs.current.fromAccount = el;
+              }}
+              id="transaction-from-account"
               value={editedTransaction.fromAccount || ''}
-              onValueChange={(value) => handleChange('fromAccount', value)}
-            >
-              <SelectTrigger
-                ref={(el) => {
-                  fieldRefs.current.fromAccount = el;
-                }}
-                id="transaction-from-account"
-                className={cn(
-                  'w-full text-sm',
-                  inputPadding,
-                  'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                  darkFieldClass,
-                  hasError('fromAccount') && 'border-destructive',
-                  hasLowConfidence('fromAccount', fieldConfidences) &&
-                    'border-amber-500',
-                )}
-                title={
-                  hasLowConfidence('fromAccount', fieldConfidences)
-                    ? 'Low confidence'
-                    : undefined
+              onChange={(event) => {
+                setUserInteractions((prev) => ({ ...prev, fromAccount: true }));
+                handleChange('fromAccount', event.target.value);
+              }}
+              onFocus={() => {
+                setUserInteractions((prev) => ({ ...prev, fromAccount: true }));
+                setFromAccountOpen(true);
+              }}
+              onBlur={() => {
+                window.setTimeout(() => {
+                  setFromAccountOpen(false);
+                }, 120);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  confirmFromAccountEntry();
                 }
-              >
-                <SelectValue placeholder="Select account" />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.name}>
+                if (event.key === 'Escape') {
+                  setFromAccountOpen(false);
+                }
+              }}
+              placeholder="Type account name"
+              required
+              title={
+                hasLowConfidence('fromAccount', fieldConfidences)
+                  ? 'Low confidence'
+                  : undefined
+              }
+              className={cn(
+                'w-full text-sm rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                inputPadding,
+                darkFieldClass,
+                hasError('fromAccount') && 'border-destructive',
+                hasLowConfidence('fromAccount', fieldConfidences) &&
+                  'border-amber-500',
+              )}
+            />
+            {fromAccountOpen && (
+              <div className="absolute z-50 mt-1 w-full overflow-y-auto rounded-md border border-border bg-background shadow-lg">
+                {filteredFromAccounts.map((account) => (
+                  <button
+                    type="button"
+                    key={account.id}
+                    className="block w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-muted"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      handleChange('fromAccount', account.name);
+                      setFromAccountOpen(false);
+                    }}
+                  >
                     {account.name}
-                  </SelectItem>
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
+                {!hasFromAccountExactMatch && editedTransaction.fromAccount?.trim() && (
+                  <button
+                    type="button"
+                    className="block w-full px-3 py-2 text-left text-sm font-medium text-primary hover:bg-muted"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={confirmFromAccountEntry}
+                  >
+                    Create “{editedTransaction.fromAccount.trim()}”
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => handleMissingInlineEdit('account')}
-            title={editedTransaction.fromAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
-            aria-label="Edit selected from account"
-            disabled={!editedTransaction.fromAccount}
-          >
-            <Pencil className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => {
-              setAccountTargetField('fromAccount');
-              setAddAccountOpen(true);
-            }}
-            title="Add account"
-          >
-            <Plus className="size-4" />
-          </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => handleMissingInlineEdit('account')}
+              title={editedTransaction.fromAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
+              aria-label="Edit selected from account"
+              disabled={!editedTransaction.fromAccount}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                setAccountTargetField('fromAccount');
+                setAddAccountOpen(true);
+              }}
+              title="Add account"
+            >
+              <Plus className="size-4" />
+            </Button>
+            {renderFeedbackIcons('fromAccount')}
+          </div>
           <input
             tabIndex={-1}
             autoComplete="off"
@@ -1686,7 +1801,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             className="absolute h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
-          {renderFeedbackIcons('fromAccount')}
         </div>
       </div>
       {hasError('fromAccount') && (
@@ -1702,7 +1816,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               To Account*
             </label>
 
-            <div className="flex min-w-0 flex-1 items-center gap-1">
+            <div className="flex w-full items-center gap-1">
               <div className="min-w-0 flex-1">
                 <Select
                   value={editedTransaction.toAccount || ''}
@@ -1732,29 +1846,32 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => handleMissingInlineEdit('account')}
-                title={editedTransaction.toAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
-                aria-label="Edit selected to account"
-                disabled={!editedTransaction.toAccount}
-              >
-                <Pencil className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setAccountTargetField('toAccount');
-                  setAddAccountOpen(true);
-                }}
-                title="Add account"
-              >
-                <Plus className="size-4" />
-              </Button>
+              <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleMissingInlineEdit('account')}
+                  title={editedTransaction.toAccount ? 'Account edit flow is not available yet' : 'Select an account to edit'}
+                  aria-label="Edit selected to account"
+                  disabled={!editedTransaction.toAccount}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    setAccountTargetField('toAccount');
+                    setAddAccountOpen(true);
+                  }}
+                  title="Add account"
+                >
+                  <Plus className="size-4" />
+                </Button>
+                {renderFeedbackIcons('toAccount')}
+              </div>
               <input
                 tabIndex={-1}
                 autoComplete="off"
@@ -1764,7 +1881,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 className="absolute h-0 w-0 opacity-0 pointer-events-none"
                 aria-hidden="true"
               />
-              {renderFeedbackIcons('toAccount')}
             </div>
           </div>
           {hasError('toAccount') && (
@@ -1903,7 +2019,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           Payee
         </label>
 
-        <div className="flex min-w-0 flex-1 items-center gap-1">
+        <div className="flex w-full items-center gap-1">
           <div className="min-w-0 flex-1">
             <VendorAutocomplete
               inputId="transaction-vendor"
@@ -1925,18 +2041,20 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               )}
             />
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => handleMissingInlineEdit('payee')}
-            title={editedTransaction.vendor ? 'Payee edit flow is not available yet' : 'Select a payee to edit'}
-            aria-label="Edit selected payee"
-            disabled={!editedTransaction.vendor}
-          >
-            <Pencil className="size-4" />
-          </Button>
-          {renderFeedbackIcons('vendor')}
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => handleMissingInlineEdit('payee')}
+              title={editedTransaction.vendor ? 'Payee edit flow is not available yet' : 'Select a payee to edit'}
+              aria-label="Edit selected payee"
+              disabled={!editedTransaction.vendor}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            {renderFeedbackIcons('vendor')}
+          </div>
         </div>
       </div>
 
