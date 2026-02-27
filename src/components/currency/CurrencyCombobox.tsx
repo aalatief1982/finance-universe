@@ -33,7 +33,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
   const normalizedSearch = search.trim().toLowerCase();
   const filtered = normalizedSearch
     ? options.filter((currency) => {
-      const searchable = `${currency.code} ${currency.name} ${currency.country}`.toLowerCase();
+      const searchable = `${currency.code} ${currency.name}`.toLowerCase();
       return searchable.includes(normalizedSearch);
     })
     : options;
@@ -49,16 +49,18 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn('w-full justify-between font-normal', className)}
+          className={cn('w-full min-w-0 justify-between font-normal', className)}
         >
-          {selected ? `${selected.flag} ${selected.code} — ${selected.name}` : placeholder}
+          <span className="min-w-0 truncate text-left">
+            {selected ? `${selected.flag} ${selected.code} — ${selected.name}` : placeholder}
+          </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder="Search by code, country, or currency"
+            placeholder="Search by code or currency"
             value={search}
             onValueChange={setSearch}
           />
