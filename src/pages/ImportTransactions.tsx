@@ -23,6 +23,7 @@ import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import SmartPaste from '@/components/SmartPaste';
 import { Transaction } from '@/types/transaction';
+import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 
 
 interface ImportTransactionsLocationState {
@@ -101,24 +102,27 @@ const ImportTransactions = () => {
       // }
     // });
 
-    navigate('/edit-transaction', {
-      state: {
-        transaction: {
-          ...transaction,
-          rawMessage: rawMessage ?? '',
-        },
-        rawMessage,
-        senderHint,
-        confidence,
-        matchedCount,
-        totalTemplates,
-        fieldScore,
-        keywordScore,
-        fieldConfidences,
-        isSuggested: true,
-        matchOrigin,
-        mode: 'create',
+    const inferenceDTO = normalizeInferenceDTO({
+      transaction: {
+        ...transaction,
+        rawMessage: rawMessage ?? '',
       },
+      rawMessage,
+      senderHint,
+      confidence,
+      matchedCount,
+      totalTemplates,
+      fieldScore,
+      keywordScore,
+      fieldConfidences,
+      isSuggested: true,
+      origin: matchOrigin,
+      matchOrigin,
+      mode: 'create',
+    });
+
+    navigate('/edit-transaction', {
+      state: inferenceDTO,
     });
   };
 

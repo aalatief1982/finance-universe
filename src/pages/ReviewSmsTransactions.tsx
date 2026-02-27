@@ -42,6 +42,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { normalizeInferenceDTO, type InferenceDTO } from '@/lib/inference/inferenceDTO';
 import { saveTransactionWithLearning } from '@/lib/smart-paste-engine/saveTransactionWithLearning';
 import { generateDefaultTitle } from '@/components/transaction-utils';
 import { useLocation } from 'react-router-dom';
@@ -90,6 +91,7 @@ interface DraftTransaction {
   confidence?: number;
   fieldConfidences?: Record<string, number>;
   parsingStatus?: 'success' | 'partial' | 'failed';
+  inferenceDTO?: InferenceDTO;
 
 }
 
@@ -143,26 +145,59 @@ const ReviewSmsTransactions: React.FC = () => {
             fromAccount: txn.type === 'income' ? undefined : txn.fromAccount,
           };
           const mappedVendor = vendorMap[txn.vendor] || txn.vendor;
-          const kbEntry = keywordMap.find(kb => kb.keyword === mappedVendor);
-          const cat = kbEntry?.mappings.find(m => m.field === "category")?.value || txn.category;
-          const sub = kbEntry?.mappings.find(m => m.field === "subcategory")?.value || txn.subcategory;
+          const matchingKeywordMappings = keywordMap
+            .filter(kb => kb.keyword === mappedVendor)
+            .flatMap(kb => kb.mappings);
 
-          return {
+          const mappingOverrides = matchingKeywordMappings.reduce<{
+            category?: string;
+            subcategory?: string;
+          }>((acc, mapping) => {
+            if (mapping.field === 'category' && mapping.value) {
+              acc.category = mapping.value;
+            }
+            if (mapping.field === 'subcategory' && mapping.value) {
+              acc.subcategory = mapping.value;
+            }
+            return acc;
+          }, {});
+
+          // Override policy: directFields > templateFields > mappingOverrides > keywordInference > defaults.
+          // parseAndInferTransaction output is the authoritative baseline; mapping only overrides vendor/category/subcategory.
+          const finalTransaction = {
             ...normalizedTransaction,
             vendor: mappedVendor,
-            category: cat,
-            subcategory: sub,
+            category: mappingOverrides.category || txn.category,
+            subcategory: mappingOverrides.subcategory || txn.subcategory,
+          };
+
+          const inferenceDTO = normalizeInferenceDTO({
+            transaction: finalTransaction,
             rawMessage,
-
-            title: generateDefaultTitle({ ...normalizedTransaction, category: cat, subcategory: sub }),
-            sender: msg.sender,
-            alwaysApply: false,
-
+            senderHint: msg.sender,
             confidence,
             fieldConfidences,
-            parsingStatus
+            parsingStatus,
+            origin: result.origin,
+            matchOrigin: result.origin,
+            matchedCount: result.matchedCount,
+            totalTemplates: result.totalTemplates,
+            fieldScore: result.fieldScore,
+            keywordScore: result.keywordScore,
+            isSuggested: true,
+            mode: 'create',
+          });
 
-
+          return {
+            ...finalTransaction,
+            rawMessage,
+            title: generateDefaultTitle(finalTransaction),
+            sender: msg.sender,
+            alwaysApply: false,
+            confidence,
+            fieldConfidences,
+            parsingStatus,
+            inferenceDTO,
           };
         })
       );
@@ -601,15 +636,23 @@ const toggleSkipAll = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
+              onClick={() => {
+                const inferenceDTO = normalizeInferenceDTO({
+                  ...(txn.inferenceDTO || {}),
+                  transaction: txn,
+                  rawMessage: txn.rawMessage,
+                  senderHint: txn.sender,
+                  confidence: txn.confidence,
+                  fieldConfidences: txn.fieldConfidences,
+                  parsingStatus: txn.parsingStatus,
+                  mode: 'create',
+                  isSuggested: true,
+                });
+
                 navigate('/edit-transaction', {
-                  state: {
-                    transaction: txn,
-                    rawMessage: txn.rawMessage,
-                    fieldConfidences: txn.fieldConfidences,
-                  },
-                })
-              }
+                  state: inferenceDTO,
+                });
+              }}
             >
               Full Form
             </Button>
