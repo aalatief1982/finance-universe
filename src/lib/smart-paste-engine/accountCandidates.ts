@@ -5,10 +5,15 @@ export interface AccountCandidate {
   span?: { start: number; end: number };
 }
 
+interface AccountCandidatesDebug {
+  anchors: number;
+  scannedMatches: number;
+}
+
 const ANCHOR_PATTERN = /\b(card|acct|account|a\/c|iban|wallet|debit|credit|visa|mastercard|mada|hsbc|rajhi|alrajhi|stc)\b|بطاقة|حساب|رقم|عبر|الى|إلى|من|لصالح|لدى|مدى/gi;
 const STRONG_LABEL_PATTERN = /^(بطاقة|حساب|account|acct|card)$/i;
 const AMOUNT_KEYWORD_PATTERN = /\b(sar|usd|egp|amount|balance)\b|ريال|ر\.س|مبلغ|رصيد/i;
-const DATE_LIKE_PATTERN = /\b\d{1,4}[\/-]\d{1,2}([\/-]\d{1,4})?\b/;
+const DATE_LIKE_PATTERN = /\b\d{1,4}[/-]\d{1,2}([/-]\d{1,4})?\b/;
 const TIME_LIKE_PATTERN = /\b\d{1,2}:\d{2}\b/;
 const CANDIDATE_PATTERN = /\*{2,}\d{3,8}|\(\d{3,8}\)|\d{3,8}/g;
 
@@ -30,7 +35,7 @@ function lengthBonus(value: string): number {
 
 export function extractAccountCandidates(rawMessage: string): {
   candidates: AccountCandidate[];
-  debug?: any;
+  debug?: AccountCandidatesDebug;
 } {
   const normalized = normalizeText(rawMessage || '');
   if (!normalized) {
