@@ -17,9 +17,9 @@
  * - [ ] Component renders without crashing
  */
 import React, { useState, useEffect } from 'react';
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 import { Transaction } from '@/types/transaction';
 import { Loader2 } from 'lucide-react';
 import { Label } from './ui/label';
@@ -32,6 +32,7 @@ import { getTemplateFailureCount } from '@/lib/smart-paste-engine/templateUtils'
 import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { computeCapturedFields } from '@/lib/inference/fieldStatus';
 
 interface SmartPasteProps {
   senderHint?: string;
@@ -40,25 +41,34 @@ interface SmartPasteProps {
     rawMessage?: string,
     senderHint?: string,
     confidence?: number,
-    matchOrigin?: "template" | "structure" | "ml" | "fallback",
+    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
     matchedCount?: number,
     totalTemplates?: number,
     fieldScore?: number,
     keywordScore?: number,
-    fieldConfidences?: Record<string, number>
+    fieldConfidences?: Record<string, number>,
   ) => void;
 }
 
-const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => {
+const SmartPaste = ({
+  senderHint,
+  onTransactionsDetected,
+}: SmartPasteProps) => {
   const [text, setText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [detectedTransactions, setDetectedTransactions] = useState<Transaction[]>([]);
+  const [detectedTransactions, setDetectedTransactions] = useState<
+    Transaction[]
+  >([]);
   const [matchStatus, setMatchStatus] = useState('Paste a message to begin');
   const [hasMatch, setHasMatch] = useState(false);
   const [confidence, setConfidence] = useState<number | null>(null);
-  const [matchOrigin, setMatchOrigin] = useState<'template' | 'structure' | 'ml' | 'fallback' | null>(null);
-  const [fieldConfidences, setFieldConfidences] = useState<Record<string, number>>({});
+  const [matchOrigin, setMatchOrigin] = useState<
+    'template' | 'structure' | 'ml' | 'fallback' | null
+  >(null);
+  const [fieldConfidences, setFieldConfidences] = useState<
+    Record<string, number>
+  >({});
   const [matchedCount, setMatchedCount] = useState<number | null>(null);
   const [totalTemplates, setTotalTemplates] = useState<number | null>(null);
   const [fieldScore, setFieldScore] = useState<number | null>(null);
@@ -84,139 +94,144 @@ const SmartPaste = ({ senderHint, onTransactionsDetected }: SmartPasteProps) => 
           parsed.directFields.vendor?.value ||
           parsed.directFields.fromAccount?.value ||
           '';
-        setMatchStatus(
-          `Matched template from ${bank || 'saved template'}`
-        );
+        setMatchStatus(`Matched template from ${bank || 'saved template'}`);
         setHasMatch(true);
       } else {
-        setMatchStatus('Ready to review. We can still extract transaction details from this message.');
+        setMatchStatus(
+          'Ready to review. We can still extract transaction details from this message.',
+        );
         setHasMatch(false);
       }
     } catch {
-      setMatchStatus('Ready to review. We can still extract transaction details from this message.');
+      setMatchStatus(
+        'Ready to review. We can still extract transaction details from this message.',
+      );
       setHasMatch(false);
     }
   }, [text, senderHint]);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (!text.trim()) {
-    toast({
-      title: "Error",
-      description: "Please paste or enter a message first",
-      variant: "destructive",
-    });
-    return;
-  }
- if (import.meta.env.MODE === 'development') {
-   // console.log('[SmartPaste] Checking message:', text);
- }
-  // 🚫 Check if message contains financial transaction pattern
-  if (!isFinancialTransactionMessage(text)) {
-    toast({
-      title: "Non-transactional message",
-      description: "This message does not appear to contain any transaction data.",
-      variant: "default",
-    });
-    return;
-  }
-
-  if (import.meta.env.MODE === 'development') {
-    // console.log("[SmartPaste] Submitting message:", text);
-  }
-  setIsProcessing(true);
-  setIsSubmitted(true);
-  setError(null);
-  setConfidence(null);
-  setMatchOrigin(null);
-  setMatchedCount(null);
-  setTotalTemplates(null);
-  setFieldScore(null);
-  setKeywordScore(null);
-  logAnalyticsEvent('smart_paste_sms');
-
-  try {
-    const {
-      transaction,
-      confidence,
-      origin,
-      parsed,
-      fieldConfidences,
-      parsingStatus,
-      matchedCount,
-      totalTemplates,
-      fieldScore,
-      keywordScore
-    } = await parseAndInferTransaction(text, senderHint);
-
-    if (import.meta.env.MODE === 'development') {
-      // console.log("[SmartPaste] Parsed result:", parsed);
+    if (!text.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Please paste or enter a message first',
+        variant: 'destructive',
+      });
+      return;
     }
     if (import.meta.env.MODE === 'development') {
-      // console.log("[SmartPaste] Confidence Breakdown:", {
-        // confidence,
-        // origin,
-        // fieldConfidences
-      // });
+      // console.log('[SmartPaste] Checking message:', text);
+    }
+    // 🚫 Check if message contains financial transaction pattern
+    if (!isFinancialTransactionMessage(text)) {
+      toast({
+        title: 'Non-transactional message',
+        description:
+          'This message does not appear to contain any transaction data.',
+        variant: 'default',
+      });
+      return;
     }
 
-    setDetectedTransactions([transaction]);
-    setConfidence(confidence);
-    setMatchOrigin(origin);
-    setFieldConfidences(fieldConfidences || {});
-    setMatchedCount(matchedCount);
-    setTotalTemplates(totalTemplates);
-    setFieldScore(fieldScore);
-    setKeywordScore(keywordScore);
-    
     if (import.meta.env.MODE === 'development') {
-      // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
+      // console.log("[SmartPaste] Submitting message:", text);
     }
-
-    if (parsed.matched) {
-      const failCount = getTemplateFailureCount(parsed.templateHash, senderHint);
-      if (failCount >= 3) {
-        toast({
-          title: 'Parsing failed repeatedly — help us improve this template',
-        });
-        navigate(
-          `/train-model?msg=${encodeURIComponent(text)}&sender=${encodeURIComponent(
-            senderHint || ''
-          )}`
-        );
-      }
-    }
-  } catch (err: unknown) {
-    if (import.meta.env.MODE === 'development') {
-      console.error("[SmartPaste] Error in structure parsing:", err);
-    }
-    setError("Could not parse the message. Try again or report.");
-    toast({
-      title: "Error",
-      description: "Could not parse the message. Try again or report.",
-      variant: "destructive",
-    });
+    setIsProcessing(true);
+    setIsSubmitted(true);
+    setError(null);
     setConfidence(null);
     setMatchOrigin(null);
     setMatchedCount(null);
     setTotalTemplates(null);
     setFieldScore(null);
     setKeywordScore(null);
-  } finally {
-    setIsProcessing(false);
-  }
-};
+    logAnalyticsEvent('smart_paste_sms');
 
-  const extractedFieldCount = detectedTransactions[0]
-    ? ['amount', 'date', 'vendor', 'category']
-        .filter((key) => {
-          const value = detectedTransactions[0][key as keyof Transaction];
-          if (typeof value === 'number') return value > 0;
-          return Boolean(value && String(value).trim() && value !== 'Uncategorized');
-        })
-        .length
-    : 0;
+    try {
+      const {
+        transaction,
+        confidence,
+        origin,
+        parsed,
+        fieldConfidences,
+        parsingStatus,
+        matchedCount,
+        totalTemplates,
+        fieldScore,
+        keywordScore,
+      } = await parseAndInferTransaction(text, senderHint);
+
+      if (import.meta.env.MODE === 'development') {
+        // console.log("[SmartPaste] Parsed result:", parsed);
+      }
+      if (import.meta.env.MODE === 'development') {
+        // console.log("[SmartPaste] Confidence Breakdown:", {
+        // confidence,
+        // origin,
+        // fieldConfidences
+        // });
+      }
+
+      setDetectedTransactions([transaction]);
+      setConfidence(confidence);
+      setMatchOrigin(origin);
+      setFieldConfidences(fieldConfidences || {});
+      setMatchedCount(matchedCount);
+      setTotalTemplates(totalTemplates);
+      setFieldScore(fieldScore);
+      setKeywordScore(keywordScore);
+
+      if (import.meta.env.MODE === 'development') {
+        // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
+      }
+
+      if (parsed.matched) {
+        const failCount = getTemplateFailureCount(
+          parsed.templateHash,
+          senderHint,
+        );
+        if (failCount >= 3) {
+          toast({
+            title: 'Parsing failed repeatedly — help us improve this template',
+          });
+          navigate(
+            `/train-model?msg=${encodeURIComponent(text)}&sender=${encodeURIComponent(
+              senderHint || '',
+            )}`,
+          );
+        }
+      }
+    } catch (err: unknown) {
+      if (import.meta.env.MODE === 'development') {
+        console.error('[SmartPaste] Error in structure parsing:', err);
+      }
+      setError('Could not parse the message. Try again or report.');
+      toast({
+        title: 'Error',
+        description: 'Could not parse the message. Try again or report.',
+        variant: 'destructive',
+      });
+      setConfidence(null);
+      setMatchOrigin(null);
+      setMatchedCount(null);
+      setTotalTemplates(null);
+      setFieldScore(null);
+      setKeywordScore(null);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const capturedFieldStatus = computeCapturedFields(
+    detectedTransactions[0],
+    fieldConfidences,
+    {
+      isSuggested: true,
+      matchOrigin,
+    },
+  );
 
   const handlePaste = async () => {
     try {
@@ -227,9 +242,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       setText(clipboardText);
     } catch (err) {
       toast({
-        title: "Clipboard Error",
-        description: "Could not access clipboard.",
-        variant: "destructive",
+        title: 'Clipboard Error',
+        description: 'Could not access clipboard.',
+        variant: 'destructive',
       });
     }
   };
@@ -237,22 +252,22 @@ const handleSubmit = async (e: React.FormEvent) => {
   const handleAddTransaction = (transaction: Transaction) => {
     if (import.meta.env.MODE === 'development') {
       // console.log('[SmartPaste] handleAddTransaction called with:', {
-        // transaction,
-        // currentFieldConfidences: fieldConfidences,
-        // currentConfidence: confidence,
-        // currentMatchOrigin: matchOrigin,
-        // parsedFields: {
-          // amount: transaction.amount,
-          // currency: transaction.currency,
-          // date: transaction.date,
-          // type: transaction.type,
-          // category: transaction.category,
-          // vendor: transaction.vendor,
-          // fromAccount: transaction.fromAccount,
-        // }
+      // transaction,
+      // currentFieldConfidences: fieldConfidences,
+      // currentConfidence: confidence,
+      // currentMatchOrigin: matchOrigin,
+      // parsedFields: {
+      // amount: transaction.amount,
+      // currency: transaction.currency,
+      // date: transaction.date,
+      // type: transaction.type,
+      // category: transaction.category,
+      // vendor: transaction.vendor,
+      // fromAccount: transaction.fromAccount,
+      // }
       // });
     }
-    
+
     if (import.meta.env.MODE === 'development') {
       // console.log("[SmartPaste] Transaction added:", transaction);
     }
@@ -270,20 +285,19 @@ const handleSubmit = async (e: React.FormEvent) => {
         totalTemplates || 0,
         fieldScore ?? undefined,
         keywordScore ?? undefined,
-        fieldConfidences
+        fieldConfidences,
       );
     }
 
     logAnalyticsEvent('smart_paste_save');
-
   };
 
   return (
-    <div className="pt-4 space-y-4">
-
+    <div className="space-y-4 pb-[calc(var(--safe-area-bottom,0px)+var(--bottom-nav-height,72px)+16px)] pt-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Add a transaction by typing it, pasting an SMS, or using smart input methods.
+          Add a transaction by typing it, pasting an SMS, or using smart input
+          methods.
         </p>
         <div className="grid gap-2">
           <Label htmlFor="message">Transaction details</Label>
@@ -314,18 +328,18 @@ const handleSubmit = async (e: React.FormEvent) => {
               confidence >= 0.8
                 ? 'text-success'
                 : confidence >= 0.5
-                ? 'text-warning'
-                : 'text-destructive'
+                  ? 'text-warning'
+                  : 'text-destructive'
             }`}
           >
             How sure we are: {(confidence * 100).toFixed(0)}% ·{' '}
             {matchOrigin === 'template'
               ? 'Based on a saved pattern.'
               : matchOrigin === 'ml'
-              ? 'Estimated from message text.'
-              : matchOrigin === 'fallback'
-              ? 'Best effort guess from message text.'
-              : 'Detected from message structure.'}
+                ? 'Estimated from message text.'
+                : matchOrigin === 'fallback'
+                  ? 'Best effort guess from message text.'
+                  : 'Detected from message structure.'}
           </p>
         )}
 
@@ -339,32 +353,40 @@ const handleSubmit = async (e: React.FormEvent) => {
                   {matchOrigin === 'template'
                     ? 'Based on your saved patterns'
                     : matchOrigin === 'fallback'
-                    ? 'Estimated from message text'
-                    : matchOrigin === 'ml'
-                    ? 'Estimated from message text'
-                    : 'Detected from message structure'}
+                      ? 'Estimated from message text'
+                      : matchOrigin === 'ml'
+                        ? 'Estimated from message text'
+                        : 'Detected from message structure'}
                 </span>
               </p>
               <p>
                 Important details captured:{' '}
-                <span className="font-medium">{extractedFieldCount}/4</span>
+                <span className="font-medium">
+                  {capturedFieldStatus.capturedCount}/
+                  {capturedFieldStatus.totalCount}
+                </span>
               </p>
               <p>
                 Currency:{' '}
-                <span className="font-medium">{detectedTransactions[0].currency || 'Unknown'}</span>
+                <span className="font-medium">
+                  {detectedTransactions[0].currency || 'Unknown'}
+                </span>
               </p>
               <p>
                 How sure we are:{' '}
-                <span className="font-medium">{(confidence * 100).toFixed(0)}%</span>
+                <span className="font-medium">
+                  {(confidence * 100).toFixed(0)}%
+                </span>
               </p>
               {detectedTransactions[0].category === 'Uncategorized' && (
-                <p className="text-warning">Category still needs your confirmation.</p>
+                <p className="text-warning">
+                  Category still needs your confirmation.
+                </p>
               )}
             </div>
           </Card>
         )}
       </form>
-
 
       {detectedTransactions.length > 0 && (
         <div className="space-y-3 mt-2">
@@ -382,7 +404,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       )}
 
       <NoTransactionMessage
-        show={isSubmitted && !isProcessing && text.trim() && detectedTransactions.length === 0 && !error}
+        show={
+          isSubmitted &&
+          !isProcessing &&
+          text.trim() &&
+          detectedTransactions.length === 0 &&
+          !error
+        }
         message={matchStatus}
         matched={hasMatch}
       />
