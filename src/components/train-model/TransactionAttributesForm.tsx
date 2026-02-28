@@ -6,6 +6,7 @@ import { Transaction, TransactionType } from '@/types/transaction';
 import { SupportedCurrency } from '@/types/locale';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CurrencySelect from '@/components/currency/CurrencySelect';
 
 interface TransactionAttributesFormProps {
   transaction: Partial<Transaction>;
@@ -56,21 +57,13 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
 
         <div className="space-y-2">
           <Label htmlFor="currency">Currency</Label>
-          <Select
+          <CurrencySelect
+            id="currency"
             value={transaction.currency || 'SAR'}
-            onValueChange={(value) => handleChange('currency', value as SupportedCurrency)}
-          >
-            <SelectTrigger id="currency" className="h-9">
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencies.map((currency) => (
-                <SelectItem key={currency} value={currency}>
-                  {currency}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(value) => handleChange('currency', value as SupportedCurrency)}
+            currencies={currencies}
+            triggerClassName="h-9"
+          />
         </div>
 
         <div className="space-y-2">

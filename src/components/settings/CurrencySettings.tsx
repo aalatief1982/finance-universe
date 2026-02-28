@@ -21,9 +21,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CurrencySelect from '@/components/currency/CurrencySelect';
 import { Coins } from 'lucide-react';
-import { getUserSettings, storeUserSettings, updateCurrency } from '@/utils/storage-utils';
+import { getUserSettings, updateCurrency } from '@/utils/storage-utils';
 import { SupportedCurrency } from '@/types/locale';
 import { getAllCurrencies } from '@/utils/locale';
 
@@ -64,18 +64,12 @@ const CurrencySettings = () => {
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="currency">Currency</Label>
-          <Select value={currency} onValueChange={handleCurrencyChange}>
-            <SelectTrigger id="currency" className="w-full">
-              <SelectValue placeholder="Select currency" />
-            </SelectTrigger>
-            <SelectContent>
-              {currencies.map(curr => (
-                <SelectItem key={curr.code} value={curr.code}>
-                  {curr.code} — {curr.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CurrencySelect
+            id="currency"
+            value={currency}
+            onChange={(value) => handleCurrencyChange(value as SupportedCurrency)}
+            currencies={currencies.map((curr) => curr.code)}
+          />
         </div>
       </CardContent>
     </Card>

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CurrencySelect from '@/components/currency/CurrencySelect';
 import { DatePicker } from '@/components/ui/date-picker';
 import { CURRENCIES } from '@/lib/categories-data';
 import { Account } from '@/models/account';
@@ -162,16 +163,13 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-currency">
                 Currency
               </label>
-              <Select value={form.currency} onValueChange={val => setForm({ ...form, currency: val })}>
-                <SelectTrigger id="account-currency">
-                  <SelectValue placeholder="Currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <CurrencySelect
+                  id="account-currency"
+                  value={form.currency}
+                  onChange={(val) => setForm({ ...form, currency: val })}
+                  currencies={CURRENCIES}
+                  placeholder="Currency"
+                />
             </div>
 
             <div>
