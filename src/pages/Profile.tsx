@@ -51,6 +51,7 @@ import {
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { Card } from '@/components/ui/card';
 
 const Profile = () => {
   const { user, updateUser } = useUser();
@@ -109,39 +110,9 @@ const Profile = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="max-w-md mx-auto space-y-6"
+        className="mx-auto max-w-md space-y-6 px-1 pt-2 pb-[calc(var(--bottom-nav-height,72px)+env(safe-area-inset-bottom,0px)+16px)]"
       >
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-500 hover:bg-red-600">
-                  Delete Account
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-
-        <div className="bg-card rounded-lg border p-6 flex flex-col items-center text-center space-y-4">
+        <Card className="flex flex-col items-center space-y-4 p-6 text-center">
           <div className="relative">
             <Avatar className="h-24 w-24">
 
@@ -167,11 +138,43 @@ const Profile = () => {
           </div>
 
           <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-        </div>
+        </Card>
+
+        <Card className="space-y-3 p-5">
+          <div>
+            <h2 className="text-lg font-semibold">Danger Zone</h2>
+            <p className="text-sm text-muted-foreground">
+              Permanently delete your account and all associated data.
+            </p>
+          </div>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" className="w-full sm:w-auto">
+                <Trash2 className="mr-1 h-4 w-4" />
+                Delete Account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-500 hover:bg-red-600">
+                  Delete Account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </Card>
       </motion.div>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom,0px),1rem)] pt-5 sm:px-6">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
           </DialogHeader>
@@ -218,7 +221,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="sticky bottom-0 bg-background pt-3">
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
