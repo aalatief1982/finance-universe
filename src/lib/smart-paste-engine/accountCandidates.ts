@@ -10,7 +10,7 @@ interface AccountCandidatesDebug {
   scannedMatches: number;
 }
 
-const ANCHOR_PATTERN = /\b(card|acct|account|a/c|iban|wallet|debit|credit|visa|mastercard|mada|hsbc|rajhi|alrajhi|stc)\b|بطاقة|حساب|رقم|عبر|الى|إلى|من|لصالح|لدى|مدى/gi;
+const ANCHOR_PATTERN = /\b(card|acct|account|a\/c|iban|wallet|debit|credit|visa|mastercard|mada|hsbc|rajhi|alrajhi|stc)\b|بطاقة|حساب|رقم|عبر|الى|إلى|من|لصالح|لدى|مدى/gi;
 const STRONG_LABEL_PATTERN = /^(بطاقة|حساب|account|acct|card)$/i;
 const AMOUNT_KEYWORD_PATTERN = /\b(sar|usd|egp|amount|balance)\b|ريال|ر\.س|مبلغ|رصيد/i;
 const DATE_LIKE_PATTERN = /\b\d{1,4}[/-]\d{1,2}([/-]\d{1,4})?\b/;
