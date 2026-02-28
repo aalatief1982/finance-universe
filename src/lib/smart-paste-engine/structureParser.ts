@@ -23,6 +23,7 @@ import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
 import { normalizeVendorNameForCompare } from './vendorFallbackUtils';
+import { extractAccountCandidates } from './accountCandidates';
 //import { normalizeDate } from './dateUtils';
 
 
@@ -99,6 +100,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
       directFields: {},
       inferredFields: {},
       defaultValues: {},
+      candidates: { accountCandidates: [] },
     };
   }
   
@@ -259,6 +261,9 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     directFields,
     inferredFields: inferred,
     defaultValues,
+    candidates: {
+      accountCandidates: extractAccountCandidates(rawMessage).candidates,
+    },
   };
 }
 

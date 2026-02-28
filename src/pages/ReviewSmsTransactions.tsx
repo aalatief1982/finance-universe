@@ -66,6 +66,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import type { AccountCandidate } from '@/lib/smart-paste-engine/accountCandidates';
 
 interface DraftTransaction {
   id?: string;
@@ -92,6 +93,7 @@ interface DraftTransaction {
   fieldConfidences?: Record<string, number>;
   parsingStatus?: 'success' | 'partial' | 'failed';
   inferenceDTO?: InferenceDTO;
+  accountCandidates?: AccountCandidate[];
 
 }
 
@@ -118,9 +120,11 @@ const ReviewSmsTransactions: React.FC = () => {
   const { addTransaction, updateTransaction } = useTransactions();
 
   const state = location.state as SmsLocationState | null;
-  const messages = React.useMemo(() => state?.messages || [], [state]);
-  const vendorMap = React.useMemo(() => state?.vendorMap || {}, [state]);
-  const keywordMap = React.useMemo(() => state?.keywordMap || [], [state]);
+  const historyState = (window.history.state?.usr || window.history.state) as SmsLocationState | undefined;
+  const effectiveState = state || historyState || null;
+  const messages = React.useMemo(() => effectiveState?.messages || [], [effectiveState]);
+  const vendorMap = React.useMemo(() => effectiveState?.vendorMap || {}, [effectiveState]);
+  const keywordMap = React.useMemo(() => effectiveState?.keywordMap || [], [effectiveState]);
 
   const allHighConfidence =
     transactions.length > 0 && transactions.every(t => t.confidence >= 0.9);
@@ -198,6 +202,7 @@ const ReviewSmsTransactions: React.FC = () => {
             fieldConfidences,
             parsingStatus,
             inferenceDTO,
+            accountCandidates: result.parsed?.candidates?.accountCandidates || [],
           };
         })
       );
@@ -452,6 +457,15 @@ const toggleSkipAll = () => {
         </div>
 
       {transactions.map((txn, index) => {
+        const accountFieldName = txn.type === 'income' ? 'toAccount' : 'fromAccount';
+        const accountValue = txn.type === 'income' ? txn.toAccount || '' : txn.fromAccount || '';
+        const accountConfidence =
+          txn.type === 'income'
+            ? (txn.fieldConfidences?.toAccount ?? txn.fieldConfidences?.fromAccount ?? 0)
+            : (txn.fieldConfidences?.fromAccount ?? 0);
+        const shouldShowAccountSuggestions =
+          !!txn.accountCandidates?.length && (!accountValue || accountConfidence < 0.6);
+
         const borderColor =
           txn.parsingStatus === 'success'
             ? 'border-green-500'
@@ -596,11 +610,11 @@ const toggleSkipAll = () => {
                 {txn.type === 'income' ? 'To account' : 'From account'}
               </label>
               <Input
-                value={txn.type === 'income' ? txn.toAccount || '' : txn.fromAccount || ''}
+                value={accountValue}
                 onChange={e =>
                   handleFieldChange(
                     index,
-                    txn.type === 'income' ? 'toAccount' : 'fromAccount',
+                    accountFieldName,
                     e.target.value
                   )
                 }
@@ -612,6 +626,29 @@ const toggleSkipAll = () => {
                     : 'border-red-500'
               }`}
               />
+              {shouldShowAccountSuggestions && (
+                <div className="mt-2">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Suggested account from message:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {txn.accountCandidates!.slice(0, 5).map((candidate) => (
+                      <Button
+                        key={`${candidate.value}-${candidate.labelHint}`}
+                        type="button"
+                        size="sm"
+                        variant={accountValue === candidate.value ? 'default' : 'outline'}
+                        onClick={() =>
+                          handleFieldChange(index, accountFieldName, candidate.value)
+                        }
+                        className="h-7 px-2 text-xs"
+                      >
+                        {candidate.value}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <ToggleGroup
               type="single"
