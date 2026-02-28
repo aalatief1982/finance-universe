@@ -12,7 +12,7 @@
  * 4. Combine scores into overall confidence
  *
  * @dependencies
- * - localStorage: xpensia_vendor_map, xpensia_fromaccount_map
+ * - safeStorage: xpensia_vendor_map, xpensia_fromaccount_map
  *
  * @review-tags
  * - @side-effects: reads localStorage for user mappings
@@ -24,27 +24,46 @@
  * - [ ] Overall weighting matches UX expectations
  */
 
-export function getFieldConfidence(parsed: unknown): number {
+import { safeStorage } from '@/utils/safe-storage';
+import type { ParsedField } from './structureParser';
+
+interface ParsedResult {
+  directFields?: Record<string, ParsedField>;
+  inferredFields?: Record<string, ParsedField>;
+  defaultValues?: Record<string, ParsedField>;
+}
+
+interface TransactionLike {
+  vendor?: string;
+  category?: string;
+  subcategory?: string;
+  fromAccount?: string;
+  [key: string]: unknown;
+}
+
+interface KeywordBankEntry {
+  keyword: string;
+  mappings: { field: string; value: string }[];
+}
+
+export function getFieldConfidence(parsed: ParsedResult): number {
   const totalFields = ['amount', 'currency', 'date', 'type', 'category', 'subcategory', 'vendor', 'fromAccount'];
   const filledFields = totalFields.filter(field => {
     return parsed.directFields?.[field] || parsed.inferredFields?.[field] || parsed.defaultValues?.[field];
   });
 
-  return filledFields.length / totalFields.length; // e.g., 7/8 = 0.875
+  return filledFields.length / totalFields.length;
 }
 
 export function getTemplateConfidence(templateMatched: number, totalTemplates: number): number {
-  // templateMatched should be 1 if matched, 0 if not
-  // If we have templates and this one matched, give high confidence
   if (totalTemplates === 0) return 0;
-  return templateMatched; // Simply return 1 if matched, 0 if not
+  return templateMatched;
 }
 
-export function getKeywordConfidence(transaction: unknown, keywordBank: unknown[]): number {
+export function getKeywordConfidence(transaction: TransactionLike, keywordBank: KeywordBankEntry[]): number {
   let totalScore = 0;
   let sourceCount = 0;
 
-  // Check keyword bank confidence for category/subcategory
   if (transaction.vendor) {
     const keyword = transaction.vendor.toLowerCase().split(' ')[0];
     const entry = keywordBank.find(k => k.keyword === keyword);
@@ -59,17 +78,15 @@ export function getKeywordConfidence(transaction: unknown, keywordBank: unknown[
     }
   }
 
-  // Check xpensia_vendor_map confidence
-  const vendorMap = JSON.parse(localStorage.getItem('xpensia_vendor_map') || '{}');
+  const vendorMap = JSON.parse(safeStorage.getItem('xpensia_vendor_map') || '{}');
   if (transaction.vendor) {
     const isUserMappedVendor = Object.values(vendorMap).includes(transaction.vendor);
     if (isUserMappedVendor) {
-      totalScore += 0.8; // 80% confidence for user-mapped vendors
+      totalScore += 0.8;
       sourceCount++;
     }
   }
 
-  // Check xpensia_keyword_bank for category/subcategory derivation
   if (transaction.category || transaction.subcategory) {
     const hasKeywordBankMatch = keywordBank.some(entry => 
       entry.mappings.some(mapping => 
@@ -78,17 +95,16 @@ export function getKeywordConfidence(transaction: unknown, keywordBank: unknown[
       )
     );
     if (hasKeywordBankMatch) {
-      totalScore += 0.7; // 70% confidence for keyword bank category/subcategory matches
+      totalScore += 0.7;
       sourceCount++;
     }
   }
 
-  // Check xpensia_fromaccount_map confidence
-  const fromAccountMap = JSON.parse(localStorage.getItem('xpensia_fromaccount_map') || '{}');
+  const fromAccountMap = JSON.parse(safeStorage.getItem('xpensia_fromaccount_map') || '{}');
   if (transaction.fromAccount) {
     const isUserMappedFromAccount = Object.values(fromAccountMap).includes(transaction.fromAccount);
     if (isUserMappedFromAccount) {
-      totalScore += 0.8; // 80% confidence for user-mapped fromAccount
+      totalScore += 0.8;
       sourceCount++;
     }
   }
@@ -101,10 +117,18 @@ export function computeOverallConfidence(
   templateScore: number,
   keywordScore: number
 ): number {
-  // You can weight this however you like
   return (
-    fieldScore * 0.5 +  // 50%
-    templateScore * 0.3 + // 30%
-    keywordScore * 0.2    // 20%
+    fieldScore * 0.5 +
+    templateScore * 0.3 +
+    keywordScore * 0.2
   );
+}
+
+export function computeConfidenceScore(source: 'direct' | 'inferred' | 'default'): number {
+  switch (source) {
+    case 'direct': return 0.9;
+    case 'inferred': return 0.6;
+    case 'default': return 0.3;
+    default: return 0;
+  }
 }
