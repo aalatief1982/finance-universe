@@ -163,7 +163,9 @@ const normalizeTransactionForCompare = (tx: Partial<Transaction>) => ({
   type: normalizeText(tx.type),
 });
 
-const getAmountValidationError = (amountNumber: number | null): string | undefined => {
+const getAmountValidationError = (
+  amountNumber: number | null,
+): string | undefined => {
   if (amountNumber === null) return 'Amount is required';
   if (amountNumber <= 0) return 'Amount must be greater than 0';
   return undefined;
@@ -367,7 +369,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     subcategory: string;
   }>({ type: 'expense', category: '', subcategory: '' });
 
-
   const [vendors, setVendors] = useState<string[]>(() => {
     const syncedVendors = getVendorData();
     const builtIn = Object.keys(
@@ -399,10 +400,17 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const [initialTransactionState, setInitialTransactionState] =
     useState<Transaction>(() => createInitialTransactionState(transaction));
-  const [editedTransaction, setEditedTransaction] = useState<Transaction>(() => {
-    const initial = createInitialTransactionState(transaction);
-    return { ...initial, amount: Number.isFinite(initial.amount) ? Math.abs(initial.amount) : initial.amount };
-  });
+  const [editedTransaction, setEditedTransaction] = useState<Transaction>(
+    () => {
+      const initial = createInitialTransactionState(transaction);
+      return {
+        ...initial,
+        amount: Number.isFinite(initial.amount)
+          ? Math.abs(initial.amount)
+          : initial.amount,
+      };
+    },
+  );
   const [amountText, setAmountText] = useState<string>(() => {
     const initialState = createInitialTransactionState(transaction);
     return Number.isFinite(initialState.amount)
@@ -512,7 +520,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setInitialTransactionState(nextInitialState);
     setEditedTransaction({
       ...nextInitialState,
-      amount: Number.isFinite(nextInitialState.amount) ? Math.abs(nextInitialState.amount) : nextInitialState.amount,
+      amount: Number.isFinite(nextInitialState.amount)
+        ? Math.abs(nextInitialState.amount)
+        : nextInitialState.amount,
     });
     setAmountText(
       Number.isFinite(nextInitialState.amount)
@@ -564,7 +574,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         return true;
       }
 
-      return normalizedTitle === initialNormalized && initialNormalized === lastAutoNormalized;
+      return (
+        normalizedTitle === initialNormalized &&
+        initialNormalized === lastAutoNormalized
+      );
     },
     [initialTitle, lastAutoTitle, titleManuallyEdited, transaction],
   );
@@ -764,7 +777,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         field === 'amount'
           ? parseAmountToNullableNumber(String(value ?? ''))
           : parseAmountToNullableNumber(updated.amount);
-      const amountError = getAmountValidationError(nextAmountValue !== null ? Math.abs(nextAmountValue) : null);
+      const amountError = getAmountValidationError(
+        nextAmountValue !== null ? Math.abs(nextAmountValue) : null,
+      );
       if (amountError) {
         validationErrors.amount = amountError;
       }
@@ -851,7 +866,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setAddCategoryOpen(false);
   };
 
-
   const handleSaveVendor = () => {
     if (!newVendor.name.trim()) return;
 
@@ -886,7 +900,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       );
       handleChange('vendor', sanitizedName);
       setVendorToEdit(null);
-      setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
+      setNewVendor({
+        name: '',
+        type: 'expense',
+        category: '',
+        subcategory: '',
+      });
       setAddVendorOpen(false);
       return;
     }
@@ -955,12 +974,15 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     setEditRateDialogOpen(true);
   };
 
-  const handleAccountPencilClick = (field: 'fromAccount' | 'toAccount' = 'fromAccount') => {
+  const handleAccountPencilClick = (
+    field: 'fromAccount' | 'toAccount' = 'fromAccount',
+  ) => {
     console.info('[UI] Account pencil clicked');
     const selectedAccountName = editedTransaction[field]?.trim();
     if (!selectedAccountName) return;
 
-    const existingAccount = accountService.getAccountByName(selectedAccountName);
+    const existingAccount =
+      accountService.getAccountByName(selectedAccountName);
     if (!existingAccount) return;
 
     setAccountTargetField(field);
@@ -974,7 +996,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     if (!selectedPayee) return;
 
     const fallbacks = loadVendorFallbacks();
-    const existingKey = findVendorByNormalizedName(Object.keys(fallbacks), selectedPayee);
+    const existingKey = findVendorByNormalizedName(
+      Object.keys(fallbacks),
+      selectedPayee,
+    );
     const fallback = existingKey ? fallbacks[existingKey] : undefined;
 
     setVendorToEdit(existingKey || selectedPayee);
@@ -1010,7 +1035,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   };
 
   const focusFirstInvalidField = (errors: TransactionValidationErrors) => {
-    const firstInvalidField = VALIDATION_FIELD_ORDER.find((field) => errors[field]);
+    const firstInvalidField = VALIDATION_FIELD_ORDER.find(
+      (field) => errors[field],
+    );
     if (!firstInvalidField) return;
 
     const target = fieldRefs.current[firstInvalidField];
@@ -1050,7 +1077,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     delete preSubmitErrors.amount;
 
     const amountError = getAmountValidationError(
-      canonicalAmount !== null ? Math.abs(canonicalAmount) : null
+      canonicalAmount !== null ? Math.abs(canonicalAmount) : null,
     );
     if (amountError) {
       preSubmitErrors.amount = amountError;
@@ -1090,7 +1117,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     const shouldRecalculateFx =
       canonicalAmount !== Math.abs(initialTransactionState.amount || 0) ||
       finalTransaction.currency !== initialTransactionState.currency ||
-      finalTransaction.date !== toISOFormat(initialTransactionState.date || '') ||
+      finalTransaction.date !==
+        toISOFormat(initialTransactionState.date || '') ||
       rateValue !== undefined ||
       finalTransaction.amountInBase === null ||
       finalTransaction.amountInBase === undefined ||
@@ -1211,8 +1239,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </p>
       )}
 
-
-
       <div className={rowClass}>
         <label className={labelClass} htmlFor="transaction-currency">
           Currency*
@@ -1232,8 +1258,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               className={cn(
                 'w-full text-sm',
                 inputPadding,
+                isDriven('currency', drivenFields) && 'bg-[#dfffe0]',
                 hasError('currency') && 'border-destructive',
-                hasLowConfidence('currency', fieldConfidences) && 'border-warning',
+                hasLowConfidence('currency', fieldConfidences) &&
+                  'border-warning',
               )}
             />
           </div>
@@ -1452,16 +1480,26 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={addVendorOpen} onOpenChange={(open) => {
-        setAddVendorOpen(open);
-        if (!open) {
-          setVendorToEdit(null);
-          setNewVendor({ name: '', type: 'expense', category: '', subcategory: '' });
-        }
-      }}>
+      <Dialog
+        open={addVendorOpen}
+        onOpenChange={(open) => {
+          setAddVendorOpen(open);
+          if (!open) {
+            setVendorToEdit(null);
+            setNewVendor({
+              name: '',
+              type: 'expense',
+              category: '',
+              subcategory: '',
+            });
+          }
+        }}
+      >
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{vendorToEdit ? 'Edit Payee' : 'Add Payee'}</DialogTitle>
+            <DialogTitle>
+              {vendorToEdit ? 'Edit Payee' : 'Add Payee'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
@@ -1567,7 +1605,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                     <SelectValue placeholder="Select subcategory" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
-                      {vendorAvailableSubcategories.map((subcategory) => (
+                    {vendorAvailableSubcategories.map((subcategory) => (
                       <SelectItem key={subcategory} value={subcategory}>
                         {subcategory}
                       </SelectItem>
@@ -1671,12 +1709,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             inputMode="decimal"
             value={amountText}
             isAutoFilled={isDriven('amount', drivenFields)}
-            onChange={(e) =>
-              handleChange(
-                'amount',
-                e.target.value,
-              )
-            }
+            onChange={(e) => handleChange('amount', e.target.value)}
             onBlur={handleAmountBlur}
             placeholder="0.00"
             required
@@ -1724,6 +1757,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               }}
               id="transaction-from-account"
               value={editedTransaction.fromAccount || ''}
+              isAutoFilled={isDriven('fromAccount', drivenFields)}
               onChange={(event) => {
                 setUserInteractions((prev) => ({ ...prev, fromAccount: true }));
                 handleChange('fromAccount', event.target.value);
@@ -1783,7 +1817,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               variant="outline"
               size="icon"
               onClick={() => handleAccountPencilClick('fromAccount')}
-              title={editedTransaction.fromAccount ? 'Edit selected account' : 'Select an account to edit'}
+              title={
+                editedTransaction.fromAccount
+                  ? 'Edit selected account'
+                  : 'Select an account to edit'
+              }
               aria-label="Edit selected from account"
               disabled={!editedTransaction.fromAccount}
             >
@@ -1864,7 +1902,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   variant="outline"
                   size="icon"
                   onClick={() => handleAccountPencilClick('toAccount')}
-                  title={editedTransaction.toAccount ? 'Edit selected account' : 'Select an account to edit'}
+                  title={
+                    editedTransaction.toAccount
+                      ? 'Edit selected account'
+                      : 'Select an account to edit'
+                  }
                   aria-label="Edit selected to account"
                   disabled={!editedTransaction.toAccount}
                 >
@@ -2044,7 +2086,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               vendors={vendors}
               onAddClick={() => {
                 setVendorToEdit(null);
-                setNewVendor({ name: '', type: editedTransaction.type, category: '', subcategory: '' });
+                setNewVendor({
+                  name: '',
+                  type: editedTransaction.type,
+                  category: '',
+                  subcategory: '',
+                });
                 setAddVendorOpen(true);
               }}
               isAutoFilled={isDriven('vendor', drivenFields)}
@@ -2064,7 +2111,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               variant="outline"
               size="icon"
               onClick={handlePayeePencilClick}
-              title={editedTransaction.vendor ? 'Edit selected payee' : 'Select a payee to edit'}
+              title={
+                editedTransaction.vendor
+                  ? 'Edit selected payee'
+                  : 'Select a payee to edit'
+              }
               aria-label="Edit selected payee"
               disabled={!editedTransaction.vendor}
             >
@@ -2249,8 +2300,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           {transaction ? 'Update Transaction' : 'Create Transaction'}
         </Button>
       </div>
-
-
     </form>
   );
 };
