@@ -88,6 +88,10 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
               id="default-currency-gate-select"
               value={selectedCurrency}
               onChange={handleCurrencyChange}
+              displayMode="codePlusCountry"
+              searchAutoFocus={false}
+              dropdownContentClassName="max-h-[320px]"
+              dropdownListClassName="max-h-[280px]"
               className={showCurrencyError ? 'border-destructive text-destructive' : undefined}
             />
             {showCurrencyError ? (

@@ -12,6 +12,10 @@ interface CurrencyComboboxProps {
   placeholder?: string;
   id?: string;
   className?: string;
+  displayMode?: 'codeOnly' | 'codePlusCountry';
+  searchAutoFocus?: boolean;
+  dropdownContentClassName?: string;
+  dropdownListClassName?: string;
 }
 
 const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
@@ -20,6 +24,10 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
   placeholder = 'Select currency',
   id,
   className,
+  displayMode = 'codeOnly',
+  searchAutoFocus = true,
+  dropdownContentClassName,
+  dropdownListClassName,
 }) => {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
@@ -40,6 +48,14 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
 
   const selected = options.find((currency) => currency.code === value);
 
+  const renderOptionLabel = (currency: AvailableCurrency) => {
+    if (displayMode === 'codePlusCountry') {
+      return `${formatCurrencyFlagCode(currency.code)} • ${currency.name}`;
+    }
+
+    return formatCurrencyFlagCode(currency.code);
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -57,14 +73,18 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className={cn('w-[var(--radix-popover-trigger-width)] p-0', dropdownContentClassName)}
+        align="start"
+      >
         <Command shouldFilter={false}>
           <CommandInput
             placeholder="Search by code or currency"
             value={search}
             onValueChange={setSearch}
+            autoFocus={searchAutoFocus}
           />
-          <CommandList>
+          <CommandList className={dropdownListClassName}>
             <CommandEmpty>No currency found.</CommandEmpty>
             <CommandGroup>
               {filtered.map((currency) => (
@@ -83,7 +103,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
                       value === currency.code ? 'opacity-100' : 'opacity-0',
                     )}
                   />
-                  {formatCurrencyFlagCode(currency.code)}
+                  {renderOptionLabel(currency)}
                 </CommandItem>
               ))}
             </CommandGroup>
