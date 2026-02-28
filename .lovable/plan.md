@@ -1,49 +1,53 @@
 
 
-# Create SMS Flow Analysis Report
+# Unify Currency Dropdown Across the App
 
-## What will be created
+## Summary
+Replace all currency dropdowns with an enhanced `CurrencyCombobox` that is searchable and shows country names (flag + code + country name). This will be used consistently in every place a currency is selected.
 
-A single file `docs/sms-flow-analysis-report.md` containing a comprehensive analysis of:
+## Current State
+There are 5 different currency dropdown implementations:
+- **ExchangeRateDialog** -- plain `Select`, shows flag+code only, not searchable
+- **DefaultCurrencyModal** -- plain `Select`, shows flag+code only, not searchable
+- **TransactionEditForm** -- uses `CurrencyCombobox` (searchable), but `displayMode="codeOnly"`
+- **SmsTransactionConfirmation** -- plain `Select`, shows raw code only (no flag, no country)
+- **CurrencySelector form field** -- uses `CurrencyCombobox` with `displayMode="codeOnly"`
 
-1. **Navigation Loop Root Cause** -- The `useEffect` at line 487 of `App.tsx` includes `location.pathname` in its dependency array (line 554). When the flow coordinator routes to `/process-sms`, the path change re-triggers the effect, creating an infinite re-render loop when provider state never resolves to "configured."
+## Changes
 
-2. **Bulk Import Flow** -- Full walkthrough of `SmsFlowCoordinator` -> `SmsImportService` -> `/vendor-mapping` -> `/review-sms-transactions`, including:
-   - Sender selection and legacy migration logic
-   - Per-sender checkpoint dates and scan windows
-   - Financial message filtering (keyword + amount + date triple-gate in `messageFilter.ts`)
-   - Vendor mapping and keyword map construction
-   - Session-level prompt guards (`autoPromptShown`, `autoPromptAccepted`)
+### 1. Enhance CurrencyCombobox to show country by default
+Update `src/components/currency/CurrencyCombobox.tsx`:
+- Change default `displayMode` from `"codeOnly"` to `"codePlusCountry"` so dropdown items always show flag, code, and country name
+- Also include country name in search filtering (already searches code+name, will also add country)
+- The trigger button will still show compact flag+code for space efficiency
 
-3. **Real-Time SMS Listener Flow** -- How `BackgroundSmsListener` in `App.tsx` (lines 370-485):
-   - Receives all incoming SMS via native plugin
-   - Filters with `isFinancialTransactionMessage()` (no sender allow-list)
-   - Parses via `buildInferenceDTO()` -> `parseAndInferTransaction()`
-   - Auto-navigates to `/edit-transaction` when app is active, or schedules a local notification when backgrounded
+### 2. Replace Select in ExchangeRateDialog
+Update `src/components/fx/ExchangeRateDialog.tsx`:
+- Replace the `Select` component with `CurrencyCombobox`
+- Keep the "Add Currency" (+) button alongside it
+- Remove `Select`-related imports, add `CurrencyCombobox` import
 
-4. **Inference Rules** -- Detailed breakdown per field:
-   - **Amount**: Regex extraction from placeholders, first numeric match
-   - **Date**: Regex with `normalizeDate()` supporting DD-MM-YY and ISO formats
-   - **Vendor**: Anchor-pattern regex (Arabic + English prepositions), domain-like fallback, salary keyword fallback
-   - **Type**: `xpensia_type_keywords` lookup (object format: `{expense: [...], income: [...]}`)
-   - **Category/Subcategory**: Keyword bank -> vendor fallback (fuzzy 70% threshold) -> income default ("Earnings > Benefits")
-   - **fromAccount/toAccount**: Direct field -> token remap -> template-hash map -> template default -> senderHint fallback
+### 3. Replace Select in DefaultCurrencyModal
+Update `src/components/DefaultCurrencyModal.tsx`:
+- Replace `Select` with `CurrencyCombobox`
+- Remove `Select`-related imports
 
-5. **Smart Entry Intersection** -- How bulk import (`smsParser.ts`) and real-time listener both call into the same `suggestionEngine.ts` and `structureParser.ts` pipeline, but with divergent entry points and inconsistencies (e.g., `smsParser.ts` uses its own simpler regex vs `structureParser.ts` template system)
+### 4. Replace Select in SmsTransactionConfirmation
+Update `src/components/SmsTransactionConfirmation.tsx`:
+- Replace the plain `Select` (which only shows currency codes) with `CurrencyCombobox`
+- Remove unused `CURRENCIES` import from `categories-data`
 
-6. **Guardrails Inventory** -- Table of all existing guards: import lock, `MAX_SAFE_LIMIT`, `isCancelled` flag, platform checks, session prompt flags, empty-string guards in fuzzy matching
+### 5. Update CurrencySelector form field
+Update `src/components/forms/CurrencySelector.tsx`:
+- Change `displayMode` to `"codePlusCountry"` (or remove since it will now be the default)
 
-7. **UX/UI Consultancy** -- Expert recommendations:
-   - Fix the navigation loop (remove `location.pathname` from deps, add `useRef` guard)
-   - Replace `window.confirm/alert` with themed in-app dialogs
-   - Queue real-time SMS as non-blocking notifications instead of auto-navigating
-   - Add sender allow-list to real-time listener
-   - Add transaction deduplication (hash of sender + body + date)
-   - Collapse the 4-step import flow into fewer screens
+### 6. Update TransactionEditForm usage
+Update `src/components/TransactionEditForm.tsx`:
+- Remove explicit `displayMode="codeOnly"` so it picks up the new default showing country names
 
-## Technical details
-
-- Single new file: `docs/sms-flow-analysis-report.md`
-- No code modifications
-- Report structured with clear sections, tables, and code references with line numbers
+## Technical Notes
+- `CurrencyCombobox` already has built-in search, scrollable list, and refreshes options on open -- it is the most capable component
+- The trigger button remains compact (flag + code) while the dropdown items show the full label (flag + code + country name)
+- All existing props (`className`, `id`, conditional styling for driven fields, errors, etc.) are preserved
+- Also fixes the pre-existing build errors from the previous round
 
