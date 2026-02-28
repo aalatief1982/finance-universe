@@ -59,6 +59,8 @@ import {
 } from './vendorFallbackUtils';
 import { getVendorData } from '@/services/VendorSyncService';
 import { toast } from '@/components/ui/use-toast';
+import { accountService } from '@/services/AccountService';
+import { getUserSettings } from '@/utils/storage-utils';
 import { ensureFxFields } from '@/services/FxConversionService';
 import {
   TransactionValidationError,
@@ -81,6 +83,54 @@ interface SaveOptions {
   showPatternToast?: boolean;
   combineToasts?: boolean;
 }
+
+
+const ACCOUNT_PLACEHOLDER_VALUES = new Set(['', 'select account', 'unknown', 'n/a', 'none']);
+
+const normalizeAccountNameForCompare = (value: string): string =>
+  value.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+
+const ensureAccountExistsForTransaction = (accountValue?: string): string | undefined => {
+  if (typeof accountValue !== 'string') {
+    return accountValue;
+  }
+
+  const trimmedValue = accountValue.trim();
+  if (!trimmedValue) {
+    return accountValue;
+  }
+
+  const accountById = accountService.getAccountById(trimmedValue);
+  if (accountById) {
+    return accountById.id;
+  }
+
+  const normalizedInput = normalizeAccountNameForCompare(trimmedValue);
+  if (ACCOUNT_PLACEHOLDER_VALUES.has(normalizedInput)) {
+    return trimmedValue;
+  }
+
+  const existingAccount = accountService
+    .getAccounts()
+    .find((account) => normalizeAccountNameForCompare(account.name) === normalizedInput);
+
+  if (existingAccount) {
+    return existingAccount.name;
+  }
+
+  const settingsCurrency = getUserSettings()?.currency;
+  const newAccount = accountService.addAccount({
+    id: uuidv4(),
+    name: trimmedValue,
+    type: 'Bank',
+    currency: settingsCurrency || 'SAR',
+    initialBalance: 0,
+    startDate: new Date().toISOString().split('T')[0],
+    tags: [],
+  });
+
+  return newAccount.name;
+};
 
 // ============================================================================
 // SECTION: Main Save Function
@@ -124,7 +174,13 @@ export function saveTransactionWithLearning(
     throw new TransactionValidationError(errors);
   }
 
-  const sanitizedVendor = sanitizeVendorName(transaction.vendor || '');
+  const transactionWithAccounts: Transaction = {
+    ...transaction,
+    fromAccount: ensureAccountExistsForTransaction(transaction.fromAccount),
+    toAccount: ensureAccountExistsForTransaction(transaction.toAccount),
+  };
+
+  const sanitizedVendor = sanitizeVendorName(transactionWithAccounts.vendor || '');
   const knownVendorNames = [
     ...Object.keys(getVendorData() || {}),
     ...Object.keys(loadVendorFallbacks()),
@@ -137,14 +193,14 @@ export function saveTransactionWithLearning(
 
   if (!existingVendorName && isVendorNameValid(sanitizedVendor)) {
     addUserVendor(sanitizedVendor, {
-      type: transaction.type,
-      category: transaction.category,
-      subcategory: transaction.subcategory || 'none',
+      type: transactionWithAccounts.type,
+      category: transactionWithAccounts.category,
+      subcategory: transactionWithAccounts.subcategory || 'none',
     });
   }
 
   const newTransaction: Transaction = ensureFxFields({
-    ...transaction,
+    ...transactionWithAccounts,
     vendor: effectiveVendorName,
     id: transaction.id || uuidv4(),
     source: transaction.source || 'manual',
@@ -234,8 +290,8 @@ export function saveTransactionWithLearning(
 
     // Vendor Remapping - user corrected vendor name
     const rawDetectedVendorToken =
-      typeof transaction.details?.detectedVendorToken === 'string'
-        ? transaction.details.detectedVendorToken
+      typeof transactionWithAccounts.details?.detectedVendorToken === 'string'
+        ? transactionWithAccounts.details.detectedVendorToken
         : placeholders?.vendor;
 
     const normalizedDetectedToken = normalizeVendorNameForCompare(
@@ -260,14 +316,14 @@ export function saveTransactionWithLearning(
     // FromAccount Remapping - user corrected account name
     if (
       rawMessage &&
-      transaction.fromAccount &&
+      transactionWithAccounts.fromAccount &&
       placeholders?.account &&
-      transaction.fromAccount !== placeholders.account
+      transactionWithAccounts.fromAccount !== placeholders.account
     ) {
       const fromAccountMap = JSON.parse(
         safeStorage.getItem('xpensia_fromaccount_map') || '{}',
       );
-      fromAccountMap[placeholders.account] = transaction.fromAccount;
+      fromAccountMap[placeholders.account] = transactionWithAccounts.fromAccount;
       safeStorage.setItem(
         'xpensia_fromaccount_map',
         JSON.stringify(fromAccountMap),
