@@ -2,6 +2,17 @@ import { safeStorage } from "@/utils/safe-storage";
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { ENABLE_SUPABASE_AUTH } from '@/lib/env';
 import { User } from './types';
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isVerifying: boolean;
+  verificationAttemptsRemaining: number;
+  maxVerificationAttempts: number;
+  isDemoMode: boolean;
+}
+
+type AuthSetter = (value: AuthState | ((prev: AuthState) => AuthState)) => void;
 import { toast } from '@/hooks/use-toast';
 import {
   startPhoneVerificationWithSupabase,
@@ -128,7 +139,7 @@ export const getUserFromLocalStorage = (): User | null => {
  */
 export const checkSupabaseAuth = async (
   setUser: (user: User) => void,
-  setAuth: (auth: unknown) => void
+  setAuth: (auth: AuthState | ((prev: AuthState) => AuthState)) => void
 ): Promise<void> => {
   if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured()) {
     try {
@@ -161,7 +172,7 @@ export const checkSupabaseAuth = async (
           };
           
           setUser(updatedUser);
-          setAuth((prev: unknown) => ({
+          setAuth((prev: AuthState) => ({
             ...prev,
             isAuthenticated: updatedUser.phoneVerified,
             isLoading: false,
@@ -181,7 +192,7 @@ export const checkSupabaseAuth = async (
   }
   
   // If we get here, either Supabase auth failed or it's disabled
-  setAuth((prev: unknown) => ({ ...prev, isLoading: false }));
+  setAuth((prev: AuthState) => ({ ...prev, isLoading: false }));
 };
 
 /**
@@ -206,12 +217,12 @@ export const getVerificationSessionTimeout = (): number => {
 export const startPhoneVerification = async (
   phoneNumber: string,
   setIsLoading: (isLoading: boolean) => void,
-  setAuth: (auth: unknown) => void,
+  setAuth: (auth: AuthState | ((prev: AuthState) => AuthState)) => void,
   updateUser: (userData: Partial<User>) => void,
   updateAuthState: () => void
 ): Promise<boolean> => {
   setIsLoading(true);
-  setAuth((prev: unknown) => ({ ...prev, isVerifying: true }));
+  setAuth((prev: AuthState) => ({ ...prev, isVerifying: true }));
   
   try {
     // Check if we should use Supabase for verification
@@ -273,7 +284,7 @@ export const startPhoneVerification = async (
 export const confirmPhoneVerification = async (
   code: string,
   setIsLoading: (isLoading: boolean) => void,
-  setAuth: (auth: unknown) => void,
+  setAuth: (auth: AuthState | ((prev: AuthState) => AuthState)) => void,
   updateUser: (userData: Partial<User>) => void,
   updateAuthState: () => void
 ): Promise<boolean> => {
@@ -289,7 +300,7 @@ export const confirmPhoneVerification = async (
           phoneVerified: true,
           registrationStarted: true
         });
-        setAuth((prev: unknown) => ({ 
+        setAuth((prev: AuthState) => ({ 
           ...prev, 
           isVerifying: false,
           isAuthenticated: true // Set authenticated when phone is verified
@@ -313,7 +324,7 @@ export const confirmPhoneVerification = async (
           phoneVerified: true,
           registrationStarted: true
         });
-        setAuth((prev: unknown) => ({ 
+        setAuth((prev: AuthState) => ({ 
           ...prev, 
           isVerifying: false,
           isAuthenticated: true // Set authenticated when phone is verified in demo mode too
@@ -342,7 +353,7 @@ export const confirmPhoneVerification = async (
  */
 export const logIn = async (
   updateUser: (userData: Partial<User>) => void,
-  setAuth: (auth: unknown) => void,
+  setAuth: (auth: AuthState | ((prev: AuthState) => AuthState)) => void,
   user: User | null
 ): Promise<void> => {
   if (ENABLE_SUPABASE_AUTH && isSupabaseConfigured() && !isDemoMode()) {
@@ -350,7 +361,7 @@ export const logIn = async (
     // We just need to check if we're already authenticated
     const isAuthenticated = await isAuthenticatedWithSupabase();
     
-    setAuth((prev: unknown) => ({ 
+    setAuth((prev: AuthState) => ({ 
       ...prev, 
       isAuthenticated: isAuthenticated || prev.isAuthenticated 
     }));
@@ -358,7 +369,7 @@ export const logIn = async (
     // When not using Supabase, handle auth state locally
     // Preserve existing isAuthenticated if already true (e.g., from completeOnboarding)
     // Otherwise, set based on phone verification
-    setAuth((prev: unknown) => ({ 
+    setAuth((prev: AuthState) => ({ 
       ...prev, 
       isAuthenticated: prev.isAuthenticated || user?.phoneVerified || false
     }));
@@ -377,7 +388,7 @@ export const logIn = async (
  * @param setUser Function to set user state
  */
 export const logOut = async (
-  setAuth: (auth: unknown) => void,
+  setAuth: (auth: AuthState | ((prev: AuthState) => AuthState)) => void,
   setUser: (user: User | null) => void
 ): Promise<void> => {
   try {
@@ -387,7 +398,7 @@ export const logOut = async (
     }
     
     // Clear local state
-    setAuth((prev: unknown) => ({ 
+    setAuth((prev: AuthState) => ({ 
       ...prev, 
       isAuthenticated: false,
       isDemoMode: isDemoMode()

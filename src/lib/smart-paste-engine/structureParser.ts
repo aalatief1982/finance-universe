@@ -131,9 +131,9 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
       template: '',
       templateHash: '',
       matched: false,
-      directFields: {},
-      inferredFields: {},
-      defaultValues: {},
+      directFields: {} as Record<string, ParsedField>,
+      inferredFields: {} as Record<string, ParsedField>,
+      defaultValues: {} as Record<string, ParsedField>,
       candidates: { accountCandidates: [] },
     };
   }

@@ -89,10 +89,12 @@ const SmartPaste = ({
     try {
       const parsed = parseSmsMessage(text, senderHint);
       if (parsed.matched) {
+        const fields = parsed.inferredFields as Record<string, { value: string }>;
+        const directFields = parsed.directFields as Record<string, { value: string }>;
         const bank =
-          parsed.inferredFields.vendor?.value ||
-          parsed.directFields.vendor?.value ||
-          parsed.directFields.fromAccount?.value ||
+          fields.vendor?.value ||
+          directFields.vendor?.value ||
+          directFields.fromAccount?.value ||
           '';
         setMatchStatus(`Matched template from ${bank || 'saved template'}`);
         setHasMatch(true);
