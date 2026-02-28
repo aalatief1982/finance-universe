@@ -561,7 +561,7 @@ const Settings = () => {
                     }
 
                     if (!isDefaultCurrencySet()) {
-                      window.dispatchEvent(new CustomEvent('xpensia:open-default-currency-gate'));
+                      navigate('/set-default-currency');
                       return;
                     }
 
