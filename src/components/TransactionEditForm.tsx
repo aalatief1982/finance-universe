@@ -108,7 +108,6 @@ import {
   validateTransactionForm,
 } from '@/lib/transaction-validation';
 import { parseAmount } from '@/lib/amount';
-import { v4 as uuidv4 } from 'uuid';
 
 const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
   'amount',
@@ -416,7 +415,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     return parsed !== null ? Math.abs(parsed) : null;
   });
 
-  const normalizedFromAccountValue = normalizeText(editedTransaction.fromAccount);
   const filteredFromAccounts = useMemo(() => {
     const query = normalizeText(editedTransaction.fromAccount);
 
@@ -428,9 +426,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       normalizeText(account.name).includes(query),
     );
   }, [accounts, editedTransaction.fromAccount]);
-  const hasFromAccountExactMatch = accounts.some(
-    (account) => normalizeText(account.name) === normalizedFromAccountValue,
-  );
 
   const hydrationSnapshotKey = useMemo(() => {
     const baseline = createInitialTransactionState(transaction);
@@ -799,49 +794,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const refreshAccounts = () => {
     setAccounts(accountService.getAccounts());
-  };
-
-  const createAccountFromText = (rawName: string): Account | null => {
-    const accountName = rawName.trim();
-    if (!accountName) {
-      return null;
-    }
-
-    const existingAccount = accountService.getAccountByName(accountName);
-    if (existingAccount) {
-      return existingAccount;
-    }
-
-    const defaultCurrency = getUserSettings()?.currency || 'SAR';
-    const newAccount: Account = {
-      id: uuidv4(),
-      name: accountName,
-      type: 'Bank',
-      currency: defaultCurrency,
-      initialBalance: 0,
-      startDate: new Date().toISOString().split('T')[0],
-      tags: [],
-    };
-
-    accountService.addAccount(newAccount);
-    refreshAccounts();
-
-    return newAccount;
-  };
-
-  const confirmFromAccountEntry = () => {
-    const accountName = editedTransaction.fromAccount?.trim();
-    if (!accountName) {
-      return;
-    }
-
-    const selectedAccount = createAccountFromText(accountName);
-    if (!selectedAccount) {
-      return;
-    }
-
-    handleChange('fromAccount', selectedAccount.name);
-    setFromAccountOpen(false);
   };
 
   const handleSaveCategory = () => {
@@ -1786,10 +1738,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 }, 120);
               }}
               onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  confirmFromAccountEntry();
-                }
                 if (event.key === 'Escape') {
                   setFromAccountOpen(false);
                 }
@@ -1826,16 +1774,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                     {account.name}
                   </button>
                 ))}
-                {!hasFromAccountExactMatch && editedTransaction.fromAccount?.trim() && (
-                  <button
-                    type="button"
-                    className="block w-full px-3 py-2 text-left text-sm font-medium text-primary hover:bg-muted"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={confirmFromAccountEntry}
-                  >
-                    Create “{editedTransaction.fromAccount.trim()}”
-                  </button>
-                )}
               </div>
             )}
           </div>
