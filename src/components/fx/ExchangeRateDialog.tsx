@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { getUserSettings } from '@/utils/storage-utils';
 import { ExchangeRate } from '@/models/exchange-rate';
@@ -19,6 +18,7 @@ import { addExchangeRate, updateExchangeRate } from '@/services/ExchangeRateServ
 import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
 import { formatCurrencyFlagCode, getAvailableCurrencies } from '@/lib/currency-utils';
 import { toast } from '@/components/ui/use-toast';
+import CurrencySelect from '@/components/currency/CurrencySelect';
 
 interface ExchangeRateDialogProps {
   open: boolean;
@@ -138,18 +138,12 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
               />
             ) : (
               <div className="flex items-center gap-1">
-                <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                  <SelectTrigger id="from-currency" className="w-full">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCurrencies.map((currency) => (
-                      <SelectItem key={currency} value={currency}>
-                        {formatCurrencyFlagCode(currency, currency)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CurrencySelect
+                  id="from-currency"
+                  value={fromCurrency}
+                  onChange={setFromCurrency}
+                  currencies={availableCurrencies}
+                />
                 <Button
                   type="button"
                   variant="outline"

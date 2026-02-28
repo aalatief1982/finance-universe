@@ -22,6 +22,7 @@ import { Check, X, Edit, Globe, Coins, Building, ArrowRightLeft, User } from 'lu
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CurrencySelect from '@/components/currency/CurrencySelect';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { SupportedCurrency } from '@/types/locale';
@@ -396,19 +397,12 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               
               <div className="space-y-2">
                 <label className="text-sm font-medium" htmlFor="sms-edit-currency">Currency</label>
-                <Select 
+                <CurrencySelect
+                  id="sms-edit-currency"
                   value={editedTransaction.currency || 'USD'}
-                  onValueChange={(value) => handleChange('currency', value as SupportedCurrency)}
-                >
-                  <SelectTrigger id="sms-edit-currency">
-                    <SelectValue placeholder="Select currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CURRENCIES.map(currency => (
-                      <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(value) => handleChange('currency', value as SupportedCurrency)}
+                  currencies={CURRENCIES}
+                />
               </div>
             </div>
             

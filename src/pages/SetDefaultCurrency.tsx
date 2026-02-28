@@ -64,7 +64,7 @@ const SetDefaultCurrency: React.FC = () => {
   };
 
   return (
-    <div className="flex h-dvh flex-col bg-background text-foreground">
+    <div className="flex h-dvh flex-col overflow-hidden overscroll-none bg-background text-foreground">
       <div className="sticky top-0 z-10 space-y-3 border-b bg-background p-4">
         <Button onClick={handleSave} disabled={!selectedCurrency || isSaving} className="w-full">
           {isSaving ? 'Saving...' : 'Save & Continue'}
@@ -78,7 +78,7 @@ const SetDefaultCurrency: React.FC = () => {
         />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="min-h-0 flex-1 overflow-y-auto p-3 [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]">
         <div className="space-y-2">
           {filteredCurrencies.map((currency) => (
             <label

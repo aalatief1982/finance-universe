@@ -22,6 +22,7 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CurrencySelect from '@/components/currency/CurrencySelect';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -893,16 +894,12 @@ const SetBudgetPage = () => {
                   className="text-lg font-medium"
                 />
               </div>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="w-24">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CurrencySelect
+                value={currency}
+                onChange={setCurrency}
+                currencies={CURRENCIES}
+                className="w-24"
+              />
             </div>
 
             {/* Cascade Preview for Overall scope */}
