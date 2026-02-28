@@ -17,6 +17,7 @@
  * - [ ] Navigation hooks are wired correctly
  */
 import { safeStorage } from "@/utils/safe-storage";
+import { setDefaultCurrencyRequired } from '@/utils/default-currency';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
@@ -60,6 +61,7 @@ const Onboarding = () => {
     console.log('Onboarding completed');
     safeStorage.setItem('xpensia_onb_done', 'true');
     safeStorage.setItem('xpensia_onb_just_completed', 'true'); // New flag
+    setDefaultCurrencyRequired(true);
     
     // Log onboarding completion
     logAnalyticsEvent('onboarding_complete', {

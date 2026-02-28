@@ -2,6 +2,7 @@ import { CURRENCIES } from '@/lib/categories-data';
 import { safeStorage } from '@/utils/safe-storage';
 
 const USER_SETTINGS_STORAGE_KEY = 'xpensia_user_settings';
+const DEFAULT_CURRENCY_REQUIRED_KEY = 'xpensia_default_currency_required';
 const FALLBACK_CURRENCY = 'USD';
 
 type StoredSettings = {
@@ -41,5 +42,18 @@ export const getDefaultCurrency = (): string | null => {
 };
 
 export const isDefaultCurrencySet = (): boolean => getDefaultCurrency() !== null;
+
+export const setDefaultCurrencyRequired = (required: boolean): void => {
+  safeStorage.setItem(DEFAULT_CURRENCY_REQUIRED_KEY, required ? 'true' : 'false');
+};
+
+export const isDefaultCurrencySelectionRequired = (): boolean => {
+  const requiredFlag = safeStorage.getItem(DEFAULT_CURRENCY_REQUIRED_KEY) === 'true';
+  return requiredFlag || !isDefaultCurrencySet();
+};
+
+export const markDefaultCurrencySelectionCompleted = (): void => {
+  setDefaultCurrencyRequired(false);
+};
 
 export const getCurrencyOrAppFallback = (): string => getDefaultCurrency() ?? FALLBACK_CURRENCY;

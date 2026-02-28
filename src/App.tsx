@@ -70,8 +70,8 @@ import { UpdateDialog } from '@/components/UpdateDialog';
 import SmsPermissionPrompt from '@/components/SmsPermissionPrompt';
 import { useTheme } from 'next-themes';
 import { trackNavigationPath } from '@/utils/navigation';
-import DefaultCurrencyModal from '@/components/DefaultCurrencyModal';
-import { isDefaultCurrencySet, getDefaultCurrency } from '@/utils/default-currency';
+import { isDefaultCurrencySelectionRequired } from '@/utils/default-currency';
+import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -103,8 +103,6 @@ function AppWrapper() {
   const location = useLocation();
   const navigateRef = React.useRef(navigate);
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
-  const [showDefaultCurrencyGate, setShowDefaultCurrencyGate] = useState(false);
-  const [selectedDefaultCurrency, setSelectedDefaultCurrency] = useState('');
   const hasScheduledSmsPrompt = React.useRef(false);
   const { theme, resolvedTheme } = useTheme();
   const previousPathRef = React.useRef(location.pathname);
@@ -117,24 +115,8 @@ function AppWrapper() {
     theme,
     resolvedTheme,
   });
-  const { user, auth, updateCurrency } = useUser();
+  const { user, auth } = useUser();
   const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
-
-  const evaluateDefaultCurrencyGate = React.useCallback(() => {
-    const shouldShow = onboardingDone && !isDefaultCurrencySet();
-    setShowDefaultCurrencyGate(shouldShow);
-
-    if (shouldShow) {
-      setShowSmsPrompt(false);
-      setSelectedDefaultCurrency(getDefaultCurrency() ?? '');
-      return;
-    }
-
-    const storedCurrency = getDefaultCurrency();
-    if (storedCurrency) {
-      setSelectedDefaultCurrency(storedCurrency);
-    }
-  }, [onboardingDone]);
 
   traceState('AppWrapper render state', {
     pathname: location.pathname,
@@ -160,20 +142,6 @@ function AppWrapper() {
       pathname: location.pathname,
     });
   }, [location.pathname]);
-
-  useEffect(() => {
-    evaluateDefaultCurrencyGate();
-  }, [evaluateDefaultCurrencyGate, location.pathname]);
-
-  useEffect(() => {
-    const openGate = () => {
-      setShowDefaultCurrencyGate(true);
-      setShowSmsPrompt(false);
-    };
-
-    window.addEventListener('xpensia:open-default-currency-gate', openGate);
-    return () => window.removeEventListener('xpensia:open-default-currency-gate', openGate);
-  }, []);
 
   useEffect(() => {
     traceState('theme state transition check', {
@@ -560,8 +528,8 @@ function AppWrapper() {
       // Prevent double-scheduling
       if (hasScheduledSmsPrompt.current) return;
 
-      if (onboardingDone && !isDefaultCurrencySet()) {
-        setShowDefaultCurrencyGate(true);
+      if (onboardingDone && isDefaultCurrencySelectionRequired()) {
+        setShowSmsPrompt(false);
         return;
       }
 
@@ -607,49 +575,11 @@ function AppWrapper() {
     checkAndMaybeShowSmsPrompt();
   }, [location.pathname, onboardingDone]);
 
-  const handleSaveDefaultCurrency = React.useCallback(async () => {
-    if (!selectedDefaultCurrency) return;
-
-    updateCurrency(selectedDefaultCurrency as Parameters<typeof updateCurrency>[0]);
-    setShowDefaultCurrencyGate(false);
-
-    const justCompleted = safeStorage.getItem('xpensia_onb_just_completed') === 'true';
-    const isNative = Capacitor.isNativePlatform();
-    const isAndroid = Capacitor.getPlatform() === 'android';
-    const alreadyPrompted = safeStorage.getItem('sms_prompt_shown') === 'true';
-
-    if (!justCompleted || alreadyPrompted) {
-      return;
-    }
-
-    try {
-      const { smsPermissionService } = await import('@/services/SmsPermissionService');
-      const permissionStatus = await smsPermissionService.checkPermissionStatus();
-      if (permissionStatus.granted) {
-        safeStorage.setItem('sms_prompt_shown', 'true');
-        safeStorage.removeItem('xpensia_onb_just_completed');
-        return;
-      }
-    } catch (e) {
-      console.warn('[App] Error checking permission status after default currency save:', e);
-    }
-
-    hasScheduledSmsPrompt.current = true;
-    safeStorage.removeItem('xpensia_onb_just_completed');
-    setShowSmsPrompt(true);
-  }, [selectedDefaultCurrency, updateCurrency]);
-
   return (
     <>
       <ScrollToTop />
-      <DefaultCurrencyModal
-        open={showDefaultCurrencyGate}
-        selectedCurrency={selectedDefaultCurrency}
-        onCurrencyChange={setSelectedDefaultCurrency}
-        onSave={handleSaveDefaultCurrency}
-      />
       <SmsPermissionPrompt 
-        open={showSmsPrompt && !showDefaultCurrencyGate} 
+        open={showSmsPrompt} 
         onOpenChange={setShowSmsPrompt} 
       />
     </>
@@ -658,6 +588,7 @@ function AppWrapper() {
 
 function AppRoutes() {
   const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
+  const requiresDefaultCurrency = onboardingDone && isDefaultCurrencySelectionRequired();
   const location = useLocation();
   const previousOnboardingDoneRef = React.useRef(onboardingDone);
 
@@ -684,12 +615,32 @@ function AppRoutes() {
     });
   }, [location.pathname, onboardingDone]);
 
-  if (onboardingDone && location.pathname.startsWith('/onboarding')) {
-    traceAppRoot('AppRoutes redirect branch selected: /onboarding* -> /home');
+  if (requiresDefaultCurrency && !location.pathname.startsWith('/onboarding') && location.pathname !== '/set-default-currency') {
+    traceAppRoot('AppRoutes redirect branch selected: enforce /set-default-currency');
+    return (
+      <>
+        <AppWrapper />
+        <Navigate to="/set-default-currency" replace />
+      </>
+    );
+  }
+
+  if (!requiresDefaultCurrency && location.pathname === '/set-default-currency') {
+    traceAppRoot('AppRoutes redirect branch selected: /set-default-currency -> /home');
     return (
       <>
         <AppWrapper />
         <Navigate to="/home" replace />
+      </>
+    );
+  }
+
+  if (onboardingDone && location.pathname.startsWith('/onboarding')) {
+    traceAppRoot(`AppRoutes redirect branch selected: /onboarding* -> ${requiresDefaultCurrency ? '/set-default-currency' : '/home'}`);
+    return (
+      <>
+        <AppWrapper />
+        <Navigate to={requiresDefaultCurrency ? '/set-default-currency' : '/home'} replace />
       </>
     );
   }
@@ -712,6 +663,14 @@ function AppRoutes() {
               <ErrorBoundary name="Home Page">
                 <Home />
               </ErrorBoundary>
+            </OnboardingGuard>
+          }
+        />
+        <Route
+          path="/set-default-currency"
+          element={
+            <OnboardingGuard>
+              <SetDefaultCurrency />
             </OnboardingGuard>
           }
         />
