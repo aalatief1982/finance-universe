@@ -1,24 +1,49 @@
 
-# Fix: Unblock Build to Deploy ResizeObserver Fix to Android
 
-## Problem
+# Create SMS Flow Analysis Report
 
-The ResizeObserver toast suppression fix was applied correctly, but the app build is failing due to a pre-existing `@types/react-dnd` type error. This means the fix never reaches your Android device -- it's still running the old bundle.
+## What will be created
 
-## Root Cause of Build Failure
+A single file `docs/sms-flow-analysis-report.md` containing a comprehensive analysis of:
 
-`@types/react-dnd` uses deprecated `module` keyword syntax that newer TypeScript rejects. Since `react-dnd` v16 already includes its own built-in TypeScript definitions, the `@types/react-dnd` package is redundant and harmful.
+1. **Navigation Loop Root Cause** -- The `useEffect` at line 487 of `App.tsx` includes `location.pathname` in its dependency array (line 554). When the flow coordinator routes to `/process-sms`, the path change re-triggers the effect, creating an infinite re-render loop when provider state never resolves to "configured."
 
-## Fix
+2. **Bulk Import Flow** -- Full walkthrough of `SmsFlowCoordinator` -> `SmsImportService` -> `/vendor-mapping` -> `/review-sms-transactions`, including:
+   - Sender selection and legacy migration logic
+   - Per-sender checkpoint dates and scan windows
+   - Financial message filtering (keyword + amount + date triple-gate in `messageFilter.ts`)
+   - Vendor mapping and keyword map construction
+   - Session-level prompt guards (`autoPromptShown`, `autoPromptAccepted`)
 
-**Remove `@types/react-dnd` from `package.json`**
+3. **Real-Time SMS Listener Flow** -- How `BackgroundSmsListener` in `App.tsx` (lines 370-485):
+   - Receives all incoming SMS via native plugin
+   - Filters with `isFinancialTransactionMessage()` (no sender allow-list)
+   - Parses via `buildInferenceDTO()` -> `parseAndInferTransaction()`
+   - Auto-navigates to `/edit-transaction` when app is active, or schedules a local notification when backgrounded
 
-This is the only change needed. The `react-dnd` package (v16.0.1) already ships its own type definitions, so `@types/react-dnd` is unnecessary and is the sole cause of the build failure.
+4. **Inference Rules** -- Detailed breakdown per field:
+   - **Amount**: Regex extraction from placeholders, first numeric match
+   - **Date**: Regex with `normalizeDate()` supporting DD-MM-YY and ISO formats
+   - **Vendor**: Anchor-pattern regex (Arabic + English prepositions), domain-like fallback, salary keyword fallback
+   - **Type**: `xpensia_type_keywords` lookup (object format: `{expense: [...], income: [...]}`)
+   - **Category/Subcategory**: Keyword bank -> vendor fallback (fuzzy 70% threshold) -> income default ("Earnings > Benefits")
+   - **fromAccount/toAccount**: Direct field -> token remap -> template-hash map -> template default -> senderHint fallback
 
-No other files need to change -- all existing `react-dnd` imports will continue to work with the built-in types.
+5. **Smart Entry Intersection** -- How bulk import (`smsParser.ts`) and real-time listener both call into the same `suggestionEngine.ts` and `structureParser.ts` pipeline, but with divergent entry points and inconsistencies (e.g., `smsParser.ts` uses its own simpler regex vs `structureParser.ts` template system)
 
-## Expected Result
+6. **Guardrails Inventory** -- Table of all existing guards: import lock, `MAX_SAFE_LIMIT`, `isCancelled` flag, platform checks, session prompt flags, empty-string guards in fuzzy matching
 
-- Build succeeds
-- ResizeObserver toast suppression fix gets deployed
-- Android device loads the new bundle without the error toasts
+7. **UX/UI Consultancy** -- Expert recommendations:
+   - Fix the navigation loop (remove `location.pathname` from deps, add `useRef` guard)
+   - Replace `window.confirm/alert` with themed in-app dialogs
+   - Queue real-time SMS as non-blocking notifications instead of auto-navigating
+   - Add sender allow-list to real-time listener
+   - Add transaction deduplication (hash of sender + body + date)
+   - Collapse the 4-step import flow into fewer screens
+
+## Technical details
+
+- Single new file: `docs/sms-flow-analysis-report.md`
+- No code modifications
+- Report structured with clear sections, tables, and code references with line numbers
+
