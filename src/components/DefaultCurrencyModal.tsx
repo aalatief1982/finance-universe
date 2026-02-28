@@ -90,6 +90,7 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
               onChange={handleCurrencyChange}
               displayMode="codePlusCountry"
               searchAutoFocus={false}
+              openFocusTarget="selectedItem"
               dropdownContentClassName="max-h-[320px]"
               dropdownListClassName="max-h-[280px]"
               className={showCurrencyError ? 'border-destructive text-destructive' : undefined}

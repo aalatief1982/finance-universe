@@ -16,6 +16,7 @@ interface CurrencyComboboxProps {
   searchAutoFocus?: boolean;
   dropdownContentClassName?: string;
   dropdownListClassName?: string;
+  openFocusTarget?: 'search' | 'selectedItem';
 }
 
 const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
@@ -28,10 +29,12 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
   searchAutoFocus = true,
   dropdownContentClassName,
   dropdownListClassName,
+  openFocusTarget = 'search',
 }) => {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
   const [options, setOptions] = React.useState<AvailableCurrency[]>(() => getAvailableCurrencyOptions());
+  const optionRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
 
   React.useEffect(() => {
     if (!open) return;
@@ -47,6 +50,21 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
     : options;
 
   const selected = options.find((currency) => currency.code === value);
+
+  React.useEffect(() => {
+    if (!open || openFocusTarget !== 'selectedItem') return;
+
+    const fallbackCode = filtered[0]?.code;
+    const targetCode = value && optionRefs.current[value] ? value : fallbackCode;
+    if (!targetCode) return;
+
+    requestAnimationFrame(() => {
+      const targetElement = optionRefs.current[targetCode];
+      if (!targetElement) return;
+      targetElement.focus();
+      targetElement.scrollIntoView({ block: 'nearest' });
+    });
+  }, [filtered, open, openFocusTarget, value]);
 
   const renderOptionLabel = (currency: AvailableCurrency) => {
     if (displayMode === 'codePlusCountry') {
@@ -76,6 +94,11 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
       <PopoverContent
         className={cn('w-[var(--radix-popover-trigger-width)] p-0', dropdownContentClassName)}
         align="start"
+        onOpenAutoFocus={(event) => {
+          if (openFocusTarget === 'selectedItem') {
+            event.preventDefault();
+          }
+        }}
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -91,6 +114,10 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
                 <CommandItem
                   key={currency.code}
                   value={`${currency.code}-${currency.countryCode}`}
+                  ref={(element) => {
+                    optionRefs.current[currency.code] = element;
+                  }}
+                  tabIndex={-1}
                   onSelect={() => {
                     onChange(currency.code);
                     setOpen(false);
