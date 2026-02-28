@@ -314,7 +314,7 @@ const EditTransaction = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleStayOnPage}>Stay</AlertDialogCancel>
+            <AlertDialogCancel><span onClick={handleStayOnPage}>Stay</span></AlertDialogCancel>
             <AlertDialogAction onClick={handleDiscardChanges}>Discard</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -215,7 +215,7 @@ export class SmsImportService {
       // For permission-date-based import, use the dedicated logic
       // This handles both initial import after permission grant and subsequent auto imports
       if (usePermissionDate) {
-        await this.handleAutoImportWithPermissionDate(safeNavigate as unknown);
+        await this.handleAutoImportWithPermissionDate(safeNavigate as (path: string, options?: unknown) => void);
         return;
       }
 

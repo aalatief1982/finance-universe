@@ -239,7 +239,7 @@ export async function parseAndInferTransaction(
   // Calculate component confidence scores
   const fieldScore = getFieldConfidence(parsed);
   const templateScore = getTemplateConfidence(templateMatched, totalTemplates);
-  const keywordScore = getKeywordConfidence(transaction, keywordBank);
+  const keywordScore = getKeywordConfidence(transaction as unknown as Parameters<typeof getKeywordConfidence>[0], keywordBank);
 
   const finalConfidence = computeOverallConfidence(
     fieldScore,

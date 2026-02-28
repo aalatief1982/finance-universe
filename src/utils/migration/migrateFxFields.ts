@@ -163,8 +163,8 @@ export const migrateFxFields = (): { migrated: number; total: number } => {
           tx.fxLockedAt = reference.fxLockedAt;
           tx.fxPair = reference.fxPair;
           // Recalculate amountInBase with correct sign
-          if (reference.fxRateToBase !== null) {
-            tx.amountInBase = tx.amount * reference.fxRateToBase;
+          if (reference.fxRateToBase !== null && reference.fxRateToBase !== undefined) {
+            tx.amountInBase = (tx.amount as number) * (reference.fxRateToBase as number);
           } else {
             tx.amountInBase = null;
           }
