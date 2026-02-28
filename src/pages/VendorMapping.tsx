@@ -109,19 +109,18 @@ const VendorMapping: React.FC = () => {
 
     const vendorSamples: Record<string, string> = {};
     messages.forEach((m: unknown) => {
-      const msg = m as Record<string, unknown>;
-      const extracted = extractVendorName(msg.message as string);
+      const extracted = extractVendorName(m.message);
       if (extracted && !vendorSamples[extracted]) {
-        vendorSamples[extracted] = msg.message as string;
+        vendorSamples[extracted] = m.message;
       }
     });
 
     const uniqueVendors = Object.keys(incomingVendorMap);
 
     const initialMappings = uniqueVendors.map(vendor => {
-      const kbEntry = incomingKeywordBank.find((entry: unknown) => (entry as Record<string, unknown>).keyword === vendor);
-      const categoryFromKB = (kbEntry as Record<string, unknown>)?.mappings ? ((kbEntry as Record<string, unknown>).mappings as Array<Record<string, string>>).find((m) => m.field === 'category')?.value : undefined;
-      const subcategoryFromKB = (kbEntry as Record<string, unknown>)?.mappings ? ((kbEntry as Record<string, unknown>).mappings as Array<Record<string, string>>).find((m) => m.field === 'subcategory')?.value : undefined;
+      const kbEntry = incomingKeywordBank.find((entry: unknown) => entry.keyword === vendor);
+      const categoryFromKB = kbEntry?.mappings.find((m: unknown) => m.field === 'category')?.value;
+      const subcategoryFromKB = kbEntry?.mappings.find((m: unknown) => m.field === 'subcategory')?.value;
       const fallbackMatch = findClosestFallbackMatch(vendor);
 
 
@@ -200,11 +199,10 @@ const VendorMapping: React.FC = () => {
       const allMessages = state?.messages || [];
       const senderDates: Record<string, string> = {};
       allMessages.forEach((m: unknown) => {
-        const msg = m as Record<string, string>;
-        if (msg.sender) {
-          const existing = senderDates[msg.sender];
-          if (!existing || new Date(msg.date).getTime() > new Date(existing).getTime()) {
-            senderDates[msg.sender] = msg.date;
+        if (m.sender) {
+          const existing = senderDates[m.sender];
+          if (!existing || new Date(m.date).getTime() > new Date(existing).getTime()) {
+            senderDates[m.sender] = m.date;
           }
         }
       });
@@ -246,32 +244,29 @@ const VendorMapping: React.FC = () => {
 
     const senderVendorUpdates: Record<string, Record<string, string>> = {};
     allMessages.forEach((m: unknown) => {
-      const msg = m as Record<string, string>;
-      if (!msg.sender) return;
-      const extracted = extractVendorName(msg.message);
+      if (!m.sender) return;
+      const extracted = extractVendorName(m.message);
       if (!extracted) return;
 
       const mappedVendor = vendorMap[extracted];
       if (!mappedVendor) return;
 
-      if (!senderVendorUpdates[msg.sender]) {
-        senderVendorUpdates[msg.sender] = {};
+      if (!senderVendorUpdates[m.sender]) {
+        senderVendorUpdates[m.sender] = {};
       }
 
-      senderVendorUpdates[msg.sender][extracted] = mappedVendor;
+      senderVendorUpdates[m.sender][extracted] = mappedVendor;
     });
     updateSmsSenderVendorMappings(senderVendorUpdates);
 
     const allowed = new Set(vendors.filter(v => !v.skipped).map(v => v.vendor));
     const messages = allMessages.filter((m: unknown) => {
-      const msg = m as Record<string, string>;
-      const extracted = extractVendorName(msg.message);
+      const extracted = extractVendorName(m.message);
       return extracted && allowed.has(extracted);
     });
 
     const skippedMsgs = allMessages.filter((m: unknown) => {
-      const msg = m as Record<string, string>;
-      const extracted = extractVendorName(msg.message);
+      const extracted = extractVendorName(m.message);
       return extracted && skippedVendors.includes(extracted);
     });
 

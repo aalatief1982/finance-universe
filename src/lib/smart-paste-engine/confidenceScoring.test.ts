@@ -13,9 +13,9 @@ describe('confidence scoring', () => {
 
   it('calculates field confidence based on available fields', () => {
     const parsed = {
-      directFields: { amount: { value: '100', confidenceScore: 1, source: 'direct' as const, confidence: 1 }, currency: { value: 'SAR', confidenceScore: 1, source: 'direct' as const, confidence: 1 } },
-      inferredFields: { category: { value: 'Food', confidenceScore: 0.8, source: 'inferred' as const, confidence: 0.8 } },
-      defaultValues: { type: { value: 'expense', confidenceScore: 0.5, source: 'default' as const, confidence: 0.5 } },
+      directFields: { amount: 100, currency: 'SAR' },
+      inferredFields: { category: 'Food' },
+      defaultValues: { type: 'expense' },
     };
     expect(getFieldConfidence(parsed)).toBe(4 / 8);
   });

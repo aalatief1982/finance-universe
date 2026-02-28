@@ -45,7 +45,7 @@ export const validateTransactionForStorage = (transaction: unknown): Transaction
     baseCurrency: getString(record.baseCurrency) || undefined,
     amountInBase: typeof record.amountInBase === 'number' ? record.amountInBase : (record.amountInBase === null ? null : undefined),
     fxRateToBase: typeof record.fxRateToBase === 'number' ? record.fxRateToBase : (record.fxRateToBase === null ? null : undefined),
-    fxSource: (['identity', 'cached', 'api', 'manual', 'missing'] as const).includes(record.fxSource as 'identity' | 'cached' | 'api' | 'manual' | 'missing') ? (record.fxSource as Transaction['fxSource']) : undefined,
+    fxSource: (['identity', 'cached', 'api', 'manual', 'missing'] as const).includes(record.fxSource as unknown) ? (record.fxSource as Transaction['fxSource']) : undefined,
     fxLockedAt: getString(record.fxLockedAt) || (record.fxLockedAt === null ? null : undefined),
     fxPair: getString(record.fxPair) || (record.fxPair === null ? null : undefined),
     // Transfer & metadata fields

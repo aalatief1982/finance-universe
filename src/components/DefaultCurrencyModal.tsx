@@ -42,12 +42,21 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
     onCurrencyChange(currency);
   };
 
+  const focusCurrencyDropdown = () => {
+    const trigger = document.getElementById('default-currency-gate-select');
+    if (!trigger) return;
+
+    trigger.focus();
+    trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  };
+
   const handleSaveClick = async () => {
     if (isSaving) return;
 
     setSubmitAttempted(true);
 
     if (!selectedCurrency) {
+      focusCurrencyDropdown();
       return;
     }
 
@@ -76,8 +85,13 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
 
           <div className="space-y-2 rounded-md border border-primary/20 bg-primary/5 p-3">
             <CurrencyCombobox
-              value={selectedCurrency || undefined}
+              id="default-currency-gate-select"
+              value={selectedCurrency}
               onChange={handleCurrencyChange}
+              displayMode="codePlusCountry"
+              searchAutoFocus={false}
+              dropdownContentClassName="max-h-[320px]"
+              dropdownListClassName="max-h-[280px]"
               className={showCurrencyError ? 'border-destructive text-destructive' : undefined}
             />
             {showCurrencyError ? (

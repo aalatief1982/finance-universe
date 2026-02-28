@@ -395,7 +395,7 @@ const toggleSkipAll = () => {
       };
 
       const originalTxn = transactions[idx];
-      saveTransactionWithLearning(cleanTransaction as Transaction, {
+      saveTransactionWithLearning(cleanTransaction as unknown, {
         rawMessage: originalTxn.rawMessage,
         senderHint: normalizedFromAccount || normalizedToAccount || '',
         isNew: true,

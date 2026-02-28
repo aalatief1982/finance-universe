@@ -564,7 +564,7 @@ const Analytics: React.FC = () => {
               />
 
               {hasHistory && (categoryDrivers.length > 0 || merchantDrivers.length > 0) && (
-                <div ref={driversRef as React.RefObject<HTMLDivElement>}>
+                <div ref={driversRef}>
                   <AnalyticsDriversSection
                     categoryDrivers={categoryDrivers}
                     merchantDrivers={merchantDrivers}
@@ -583,7 +583,7 @@ const Analytics: React.FC = () => {
                 </Card>
               )}
 
-              <div ref={actionsRef as React.RefObject<HTMLDivElement>}>
+              <div ref={actionsRef}>
                 <AnalyticsActionsSection actions={actions} />
               </div>
 

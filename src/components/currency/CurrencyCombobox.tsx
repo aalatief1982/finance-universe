@@ -24,7 +24,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
   placeholder = 'Select currency',
   id,
   className,
-  displayMode = 'codePlusCountry',
+  displayMode = 'codeOnly',
   searchAutoFocus = true,
   dropdownContentClassName,
   dropdownListClassName,
@@ -41,7 +41,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
   const normalizedSearch = search.trim().toLowerCase();
   const filtered = normalizedSearch
     ? options.filter((currency) => {
-      const searchable = `${currency.code} ${currency.name} ${currency.country}`.toLowerCase();
+      const searchable = `${currency.code} ${currency.name}`.toLowerCase();
       return searchable.includes(normalizedSearch);
     })
     : options;

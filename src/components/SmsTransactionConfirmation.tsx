@@ -25,8 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { SupportedCurrency } from '@/types/locale';
-import { CATEGORY_HIERARCHY, getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
-import CurrencyCombobox from '@/components/currency/CurrencyCombobox';
+import { CATEGORY_HIERARCHY, CURRENCIES, getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
 import { getPeopleNames, addUserPerson } from '@/lib/people-utils';
 import { Plus } from 'lucide-react';
 import { TransactionType } from '@/types/transaction';
@@ -397,11 +396,19 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               
               <div className="space-y-2">
                 <label className="text-sm font-medium" htmlFor="sms-edit-currency">Currency</label>
-                <CurrencyCombobox
-                  id="sms-edit-currency"
+                <Select 
                   value={editedTransaction.currency || 'USD'}
-                  onChange={(value) => handleChange('currency', value as SupportedCurrency)}
-                />
+                  onValueChange={(value) => handleChange('currency', value as SupportedCurrency)}
+                >
+                  <SelectTrigger id="sms-edit-currency">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(currency => (
+                      <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             

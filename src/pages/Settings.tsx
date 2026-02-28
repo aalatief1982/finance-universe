@@ -77,7 +77,7 @@ import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
 import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
@@ -338,7 +338,7 @@ const Settings = () => {
           path: fileName,
           data: csv,
           directory: Directory.Documents,
-          encoding: Encoding.UTF8
+          encoding: 'utf8' as unknown
         });
         toast({
           title: 'Export successful',
@@ -395,8 +395,8 @@ const Settings = () => {
 
           if (!confirmImport) return;
 
-          const merged = [...existing, ...data];
-          storeTransactions(merged);
+          const merged = [...existing, ...(data as unknown[])];
+          storeTransactions(merged as unknown);
           
           // Log import success
           logAnalyticsEvent('data_import', {

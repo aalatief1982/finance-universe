@@ -118,7 +118,7 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, un
       logEntry.keywordBank = keywordBank || '';
     }
 
-    await logToGoogleSheets(logEntry as unknown as Parameters<typeof logToGoogleSheets>[0]);
+    await logToGoogleSheets(logEntry);
     
   } catch (err) {
    

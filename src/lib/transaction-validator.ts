@@ -53,7 +53,7 @@ const toTransactionValidatorShape = (input: unknown): TransactionValidatorShape 
     return null;
   }
 
-  return { amount, date, type, category, subcategory: subcategory as string | undefined };
+  return { amount, date, type, category, subcategory };
 };
 
 export function validateTransactionInput(input: unknown): TransactionValidationResult {

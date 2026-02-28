@@ -30,7 +30,7 @@ import { Capacitor } from '@capacitor/core';
 // Add a small cache and in-flight guard to avoid repeatedly calling native checkPermissionWithRationale
 let _lastPermissionCheckTime = 0;
 let _lastPermissionCheckResult: { granted: boolean; shouldShowRationale?: boolean } | null = null;
-let _permissionCheckInFlight: Promise<{ granted: boolean; shouldShowRationale?: boolean }> | null = null;
+let _permissionCheckInFlight: Promise<unknown> | null = null;
 const PERMISSION_CHECK_CACHE_TTL = 2000; // ms
 
 // Create a wrapper around the actual plugin with better error handling
@@ -67,7 +67,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
       _permissionCheckInFlight = (async () => {
         try {
           const result = await BackgroundSmsListener.checkPermission();
-          _lastPermissionCheckResult = result as { granted: boolean; shouldShowRationale?: boolean };
+          _lastPermissionCheckResult = result as unknown;
           _lastPermissionCheckTime = Date.now();
           return result;
         } catch (err) {
@@ -92,7 +92,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
     }
   },
 
-  checkPermissionWithRationale: async (): Promise<{ granted: boolean; shouldShowRationale: boolean }> => {
+  checkPermissionWithRationale: async () => {
     try {
       if (import.meta.env.MODE === 'development') {
         // console.log('[SMS] Checking permission with rationale');
@@ -105,14 +105,14 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
         return { granted: _lastPermissionCheckResult.granted, shouldShowRationale: !!_lastPermissionCheckResult.shouldShowRationale };
       }
 
-      if (_permissionCheckInFlight) return _permissionCheckInFlight as Promise<{ granted: boolean; shouldShowRationale: boolean }>;
+      if (_permissionCheckInFlight) return _permissionCheckInFlight;
 
       _permissionCheckInFlight = (async () => {
         try {
           const result = await BackgroundSmsListener.checkPermissionWithRationale();
-          _lastPermissionCheckResult = result as { granted: boolean; shouldShowRationale?: boolean };
+          _lastPermissionCheckResult = result as unknown;
           _lastPermissionCheckTime = Date.now();
-          return result as { granted: boolean; shouldShowRationale: boolean };
+          return result;
         } catch (err) {
           if (import.meta.env.MODE === 'development') {
             console.warn('[SMS] Error checking permission rationale:', err);
@@ -126,7 +126,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
         }
       })();
 
-      return _permissionCheckInFlight as Promise<{ granted: boolean; shouldShowRationale: boolean }>;
+      return _permissionCheckInFlight;
     } catch (err) {
       if (import.meta.env.MODE === 'development') {
         console.warn('[SMS] Error checking permission rationale:', err);
@@ -145,7 +145,7 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
         // console.log('[SMS] Permission request result:', result);
       }
       // update cached result
-      _lastPermissionCheckResult = result as { granted: boolean; shouldShowRationale?: boolean };
+      _lastPermissionCheckResult = result as unknown;
       _lastPermissionCheckTime = Date.now();
       return result;
     } catch (err) {

@@ -1,12 +1,12 @@
 // utils/debugMissingCategories.ts
-export function logTransactionsMissingCategory(transactions: Array<Record<string, unknown>>) {
+export function logTransactionsMissingCategory(transactions: Array<{ id?: string; title?: string; category?: string }>) {
   if (import.meta.env.MODE === 'development') {
     console.group(`[Validation] Scanning ${transactions.length} transactions for missing category/subcategory...`);
   }
 
   let missingCategoryCount = 0;
   transactions.forEach((txn, index) => {
-    const { type, category, subcategory, rawMessage } = txn as Record<string, string>;
+    const { type, category, subcategory, rawMessage } = txn;
     if (!category || category === 'undefined') {
       if (import.meta.env.MODE === 'development') {
         console.warn(`❌ txn[${index}] is missing category:`, { type, subcategory, rawMessage });

@@ -1255,7 +1255,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               id="transaction-currency"
               value={editedTransaction.currency || 'SAR'}
               onChange={(value) => handleChange('currency', value)}
-              displayMode="codePlusCountry"
+              displayMode="codeOnly"
               className={cn(
                 'w-full text-sm',
                 inputPadding,

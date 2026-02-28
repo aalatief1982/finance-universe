@@ -251,9 +251,9 @@ export async function initializeXpensiaStorageDefaults() {
   // Step 2: Ensure vendor fallback data exists - load from local JSON if not initialized
   if (!safeStorage.getItem('xpensia_vendor_fallbacks')) {
     // Always use local JSON file as fallback during initialization
-    const dataToUse = (vendorFallbackData as Record<string, unknown>).default ?? vendorFallbackData;
+    const dataToUse = (vendorFallbackData as unknown).default ?? vendorFallbackData;
     
-    saveVendorFallbacks(dataToUse as Parameters<typeof saveVendorFallbacks>[0]);
+    saveVendorFallbacks(dataToUse);
     if (import.meta.env.MODE === 'development') {
       // console.log('[Init] xpensia_vendor_fallbacks initialized from local JSON');
     }

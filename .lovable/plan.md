@@ -1,53 +1,24 @@
 
+# Fix: Unblock Build to Deploy ResizeObserver Fix to Android
 
-# Unify Currency Dropdown Across the App
+## Problem
 
-## Summary
-Replace all currency dropdowns with an enhanced `CurrencyCombobox` that is searchable and shows country names (flag + code + country name). This will be used consistently in every place a currency is selected.
+The ResizeObserver toast suppression fix was applied correctly, but the app build is failing due to a pre-existing `@types/react-dnd` type error. This means the fix never reaches your Android device -- it's still running the old bundle.
 
-## Current State
-There are 5 different currency dropdown implementations:
-- **ExchangeRateDialog** -- plain `Select`, shows flag+code only, not searchable
-- **DefaultCurrencyModal** -- plain `Select`, shows flag+code only, not searchable
-- **TransactionEditForm** -- uses `CurrencyCombobox` (searchable), but `displayMode="codeOnly"`
-- **SmsTransactionConfirmation** -- plain `Select`, shows raw code only (no flag, no country)
-- **CurrencySelector form field** -- uses `CurrencyCombobox` with `displayMode="codeOnly"`
+## Root Cause of Build Failure
 
-## Changes
+`@types/react-dnd` uses deprecated `module` keyword syntax that newer TypeScript rejects. Since `react-dnd` v16 already includes its own built-in TypeScript definitions, the `@types/react-dnd` package is redundant and harmful.
 
-### 1. Enhance CurrencyCombobox to show country by default
-Update `src/components/currency/CurrencyCombobox.tsx`:
-- Change default `displayMode` from `"codeOnly"` to `"codePlusCountry"` so dropdown items always show flag, code, and country name
-- Also include country name in search filtering (already searches code+name, will also add country)
-- The trigger button will still show compact flag+code for space efficiency
+## Fix
 
-### 2. Replace Select in ExchangeRateDialog
-Update `src/components/fx/ExchangeRateDialog.tsx`:
-- Replace the `Select` component with `CurrencyCombobox`
-- Keep the "Add Currency" (+) button alongside it
-- Remove `Select`-related imports, add `CurrencyCombobox` import
+**Remove `@types/react-dnd` from `package.json`**
 
-### 3. Replace Select in DefaultCurrencyModal
-Update `src/components/DefaultCurrencyModal.tsx`:
-- Replace `Select` with `CurrencyCombobox`
-- Remove `Select`-related imports
+This is the only change needed. The `react-dnd` package (v16.0.1) already ships its own type definitions, so `@types/react-dnd` is unnecessary and is the sole cause of the build failure.
 
-### 4. Replace Select in SmsTransactionConfirmation
-Update `src/components/SmsTransactionConfirmation.tsx`:
-- Replace the plain `Select` (which only shows currency codes) with `CurrencyCombobox`
-- Remove unused `CURRENCIES` import from `categories-data`
+No other files need to change -- all existing `react-dnd` imports will continue to work with the built-in types.
 
-### 5. Update CurrencySelector form field
-Update `src/components/forms/CurrencySelector.tsx`:
-- Change `displayMode` to `"codePlusCountry"` (or remove since it will now be the default)
+## Expected Result
 
-### 6. Update TransactionEditForm usage
-Update `src/components/TransactionEditForm.tsx`:
-- Remove explicit `displayMode="codeOnly"` so it picks up the new default showing country names
-
-## Technical Notes
-- `CurrencyCombobox` already has built-in search, scrollable list, and refreshes options on open -- it is the most capable component
-- The trigger button remains compact (flag + code) while the dropdown items show the full label (flag + code + country name)
-- All existing props (`className`, `id`, conditional styling for driven fields, errors, etc.) are preserved
-- Also fixes the pre-existing build errors from the previous round
-
+- Build succeeds
+- ResizeObserver toast suppression fix gets deployed
+- Android device loads the new bundle without the error toasts
