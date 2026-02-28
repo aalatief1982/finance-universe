@@ -133,6 +133,50 @@ export async function parseAndInferTransaction(
   smsId?: string
 ): Promise<ParsedTransactionResult> {
   const parsed = parseSmsMessage(rawMessage, senderHint);
+  const debugAccountInference =
+    import.meta.env.VITE_DEBUG_ACCOUNT_INFERENCE === 'true';
+  const inferredType =
+    (parsed.inferredFields.type?.value as TransactionType) || 'expense';
+
+  const resolvedFromAccount =
+    parsed.directFields.fromAccount?.value ||
+    parsed.inferredFields.fromAccount?.value ||
+    parsed.defaultValues?.fromAccount?.value ||
+    (inferredType === 'expense' || inferredType === 'transfer' ? senderHint || '' : '');
+
+  const resolvedToAccount =
+    parsed.directFields.toAccount?.value ||
+    parsed.inferredFields.toAccount?.value ||
+    parsed.defaultValues?.toAccount?.value ||
+    (inferredType === 'income' ? senderHint || '' : '');
+
+  if (debugAccountInference) {
+    const fromAccountSource = parsed.directFields.fromAccount?.value
+      ? parsed.accountInference?.fromAccountSource || 'direct-field'
+      : parsed.defaultValues?.fromAccount?.value
+        ? parsed.accountInference?.fromAccountSource || 'template-default'
+        : inferredType === 'expense' || inferredType === 'transfer'
+          ? 'senderHint-fallback'
+          : 'empty';
+
+    const toAccountSource = parsed.directFields.toAccount?.value
+      ? parsed.accountInference?.toAccountSource || 'direct-field'
+      : parsed.defaultValues?.toAccount?.value
+        ? parsed.accountInference?.toAccountSource || 'template-default'
+        : inferredType === 'income'
+          ? 'senderHint-fallback'
+          : 'empty';
+
+    console.log('[AccountInference:parseAndInferTransaction]', {
+      templateHash: parsed.templateHash,
+      templateHashAccountMapHit: parsed.accountInference?.templateHashAccountMapHit || false,
+      type: inferredType,
+      fromAccountSource,
+      toAccountSource,
+      fromAccount: resolvedFromAccount,
+      toAccount: resolvedToAccount,
+    });
+  }
 
   // Build transaction from parsed fields
   const detectedVendorToken = parsed.directFields.vendor?.value || '';
@@ -142,19 +186,15 @@ export async function parseAndInferTransaction(
     amount: parseFloat(parsed.directFields.amount?.value || '0'),
     currency: parsed.directFields.currency?.value || 'SAR',
     date: parsed.directFields.date?.value || '',
-    type: (parsed.inferredFields.type?.value as TransactionType) || 'expense',
+    type: inferredType,
     category: parsed.inferredFields.category?.value || 'Uncategorized',
     subcategory: parsed.inferredFields.subcategory?.value || 'none',
     vendor:
       parsed.inferredFields.vendor?.value ||
       parsed.directFields.vendor?.value ||
       '',
-    fromAccount:
-      parsed.directFields.fromAccount?.value ||
-      parsed.directFields.account?.value ||
-      parsed.inferredFields.fromAccount?.value ||
-      parsed.defaultValues?.fromAccount?.value ||
-      senderHint || '',
+    fromAccount: resolvedFromAccount,
+    toAccount: resolvedToAccount,
     source: 'smart-paste',
     createdAt: new Date().toISOString(),
     title: '', // Editable in form later

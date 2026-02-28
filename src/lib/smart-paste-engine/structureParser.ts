@@ -59,6 +59,14 @@ export interface ParsedField {
   source: 'direct' | 'inferred' | 'default'
 }
 
+type AccountInferenceSource =
+  | 'direct-field'
+  | 'token-remap'
+  | 'template-hash-map'
+  | 'template-default'
+  | 'senderHint-fallback'
+  | 'empty';
+
 
 function applyFromAccountRemapping(accountToken?: string): string | undefined {
   if (!accountToken) return undefined;
@@ -68,6 +76,32 @@ function applyFromAccountRemapping(accountToken?: string): string | undefined {
   const normalized = mapped.trim();
   return normalized || undefined;
 }
+
+type TemplateAccountMapEntry = {
+  accountId: string;
+  updatedAt: number;
+  count: number;
+};
+
+type TemplateAccountMap = Record<string, TemplateAccountMapEntry>;
+
+const TEMPLATE_ACCOUNT_MAP_KEY = 'xpensia_template_account_map';
+
+const isAccountInferenceDebugEnabled =
+  import.meta.env.VITE_DEBUG_ACCOUNT_INFERENCE === 'true';
+
+const getTemplateAccountMapKey = (
+  templateHash: string,
+  role: 'from' | 'to',
+): string => `${templateHash}::${role}`;
+
+const loadTemplateAccountMap = (): TemplateAccountMap => {
+  try {
+    return JSON.parse(safeStorage.getItem(TEMPLATE_ACCOUNT_MAP_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
 
 /**
  * Parse an SMS message into structured fields with confidence scores.
@@ -149,6 +183,9 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   );
   const directFields: Record<string, ParsedField> = {};
   const defaultValues: Record<string, ParsedField> = {};
+  const templateDefaults: Record<string, string> = {};
+  let fromAccountSource: AccountInferenceSource = 'empty';
+  let toAccountSource: AccountInferenceSource = 'empty';
 
   if (matchedTemplate) {
     matchedTemplate.fields.forEach((field) => {
@@ -168,6 +205,12 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
 
     if (matchedTemplate.defaultValues) {
       Object.entries(matchedTemplate.defaultValues).forEach(([key, value]) => {
+        templateDefaults[key] = value;
+
+        if (key === 'fromAccount' || key === 'toAccount') {
+          return;
+        }
+
         if (!directFields[key]) {
           const field = {
             value,
@@ -207,6 +250,13 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
 
   // Promote learned account remapping for exact account tokens when available.
   // This lets repeated patterns auto-drive fromAccount even if sender context changes.
+  if (directFields['fromAccount']) {
+    fromAccountSource = 'direct-field';
+  }
+  if (directFields['toAccount']) {
+    toAccountSource = 'direct-field';
+  }
+
   if (!directFields['fromAccount'] && directFields['account']) {
     const mappedFromAccount = applyFromAccountRemapping(directFields['account'].value);
     if (mappedFromAccount) {
@@ -217,7 +267,69 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
       };
       directFields['fromAccount'] = field;
       defaultValues['fromAccount'] = field;
+      fromAccountSource = 'token-remap';
     }
+  }
+
+  const templateAccountMap = loadTemplateAccountMap();
+  const templateFromAccount =
+    templateAccountMap[getTemplateAccountMapKey(templateHash, 'from')]?.accountId;
+  const templateToAccount =
+    templateAccountMap[getTemplateAccountMapKey(templateHash, 'to')]?.accountId;
+
+  if (!directFields['fromAccount'] && !defaultValues['fromAccount'] && templateFromAccount) {
+    const field = {
+      value: templateFromAccount,
+      confidenceScore: computeConfidenceScore('default'),
+      source: 'default' as const,
+    };
+    directFields['fromAccount'] = field;
+    defaultValues['fromAccount'] = field;
+    fromAccountSource = 'template-hash-map';
+  }
+
+  if (!directFields['toAccount'] && !defaultValues['toAccount'] && templateToAccount) {
+    const field = {
+      value: templateToAccount,
+      confidenceScore: computeConfidenceScore('default'),
+      source: 'default' as const,
+    };
+    directFields['toAccount'] = field;
+    defaultValues['toAccount'] = field;
+    toAccountSource = 'template-hash-map';
+  }
+
+  if (!directFields['fromAccount'] && !defaultValues['fromAccount'] && templateDefaults.fromAccount) {
+    const field = {
+      value: templateDefaults.fromAccount,
+      confidenceScore: computeConfidenceScore('default'),
+      source: 'default' as const,
+    };
+    directFields['fromAccount'] = field;
+    defaultValues['fromAccount'] = field;
+    fromAccountSource = 'template-default';
+  }
+
+  if (!directFields['toAccount'] && !defaultValues['toAccount'] && templateDefaults.toAccount) {
+    const field = {
+      value: templateDefaults.toAccount,
+      confidenceScore: computeConfidenceScore('default'),
+      source: 'default' as const,
+    };
+    directFields['toAccount'] = field;
+    defaultValues['toAccount'] = field;
+    toAccountSource = 'template-default';
+  }
+
+  if (isAccountInferenceDebugEnabled) {
+    console.log('[AccountInference]', {
+      templateHash,
+      templateHashAccountMapHit: Boolean(templateFromAccount || templateToAccount),
+      chosenFromAccountSource: fromAccountSource,
+      chosenToAccountSource: toAccountSource,
+      fromAccount: directFields['fromAccount']?.value,
+      toAccount: directFields['toAccount']?.value,
+    });
   }
 
   // ============================================================================
@@ -261,6 +373,11 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
     directFields,
     inferredFields: inferred,
     defaultValues,
+    accountInference: {
+      templateHashAccountMapHit: Boolean(templateFromAccount || templateToAccount),
+      fromAccountSource,
+      toAccountSource,
+    },
     candidates: {
       accountCandidates: extractAccountCandidates(rawMessage).candidates,
     },

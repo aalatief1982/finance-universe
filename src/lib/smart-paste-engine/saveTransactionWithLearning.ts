@@ -84,6 +84,56 @@ interface SaveOptions {
   combineToasts?: boolean;
 }
 
+type TemplateAccountMapEntry = {
+  accountId: string;
+  updatedAt: number;
+  count: number;
+};
+
+type TemplateAccountMap = Record<string, TemplateAccountMapEntry>;
+
+const TEMPLATE_ACCOUNT_MAP_KEY = 'xpensia_template_account_map';
+
+const loadTemplateAccountMap = (): TemplateAccountMap => {
+  try {
+    return JSON.parse(safeStorage.getItem(TEMPLATE_ACCOUNT_MAP_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
+const saveTemplateAccountMap = (map: TemplateAccountMap): void => {
+  safeStorage.setItem(TEMPLATE_ACCOUNT_MAP_KEY, JSON.stringify(map));
+};
+
+const getTemplateAccountMapKey = (
+  templateHash: string,
+  role: 'from' | 'to',
+): string => `${templateHash}::${role}`;
+
+const upsertTemplateAccountPreference = (
+  templateHash: string,
+  role: 'from' | 'to',
+  accountId?: string,
+): void => {
+  const normalizedAccount = accountId?.trim();
+  if (!templateHash || !normalizedAccount) {
+    return;
+  }
+
+  const map = loadTemplateAccountMap();
+  const key = getTemplateAccountMapKey(templateHash, role);
+  const existing = map[key];
+
+  map[key] = {
+    accountId: normalizedAccount,
+    updatedAt: Date.now(),
+    count: (existing?.count || 0) + 1,
+  };
+
+  saveTemplateAccountMap(map);
+};
+
 
 const ACCOUNT_PLACEHOLDER_VALUES = new Set(['', 'select account', 'unknown', 'n/a', 'none']);
 
@@ -219,7 +269,11 @@ export function saveTransactionWithLearning(
   // REVIEW: Only runs for smart-paste source with raw message
   // ============================================================================
 
-  if (rawMessage && newTransaction.source === 'smart-paste') {
+  const isLearningSource = ['smart-paste', 'sms', 'sms-import'].includes(
+    newTransaction.source,
+  );
+
+  if (rawMessage && isLearningSource) {
     learnFromTransaction(rawMessage, newTransaction, senderHint || '');
 
     // Extract and save template structure
@@ -330,6 +384,18 @@ export function saveTransactionWithLearning(
       );
     }
 
+    // Preferred account by template hash (source-agnostic, post-confirm only)
+    if (templateHash) {
+      if (newTransaction.type === 'income') {
+        upsertTemplateAccountPreference(templateHash, 'to', newTransaction.toAccount);
+      } else if (newTransaction.type === 'transfer') {
+        upsertTemplateAccountPreference(templateHash, 'from', newTransaction.fromAccount);
+        upsertTemplateAccountPreference(templateHash, 'to', newTransaction.toAccount);
+      } else {
+        upsertTemplateAccountPreference(templateHash, 'from', newTransaction.fromAccount);
+      }
+    }
+
     // Default From Account Mapping - store for template defaults
     if (templateHash && newTransaction.fromAccount) {
       const templates = loadTemplateBank();
@@ -361,9 +427,7 @@ export function saveTransactionWithLearning(
     if (combineToasts) {
       let description = `Your transaction has been successfully ${isNew ? 'created' : 'updated'}.`;
       if (
-        rawMessage &&
-        newTransaction.source === 'smart-paste' &&
-        showPatternToast
+        rawMessage && isLearningSource && showPatternToast
       ) {
         description += ' Pattern saved for learning.';
       }
