@@ -35,6 +35,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
   const [search, setSearch] = React.useState('');
   const [options, setOptions] = React.useState<AvailableCurrency[]>(() => getAvailableCurrencyOptions());
   const optionRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -65,6 +66,14 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
       targetElement.scrollIntoView({ block: 'nearest' });
     });
   }, [filtered, open, openFocusTarget, value]);
+
+  React.useEffect(() => {
+    if (!open || openFocusTarget !== 'search' || !searchAutoFocus) return;
+
+    requestAnimationFrame(() => {
+      searchInputRef.current?.focus();
+    });
+  }, [open, openFocusTarget, searchAutoFocus]);
 
   const renderOptionLabel = (currency: AvailableCurrency) => {
     if (displayMode === 'codePlusCountry') {
@@ -102,10 +111,10 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
       >
         <Command shouldFilter={false}>
           <CommandInput
+            ref={searchInputRef}
             placeholder="Search by code or currency"
             value={search}
             onValueChange={setSearch}
-            autoFocus={searchAutoFocus}
           />
           <CommandList className={dropdownListClassName}>
             <CommandEmpty>No currency found.</CommandEmpty>
