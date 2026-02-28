@@ -179,7 +179,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   const matchedTemplate = getTemplateByHash(
     templateHash,
     senderHint,
-    (placeholders as unknown).account
+    (placeholders as Record<string, unknown>).account as string | undefined
   );
   const directFields: Record<string, ParsedField> = {};
   const defaultValues: Record<string, ParsedField> = {};

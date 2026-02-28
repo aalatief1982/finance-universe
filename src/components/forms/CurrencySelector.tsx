@@ -28,7 +28,7 @@ const CurrencySelector: React.FC<CurrencySelectorProps> = ({ form }) => {
             <CurrencyCombobox
               value={field.value}
               onChange={field.onChange}
-              displayMode="codeOnly"
+              displayMode="codePlusCountry"
               className={cn(fieldState.error && 'border-destructive')}
             />
           </FormControl>

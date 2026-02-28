@@ -8,14 +8,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { formatCurrencyFlagCode, getAvailableCurrencies } from '@/lib/currency-utils';
+import CurrencyCombobox from '@/components/currency/CurrencyCombobox';
 
 interface DefaultCurrencyModalProps {
   open: boolean;
@@ -33,7 +26,6 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
   const [submitAttempted, setSubmitAttempted] = React.useState(false);
   const [currencyTouched, setCurrencyTouched] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [currencies] = React.useState(() => getAvailableCurrencies());
 
   const showCurrencyError = !selectedCurrency && (submitAttempted || currencyTouched);
 
@@ -50,21 +42,12 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
     onCurrencyChange(currency);
   };
 
-  const focusCurrencyDropdown = () => {
-    const trigger = document.getElementById('default-currency-gate-select');
-    if (!trigger) return;
-
-    trigger.focus();
-    trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-  };
-
   const handleSaveClick = async () => {
     if (isSaving) return;
 
     setSubmitAttempted(true);
 
     if (!selectedCurrency) {
-      focusCurrencyDropdown();
       return;
     }
 
@@ -92,21 +75,11 @@ const DefaultCurrencyModal: React.FC<DefaultCurrencyModalProps> = ({
           </AlertDialogHeader>
 
           <div className="space-y-2 rounded-md border border-primary/20 bg-primary/5 p-3">
-            <Select value={selectedCurrency || undefined} onValueChange={handleCurrencyChange}>
-              <SelectTrigger
-                id="default-currency-gate-select"
-                className={showCurrencyError ? 'border-destructive text-destructive' : undefined}
-              >
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-              <SelectContent className="max-h-[280px]">
-                {currencies.map((currency) => (
-                  <SelectItem key={currency} value={currency}>
-                    {formatCurrencyFlagCode(currency, currency)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CurrencyCombobox
+              value={selectedCurrency || undefined}
+              onChange={handleCurrencyChange}
+              className={showCurrencyError ? 'border-destructive text-destructive' : undefined}
+            />
             {showCurrencyError ? (
               <p className="text-sm text-destructive" role="alert">
                 Please select a currency to continue.

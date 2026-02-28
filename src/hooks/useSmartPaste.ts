@@ -56,7 +56,7 @@ export const useSmartPaste = (
   const { toast } = useToast();
   const [matchOrigin, setMatchOrigin] = useState<"template" | "structure" | "ml" | "fallback" | undefined>();
   const [currentSenderHint, setCurrentSenderHint] = useState<string | undefined>();
-  const [structureMatch, setStructureMatch] = useState<Record<string, unknown> | null>(null);
+  const [structureMatch, setStructureMatch] = useState<Record<string, unknown> & { inferredTransaction?: Record<string, unknown>; confidence?: number } | null>(null);
   const navigate = useNavigate();
 
   if (import.meta.env.MODE === 'development') {
@@ -161,7 +161,8 @@ export const useSmartPaste = (
       if (import.meta.env.MODE === 'development') {
         // console.log("[useSmartPaste] Step 2: Attempting structure match");
       }
-      const structureMatchResult = learningEngineService.matchUsingTemplateStructure(rawText);
+      const structureMatchResult = learningEngineService.matchUsingTemplateStructure(rawText) as
+        (Record<string, unknown> & { inferredTransaction?: Record<string, unknown>; confidence?: number }) | null;
       // if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match result:", { 
         // success: !!structureMatchResult, 
         // confidence: structureMatchResult?.confidence 
@@ -174,19 +175,20 @@ export const useSmartPaste = (
           // inference: structureMatchResult.inferredTransaction
         // });
         
-        const vendorName = structureMatchResult.inferredTransaction.description || '';
-        const categoryInfo = findCategoryForVendor(vendorName, structureMatchResult.inferredTransaction.type || 'expense');
+        const inf = structureMatchResult.inferredTransaction;
+        const vendorName = (inf.description as string) || '';
+        const categoryInfo = findCategoryForVendor(vendorName, (inf.type as string) || 'expense');
 
         const txn: Transaction = {
           id: `structure-${Math.random().toString(36).substring(2, 9)}`,
-          title: `Structure: ${categoryInfo.category} | ${structureMatchResult.inferredTransaction.amount}`,
-          amount: structureMatchResult.inferredTransaction.amount.toFixed(2),
-          currency: structureMatchResult.inferredTransaction.currency || 'SAR',
-          type: structureMatchResult.inferredTransaction.type || 'expense',
-          fromAccount: structureMatchResult.inferredTransaction.fromAccount || 'Unknown',
+          title: `Structure: ${categoryInfo.category} | ${inf.amount}`,
+          amount: Number(inf.amount).toFixed(2) as unknown as number,
+          currency: (inf.currency as string) || 'SAR',
+          type: (inf.type as TransactionType) || 'expense',
+          fromAccount: (inf.fromAccount as string) || 'Unknown',
           category: categoryInfo.category,
           subcategory: categoryInfo.subcategory,
-          date: structureMatchResult.inferredTransaction.date || new Date().toISOString(),
+          date: (inf.date as string) || new Date().toISOString(),
           description: vendorName,
           notes: 'Matched by structure template',
           source: 'smart-paste'
@@ -198,7 +200,7 @@ export const useSmartPaste = (
         setDetectedTransactions([txn]);
         setIsSmartMatch(true);
         setMatchOrigin("structure");
-        onTransactionsDetected?.([txn], rawText, undefined, structureMatchResult.confidence, true, "structure");
+        onTransactionsDetected?.([txn], rawText, undefined, (structureMatchResult.confidence as number) ?? 0, true, "structure");
         return;
       }
 

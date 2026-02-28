@@ -20,7 +20,7 @@ describe('transaction amount validation', () => {
   it('accepts positive amount strings', () => {
     const errors = validateTransactionForm({
       title: 'Lunch',
-      amount: '500',
+      amount: '500' as unknown as number,
       type: 'expense',
       fromAccount: 'Cash',
       category: 'Food',
@@ -50,7 +50,7 @@ describe('transaction amount validation', () => {
   it('still rejects empty/zero amounts', () => {
     const emptyErrors = validateTransactionForm({
       title: 'Groceries',
-      amount: '',
+      amount: '' as unknown as number,
       type: 'expense',
       fromAccount: 'Cash',
       category: 'Food',

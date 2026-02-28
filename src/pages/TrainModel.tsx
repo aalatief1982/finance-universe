@@ -137,19 +137,21 @@ const TrainModel = () => {
         if (import.meta.env.MODE === 'development') {
           // console.log("[TrainModel] Attempting template structure match");
         }
-        const structureMatch = learningEngineService.matchUsingTemplateStructure?.(message);
+        const structureMatch = learningEngineService.matchUsingTemplateStructure?.(message) as
+          (Record<string, unknown> & { inferredTransaction?: Record<string, unknown> }) | null | undefined;
         if (structureMatch && structureMatch.inferredTransaction) {
           if (import.meta.env.MODE === 'development') {
             // console.log("[TrainModel] Structure match found:", structureMatch);
           }
+          const inferred = structureMatch.inferredTransaction;
           // Apply structured data on top of inferred fields
           setTransaction(prev => ({ 
             ...prev, 
-            ...structureMatch.inferredTransaction,
+            ...(inferred as Partial<typeof prev>),
             // If amount is a string, convert it to number
-            amount: typeof structureMatch.inferredTransaction.amount === 'string' 
-              ? parseFloat(structureMatch.inferredTransaction.amount) 
-              : structureMatch.inferredTransaction.amount
+            amount: typeof inferred.amount === 'string' 
+              ? parseFloat(inferred.amount) 
+              : (inferred.amount as number)
           }));
         }
       } catch (error) {
