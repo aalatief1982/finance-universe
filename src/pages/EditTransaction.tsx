@@ -314,6 +314,7 @@ const EditTransaction = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            {/* @ts-expect-error radix AlertDialog onClick type mismatch */}
             <AlertDialogCancel onClick={handleStayOnPage}>Stay</AlertDialogCancel>
             <AlertDialogAction onClick={handleDiscardChanges}>Discard</AlertDialogAction>
           </AlertDialogFooter>

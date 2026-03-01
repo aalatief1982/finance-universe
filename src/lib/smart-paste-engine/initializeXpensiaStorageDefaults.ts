@@ -27,7 +27,7 @@
 import { safeStorage } from "@/utils/safe-storage";
 import { TransactionType } from '@/types/transaction';
 import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
-import { saveVendorFallbacks } from './vendorFallbackUtils';
+import { saveVendorFallbacks, VendorFallbackData } from './vendorFallbackUtils';
 import { checkForVendorUpdates, getVendorData } from '@/services/VendorSyncService';
 
 
@@ -251,9 +251,9 @@ export async function initializeXpensiaStorageDefaults() {
   // Step 2: Ensure vendor fallback data exists - load from local JSON if not initialized
   if (!safeStorage.getItem('xpensia_vendor_fallbacks')) {
     // Always use local JSON file as fallback during initialization
-    const dataToUse = (vendorFallbackData as unknown).default ?? vendorFallbackData;
+    const rawData = (vendorFallbackData as Record<string, unknown>).default ?? vendorFallbackData;
     
-    saveVendorFallbacks(dataToUse);
+    saveVendorFallbacks(rawData as Record<string, VendorFallbackData>);
     if (import.meta.env.MODE === 'development') {
       // console.log('[Init] xpensia_vendor_fallbacks initialized from local JSON');
     }

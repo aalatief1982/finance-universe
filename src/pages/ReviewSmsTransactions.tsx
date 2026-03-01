@@ -207,7 +207,7 @@ const ReviewSmsTransactions: React.FC = () => {
         })
       );
 
-      setTransactions(parsed);
+      setTransactions(parsed as unknown as DraftTransaction[]);
     };
     setLoading(true);
     parseAll()
@@ -395,7 +395,7 @@ const toggleSkipAll = () => {
       };
 
       const originalTxn = transactions[idx];
-      saveTransactionWithLearning(cleanTransaction as unknown, {
+      saveTransactionWithLearning(cleanTransaction as Transaction, {
         rawMessage: originalTxn.rawMessage,
         senderHint: normalizedFromAccount || normalizedToAccount || '',
         isNew: true,

@@ -338,7 +338,7 @@ const Settings = () => {
           path: fileName,
           data: csv,
           directory: Directory.Documents,
-          encoding: 'utf8' as unknown
+          encoding: 'utf8' as unknown as import('@capacitor/filesystem').Encoding
         });
         toast({
           title: 'Export successful',
@@ -395,8 +395,8 @@ const Settings = () => {
 
           if (!confirmImport) return;
 
-          const merged = [...existing, ...(data as unknown[])];
-          storeTransactions(merged as unknown);
+          const merged = [...existing, ...data];
+          storeTransactions(merged);
           
           // Log import success
           logAnalyticsEvent('data_import', {

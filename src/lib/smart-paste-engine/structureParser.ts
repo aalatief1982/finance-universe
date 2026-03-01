@@ -114,7 +114,25 @@ const loadTemplateAccountMap = (): TemplateAccountMap => {
  * - Throws if template extraction fails
  * - Returns empty parse object for empty messages
  */
-export function parseSmsMessage(rawMessage: string, senderHint?: string) {
+export interface ParsedSmsResult {
+  rawMessage: string;
+  template: string;
+  templateHash: string;
+  matched: boolean;
+  directFields: Record<string, ParsedField>;
+  inferredFields: Record<string, ParsedField>;
+  defaultValues: Record<string, ParsedField>;
+  accountInference?: {
+    templateHashAccountMapHit: boolean;
+    fromAccountSource: AccountInferenceSource;
+    toAccountSource: AccountInferenceSource;
+  };
+  candidates: {
+    accountCandidates: string[];
+  };
+}
+
+export function parseSmsMessage(rawMessage: string, senderHint?: string): ParsedSmsResult {
   // ============================================================================
   // SECTION: Input Guardrails
   // PURPOSE: Handle empty messages without throwing
@@ -179,7 +197,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
   const matchedTemplate = getTemplateByHash(
     templateHash,
     senderHint,
-    (placeholders as unknown).account
+    (placeholders as Record<string, string>).account
   );
   const directFields: Record<string, ParsedField> = {};
   const defaultValues: Record<string, ParsedField> = {};
@@ -379,7 +397,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string) {
       toAccountSource,
     },
     candidates: {
-      accountCandidates: extractAccountCandidates(rawMessage).candidates,
+      accountCandidates: extractAccountCandidates(rawMessage).candidates.map(c => typeof c === 'string' ? c : c.value),
     },
   };
 }
