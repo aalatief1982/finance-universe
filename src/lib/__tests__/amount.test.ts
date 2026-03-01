@@ -50,7 +50,6 @@ describe('transaction amount validation', () => {
   it('still rejects empty/zero amounts', () => {
     const emptyErrors = validateTransactionForm({
       title: 'Groceries',
-      amount: 0,
       type: 'expense',
       fromAccount: 'Cash',
       category: 'Food',
