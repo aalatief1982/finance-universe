@@ -51,6 +51,20 @@ describe('suggestionEngine', () => {
     expect(extractVendorName('Paid to Google YouTubePremium SAR 49.99')).toBe('');
   });
 
+  it('prefers longer vendor fallback keyword for substring matches', () => {
+    localStorage.setItem(
+      'xpensia_vendor_fallbacks',
+      JSON.stringify({
+        acme: { type: 'expense', category: 'Shopping', subcategory: 'Generic' },
+        'acme store': { type: 'expense', category: 'Shopping', subcategory: 'Retail' },
+      })
+    );
+
+    const match = findClosestFallbackMatch('Acme Store Riyadh');
+    expect(match?.vendor).toBe('acme store');
+  });
+
+
   it('finds closest fallback vendor matches', () => {
     localStorage.setItem('xpensia_vendor_fallbacks', JSON.stringify(vendorFallbacks));
     const match = findClosestFallbackMatch('Acme Store Riyadh');
@@ -76,6 +90,60 @@ describe('suggestionEngine', () => {
     expect(inferred.category).toBe('Shopping');
     expect(inferred.type).toBe('expense');
   });
+
+  it('prefers longer category keyword when multiple keywords match', () => {
+    localStorage.setItem(
+      'xpensia_keyword_bank',
+      JSON.stringify([
+        {
+          keyword: 'uber',
+          mappings: [{ field: 'category', value: 'Transportation' }],
+        },
+        {
+          keyword: 'uber eats',
+          mappings: [{ field: 'category', value: 'Food & Dining' }],
+        },
+      ])
+    );
+
+    const inferred = inferIndirectFields('Paid to Uber Eats today');
+    expect(inferred.category).toBe('Food & Dining');
+  });
+
+  it('prefers exact type keyword over substring keyword', () => {
+    localStorage.setItem(
+      'xpensia_type_keywords',
+      JSON.stringify({
+        income: ['credit'],
+        expense: ['credited'],
+      })
+    );
+
+    const inferred = inferIndirectFields('credit alert for account');
+    expect(inferred.type).toBe('income');
+  });
+
+  it('prefers newer keyword metadata when keyword quality ties', () => {
+    localStorage.setItem(
+      'xpensia_keyword_bank',
+      JSON.stringify([
+        {
+          keyword: 'netflix',
+          mappings: [{ field: 'subcategory', value: 'Video' }],
+          lastUpdated: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          keyword: 'netflix',
+          mappings: [{ field: 'subcategory', value: 'Streaming' }],
+          lastUpdated: '2025-01-01T00:00:00.000Z',
+        },
+      ])
+    );
+
+    const inferred = inferIndirectFields('Payment to Netflix');
+    expect(inferred.subcategory).toBe('Streaming');
+  });
+
 
   it('uses vendor fallback when category is missing', () => {
     localStorage.setItem('xpensia_vendor_fallbacks', JSON.stringify(vendorFallbacks));

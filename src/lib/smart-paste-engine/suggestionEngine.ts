@@ -85,6 +85,89 @@ interface FallbackVendorEntry extends VendorFallbackData {
   vendor: string;
 }
 
+interface KeywordScoreContext {
+  sourceText: string;
+  vendorText?: string;
+  keyword: string;
+  lastUpdated?: string;
+  frequency?: number;
+}
+
+interface ScoredCandidate {
+  keyword: string;
+  source: 'vendor' | 'message';
+  matchType: 'exact' | 'substring';
+  keywordLength: number;
+  timestampScore: number;
+  frequencyScore: number;
+  score: number;
+}
+
+const KEYWORD_DEBUG_ENABLED = String(import.meta.env.VITE_DEBUG_KEYWORD_SCORING).toLowerCase() === 'true';
+
+const tokenize = (value: string): string[] =>
+  value
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+
+const getKeywordMatchType = (sourceText: string, keyword: string): 'exact' | 'substring' | null => {
+  const normalizedKeyword = keyword.trim().toLowerCase();
+  if (!normalizedKeyword) return null;
+  const words = tokenize(sourceText);
+  if (words.includes(normalizedKeyword)) {
+    return 'exact';
+  }
+  return sourceText.toLowerCase().includes(normalizedKeyword) ? 'substring' : null;
+};
+
+export function scoreKeywordMatch({
+  sourceText,
+  vendorText,
+  keyword,
+  lastUpdated,
+  frequency,
+}: KeywordScoreContext): ScoredCandidate | null {
+  const matchType = getKeywordMatchType(sourceText, keyword);
+  if (!matchType) return null;
+
+  const normalizedKeyword = keyword.trim().toLowerCase();
+  const vendorMatchType = vendorText ? getKeywordMatchType(vendorText, keyword) : null;
+  const source: 'vendor' | 'message' = vendorMatchType ? 'vendor' : 'message';
+  const timestampScore = lastUpdated ? new Date(lastUpdated).getTime() || 0 : 0;
+  const frequencyScore = Number.isFinite(frequency) ? Number(frequency) : 0;
+
+  const score =
+    (matchType === 'exact' ? 1_000_000 : 500_000) +
+    (source === 'vendor' ? 100_000 : 0) +
+    normalizedKeyword.length * 1_000 +
+    Math.max(0, timestampScore) +
+    Math.max(0, frequencyScore);
+
+  return {
+    keyword: normalizedKeyword,
+    source,
+    matchType,
+    keywordLength: normalizedKeyword.length,
+    timestampScore,
+    frequencyScore,
+    score,
+  };
+}
+
+const pickBestCandidate = <T extends ScoredCandidate>(candidates: T[]): T | null => {
+  if (candidates.length === 0) return null;
+  return [...candidates].sort((a, b) => {
+    if (b.matchType !== a.matchType) return a.matchType === 'exact' ? -1 : 1;
+    if (b.source !== a.source) return a.source === 'vendor' ? -1 : 1;
+    if (b.keywordLength !== a.keywordLength) return b.keywordLength - a.keywordLength;
+    if (b.timestampScore !== a.timestampScore) return b.timestampScore - a.timestampScore;
+    if (b.frequencyScore !== a.frequencyScore) return b.frequencyScore - a.frequencyScore;
+    if (b.score !== a.score) return b.score - a.score;
+    return a.keyword.localeCompare(b.keyword);
+  })[0];
+};
+
 const getFallbackVendors = (): Record<string, VendorFallbackData> => {
   return loadVendorFallbacks();
 };
@@ -143,13 +226,32 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
     return { vendor: originalKey, ...data };
   }
 
-  // Step 2: Try substring match
-  for (const key of vendorKeys) {
-    if (lowerInput.includes(softNormalize(key))) {
-      const data = fallbackVendors[key];
-      console.info('[SmartPaste] Substring matched vendor:', key, '→', data);
-      return { vendor: key, ...data };
+  // Step 2: Deterministic substring scoring
+  const substringCandidates = vendorKeys
+    .map((key) => {
+      const score = scoreKeywordMatch({
+        sourceText: lowerInput,
+        vendorText: lowerInput,
+        keyword: softNormalize(key),
+      });
+
+      if (!score) return null;
+      return {
+        ...score,
+        keyword: key,
+      };
+    })
+    .filter((candidate): candidate is ScoredCandidate & { keyword: string } => Boolean(candidate));
+
+  const bestSubstringCandidate = pickBestCandidate(substringCandidates);
+  if (bestSubstringCandidate) {
+    const data = fallbackVendors[bestSubstringCandidate.keyword];
+    console.info('[SmartPaste] Substring matched vendor:', bestSubstringCandidate.keyword, '→', data);
+    if (KEYWORD_DEBUG_ENABLED) {
+      console.debug('[SmartPaste][KeywordScoring] Vendor fallback candidates:', substringCandidates);
+      console.debug('[SmartPaste][KeywordScoring] Vendor fallback winner:', bestSubstringCandidate);
     }
+    return { vendor: bestSubstringCandidate.keyword, ...data };
   }
 
   if (import.meta.env.MODE === 'development') {
@@ -185,7 +287,9 @@ export function inferIndirectFields(
   text: string,
   knowns: Partial<Record<string, string>> = {}
 ): Record<string, string> {
-  const rawText = (text + ' ' + (knowns.vendor || '')).toLowerCase();
+  const messageText = text.toLowerCase();
+  const vendorText = (knowns.vendor || '').toLowerCase();
+  const rawText = `${messageText} ${vendorText}`.trim();
   const inferred: Record<string, string> = {};
 
   // Step 1: Load keyword bank
@@ -197,32 +301,69 @@ export function inferIndirectFields(
   }
 
   // Step 2: Keyword-based mapping
-  keywordBank.forEach(({ keyword, mappings }) => {
-    if (rawText.includes(keyword.toLowerCase())) {
-      mappings.forEach(({ field, value }) => {
-        if (!value || typeof value !== 'string') return;
-        if (!inferred[field] && !knowns[field]) {
-          inferred[field] = value.trim();
-        }
+  type FieldCandidate = ScoredCandidate & { field: string; value: string };
+  const candidatesByField = new Map<string, FieldCandidate[]>();
+
+  keywordBank.forEach((entry: KeywordMapping & Partial<KeywordEntry>) => {
+    const score = scoreKeywordMatch({
+      sourceText: rawText,
+      vendorText,
+      keyword: entry.keyword,
+      lastUpdated: entry.lastUpdated,
+      frequency: entry.mappingCount,
+    });
+
+    if (!score) return;
+
+    entry.mappings.forEach(({ field, value }) => {
+      if (!value || typeof value !== 'string' || knowns[field]) return;
+      const fieldCandidates = candidatesByField.get(field) || [];
+      fieldCandidates.push({
+        ...score,
+        field,
+        value: value.trim(),
       });
+      candidatesByField.set(field, fieldCandidates);
+    });
+  });
+
+  candidatesByField.forEach((fieldCandidates, field) => {
+    const winner = pickBestCandidate(fieldCandidates);
+    if (!winner || inferred[field]) return;
+    inferred[field] = winner.value;
+    if (KEYWORD_DEBUG_ENABLED) {
+      console.debug(`[SmartPaste][KeywordScoring] Keyword candidates for ${field}:`, fieldCandidates);
+      console.debug(`[SmartPaste][KeywordScoring] Keyword winner for ${field}:`, winner);
     }
   });
 
   // Step 3: Type keyword inference
   if (!inferred['type']) {
     const typeKeywordsData = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '{}');
-    const rawTextLower = rawText.toLowerCase();
+    const typeCandidates: Array<ScoredCandidate & { transactionType: string }> = [];
     
     // Handle object format: {expense: [...], income: [...], transfer: [...]}
     for (const [transactionType, keywords] of Object.entries(typeKeywordsData)) {
       if (Array.isArray(keywords)) {
         for (const keyword of keywords) {
-          if (rawTextLower.includes(keyword.toLowerCase())) {
-            inferred['type'] = transactionType;
-            break;
+          const candidate = scoreKeywordMatch({
+            sourceText: rawText,
+            vendorText,
+            keyword,
+          });
+          if (candidate) {
+            typeCandidates.push({ ...candidate, transactionType });
           }
         }
-        if (inferred['type']) break;
+      }
+    }
+
+    const winner = pickBestCandidate(typeCandidates);
+    if (winner) {
+      inferred['type'] = winner.transactionType;
+      if (KEYWORD_DEBUG_ENABLED) {
+        console.debug('[SmartPaste][KeywordScoring] Type candidates:', typeCandidates);
+        console.debug('[SmartPaste][KeywordScoring] Type winner:', winner);
       }
     }
   }
