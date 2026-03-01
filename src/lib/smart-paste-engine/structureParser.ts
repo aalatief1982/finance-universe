@@ -23,7 +23,11 @@ import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
 import { inferIndirectFields } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
 import { normalizeVendorNameForCompare } from './vendorFallbackUtils';
-import { extractAccountCandidates } from './accountCandidates';
+import { extractAccountCandidates as extractLegacyAccountCandidates } from './accountCandidates';
+import {
+  extractAccountCandidates as extractAccountInferenceCandidates,
+  pickBestAccountCandidate,
+} from './accountInference';
 //import { normalizeDate } from './dateUtils';
 
 
@@ -350,6 +354,19 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
     });
   }
 
+  const accountCandidatesV1Enabled =
+    import.meta.env.VITE_ACCOUNT_CANDIDATES_V1 === 'true';
+
+  const inferredAccountCandidates = accountCandidatesV1Enabled
+    ? extractAccountInferenceCandidates(rawMessage, senderHint)
+    : [];
+  const bestAccountCandidate = accountCandidatesV1Enabled
+    ? pickBestAccountCandidate(inferredAccountCandidates, {
+        senderHint,
+        rawMessage,
+      })
+    : undefined;
+
   // ============================================================================
   // SECTION: Normalization + Inference
   // PURPOSE: Normalize known fields and infer missing data
@@ -370,6 +387,22 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
       };
     }
   });
+
+  // Keep legacy extraction as primary; only inject candidate-based account when nothing else resolved.
+  if (
+    accountCandidatesV1Enabled &&
+    bestAccountCandidate &&
+    !directFields['account'] &&
+    !directFields['fromAccount'] &&
+    !defaultValues['fromAccount'] &&
+    !inferred['fromAccount']
+  ) {
+    inferred['fromAccount'] = {
+      value: bestAccountCandidate.value,
+      confidenceScore: computeConfidenceScore('inferred'),
+      source: 'inferred',
+    };
+  }
   if (import.meta.env.MODE === 'development') {
     // console.log('[SmartPaste] Step 5: Inferred fields:', inferred);
   }
@@ -397,7 +430,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
       toAccountSource,
     },
     candidates: {
-      accountCandidates: extractAccountCandidates(rawMessage).candidates.map(c => typeof c === 'string' ? c : c.value),
+      accountCandidates: extractLegacyAccountCandidates(rawMessage).candidates.map(c => typeof c === 'string' ? c : c.value),
     },
   };
 }
