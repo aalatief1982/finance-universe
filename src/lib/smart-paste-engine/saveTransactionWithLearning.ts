@@ -66,6 +66,7 @@ import {
   TransactionValidationError,
   validateTransaction,
 } from '@/lib/transaction-validation';
+import { normalizeDraftTransactionForSave } from '@/lib/transactions/normalizeDraftTransactionForSave';
 import { recordPreferredFromAccount } from './templateHashAccountMap';
 
 // ============================================================================
@@ -220,15 +221,17 @@ export function saveTransactionWithLearning(
     combineToasts = false,
   } = options;
 
-  const errors = validateTransaction(transaction, transaction.type);
+  const normalizedForSave = normalizeDraftTransactionForSave(transaction);
+
+  const errors = validateTransaction(normalizedForSave, normalizedForSave.type);
   if (Object.keys(errors).length > 0) {
     throw new TransactionValidationError(errors);
   }
 
   const transactionWithAccounts: Transaction = {
-    ...transaction,
-    fromAccount: ensureAccountExistsForTransaction(transaction.fromAccount),
-    toAccount: ensureAccountExistsForTransaction(transaction.toAccount),
+    ...normalizedForSave,
+    fromAccount: ensureAccountExistsForTransaction(normalizedForSave.fromAccount),
+    toAccount: ensureAccountExistsForTransaction(normalizedForSave.toAccount),
   };
 
   const sanitizedVendor = sanitizeVendorName(transactionWithAccounts.vendor || '');
@@ -253,8 +256,8 @@ export function saveTransactionWithLearning(
   const newTransaction: Transaction = ensureFxFields({
     ...transactionWithAccounts,
     vendor: effectiveVendorName,
-    id: transaction.id || uuidv4(),
-    source: transaction.source || 'manual',
+    id: normalizedForSave.id || uuidv4(),
+    source: normalizedForSave.source || 'manual',
   });
 
   // Persist transaction
