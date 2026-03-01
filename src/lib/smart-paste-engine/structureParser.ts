@@ -28,6 +28,7 @@ import {
   extractAccountCandidates as extractAccountInferenceCandidates,
   pickBestAccountCandidate,
 } from './accountInference';
+import { getPreferredFromAccount } from './templateHashAccountMap';
 //import { normalizeDate } from './dateUtils';
 
 
@@ -291,6 +292,27 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
       defaultValues['fromAccount'] = field;
       fromAccountSource = 'token-remap';
     }
+  }
+
+  const preferredFromAccount = getPreferredFromAccount(senderHint, templateHash);
+  const hasStrongDirectAccountToken =
+    Boolean(directFields['account']) &&
+    (directFields['account']?.confidenceScore || 0) >= computeConfidenceScore('direct');
+
+  if (
+    !directFields['fromAccount'] &&
+    !defaultValues['fromAccount'] &&
+    preferredFromAccount &&
+    !hasStrongDirectAccountToken
+  ) {
+    const field = {
+      value: preferredFromAccount,
+      confidenceScore: computeConfidenceScore('default'),
+      source: 'default' as const,
+    };
+    directFields['fromAccount'] = field;
+    defaultValues['fromAccount'] = field;
+    fromAccountSource = 'template-hash-map';
   }
 
   const templateAccountMap = loadTemplateAccountMap();
