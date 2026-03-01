@@ -1,4 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
+import { Transaction } from '@/types/transaction';
 import {
   computeOverallConfidence,
   getFieldConfidence,
@@ -13,9 +14,14 @@ describe('confidence scoring', () => {
 
   it('calculates field confidence based on available fields', () => {
     const parsed = {
-      directFields: { amount: 100, currency: 'SAR' },
-      inferredFields: { category: 'Food' },
-      defaultValues: { type: 'expense' },
+      rawMessage: '',
+      template: '',
+      templateHash: '',
+      matched: false,
+      directFields: { amount: { value: '100', confidenceScore: 1, source: 'direct' as const }, currency: { value: 'SAR', confidenceScore: 1, source: 'direct' as const } },
+      inferredFields: { category: { value: 'Food', confidenceScore: 0.5, source: 'inferred' as const } },
+      defaultValues: { type: { value: 'expense', confidenceScore: 0.3, source: 'default' as const } },
+      candidates: { accountCandidates: [] as string[] },
     };
     expect(getFieldConfidence(parsed)).toBe(4 / 8);
   });
@@ -36,17 +42,22 @@ describe('confidence scoring', () => {
     ];
 
     const transaction = {
+      id: '1', title: '', amount: 0, date: '', type: 'expense' as const,
+      category: 'Food', source: 'smart-paste' as const, createdAt: '',
       vendor: 'Acme Store',
-      category: 'Food',
       fromAccount: 'Main Checking',
     };
-
-    expect(getKeywordConfidence(transaction, keywordBank)).toBeCloseTo(0.825, 3);
+    expect(getKeywordConfidence(transaction as Transaction, keywordBank)).toBeCloseTo(0.825, 3);
   });
 
   it('returns zero keyword confidence when no sources match', () => {
-    const transaction = { vendor: 'Unknown' };
-    expect(getKeywordConfidence(transaction, [])).toBe(0);
+    const transaction = {
+      id: '1', title: '', amount: 0, date: '', type: 'expense' as const,
+      category: '', source: 'smart-paste' as const, createdAt: '',
+      currency: 'SAR',
+      vendor: 'Unknown',
+    };
+    expect(getKeywordConfidence(transaction as Transaction, [])).toBe(0);
   });
 
   it('returns full template confidence when template matched', () => {

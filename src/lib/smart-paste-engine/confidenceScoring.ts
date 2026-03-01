@@ -24,7 +24,20 @@
  * - [ ] Overall weighting matches UX expectations
  */
 
-export function getFieldConfidence(parsed: unknown): number {
+import { ParsedField, ParsedSmsResult } from './structureParser';
+import { Transaction } from '@/types/transaction';
+
+interface KeywordMapping {
+  field: string;
+  value: string;
+}
+
+interface KeywordBankEntry {
+  keyword: string;
+  mappings: KeywordMapping[];
+}
+
+export function getFieldConfidence(parsed: ParsedSmsResult): number {
   const totalFields = ['amount', 'currency', 'date', 'type', 'category', 'subcategory', 'vendor', 'fromAccount'];
   const filledFields = totalFields.filter(field => {
     return parsed.directFields?.[field] || parsed.inferredFields?.[field] || parsed.defaultValues?.[field];
@@ -40,7 +53,7 @@ export function getTemplateConfidence(templateMatched: number, totalTemplates: n
   return templateMatched; // Simply return 1 if matched, 0 if not
 }
 
-export function getKeywordConfidence(transaction: unknown, keywordBank: unknown[]): number {
+export function getKeywordConfidence(transaction: Transaction, keywordBank: KeywordBankEntry[]): number {
   let totalScore = 0;
   let sourceCount = 0;
 

@@ -104,7 +104,7 @@ export async function logAnalyticsEvent(name: string, params?: Record<string, un
     }
 
     // Log to Google Sheets
-    const logEntry: Record<string, unknown> = {
+    const logEntry: { deviceName: string; event: string; parameters: string; date: string; osVersion: string; keywordBank?: string } = {
       deviceName: deviceInfo.name || 'Unknown Device',
       event: name,
       parameters: JSON.stringify(params || {}),

@@ -19,7 +19,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useForm, type FieldErrors, type FieldPath } from 'react-hook-form';
+import { useForm, type FieldPath } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
 import { TransactionType } from '@/types/transaction';
@@ -110,7 +110,7 @@ const ExpenseForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
 
-  const scrollToFirstError = (errors: FieldErrors<TransactionFormValues>) => {
+  const scrollToFirstError = (errors: Record<string, unknown>) => {
     const root = formElementRef.current;
     if (!root) return;
 
@@ -159,7 +159,7 @@ const ExpenseForm = ({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit, scrollToFirstError)} className="space-y-4">
+            <form ref={formElementRef} onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               {/* Transaction Type */}
               <TransactionTypeSelector form={form} />
 

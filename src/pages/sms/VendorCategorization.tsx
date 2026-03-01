@@ -41,9 +41,8 @@ const VendorCategorization: React.FC = () => {
     const rawMessages = JSON.parse(safeStorage.getItem("xpensia_filtered_sms") || "[]");
 
     const vendorSet = new Set<string>();
-    rawMessages.forEach((msg: unknown) => {
-      // Extract vendor name (similar to SmartPaste fallback logic)
-      const vendorMatch = msg.message.match(/(?:at|@|في|لدى)\s+([^\n,;]+)/i);
+    rawMessages.forEach((msg: { message?: string }) => {
+      const vendorMatch = (msg.message || '').match(/(?:at|@|في|لدى)\s+([^\n,;]+)/i);
       if (vendorMatch) {
         vendorSet.add(vendorMatch[1].trim()||'');
       }

@@ -161,13 +161,23 @@ export const useSmartPaste = (
       if (import.meta.env.MODE === 'development') {
         // console.log("[useSmartPaste] Step 2: Attempting structure match");
       }
-      const structureMatchResult = learningEngineService.matchUsingTemplateStructure(rawText);
+      const structureMatchResult = learningEngineService.matchUsingTemplateStructure(rawText) as {
+        inferredTransaction?: {
+          description?: string;
+          amount: number;
+          currency?: string;
+          type?: TransactionType;
+          fromAccount?: string;
+          date?: string;
+        };
+        confidence?: number;
+      } | null;
       // if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match result:", { 
         // success: !!structureMatchResult, 
         // confidence: structureMatchResult?.confidence 
       // });
       
-      setStructureMatch(structureMatchResult);
+      setStructureMatch(structureMatchResult as Record<string, unknown> | null);
       
       if (structureMatchResult && structureMatchResult.inferredTransaction) {
         // if (import.meta.env.MODE === 'development') console.log("[useSmartPaste] Structure match successful", { 
@@ -180,7 +190,7 @@ export const useSmartPaste = (
         const txn: Transaction = {
           id: `structure-${Math.random().toString(36).substring(2, 9)}`,
           title: `Structure: ${categoryInfo.category} | ${structureMatchResult.inferredTransaction.amount}`,
-          amount: structureMatchResult.inferredTransaction.amount.toFixed(2),
+          amount: Number(structureMatchResult.inferredTransaction.amount.toFixed(2)),
           currency: structureMatchResult.inferredTransaction.currency || 'SAR',
           type: structureMatchResult.inferredTransaction.type || 'expense',
           fromAccount: structureMatchResult.inferredTransaction.fromAccount || 'Unknown',

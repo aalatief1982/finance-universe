@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { UseFormReturn, FieldValues } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
 import { getFriendlyMessage } from '@/utils/errorMapper';
 
@@ -35,7 +35,7 @@ export interface AutoSaveOptions<T> {
   onError?: (error: Error) => void;
 }
 
-export const useAutoSave = <T,>(
+export const useAutoSave = <T extends FieldValues>(
   form: UseFormReturn<T>,
   options: AutoSaveOptions<T> = {}
 ) => {
@@ -92,9 +92,7 @@ export const useAutoSave = <T,>(
       }, delay);
     };
 
-    const subscription = form.watch(() => {
-      handleChange();
-    });
+    const subscription = form.watch(handleChange as unknown as string);
 
     const observer = new MutationObserver(handleChange);
     const formElement = document.querySelector('form');
@@ -104,7 +102,9 @@ export const useAutoSave = <T,>(
 
     return () => {
       observer.disconnect();
-      subscription.unsubscribe();
+      if (typeof subscription === 'object' && subscription && 'unsubscribe' in subscription) {
+        (subscription as { unsubscribe: () => void }).unsubscribe();
+      }
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
