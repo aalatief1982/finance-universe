@@ -42,6 +42,15 @@ describe('suggestionEngine', () => {
     expect(extractVendorName(message)).toBe('bolt.eu');
   });
 
+  it('extracts Arabic anchor merchant before amount delimiters', () => {
+    const message = '... لدى Google YouTubePremium بمبلغ SAR 49.99 في UNITED STATES ...';
+    expect(extractVendorName(message)).toBe('Google YouTubePremium');
+  });
+
+  it('rejects malformed vendor captures that include currency fragments', () => {
+    expect(extractVendorName('Paid to Google YouTubePremium SAR 49.99')).toBe('');
+  });
+
   it('finds closest fallback vendor matches', () => {
     localStorage.setItem('xpensia_vendor_fallbacks', JSON.stringify(vendorFallbacks));
     const match = findClosestFallbackMatch('Acme Store Riyadh');
