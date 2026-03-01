@@ -148,6 +148,22 @@ const getDateConfidence = (txn: DraftTransaction): DateConfidence => {
   return 'high';
 };
 
+
+const toTransactionForTitle = (txn: DraftTransaction): Transaction => ({
+  id: txn.id || `temp-${Date.now()}`,
+  title: txn.title,
+  amount: typeof txn.amount === 'string' ? parseFloat(txn.amount) : (txn.amount || 0),
+  category: txn.category,
+  subcategory: txn.subcategory,
+  date: txn.date || new Date().toISOString().split('T')[0],
+  type: (txn.type as TransactionType) || 'expense',
+  source: 'sms-import',
+  currency: txn.currency,
+  vendor: txn.vendor,
+  fromAccount: txn.fromAccount,
+  toAccount: txn.toAccount,
+});
+
 const ReviewSmsTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<DraftTransaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -300,23 +316,8 @@ const handleFieldChange = (index: number, field: keyof DraftTransaction, value: 
     txn.subcategory = validSubcategories[0] || 'none';
   }
 
-  if (['amount', 'currency', 'subcategory', 'category'].includes(field)) {
-    // Convert DraftTransaction to Transaction for title generation
-    const transactionForTitle: Transaction = {
-      id: txn.id || `temp-${Date.now()}`,
-      title: txn.title,
-      amount: typeof txn.amount === 'string' ? parseFloat(txn.amount) : (txn.amount || 0),
-      category: txn.category,
-      subcategory: txn.subcategory,
-      date: txn.date || new Date().toISOString().split('T')[0],
-      type: (txn.type as TransactionType) || 'expense',
-      source: 'sms-import',
-      currency: txn.currency,
-      vendor: txn.vendor,
-      fromAccount: txn.fromAccount,
-      toAccount: txn.toAccount
-    };
-    txn.title = generateDefaultTitle(transactionForTitle);
+  if (['amount', 'currency', 'subcategory', 'category', 'date', 'type', 'vendor'].includes(field)) {
+    txn.title = generateDefaultTitle(toTransactionForTitle(txn));
   }
 
   updated[index] = txn;
@@ -360,23 +361,9 @@ const toggleSkipAll = () => {
         return;
       }
 
-      // Convert DraftTransaction to Transaction for title generation
-      const transactionForTitle: Transaction = {
-        id: txn.id || `temp-${Date.now()}`,
-        title: txn.title,
-        amount: typeof txn.amount === 'string' ? parseFloat(txn.amount) : (txn.amount || 0),
-        category: txn.category,
-        subcategory: txn.subcategory,
-        date: txn.date || new Date().toISOString().split('T')[0],
-        type: (txn.type as TransactionType) || 'expense',
-        source: 'sms-import',
-        currency: txn.currency,
-        vendor: txn.vendor,
-        fromAccount: txn.fromAccount,
-        toAccount: txn.toAccount
-      };
-      const title = generateDefaultTitle(transactionForTitle);
-      
+      const generatedTitle = generateDefaultTitle(toTransactionForTitle(txn));
+      const title = txn.title?.trim() || generatedTitle;
+
       if (txn.amount && txn.currency && txn.date && txn.category && txn.subcategory && title) {
         const fullTransaction: Transaction = {
           id: txn.id || `txn-${Date.now()}-${Math.random()}`,

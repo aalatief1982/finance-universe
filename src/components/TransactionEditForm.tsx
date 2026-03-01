@@ -163,6 +163,16 @@ const normalizeTransactionForCompare = (tx: Partial<Transaction>) => ({
   type: normalizeText(tx.type),
 });
 
+const getRawMessageFromTransaction = (transaction?: Transaction): string => {
+  if (!transaction) return '';
+
+  if (typeof (transaction as { rawMessage?: unknown }).rawMessage === 'string') {
+    return ((transaction as { rawMessage?: string }).rawMessage || '').trim();
+  }
+
+  return (transaction.details?.rawMessage || '').trim();
+};
+
 const getAmountValidationError = (
   amountNumber: number | null,
 ): string | undefined => {
@@ -193,10 +203,7 @@ const createInitialTransactionState = (
     const mappedVendor = remapVendor(transaction.vendor);
     const mappedFromAccount = remapFromAccount(transaction.fromAccount);
     const displayDate = transaction.date ? toISOFormat(transaction.date) : '';
-    const rawMessage =
-      typeof (transaction as { rawMessage?: unknown }).rawMessage === 'string'
-        ? (transaction as { rawMessage?: string }).rawMessage
-        : transaction.details?.rawMessage || '';
+    const rawMessage = getRawMessageFromTransaction(transaction);
 
     const { person: _legacyPerson, ...transactionWithoutPerson } = transaction;
 
@@ -426,6 +433,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     return parsed !== null ? Math.abs(parsed) : null;
   });
 
+  const rawMessageDescriptionDefault = useMemo(
+    () => getRawMessageFromTransaction(transaction),
+    [transaction],
+  );
+
   const filteredFromAccounts = useMemo(() => {
     const query = normalizeText(editedTransaction.fromAccount);
 
@@ -597,6 +609,36 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     [initialTitle, lastAutoTitle, titleManuallyEdited, transaction],
   );
 
+
+  useEffect(() => {
+    if (descriptionManuallyEdited) {
+      return;
+    }
+
+    if ((editedTransaction.description || '').trim()) {
+      return;
+    }
+
+    if (!rawMessageDescriptionDefault) {
+      return;
+    }
+
+    setEditedTransaction((prev) => {
+      if ((prev.description || '').trim()) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        description: rawMessageDescriptionDefault,
+      };
+    });
+  }, [
+    descriptionManuallyEdited,
+    editedTransaction.description,
+    rawMessageDescriptionDefault,
+  ]);
+
   useEffect(() => {
     const initialSerialized = serializeTransactionForDirtyCheck(
       initialTransactionState,
@@ -764,6 +806,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         const autoTitle = generateDefaultTitle(updated);
 
         if (
+          TITLE_DRIVING_FIELDS.includes(field) &&
+          !titleManuallyEdited &&
+          shouldAutoUpdateTitle(updated.title || '')
+        ) {
+          updated.title = autoTitle;
+          setLastAutoTitle(autoTitle);
+          setSuggestedTitle('');
+        } else if (
           TITLE_DRIVING_FIELDS.includes(field) &&
           !titleManuallyEdited &&
           hasEditedTitleDrivers &&
