@@ -392,11 +392,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [userInteractions, setUserInteractions] = useState<{
     vendor: boolean;
     fromAccount: boolean;
+    toAccount: boolean;
   }>({
     vendor: false,
     fromAccount: false,
+    toAccount: false,
   });
   const [fromAccountOpen, setFromAccountOpen] = useState(false);
+  const [toAccountOpen, setToAccountOpen] = useState(false);
 
   const [initialTransactionState, setInitialTransactionState] =
     useState<Transaction>(() => createInitialTransactionState(transaction));
@@ -434,6 +437,18 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
       normalizeText(account.name).includes(query),
     );
   }, [accounts, editedTransaction.fromAccount]);
+
+  const filteredToAccounts = useMemo(() => {
+    const query = normalizeText(editedTransaction.toAccount);
+
+    if (!query) {
+      return accounts;
+    }
+
+    return accounts.filter((account) =>
+      normalizeText(account.name).includes(query),
+    );
+  }, [accounts, editedTransaction.toAccount]);
 
   const hydrationSnapshotKey = useMemo(() => {
     const baseline = createInitialTransactionState(transaction);
@@ -1266,7 +1281,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               )}
             />
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="relative z-10 flex shrink-0 items-center gap-1 overflow-visible">
             <Button
               type="button"
               variant="outline"
@@ -1812,7 +1827,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               </div>
             )}
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="relative z-10 flex shrink-0 items-center gap-1 overflow-visible">
             <Button
               type="button"
               variant="outline"
@@ -1825,6 +1840,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               }
               aria-label="Edit selected from account"
               disabled={!editedTransaction.fromAccount}
+              className="shrink-0"
             >
               <Pencil className="size-4" />
             </Button>
@@ -1838,6 +1854,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 setAddAccountOpen(true);
               }}
               title="Add account"
+              className="shrink-0"
             >
               <Plus className="size-4" />
             </Button>
@@ -1868,36 +1885,61 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             </label>
 
             <div className="flex w-full items-center gap-1">
-              <div className="min-w-0 flex-1">
-                <Select
+              <div className="relative min-w-0 flex-1">
+                <Input
+                  ref={(el) => {
+                    fieldRefs.current.toAccount = el;
+                  }}
+                  id="transaction-to-account"
                   value={editedTransaction.toAccount || ''}
-                  onValueChange={(value) => handleChange('toAccount', value)}
-                >
-                  <SelectTrigger
-                    ref={(el) => {
-                      fieldRefs.current.toAccount = el;
-                    }}
-                    id="transaction-to-account"
-                    className={cn(
-                      'w-full text-sm',
-                      inputPadding,
-                      'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
-                      darkFieldClass,
-                      hasError('toAccount') && 'border-destructive',
-                    )}
-                  >
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {accounts.map((account) => (
-                      <SelectItem key={account.id} value={account.name}>
+                  isAutoFilled={isDriven('toAccount', drivenFields)}
+                  onChange={(event) => {
+                    setUserInteractions((prev) => ({ ...prev, toAccount: true }));
+                    handleChange('toAccount', event.target.value);
+                  }}
+                  onFocus={() => {
+                    setUserInteractions((prev) => ({ ...prev, toAccount: true }));
+                    setToAccountOpen(true);
+                  }}
+                  onBlur={() => {
+                    window.setTimeout(() => {
+                      setToAccountOpen(false);
+                    }, 120);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape') {
+                      setToAccountOpen(false);
+                    }
+                  }}
+                  placeholder="Type account name"
+                  required
+                  className={cn(
+                    'w-full text-sm rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
+                    inputPadding,
+                    darkFieldClass,
+                    hasError('toAccount') && 'border-destructive',
+                  )}
+                />
+                {toAccountOpen && (
+                  <div className="absolute z-50 mt-1 w-full overflow-y-auto rounded-md border border-border bg-background shadow-lg">
+                    {filteredToAccounts.map((account) => (
+                      <button
+                        type="button"
+                        key={account.id}
+                        className="block w-full border-b border-border px-3 py-2 text-left text-sm last:border-b-0 hover:bg-muted"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          handleChange('toAccount', account.name);
+                          setToAccountOpen(false);
+                        }}
+                      >
                         {account.name}
-                      </SelectItem>
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
               </div>
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="relative z-10 flex shrink-0 items-center gap-1 overflow-visible">
                 <Button
                   type="button"
                   variant="outline"
@@ -1910,6 +1952,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   }
                   aria-label="Edit selected to account"
                   disabled={!editedTransaction.toAccount}
+                  className="shrink-0"
                 >
                   <Pencil className="size-4" />
                 </Button>
@@ -1923,6 +1966,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                     setAddAccountOpen(true);
                   }}
                   title="Add account"
+                  className="shrink-0"
                 >
                   <Plus className="size-4" />
                 </Button>
@@ -2106,7 +2150,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               )}
             />
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="relative z-10 flex shrink-0 items-center gap-1 overflow-visible">
             <Button
               type="button"
               variant="outline"
@@ -2119,6 +2163,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               }
               aria-label="Edit selected payee"
               disabled={!editedTransaction.vendor}
+              className="shrink-0"
             >
               <Pencil className="size-4" />
             </Button>

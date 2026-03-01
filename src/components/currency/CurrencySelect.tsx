@@ -1,7 +1,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { formatCurrencyFlagCode, getAvailableCurrencies } from '@/lib/currency-utils';
+import { formatCurrencyFlagCode, getAvailableCurrencies, getCurrencyOptionByCode } from '@/lib/currency-utils';
 
 interface CurrencySelectProps {
   value?: string;
@@ -12,6 +12,7 @@ interface CurrencySelectProps {
   triggerClassName?: string;
   currencies?: string[];
   disabled?: boolean;
+  displayMode?: 'codeOnly' | 'codePlusCountry';
 }
 
 const CurrencySelect: React.FC<CurrencySelectProps> = ({
@@ -23,6 +24,7 @@ const CurrencySelect: React.FC<CurrencySelectProps> = ({
   triggerClassName,
   currencies,
   disabled,
+  displayMode = 'codeOnly',
 }) => {
   const options = React.useMemo(() => currencies ?? getAvailableCurrencies(), [currencies]);
 
@@ -34,7 +36,14 @@ const CurrencySelect: React.FC<CurrencySelectProps> = ({
       <SelectContent className={className}>
         {options.map((currency) => (
           <SelectItem key={currency} value={currency}>
-            {formatCurrencyFlagCode(currency, currency)}
+            {displayMode === 'codePlusCountry'
+              ? (() => {
+                  const option = getCurrencyOptionByCode(currency);
+                  return option
+                    ? `${option.flag} ${option.code} - ${option.country}`
+                    : formatCurrencyFlagCode(currency, currency);
+                })()
+              : formatCurrencyFlagCode(currency, currency)}
           </SelectItem>
         ))}
       </SelectContent>
