@@ -380,24 +380,10 @@ const toggleSkipAll = () => {
     if (valid.length === 0 && skippedTxns.length === 0) return;
 
     valid.forEach(({ txn, idx }) => {
-      const normalizedAmount =
-        txn.type === 'expense' ? -Math.abs(parseFloat(String(txn.amount!))) : Math.abs(parseFloat(String(txn.amount!)));
-      const normalizedToAccount =
-        txn.type === 'income' && !txn.toAccount && txn.fromAccount ? txn.fromAccount : txn.toAccount;
-      const normalizedFromAccount = txn.type === 'income' ? '' : txn.fromAccount;
-
-      const cleanTransaction = {
-        ...txn,
-        amount: normalizedAmount,
-        fromAccount: normalizedFromAccount,
-        toAccount: normalizedToAccount,
-        title: txn.title,
-      };
-
       const originalTxn = transactions[idx];
-      saveTransactionWithLearning(cleanTransaction as Transaction, {
+      saveTransactionWithLearning(txn, {
         rawMessage: originalTxn.rawMessage,
-        senderHint: normalizedFromAccount || normalizedToAccount || '',
+        senderHint: txn.fromAccount || txn.toAccount || '',
         isNew: true,
         addTransaction,
         updateTransaction,
