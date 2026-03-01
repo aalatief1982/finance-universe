@@ -8,33 +8,60 @@ import { formatCurrency } from '@/utils/format-utils';
 
 interface DetectedTransactionCardProps {
   transaction: Transaction;
+  fieldConfidences?: Record<string, number>;
   isSmartMatch: boolean;
   onAddTransaction: (transaction: Transaction) => void;
-  origin?: "template" | "structure" | "ml" | "fallback";
+  origin?: 'template' | 'structure' | 'ml' | 'fallback';
 }
 
 const DetectedTransactionCard = ({
   transaction,
+  fieldConfidences = {},
   isSmartMatch,
   onAddTransaction,
-  origin
+  origin,
 }: DetectedTransactionCardProps) => {
   const getOriginDisplay = () => {
     switch (origin) {
       case 'template':
-        return { label: 'Template Match', color: 'bg-success/10 text-success border border-success/20' };
+        return {
+          label: 'Template Match',
+          color: 'bg-success/10 text-success border border-success/20',
+        };
       case 'structure':
-        return { label: 'Structure Match', color: 'bg-info/10 text-info border border-info/20' };
+        return {
+          label: 'Structure Match',
+          color: 'bg-info/10 text-info border border-info/20',
+        };
       case 'ml':
-        return { label: 'AI Extracted', color: 'bg-warning/10 text-warning border border-warning/20' };
+        return {
+          label: 'AI Extracted',
+          color: 'bg-warning/10 text-warning border border-warning/20',
+        };
       case 'fallback':
-        return { label: 'Fallback', color: 'bg-muted text-muted-foreground border border-border' };
+        return {
+          label: 'Fallback',
+          color: 'bg-muted text-muted-foreground border border-border',
+        };
       default:
-        return { label: 'Unknown', color: 'bg-muted text-muted-foreground border border-border' };
+        return {
+          label: 'Unknown',
+          color: 'bg-muted text-muted-foreground border border-border',
+        };
     }
   };
 
   const originInfo = getOriginDisplay();
+
+  const isDriven = (field: keyof Transaction): boolean => {
+    const score = fieldConfidences[field as string];
+    return typeof score === 'number' && score > 0;
+  };
+
+  const chipClass = (field: keyof Transaction): string =>
+    isDriven(field)
+      ? 'text-xs bg-success/15 text-success px-2 py-1 rounded-md border border-success/30'
+      : 'text-xs bg-muted px-2 py-1 rounded-md';
 
   return (
     <Card className="overflow-hidden">
@@ -50,7 +77,9 @@ const DetectedTransactionCard = ({
                 </span>
               )}
               {origin && (
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${originInfo.color}`}>
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${originInfo.color}`}
+                >
                   {originInfo.label}
                 </span>
               )}
@@ -62,9 +91,13 @@ const DetectedTransactionCard = ({
               {formatCurrency(transaction.amount, transaction.currency)}
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
-              <span className="text-xs bg-muted px-2 py-1 rounded-md">
-                {transaction.type}
-              </span>
+              <span className={chipClass('type')}>{transaction.type}</span>
+              <span className={chipClass('currency')}>{transaction.currency}</span>
+              {transaction.fromAccount && (
+                <span className={chipClass('fromAccount')}>
+                  {transaction.fromAccount}
+                </span>
+              )}
               <span className="text-xs bg-muted px-2 py-1 rounded-md">
                 {transaction.category}
               </span>
@@ -75,10 +108,7 @@ const DetectedTransactionCard = ({
               )}
             </div>
           </div>
-          <Button
-            className="w-full"
-            onClick={() => onAddTransaction(transaction)}
-          >
+          <Button className="w-full" onClick={() => onAddTransaction(transaction)}>
             <Plus className="h-4 w-4 mr-1" />
             Add Transaction
           </Button>
