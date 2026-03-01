@@ -66,6 +66,7 @@ import {
   TransactionValidationError,
   validateTransaction,
 } from '@/lib/transaction-validation';
+import { recordPreferredFromAccount } from './templateHashAccountMap';
 
 // ============================================================================
 // SECTION: Save Options Interface
@@ -394,6 +395,12 @@ export function saveTransactionWithLearning(
       } else {
         upsertTemplateAccountPreference(templateHash, 'from', newTransaction.fromAccount);
       }
+
+      recordPreferredFromAccount(
+        senderHint,
+        templateHash,
+        newTransaction.fromAccount,
+      );
     }
 
     // Default From Account Mapping - store for template defaults
