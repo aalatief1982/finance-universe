@@ -1,28 +1,11 @@
 import type { Transaction } from '@/types/transaction';
+import type {
+  InferenceDTO,
+  InferenceOrigin,
+  InferenceParsingStatus,
+} from '@/types/inference';
 
-export interface InferenceDTO {
-  transaction: Transaction;
-  rawMessage: string;
-  senderHint?: string;
-  confidence?: number;
-  parsingStatus?: 'success' | 'partial' | 'failed';
-  origin?: 'template' | 'structure' | 'ml' | 'fallback' | 'manual';
-  matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback' | 'manual';
-  fieldConfidences: Record<string, number>;
-  matchedCount?: number;
-  totalTemplates?: number;
-  fieldScore?: number;
-  keywordScore?: number;
-  mode: 'create' | 'edit';
-  isSuggested?: boolean;
-  meta?: {
-    matchedCount?: number;
-    totalTemplates?: number;
-    fieldScore?: number;
-    keywordScore?: number;
-    extractedFieldCount?: number;
-  };
-}
+export type { InferenceDTO } from '@/types/inference';
 
 const isObject = (value: unknown): value is Record<string, unknown> => (
   typeof value === 'object' && value !== null
@@ -56,8 +39,42 @@ const createFallbackTransaction = (
   },
 });
 
+const normalizeParsingStatus = (status: unknown): InferenceParsingStatus | undefined => (
+  status === 'success' || status === 'partial' || status === 'failed' ? status : undefined
+);
+
+const normalizeOrigin = (origin: unknown): InferenceOrigin | undefined => (
+  origin === 'template' ||
+  origin === 'structure' ||
+  origin === 'ml' ||
+  origin === 'fallback' ||
+  origin === 'manual'
+    ? origin
+    : undefined
+);
+
+const devAssertRequiredKeys = (source: Record<string, unknown>) => {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+
+  const missing: string[] = [];
+  if (!isObject(source.transaction)) missing.push('transaction');
+  if (typeof source.rawMessage !== 'string') missing.push('rawMessage');
+  if (!isObject(source.fieldConfidences)) missing.push('fieldConfidences');
+
+  if (missing.length > 0) {
+    console.warn('[InferenceDTO] normalizeInferenceDTO missing required keys, applying defaults:', {
+      missing,
+      source,
+    });
+  }
+};
+
 export function normalizeInferenceDTO(input: unknown): InferenceDTO {
   const source = isObject(input) ? input : {};
+  devAssertRequiredKeys(source);
+
   const rawMessage = typeof source.rawMessage === 'string' ? source.rawMessage : '';
   const senderHint = typeof source.senderHint === 'string' ? source.senderHint : undefined;
 
@@ -66,30 +83,13 @@ export function normalizeInferenceDTO(input: unknown): InferenceDTO {
     ? ({ ...createFallbackTransaction(rawMessage, senderHint), ...candidateTransaction } as Transaction)
     : createFallbackTransaction(rawMessage, senderHint);
 
-  const mode = source.mode === 'edit' ? 'edit' : 'create';
+  const inferredMode = transaction.id ? 'edit' : 'create';
+  const mode = source.mode === 'edit' || source.mode === 'create' ? source.mode : inferredMode;
 
   const confidence = typeof source.confidence === 'number' ? source.confidence : undefined;
-  const parsingStatus = source.parsingStatus === 'success' || source.parsingStatus === 'partial' || source.parsingStatus === 'failed'
-    ? source.parsingStatus
-    : undefined;
-
-  const origin =
-    source.origin === 'template' ||
-    source.origin === 'structure' ||
-    source.origin === 'ml' ||
-    source.origin === 'fallback' ||
-    source.origin === 'manual'
-      ? source.origin
-      : undefined;
-
-  const matchOrigin =
-    source.matchOrigin === 'template' ||
-    source.matchOrigin === 'structure' ||
-    source.matchOrigin === 'ml' ||
-    source.matchOrigin === 'fallback' ||
-    source.matchOrigin === 'manual'
-      ? source.matchOrigin
-      : origin;
+  const parsingStatus = normalizeParsingStatus(source.parsingStatus);
+  const origin = normalizeOrigin(source.origin);
+  const matchOrigin = normalizeOrigin(source.matchOrigin) ?? origin;
 
   const fieldConfidences = isObject(source.fieldConfidences)
     ? (source.fieldConfidences as Record<string, number>)
@@ -99,11 +99,13 @@ export function normalizeInferenceDTO(input: unknown): InferenceDTO {
   const totalTemplates = typeof source.totalTemplates === 'number' ? source.totalTemplates : undefined;
   const fieldScore = typeof source.fieldScore === 'number' ? source.fieldScore : undefined;
   const keywordScore = typeof source.keywordScore === 'number' ? source.keywordScore : undefined;
+  const templateHash = typeof source.templateHash === 'string' ? source.templateHash : undefined;
 
   return {
     transaction,
     rawMessage,
     senderHint,
+    templateHash,
     confidence,
     parsingStatus,
     origin,

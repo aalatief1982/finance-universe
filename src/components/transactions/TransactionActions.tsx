@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,7 +29,7 @@ const TransactionActions = ({
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/edit-transaction/${transaction.id}`, { state: { transaction } });
+    navigate(`/edit-transaction/${transaction.id}`, { state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }) });
   };
 
   const handleDelete = (e: React.MouseEvent) => {

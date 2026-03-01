@@ -6,6 +6,7 @@ import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/utils/format-utils';
 import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -26,7 +27,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const handleEdit = () => {
-    navigate(`/edit-transaction/${transaction.id}`, { state: { transaction } });
+    navigate(`/edit-transaction/${transaction.id}`, { state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }) });
   };
 
   const handleDelete = () => {
