@@ -92,6 +92,7 @@ interface DraftTransaction {
   confidence?: number;
   fieldConfidences?: Record<string, number>;
   parsingStatus?: 'success' | 'partial' | 'failed';
+  origin?: 'template' | 'structure' | 'ml' | 'fallback' | 'manual';
   inferenceDTO?: InferenceDTO;
   accountCandidates?: AccountCandidate[];
 
@@ -111,6 +112,41 @@ interface SmsLocationState {
   vendorMap?: Record<string, string>;
   keywordMap?: Array<{ keyword: string; mappings: Array<{ field: string; value: string }> }>;
 }
+
+type DateConfidence = 'high' | 'low';
+
+const getDateOnly = (value?: string): string | null => {
+  if (!value) return null;
+  const normalized = value.includes('T') ? value.split('T')[0] : value;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return normalized;
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.toISOString().split('T')[0];
+};
+
+const getRelativeDateOnly = (offsetDays: number): string => {
+  const value = new Date();
+  value.setHours(0, 0, 0, 0);
+  value.setDate(value.getDate() + offsetDays);
+  return value.toISOString().split('T')[0];
+};
+
+const getDateConfidence = (txn: DraftTransaction): DateConfidence => {
+  const dateFieldConfidence = txn.fieldConfidences?.date;
+  const usedFallbackPath = txn.origin === 'fallback' || txn.parsingStatus !== 'success';
+  const ambiguousDate = typeof dateFieldConfidence === 'number' && dateFieldConfidence < 0.8;
+
+  if (usedFallbackPath || ambiguousDate) {
+    return 'low';
+  }
+
+  return 'high';
+};
 
 const ReviewSmsTransactions: React.FC = () => {
   const [transactions, setTransactions] = useState<DraftTransaction[]>([]);
@@ -201,6 +237,7 @@ const ReviewSmsTransactions: React.FC = () => {
             confidence,
             fieldConfidences,
             parsingStatus,
+            origin: result.origin,
             inferenceDTO,
             accountCandidates: result.parsed?.candidates?.accountCandidates || [],
           };
@@ -464,6 +501,8 @@ const toggleSkipAll = () => {
             : txn.parsingStatus === 'partial'
               ? 'warning'
               : 'destructive';
+        const dateConfidence = getDateConfidence(txn);
+        const messageDate = getDateOnly(messages[index]?.date);
         return (
         <Card key={index} className={`p-[var(--card-padding)] mb-4 border ${borderColor}`}>
           <div className="flex justify-between mb-2 items-center">
@@ -518,18 +557,56 @@ const toggleSkipAll = () => {
                     : 'border-red-500'
               }`}
             />
-            <Input
-              type="date"
-              value={txn.date?.split('T')[0] || ''}
-              onChange={e => handleFieldChange(index, 'date', e.target.value)}
-              className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
-                (txn.fieldConfidences?.date ?? 0) >= 0.8
-                  ? 'border-green-500'
-                  : (txn.fieldConfidences?.date ?? 0) >= 0.4
-                    ? 'border-amber-500'
-                    : 'border-red-500'
-              }`}
-            />
+            <div className="space-y-2">
+              <Input
+                type="date"
+                value={txn.date?.split('T')[0] || ''}
+                onChange={e => handleFieldChange(index, 'date', e.target.value)}
+                className={`p-2 dark:bg-black dark:text-white dark:border-zinc-700 ${
+                  (txn.fieldConfidences?.date ?? 0) >= 0.8
+                    ? 'border-green-500'
+                    : (txn.fieldConfidences?.date ?? 0) >= 0.4
+                      ? 'border-amber-500'
+                      : 'border-red-500'
+                }`}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                {dateConfidence === 'low' && (
+                  <span className="text-xs text-amber-700 dark:text-amber-300">
+                    Needs confirmation
+                  </span>
+                )}
+                {messageDate && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handleFieldChange(index, 'date', messageDate)}
+                  >
+                    Use message time
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => handleFieldChange(index, 'date', getRelativeDateOnly(0))}
+                >
+                  Today
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => handleFieldChange(index, 'date', getRelativeDateOnly(-1))}
+                >
+                  Yesterday
+                </Button>
+              </div>
+            </div>
             <Select
               value={txn.category}
               onValueChange={value => handleFieldChange(index, 'category', value)}
