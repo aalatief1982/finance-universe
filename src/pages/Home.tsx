@@ -40,6 +40,7 @@ import UnconvertedWarningBanner from "@/components/dashboard/UnconvertedWarningB
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTransactions } from "@/context/TransactionContext";
 import { useNavigate } from "react-router-dom";
+import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { ChevronRight } from "lucide-react";
 import { TYPE_ICON_MAP } from "@/constants/typeIconMap";
 import { CATEGORY_ICON_MAP } from "@/constants/categoryIconMap";
@@ -309,13 +310,13 @@ const Home = () => {
                       key={transaction.id || idx}
                       onClick={() =>
                         navigate(`/edit-transaction/${transaction.id}`, {
-                          state: { transaction },
+                          state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }),
                         })
                       }
                       onKeyDown={(e) =>
                         e.key === 'Enter' &&
                         navigate(`/edit-transaction/${transaction.id}`, {
-                          state: { transaction },
+                          state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }),
                         })
                       }
                       aria-label="Edit transaction"

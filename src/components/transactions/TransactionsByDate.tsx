@@ -18,6 +18,7 @@ import {
 import { useTransactions } from "@/context/TransactionContext";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { normalizeInferenceDTO } from "@/lib/inference/inferenceDTO";
 import { UnconvertedBadge } from "@/components/fx";
 
 interface TransactionsByDateProps {
@@ -64,7 +65,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
   };
 
   const handleTransactionClick = (transaction: Transaction) => {
-    navigate(`/edit-transaction/${transaction.id}`, { state: { transaction } });
+    navigate(`/edit-transaction/${transaction.id}`, { state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }) });
   };
 
   const handleDeleteClick = (e: React.MouseEvent, transaction: Transaction) => {
