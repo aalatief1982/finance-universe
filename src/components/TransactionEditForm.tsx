@@ -108,6 +108,8 @@ import {
   validateTransactionForm,
 } from '@/lib/transaction-validation';
 import { parseAmount } from '@/lib/amount';
+import { resolveFieldTier, type ConfidenceTier } from '@/lib/inference/fieldTier';
+import type { InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
 
 const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
   'amount',
@@ -190,6 +192,11 @@ interface TransactionEditFormProps {
   showNotes?: boolean;
   /** Optional confidence scores for fields */
   fieldConfidences?: Partial<Record<keyof Transaction, number>>;
+  confidence?: number;
+  origin?: InferenceOrigin | null;
+  matchOrigin?: InferenceOrigin | null;
+  parsingStatus?: InferenceParsingStatus | null;
+  isSuggested?: boolean;
   /** Called when user starts editing any field */
   onEditStart?: () => void;
   /** Called when form dirty state changes */
@@ -258,12 +265,16 @@ function isDriven(
   return !!drivenFields[field];
 }
 
-function hasLowConfidence(
-  field: keyof Transaction,
-  scores: Partial<Record<keyof Transaction, number>>,
-) {
-  const score = scores[field];
-  return score !== undefined && score < 0.6;
+function isLowTier(tier: ConfidenceTier) {
+  return tier === 'low';
+}
+
+function isHighTier(tier: ConfidenceTier) {
+  return tier === 'high';
+}
+
+function isMediumTier(tier: ConfidenceTier) {
+  return tier === 'medium';
 }
 
 function areDrivenFieldsEqual(
@@ -323,6 +334,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   compact = false,
   showNotes = true,
   fieldConfidences = {},
+  confidence,
+  origin,
+  matchOrigin,
+  parsingStatus,
+  isSuggested = false,
   onEditStart,
   onDirtyChange,
 }) => {
@@ -346,6 +362,33 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [drivenFields, setDrivenFields] = useState<
     Partial<Record<keyof Transaction, boolean>>
   >({});
+
+  const fieldTierByField = useMemo(() => {
+    const tiers: Partial<Record<keyof Transaction, ConfidenceTier>> = {};
+
+    (Object.keys(editedTransaction) as (keyof Transaction)[]).forEach((field) => {
+      tiers[field] = resolveFieldTier(field, {
+        fieldConfidences,
+        confidence,
+        origin,
+        matchOrigin,
+        parsingStatus,
+        transaction: editedTransaction,
+      }).tier;
+    });
+
+    return tiers;
+  }, [
+    editedTransaction,
+    fieldConfidences,
+    confidence,
+    origin,
+    matchOrigin,
+    parsingStatus,
+  ]);
+
+  const getFieldTier = (field: keyof Transaction): ConfidenceTier =>
+    fieldTierByField[field] ?? 'low';
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [availableSubcategories, setAvailableSubcategories] = useState<
     string[]
@@ -658,29 +701,64 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   }, [editedTransaction.fromAccount, userInteractions.fromAccount]);
 
   useEffect(() => {
-    if (transaction && fieldConfidences) {
-      const driven: Partial<Record<keyof Transaction, boolean>> = {};
-
-      // Use fieldConfidences to determine which fields were driven by smart paste
-      Object.keys(fieldConfidences).forEach((field) => {
-        const confidence = fieldConfidences[field as keyof Transaction];
-
-        // Field is driven if it has a confidence score (regardless of value)
-        if (confidence !== undefined && confidence > 0) {
-          driven[field as keyof Transaction] = true;
-        }
-      });
-
-      setDrivenFields((prev) => {
-        if (areDrivenFieldsEqual(driven, prev)) {
-          return prev;
-        }
-        return driven;
-      });
+    if (!transaction) {
+      setDrivenFields({});
+      return;
     }
-    // Use serialized key to prevent object reference changes from triggering re-renders
+
+    const hasInferenceSignals =
+      Boolean(isSuggested || origin || matchOrigin || parsingStatus) ||
+      Object.keys(fieldConfidences || {}).length > 0;
+
+    if (!hasInferenceSignals) {
+      setDrivenFields({});
+      return;
+    }
+
+    const driven: Partial<Record<keyof Transaction, boolean>> = {};
+    (Object.keys(transaction) as (keyof Transaction)[]).forEach((field) => {
+      const value = transaction[field];
+      const hasValue =
+        typeof value === 'string'
+          ? value.trim().length > 0
+          : typeof value === 'number'
+            ? Number.isFinite(value)
+            : Boolean(value);
+
+      if (!hasValue) {
+        return;
+      }
+
+      const tierResult = resolveFieldTier(field, {
+        fieldConfidences,
+        confidence,
+        origin,
+        matchOrigin,
+        parsingStatus,
+        transaction,
+      });
+
+      if (tierResult.score > 0) {
+        driven[field] = true;
+      }
+    });
+
+    setDrivenFields((prev) => {
+      if (areDrivenFieldsEqual(driven, prev)) {
+        return prev;
+      }
+      return driven;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transaction, fieldConfidencesKey]);
+  }, [
+    transaction,
+    fieldConfidencesKey,
+    confidence,
+    origin,
+    matchOrigin,
+    parsingStatus,
+    isSuggested,
+  ]);
 
   useEffect(() => {
     const categories = getCategoriesForType(editedTransaction.type) || [];
@@ -1078,23 +1156,32 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   };
 
   const renderFeedbackIcons = (field: keyof Transaction) => {
-    if (
-      !showFeedback ||
-      !isDriven(field, drivenFields) ||
-      feedbackGiven[field]
-    ) {
-      return null;
-    }
+    const tier = getFieldTier(field);
+    const showTier = isDriven(field, drivenFields);
+
     return (
       <span className="ml-1 flex items-center gap-1">
-        <ThumbsUp
-          className="size-4 cursor-pointer text-success hover:text-success/80"
-          onClick={() => handleFeedback(field, true)}
-        />
-        <ThumbsDown
-          className="size-4 cursor-pointer text-destructive hover:text-destructive/80"
-          onClick={() => handleFeedback(field, false)}
-        />
+        {showTier && isHighTier(tier) && (
+          <span className="text-[10px] text-success font-medium">Detected</span>
+        )}
+        {showTier && isMediumTier(tier) && (
+          <span className="text-[10px] text-info font-medium">Suggested</span>
+        )}
+        {showTier && isLowTier(tier) && (
+          <span className="text-[10px] text-warning font-medium">Needs review</span>
+        )}
+        {showFeedback && showTier && !feedbackGiven[field] && (
+          <>
+            <ThumbsUp
+              className="size-4 cursor-pointer text-success hover:text-success/80"
+              onClick={() => handleFeedback(field, true)}
+            />
+            <ThumbsDown
+              className="size-4 cursor-pointer text-destructive hover:text-destructive/80"
+              onClick={() => handleFeedback(field, false)}
+            />
+          </>
+        )}
       </span>
     );
   };
@@ -1285,8 +1372,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               'rounded-md border-border focus:ring-ring',
               darkFieldClass,
               hasError('type') && 'border-destructive',
+              isMediumTier(getFieldTier('type')) && 'border-info/60',
+              isLowTier(getFieldTier('type')) && 'border-amber-500',
             )}
-            isAutoFilled={isDriven('type', drivenFields)}
+            isAutoFilled={isDriven('type', drivenFields) && isHighTier(getFieldTier('type'))}
           >
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
@@ -1324,9 +1413,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               className={cn(
                 'w-full text-sm',
                 inputPadding,
-                isDriven('currency', drivenFields) && 'bg-[#dfffe0]',
+                isDriven('currency', drivenFields) &&
+                  isHighTier(getFieldTier('currency')) &&
+                  'bg-[#dfffe0]',
                 hasError('currency') && 'border-destructive',
-                hasLowConfidence('currency', fieldConfidences) &&
+                isMediumTier(getFieldTier('currency')) && 'border-info/60',
+                isLowTier(getFieldTier('currency')) &&
                   'border-warning',
               )}
             />
@@ -1774,14 +1866,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             type="text"
             inputMode="decimal"
             value={amountText}
-            isAutoFilled={isDriven('amount', drivenFields)}
+            isAutoFilled={isDriven('amount', drivenFields) && isHighTier(getFieldTier('amount'))}
             onChange={(e) => handleChange('amount', e.target.value)}
             onBlur={handleAmountBlur}
             placeholder="0.00"
             required
             title={
-              hasLowConfidence('amount', fieldConfidences)
-                ? 'Low confidence'
+              isLowTier(getFieldTier('amount'))
+                ? 'Needs review'
                 : undefined
             }
             className={cn(
@@ -1789,7 +1881,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               inputPadding,
               darkFieldClass,
               hasError('amount') && 'border-destructive',
-              hasLowConfidence('amount', fieldConfidences) &&
+              isMediumTier(getFieldTier('amount')) && 'border-info/60',
+              isLowTier(getFieldTier('amount')) &&
                 'border-amber-500',
             )}
           />
@@ -1823,7 +1916,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               }}
               id="transaction-from-account"
               value={editedTransaction.fromAccount || ''}
-              isAutoFilled={isDriven('fromAccount', drivenFields)}
+              isAutoFilled={isDriven('fromAccount', drivenFields) && isHighTier(getFieldTier('fromAccount'))}
               onChange={(event) => {
                 setUserInteractions((prev) => ({ ...prev, fromAccount: true }));
                 handleChange('fromAccount', event.target.value);
@@ -1845,8 +1938,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
               placeholder="Type account name"
               required
               title={
-                hasLowConfidence('fromAccount', fieldConfidences)
-                  ? 'Low confidence'
+                isLowTier(getFieldTier('fromAccount'))
+                  ? 'Needs review'
                   : undefined
               }
               className={cn(
@@ -1854,7 +1947,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 inputPadding,
                 darkFieldClass,
                 hasError('fromAccount') && 'border-destructive',
-                hasLowConfidence('fromAccount', fieldConfidences) &&
+                isMediumTier(getFieldTier('fromAccount')) && 'border-info/60',
+                isLowTier(getFieldTier('fromAccount')) &&
                   'border-amber-500',
               )}
             />
@@ -1942,7 +2036,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   }}
                   id="transaction-to-account"
                   value={editedTransaction.toAccount || ''}
-                  isAutoFilled={isDriven('toAccount', drivenFields)}
+                  isAutoFilled={isDriven('toAccount', drivenFields) && isHighTier(getFieldTier('toAccount'))}
                   onChange={(event) => {
                     setUserInteractions((prev) => ({ ...prev, toAccount: true }));
                     handleChange('toAccount', event.target.value);
@@ -1963,11 +2057,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   }}
                   placeholder="Type account name"
                   required
+                  title={
+                    isLowTier(getFieldTier('toAccount')) ? 'Needs review' : undefined
+                  }
                   className={cn(
                     'w-full text-sm rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                     inputPadding,
                     darkFieldClass,
                     hasError('toAccount') && 'border-destructive',
+                    isMediumTier(getFieldTier('toAccount')) && 'border-info/60',
+                    isLowTier(getFieldTier('toAccount')) && 'border-amber-500',
                   )}
                 />
                 {toAccountOpen && (
@@ -2062,13 +2161,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass,
                 hasError('category') && 'border-destructive',
-                hasLowConfidence('category', fieldConfidences) &&
+                isMediumTier(getFieldTier('category')) && 'border-info/60',
+                isLowTier(getFieldTier('category')) &&
                   'border-amber-500',
               )}
-              isAutoFilled={isDriven('category', drivenFields)}
+              isAutoFilled={isDriven('category', drivenFields) && isHighTier(getFieldTier('category'))}
               title={
-                hasLowConfidence('category', fieldConfidences)
-                  ? 'Low confidence'
+                isLowTier(getFieldTier('category'))
+                  ? 'Needs review'
                   : undefined
               }
             >
@@ -2129,13 +2229,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                   darkFieldClass,
                   hasError('subcategory') && 'border-destructive',
-                  hasLowConfidence('subcategory', fieldConfidences) &&
+                  isMediumTier(getFieldTier('subcategory')) && 'border-info/60',
+                  isLowTier(getFieldTier('subcategory')) &&
                     'border-amber-500',
                 )}
-                isAutoFilled={isDriven('subcategory', drivenFields)}
+                isAutoFilled={isDriven('subcategory', drivenFields) && isHighTier(getFieldTier('subcategory'))}
                 title={
-                  hasLowConfidence('subcategory', fieldConfidences)
-                    ? 'Low confidence'
+                  isLowTier(getFieldTier('subcategory'))
+                    ? 'Needs review'
                     : undefined
                 }
               >
@@ -2189,14 +2290,16 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                 });
                 setAddVendorOpen(true);
               }}
-              isAutoFilled={isDriven('vendor', drivenFields)}
-              hasLowConfidence={hasLowConfidence('vendor', fieldConfidences)}
+              isAutoFilled={isDriven('vendor', drivenFields) && isHighTier(getFieldTier('vendor'))}
+              hasLowConfidence={isLowTier(getFieldTier('vendor'))}
               userHasInteracted={userInteractions.vendor}
               className={cn(
                 'w-full text-sm',
                 inputPadding,
                 'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
                 darkFieldClass,
+                isMediumTier(getFieldTier('vendor')) && 'border-info/60',
+                isLowTier(getFieldTier('vendor')) && 'border-amber-500',
               )}
             />
           </div>
@@ -2235,10 +2338,10 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           type="date"
           value={editedTransaction.date || ''}
           onChange={(e) => handleChange('date', e.target.value)}
-          isAutoFilled={isDriven('date', drivenFields)}
+          isAutoFilled={isDriven('date', drivenFields) && isHighTier(getFieldTier('date'))}
           title={
-            hasLowConfidence('date', fieldConfidences)
-              ? 'Low confidence'
+            isLowTier(getFieldTier('date'))
+              ? 'Needs review'
               : undefined
           }
           required
@@ -2248,7 +2351,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             'rounded-md border-gray-300 dark:border-gray-600 focus:ring-primary',
             darkFieldClass,
             hasError('date') && 'border-destructive',
-            hasLowConfidence('date', fieldConfidences) && 'border-amber-500',
+            isMediumTier(getFieldTier('date')) && 'border-info/60',
+            isLowTier(getFieldTier('date')) && 'border-amber-500',
           )}
         />
         {renderFeedbackIcons('date')}
@@ -2275,7 +2379,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             setSuggestedTitle('');
             handleChange('title', e.target.value);
           }}
-          isAutoFilled={isDriven('title', drivenFields)}
+          isAutoFilled={isDriven('title', drivenFields) && isHighTier(getFieldTier('title'))}
           placeholder="Transaction title"
           required
           className={cn(
@@ -2349,7 +2453,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
           }}
           placeholder="Enter a detailed description..."
           rows={2}
-          isAutoFilled={isDriven('description', drivenFields)}
+          isAutoFilled={isDriven('description', drivenFields) && isHighTier(getFieldTier('description'))}
           className={cn(
             'w-full text-sm min-h-[72px] h-[clamp(72px,10vh,120px)] max-h-[120px]',
             inputPadding,
@@ -2373,7 +2477,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             onChange={(e) => handleChange('notes', e.target.value)}
             placeholder="Additional notes..."
             rows={2}
-            isAutoFilled={isDriven('notes', drivenFields)}
+            isAutoFilled={isDriven('notes', drivenFields) && isHighTier(getFieldTier('notes'))}
             className={cn(
               'w-full text-sm',
               inputPadding,
