@@ -105,17 +105,12 @@ interface ScoredCandidate {
 
 const KEYWORD_DEBUG_ENABLED = String(import.meta.env.VITE_DEBUG_KEYWORD_SCORING).toLowerCase() === 'true';
 
-const tokenize = (value: string): string[] =>
-  value
-    .toLowerCase()
-    .split(/[^\p{L}\p{N}]+/u)
-    .filter(Boolean);
-
 const getKeywordMatchType = (sourceText: string, keyword: string): 'exact' | 'substring' | null => {
   const normalizedKeyword = keyword.trim().toLowerCase();
   if (!normalizedKeyword) return null;
-  const words = tokenize(sourceText);
-  if (words.includes(normalizedKeyword)) {
+  const escapedKeyword = normalizedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const exactPhrasePattern = new RegExp(`(^|[^\\p{L}\\p{N}])${escapedKeyword}([^\\p{L}\\p{N}]|$)`, 'iu');
+  if (exactPhrasePattern.test(sourceText)) {
     return 'exact';
   }
   return sourceText.toLowerCase().includes(normalizedKeyword) ? 'substring' : null;
