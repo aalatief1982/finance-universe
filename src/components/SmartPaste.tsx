@@ -34,6 +34,28 @@ import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageF
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { computeCapturedFields } from '@/lib/inference/fieldStatus';
 
+const normalizeFieldConfidences = (
+  confidences?: Record<string, number>,
+): Record<string, number> => {
+  const normalized = { ...(confidences || {}) };
+
+  if (
+    typeof normalized.account === 'number' &&
+    typeof normalized.fromAccount !== 'number'
+  ) {
+    normalized.fromAccount = normalized.account;
+  }
+
+  if (
+    typeof normalized.payee === 'number' &&
+    typeof normalized.vendor !== 'number'
+  ) {
+    normalized.vendor = normalized.payee;
+  }
+
+  return normalized;
+};
+
 interface SmartPasteProps {
   senderHint?: string;
   onTransactionsDetected?: (
@@ -156,12 +178,15 @@ const SmartPaste = ({
         origin,
         parsed,
         fieldConfidences,
-        parsingStatus,
         matchedCount,
         totalTemplates,
         fieldScore,
         keywordScore,
       } = await parseAndInferTransaction(text, senderHint);
+
+      const normalizedFieldConfidences = normalizeFieldConfidences(
+        fieldConfidences,
+      );
 
       if (import.meta.env.MODE === 'development') {
         // console.log("[SmartPaste] Parsed result:", parsed);
@@ -177,7 +202,7 @@ const SmartPaste = ({
       setDetectedTransactions([transaction]);
       setConfidence(confidence);
       setMatchOrigin(origin);
-      setFieldConfidences(fieldConfidences || {});
+      setFieldConfidences(normalizedFieldConfidences);
       setMatchedCount(matchedCount);
       setTotalTemplates(totalTemplates);
       setFieldScore(fieldScore);
@@ -228,8 +253,7 @@ const SmartPaste = ({
     detectedTransactions[0],
     fieldConfidences,
     {
-      isSuggested: true,
-      matchOrigin,
+      fields: ['amount', 'date', 'currency', 'type', 'fromAccount'],
     },
   );
 
@@ -285,7 +309,7 @@ const SmartPaste = ({
         totalTemplates || 0,
         fieldScore ?? undefined,
         keywordScore ?? undefined,
-        fieldConfidences,
+        normalizeFieldConfidences(fieldConfidences),
       );
     }
 
@@ -293,7 +317,7 @@ const SmartPaste = ({
   };
 
   return (
-    <div className="space-y-4 pb-[calc(var(--safe-area-bottom,0px)+var(--bottom-nav-height,72px)+16px)] pt-4">
+    <div className="space-y-4 pb-[calc(var(--safe-area-bottom,0px)+var(--bottom-nav-height,72px)+96px)] pt-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-muted-foreground">
           Add a transaction by typing it, pasting an SMS, or using smart input
@@ -395,6 +419,7 @@ const SmartPaste = ({
             <DetectedTransactionCard
               key={txn.id}
               transaction={txn}
+              fieldConfidences={fieldConfidences}
               isSmartMatch={true}
               onAddTransaction={handleAddTransaction}
               origin={matchOrigin ?? undefined}
