@@ -20,7 +20,17 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
   placeholder = 'Select currency',
   id,
   className,
+  displayMode = 'codeOnly',
+  searchAutoFocus,
+  dropdownContentClassName,
+  dropdownListClassName,
+  openFocusTarget,
 }) => {
+  void searchAutoFocus;
+  void dropdownContentClassName;
+  void dropdownListClassName;
+  void openFocusTarget;
+
   return (
     <CurrencySelect
       id={id}
@@ -28,6 +38,7 @@ const CurrencyCombobox: React.FC<CurrencyComboboxProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       triggerClassName={className}
+      displayMode={displayMode}
     />
   );
 };

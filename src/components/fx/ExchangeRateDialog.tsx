@@ -143,6 +143,7 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
                   value={fromCurrency}
                   onChange={setFromCurrency}
                   currencies={availableCurrencies}
+                  displayMode="codePlusCountry"
                 />
                 <Button
                   type="button"
