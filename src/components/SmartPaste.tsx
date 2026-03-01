@@ -253,7 +253,10 @@ const SmartPaste = ({
     detectedTransactions[0],
     fieldConfidences,
     {
-      fields: ['amount', 'date', 'currency', 'type', 'fromAccount'],
+      fields: ['amount', 'date', 'vendor', 'category'],
+      confidence: confidence ?? undefined,
+      origin: matchOrigin ?? undefined,
+      matchOrigin: matchOrigin ?? undefined,
     },
   );
 
@@ -390,6 +393,7 @@ const SmartPaste = ({
                   {capturedFieldStatus.totalCount}
                 </span>
               </p>
+              <p>Suggested fields are filled but not confirmed yet.</p>
               <p>
                 Currency:{' '}
                 <span className="font-medium">

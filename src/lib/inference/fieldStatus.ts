@@ -1,16 +1,19 @@
 import type { Transaction } from '@/types/transaction';
+import {
+  resolveFieldTier,
+  type ResolveFieldTierOptions,
+} from '@/lib/inference/fieldTier';
 
 export const SMART_ENTRY_REQUIRED_FIELDS: Array<keyof Transaction> = [
   'amount',
   'date',
-  'currency',
-  'type',
+  'vendor',
+  'category',
 ];
 
-interface ComputeCapturedFieldsOptions {
+interface ComputeCapturedFieldsOptions extends ResolveFieldTierOptions {
   fields?: Array<keyof Transaction>;
   isSuggested?: boolean;
-  matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback' | 'manual' | null;
 }
 
 const hasValue = (value: unknown): boolean => {
@@ -31,7 +34,6 @@ export function computeCapturedFields(
   options: ComputeCapturedFieldsOptions = {},
 ) {
   const fields = options.fields ?? SMART_ENTRY_REQUIRED_FIELDS;
-  const inferredByDto = Boolean(options.isSuggested || options.matchOrigin);
 
   const capturedFields = fields.filter((field) => {
     if (!transaction) {
@@ -42,8 +44,13 @@ export function computeCapturedFields(
       return false;
     }
 
-    const score = fieldConfidences[field as string];
-    return (typeof score === 'number' && score > 0) || inferredByDto;
+    return (
+      resolveFieldTier(field, {
+        ...options,
+        transaction,
+        fieldConfidences,
+      }).tier === 'high'
+    );
   });
 
   return {

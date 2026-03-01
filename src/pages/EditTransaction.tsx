@@ -22,6 +22,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Transaction } from '@/types/transaction';
+import type { InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -61,6 +62,9 @@ interface EditTransactionState {
   fieldScore?: number;
   keywordScore?: number;
   mode?: 'create' | 'edit';
+  origin?: InferenceOrigin | null;
+  matchOrigin?: InferenceOrigin | null;
+  parsingStatus?: InferenceParsingStatus | null;
 }
 
 const EditTransaction = () => {
@@ -92,6 +96,9 @@ const EditTransaction = () => {
   const isSuggested = state?.isSuggested;
   const fieldConfidences = state?.fieldConfidences;
   const isSmartEntryCreate = state?.mode === 'create';
+  const inferenceOrigin = state?.origin;
+  const matchOrigin = state?.matchOrigin;
+  const parsingStatus = state?.parsingStatus;
   const isNewTransaction = isSmartEntryCreate ? true : !transaction;
   const transactionForForm = React.useMemo(() => {
     if (!transaction) return transaction;
@@ -290,6 +297,11 @@ const EditTransaction = () => {
               compact
               showNotes={false}
               fieldConfidences={fieldConfidences}
+              confidence={state?.confidence}
+              origin={inferenceOrigin}
+              matchOrigin={matchOrigin}
+              parsingStatus={parsingStatus}
+              isSuggested={isSuggested}
               onDirtyChange={setIsDirty}
             />
           </CardContent>
