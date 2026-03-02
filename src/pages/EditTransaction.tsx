@@ -50,6 +50,7 @@ import {
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { markSmsStatus } from '@/lib/sms-inbox/smsInboxQueue';
+import { ToastAction } from '@/components/ui/toast';
 
 interface EditTransactionState {
   transaction?: Transaction;
@@ -160,10 +161,29 @@ const EditTransaction = () => {
         updateTransaction,
         learnFromTransaction,
         navigateBack: () => {
+          let remainingNewSmsCount = 0;
+
           if (smsInboxId) {
-            markSmsStatus(smsInboxId, 'processed');
+            const updatedInbox = markSmsStatus(smsInboxId, 'processed');
+            remainingNewSmsCount = updatedInbox.filter((item) => item.status === 'new').length;
             savedSmsInboxRef.current = true;
           }
+
+          if (remainingNewSmsCount > 0) {
+            toast({
+              title: 'Transaction saved',
+              description: `You still have ${remainingNewSmsCount} new SMS to review.`,
+              action: (
+                <ToastAction
+                  altText="Review next SMS"
+                  onClick={() => navigate('/import-transactions', { state: { scrollToInbox: true } })}
+                >
+                  Review next SMS
+                </ToastAction>
+              ),
+            });
+          }
+
           navigate(-1);
         },
         combineToasts: true,

@@ -33,12 +33,14 @@ import { getInbox, markSmsStatus, SmsInboxItem } from '@/lib/sms-inbox/smsInboxQ
 interface ImportTransactionsLocationState {
   senderHint?: string;
   sender?: string;
+  scrollToInbox?: boolean;
 }
 
 const ImportTransactions = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [smsInboxItems, setSmsInboxItems] = React.useState<SmsInboxItem[]>([]);
+  const smsInboxRef = React.useRef<HTMLDivElement | null>(null);
   const locationState = (location.state as ImportTransactionsLocationState | null) || null;
 
   const effectiveSenderHint =
@@ -63,6 +65,22 @@ const ImportTransactions = () => {
   React.useEffect(() => {
     loadSmsInbox();
   }, [loadSmsInbox]);
+
+  React.useEffect(() => {
+    if (!locationState?.scrollToInbox) {
+      return;
+    }
+
+    smsInboxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    navigate(location.pathname + location.search, {
+      replace: true,
+      state: {
+        ...locationState,
+        scrollToInbox: false,
+      },
+    });
+  }, [location.pathname, location.search, locationState, navigate]);
 
   const newItems = React.useMemo(
     () => smsInboxItems.filter((item) => item.status === 'new'),
@@ -206,7 +224,7 @@ const ImportTransactions = () => {
           transition={{ duration: 0.5 }}
           className="space-y-[calc(var(--section-gap)/2)]"
         >
-          <Card>
+          <Card ref={smsInboxRef}>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">SMS Inbox</CardTitle>
             </CardHeader>
