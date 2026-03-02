@@ -3,7 +3,7 @@ const MAX_INBOX_ITEMS = 200;
 const DEDUP_WINDOW_MS = 10 * 60 * 1000;
 
 type SmsInboxStatus = 'new' | 'opened' | 'processed' | 'ignored';
-type SmsInboxSource = 'listener';
+type SmsInboxSource = 'listener' | 'static_receiver';
 
 export interface SmsInboxItem {
   id: string;
@@ -67,7 +67,7 @@ const parseInbox = (rawValue: string | null): SmsInboxItem[] => {
         && typeof item.body === 'string'
         && typeof item.receivedAt === 'string'
         && (item.status === 'new' || item.status === 'opened' || item.status === 'processed' || item.status === 'ignored')
-        && item.source === 'listener';
+        && (item.source === 'listener' || item.source === 'static_receiver');
     });
   } catch {
     return [];

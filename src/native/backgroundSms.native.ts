@@ -175,6 +175,30 @@ const BackgroundSmsListenerWrapper: BackgroundSmsListenerPlugin = {
     }
   },
   
+  drainPersistedMessages: async () => {
+    try {
+      const result = await BackgroundSmsListener.drainPersistedMessages();
+      return result;
+    } catch (err) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[SMS] Error draining persisted messages:', err);
+      }
+      return { messages: [] };
+    }
+  },
+
+  consumePendingOpenRoute: async () => {
+    try {
+      const result = await BackgroundSmsListener.consumePendingOpenRoute();
+      return result;
+    } catch (err) {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[SMS] Error consuming pending route:', err);
+      }
+      return {};
+    }
+  },
+
   stopListening: async () => {
     try {
       if (import.meta.env.MODE === 'development') {

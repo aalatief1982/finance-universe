@@ -41,7 +41,11 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     private static final String INIT_TAG = "PLUGIN_INIT_LOGS";
     private static final String PREFS_NAME = "BackgroundSmsPrefs";
     private static final String PREF_KEY = "newIncomingBuffer";
+    private static final String PREF_PENDING_ROUTE = "pendingOpenRoute";
+    private static final String PREF_PENDING_SOURCE = "pendingOpenSource";
     private static final Object PREF_LOCK = new Object();
+    private static final int MAX_INBOX_ITEMS = 200;
+    private static final long DEDUP_WINDOW_MS = 10 * 60 * 1000;
 
     private static BackgroundSmsListenerPlugin instance;
     private static final ArrayList<JSObject> pendingMessages = new ArrayList<>();
@@ -62,7 +66,6 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         super.load();
         instance = this;
         checkStaticReceiver();
-        deliverPersistedMessages();
         synchronized (pendingMessages) {
             if (!pendingMessages.isEmpty()) {
                 Log.d(PENDING_TAG, "Delivering " + pendingMessages.size() + " queued SMS messages");
@@ -125,7 +128,7 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
-    static void persistMessage(Context context, String sender, String body) {
+    static int persistMessage(Context context, String sender, String body, long receivedAt, String source, String hash) {
         synchronized (PREF_LOCK) {
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String stored = prefs.getString(PREF_KEY, "[]");
@@ -136,18 +139,95 @@ public class BackgroundSmsListenerPlugin extends Plugin {
                 arr = new JSONArray();
             }
 
+            JSONArray nextArr = new JSONArray();
+            for (int i = 0; i < arr.length(); i++) {
+                JSONObject existing = arr.optJSONObject(i);
+                if (existing == null) {
+                    continue;
+                }
+                long existingAt = existing.optLong("receivedAt", 0L);
+                String existingHash = existing.optString("hash", "");
+                if (!existingHash.isEmpty() && existingHash.equals(hash) && Math.abs(receivedAt - existingAt) <= DEDUP_WINDOW_MS) {
+                    Log.d(PENDING_TAG, "Skipping native duplicate SMS hash=" + hash);
+                    return arr.length();
+                }
+                nextArr.put(existing);
+            }
+
             JSONObject obj = new JSONObject();
             try {
                 obj.put("sender", sender);
                 obj.put("body", body);
+                obj.put("receivedAt", receivedAt);
+                obj.put("source", source);
+                obj.put("hash", hash);
             } catch (JSONException e) {
                 Log.e(TAG, "Failed to encode SMS message", e);
             }
 
-            arr.put(obj);
-            prefs.edit().putString(PREF_KEY, arr.toString()).apply();
-            Log.d(PENDING_TAG, "Persisted SMS from " + sender);
+            nextArr.put(obj);
+            if (nextArr.length() > MAX_INBOX_ITEMS) {
+                JSONArray trimmed = new JSONArray();
+                int start = nextArr.length() - MAX_INBOX_ITEMS;
+                for (int i = start; i < nextArr.length(); i++) {
+                    trimmed.put(nextArr.opt(i));
+                }
+                nextArr = trimmed;
+            }
+
+            prefs.edit().putString(PREF_KEY, nextArr.toString()).apply();
+            Log.d(PENDING_TAG, "Persisted SMS from " + sender + " queueSize=" + nextArr.length());
+            return nextArr.length();
         }
+    }
+
+    @PluginMethod
+    public void drainPersistedMessages(PluginCall call) {
+        JSObject ret = new JSObject();
+        JSONArray messages = new JSONArray();
+        synchronized (PREF_LOCK) {
+            SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String stored = prefs.getString(PREF_KEY, "[]");
+            try {
+                JSONArray arr = new JSONArray(stored);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject obj = arr.optJSONObject(i);
+                    if (obj != null) {
+                        messages.put(obj);
+                    }
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to parse persisted SMS queue", e);
+            }
+            prefs.edit().remove(PREF_KEY).apply();
+        }
+        ret.put("messages", messages);
+        call.resolve(ret);
+    }
+
+    public static void setPendingOpenRoute(Context context, String route, String source) {
+        synchronized (PREF_LOCK) {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putString(PREF_PENDING_ROUTE, route).putString(PREF_PENDING_SOURCE, source).apply();
+        }
+    }
+
+    @PluginMethod
+    public void consumePendingOpenRoute(PluginCall call) {
+        JSObject ret = new JSObject();
+        synchronized (PREF_LOCK) {
+            SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String route = prefs.getString(PREF_PENDING_ROUTE, null);
+            String source = prefs.getString(PREF_PENDING_SOURCE, null);
+            prefs.edit().remove(PREF_PENDING_ROUTE).remove(PREF_PENDING_SOURCE).apply();
+            if (route != null) {
+                ret.put("route", route);
+            }
+            if (source != null) {
+                ret.put("source", source);
+            }
+        }
+        call.resolve(ret);
     }
 
     /**

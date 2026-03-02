@@ -295,6 +295,51 @@ function AppWrapper() {
       return;
     }
 
+    const syncNativeInboxAndRoute = async () => {
+      try {
+        const drained = await BackgroundSmsListener.drainPersistedMessages();
+        const messages = Array.isArray(drained?.messages) ? drained.messages : [];
+        let enqueued = 0;
+        for (const message of messages) {
+          const beforeCount = getInboxCount();
+          enqueueSms({
+            sender: message.sender ?? '',
+            body: message.body ?? '',
+            receivedAt: message.receivedAt ? new Date(message.receivedAt).toISOString() : undefined,
+            source: message.source === 'static_receiver' ? 'static_receiver' : 'listener',
+          });
+          if (getInboxCount() > beforeCount) {
+            enqueued += 1;
+          }
+        }
+        console.log(`[SMS] Drained persisted native messages: ${messages.length}, enqueued: ${enqueued}`);
+      } catch (err) {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] Error draining persisted messages:', err);
+        }
+      }
+
+      try {
+        const pendingRoute = await BackgroundSmsListener.consumePendingOpenRoute();
+        if (pendingRoute?.route === '/import-transactions') {
+          navigate('/import-transactions');
+        }
+      } catch (err) {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SMS] Error consuming pending native route:', err);
+        }
+      }
+    };
+
+    let appStateListener: { remove: () => void } | null = null;
+    void CapacitorApp.addListener('appStateChange', async (state) => {
+      if (state.isActive) {
+        await syncNativeInboxAndRoute();
+      }
+    }).then((listenerHandle) => {
+      appStateListener = listenerHandle;
+    });
+
     const setupSmsListener = async () => {
       try {
         if (import.meta.env.MODE === 'development') {
@@ -318,7 +363,27 @@ function AppWrapper() {
           if (import.meta.env.MODE === 'development') {
             // console.log('[SMS] Permission already granted. Setting up SMS listener.');
           }
-          
+
+          await syncNativeInboxAndRoute();
+
+          const notificationPromptedKey = 'xpensia_notif_permission_prompted';
+          try {
+            const notificationPermission = await LocalNotifications.checkPermissions();
+            const shouldPromptNotificationPermission =
+              Capacitor.getPlatform() === 'android'
+              && notificationPermission.display !== 'granted'
+              && safeStorage.getItem(notificationPromptedKey) !== 'true';
+
+            if (shouldPromptNotificationPermission) {
+              await LocalNotifications.requestPermissions();
+              safeStorage.setItem(notificationPromptedKey, 'true');
+            }
+          } catch (err) {
+            if (import.meta.env.MODE === 'development') {
+              console.warn('[SMS] Unable to check/request notification permission:', err);
+            }
+          }
+
           if (import.meta.env.MODE === 'development') {
             // console.log('[SMS] Starting to listen for SMS...');
           }
@@ -430,6 +495,7 @@ function AppWrapper() {
       if (import.meta.env.MODE === 'development') {
         // console.log('AIS-04 stopping listener');
       }
+      appStateListener?.remove();
       BackgroundSmsListener.stopListening().catch(err => {
         if (import.meta.env.MODE === 'development') {
           console.warn('[SMS] Error stopping SMS listener:', err);
