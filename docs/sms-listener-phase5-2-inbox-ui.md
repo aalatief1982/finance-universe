@@ -29,13 +29,13 @@
 - `ignored`: explicitly dismissed from inbox.
 
 ## User journey
-- User opens Import Transactions page.
-- Inbox card shows two sections:
+- User opens **Import Transactions** and sees the SMS Inbox card split into:
   - **New SMS** with `Review` + `Ignore`.
   - **In review** with `Continue` + `Ignore`.
 - `Review` from **New SMS**:
   - Marks item as `opened`.
   - Navigates to `/edit-transaction` with `buildInferenceDTO(...)` payload.
+- Returning to `/import-transactions` shows the reviewed message in **In review** immediately.
 - `Continue` from **In review**:
   - Navigates to `/edit-transaction` with same `buildInferenceDTO(...)` payload.
   - Does **not** change status (remains `opened`).
@@ -46,4 +46,4 @@
 1. Revert `src/pages/ImportTransactions.tsx` to previous single-list inbox behavior (`new` only).
 2. Remove the `In review` section and restore `No new SMS to review.` empty-state copy.
 3. Remove `Continue` action and keep only `Review` + `Ignore` for `new` items.
-4. Re-run manual review on `/import-transactions` to verify old UX parity.
+4. Re-run manual review on `/import-transactions` to verify old UX parity (single list behavior).
