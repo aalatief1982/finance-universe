@@ -44,6 +44,8 @@ let autoPromptShown = false;
 let autoPromptAccepted: boolean | null = null;
 
 let autoAlertShown = false;
+const HOME_ROUTE = '/home';
+const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
 
 interface LegacySmsProviderSelection {
   id: string;
@@ -191,7 +193,7 @@ export class SmsImportService {
 
   static async checkForNewMessages(
     navigate?: ((path: string, options?: unknown) => void) | undefined,
-    opts?: { auto?: boolean; usePermissionDate?: boolean }
+    opts?: { auto?: boolean; usePermissionDate?: boolean; sourcePathname?: string }
   ): Promise<void> {
     if (this.importLock) {
       if (import.meta.env.MODE === 'development') {
@@ -210,12 +212,15 @@ export class SmsImportService {
 
     try {
       await logAnalyticsEvent('app_start');
-      const { auto = false, usePermissionDate = false } = opts || {};
+      const { auto = false, usePermissionDate = false, sourcePathname } = opts || {};
 
       // For permission-date-based import, use the dedicated logic
       // This handles both initial import after permission grant and subsequent auto imports
       if (usePermissionDate) {
-        await this.handleAutoImportWithPermissionDate(safeNavigate as (path: string, options?: unknown) => void);
+        await this.handleAutoImportWithPermissionDate(
+          safeNavigate as (path: string, options?: unknown) => void,
+          sourcePathname
+        );
         return;
       }
 
@@ -300,7 +305,8 @@ export class SmsImportService {
    * Handle automatic import using permission grant date
    */
   private static async handleAutoImportWithPermissionDate(
-    navigate: (path: string, options?: unknown) => void
+    navigate: (path: string, options?: unknown) => void,
+    sourcePathname?: string
   ): Promise<void> {
     try {
       const senderMap = getSmsSenderImportMap();
@@ -328,10 +334,21 @@ export class SmsImportService {
       });
 
       if (!messages || messages.length === 0) {
+        safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
         if (import.meta.env.MODE === 'development') {
-          // console.log('[SMS Auto Import] No messages found since permission grant date');
+          console.log('[SMS_IMPORT] Leaving import screen -> replace(/home) (reason: 0 messages)', {
+            pathnameBefore: sourcePathname ?? window.location.pathname,
+            targetPathname: HOME_ROUTE,
+          });
         }
-        navigate('/');
+        navigate(HOME_ROUTE, { replace: true });
+        setTimeout(() => {
+          if (import.meta.env.MODE === 'development') {
+            console.log('[SMS_IMPORT] pathname after 0-messages navigation tick', {
+              pathnameAfter: window.location.pathname,
+            });
+          }
+        }, 0);
         return;
       }
 
@@ -343,10 +360,21 @@ export class SmsImportService {
       );
 
       if (filteredMessages.length === 0) {
+        safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
         if (import.meta.env.MODE === 'development') {
-          // console.log('[SMS Auto Import] No financial messages found');
+          console.log('[SMS_IMPORT] Leaving import screen -> replace(/home) (reason: 0 filtered messages)', {
+            pathnameBefore: sourcePathname ?? window.location.pathname,
+            targetPathname: HOME_ROUTE,
+          });
         }
-        navigate('/');
+        navigate(HOME_ROUTE, { replace: true });
+        setTimeout(() => {
+          if (import.meta.env.MODE === 'development') {
+            console.log('[SMS_IMPORT] pathname after 0-filtered navigation tick', {
+              pathnameAfter: window.location.pathname,
+            });
+          }
+        }, 0);
         return;
       }
 

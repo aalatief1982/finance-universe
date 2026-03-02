@@ -40,6 +40,9 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/env';
 
+const HOME_ROUTE = '/home';
+const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
+
 interface SmsPermissionPromptProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -88,8 +91,24 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           return false;
         }
 
+        if (import.meta.env.MODE === 'development') {
+          console.log('[SMS_IMPORT] navigation request', {
+            pathnameBefore: window.location.pathname,
+            targetPathname: path,
+          });
+        }
+
         hasTransitionedRef.current = true;
         navigate(path, options);
+
+        setTimeout(() => {
+          if (import.meta.env.MODE === 'development') {
+            console.log('[SMS_IMPORT] pathname after navigation tick', {
+              pathnameAfter: window.location.pathname,
+            });
+          }
+        }, 0);
+
         return true;
       };
 
@@ -131,13 +150,18 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         // Sender discovery prerequisites are met, continue canonical SMS flow
         // /process-sms -> /vendor-mapping -> /review-sms-transactions.
         if (!SMS_STARTUP_IMPORT_ENABLED) {
+          safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
           console.log('[SMS_IMPORT] Permission-grant auto-import disabled (SMS_STARTUP_IMPORT_ENABLED=false)');
-          transitionOnce('/');
+          transitionOnce(HOME_ROUTE, { replace: true });
           return;
         }
 
-        await SmsImportService.checkForNewMessages(transitionOnce, { auto: false, usePermissionDate: true });
-        transitionOnce('/');
+        await SmsImportService.checkForNewMessages(transitionOnce, {
+          auto: false,
+          usePermissionDate: true,
+          sourcePathname: window.location.pathname,
+        });
+        transitionOnce(HOME_ROUTE, { replace: true });
         console.log('[SmsPermissionPrompt] Initial SMS import completed');
       } catch (importErr) {
         console.warn('[SmsPermissionPrompt] Error during initial SMS import:', importErr);
