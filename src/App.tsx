@@ -72,6 +72,7 @@ import { trackNavigationPath } from '@/utils/navigation';
 import { isDefaultCurrencySelectionRequired } from '@/utils/default-currency';
 import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
 import { ToastAction } from '@/components/ui/toast';
+import { enqueueSms } from '@/lib/sms-inbox/smsInboxQueue';
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -350,6 +351,8 @@ function AppWrapper() {
               if (import.meta.env.MODE === 'development') {
                 // console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
               }
+
+              enqueueSms({ sender, body, source: 'listener' });
 
               // Handle background state
               const appState = await CapacitorApp.getState();
