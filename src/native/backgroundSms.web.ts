@@ -54,6 +54,10 @@ const BackgroundSmsListenerWebMock: BackgroundSmsListenerPlugin = {
     return;
   },
   
+  drainPersistedMessages: async () => ({ messages: [] }),
+
+  consumePendingOpenRoute: async () => ({}),
+
   stopListening: async () => {
     if (import.meta.env.MODE === 'development') {
       // console.log('[SMS-Web] Stopping listening for SMS (simulation)');

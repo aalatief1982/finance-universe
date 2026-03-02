@@ -35,7 +35,7 @@
 
         <receiver
             android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsBroadcastReceiver"
-            android:exported="true"
+            android:exported="false"
             tools:replace="android:exported">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
@@ -44,7 +44,7 @@
 
         <receiver
             android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsBootReceiver"
-            android:exported="true"
+            android:exported="false"
             tools:replace="android:exported">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -60,4 +60,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
