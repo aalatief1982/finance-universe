@@ -8,16 +8,19 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Build;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 public class SmsBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = "STATIC_SMS_RECEIVER";
+    private static final String LOG_TAG = "XP_NOTIF";
     private static final String CHANNEL_ID = "xpensia_sms_inbox";
     private static final int INBOX_NOTIFICATION_ID = 41001;
 
@@ -27,6 +30,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
             Log.d(TAG, "Ignored intent action=" + (intent != null ? intent.getAction() : "null"));
             return;
         }
+        Log.d(TAG, "[" + LOG_TAG + "] receiver fired action=" + intent.getAction());
 
         if (BackgroundSmsListenerPlugin.isPluginActive()) {
             Log.d(TAG, "Plugin active, ignoring static receiver event");
@@ -57,6 +61,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 hash);
 
         Log.d(TAG, "Persisted SMS hash=" + hash + " queueSize=" + queueSize);
+        Log.d(TAG, "[" + LOG_TAG + "] message persisted hash=" + hash + " queueSize=" + queueSize);
         postOrUpdateSummaryNotification(context, queueSize);
     }
 
@@ -72,16 +77,23 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
             return;
         }
 
+        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(context);
+        if (!managerCompat.areNotificationsEnabled()) {
+            Log.d(TAG, "[" + LOG_TAG + "] skip notify (permission/disabled)");
+            return;
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
                 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "POST_NOTIFICATIONS not granted, skipping notification");
+            Log.d(TAG, "[" + LOG_TAG + "] skip notify (permission/disabled)");
             return;
         }
 
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager == null) {
+            Log.d(TAG, "[" + LOG_TAG + "] skip notify (notification manager null)");
             return;
         }
 
@@ -92,6 +104,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                     NotificationManager.IMPORTANCE_DEFAULT);
             channel.setDescription("Alerts for new SMS waiting in Xpensia inbox review");
             notificationManager.createNotificationChannel(channel);
+            Log.d(TAG, "[" + LOG_TAG + "] channel ensured id=" + CHANNEL_ID);
         }
 
         PackageManager pm = context.getPackageManager();
@@ -111,8 +124,14 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 openIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
+        int smallIcon = context.getApplicationInfo().icon;
+        if (smallIcon == 0) {
+            smallIcon = android.R.drawable.ic_dialog_info;
+        }
+        Log.d(TAG, "[" + LOG_TAG + "] using smallIcon=" + smallIcon);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_notify_more)
+                .setSmallIcon(smallIcon)
                 .setContentTitle("Xpensia")
                 .setContentText("You have " + messageCount + " new SMS to review")
                 .setAutoCancel(true)
@@ -120,7 +139,12 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 .setOnlyAlertOnce(true)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
-        notificationManager.notify(INBOX_NOTIFICATION_ID, builder.build());
-        Log.d(TAG, "Posted/updated SMS summary notification count=" + messageCount);
+        Log.d(TAG, "[" + LOG_TAG + "] notification attempt count=" + messageCount);
+        try {
+            notificationManager.notify(INBOX_NOTIFICATION_ID, builder.build());
+            Log.d(TAG, "[" + LOG_TAG + "] notify succeeded id=" + INBOX_NOTIFICATION_ID + " count=" + messageCount);
+        } catch (SecurityException | Resources.NotFoundException | RuntimeException ex) {
+            Log.e(TAG, "[" + LOG_TAG + "][ERROR] notify failed", ex);
+        }
     }
 }
