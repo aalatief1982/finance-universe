@@ -12,6 +12,7 @@ export interface SmsFlowInput {
   permissionState: SmsPermissionState;
   providerSelectionState: ProviderSelectionState;
   autoImportEnabled: boolean;
+  startupImportEnabled?: boolean;
   smsSenderFirstFlowV2Enabled?: boolean;
   rollbackToLegacyRoutingOnce?: boolean;
 }
@@ -86,6 +87,7 @@ export const getNextSmsFlowStep = ({
   permissionState,
   providerSelectionState,
   autoImportEnabled,
+  startupImportEnabled = true,
   smsSenderFirstFlowV2Enabled = false,
   rollbackToLegacyRoutingOnce = false,
 }: SmsFlowInput): SmsFlowDecision => {
@@ -111,7 +113,7 @@ export const getNextSmsFlowStep = ({
     ) {
       return {
         nextStep: 'continue_existing_flow',
-        shouldTriggerAutoImport: autoImportEnabled,
+        shouldTriggerAutoImport: autoImportEnabled && startupImportEnabled,
       };
     }
 
@@ -124,6 +126,6 @@ export const getNextSmsFlowStep = ({
 
   return {
     nextStep: 'continue_existing_flow',
-    shouldTriggerAutoImport: autoImportEnabled,
+    shouldTriggerAutoImport: autoImportEnabled && startupImportEnabled,
   };
 };

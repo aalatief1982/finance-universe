@@ -37,6 +37,7 @@ import {
 } from '@/utils/storage-utils';
 import { getAutoImportStartDate, setLastAutoImportDate } from '@/utils/sms-permission-storage';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/env';
 
 // Flags to ensure auto import prompts only appear once per session
 // and track whether the user accepted the auto import prompt
@@ -309,6 +310,12 @@ export class SmsImportService {
     sourcePathname?: string
   ): Promise<void> {
     try {
+      if (!SMS_STARTUP_IMPORT_ENABLED) {
+        safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
+        console.log('[SMS_IMPORT] startup import disabled -> replace(HOME_ROUTE)');
+        navigate(HOME_ROUTE, { replace: true });
+        return;
+      }
       const senderMap = getSmsSenderImportMap();
       const senders = this.getConfiguredSendersFromSelection(Object.keys(senderMap));
       if (senders.length === 0) {
@@ -335,12 +342,10 @@ export class SmsImportService {
 
       if (!messages || messages.length === 0) {
         safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
-        if (import.meta.env.MODE === 'development') {
-          console.log('[SMS_IMPORT] Leaving import screen -> replace(/home) (reason: 0 messages)', {
-            pathnameBefore: sourcePathname ?? window.location.pathname,
-            targetPathname: HOME_ROUTE,
-          });
-        }
+        console.log('[SMS_IMPORT] startup import complete: 0 fetched -> replace(HOME_ROUTE)', {
+          pathnameBefore: sourcePathname ?? window.location.pathname,
+          targetPathname: HOME_ROUTE,
+        });
         navigate(HOME_ROUTE, { replace: true });
         setTimeout(() => {
           if (import.meta.env.MODE === 'development') {
@@ -361,12 +366,10 @@ export class SmsImportService {
 
       if (filteredMessages.length === 0) {
         safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
-        if (import.meta.env.MODE === 'development') {
-          console.log('[SMS_IMPORT] Leaving import screen -> replace(/home) (reason: 0 filtered messages)', {
-            pathnameBefore: sourcePathname ?? window.location.pathname,
-            targetPathname: HOME_ROUTE,
-          });
-        }
+        console.log('[SMS_IMPORT] startup import complete: 0 financial -> replace(HOME_ROUTE)', {
+          pathnameBefore: sourcePathname ?? window.location.pathname,
+          targetPathname: HOME_ROUTE,
+        });
         navigate(HOME_ROUTE, { replace: true });
         setTimeout(() => {
           if (import.meta.env.MODE === 'development') {
