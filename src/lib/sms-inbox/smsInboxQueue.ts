@@ -2,7 +2,7 @@ const SMS_INBOX_QUEUE_KEY = 'xpensia_sms_inbox_queue';
 const MAX_INBOX_ITEMS = 200;
 const DEDUP_WINDOW_MS = 10 * 60 * 1000;
 
-type SmsInboxStatus = 'new' | 'processed' | 'ignored';
+type SmsInboxStatus = 'new' | 'opened' | 'processed' | 'ignored';
 type SmsInboxSource = 'listener';
 
 export interface SmsInboxItem {
@@ -66,7 +66,7 @@ const parseInbox = (rawValue: string | null): SmsInboxItem[] => {
         && typeof item.sender === 'string'
         && typeof item.body === 'string'
         && typeof item.receivedAt === 'string'
-        && (item.status === 'new' || item.status === 'processed' || item.status === 'ignored')
+        && (item.status === 'new' || item.status === 'opened' || item.status === 'processed' || item.status === 'ignored')
         && item.source === 'listener';
     });
   } catch {
