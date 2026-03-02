@@ -94,7 +94,13 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
             notificationManager.createNotificationChannel(channel);
         }
 
-        Intent openIntent = new Intent(context, app.xpensia.com.MainActivity.class);
+        PackageManager pm = context.getPackageManager();
+        Intent openIntent = pm.getLaunchIntentForPackage(context.getPackageName());
+        if (openIntent == null) {
+            openIntent = new Intent(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_LAUNCHER)
+                    .setPackage(context.getPackageName());
+        }
         openIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         openIntent.putExtra("xpensia_open_route", "/import-transactions");
         openIntent.putExtra("xpensia_open_source", "sms_notification");
