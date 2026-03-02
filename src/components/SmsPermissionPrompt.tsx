@@ -38,6 +38,7 @@ import { getNextSmsFlowStep, resolveProviderSelectionState } from '@/services/Sm
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useNavigate } from 'react-router-dom';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
+import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/env';
 
 interface SmsPermissionPromptProps {
   open: boolean;
@@ -129,6 +130,11 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
 
         // Sender discovery prerequisites are met, continue canonical SMS flow
         // /process-sms -> /vendor-mapping -> /review-sms-transactions.
+        if (!SMS_STARTUP_IMPORT_ENABLED) {
+          console.log('[SMS_IMPORT] Permission-grant auto-import disabled (SMS_STARTUP_IMPORT_ENABLED=false)');
+          return;
+        }
+
         await SmsImportService.checkForNewMessages(transitionOnce, { auto: false, usePermissionDate: true });
         console.log('[SmsPermissionPrompt] Initial SMS import completed');
       } catch (importErr) {
