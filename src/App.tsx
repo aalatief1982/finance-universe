@@ -63,7 +63,6 @@ import {
   isSmsSenderFirstFlowV2Enabled,
 } from '@/lib/env';
 import { useUser } from './context/UserContext';
-import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
 import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
 import { UpdateDialog } from '@/components/UpdateDialog';
@@ -72,6 +71,7 @@ import { useTheme } from 'next-themes';
 import { trackNavigationPath } from '@/utils/navigation';
 import { isDefaultCurrencySelectionRequired } from '@/utils/default-currency';
 import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
+import { ToastAction } from '@/components/ui/toast';
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -351,19 +351,21 @@ function AppWrapper() {
                 // console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
               }
 
-              const inferenceDTO = await buildInferenceDTO({
-                rawMessage: body,
-                senderHint: sender,
-                source: 'sms',
-              });
-
               // Handle background state
               const appState = await CapacitorApp.getState();
               if (appState.isActive) {
                 if (import.meta.env.MODE === 'development') {
-                  // console.log('[NOTIFY] App active. Navigating to transaction.');
+                  // console.log('[NOTIFY] App active. Showing in-app transaction banner.');
                 }
-                navigate('/edit-transaction', { state: inferenceDTO });
+                toast({
+                  title: 'New SMS transaction detected',
+                  description: 'Review imported SMS transactions when you are ready.',
+                  action: (
+                    <ToastAction altText="View detected SMS transactions" onClick={() => navigate('/import-transactions')}>
+                      View
+                    </ToastAction>
+                  ),
+                });
               } else {
                 if (import.meta.env.MODE === 'development') {
                   // console.log('[NOTIFY] App backgrounded. Showing notification.');
@@ -399,30 +401,10 @@ function AppWrapper() {
             const statePayload = event.notification.extra;
             if (statePayload?.smsData) {
               if (import.meta.env.MODE === 'development') {
-                // console.log('[NOTIFICATION] Tapped. Processing SMS directly.');
+                // console.log('[NOTIFICATION] Tapped. Routing to safe SMS import review page.');
               }
-              
-              const { sender, body } = statePayload.smsData;
-              
-              try {
-                const inferenceDTO = await buildInferenceDTO({
-                  rawMessage: body,
-                  senderHint: sender,
-                  source: 'sms',
-                });
-                
-                if (import.meta.env.MODE === 'development') {
-                  // console.log('[NOTIFICATION] SMS processed:', inferenceDTO);
-                }
-                
-                navigate('/edit-transaction', { state: inferenceDTO });
-              } catch (error) {
-                if (import.meta.env.MODE === 'development') {
-                  console.error('[NOTIFICATION] Error processing SMS:', error);
-                }
-                // Fallback to import transactions page if processing fails
-                navigate('/import-transactions');
-              }
+
+              navigate('/import-transactions');
             }
           });
           
