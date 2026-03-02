@@ -77,7 +77,15 @@ export const setLastAutoImportDate = (date: string): void => {
 export const getAutoImportStartDate = (): Date => {
   const permissionDate = getSmsPermissionGrantDate();
   const lastImportDate = getLastAutoImportDate();
-  const lookbackMonths = Math.max(1, getSmsLookbackMonths());
+  const lookbackMonths = getSmsLookbackMonths();
+
+  // A lookback of 0 explicitly disables historical SMS import.
+  // Return a future date so bounded date queries resolve to an empty set.
+  if (lookbackMonths === 0) {
+    const disabledStartDate = new Date();
+    disabledStartDate.setDate(disabledStartDate.getDate() + 1);
+    return disabledStartDate;
+  }
   
   // Use the later of permission grant date or last import date
   let startDate: Date;
