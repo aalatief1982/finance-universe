@@ -77,10 +77,11 @@ const ImportTransactions = () => {
         ...inferenceDTO,
         mode: 'create',
         isSuggested: true,
+        smsInboxId: item.id,
       },
     });
 
-    markSmsStatus(item.id, 'processed');
+    markSmsStatus(item.id, 'opened');
     loadNewSmsInbox();
   }, [loadNewSmsInbox, navigate]);
 

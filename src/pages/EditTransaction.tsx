@@ -49,6 +49,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { markSmsStatus } from '@/lib/sms-inbox/smsInboxQueue';
 
 interface EditTransactionState {
   transaction?: Transaction;
@@ -65,6 +66,7 @@ interface EditTransactionState {
   origin?: InferenceOrigin | null;
   matchOrigin?: InferenceOrigin | null;
   parsingStatus?: InferenceParsingStatus | null;
+  smsInboxId?: string;
 }
 
 const EditTransaction = () => {
@@ -83,6 +85,7 @@ const EditTransaction = () => {
   const isDirtyRef = useRef(isDirty);
   const savingRef = useRef(saving);
   const showUnsavedDialogRef = useRef(showUnsavedDialog);
+  const savedSmsInboxRef = useRef(false);
 
   const [matchDetails, setMatchDetails] = useState<{
     entry: LearnedEntry | null;
@@ -99,6 +102,7 @@ const EditTransaction = () => {
   const inferenceOrigin = state?.origin;
   const matchOrigin = state?.matchOrigin;
   const parsingStatus = state?.parsingStatus;
+  const smsInboxId = state?.smsInboxId;
   const isNewTransaction = isSmartEntryCreate ? true : !transaction;
   const transactionForForm = React.useMemo(() => {
     if (!transaction) return transaction;
@@ -155,7 +159,13 @@ const EditTransaction = () => {
         addTransaction,
         updateTransaction,
         learnFromTransaction,
-        navigateBack: () => navigate(-1),
+        navigateBack: () => {
+          if (smsInboxId) {
+            markSmsStatus(smsInboxId, 'processed');
+            savedSmsInboxRef.current = true;
+          }
+          navigate(-1);
+        },
         combineToasts: true,
       });
       logAnalyticsEvent('edit_transaction');
@@ -219,6 +229,16 @@ const EditTransaction = () => {
       void backListenerPromise.then((listener) => listener.remove());
     };
   }, [navigate]);
+
+  useEffect(() => {
+    return () => {
+      if (!smsInboxId || savedSmsInboxRef.current) {
+        return;
+      }
+
+      markSmsStatus(smsInboxId, 'new');
+    };
+  }, [smsInboxId]);
 
   useEffect(() => {
     if (isSuggested) {
