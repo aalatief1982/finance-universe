@@ -37,7 +37,7 @@ import {
 } from '@/utils/storage-utils';
 import { getAutoImportStartDate, setLastAutoImportDate } from '@/utils/sms-permission-storage';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
-import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/env';
+import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/envFlags';
 
 // Flags to ensure auto import prompts only appear once per session
 // and track whether the user accepted the auto import prompt

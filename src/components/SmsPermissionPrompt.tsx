@@ -38,7 +38,7 @@ import { getNextSmsFlowStep, resolveProviderSelectionState } from '@/services/Sm
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useNavigate } from 'react-router-dom';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
-import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/env';
+import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/envFlags';
 
 const HOME_ROUTE = '/home';
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
