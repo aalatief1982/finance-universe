@@ -214,7 +214,7 @@ const ImportTransactions = () => {
               <div className="space-y-2">
                 <p className="text-sm font-medium">New SMS</p>
                 {newItems.length === 0 ? (
-                  <p className="rounded-md border p-3 text-sm text-muted-foreground">No new SMS</p>
+                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">No new SMS</div>
                 ) : (
                   newItems.map((item) => (
                     <div
@@ -240,7 +240,7 @@ const ImportTransactions = () => {
               <div className="space-y-2">
                 <p className="text-sm font-medium">In review</p>
                 {openedItems.length === 0 ? (
-                  <p className="rounded-md border p-3 text-sm text-muted-foreground">No items in review</p>
+                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">No items in review</div>
                 ) : (
                   openedItems.map((item) => (
                     <div
