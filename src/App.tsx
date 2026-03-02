@@ -72,7 +72,9 @@ import { trackNavigationPath } from '@/utils/navigation';
 import { isDefaultCurrencySelectionRequired } from '@/utils/default-currency';
 import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
 import { ToastAction } from '@/components/ui/toast';
-import { enqueueSms } from '@/lib/sms-inbox/smsInboxQueue';
+import { enqueueSms, getInboxCount } from '@/lib/sms-inbox/smsInboxQueue';
+
+const SMS_INBOX_NOTIFICATION_ID = 777;
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -370,19 +372,21 @@ function AppWrapper() {
                   ),
                 });
               } else {
+                const unreadCount = getInboxCount({ status: 'new' });
+                if (unreadCount === 0) {
+                  return;
+                }
+
                 if (import.meta.env.MODE === 'development') {
                   // console.log('[NOTIFY] App backgrounded. Showing notification.');
                 }
                 await LocalNotifications.schedule({
                   notifications: [
                     {
-                      id: 777,
-                      title: 'New Transaction Detected',
-                      body: 'Review and confirm your latest expense now!',
+                      id: SMS_INBOX_NOTIFICATION_ID,
+                      title: 'New transactions detected',
+                      body: `${unreadCount} new SMS ready to review`,
                       schedule: { at: new Date(Date.now() + 1000) },
-                      extra: { 
-                        smsData: { sender, body }
-                      },
                       iconColor: '#0097a0',
                       smallIcon: 'ic_launcher'
                     }
@@ -400,15 +404,12 @@ function AppWrapper() {
           }
           
           // Handle notification taps
-          LocalNotifications.addListener('localNotificationActionPerformed', async (event: { notification: { extra?: { smsData?: { sender: string; body: string } } } }) => {
-            const statePayload = event.notification.extra;
-            if (statePayload?.smsData) {
-              if (import.meta.env.MODE === 'development') {
-                // console.log('[NOTIFICATION] Tapped. Routing to safe SMS import review page.');
-              }
-
-              navigate('/import-transactions');
+          LocalNotifications.addListener('localNotificationActionPerformed', async () => {
+            if (import.meta.env.MODE === 'development') {
+              // console.log('[NOTIFICATION] Tapped. Routing to safe SMS import review page.');
             }
+
+            navigate('/import-transactions');
           });
           
         } catch (err) {
