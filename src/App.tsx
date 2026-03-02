@@ -79,6 +79,7 @@ const SMS_INBOX_NOTIFICATION_ID = 777;
 const HOME_ROUTE = '/home';
 const IMPORT_ROUTE = '/import-transactions';
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
+const BLOCK_STARTUP_IMPORT_ROUTE = true;
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -326,6 +327,14 @@ function AppWrapper() {
       try {
         const pendingRoute = await BackgroundSmsListener.consumePendingOpenRoute();
         if (pendingRoute?.route === IMPORT_ROUTE) {
+          if (BLOCK_STARTUP_IMPORT_ROUTE) {
+            if (import.meta.env.MODE === 'development') {
+              console.log('[ROUTE_GUARD] blocked native startup navigation to import route', {
+                pathname: location.pathname,
+              });
+            }
+            return;
+          }
           navigate(IMPORT_ROUTE);
         }
       } catch (err) {
@@ -568,6 +577,17 @@ function AppWrapper() {
       }
 
       if (flowDecision.nextStep === 'route_sender_discovery' && flowDecision.route && location.pathname !== flowDecision.route) {
+        if (BLOCK_STARTUP_IMPORT_ROUTE && flowDecision.route === IMPORT_ROUTE) {
+          if (import.meta.env.MODE === 'development') {
+            console.log('[ROUTE_GUARD] blocked startup sender-discovery navigation to import route', {
+              pathname: location.pathname,
+              permissionState,
+              providerSelectionState,
+            });
+          }
+          return;
+        }
+
         if (import.meta.env.MODE === 'development') {
           console.log('[ROUTE_GUARD] forcing import because sender discovery is required', {
             pathname: location.pathname,
