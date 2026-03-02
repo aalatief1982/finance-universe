@@ -59,6 +59,7 @@ import { getNextSmsFlowStep, resolveProviderSelectionState, type OnboardingState
 import { migrateSmsFlowSchema } from '@/services/SmsFlowMigrationService';
 import {
   ENABLE_SMS_INTEGRATION,
+  SMS_STARTUP_IMPORT_ENABLED,
   consumeSmsSenderFirstFlowV2RollbackToggle,
   isSmsSenderFirstFlowV2Enabled,
 } from '@/lib/env';
@@ -559,6 +560,11 @@ function AppWrapper() {
       }
 
       if (flowDecision.shouldTriggerAutoImport) {
+        if (!SMS_STARTUP_IMPORT_ENABLED) {
+          console.log('[SMS_IMPORT] Startup auto-import disabled (SMS_STARTUP_IMPORT_ENABLED=false)');
+          return;
+        }
+
         SmsImportService.checkForNewMessages(navigateRef.current, {
           auto: true,
           usePermissionDate: true,
