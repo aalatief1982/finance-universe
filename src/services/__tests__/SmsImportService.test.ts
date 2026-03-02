@@ -13,11 +13,13 @@ import {
 } from '@/lib/smart-paste-engine/suggestionEngine';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { safeStorage } from '@/utils/safe-storage';
+import { getAutoImportStartDate } from '@/utils/sms-permission-storage';
 
 vi.mock('../SmsReaderService');
 vi.mock('@/utils/storage-utils');
 vi.mock('@/lib/smart-paste-engine/suggestionEngine');
 vi.mock('@/lib/smart-paste-engine/messageFilter');
+vi.mock('@/utils/sms-permission-storage');
 
 describe('SmsImportService.checkForNewMessages', () => {
   beforeEach(() => {
@@ -25,6 +27,7 @@ describe('SmsImportService.checkForNewMessages', () => {
     (isFinancialTransactionMessage as Mock).mockReturnValue(true);
     (getSmsSenderVendorMap as Mock).mockReturnValue({});
     (getSmsSenderImportMap as Mock).mockReturnValue({});
+    (getAutoImportStartDate as Mock).mockReturnValue(new Date(0));
   });
 
   it('routes to process-sms when no sender selection exists', async () => {
@@ -118,6 +121,33 @@ describe('SmsImportService.checkForNewMessages', () => {
 
     confirmSpy.mockRestore();
     alertSpy.mockRestore();
+  });
+
+
+  it('routes to home when permission-date import fetches zero messages', async () => {
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue([]);
+
+    const navigate = vi.fn();
+    await SmsImportService.checkForNewMessages(navigate, { usePermissionDate: true });
+
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
+
+  it('routes to home when permission-date import has zero financial messages after filtering', async () => {
+    const now = new Date().toISOString();
+    (getSelectedSmsSenders as Mock).mockReturnValue(['BANK']);
+    (getSmsSenderImportMap as Mock).mockReturnValue({ BANK: new Date(0).toISOString() });
+    (SmsReaderService.readSmsMessages as Mock).mockResolvedValue([
+      { sender: 'BANK', message: 'Your OTP is 1234', date: now },
+    ]);
+    (isFinancialTransactionMessage as Mock).mockReturnValue(false);
+
+    const navigate = vi.fn();
+    await SmsImportService.checkForNewMessages(navigate, { usePermissionDate: true });
+
+    expect(navigate).toHaveBeenCalledWith('/');
   });
 
   it('converts legacy selected providers to sender allowlist when sender IDs match', async () => {

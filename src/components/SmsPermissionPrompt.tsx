@@ -132,10 +132,12 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         // /process-sms -> /vendor-mapping -> /review-sms-transactions.
         if (!SMS_STARTUP_IMPORT_ENABLED) {
           console.log('[SMS_IMPORT] Permission-grant auto-import disabled (SMS_STARTUP_IMPORT_ENABLED=false)');
+          transitionOnce('/');
           return;
         }
 
         await SmsImportService.checkForNewMessages(transitionOnce, { auto: false, usePermissionDate: true });
+        transitionOnce('/');
         console.log('[SmsPermissionPrompt] Initial SMS import completed');
       } catch (importErr) {
         console.warn('[SmsPermissionPrompt] Error during initial SMS import:', importErr);
