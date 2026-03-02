@@ -123,6 +123,7 @@ function AppWrapper() {
     theme,
     resolvedTheme,
   });
+  const startupSmsFlowRanRef = React.useRef(false);
   const { user, auth } = useUser();
   const onboardingDone = safeStorage.getItem('xpensia_onb_done') === 'true';
 
@@ -522,6 +523,22 @@ function AppWrapper() {
     let isCancelled = false;
 
     const runStartupSmsFlow = async () => {
+      if (startupSmsFlowRanRef.current) {
+        console.log('[SMS_FLOW] startup flow skipped (already ran this session)');
+        return;
+      }
+
+      const startupImportDone = safeStorage.getItem(SMS_STARTUP_IMPORT_DONE_KEY) === '1';
+      if (startupImportDone) {
+        console.log('[SMS_FLOW] startup flow skipped (already done)');
+        if (location.pathname === IMPORT_ROUTE) {
+          navigateRef.current(HOME_ROUTE, { replace: true });
+        }
+        return;
+      }
+
+      startupSmsFlowRanRef.current = true;
+
       const onboardingState: OnboardingState =
         safeStorage.getItem('xpensia_onb_done') === 'true'
           ? (safeStorage.getItem('xpensia_onb_just_completed') === 'true'
@@ -560,19 +577,20 @@ function AppWrapper() {
         permissionState,
         providerSelectionState,
         autoImportEnabled: Boolean(user?.preferences?.sms?.autoImport),
+        startupImportEnabled: SMS_STARTUP_IMPORT_ENABLED,
         smsSenderFirstFlowV2Enabled,
         rollbackToLegacyRoutingOnce,
       });
 
       if (isCancelled) return;
 
-      const startupImportDone = safeStorage.getItem(SMS_STARTUP_IMPORT_DONE_KEY) === '1';
-      if (flowDecision.shouldTriggerAutoImport && startupImportDone) {
-        if (import.meta.env.MODE === 'development') {
-          console.log('[ROUTE_GUARD] skipping startup auto-import because startup import is already marked done', {
-            pathname: location.pathname,
-          });
-        }
+      if (!SMS_STARTUP_IMPORT_ENABLED && location.pathname === IMPORT_ROUTE) {
+        safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
+        console.log('[SMS_IMPORT] startup import disabled -> replace(HOME_ROUTE)', {
+          pathnameBefore: location.pathname,
+          targetPathname: HOME_ROUTE,
+        });
+        navigateRef.current(HOME_ROUTE, { replace: true });
         return;
       }
 
@@ -601,28 +619,6 @@ function AppWrapper() {
       }
 
       if (flowDecision.shouldTriggerAutoImport) {
-        if (!SMS_STARTUP_IMPORT_ENABLED) {
-          safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
-          if (import.meta.env.MODE === 'development') {
-            console.log('[SMS_IMPORT] Startup auto-import disabled (SMS_STARTUP_IMPORT_ENABLED=false)', {
-              pathnameBefore: location.pathname,
-              targetPathname: HOME_ROUTE,
-            });
-          }
-
-          if (location.pathname === IMPORT_ROUTE) {
-            navigateRef.current(HOME_ROUTE, { replace: true });
-            setTimeout(() => {
-              if (import.meta.env.MODE === 'development') {
-                console.log('[SMS_IMPORT] pathname after disabled-import navigation tick', {
-                  pathnameAfter: window.location.pathname,
-                });
-              }
-            }, 0);
-          }
-          return;
-        }
-
         SmsImportService.checkForNewMessages(navigateRef.current, {
           auto: true,
           usePermissionDate: true,
