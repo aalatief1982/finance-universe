@@ -331,6 +331,7 @@ export class SmsImportService {
         if (import.meta.env.MODE === 'development') {
           // console.log('[SMS Auto Import] No messages found since permission grant date');
         }
+        navigate('/');
         return;
       }
 
@@ -345,6 +346,7 @@ export class SmsImportService {
         if (import.meta.env.MODE === 'development') {
           // console.log('[SMS Auto Import] No financial messages found');
         }
+        navigate('/');
         return;
       }
 
