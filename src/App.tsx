@@ -59,10 +59,10 @@ import { getNextSmsFlowStep, resolveProviderSelectionState, type OnboardingState
 import { migrateSmsFlowSchema } from '@/services/SmsFlowMigrationService';
 import {
   ENABLE_SMS_INTEGRATION,
-  SMS_STARTUP_IMPORT_ENABLED,
   consumeSmsSenderFirstFlowV2RollbackToggle,
   isSmsSenderFirstFlowV2Enabled,
 } from '@/lib/env';
+import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/envFlags';
 import { useUser } from './context/UserContext';
 import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';

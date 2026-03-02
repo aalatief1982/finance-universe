@@ -25,6 +25,7 @@
  */
 
 import { safeStorage } from "@/utils/safe-storage";
+import { SMS_HISTORICAL_IMPORT_ENABLED, SMS_STARTUP_IMPORT_ENABLED } from '@/lib/envFlags';
 
 /**
  * This file provides a unified interface for accessing environment variables
@@ -61,9 +62,7 @@ export const SUPABASE_ANON_KEY = getEnvironmentVariable('SUPABASE_ANON_KEY');
 // Feature flags
 export const ENABLE_SUPABASE_AUTH = getEnvironmentVariable('ENABLE_SUPABASE_AUTH', 'false') === 'true';
 export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRATION', 'true') === 'true';
-export const SMS_STARTUP_IMPORT_ENABLED =
-  getEnvironmentVariable('SMS_STARTUP_IMPORT_ENABLED', 'false') === 'true';
-export const SMS_HISTORICAL_IMPORT_ENABLED = SMS_STARTUP_IMPORT_ENABLED;
+export { SMS_STARTUP_IMPORT_ENABLED, SMS_HISTORICAL_IMPORT_ENABLED };
 export const ENABLE_SMS_SENDER_FIRST_FLOW_V2 =
   getEnvironmentVariable('SMS_SENDER_FIRST_FLOW_V2', 'false') === 'true';
 
