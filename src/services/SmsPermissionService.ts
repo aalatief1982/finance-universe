@@ -166,12 +166,18 @@ class SmsPermissionService {
   
   // Initialize SMS listener
   async initSmsListener(): Promise<void> {
+    console.log('[SMS_INIT] initSmsListener invoked (listener-only path; no inbox import)');
+
     if (!this.isNativeEnvironment()) {
+      console.log('[SMS_INIT] initSmsListener skipped (non-native environment)');
       return;
     }
 
     // Throttle initialization so it only runs once
-    if (this.smsListenerInitialized) return;
+    if (this.smsListenerInitialized) {
+      console.log('[SMS_INIT] initSmsListener skipped (already initialized)');
+      return;
+    }
     
     try {
       const smsListener = await loadSmsListener();
@@ -180,6 +186,7 @@ class SmsPermissionService {
       }
       await smsListener.startListening();
       this.smsListenerInitialized = true;
+      console.log('[SMS_INIT] initSmsListener completed (listener active; no bulk import)');
       if (import.meta.env.MODE === 'development') {
         // console.log('[SMS] SMS listener initialized');
       }

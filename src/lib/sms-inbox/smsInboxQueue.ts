@@ -1,6 +1,7 @@
 const SMS_INBOX_QUEUE_KEY = 'xpensia_sms_inbox_queue';
 const MAX_INBOX_ITEMS = 200;
 const DEDUP_WINDOW_MS = 10 * 60 * 1000;
+let hasLoggedInboxBootstrap = false;
 
 type SmsInboxStatus = 'new' | 'opened' | 'processed' | 'ignored';
 type SmsInboxSource = 'listener' | 'static_receiver';
@@ -80,7 +81,13 @@ const loadInbox = (): SmsInboxItem[] => {
     return [];
   }
 
-  return parseInbox(storage.getItem(SMS_INBOX_QUEUE_KEY));
+  const inbox = parseInbox(storage.getItem(SMS_INBOX_QUEUE_KEY));
+  if (!hasLoggedInboxBootstrap) {
+    hasLoggedInboxBootstrap = true;
+    console.log(`[SMS_INBOX] Loaded ${inbox.length} existing items from localStorage`);
+  }
+
+  return inbox;
 };
 
 const saveInbox = (items: SmsInboxItem[]): void => {

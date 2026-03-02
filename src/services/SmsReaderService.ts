@@ -33,7 +33,7 @@ import { safeStorage } from "@/utils/safe-storage";
 import { Capacitor } from "@capacitor/core";
 import { SmsReader } from "../plugins/SmsReaderPlugin";
 import { subMonths, startOfToday } from 'date-fns';
-import { getSmsLookbackMonths } from '@/lib/env';
+import { getSmsLookbackMonths, SMS_HISTORICAL_IMPORT_ENABLED } from '@/lib/env';
 
 export interface SmsReadOptions {
   startDate?: Date;
@@ -143,6 +143,11 @@ export class SmsReaderService {
   static async readSmsMessages(options: SmsReadOptions = {}): Promise<SmsEntry[]> {
     if (import.meta.env.MODE === 'development') {
       // console.log('AIS-01 readSmsMessages', options);
+    }
+
+    if (!SMS_HISTORICAL_IMPORT_ENABLED) {
+      console.log('[SMS_IMPORT] HISTORICAL IMPORT BLOCKED (flag=false) at SmsReaderService.readSmsMessages');
+      return [];
     }
 
     if (!Capacitor.isNativePlatform()) {
