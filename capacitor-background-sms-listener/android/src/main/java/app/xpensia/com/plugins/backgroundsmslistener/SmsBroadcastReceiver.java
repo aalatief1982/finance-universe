@@ -143,7 +143,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         try {
             notificationManager.notify(INBOX_NOTIFICATION_ID, builder.build());
             Log.d(TAG, "[" + LOG_TAG + "] notify succeeded id=" + INBOX_NOTIFICATION_ID + " count=" + messageCount);
-        } catch (SecurityException | Resources.NotFoundException | RuntimeException ex) {
+        } catch (RuntimeException ex) {
             Log.e(TAG, "[" + LOG_TAG + "][ERROR] notify failed", ex);
         }
     }
