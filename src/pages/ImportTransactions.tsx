@@ -22,8 +22,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import SmartPaste from '@/components/SmartPaste';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Transaction } from '@/types/transaction';
+import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
 import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
+import { getInbox, markSmsStatus, SmsInboxItem } from '@/lib/sms-inbox/smsInboxQueue';
 
 
 interface ImportTransactionsLocationState {
@@ -34,6 +38,7 @@ interface ImportTransactionsLocationState {
 const ImportTransactions = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [smsInboxItems, setSmsInboxItems] = React.useState<SmsInboxItem[]>([]);
   const locationState = (location.state as ImportTransactionsLocationState | null) || null;
 
   const effectiveSenderHint =
@@ -46,6 +51,43 @@ const ImportTransactions = () => {
   if (import.meta.env.MODE === 'development') {
     // console.log('[ImportTransactions] Page initialized');
   }
+
+
+  const loadNewSmsInbox = React.useCallback(() => {
+    const items = getInbox()
+      .filter((item) => item.status === 'new')
+      .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+
+    setSmsInboxItems(items);
+  }, []);
+
+  React.useEffect(() => {
+    loadNewSmsInbox();
+  }, [loadNewSmsInbox]);
+
+  const handleReviewSms = React.useCallback(async (item: SmsInboxItem) => {
+    const inferenceDTO = await buildInferenceDTO({
+      rawMessage: item.body,
+      senderHint: item.sender,
+      source: 'sms',
+    });
+
+    navigate('/edit-transaction', {
+      state: {
+        ...inferenceDTO,
+        mode: 'create',
+        isSuggested: true,
+      },
+    });
+
+    markSmsStatus(item.id, 'processed');
+    loadNewSmsInbox();
+  }, [loadNewSmsInbox, navigate]);
+
+  const handleIgnoreSms = React.useCallback((id: string) => {
+    markSmsStatus(id, 'ignored');
+    loadNewSmsInbox();
+  }, [loadNewSmsInbox]);
 
   const handleTransactionsDetected = (
     transactions: Transaction[],
@@ -136,6 +178,36 @@ const ImportTransactions = () => {
           transition={{ duration: 0.5 }}
           className="space-y-[calc(var(--section-gap)/2)]"
         >
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">SMS Inbox</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {smsInboxItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No new SMS to review.</p>
+              ) : (
+                smsInboxItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-3 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-semibold">{item.sender}</p>
+                      <p className="truncate text-sm text-muted-foreground">{item.body}</p>
+                      <p className="text-xs text-muted-foreground">{item.receivedAt.slice(0, 16)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button onClick={() => void handleReviewSms(item)}>Review</Button>
+                      <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>
+                        Ignore
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
           <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
             <SmartPaste
               senderHint={effectiveSenderHint}
