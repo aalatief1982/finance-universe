@@ -83,15 +83,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   render() {
     if (this.state.hasError) {
-      const friendlyMessage = this.state.error 
-        ? getFriendlyMessage(this.state.error) 
+      const friendlyMessage = this.state.error
+        ? getFriendlyMessage(this.state.error)
         : 'Something went wrong.';
+      const displayMessage = this.state.error?.message && friendlyMessage === 'Something went wrong. Please try again later.'
+        ? this.state.error.message
+        : friendlyMessage;
       
       return (
         <div className="p-4 text-center space-y-3 border border-destructive/20 rounded-lg bg-destructive/5 m-2">
           <div className="flex items-center justify-center gap-2 text-destructive">
             <AlertTriangle size={20} />
-            <p className="font-medium">{friendlyMessage}</p>
+            <p className="font-medium">{displayMessage}</p>
           </div>
           
           <div className="flex justify-center gap-2">
