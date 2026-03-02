@@ -53,19 +53,49 @@ const ImportTransactions = () => {
   }
 
 
-  const loadNewSmsInbox = React.useCallback(() => {
+  const loadSmsInbox = React.useCallback(() => {
     const items = getInbox()
-      .filter((item) => item.status === 'new')
       .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
 
     setSmsInboxItems(items);
   }, []);
 
   React.useEffect(() => {
-    loadNewSmsInbox();
-  }, [loadNewSmsInbox]);
+    loadSmsInbox();
+  }, [loadSmsInbox]);
+
+  const newItems = React.useMemo(
+    () => smsInboxItems.filter((item) => item.status === 'new'),
+    [smsInboxItems]
+  );
+
+  const openedItems = React.useMemo(
+    () => smsInboxItems.filter((item) => item.status === 'opened'),
+    [smsInboxItems]
+  );
 
   const handleReviewSms = React.useCallback(async (item: SmsInboxItem) => {
+    const inferenceDTO = await buildInferenceDTO({
+      rawMessage: item.body,
+      senderHint: item.sender,
+      source: 'sms',
+    });
+
+    markSmsStatus(item.id, 'opened');
+    loadSmsInbox();
+
+    navigate('/edit-transaction', {
+      state: {
+        ...inferenceDTO,
+        mode: 'create',
+        isSuggested: true,
+        smsInboxId: item.id,
+      },
+    });
+
+  }, [loadSmsInbox, navigate]);
+
+  const handleContinueSms = React.useCallback(async (item: SmsInboxItem) => {
     const inferenceDTO = await buildInferenceDTO({
       rawMessage: item.body,
       senderHint: item.sender,
@@ -80,15 +110,12 @@ const ImportTransactions = () => {
         smsInboxId: item.id,
       },
     });
-
-    markSmsStatus(item.id, 'opened');
-    loadNewSmsInbox();
-  }, [loadNewSmsInbox, navigate]);
+  }, [navigate]);
 
   const handleIgnoreSms = React.useCallback((id: string) => {
     markSmsStatus(id, 'ignored');
-    loadNewSmsInbox();
-  }, [loadNewSmsInbox]);
+    loadSmsInbox();
+  }, [loadSmsInbox]);
 
   const handleTransactionsDetected = (
     transactions: Transaction[],
@@ -184,28 +211,57 @@ const ImportTransactions = () => {
               <CardTitle className="text-base">SMS Inbox</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {smsInboxItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No new SMS to review.</p>
-              ) : (
-                smsInboxItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col gap-3 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div className="min-w-0 space-y-1">
-                      <p className="font-semibold">{item.sender}</p>
-                      <p className="truncate text-sm text-muted-foreground">{item.body}</p>
-                      <p className="text-xs text-muted-foreground">{item.receivedAt.slice(0, 16)}</p>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">New SMS</p>
+                {newItems.length === 0 ? (
+                  <p className="rounded-md border p-3 text-sm text-muted-foreground">No new SMS</p>
+                ) : (
+                  newItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex flex-col gap-3 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <p className="font-semibold">{item.sender}</p>
+                        <p className="truncate text-sm text-muted-foreground">{item.body}</p>
+                        <p className="text-xs text-muted-foreground">{item.receivedAt.slice(0, 16)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button onClick={() => void handleReviewSms(item)}>Review</Button>
+                        <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>
+                          Ignore
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button onClick={() => void handleReviewSms(item)}>Review</Button>
-                      <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>
-                        Ignore
-                      </Button>
+                  ))
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">In review</p>
+                {openedItems.length === 0 ? (
+                  <p className="rounded-md border p-3 text-sm text-muted-foreground">No items in review</p>
+                ) : (
+                  openedItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex flex-col gap-3 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <p className="font-semibold">{item.sender}</p>
+                        <p className="truncate text-sm text-muted-foreground">{item.body}</p>
+                        <p className="text-xs text-muted-foreground">{item.receivedAt.slice(0, 16)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button onClick={() => void handleContinueSms(item)}>Continue</Button>
+                        <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>
+                          Ignore
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
 
