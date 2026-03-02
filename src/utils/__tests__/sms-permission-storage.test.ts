@@ -62,4 +62,13 @@ describe('getAutoImportStartDate', () => {
     expect(diffMs).toBeGreaterThanOrEqual(29 * 24 * 60 * 60 * 1000);
     expect(diffMs).toBeLessThanOrEqual(31 * 24 * 60 * 60 * 1000);
   });
+
+  it('returns a future start date when lookback is 0 to disable import', () => {
+    vi.mocked(getSmsLookbackMonths).mockReturnValue(0);
+
+    const now = new Date();
+    const startDate = getAutoImportStartDate();
+
+    expect(startDate.getTime()).toBeGreaterThan(now.getTime());
+  });
 });
