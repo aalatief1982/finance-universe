@@ -8,6 +8,7 @@ vi.stubGlobal('localStorage', storageMock);
 // Import after mocks
 import { parseAndInferTransaction } from '../parseAndInferTransaction';
 import { parseSmsMessage } from '../structureParser';
+import { saveTransactionWithLearning } from '../saveTransactionWithLearning';
 
 describe('Smart Paste Integration', () => {
   beforeEach(() => {
@@ -16,6 +17,40 @@ describe('Smart Paste Integration', () => {
   });
 
   describe('SMS parsing to transaction conversion', () => {
+    it('learns template through save flow and then exact-matches with templateScore=1.0', async () => {
+      const sms = 'Purchase of SAR 150.00 at CARREFOUR on 15/01/2024. Ref: 123456';
+
+      saveTransactionWithLearning(
+        {
+          id: 'txn-1',
+          title: 'Purchase',
+          amount: 150,
+          currency: 'SAR',
+          category: 'Food',
+          subcategory: 'Groceries',
+          date: '2024-01-15',
+          type: 'expense',
+          source: 'smart-paste',
+          vendor: 'CARREFOUR',
+          fromAccount: 'ALRAJHI',
+        },
+        {
+          rawMessage: sms,
+          isNew: true,
+          senderHint: 'ALRAJHI',
+          addTransaction: vi.fn(),
+          updateTransaction: vi.fn(),
+          learnFromTransaction: vi.fn(),
+          navigateBack: vi.fn(),
+          silent: true,
+        },
+      );
+
+      const result = await parseAndInferTransaction(sms, 'ALRAJHI');
+      expect(result.parsed.matched).toBe(true);
+      expect(result.debugTrace.confidenceBreakdown.templateScore).toBe(1);
+    });
+
     it('should parse a typical bank SMS and create transaction', async () => {
       const sms = 'Purchase of SAR 150.00 at CARREFOUR on 15/01/2024. Ref: 123456';
 
@@ -66,6 +101,20 @@ describe('Smart Paste Integration', () => {
       const result = await parseAndInferTransaction(purchaseSms);
 
       expect(result.transaction.type).toBe('expense');
+    });
+
+    it('infers type from legacy xpensia_type_keywords array without defaulting score to zero', async () => {
+      localStorage.setItem(
+        'xpensia_type_keywords',
+        JSON.stringify([{ keyword: 'شراء', type: 'expense' }]),
+      );
+
+      const result = await parseAndInferTransaction('شراء بمبلغ SAR 35 لدى bolt');
+      const typeField = result.debugTrace.fields.find((field) => field.field === 'type');
+
+      expect(result.transaction.type).toBe('expense');
+      expect(typeField?.score || 0).toBeGreaterThan(0);
+      expect(typeField?.tier).not.toBe('needs_review');
     });
 
     it('should infer income type for salary/credit messages', async () => {

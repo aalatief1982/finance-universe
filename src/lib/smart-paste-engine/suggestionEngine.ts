@@ -122,6 +122,45 @@ interface ScoredCandidate {
   score: number;
 }
 
+type TypeKeywordBuckets = Record<string, string[]>;
+
+const normalizeTypeKeywordsData = (value: unknown): TypeKeywordBuckets => {
+  if (Array.isArray(value)) {
+    return value.reduce<TypeKeywordBuckets>((acc, entry) => {
+      if (
+        entry &&
+        typeof entry === 'object' &&
+        'keyword' in entry &&
+        'type' in entry &&
+        typeof (entry as { keyword: unknown }).keyword === 'string' &&
+        typeof (entry as { type: unknown }).type === 'string'
+      ) {
+        const keyword = (entry as { keyword: string }).keyword.trim();
+        const transactionType = (entry as { type: string }).type.trim();
+        if (keyword && transactionType) {
+          if (!acc[transactionType]) acc[transactionType] = [];
+          acc[transactionType].push(keyword);
+        }
+      }
+      return acc;
+    }, {});
+  }
+
+  if (value && typeof value === 'object') {
+    const normalized: TypeKeywordBuckets = {};
+    for (const [transactionType, keywords] of Object.entries(value)) {
+      if (Array.isArray(keywords)) {
+        normalized[transactionType] = keywords.filter(
+          (keyword): keyword is string => typeof keyword === 'string' && keyword.trim().length > 0,
+        );
+      }
+    }
+    return normalized;
+  }
+
+  return {};
+};
+
 const KEYWORD_DEBUG_ENABLED = String(import.meta.env.VITE_DEBUG_KEYWORD_SCORING).toLowerCase() === 'true';
 
 const getKeywordMatchType = (sourceText: string, keyword: string): 'exact' | 'substring' | null => {
@@ -422,7 +461,8 @@ export function inferIndirectFieldsWithDebug(
 
   // Step 3: Type keyword inference
   if (!inferred['type']) {
-    const typeKeywordsData = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '{}');
+    const typeKeywordsRaw = JSON.parse(safeStorage.getItem('xpensia_type_keywords') || '{}');
+    const typeKeywordsData = normalizeTypeKeywordsData(typeKeywordsRaw);
     const typeCandidates: Array<ScoredCandidate & { transactionType: string }> = [];
     
     // Handle object format: {expense: [...], income: [...], transfer: [...]}

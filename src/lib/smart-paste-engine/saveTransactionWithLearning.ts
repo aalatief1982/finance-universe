@@ -43,6 +43,7 @@ import {
   loadTemplateBank,
   saveTemplateBank,
   getTemplateKey,
+  getTemplateByHash,
 } from './templateUtils';
 import {
   loadKeywordBank,
@@ -288,13 +289,12 @@ export function saveTransactionWithLearning(
     } = extractTemplateStructure(rawMessage);
     const fields = Object.keys(placeholders);
 
-    const key = getTemplateKey(
+    const existingTemplate = getTemplateByHash(
+      templateHash,
       senderHint,
       newTransaction.fromAccount,
-      templateHash,
     );
-    const bank = loadTemplateBank();
-    if (!bank[key]) {
+    if (!existingTemplate) {
       saveNewTemplate(
         structure,
         fields,

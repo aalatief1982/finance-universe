@@ -261,45 +261,20 @@ export async function initializeXpensiaStorageDefaults() {
 
   // Ensure type keyword bank exists
   if (!safeStorage.getItem('xpensia_type_keywords')) {
-    safeStorage.setItem('xpensia_type_keywords', JSON.stringify([
-      { "keyword": "purchase", "type": "expense" },
-      { "keyword": "pos", "type": "expense" },
-      { "keyword": "mada", "type": "expense" },
-      { "keyword": "spent", "type": "expense" },
-      { "keyword": "paid", "type": "expense" },
-      { "keyword": "atm withdrawal", "type": "expense" },
-      { "keyword": "fuel", "type": "expense" },
-      { "keyword": "food", "type": "expense" },
-      { "keyword": "market", "type": "expense" },
-      { "keyword": "شراء", "type": "expense" },
-      { "keyword": "خصم", "type": "expense" },
-      { "keyword": "بطاقة", "type": "expense" },
-	  { "keyword": "سداد", "type": "expense" },
-	  { "keyword": "حوالة صادرة", "type": "income" },
-
-      { "keyword": "salary", "type": "income" },
-      { "keyword": "deposit", "type": "income" },
-      { "keyword": "credited", "type": "income" },
-      { "keyword": "received", "type": "income" },
-      { "keyword": "bonus", "type": "income" },
-      { "keyword": "commission", "type": "income" },
-      { "keyword": "incentive", "type": "income" },
-      { "keyword": "حوالة واردة", "type": "income" },
-      { "keyword": "دفعة", "type": "income" },
-	  { "keyword": "راتب", "type": "income" },
-
-      { "keyword": "transfer", "type": "transfer" },
-      { "keyword": "sent", "type": "transfer" },
-      { "keyword": "received from", "type": "transfer" },
-      { "keyword": "sent to", "type": "transfer" },
-      { "keyword": "تحويل", "type": "transfer" },
-      { "keyword": "نقل", "type": "transfer" },
-      { "keyword": "ارسال", "type": "transfer" },
-      { "keyword": "bank to bank", "type": "transfer" },
-      { "keyword": "wallet", "type": "transfer" },
-      { "keyword": "iban", "type": "transfer" },
-	  { "keyword": "سحب", "type": "transfer" }
-    ]));
+    safeStorage.setItem('xpensia_type_keywords', JSON.stringify({
+      expense: [
+        'purchase', 'pos', 'mada', 'spent', 'paid', 'atm withdrawal', 'fuel',
+        'food', 'market', 'شراء', 'خصم', 'بطاقة', 'سداد',
+      ],
+      income: [
+        'حوالة صادرة', 'salary', 'deposit', 'credited', 'received', 'bonus',
+        'commission', 'incentive', 'حوالة واردة', 'دفعة', 'راتب',
+      ],
+      transfer: [
+        'transfer', 'sent', 'received from', 'sent to', 'تحويل', 'نقل',
+        'ارسال', 'bank to bank', 'wallet', 'iban', 'سحب',
+      ],
+    }));
     if (import.meta.env.MODE === 'development') {
       // console.log('[Init] xpensia_type_keywords initialized');
     }
