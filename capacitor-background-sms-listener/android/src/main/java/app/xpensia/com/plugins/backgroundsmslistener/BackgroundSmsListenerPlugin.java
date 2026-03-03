@@ -92,6 +92,39 @@ public class BackgroundSmsListenerPlugin extends Plugin {
         }
     }
 
+    static void handleIncomingSms(Context context, String sender, String body, String source, boolean emitToJs) {
+        if (!FinancialSmsClassifier.isFinancialTransactionMessage(body)) {
+            Log.d(TAG, "Skipping non-financial SMS from " + sender);
+            return;
+        }
+
+        long receivedAt = System.currentTimeMillis();
+        String hash = buildHash(sender, body);
+        int queueSize = persistMessage(
+                context,
+                sender != null ? sender : "",
+                body,
+                receivedAt,
+                source,
+                hash
+        );
+
+        Log.d(PENDING_TAG, "Persisted qualifying SMS hash=" + hash + " queueSize=" + queueSize + " source=" + source);
+
+        if (emitToJs) {
+            notifySmsReceived(context, sender != null ? sender : "", body);
+        }
+
+        SmsBroadcastReceiver.postOrUpdateSummaryNotification(context, queueSize);
+    }
+
+    static String buildHash(String sender, String body) {
+        String normalizedSender = sender == null ? "" : sender.trim().replaceAll("\\s+", "").toLowerCase();
+        String normalizedBody = body == null ? "" : body.trim().replaceAll("\\s+", " ").toLowerCase();
+        String base = normalizedSender + "|" + normalizedBody + "|" + normalizedBody.length();
+        return Integer.toHexString(base.hashCode());
+    }
+
     private void checkStaticReceiver() {
         ComponentName cn = new ComponentName(getContext(), SmsBroadcastReceiver.class);
         try {
@@ -386,12 +419,8 @@ public class BackgroundSmsListenerPlugin extends Plugin {
                         String body = bodyBuilder.toString();
                         
                         Log.d(TAG, "SMS received from " + sender + ": " + body);
-                        
-                        // Send to JavaScript
-                        JSObject data = new JSObject();
-                        data.put("sender", sender);
-                        data.put("body", body);
-                        notifyListeners("smsReceived", data);
+
+                        handleIncomingSms(context, sender, body, "listener", true);
                     }
                 }
             }
