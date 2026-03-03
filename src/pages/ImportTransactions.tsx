@@ -263,7 +263,7 @@ const ImportTransactions = () => {
     const inferenceDTO = createInferenceDTOFromDetection({
       transaction: {
         ...transaction,
-        rawMessage: rawMessage ?? '',
+        details: { ...transaction.details, rawMessage: rawMessage ?? '' },
       },
       rawMessage,
       senderHint,

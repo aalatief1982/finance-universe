@@ -41,6 +41,7 @@ const ImportTransactionsNER = () => {
     senderHint?: string,
     confidence?: number,
     matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+    parsingStatus?: 'success' | 'partial' | 'failed',
     matchedCount?: number,
     totalTemplates?: number,
     fieldScore?: number,
@@ -74,11 +75,12 @@ const ImportTransactionsNER = () => {
     const inferenceDTO = normalizeInferenceDTO({
       transaction: {
         ...transaction,
-        rawMessage: rawMessage ?? '',
+        details: { ...transaction.details, rawMessage: rawMessage ?? '' },
       },
       rawMessage,
       senderHint,
       confidence,
+      parsingStatus,
       matchedCount,
       totalTemplates,
       fieldScore,

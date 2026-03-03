@@ -40,10 +40,12 @@ interface NERSmartPasteProps {
     senderHint?: string,
     confidence?: number,
     matchOrigin?: "template" | "structure" | "ml" | "fallback",
+    parsingStatus?: 'success' | 'partial' | 'failed',
     matchedCount?: number,
     totalTemplates?: number,
     fieldScore?: number,
-    keywordScore?: number
+    keywordScore?: number,
+    fieldConfidences?: Record<string, number>
   ) => void;
 }
 
@@ -103,10 +105,12 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
           senderHint,
           result.confidence,
           result.origin,
+          result.parsingStatus,
           result.matchedCount,
           result.totalTemplates,
           result.fieldScore,
-          result.keywordScore
+          result.keywordScore,
+          result.fieldConfidences
         );
       }
     } catch (err: unknown) {
@@ -163,8 +167,10 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
         senderHint,
         confidence || 0.95,
         matchOrigin || 'structure',
+        undefined,
         0,
         0,
+        undefined,
         undefined,
         undefined
       );
