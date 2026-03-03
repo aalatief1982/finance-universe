@@ -85,6 +85,25 @@ interface FallbackVendorEntry extends VendorFallbackData {
   vendor: string;
 }
 
+export interface InferenceDebugCandidate {
+  value: string;
+  score: number;
+  reason: string;
+  sourceKind: 'direct_extract' | 'keyword_bank' | 'template_default' | 'history_learning' | 'heuristic' | 'default';
+  matchedText?: string;
+  mappingId?: string;
+  ruleId?: string;
+}
+
+export interface FieldInferenceDebug {
+  sourceKind: InferenceDebugCandidate['sourceKind'];
+  matchedText: string[];
+  ruleId?: string;
+  mappingId?: string;
+  candidates: InferenceDebugCandidate[];
+  selectionReason: string;
+}
+
 interface KeywordScoreContext {
   sourceText: string;
   vendorText?: string;
@@ -191,12 +210,19 @@ function softNormalize(str: string): string {
  * - Falls back to substring match if fuzzy fails
  */
 export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntry | null {
+  return findClosestFallbackMatchWithDebug(vendorName).match;
+}
+
+function findClosestFallbackMatchWithDebug(vendorName: string): {
+  match: FallbackVendorEntry | null;
+  candidates: Array<{ vendor: string; score: number; reason: string; ruleId: string }>;
+} {
   const lowerInput = softNormalize(vendorName);
   
   // CRITICAL GUARD: Prevent crash when vendor name is empty or whitespace-only
   // string-similarity throws "Bad arguments" on empty strings
   if (!lowerInput) {
-    return null;
+    return { match: null, candidates: [] };
   }
   
   const fallbackVendors = getFallbackVendors();
@@ -204,7 +230,7 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
 
   // Guard: prevent crash when vendor list is empty
   if (vendorKeys.length === 0) {
-    return null;
+    return { match: null, candidates: [] };
   }
 
   // Step 1: Try full fuzzy match
@@ -218,7 +244,10 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
     const originalKey = originalKeysMap[normalizedKey];
     const data = fallbackVendors[originalKey];
     console.info('[SmartPaste] Fuzzy matched vendor:', originalKey, '→', data);
-    return { vendor: originalKey, ...data };
+    return {
+      match: { vendor: originalKey, ...data },
+      candidates: [{ vendor: originalKey, score: match.bestMatch.rating, reason: 'fuzzy_similarity', ruleId: `vendor_fuzzy:${originalKey}` }],
+    };
   }
 
   // Step 2: Deterministic substring scoring
@@ -246,13 +275,24 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
       console.debug('[SmartPaste][KeywordScoring] Vendor fallback candidates:', substringCandidates);
       console.debug('[SmartPaste][KeywordScoring] Vendor fallback winner:', bestSubstringCandidate);
     }
-    return { vendor: bestSubstringCandidate.keyword, ...data };
+    return {
+      match: { vendor: bestSubstringCandidate.keyword, ...data },
+      candidates: substringCandidates
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map((candidate) => ({
+          vendor: candidate.keyword,
+          score: candidate.score,
+          reason: candidate === bestSubstringCandidate ? 'chosen_substring' : 'lower_substring_score',
+          ruleId: `vendor_substring:${candidate.keyword}`,
+        })),
+    };
   }
 
   if (import.meta.env.MODE === 'development') {
     console.warn('[SmartPaste] No fallback match found for vendor:', vendorName);
   }
-  return null;
+  return { match: null, candidates: [] };
 }
 
 // ============================================================================
@@ -282,10 +322,41 @@ export function inferIndirectFields(
   text: string,
   knowns: Partial<Record<string, string>> = {}
 ): Record<string, string> {
+  return inferIndirectFieldsWithDebug(text, knowns).inferred;
+}
+
+export function inferIndirectFieldsWithDebug(
+  text: string,
+  knowns: Partial<Record<string, string>> = {}
+): { inferred: Record<string, string>; debugByField: Record<string, FieldInferenceDebug> } {
   const messageText = text.toLowerCase();
   const vendorText = (knowns.vendor || '').toLowerCase();
   const rawText = `${messageText} ${vendorText}`.trim();
   const inferred: Record<string, string> = {};
+  const debugByField: Record<string, FieldInferenceDebug> = {};
+
+  const inferredVendor = knowns.vendor || extractVendorName(text);
+  if (inferredVendor) {
+    inferred.vendor = inferredVendor;
+    debugByField.vendor = {
+      sourceKind: knowns.vendor ? 'direct_extract' : 'heuristic',
+      matchedText: [inferredVendor],
+      ruleId: knowns.vendor ? 'vendor_known_field' : 'vendor_regex_extract',
+      candidates: [
+        {
+          value: inferredVendor,
+          score: knowns.vendor ? 1 : 0.6,
+          reason: knowns.vendor ? 'provided_by_direct_fields' : 'regex_based_vendor_extraction',
+          sourceKind: knowns.vendor ? 'direct_extract' : 'heuristic',
+          matchedText: inferredVendor,
+          ruleId: knowns.vendor ? 'vendor_known_field' : 'vendor_regex_extract',
+        },
+      ],
+      selectionReason: knowns.vendor
+        ? 'Vendor came from direct extraction and was reused for inference.'
+        : 'Vendor was extracted from message text using heuristic regex anchors.',
+    };
+  }
 
   // Step 1: Load keyword bank
   const keywordBank: KeywordMapping[] = JSON.parse(safeStorage.getItem('xpensia_keyword_bank') || '[]') || [];
@@ -326,6 +397,23 @@ export function inferIndirectFields(
     const winner = pickBestCandidate(fieldCandidates);
     if (!winner || inferred[field]) return;
     inferred[field] = winner.value;
+    const sortedCandidates = [...fieldCandidates].sort((a, b) => b.score - a.score).slice(0, 5);
+    debugByField[field] = {
+      sourceKind: 'keyword_bank',
+      matchedText: sortedCandidates.map((candidate) => candidate.keyword),
+      ruleId: `keyword_bank:${field}`,
+      mappingId: `${winner.keyword}:${field}:${winner.value}`,
+      candidates: sortedCandidates.map((candidate, idx) => ({
+        value: candidate.value,
+        score: candidate.score,
+        reason: idx === 0 ? 'chosen_highest_keyword_score' : 'lower_keyword_score',
+        sourceKind: 'keyword_bank',
+        matchedText: candidate.keyword,
+        mappingId: `${candidate.keyword}:${field}:${candidate.value}`,
+        ruleId: `keyword_bank:${field}`,
+      })),
+      selectionReason: `Matched keyword "${winner.keyword}" with highest score for ${field}.`,
+    };
     if (KEYWORD_DEBUG_ENABLED) {
       console.debug(`[SmartPaste][KeywordScoring] Keyword candidates for ${field}:`, fieldCandidates);
       console.debug(`[SmartPaste][KeywordScoring] Keyword winner for ${field}:`, winner);
@@ -356,6 +444,23 @@ export function inferIndirectFields(
     const winner = pickBestCandidate(typeCandidates);
     if (winner) {
       inferred['type'] = winner.transactionType;
+      const sortedTypeCandidates = [...typeCandidates].sort((a, b) => b.score - a.score).slice(0, 5);
+      debugByField.type = {
+        sourceKind: 'keyword_bank',
+        matchedText: sortedTypeCandidates.map((candidate) => candidate.keyword),
+        ruleId: 'type_keyword_bank',
+        mappingId: `${winner.keyword}:type:${winner.transactionType}`,
+        candidates: sortedTypeCandidates.map((candidate, idx) => ({
+          value: candidate.transactionType,
+          score: candidate.score,
+          reason: idx === 0 ? 'chosen_highest_type_keyword_score' : 'lower_type_keyword_score',
+          sourceKind: 'keyword_bank',
+          matchedText: candidate.keyword,
+          mappingId: `${candidate.keyword}:type:${candidate.transactionType}`,
+          ruleId: 'type_keyword_bank',
+        })),
+        selectionReason: `Type inferred from keyword "${winner.keyword}".`,
+      };
       if (KEYWORD_DEBUG_ENABLED) {
         console.debug('[SmartPaste][KeywordScoring] Type candidates:', typeCandidates);
         console.debug('[SmartPaste][KeywordScoring] Type winner:', winner);
@@ -369,7 +474,8 @@ export function inferIndirectFields(
 
   if (needsCategory || needsSubcategory) {
     const vendorText = knowns.vendor || extractVendorName(text);
-    const fallback = findClosestFallbackMatch(vendorText);
+    const fallbackMatch = findClosestFallbackMatchWithDebug(vendorText);
+    const fallback = fallbackMatch.match;
     if (import.meta.env.MODE === 'development') {
       // console.log('[SmartPaste] Fallback vendorText used:', vendorText);
     }
@@ -380,8 +486,44 @@ export function inferIndirectFields(
     const finalType = inferred['type'] || knowns['type'];
 
     if (fallback && (!finalType || fallback.type.toLowerCase() === finalType.toLowerCase())) {
-      if (needsCategory) inferred['category'] = fallback.category;
-      if (needsSubcategory) inferred['subcategory'] = fallback.subcategory;
+      if (needsCategory) {
+        inferred['category'] = fallback.category;
+        debugByField.category = {
+          sourceKind: 'history_learning',
+          matchedText: [vendorText],
+          ruleId: `vendor_fallback:${fallback.vendor}`,
+          mappingId: `vendor:${fallback.vendor}:category:${fallback.category}`,
+          candidates: fallbackMatch.candidates.map((candidate, idx) => ({
+            value: idx === 0 ? fallback.category : fallback.category,
+            score: candidate.score,
+            reason: candidate.reason,
+            sourceKind: 'history_learning',
+            matchedText: candidate.vendor,
+            ruleId: candidate.ruleId,
+            mappingId: `vendor:${candidate.vendor}:category:${fallback.category}`,
+          })),
+          selectionReason: `Vendor fallback selected ${fallback.vendor} for category mapping.`,
+        };
+      }
+      if (needsSubcategory) {
+        inferred['subcategory'] = fallback.subcategory;
+        debugByField.subcategory = {
+          sourceKind: 'history_learning',
+          matchedText: [vendorText],
+          ruleId: `vendor_fallback:${fallback.vendor}`,
+          mappingId: `vendor:${fallback.vendor}:subcategory:${fallback.subcategory}`,
+          candidates: fallbackMatch.candidates.map((candidate, idx) => ({
+            value: idx === 0 ? fallback.subcategory : fallback.subcategory,
+            score: candidate.score,
+            reason: candidate.reason,
+            sourceKind: 'history_learning',
+            matchedText: candidate.vendor,
+            ruleId: candidate.ruleId,
+            mappingId: `vendor:${candidate.vendor}:subcategory:${fallback.subcategory}`,
+          })),
+          selectionReason: `Vendor fallback selected ${fallback.vendor} for subcategory mapping.`,
+        };
+      }
     }
 
     // Step 5: Absolute fallback for income type
@@ -390,6 +532,42 @@ export function inferIndirectFields(
       inferred['category'] = 'Earnings';
       inferred['subcategory'] = 'Benefits';
       inferred['__fallbackTag'] = 'income_default';
+      debugByField.category = {
+        sourceKind: 'default',
+        matchedText: [finalType],
+        ruleId: 'income_default_category',
+        mappingId: 'default:income:category:Earnings',
+        candidates: [
+          {
+            value: 'Earnings',
+            score: 0.1,
+            reason: 'income_type_without_category',
+            sourceKind: 'default',
+            matchedText: finalType,
+            ruleId: 'income_default_category',
+            mappingId: 'default:income:category:Earnings',
+          },
+        ],
+        selectionReason: 'Income fallback default applied because no category/subcategory was inferred.',
+      };
+      debugByField.subcategory = {
+        sourceKind: 'default',
+        matchedText: [finalType],
+        ruleId: 'income_default_subcategory',
+        mappingId: 'default:income:subcategory:Benefits',
+        candidates: [
+          {
+            value: 'Benefits',
+            score: 0.1,
+            reason: 'income_type_without_category',
+            sourceKind: 'default',
+            matchedText: finalType,
+            ruleId: 'income_default_subcategory',
+            mappingId: 'default:income:subcategory:Benefits',
+          },
+        ],
+        selectionReason: 'Income fallback default applied because no category/subcategory was inferred.',
+      };
       console.info('[SmartPaste] Applied income fallback: Earnings > Benefits');
     }
   }
@@ -397,7 +575,7 @@ export function inferIndirectFields(
   if (import.meta.env.MODE === 'development') {
     // console.log('[SmartPaste] Final inferred fields before return:', inferred);
   }
-  return inferred;
+  return { inferred, debugByField };
 }
 
 // ============================================================================

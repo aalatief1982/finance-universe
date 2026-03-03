@@ -71,9 +71,12 @@ const EngineOutPage = () => {
         2,
       );
 
+  const traceFields = debugTrace?.fields ?? [];
+  const highlightedFields = ['vendor', 'category', 'subcategory', 'type'];
+
   return (
     <Layout withPadding fullWidth showBack>
-      <div className="space-y-4 p-3">
+      <div className="space-y-4 p-3 pb-[calc(var(--bottom-nav-height,0px)+7rem)]">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl font-semibold">Engine Out (Debug)</h1>
           <label className="text-sm flex items-center gap-2">
@@ -123,14 +126,20 @@ const EngineOutPage = () => {
         <Card>
           <CardHeader><CardTitle>Field-by-field decision trace</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {debugTrace?.fields?.length ? debugTrace.fields.map((field) => (
+            {traceFields.length ? traceFields
+              .filter((field) => highlightedFields.includes(field.field))
+              .map((field) => (
               <div key={field.field} className="rounded border p-2 text-sm">
                 <p><strong>{field.field}</strong> • {field.tier}</p>
                 <p>finalValue: {showRaw ? String(field.finalValue ?? '') : maskSensitiveText(String(field.finalValue ?? ''))}</p>
                 <p>score: {field.score}</p>
+                <p>sourceKind: {field.sourceKind || field.source}</p>
                 <p>evidence: {(field.evidence || []).join(' | ') || 'none'}</p>
-                <p>breakdown: direct={field.breakdown.directScore ?? '-'}, inferred={field.breakdown.inferredScore ?? '-'}, default={field.breakdown.defaultScore ?? '-'}</p>
-                <p>alternatives: {(field.alternatives || []).map((alt) => `${showRaw ? alt.value : maskSensitiveText(String(alt.value))} (${alt.score}, ${alt.reason})`).join(' • ') || 'none'}</p>
+                <p>ruleId: {field.ruleId || 'n/a'} • mappingId: {field.mappingId || 'n/a'}</p>
+                <p>matchedText: {(field.matchedText || []).join(' | ') || 'none'}</p>
+                <p>breakdown: direct={field.breakdown.directScore ?? '-'}, inferred={field.breakdown.inferredScore ?? '-'}, default={field.breakdown.defaultScore ?? '-'}, chosen={field.breakdown.selectedCandidateScore ?? '-'}, delta={field.breakdown.selectionDelta ?? '-'}</p>
+                <p><strong>Why chosen:</strong> {field.candidates?.[0] ? `${showRaw ? field.candidates[0].value : maskSensitiveText(String(field.candidates[0].value))} (${field.candidates[0].score}, ${field.candidates[0].reason})` : 'No explicit candidate captured.'}</p>
+                <p><strong>Alternatives:</strong> {(field.candidates || []).slice(1).map((alt) => `${showRaw ? alt.value : maskSensitiveText(String(alt.value))} (${alt.score}, ${alt.reason})`).join(' • ') || 'none'}</p>
               </div>
             )) : <p className="text-sm text-muted-foreground">No field trace available</p>}
           </CardContent>
@@ -146,9 +155,9 @@ const EngineOutPage = () => {
           </CardContent>
         </Card>
 
-        <div className="flex gap-2">
+        <div className="sticky bottom-[calc(var(--bottom-nav-height,0px)+0.5rem)] z-10 flex gap-2 rounded-md border bg-background/95 p-2 backdrop-blur">
           <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
-          <Button onClick={() => navigate('/edit-transaction', { state: continueState })}>Continue</Button>
+          <Button onClick={() => navigate('/edit-transaction', { state: continueState })}>Continue to Edit</Button>
         </div>
       </div>
     </Layout>
