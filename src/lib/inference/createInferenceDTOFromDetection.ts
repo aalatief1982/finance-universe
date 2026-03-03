@@ -1,6 +1,7 @@
 import type { Transaction } from '@/types/transaction';
 import type { InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
 import { normalizeInferenceDTO, type InferenceDTO } from './inferenceDTO';
+import type { InferenceDecisionTrace } from '@/types/inference';
 
 interface CreateInferenceDTOFromDetectionArgs {
   transaction: Transaction;
@@ -18,6 +19,7 @@ interface CreateInferenceDTOFromDetectionArgs {
   mode?: 'create' | 'edit';
   isSuggested?: boolean;
   source?: Transaction['source'];
+  debugTrace?: InferenceDecisionTrace;
 }
 
 export function createInferenceDTOFromDetection({
@@ -36,6 +38,7 @@ export function createInferenceDTOFromDetection({
   mode = 'create',
   isSuggested = true,
   source,
+  debugTrace,
 }: CreateInferenceDTOFromDetectionArgs): InferenceDTO {
   return normalizeInferenceDTO({
     transaction: {
@@ -55,6 +58,7 @@ export function createInferenceDTOFromDetection({
     keywordScore,
     mode,
     isSuggested,
+    debugTrace,
   });
 }
 

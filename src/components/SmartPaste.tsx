@@ -33,7 +33,7 @@ import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { computeCapturedFields } from '@/lib/inference/fieldStatus';
-import type { InferenceParsingStatus } from '@/types/inference';
+import type { InferenceDecisionTrace, InferenceParsingStatus } from '@/types/inference';
 
 const normalizeFieldConfidences = (
   confidences?: Record<string, number>,
@@ -71,6 +71,7 @@ interface SmartPasteProps {
     fieldScore?: number,
     keywordScore?: number,
     fieldConfidences?: Record<string, number>,
+    debugTrace?: InferenceDecisionTrace,
   ) => void;
 }
 
@@ -98,6 +99,7 @@ const SmartPaste = ({
   const [totalTemplates, setTotalTemplates] = useState<number | null>(null);
   const [fieldScore, setFieldScore] = useState<number | null>(null);
   const [keywordScore, setKeywordScore] = useState<number | null>(null);
+  const [debugTrace, setDebugTrace] = useState<InferenceDecisionTrace | undefined>();
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const { toast } = useToast();
@@ -187,6 +189,7 @@ const SmartPaste = ({
         totalTemplates,
         fieldScore,
         keywordScore,
+        debugTrace,
       } = await parseAndInferTransaction(text, senderHint);
 
       const normalizedFieldConfidences = normalizeFieldConfidences(
@@ -213,6 +216,7 @@ const SmartPaste = ({
       setTotalTemplates(totalTemplates);
       setFieldScore(fieldScore);
       setKeywordScore(keywordScore);
+      setDebugTrace(debugTrace);
 
       if (import.meta.env.MODE === 'development') {
         // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
@@ -251,6 +255,7 @@ const SmartPaste = ({
       setTotalTemplates(null);
       setFieldScore(null);
       setKeywordScore(null);
+      setDebugTrace(undefined);
     } finally {
       setIsProcessing(false);
     }
@@ -321,6 +326,7 @@ const SmartPaste = ({
         fieldScore ?? undefined,
         keywordScore ?? undefined,
         normalizeFieldConfidences(fieldConfidences),
+        debugTrace,
       );
     }
 

@@ -29,6 +29,7 @@ import { Transaction } from '@/types/transaction';
 import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
 import { createInferenceDTOFromDetection } from '@/lib/inference/createInferenceDTOFromDetection';
 import { getInbox, markSmsStatus, SmsInboxItem } from '@/lib/sms-inbox/smsInboxQueue';
+import { isAdminMode } from '@/utils/admin-utils';
 
 
 interface ImportTransactionsLocationState {
@@ -95,6 +96,7 @@ const ImportTransactions = () => {
   );
 
   const DEBUG_INFERENCE_FLOW = import.meta.env.VITE_DEBUG_INFERENCE_FLOW === 'true';
+  const adminEnabled = isAdminMode();
 
   const debugInferencePayload = React.useCallback((flow: 'smart-entry' | 'notification-review', inferenceDTO: ReturnType<typeof createInferenceDTOFromDetection>) => {
     if (!DEBUG_INFERENCE_FLOW) return;
@@ -135,14 +137,26 @@ const ImportTransactions = () => {
       markSmsStatus(item.id, 'opened');
       loadSmsInbox();
 
-      navigate('/edit-transaction', {
-        state: {
-          ...inferenceDTO,
-          mode: 'create',
-          isSuggested: true,
-          smsInboxId: item.id,
-        },
-      });
+      const continueState = {
+        ...inferenceDTO,
+        mode: 'create' as const,
+        isSuggested: true,
+        smsInboxId: item.id,
+      };
+
+      if (adminEnabled) {
+        navigate('/engine-out', {
+          state: {
+            source: 'notification_review',
+            inferenceDTO,
+            continueState,
+          },
+        });
+      } else {
+        navigate('/edit-transaction', {
+          state: continueState,
+        });
+      }
     } catch (error) {
       console.error('[ImportTransactions] Failed to build inference DTO', {
         module: 'pages/ImportTransactions',
@@ -161,7 +175,7 @@ const ImportTransactions = () => {
         variant: 'destructive',
       });
     }
-  }, [debugInferencePayload, loadSmsInbox, location.hash, location.pathname, location.search, navigate, toast]);
+  }, [adminEnabled, debugInferencePayload, loadSmsInbox, location.hash, location.pathname, location.search, navigate, toast]);
 
   const handleContinueSms = React.useCallback(async (item: SmsInboxItem) => {
     try {
@@ -215,7 +229,8 @@ const ImportTransactions = () => {
     totalTemplates?: number,
     fieldScore?: number,
     keywordScore?: number,
-    fieldConfidences?: Record<string, number>
+    fieldConfidences?: Record<string, number>,
+    debugTrace?: ReturnType<typeof createInferenceDTOFromDetection>['debugTrace']
   ) => {
     // if (import.meta.env.MODE === 'development') console.log('[ImportTransactions] onTransactionsDetected called with:', {
       // count: transactions.length,
@@ -278,9 +293,21 @@ const ImportTransactions = () => {
       origin: matchOrigin,
       matchOrigin,
       mode: 'create',
+      debugTrace,
     });
 
     debugInferencePayload('smart-entry', inferenceDTO);
+
+    if (adminEnabled) {
+      navigate('/engine-out', {
+        state: {
+          source: 'smart_entry',
+          inferenceDTO,
+          continueState: inferenceDTO,
+        },
+      });
+      return;
+    }
 
     navigate('/edit-transaction', {
       state: inferenceDTO,

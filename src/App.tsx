@@ -23,6 +23,7 @@ import { TransactionProvider } from './context/TransactionContext';
 import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
 import EditTransaction from './pages/EditTransaction';
+import EngineOutPage from './pages/EngineOutPage';
 import TrainModel from '@/pages/TrainModel';
 import BuildTemplate from '@/pages/BuildTemplate';
 import ProcessSmsMessages from '@/pages/ProcessSmsMessages';
@@ -806,6 +807,15 @@ function AppRoutes() {
           element={
             <ErrorBoundary name="Edit Transaction Page">
               <EditTransaction />
+            </ErrorBoundary>
+          }
+        />
+
+        <Route
+          path="/engine-out"
+          element={
+            <ErrorBoundary name="Engine Out Page">
+              <EngineOutPage />
             </ErrorBoundary>
           }
         />
