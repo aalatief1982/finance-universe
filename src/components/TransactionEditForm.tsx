@@ -363,6 +363,31 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
     Partial<Record<keyof Transaction, boolean>>
   >({});
 
+  const [initialTransactionState, setInitialTransactionState] =
+    useState<Transaction>(() => createInitialTransactionState(transaction));
+  const [editedTransaction, setEditedTransaction] = useState<Transaction>(
+    () => {
+      const initial = createInitialTransactionState(transaction);
+      return {
+        ...initial,
+        amount: Number.isFinite(initial.amount)
+          ? Math.abs(initial.amount)
+          : initial.amount,
+      };
+    },
+  );
+  const [amountText, setAmountText] = useState<string>(() => {
+    const initialState = createInitialTransactionState(transaction);
+    return Number.isFinite(initialState.amount)
+      ? Math.abs(initialState.amount).toFixed(2)
+      : '';
+  });
+  const [amountNumber, setAmountNumber] = useState<number | null>(() => {
+    const initialState = createInitialTransactionState(transaction);
+    const parsed = parseAmountToNullableNumber(initialState.amount);
+    return parsed !== null ? Math.abs(parsed) : null;
+  });
+
   const fieldTierByField = useMemo(() => {
     const tiers: Partial<Record<keyof Transaction, ConfidenceTier>> = {};
 
@@ -451,30 +476,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const [fromAccountOpen, setFromAccountOpen] = useState(false);
   const [toAccountOpen, setToAccountOpen] = useState(false);
 
-  const [initialTransactionState, setInitialTransactionState] =
-    useState<Transaction>(() => createInitialTransactionState(transaction));
-  const [editedTransaction, setEditedTransaction] = useState<Transaction>(
-    () => {
-      const initial = createInitialTransactionState(transaction);
-      return {
-        ...initial,
-        amount: Number.isFinite(initial.amount)
-          ? Math.abs(initial.amount)
-          : initial.amount,
-      };
-    },
-  );
-  const [amountText, setAmountText] = useState<string>(() => {
-    const initialState = createInitialTransactionState(transaction);
-    return Number.isFinite(initialState.amount)
-      ? Math.abs(initialState.amount).toFixed(2)
-      : '';
-  });
-  const [amountNumber, setAmountNumber] = useState<number | null>(() => {
-    const initialState = createInitialTransactionState(transaction);
-    const parsed = parseAmountToNullableNumber(initialState.amount);
-    return parsed !== null ? Math.abs(parsed) : null;
-  });
 
   const rawMessageDescriptionDefault = useMemo(
     () => getRawMessageFromTransaction(transaction),

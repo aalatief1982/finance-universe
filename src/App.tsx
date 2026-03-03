@@ -552,7 +552,7 @@ function AppWrapper() {
       }
 
       if (flowDecision.nextStep === 'route_sender_discovery' && flowDecision.route && location.pathname !== flowDecision.route) {
-        if (BLOCK_STARTUP_IMPORT_ROUTE && flowDecision.route === IMPORT_ROUTE) {
+        if (BLOCK_STARTUP_IMPORT_ROUTE && (flowDecision.route as string) === IMPORT_ROUTE) {
           if (import.meta.env.MODE === 'development') {
             console.log('[ROUTE_GUARD] blocked startup sender-discovery navigation to import route', {
               pathname: location.pathname,
