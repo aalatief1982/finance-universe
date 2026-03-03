@@ -36,7 +36,17 @@ export async function buildInferenceDTO({
       mode: 'create',
       isSuggested: true,
     });
-  } catch {
+  } catch (error) {
+    console.error('[buildInferenceDTO] Falling back to default inference DTO', {
+      errorCode: 'INFERENCE_DTO_FALLBACK',
+      module: 'lib/inference/buildInferenceDTO',
+      fn: 'buildInferenceDTO',
+      source,
+      hasSenderHint: Boolean(senderHint),
+      hasRawMessage: Boolean(rawMessage?.trim()),
+      error,
+    });
+
     return normalizeInferenceDTO({
       transaction: {
         id: '',
