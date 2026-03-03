@@ -132,7 +132,7 @@ describe('SmsImportService.checkForNewMessages', () => {
     const navigate = vi.fn();
     await SmsImportService.checkForNewMessages(navigate, { usePermissionDate: true });
 
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledWith('/home', { replace: true });
   });
 
   it('routes to home when permission-date import has zero financial messages after filtering', async () => {
@@ -147,7 +147,7 @@ describe('SmsImportService.checkForNewMessages', () => {
     const navigate = vi.fn();
     await SmsImportService.checkForNewMessages(navigate, { usePermissionDate: true });
 
-    expect(navigate).toHaveBeenCalledWith('/');
+    expect(navigate).toHaveBeenCalledWith('/home', { replace: true });
   });
 
   it('converts legacy selected providers to sender allowlist when sender IDs match', async () => {
