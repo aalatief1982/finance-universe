@@ -8,7 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Build;
 import android.provider.Telephony;
 import android.telephony.SmsMessage;
@@ -49,30 +48,10 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
             bodyBuilder.append(message.getMessageBody());
         }
         String body = bodyBuilder.toString();
-        long receivedAt = System.currentTimeMillis();
-        String hash = buildHash(sender, body);
-
-        int queueSize = BackgroundSmsListenerPlugin.persistMessage(
-                context,
-                sender != null ? sender : "",
-                body,
-                receivedAt,
-                "static_receiver",
-                hash);
-
-        Log.d(TAG, "Persisted SMS hash=" + hash + " queueSize=" + queueSize);
-        Log.d(TAG, "[" + LOG_TAG + "] message persisted hash=" + hash + " queueSize=" + queueSize);
-        postOrUpdateSummaryNotification(context, queueSize);
+        BackgroundSmsListenerPlugin.handleIncomingSms(context, sender, body, "static_receiver", false);
     }
 
-    private String buildHash(String sender, String body) {
-        String normalizedSender = sender == null ? "" : sender.trim().replaceAll("\\s+", "").toLowerCase();
-        String normalizedBody = body == null ? "" : body.trim().replaceAll("\\s+", " ").toLowerCase();
-        String base = normalizedSender + "|" + normalizedBody + "|" + normalizedBody.length();
-        return Integer.toHexString(base.hashCode());
-    }
-
-    private void postOrUpdateSummaryNotification(Context context, int messageCount) {
+    static void postOrUpdateSummaryNotification(Context context, int messageCount) {
         if (messageCount <= 0) {
             return;
         }

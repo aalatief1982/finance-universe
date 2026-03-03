@@ -35,7 +35,8 @@
 
         <receiver
             android:name="app.xpensia.com.plugins.backgroundsmslistener.SmsBroadcastReceiver"
-            android:exported="false"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS"
             tools:replace="android:exported">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />

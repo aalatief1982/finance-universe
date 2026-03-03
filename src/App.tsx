@@ -49,7 +49,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
-import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { BackgroundSmsListener } from '@/plugins/BackgroundSmsListenerPlugin';
@@ -75,7 +74,6 @@ import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
 import { ToastAction } from '@/components/ui/toast';
 import { enqueueSms, getInboxCount } from '@/lib/sms-inbox/smsInboxQueue';
 
-const SMS_INBOX_NOTIFICATION_ID = 777;
 const HOME_ROUTE = '/home';
 const IMPORT_ROUTE = '/import-transactions';
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
@@ -422,56 +420,25 @@ function AppWrapper() {
                 // console.log('[Xpensia SMS] Received from', sender, ':', body);
               }
 
-              if (!isFinancialTransactionMessage(body)) {
-                if (import.meta.env.MODE === 'development') {
-                  // console.log('[Xpensia SMS] Not a financial message. Skipped.');
-                }
+              enqueueSms({ sender, body, source: 'listener' });
+
+              const appState = await CapacitorApp.getState();
+              if (!appState.isActive) {
                 return;
               }
 
               if (import.meta.env.MODE === 'development') {
-                // console.log('[Xpensia SMS] Processing financial SMS from any sender:', sender);
+                // console.log('[NOTIFY] App active. Showing in-app transaction banner.');
               }
-
-              enqueueSms({ sender, body, source: 'listener' });
-
-              // Handle background state
-              const appState = await CapacitorApp.getState();
-              if (appState.isActive) {
-                if (import.meta.env.MODE === 'development') {
-                  // console.log('[NOTIFY] App active. Showing in-app transaction banner.');
-                }
-                toast({
-                  title: 'New SMS transaction detected',
-                  description: 'Review imported SMS transactions when you are ready.',
-                  action: (
-                    <ToastAction altText="View detected SMS transactions" onClick={() => navigate('/import-transactions')}>
-                      View
-                    </ToastAction>
-                  ),
-                });
-              } else {
-                const unreadCount = getInboxCount({ status: 'new' });
-                if (unreadCount === 0) {
-                  return;
-                }
-
-                if (import.meta.env.MODE === 'development') {
-                  // console.log('[NOTIFY] App backgrounded. Showing notification.');
-                }
-                await LocalNotifications.schedule({
-                  notifications: [
-                    {
-                      id: SMS_INBOX_NOTIFICATION_ID,
-                      title: 'New transactions detected',
-                      body: `${unreadCount} new SMS ready to review`,
-                      schedule: { at: new Date(Date.now() + 1000) },
-                      iconColor: '#0097a0',
-                      smallIcon: 'ic_launcher'
-                    }
-                  ]
-                });
-              }
+              toast({
+                title: 'New SMS transaction detected',
+                description: 'Review imported SMS transactions when you are ready.',
+                action: (
+                  <ToastAction altText="View detected SMS transactions" onClick={() => navigate('/import-transactions')}>
+                    View
+                  </ToastAction>
+                ),
+              });
             });
             if (import.meta.env.MODE === 'development') {
               // console.log('[SMS] Successfully added SMS listener');
@@ -481,17 +448,7 @@ function AppWrapper() {
               console.error('[SMS] Error adding SMS listener:', err);
             }
           }
-          
-          // Handle notification taps
-          LocalNotifications.addListener('localNotificationActionPerformed', async () => {
-            if (import.meta.env.MODE === 'development') {
-              // console.log('[NOTIFICATION] Tapped. Routing to safe SMS import review page.');
-            }
-
-            navigate('/import-transactions');
-          });
-          
-        } catch (err) {
+                  } catch (err) {
           if (import.meta.env.MODE === 'development') {
             console.error('[SMS] Error in SMS listener setup:', err);
           }
