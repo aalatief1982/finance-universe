@@ -324,6 +324,7 @@ export async function parseAndInferTransaction(
     const inferred = parsed.inferredFields?.[field];
     const fallbackDefault = parsed.defaultValues?.[field];
     const chosen = direct || inferred || fallbackDefault;
+    const inferenceDebug = parsed.inferenceDebug?.[field];
     const source = direct
       ? 'direct'
       : inferred
@@ -339,6 +340,10 @@ export async function parseAndInferTransaction(
     if (direct) evidence.push(`Direct extraction: ${String(direct.value)}`);
     if (inferred) evidence.push(`Inferred suggestion: ${String(inferred.value)}`);
     if (fallbackDefault) evidence.push(`Template default: ${String(fallbackDefault.value)}`);
+    if (inferenceDebug?.selectionReason) evidence.push(inferenceDebug.selectionReason);
+    if (field === 'type' && !direct && !inferred && !fallbackDefault) {
+      evidence.push('No direct/inferred/default type candidate found; defaulted to expense in parseAndInferTransaction.');
+    }
     if (field === 'fromAccount' && parsed.directFields?.account?.value) {
       evidence.push(`Derived from account token: ${parsed.directFields.account.value}`);
     }
@@ -349,19 +354,41 @@ export async function parseAndInferTransaction(
       fallbackDefault && { value: fallbackDefault.value, score: fallbackDefault.confidenceScore, reason: 'default' },
     ].filter(Boolean) as Array<{ value: unknown; score: number; reason: string }>;
 
+    const topCandidates = inferenceDebug?.candidates?.slice(0, 5) || [];
+
     return {
       field,
-      finalValue: chosen?.value ?? null,
+      finalValue: chosen?.value ?? (field === 'type' ? transaction.type : null),
       score,
       source,
+      sourceKind:
+        inferenceDebug?.sourceKind ||
+        (direct
+          ? 'direct_extract'
+          : inferred
+            ? 'keyword_bank'
+            : fallbackDefault
+              ? 'template_default'
+              : field === 'type'
+                ? 'default'
+                : undefined),
       tier,
       evidence,
+      matchedText: inferenceDebug?.matchedText,
+      ruleId: inferenceDebug?.ruleId,
+      mappingId: inferenceDebug?.mappingId,
       breakdown: {
         directScore: direct?.confidenceScore,
         inferredScore: inferred?.confidenceScore,
         defaultScore: fallbackDefault?.confidenceScore,
+        selectedCandidateScore: topCandidates[0]?.score,
+        selectionDelta:
+          topCandidates.length > 1
+            ? Number((topCandidates[0].score - topCandidates[1].score).toFixed(3))
+            : undefined,
       },
       alternatives,
+      candidates: topCandidates,
     };
   });
 
