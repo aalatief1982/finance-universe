@@ -40,6 +40,8 @@ import {
 } from './confidenceScoring';
 import type { InferenceDecisionTrace } from '@/types/inference';
 
+type DebugCandidate = NonNullable<InferenceDecisionTrace['fields'][number]['candidates']>[number];
+
 // ============================================================================
 // SECTION: String Similarity Utilities
 // PURPOSE: Calculate similarity between template structures
@@ -354,7 +356,47 @@ export async function parseAndInferTransaction(
       fallbackDefault && { value: fallbackDefault.value, score: fallbackDefault.confidenceScore, reason: 'default' },
     ].filter(Boolean) as Array<{ value: unknown; score: number; reason: string }>;
 
-    const topCandidates = inferenceDebug?.candidates?.slice(0, 5) || [];
+    const rankedCandidates: DebugCandidate[] =
+      inferenceDebug?.candidates?.slice(0, 5) ||
+      [
+        direct && {
+          value: String(direct.value),
+          score: direct.confidenceScore,
+          reason: source === 'direct' ? 'chosen_direct_extraction' : 'not_selected_direct_extraction',
+          sourceKind: 'direct_extract',
+          matchedText: String(direct.value),
+          ruleId: 'direct_field_parse',
+        },
+        inferred && {
+          value: String(inferred.value),
+          score: inferred.confidenceScore,
+          reason: source === 'inferred' ? 'chosen_inferred_suggestion' : 'not_selected_inferred_suggestion',
+          sourceKind: 'heuristic',
+          matchedText: String(inferred.value),
+          ruleId: 'inferred_field_parse',
+        },
+        fallbackDefault && {
+          value: String(fallbackDefault.value),
+          score: fallbackDefault.confidenceScore,
+          reason: source === 'default' ? 'chosen_template_default' : 'not_selected_template_default',
+          sourceKind: 'template_default',
+          matchedText: String(fallbackDefault.value),
+          ruleId: 'template_default_field',
+        },
+      ].filter(Boolean) as DebugCandidate[];
+
+    if (field === 'type' && rankedCandidates.length === 0) {
+      rankedCandidates.push({
+        value: transaction.type,
+        score: 0,
+        reason: 'chosen_parser_default_type',
+        sourceKind: 'default',
+        matchedText: transaction.type,
+        ruleId: 'parseAndInferTransaction:type_default_expense',
+      });
+    }
+
+    const topCandidates = rankedCandidates;
 
     return {
       field,
@@ -374,8 +416,8 @@ export async function parseAndInferTransaction(
                 : undefined),
       tier,
       evidence,
-      matchedText: inferenceDebug?.matchedText,
-      ruleId: inferenceDebug?.ruleId,
+      matchedText: inferenceDebug?.matchedText || topCandidates.map((candidate) => candidate.matchedText || '').filter(Boolean),
+      ruleId: inferenceDebug?.ruleId || (field === 'type' && !inferenceDebug ? 'parseAndInferTransaction:type_resolution' : undefined),
       mappingId: inferenceDebug?.mappingId,
       breakdown: {
         directScore: direct?.confidenceScore,
