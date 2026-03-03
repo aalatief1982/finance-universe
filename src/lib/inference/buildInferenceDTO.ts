@@ -1,5 +1,6 @@
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { normalizeInferenceDTO, type InferenceDTO } from './inferenceDTO';
+import { createInferenceDTOFromDetection } from './createInferenceDTOFromDetection';
 
 interface BuildInferenceDTOArgs {
   rawMessage: string;
@@ -17,24 +18,19 @@ export async function buildInferenceDTO({
   try {
     const result = await parseAndInferTransaction(rawMessage, senderHint, smsId);
 
-    return normalizeInferenceDTO({
-      transaction: {
-        ...result.transaction,
-        source,
-      },
+    return createInferenceDTOFromDetection({
+      transaction: result.transaction,
       rawMessage,
       senderHint,
       confidence: result.confidence,
       parsingStatus: result.parsingStatus,
       origin: result.origin,
-      matchOrigin: result.origin,
       fieldConfidences: result.fieldConfidences,
       matchedCount: result.matchedCount,
       totalTemplates: result.totalTemplates,
       fieldScore: result.fieldScore,
       keywordScore: result.keywordScore,
-      mode: 'create',
-      isSuggested: true,
+      source,
     });
   } catch (error) {
     console.error('[buildInferenceDTO] Falling back to default inference DTO', {
