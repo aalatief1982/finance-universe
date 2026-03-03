@@ -8,6 +8,7 @@ import {
   extractTemplateStructure,
   getTemplateKey,
   parseTemplateKey,
+  getTemplateByHash,
 } from '../templateUtils';
 
 describe('templateUtils', () => {
@@ -22,10 +23,15 @@ describe('templateUtils', () => {
   });
 
   it('saves and retrieves a template', () => {
-    saveNewTemplate('Payment of {{amount}}', ['amount'], 'Payment of 100', 'TestBank');
+    const template = 'Payment of {{amount}}';
+    const { hash } = extractTemplateStructure(template);
+    saveNewTemplate(template, ['amount'], 'Payment of 100', 'TestBank');
     const templates = getAllTemplates();
     expect(templates).toHaveLength(1);
     expect(templates[0].fields).toContain('amount');
+
+    const bank = loadTemplateBank();
+    expect(bank[getTemplateKey('TestBank', undefined, hash)]).toBeDefined();
   });
 
   it('loads and saves template bank', () => {
@@ -63,5 +69,28 @@ describe('templateUtils', () => {
     // Should have merged fields
     const template = templates.find(t => t.fields.includes('date'));
     expect(template).toBeDefined();
+  });
+
+  it('finds legacy id-keyed entries by canonical hash', () => {
+    const template = 'Transfer {{currency}} {{amount}} to {{vendor}}';
+    const { hash } = extractTemplateStructure(template);
+    const legacyId = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
+
+    saveTemplateBank({
+      [getTemplateKey('legacybank', undefined, legacyId)]: {
+        id: legacyId,
+        template,
+        fields: ['amount', 'currency', 'vendor'],
+        defaultValues: {},
+        created: new Date().toISOString(),
+        rawSample: 'Transfer SAR 42 to Store',
+        version: 'v2',
+        hashAlgorithm: 'SHA256',
+      },
+    });
+
+    const found = getTemplateByHash(hash, 'legacybank');
+    expect(found).toBeDefined();
+    expect(found?.template).toBe(template);
   });
 });

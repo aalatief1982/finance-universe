@@ -179,6 +179,20 @@ export function getTemplateByHash(
     template = templates[foundKey];
   }
 
+  // Backward compatibility: older entries may be keyed by legacy id.
+  // Scan and compare canonical structure hash when direct hash key misses.
+  if (!template) {
+    const fallbackEntry = Object.entries(templates).find(([, candidate]) => {
+      if (!candidate?.template) return false;
+      const { hash: candidateHash } = normalizeTemplateStructure(candidate.template);
+      return candidateHash === hash;
+    });
+
+    if (fallbackEntry) {
+      [foundKey, template] = fallbackEntry;
+    }
+  }
+
   // Fallback: if sender/account scoped key is unavailable, reuse any exact-hash
   // template that has a learned fromAccount default.
   if (!template) {
@@ -226,7 +240,8 @@ export function saveNewTemplate(
 ) {
   const templates = loadTemplateBank();
   const id = btoa(unescape(encodeURIComponent(template))).slice(0, 24);
-  const key = getTemplateKey(sender, fromAccount, id);
+  const { hash: templateHash } = normalizeTemplateStructure(template);
+  const key = getTemplateKey(sender, fromAccount, templateHash);
 
   if (!templates[key]) {
     templates[key] = {
