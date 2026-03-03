@@ -100,6 +100,7 @@ export function normalizeInferenceDTO(input: unknown): InferenceDTO {
   const fieldScore = typeof source.fieldScore === 'number' ? source.fieldScore : undefined;
   const keywordScore = typeof source.keywordScore === 'number' ? source.keywordScore : undefined;
   const templateHash = typeof source.templateHash === 'string' ? source.templateHash : undefined;
+  const debugTrace = isObject(source.debugTrace) ? (source.debugTrace as InferenceDTO['debugTrace']) : undefined;
 
   return {
     transaction,
@@ -117,6 +118,7 @@ export function normalizeInferenceDTO(input: unknown): InferenceDTO {
     keywordScore,
     mode,
     isSuggested: source.isSuggested === false ? false : true,
+    debugTrace,
     meta: {
       matchedCount,
       totalTemplates,

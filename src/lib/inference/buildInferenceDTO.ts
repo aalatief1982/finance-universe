@@ -31,6 +31,7 @@ export async function buildInferenceDTO({
       fieldScore: result.fieldScore,
       keywordScore: result.keywordScore,
       source,
+      debugTrace: result.debugTrace,
     });
   } catch (error) {
     console.error('[buildInferenceDTO] Falling back to default inference DTO', {
@@ -69,6 +70,7 @@ export async function buildInferenceDTO({
       keywordScore: 0,
       mode: 'create',
       isSuggested: true,
+      debugTrace: undefined,
     });
   }
 }

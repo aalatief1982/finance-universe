@@ -38,6 +38,7 @@ import {
   getKeywordConfidence,
   computeOverallConfidence,
 } from './confidenceScoring';
+import type { InferenceDecisionTrace } from '@/types/inference';
 
 // ============================================================================
 // SECTION: String Similarity Utilities
@@ -105,6 +106,7 @@ export interface ParsedTransactionResult {
   totalTemplates: number;
   fieldScore: number;
   keywordScore: number;
+  debugTrace: InferenceDecisionTrace;
 }
 
 // ============================================================================
@@ -219,6 +221,7 @@ export async function parseAndInferTransaction(
 
   let templateMatched = 0;
   const totalTemplates = templates.length;
+  const candidateTemplateScores: Array<{ template: string; similarity: number }> = [];
 
   if (parsed.matched) {
     // Exact template match
@@ -228,6 +231,10 @@ export async function parseAndInferTransaction(
     const currentStructure = parsed.template;
     const similarTemplates = templates.filter((t) => {
       const similarity = getSimilarity(currentStructure, t.template);
+      candidateTemplateScores.push({
+        template: t.template,
+        similarity,
+      });
       return similarity > 0.7; // 70% similarity threshold
     });
 
@@ -312,6 +319,52 @@ export async function parseAndInferTransaction(
     fieldConfidences[f] = 0;
   });
 
+  const fieldTrace: InferenceDecisionTrace['fields'] = fields.map((field) => {
+    const direct = parsed.directFields?.[field];
+    const inferred = parsed.inferredFields?.[field];
+    const fallbackDefault = parsed.defaultValues?.[field];
+    const chosen = direct || inferred || fallbackDefault;
+    const source = direct
+      ? 'direct'
+      : inferred
+        ? 'inferred'
+        : fallbackDefault
+          ? 'default'
+          : 'empty';
+
+    const score = fieldConfidences[field] ?? 0;
+    const tier = score >= 0.8 ? 'detected' : score >= 0.4 ? 'suggested' : 'needs_review';
+    const evidence: string[] = [];
+
+    if (direct) evidence.push(`Direct extraction: ${String(direct.value)}`);
+    if (inferred) evidence.push(`Inferred suggestion: ${String(inferred.value)}`);
+    if (fallbackDefault) evidence.push(`Template default: ${String(fallbackDefault.value)}`);
+    if (field === 'fromAccount' && parsed.directFields?.account?.value) {
+      evidence.push(`Derived from account token: ${parsed.directFields.account.value}`);
+    }
+
+    const alternatives = [
+      direct && { value: direct.value, score: direct.confidenceScore, reason: 'direct' },
+      inferred && { value: inferred.value, score: inferred.confidenceScore, reason: 'inferred' },
+      fallbackDefault && { value: fallbackDefault.value, score: fallbackDefault.confidenceScore, reason: 'default' },
+    ].filter(Boolean) as Array<{ value: unknown; score: number; reason: string }>;
+
+    return {
+      field,
+      finalValue: chosen?.value ?? null,
+      score,
+      source,
+      tier,
+      evidence,
+      breakdown: {
+        directScore: direct?.confidenceScore,
+        inferredScore: inferred?.confidenceScore,
+        defaultScore: fallbackDefault?.confidenceScore,
+      },
+      alternatives,
+    };
+  });
+
   // Determine parsing status based on confidence thresholds
   const parsingStatus: ParsedTransactionResult['parsingStatus'] =
     finalConfidence >= 0.8
@@ -323,6 +376,28 @@ export async function parseAndInferTransaction(
   const origin: ParsedTransactionResult['origin'] = parsed.matched
     ? 'template'
     : 'structure';
+
+  const debugTrace: InferenceDecisionTrace = {
+    confidenceBreakdown: {
+      fieldScore,
+      templateScore,
+      keywordScore,
+      overallConfidence: finalConfidence,
+    },
+    templateSelection: {
+      selected: origin,
+      reason: parsed.matched
+        ? 'Exact template hash match found.'
+        : templateMatched > 0
+          ? 'No exact match; selected best structure fallback based on similarity threshold.'
+          : 'No close template match; structure-only parse used.',
+      candidates: candidateTemplateScores
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 5),
+    },
+    accountCandidates: parsed.candidates.accountCandidates,
+    fields: fieldTrace,
+  };
 
   // Track template failure if matched but still failed
   // This triggers retraining flow after N failures
@@ -351,5 +426,6 @@ export async function parseAndInferTransaction(
     totalTemplates: templates.length,
     fieldScore,
     keywordScore,
+    debugTrace,
   };
 }

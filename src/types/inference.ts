@@ -12,6 +12,44 @@ export interface InferenceMeta {
   extractedFieldCount?: number;
 }
 
+export interface InferenceFieldTrace {
+  field: string;
+  finalValue: unknown;
+  score: number;
+  source: 'direct' | 'inferred' | 'default' | 'empty';
+  tier: 'detected' | 'suggested' | 'needs_review';
+  evidence: string[];
+  breakdown: {
+    directScore?: number;
+    inferredScore?: number;
+    defaultScore?: number;
+  };
+  alternatives?: Array<{
+    value: unknown;
+    score: number;
+    reason: string;
+  }>;
+}
+
+export interface InferenceDecisionTrace {
+  confidenceBreakdown: {
+    fieldScore: number;
+    templateScore: number;
+    keywordScore: number;
+    overallConfidence: number;
+  };
+  templateSelection: {
+    selected: 'template' | 'structure';
+    reason: string;
+    candidates?: Array<{
+      template: string;
+      similarity: number;
+    }>;
+  };
+  accountCandidates?: string[];
+  fields: InferenceFieldTrace[];
+}
+
 export interface InferenceDTO {
   transaction: Transaction;
   rawMessage: string;
@@ -29,4 +67,5 @@ export interface InferenceDTO {
   mode: 'create' | 'edit';
   isSuggested: boolean;
   meta?: InferenceMeta;
+  debugTrace?: InferenceDecisionTrace;
 }
