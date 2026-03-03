@@ -20,7 +20,7 @@
 import { safeStorage } from "@/utils/safe-storage";
 
 import { extractTemplateStructure, getTemplateByHash } from './templateUtils';
-import { inferIndirectFields } from './suggestionEngine';
+import { inferIndirectFieldsWithDebug, type FieldInferenceDebug } from './suggestionEngine';
 import { computeConfidenceScore } from './confidenceUtils';
 import { normalizeVendorNameForCompare } from './vendorFallbackUtils';
 import { extractAccountCandidates as extractLegacyAccountCandidates } from './accountCandidates';
@@ -135,6 +135,7 @@ export interface ParsedSmsResult {
   candidates: {
     accountCandidates: string[];
   };
+  inferenceDebug?: Record<string, FieldInferenceDebug>;
 }
 
 export function parseSmsMessage(rawMessage: string, senderHint?: string): ParsedSmsResult {
@@ -398,7 +399,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
   const rawDirects: Record<string, string> = {};
   Object.entries(directFields).forEach(([k, v]) => (rawDirects[k] = v.value));
 
-  const inferredRaw = inferIndirectFields(rawMessage, rawDirects);
+  const { inferred: inferredRaw, debugByField } = inferIndirectFieldsWithDebug(rawMessage, rawDirects);
   const inferred: Record<string, ParsedField> = {};
   Object.entries(inferredRaw).forEach(([key, value]) => {
     if (!directFields[key]) {
@@ -454,6 +455,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
     candidates: {
       accountCandidates: extractLegacyAccountCandidates(rawMessage).candidates.map(c => typeof c === 'string' ? c : c.value),
     },
+    inferenceDebug: debugByField,
   };
 }
 
