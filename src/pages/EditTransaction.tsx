@@ -51,6 +51,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { markSmsStatus } from '@/lib/sms-inbox/smsInboxQueue';
 import { ToastAction } from '@/components/ui/toast';
+import { resolveFieldTier } from '@/lib/inference/fieldTier';
 
 interface EditTransactionState {
   transaction?: Transaction;
@@ -105,6 +106,47 @@ const EditTransaction = () => {
   const parsingStatus = state?.parsingStatus;
   const smsInboxId = state?.smsInboxId;
   const isNewTransaction = isSmartEntryCreate ? true : !transaction;
+
+  const DEBUG_INFERENCE_FLOW = import.meta.env.VITE_DEBUG_INFERENCE_FLOW === 'true';
+
+  useEffect(() => {
+    if (!DEBUG_INFERENCE_FLOW || !state?.transaction) {
+      return;
+    }
+
+    const raw = state.rawMessage || '';
+    const hash = Array.from(raw).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0, 0);
+    const tx = state.transaction;
+    const fields: Array<keyof Transaction> = ['amount', 'date', 'vendor', 'fromAccount', 'toAccount', 'category', 'subcategory', 'type', 'currency'];
+
+    console.log('[InferenceFlowDebug:EditTransaction]', {
+      transactionId: tx.id,
+      rawMessageHash: hash,
+      rawMessagePreview: raw.slice(0, 80),
+      origin: state.origin,
+      matchOrigin: state.matchOrigin,
+      parsingStatus: state.parsingStatus,
+      fields: fields.map((field) => {
+        const tier = resolveFieldTier(field, {
+          fieldConfidences: state.fieldConfidences,
+          confidence: state.confidence,
+          origin: state.origin,
+          matchOrigin: state.matchOrigin,
+          parsingStatus: state.parsingStatus,
+          transaction: tx,
+        });
+
+        return {
+          field,
+          value: tx[field],
+          status: tier.tier,
+          source: typeof state.fieldConfidences?.[field] === 'number' ? 'fieldConfidences' : (state.matchOrigin || state.origin || 'unknown'),
+          confidence: state.fieldConfidences?.[field] ?? tier.score,
+        };
+      }),
+    });
+  }, [DEBUG_INFERENCE_FLOW, state]);
+
   const transactionForForm = React.useMemo(() => {
     if (!transaction) return transaction;
     if (!isNewTransaction) return transaction;

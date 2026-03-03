@@ -27,7 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Transaction } from '@/types/transaction';
 import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
-import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
+import { createInferenceDTOFromDetection } from '@/lib/inference/createInferenceDTOFromDetection';
 import { getInbox, markSmsStatus, SmsInboxItem } from '@/lib/sms-inbox/smsInboxQueue';
 
 
@@ -94,6 +94,34 @@ const ImportTransactions = () => {
     [smsInboxItems]
   );
 
+  const DEBUG_INFERENCE_FLOW = import.meta.env.VITE_DEBUG_INFERENCE_FLOW === 'true';
+
+  const debugInferencePayload = React.useCallback((flow: 'smart-entry' | 'notification-review', inferenceDTO: ReturnType<typeof createInferenceDTOFromDetection>) => {
+    if (!DEBUG_INFERENCE_FLOW) return;
+
+    const tx = inferenceDTO.transaction;
+    const raw = inferenceDTO.rawMessage || '';
+    const hash = Array.from(raw).reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0, 0);
+    const fields: Array<keyof Transaction> = ['amount', 'date', 'vendor', 'fromAccount', 'toAccount', 'category', 'subcategory', 'type', 'currency'];
+
+    console.log('[InferenceFlowDebug]', {
+      flow,
+      transactionId: tx.id,
+      rawMessageHash: hash,
+      rawMessagePreview: raw.slice(0, 80),
+      fields: fields.map((field) => ({
+        field,
+        value: tx[field],
+        status: tx[field] ? 'present' : 'empty',
+        source: typeof inferenceDTO.fieldConfidences?.[field] === 'number' ? 'fieldConfidences' : (inferenceDTO.matchOrigin || inferenceDTO.origin || 'unknown'),
+        confidence: inferenceDTO.fieldConfidences?.[field],
+      })),
+      matchOrigin: inferenceDTO.matchOrigin,
+      origin: inferenceDTO.origin,
+      parsingStatus: inferenceDTO.parsingStatus,
+    });
+  }, [DEBUG_INFERENCE_FLOW]);
+
   const handleReviewSms = React.useCallback(async (item: SmsInboxItem) => {
     try {
       const inferenceDTO = await buildInferenceDTO({
@@ -101,6 +129,8 @@ const ImportTransactions = () => {
         senderHint: item.sender,
         source: 'sms',
       });
+
+      debugInferencePayload('notification-review', inferenceDTO);
 
       markSmsStatus(item.id, 'opened');
       loadSmsInbox();
@@ -131,7 +161,7 @@ const ImportTransactions = () => {
         variant: 'destructive',
       });
     }
-  }, [loadSmsInbox, location.hash, location.pathname, location.search, navigate, toast]);
+  }, [debugInferencePayload, loadSmsInbox, location.hash, location.pathname, location.search, navigate, toast]);
 
   const handleContinueSms = React.useCallback(async (item: SmsInboxItem) => {
     try {
@@ -180,6 +210,7 @@ const ImportTransactions = () => {
     senderHint?: string,
     confidence?: number,
     matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+    parsingStatus?: 'success' | 'partial' | 'failed',
     matchedCount?: number,
     totalTemplates?: number,
     fieldScore?: number,
@@ -229,7 +260,7 @@ const ImportTransactions = () => {
       // }
     // });
 
-    const inferenceDTO = normalizeInferenceDTO({
+    const inferenceDTO = createInferenceDTOFromDetection({
       transaction: {
         ...transaction,
         rawMessage: rawMessage ?? '',
@@ -237,6 +268,7 @@ const ImportTransactions = () => {
       rawMessage,
       senderHint,
       confidence,
+      parsingStatus,
       matchedCount,
       totalTemplates,
       fieldScore,
@@ -247,6 +279,8 @@ const ImportTransactions = () => {
       matchOrigin,
       mode: 'create',
     });
+
+    debugInferencePayload('smart-entry', inferenceDTO);
 
     navigate('/edit-transaction', {
       state: inferenceDTO,

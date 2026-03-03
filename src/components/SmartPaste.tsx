@@ -33,6 +33,7 @@ import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { computeCapturedFields } from '@/lib/inference/fieldStatus';
+import type { InferenceParsingStatus } from '@/types/inference';
 
 const normalizeFieldConfidences = (
   confidences?: Record<string, number>,
@@ -64,6 +65,7 @@ interface SmartPasteProps {
     senderHint?: string,
     confidence?: number,
     matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+    parsingStatus?: InferenceParsingStatus,
     matchedCount?: number,
     totalTemplates?: number,
     fieldScore?: number,
@@ -91,6 +93,7 @@ const SmartPaste = ({
   const [fieldConfidences, setFieldConfidences] = useState<
     Record<string, number>
   >({});
+  const [parsingStatus, setParsingStatus] = useState<InferenceParsingStatus | null>(null);
   const [matchedCount, setMatchedCount] = useState<number | null>(null);
   const [totalTemplates, setTotalTemplates] = useState<number | null>(null);
   const [fieldScore, setFieldScore] = useState<number | null>(null);
@@ -165,6 +168,7 @@ const SmartPaste = ({
     setError(null);
     setConfidence(null);
     setMatchOrigin(null);
+    setParsingStatus(null);
     setMatchedCount(null);
     setTotalTemplates(null);
     setFieldScore(null);
@@ -178,6 +182,7 @@ const SmartPaste = ({
         origin,
         parsed,
         fieldConfidences,
+        parsingStatus,
         matchedCount,
         totalTemplates,
         fieldScore,
@@ -203,6 +208,7 @@ const SmartPaste = ({
       setConfidence(confidence);
       setMatchOrigin(origin);
       setFieldConfidences(normalizedFieldConfidences);
+      setParsingStatus(parsingStatus);
       setMatchedCount(matchedCount);
       setTotalTemplates(totalTemplates);
       setFieldScore(fieldScore);
@@ -240,6 +246,7 @@ const SmartPaste = ({
       });
       setConfidence(null);
       setMatchOrigin(null);
+      setParsingStatus(null);
       setMatchedCount(null);
       setTotalTemplates(null);
       setFieldScore(null);
@@ -308,6 +315,7 @@ const SmartPaste = ({
         senderHint,
         confidence || 0.95,
         matchOrigin || 'structure',
+        parsingStatus || undefined,
         matchedCount || 0,
         totalTemplates || 0,
         fieldScore ?? undefined,
