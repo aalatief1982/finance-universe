@@ -1,24 +1,22 @@
 
-# Fix: Unblock Build to Deploy ResizeObserver Fix to Android
 
-## Problem
+## Root Cause
 
-The ResizeObserver toast suppression fix was applied correctly, but the app build is failing due to a pre-existing `@types/react-dnd` type error. This means the fix never reaches your Android device -- it's still running the old bundle.
+The error **"Cannot access 'Le' before initialization"** is caused by `editedTransaction` being used before its declaration in `TransactionEditForm.tsx`.
 
-## Root Cause of Build Failure
+- The `fieldTierByField` `useMemo` (around line 370) references `editedTransaction` in both its callback body (line 376) and dependency array (line 382).
+- But `editedTransaction` is declared later at **line 456** via `useState`.
+- JavaScript's temporal dead zone means block-scoped variables (`const`/`let`) cannot be accessed before their declaration, causing a runtime `ReferenceError`.
 
-`@types/react-dnd` uses deprecated `module` keyword syntax that newer TypeScript rejects. Since `react-dnd` v16 already includes its own built-in TypeScript definitions, the `@types/react-dnd` package is redundant and harmful.
+The second build error in `App.tsx` (line 555) is a TypeScript type comparison issue — unrelated to this crash but should also be fixed.
 
-## Fix
+## Fix Plan
 
-**Remove `@types/react-dnd` from `package.json`**
+### 1. Reorder state declarations in TransactionEditForm.tsx
+Move the `editedTransaction` (and `initialTransactionState`) `useState` declarations **above** the `fieldTierByField` `useMemo` block. Specifically, move the state declarations currently at lines ~454-480 to before line 360 (before the useMemo that depends on them).
 
-This is the only change needed. The `react-dnd` package (v16.0.1) already ships its own type definitions, so `@types/react-dnd` is unnecessary and is the sole cause of the build failure.
+### 2. Fix App.tsx type comparison (line 555)
+The comparison `flowDecision.route === IMPORT_ROUTE` has mismatched literal types. This needs the route value or constant type to be widened (e.g., cast to `string`) so the comparison is valid.
 
-No other files need to change -- all existing `react-dnd` imports will continue to work with the built-in types.
+Both fixes are straightforward reorderings/type adjustments with no logic changes.
 
-## Expected Result
-
-- Build succeeds
-- ResizeObserver toast suppression fix gets deployed
-- Android device loads the new bundle without the error toasts
