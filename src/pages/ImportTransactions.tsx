@@ -24,6 +24,7 @@ import Layout from '@/components/Layout';
 import SmartPaste from '@/components/SmartPaste';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { Transaction } from '@/types/transaction';
 import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
 import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
@@ -39,6 +40,7 @@ interface ImportTransactionsLocationState {
 const ImportTransactions = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [smsInboxItems, setSmsInboxItems] = React.useState<SmsInboxItem[]>([]);
   const smsInboxRef = React.useRef<HTMLDivElement | null>(null);
   const locationState = (location.state as ImportTransactionsLocationState | null) || null;
@@ -93,42 +95,79 @@ const ImportTransactions = () => {
   );
 
   const handleReviewSms = React.useCallback(async (item: SmsInboxItem) => {
-    const inferenceDTO = await buildInferenceDTO({
-      rawMessage: item.body,
-      senderHint: item.sender,
-      source: 'sms',
-    });
+    try {
+      const inferenceDTO = await buildInferenceDTO({
+        rawMessage: item.body,
+        senderHint: item.sender,
+        source: 'sms',
+      });
 
-    markSmsStatus(item.id, 'opened');
-    loadSmsInbox();
+      markSmsStatus(item.id, 'opened');
+      loadSmsInbox();
 
-    navigate('/edit-transaction', {
-      state: {
-        ...inferenceDTO,
-        mode: 'create',
-        isSuggested: true,
-        smsInboxId: item.id,
-      },
-    });
+      navigate('/edit-transaction', {
+        state: {
+          ...inferenceDTO,
+          mode: 'create',
+          isSuggested: true,
+          smsInboxId: item.id,
+        },
+      });
+    } catch (error) {
+      console.error('[ImportTransactions] Failed to build inference DTO', {
+        module: 'pages/ImportTransactions',
+        fn: 'handleReviewSms',
+        action: 'review',
+        itemId: item.id,
+        sender: item.sender,
+        isBodyEmpty: !item.body?.trim(),
+        route: `${location.pathname}${location.search}${location.hash}`,
+        error,
+      });
 
-  }, [loadSmsInbox, navigate]);
+      toast({
+        title: 'Unable to open SMS',
+        description: 'We could not open this SMS right now. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [loadSmsInbox, location.hash, location.pathname, location.search, navigate, toast]);
 
   const handleContinueSms = React.useCallback(async (item: SmsInboxItem) => {
-    const inferenceDTO = await buildInferenceDTO({
-      rawMessage: item.body,
-      senderHint: item.sender,
-      source: 'sms',
-    });
+    try {
+      const inferenceDTO = await buildInferenceDTO({
+        rawMessage: item.body,
+        senderHint: item.sender,
+        source: 'sms',
+      });
 
-    navigate('/edit-transaction', {
-      state: {
-        ...inferenceDTO,
-        mode: 'create',
-        isSuggested: true,
-        smsInboxId: item.id,
-      },
-    });
-  }, [navigate]);
+      navigate('/edit-transaction', {
+        state: {
+          ...inferenceDTO,
+          mode: 'create',
+          isSuggested: true,
+          smsInboxId: item.id,
+        },
+      });
+    } catch (error) {
+      console.error('[ImportTransactions] Failed to build inference DTO', {
+        module: 'pages/ImportTransactions',
+        fn: 'handleContinueSms',
+        action: 'continue',
+        itemId: item.id,
+        sender: item.sender,
+        isBodyEmpty: !item.body?.trim(),
+        route: `${location.pathname}${location.search}${location.hash}`,
+        error,
+      });
+
+      toast({
+        title: 'Unable to continue SMS',
+        description: 'We could not continue this SMS right now. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [location.hash, location.pathname, location.search, navigate, toast]);
 
   const handleIgnoreSms = React.useCallback((id: string) => {
     markSmsStatus(id, 'ignored');
