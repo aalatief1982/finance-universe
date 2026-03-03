@@ -17,17 +17,32 @@ export interface InferenceFieldTrace {
   finalValue: unknown;
   score: number;
   source: 'direct' | 'inferred' | 'default' | 'empty';
+  sourceKind?: 'direct_extract' | 'keyword_bank' | 'template_default' | 'history_learning' | 'heuristic' | 'default';
   tier: 'detected' | 'suggested' | 'needs_review';
   evidence: string[];
+  matchedText?: string[];
+  ruleId?: string;
+  mappingId?: string;
   breakdown: {
     directScore?: number;
     inferredScore?: number;
     defaultScore?: number;
+    selectedCandidateScore?: number;
+    selectionDelta?: number;
   };
   alternatives?: Array<{
     value: unknown;
     score: number;
     reason: string;
+  }>;
+  candidates?: Array<{
+    value: unknown;
+    score: number;
+    reason: string;
+    sourceKind?: InferenceFieldTrace['sourceKind'];
+    matchedText?: string;
+    mappingId?: string;
+    ruleId?: string;
   }>;
 }
 
