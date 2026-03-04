@@ -8,7 +8,7 @@ describe('canAccessEngineOut', () => {
 
   it('returns true only with admin + valid state', () => {
     const dto = {
-      transaction: { id: '', title: '', amount: 0, category: 'Uncategorized', subcategory: 'none', date: '2025-01-01', type: 'expense', source: 'smart-paste', currency: 'SAR', fromAccount: '' },
+      transaction: { id: '', title: '', amount: 0, category: 'Uncategorized', subcategory: 'none', date: '2025-01-01', type: 'expense' as const, source: 'smart-paste' as const, currency: 'SAR', fromAccount: '' },
       rawMessage: '',
       fieldConfidences: {},
       mode: 'create' as const,

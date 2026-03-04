@@ -100,7 +100,7 @@ export function normalizeInferenceDTO(input: unknown): InferenceDTO {
   const fieldScore = typeof source.fieldScore === 'number' ? source.fieldScore : undefined;
   const keywordScore = typeof source.keywordScore === 'number' ? source.keywordScore : undefined;
   const templateHash = typeof source.templateHash === 'string' ? source.templateHash : undefined;
-  const debugTrace = isObject(source.debugTrace) ? (source.debugTrace as InferenceDTO['debugTrace']) : undefined;
+  const debugTrace = isObject(source.debugTrace) ? (source.debugTrace as unknown as InferenceDTO['debugTrace']) : undefined;
 
   return {
     transaction,
