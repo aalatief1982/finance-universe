@@ -19,6 +19,7 @@ export const routeTitleMap: Record<string, string> = {
   "/wireframes/sms-transaction": "SMS Transaction",
   "/import-transactions": "Smart Entry",
   "/review-sms-transactions": "Review Details",
+  "/sms-review": "SMS Review",
   "/edit-transaction": "Transaction",
   "/budget/accounts": "Accounts & Balances",
   "/budget/set": "Set Budget",
@@ -68,6 +69,13 @@ export const getNavItems = () => {
       description: "Import transactions from SMS",
     },
     {
+      title: "SMS Review",
+      path: "/sms-review",
+      icon: "Mail",
+      description: "Review imported SMS transactions",
+      mobileOnly: true,
+    },
+    {
       title: "Exchange Rates",
       path: "/exchange-rates",
       icon: "ArrowLeftRight",
@@ -78,6 +86,13 @@ export const getNavItems = () => {
       path: "/settings",
       icon: "Settings",
       description: "Configure app preferences",
+    },
+    {
+      title: "Feedback",
+      path: "__feedback__",
+      icon: "Mail",
+      description: "Share your feedback",
+      mobileOnly: true,
     },
     {
       title: "Profile",

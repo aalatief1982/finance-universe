@@ -2,6 +2,7 @@ const SMS_INBOX_QUEUE_KEY = 'xpensia_sms_inbox_queue';
 const MAX_INBOX_ITEMS = 200;
 const DEDUP_WINDOW_MS = 10 * 60 * 1000;
 let hasLoggedInboxBootstrap = false;
+const inboxListeners = new Set<() => void>();
 
 type SmsInboxStatus = 'new' | 'opened' | 'processed' | 'ignored';
 type SmsInboxSource = 'listener' | 'static_receiver';
@@ -97,6 +98,7 @@ const saveInbox = (items: SmsInboxItem[]): void => {
   }
 
   storage.setItem(SMS_INBOX_QUEUE_KEY, JSON.stringify(items));
+  inboxListeners.forEach((listener) => listener());
 };
 
 export const enqueueSms = ({ sender, body, receivedAt, source = 'listener' }: EnqueueSmsInput): SmsInboxItem[] => {
@@ -149,6 +151,19 @@ export const getInboxCount = ({ status }: GetInboxCountOptions = {}): number => 
   }
 
   return inbox.filter((item) => item.status === status).length;
+};
+
+export const getPendingInboxCount = (): number => {
+  const inbox = loadInbox();
+  return inbox.filter((item) => item.status === 'new' || item.status === 'opened').length;
+};
+
+export const subscribeInbox = (listener: () => void): (() => void) => {
+  inboxListeners.add(listener);
+
+  return () => {
+    inboxListeners.delete(listener);
+  };
 };
 
 export const markSmsStatus = (id: string, status: SmsInboxStatus): SmsInboxItem[] => {

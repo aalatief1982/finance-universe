@@ -14,6 +14,7 @@ import {
   Lock,
   ArrowLeftRight,
   Info,
+  Mail,
 } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
@@ -43,14 +44,17 @@ const iconMap = {
   BrainCircuit: BrainCircuit,
   ArrowLeftRight: ArrowLeftRight,
   Info: Info,
+  Mail: Mail,
 };
 
 interface MobileNavigationProps {
   currentPageTitle: string;
+  onOpenFeedback?: () => void;
 }
 
 export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   currentPageTitle,
+  onOpenFeedback,
 }) => {
   const location = useLocation();
   const { user } = useUser();
@@ -191,6 +195,24 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 }
 
                 // Regular navigation items
+                if (item.path === '__feedback__') {
+                  return (
+                    <SheetClose asChild key={item.title}>
+                      <button
+                        type="button"
+                        onClick={onOpenFeedback}
+                        className="flex w-full items-center px-4 py-3 rounded-md hover:bg-accent transition-colors text-foreground"
+                      >
+                        {IconComponent && <IconComponent size={20} className="mr-3" />}
+                        <div>
+                          <p className="font-medium">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                        </div>
+                      </button>
+                    </SheetClose>
+                  );
+                }
+
                 return (
                   <SheetClose asChild key={item.title}>
                     <Link
