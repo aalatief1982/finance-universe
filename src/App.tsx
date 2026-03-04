@@ -626,55 +626,19 @@ function AppWrapper() {
 
 
   useEffect(() => {
-    const checkAndMaybeShowSmsPrompt = async () => {
-      // Prevent double-scheduling
-      if (hasScheduledSmsPrompt.current) return;
+    if (onboardingDone && isDefaultCurrencySelectionRequired()) {
+      setShowSmsPrompt(false);
+      return;
+    }
 
-      if (onboardingDone && isDefaultCurrencySelectionRequired()) {
-        setShowSmsPrompt(false);
-        return;
-      }
+    const justCompleted = safeStorage.getItem('xpensia_onb_just_completed') === 'true';
+    if (!justCompleted) {
+      return;
+    }
 
-      const justCompleted = safeStorage.getItem('xpensia_onb_just_completed') === 'true';
-      if (!justCompleted) return;
-
-      const isNative = Capacitor.isNativePlatform();
-      const isAndroid = Capacitor.getPlatform() === 'android';
-      const alreadyPrompted = safeStorage.getItem('sms_prompt_shown') === 'true';
-
-      console.log('[App] SMS prompt check:', { justCompleted, isNative, isAndroid, alreadyPrompted });
-
-      if (alreadyPrompted) {
-        safeStorage.removeItem('xpensia_onb_just_completed');
-        return;
-      }
-
-      // Check canonical permission - if already granted, don't show prompt
-      try {
-        const { smsPermissionService } = await import('@/services/SmsPermissionService');
-        const permissionStatus = await smsPermissionService.checkPermissionStatus();
-        console.log('[App] Canonical permission status:', permissionStatus);
-
-        if (permissionStatus.granted) {
-          safeStorage.setItem('sms_prompt_shown', 'true');
-          safeStorage.removeItem('xpensia_onb_just_completed');
-          console.log('[App] Permission already granted, skipping prompt');
-          return;
-        }
-      } catch (e) {
-        console.warn('[App] Error checking permission status:', e);
-      }
-
-      // Mark as scheduled to prevent double-triggering
-      hasScheduledSmsPrompt.current = true;
-
-      // Clear flag and show prompt immediately once currency gate has been satisfied.
-      safeStorage.removeItem('xpensia_onb_just_completed');
-      console.log('[App] Showing SMS permission prompt immediately');
-      setShowSmsPrompt(true);
-    };
-
-    checkAndMaybeShowSmsPrompt();
+    hasScheduledSmsPrompt.current = true;
+    safeStorage.removeItem('xpensia_onb_just_completed');
+    console.log('[App] SMS permission prompt is now user-action only; skipping automatic prompt on startup');
   }, [location.pathname, onboardingDone]);
 
   return (

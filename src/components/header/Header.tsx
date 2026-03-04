@@ -78,11 +78,11 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
               variant="ghost"
               size="icon"
               onClick={() => navigate('/sms-review')}
-              className="relative ml-2"
+              className="relative ml-2 h-11 w-11 p-0 [&_svg]:size-7"
               title="SMS Review Inbox"
               aria-label="SMS Review Inbox"
             >
-              <Mail size={20} />
+              <Mail />
               {pendingSmsCount > 0 && (
                 <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
                   {pendingSmsCount}

@@ -65,8 +65,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
     <div className="md:hidden">
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Open navigation menu">
-            <Menu size={28} />
+          <Button variant="ghost" size="icon" aria-label="Open navigation menu" className="h-11 w-11 p-0 [&_svg]:size-7">
+            <Menu />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[300px] sm:w-[400px] max-h-[100dvh] overflow-y-auto">
