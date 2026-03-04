@@ -16,10 +16,24 @@
  * - [ ] Props have sensible defaults
  * - [ ] Component renders without crashing
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { XpensiaLogo } from './header/XpensiaLogo';
 
+type XpensiaWindow = Window & {
+  __xpensiaHideInitialLoading?: () => void;
+};
+
 export const SplashScreen: React.FC = () => {
+  useEffect(() => {
+    // Hide HTML bootstrap loader only after React splash has painted (2x rAF).
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        (window as XpensiaWindow).__xpensiaHideInitialLoading?.();
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
       <div className="flex flex-col items-center space-y-6">

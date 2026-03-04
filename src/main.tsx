@@ -26,15 +26,11 @@ type XpensiaWindow = Window & {
   const root = createRoot(document.getElementById('root')!)
   root.render(<AppWithLoader />)
 
-  const hideInitialLoading = () => {
+  // Safety fallback: if React SplashScreen never calls hideInitialLoading
+  // (e.g. crash during mount), force-hide after 3s to avoid stuck loader.
+  setTimeout(() => {
     ;(window as XpensiaWindow).__xpensiaHideInitialLoading?.()
-  }
-
-  if (typeof window.requestAnimationFrame === 'function') {
-    window.requestAnimationFrame(hideInitialLoading)
-  } else {
-    setTimeout(hideInitialLoading, 0)
-  }
+  }, 3000)
 })()
 
 if (Capacitor.isNativePlatform()) {
