@@ -51,7 +51,6 @@ interface Props {
 const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false }) => {
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [imagesReady, setImagesReady] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
   const shouldLogImageLoadErrors = import.meta.env.MODE === 'development';
   const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
@@ -121,30 +120,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
     }
   }, [index]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const preloadSlides = async () => {
-      const preloadImage = (src: string) => new Promise<void>((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-        img.src = src;
-      });
-
-      await Promise.all(slides.map((slide) => preloadImage(slide.image.trim())));
-      if (!cancelled) {
-        setImagesReady(true);
-      }
-    };
-
-    void preloadSlides();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
     <div
       className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden"
@@ -169,7 +144,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
           ))}
         </div>
       </div>
-      {imagesReady ? (
       <Swiper
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
         modules={[EffectFade]}
@@ -264,7 +238,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
           </SwiperSlide>
         ))}
       </Swiper>
-      ) : null}
     </div>
   );
 };

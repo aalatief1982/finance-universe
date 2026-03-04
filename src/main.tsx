@@ -10,6 +10,10 @@ import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 
+type XpensiaWindow = Window & {
+  __xpensiaHideInitialLoading?: () => void
+}
+
 ;(async () => {
   try {
     await initializeCapacitor()
@@ -21,6 +25,16 @@ import { Device } from '@capacitor/device'
 
   const root = createRoot(document.getElementById('root')!)
   root.render(<AppWithLoader />)
+
+  const hideInitialLoading = () => {
+    ;(window as XpensiaWindow).__xpensiaHideInitialLoading?.()
+  }
+
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(hideInitialLoading)
+  } else {
+    setTimeout(hideInitialLoading, 0)
+  }
 })()
 
 if (Capacitor.isNativePlatform()) {
