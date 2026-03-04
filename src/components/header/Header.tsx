@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { navigateBackSafely } from '@/utils/navigation';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/context/UserContext';
-import { AuthHeader } from './AuthHeader';
 import { LogoLink } from './LogoLink';
 import { MainNavigation } from './MainNavigation';
-import { UserMenu } from './UserMenu';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
-import { Settings, ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSmsInboxPendingCount } from '@/hooks/useSmsInboxPendingCount';
 import FeedbackModal from '@/components/FeedbackModal';
 
 interface HeaderProps {
@@ -24,9 +22,8 @@ interface HeaderProps {
 const Header = ({ className, showNavigation = true, showBack = false, onBack, onLogoClick }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { auth } = useUser();
-
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const pendingSmsCount = useSmsInboxPendingCount();
+  const [feedbackOpen, setFeedbackOpen] = React.useState(false);
   
   const currentPageTitle =
     routeTitleMap[location.pathname] ||
@@ -77,29 +74,23 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
             {shouldShowNavigation && <MainNavigation />}
           </div>
           <div className="flex items-center">
-            <UserMenu isLandingPage={isLandingPage} />
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setFeedbackOpen(true)}
-              className="ml-2"
-              title="Feedback"
-              aria-label="Feedback"
+              onClick={() => navigate('/sms-review')}
+              className="relative ml-2"
+              title="SMS Review Inbox"
+              aria-label="SMS Review Inbox"
             >
               <Mail size={20} />
+              {pendingSmsCount > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
+                  {pendingSmsCount}
+                </span>
+              )}
             </Button>
             {showMobileIcons && (
-              <>
-                <MobileNavigation currentPageTitle={currentPageTitle} />
-                <Link
-                  to="/settings"
-                  className="ml-2 md:hidden"
-                  title="App Settings"
-                  aria-label="App Settings"
-                >
-                  <Settings size={20} />
-                </Link>
-              </>
+              <MobileNavigation currentPageTitle={currentPageTitle} onOpenFeedback={() => setFeedbackOpen(true)} />
             )}
           </div>
         </div>

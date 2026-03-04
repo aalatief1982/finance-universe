@@ -33,6 +33,7 @@ import ProcessVendors from '@/pages/sms/ProcessVendors';
 import VendorCategorization from '@/pages/sms/VendorCategorization';
 import VendorMapping from '@/pages/VendorMapping';
 import ReviewSmsTransactions from '@/pages/ReviewSmsTransactions';
+import SmsReviewInboxPage from '@/pages/SmsReviewInboxPage';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
@@ -899,6 +900,7 @@ function AppRoutes() {
         <Route path="/sms/vendors" element={<ImportDisabledGuard><VendorCategorization /></ImportDisabledGuard>} />
         <Route path="/vendor-mapping" element={<ImportDisabledGuard><VendorMapping /></ImportDisabledGuard>} />
         <Route path="/review-sms-transactions" element={<ImportDisabledGuard><ReviewSmsTransactions /></ImportDisabledGuard>} />
+        <Route path="/sms-review" element={<SmsReviewInboxPage />} />
         <Route path="/exchange-rates" element={<ExchangeRates />} />
         <Route path="/budget" element={<BudgetHubPage />} />
         <Route path="/budget/:budgetId" element={<BudgetDetailPage />} />
