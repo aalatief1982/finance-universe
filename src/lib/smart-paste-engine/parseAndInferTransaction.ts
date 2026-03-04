@@ -326,7 +326,14 @@ export async function parseAndInferTransaction(
     senderHint,
     templateHash: parsed.templateHash,
     vendor: transaction.vendor,
+    rawMessage,
+    accountCandidates: parsed.candidates.accountCandidates,
     fields: {
+      type: {
+        value: transaction.type,
+        score: fieldConfidences.type ?? 0,
+        source: parsed.directFields?.type ? 'direct' : parsed.inferredFields?.type ? 'inferred' : parsed.defaultValues?.type ? 'default' : 'empty',
+      },
       category: {
         value: transaction.category,
         score: fieldConfidences.category ?? 0,
@@ -369,7 +376,8 @@ export async function parseAndInferTransaction(
           : 'empty';
 
     const score = fieldConfidences[field] ?? 0;
-    const promotionStage = promotionOverlay.promotedFields[field as 'category' | 'subcategory' | 'fromAccount'];
+    const promotionStage = promotionOverlay.promotedFields[field as 'category' | 'subcategory' | 'fromAccount' | 'type'];
+    const promotionEvidence = promotionOverlay.evidence.find((entry) => entry.field === field);
     const tier = score >= 0.8 ? 'detected' : score >= 0.4 ? 'suggested' : 'needs_review';
     const evidence: string[] = [];
 
@@ -384,10 +392,10 @@ export async function parseAndInferTransaction(
       evidence.push(`Derived from account token: ${parsed.directFields.account.value}`);
     }
     if (promotionStage === 'promoted') {
-      evidence.push('Promoted by historical confirmation overlay.');
+      evidence.push(promotionEvidence?.message || 'Promoted by historical confirmation overlay.');
     }
     if (promotionStage === 'warming') {
-      evidence.push('Warming score applied by historical confirmation overlay.');
+      evidence.push(promotionEvidence?.message || 'Warming score applied by historical confirmation overlay.');
     }
 
     const alternatives = [
@@ -444,9 +452,7 @@ export async function parseAndInferTransaction(
       score,
       source,
       sourceKind:
-        (promotionStage === 'promoted'
-          ? 'promoted_by_history'
-          : inferenceDebug?.sourceKind) ||
+        (promotionEvidence?.sourceKind || inferenceDebug?.sourceKind) ||
         (direct
           ? 'direct_extract'
           : inferred
@@ -459,7 +465,10 @@ export async function parseAndInferTransaction(
       tier,
       evidence,
       matchedText: inferenceDebug?.matchedText || topCandidates.map((candidate) => candidate.matchedText || '').filter(Boolean),
-      ruleId: inferenceDebug?.ruleId || (field === 'type' && !inferenceDebug ? 'parseAndInferTransaction:type_resolution' : undefined),
+      ruleId:
+        promotionEvidence?.ruleId ||
+        inferenceDebug?.ruleId ||
+        (field === 'type' && !inferenceDebug ? 'parseAndInferTransaction:type_resolution' : undefined),
       mappingId: inferenceDebug?.mappingId,
       breakdown: {
         directScore: direct?.confidenceScore,
@@ -508,6 +517,10 @@ export async function parseAndInferTransaction(
     },
     accountCandidates: parsed.candidates.accountCandidates,
     fields: fieldTrace,
+    promotionOverlay: {
+      promotedFields: promotionOverlay.promotedFields,
+      evidence: promotionOverlay.evidence,
+    },
   };
 
   // Track template failure if matched but still failed

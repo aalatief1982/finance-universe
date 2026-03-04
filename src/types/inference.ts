@@ -17,7 +17,7 @@ export interface InferenceFieldTrace {
   finalValue: unknown;
   score: number;
   source: 'direct' | 'inferred' | 'default' | 'empty';
-  sourceKind?: 'direct_extract' | 'keyword_bank' | 'template_default' | 'history_learning' | 'heuristic' | 'default' | 'promoted_by_history';
+  sourceKind?: 'direct_extract' | 'keyword_bank' | 'template_default' | 'history_learning' | 'heuristic' | 'default' | 'promoted_by_history' | 'promoted_by_rule';
   tier: 'detected' | 'suggested' | 'needs_review';
   evidence: string[];
   matchedText?: string[];
@@ -63,6 +63,20 @@ export interface InferenceDecisionTrace {
   };
   accountCandidates?: string[];
   fields: InferenceFieldTrace[];
+
+  promotionOverlay?: {
+    promotedFields: Record<string, 'warming' | 'promoted' | undefined>;
+    evidence: Array<{
+      field: string;
+      sourceKind: 'promoted_by_rule' | 'promoted_by_history';
+      ruleId: string;
+      matchedText?: string;
+      sampleCount?: number;
+      contradictionCount?: number;
+      mappingKey?: string;
+      message: string;
+    }>;
+  };
 }
 
 export interface InferenceDTO {

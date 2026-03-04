@@ -398,6 +398,10 @@ export function saveTransactionWithLearning(
       templateHash,
       vendor: newTransaction.vendor || predictedVendor,
       predicted: {
+        type:
+          parsedForPromotion.directFields.type?.value ||
+          parsedForPromotion.inferredFields.type?.value ||
+          parsedForPromotion.defaultValues.type?.value,
         category: parsedForPromotion.inferredFields.category?.value || parsedForPromotion.directFields.category?.value,
         subcategory: parsedForPromotion.inferredFields.subcategory?.value || parsedForPromotion.directFields.subcategory?.value,
         fromAccount:
@@ -406,6 +410,7 @@ export function saveTransactionWithLearning(
           parsedForPromotion.defaultValues.fromAccount?.value,
       },
       confirmed: {
+        type: newTransaction.type,
         category: newTransaction.category,
         subcategory: newTransaction.subcategory || 'none',
         fromAccount: newTransaction.fromAccount,
