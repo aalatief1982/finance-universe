@@ -353,6 +353,7 @@ export async function parseAndInferTransaction(
     fromAccountDeterministic: ['token-remap', 'template-hash-map', 'template-default', 'direct-field'].includes(
       parsed.accountInference?.fromAccountSource || '',
     ),
+    fromAccountSource: parsed.accountInference?.fromAccountSource,
   });
 
   Object.entries(promotionOverlay.promotedScores).forEach(([field, score]) => {
