@@ -128,7 +128,11 @@ export function applyFieldPromotionOverlay(context: PromotionOverlayContext): {
   promotedFields: Partial<Record<PromotableField, 'promoted'>>;
   evidence: PromotionEvidence[];
 } {
-  if (!CONFIDENCE_OVERLAY_ENABLED) {
+  const confidenceOverlayEnabled = import.meta.env.VITE_CONFIDENCE_OVERLAY_ENABLED
+    ? import.meta.env.VITE_CONFIDENCE_OVERLAY_ENABLED === 'true'
+    : CONFIDENCE_OVERLAY_ENABLED;
+
+  if (!confidenceOverlayEnabled) {
     return { promotedScores: {}, promotedFields: {}, evidence: [] };
   }
 

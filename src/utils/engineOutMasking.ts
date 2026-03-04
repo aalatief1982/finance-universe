@@ -35,8 +35,8 @@ export const maskRawSms = (value?: string): string => {
 export const maskSensitiveText = (value?: string): string => {
   if (!value) return '';
   return value
-    .replace(PHONE_PATTERN, (match) => maskPhoneNumber(match))
-    .replace(CARD_PATTERN, (match) => maskCardDigits(match));
+    .replace(CARD_PATTERN, (match) => maskCardDigits(match))
+    .replace(PHONE_PATTERN, (match) => maskPhoneNumber(match));
 };
 
 export const displaySensitiveText = (value: string | undefined, showRaw: boolean): string => {
