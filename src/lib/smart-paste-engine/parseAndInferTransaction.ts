@@ -38,6 +38,7 @@ import {
   getKeywordConfidence,
   computeOverallConfidence,
 } from './confidenceScoring';
+import { applyFieldPromotionOverlay } from './fieldPromotionOverlay';
 import type { InferenceDecisionTrace } from '@/types/inference';
 
 type DebugCandidate = NonNullable<InferenceDecisionTrace['fields'][number]['candidates']>[number];
@@ -321,6 +322,38 @@ export async function parseAndInferTransaction(
     fieldConfidences[f] = 0;
   });
 
+  const promotionOverlay = applyFieldPromotionOverlay({
+    senderHint,
+    templateHash: parsed.templateHash,
+    vendor: transaction.vendor,
+    fields: {
+      category: {
+        value: transaction.category,
+        score: fieldConfidences.category ?? 0,
+        source: parsed.directFields?.category ? 'direct' : parsed.inferredFields?.category ? 'inferred' : parsed.defaultValues?.category ? 'default' : 'empty',
+      },
+      subcategory: {
+        value: transaction.subcategory,
+        score: fieldConfidences.subcategory ?? 0,
+        source: parsed.directFields?.subcategory ? 'direct' : parsed.inferredFields?.subcategory ? 'inferred' : parsed.defaultValues?.subcategory ? 'default' : 'empty',
+      },
+      fromAccount: {
+        value: transaction.fromAccount,
+        score: fieldConfidences.fromAccount ?? 0,
+        source: parsed.directFields?.fromAccount ? 'direct' : parsed.inferredFields?.fromAccount ? 'inferred' : parsed.defaultValues?.fromAccount ? 'default' : 'empty',
+      },
+    },
+    fromAccountDeterministic: ['token-remap', 'template-hash-map', 'template-default', 'direct-field'].includes(
+      parsed.accountInference?.fromAccountSource || '',
+    ),
+  });
+
+  Object.entries(promotionOverlay.promotedScores).forEach(([field, score]) => {
+    if (typeof score === 'number') {
+      fieldConfidences[field] = score;
+    }
+  });
+
   const fieldTrace: InferenceDecisionTrace['fields'] = fields.map((field) => {
     const direct = parsed.directFields?.[field];
     const inferred = parsed.inferredFields?.[field];
@@ -336,6 +369,7 @@ export async function parseAndInferTransaction(
           : 'empty';
 
     const score = fieldConfidences[field] ?? 0;
+    const promotionStage = promotionOverlay.promotedFields[field as 'category' | 'subcategory' | 'fromAccount'];
     const tier = score >= 0.8 ? 'detected' : score >= 0.4 ? 'suggested' : 'needs_review';
     const evidence: string[] = [];
 
@@ -348,6 +382,12 @@ export async function parseAndInferTransaction(
     }
     if (field === 'fromAccount' && parsed.directFields?.account?.value) {
       evidence.push(`Derived from account token: ${parsed.directFields.account.value}`);
+    }
+    if (promotionStage === 'promoted') {
+      evidence.push('Promoted by historical confirmation overlay.');
+    }
+    if (promotionStage === 'warming') {
+      evidence.push('Warming score applied by historical confirmation overlay.');
     }
 
     const alternatives = [
@@ -404,7 +444,9 @@ export async function parseAndInferTransaction(
       score,
       source,
       sourceKind:
-        inferenceDebug?.sourceKind ||
+        (promotionStage === 'promoted'
+          ? 'promoted_by_history'
+          : inferenceDebug?.sourceKind) ||
         (direct
           ? 'direct_extract'
           : inferred

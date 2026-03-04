@@ -109,7 +109,7 @@ import {
 } from '@/lib/transaction-validation';
 import { parseAmount } from '@/lib/amount';
 import { resolveFieldTier, type ConfidenceTier } from '@/lib/inference/fieldTier';
-import type { InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
+import type { InferenceDecisionTrace, InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
 
 const VALIDATION_FIELD_ORDER: (keyof Transaction)[] = [
   'amount',
@@ -192,6 +192,7 @@ interface TransactionEditFormProps {
   showNotes?: boolean;
   /** Optional confidence scores for fields */
   fieldConfidences?: Partial<Record<keyof Transaction, number>>;
+  fieldSourceKinds?: Partial<Record<keyof Transaction, InferenceDecisionTrace['fields'][number]['sourceKind']>>;
   confidence?: number;
   origin?: InferenceOrigin | null;
   matchOrigin?: InferenceOrigin | null;
@@ -334,6 +335,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   compact = false,
   showNotes = true,
   fieldConfidences = {},
+  fieldSourceKinds = {},
   confidence,
   origin,
   matchOrigin,
@@ -1159,11 +1161,14 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   const renderFeedbackIcons = (field: keyof Transaction) => {
     const tier = getFieldTier(field);
     const showTier = isDriven(field, drivenFields);
+    const sourceKind = fieldSourceKinds[field];
 
     return (
       <span className="ml-1 flex items-center gap-1">
         {showTier && isHighTier(tier) && (
-          <span className="text-[10px] text-success font-medium">Detected</span>
+          <span className="text-[10px] text-success font-medium">
+            {sourceKind === 'promoted_by_history' ? 'Learned (Detected)' : sourceKind === 'direct_extract' ? 'Detected' : 'Detected'}
+          </span>
         )}
         {showTier && isMediumTier(tier) && (
           <span className="text-[10px] text-info font-medium">Suggested</span>

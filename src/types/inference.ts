@@ -17,7 +17,7 @@ export interface InferenceFieldTrace {
   finalValue: unknown;
   score: number;
   source: 'direct' | 'inferred' | 'default' | 'empty';
-  sourceKind?: 'direct_extract' | 'keyword_bank' | 'template_default' | 'history_learning' | 'heuristic' | 'default';
+  sourceKind?: 'direct_extract' | 'keyword_bank' | 'template_default' | 'history_learning' | 'heuristic' | 'default' | 'promoted_by_history';
   tier: 'detected' | 'suggested' | 'needs_review';
   evidence: string[];
   matchedText?: string[];
