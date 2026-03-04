@@ -169,6 +169,26 @@ const EngineOutPage = () => {
         </Card>
 
         <Card>
+          <CardHeader><CardTitle>Confidence promotion overlay</CardTitle></CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {debugTrace?.promotionOverlay?.evidence?.length ? (
+              <>
+                <p>promotedFields: {Object.keys(debugTrace.promotionOverlay.promotedFields || {}).join(', ') || 'none'}</p>
+                <ul className="list-disc pl-5">
+                  {debugTrace.promotionOverlay.evidence.map((item, idx) => (
+                    <li key={`${item.field}-${idx}`}>
+                      {item.field} via {item.edgeKey} ({item.valueKey}) • confirm={item.confirm}, contradict={item.contradict}, purity={item.purity.toFixed(3)}, freshnessDays={item.freshnessDays}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="text-muted-foreground">No promotions applied.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader><CardTitle>DTO payload preview</CardTitle></CardHeader>
           <CardContent>
             <details>

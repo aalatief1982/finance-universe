@@ -326,9 +326,16 @@ export async function parseAndInferTransaction(
     senderHint,
     templateHash: parsed.templateHash,
     vendor: transaction.vendor,
+    templateExactMatch: parsed.matched,
+    accountToken: parsed.directFields?.account?.value || parsed.candidates.accountCandidates[0],
     rawMessage,
     accountCandidates: parsed.candidates.accountCandidates,
     fields: {
+      vendor: {
+        value: transaction.vendor,
+        score: parsed.directFields?.vendor ? parsed.directFields.vendor.confidenceScore : parsed.inferredFields?.vendor ? parsed.inferredFields.vendor.confidenceScore : 0,
+        sourceKind: parsed.directFields?.vendor ? 'direct_extract' : parsed.inferredFields?.vendor ? 'heuristic' : 'default',
+      },
       type: {
         value: transaction.type,
         score: fieldConfidences.type ?? 0,
@@ -377,7 +384,7 @@ export async function parseAndInferTransaction(
           : 'empty';
 
     const score = fieldConfidences[field] ?? 0;
-    const promotionStage = promotionOverlay.promotedFields[field as 'category' | 'subcategory' | 'fromAccount' | 'type'];
+    const promotionStage = promotionOverlay.promotedFields[field as 'fromAccount' | 'type'];
     const promotionEvidence = promotionOverlay.evidence.find((entry) => entry.field === field);
     const tier = score >= 0.8 ? 'detected' : score >= 0.4 ? 'suggested' : 'needs_review';
     const evidence: string[] = [];
@@ -394,9 +401,6 @@ export async function parseAndInferTransaction(
     }
     if (promotionStage === 'promoted') {
       evidence.push(promotionEvidence?.message || 'Promoted by historical confirmation overlay.');
-    }
-    if (promotionStage === 'warming') {
-      evidence.push(promotionEvidence?.message || 'Warming score applied by historical confirmation overlay.');
     }
 
     const alternatives = [

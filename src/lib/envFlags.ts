@@ -21,3 +21,6 @@ export const SMS_STARTUP_IMPORT_ENABLED =
   getEnvironmentVariable('SMS_STARTUP_IMPORT_ENABLED', 'false') === 'true';
 
 export const SMS_HISTORICAL_IMPORT_ENABLED = SMS_STARTUP_IMPORT_ENABLED;
+
+export const CONFIDENCE_OVERLAY_ENABLED =
+  getEnvironmentVariable('CONFIDENCE_OVERLAY_ENABLED', 'false') === 'true';
