@@ -3,6 +3,8 @@
  * @description Zero-dependency environment feature flags used during app startup.
  */
 
+import { SMS_AUTO_IMPORT_ENABLED } from '@/lib/env';
+
 const getEnvironmentVariable = (key: string, defaultValue: string = ''): string => {
   const envKey = `VITE_${key.replace(/^VITE_/, '')}`;
 
@@ -18,7 +20,7 @@ const getEnvironmentVariable = (key: string, defaultValue: string = ''): string 
 };
 
 export const SMS_STARTUP_IMPORT_ENABLED =
-  getEnvironmentVariable('SMS_STARTUP_IMPORT_ENABLED', 'false') === 'true';
+  SMS_AUTO_IMPORT_ENABLED && getEnvironmentVariable('SMS_STARTUP_IMPORT_ENABLED', 'false') === 'true';
 
 export const SMS_HISTORICAL_IMPORT_ENABLED = SMS_STARTUP_IMPORT_ENABLED;
 
