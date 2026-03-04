@@ -127,7 +127,6 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       try {
         console.log('[SmsPermissionPrompt] Initializing SMS listener and triggering initial import...');
         await smsPermissionService.initSmsListener();
-        await new Promise((res) => setTimeout(res, 500));
 
         const flowDecision = getNextSmsFlowStep({
           onboardingState: safeStorage.getItem('xpensia_onb_done') === 'true' ? 'subsequent_run' : 'not_completed',
