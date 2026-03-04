@@ -28,6 +28,10 @@ const StateViewer = () => {
 describe('Settings background SMS toggle', () => {
   beforeEach(() => {
     localStorage.setItem('betaFeaturesActive', 'false');
+    localStorage.setItem(
+      'xpensia_admin_mode',
+      '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',
+    );
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
