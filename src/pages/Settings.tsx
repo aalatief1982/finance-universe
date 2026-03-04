@@ -57,6 +57,7 @@ import {
   Database,
   Trash2,
   Lock,
+  Bell,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 
@@ -132,7 +133,10 @@ const Settings = () => {
   const [showPinDialog, setShowPinDialog] = useState(false);
   const [adminPin, setAdminPin] = useState('');
 
-  const canAccessSmsImportSettings = SMS_AUTO_IMPORT_ENABLED || adminMode;
+  // Notification state
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.preferences?.notifications !== false
+  );
 
   const handleVersionTap = () => {
     const now = Date.now();
@@ -523,28 +527,57 @@ const Settings = () => {
           </div>
         </section>
 
-        {canAccessSmsImportSettings && (
+        {/* Alerts & Notifications */}
+        <section className="space-y-4">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
+            <Bell className="mr-2" size={20} />
+            <span>Alerts & Notifications</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Manage how you get notified
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="notifications-toggle">Transaction Alerts</Label>
+              <p className="text-sm text-muted-foreground">
+                Get notified when new expenses are detected from SMS
+              </p>
+            </div>
+            <Switch
+              id="notifications-toggle"
+              checked={notificationsEnabled}
+              onCheckedChange={(checked) => {
+                setNotificationsEnabled(checked);
+                updateUserPreferences({
+                  notifications: checked,
+                });
+              }}
+            />
+          </div>
+        </section>
+
+        {/* SMS Import */}
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <MessageSquare className="mr-2" size={20} />
-            <span>SMS Settings</span>
+            <span>SMS Import</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage SMS related options
+            Manage SMS transaction importing
           </p>
           
           <LockedFeature
             isLocked={!betaActive}
-            featureName="Enable SMS Auto-Import"
-            onLockedClick={() => handleLockedFeatureClick('Enable SMS Auto-Import')}
+            featureName="Read SMS Transactions"
+            onLockedClick={() => handleLockedFeatureClick('Read SMS Transactions')}
           >
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="sms-auto-import">
-                  Enable SMS Auto-Import
+                  Read SMS Transactions
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  Automatically read and import SMS transactions
+                  Allow Xpensia to read your bank SMS messages and import transactions automatically
                 </p>
               </div>
               <Switch
@@ -642,7 +675,6 @@ const Settings = () => {
             </div>
           </LockedFeature>
         </section>
-        )}
 
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
