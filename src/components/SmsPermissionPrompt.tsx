@@ -33,6 +33,7 @@ import { useUser } from '@/context/user/UserContext';
 import { safeStorage } from '@/utils/safe-storage';
 import { toast } from '@/hooks/use-toast';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import SmsImportService from '@/services/SmsImportService';
 import { getNextSmsFlowStep, resolveProviderSelectionState } from '@/services/SmsFlowCoordinator';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
@@ -228,30 +229,26 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
     let resumeListener: PluginListenerHandle | null = null;
     let resolveByResume: ((value: { grantedOnResume: true }) => void) | null = null;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const Plugins = (window as any).Plugins ?? (window as any).CapacitorPlugins ?? null;
-      if (Plugins && typeof Plugins.App?.addListener === 'function') {
-        resumeListener = Plugins.App.addListener('resume', async () => {
-          console.log('[SmsPermissionPrompt] App resumed — checking canonical permission status');
-          try {
-            const canonicalStatus = await smsPermissionService.checkPermissionStatus();
-            console.log('[SmsPermissionPrompt] canonical status on resume:', canonicalStatus);
-            if (canonicalStatus.granted) {
-              resolveByResume?.({ grantedOnResume: true });
-            } else if (canonicalStatus.permanentlyDenied) {
-              setPermanentlyDenied(true);
-            }
-          } catch (e) {
-            console.warn('[SmsPermissionPrompt] Error checking permission on resume', e);
-          } finally {
-            try {
-              resumeListener?.remove?.();
-            } catch (e) {
-              // ignore
-            }
+      resumeListener = await CapacitorApp.addListener('resume', async () => {
+        console.log('[SmsPermissionPrompt] App resumed — checking canonical permission status');
+        try {
+          const canonicalStatus = await smsPermissionService.checkPermissionStatus();
+          console.log('[SmsPermissionPrompt] canonical status on resume:', canonicalStatus);
+          if (canonicalStatus.granted) {
+            resolveByResume?.({ grantedOnResume: true });
+          } else if (canonicalStatus.permanentlyDenied) {
+            setPermanentlyDenied(true);
           }
-        });
-      }
+        } catch (e) {
+          console.warn('[SmsPermissionPrompt] Error checking permission on resume', e);
+        } finally {
+          try {
+            resumeListener?.remove?.();
+          } catch (e) {
+            // ignore
+          }
+        }
+      });
     } catch (e) {
       console.warn('[SmsPermissionPrompt] Failed to register resume listener', e);
       resumeListener = null;
@@ -261,8 +258,9 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       const REQUEST_TIMEOUT = 30000; // ms — increased from 15s to give users time to read the dialog
       type TimeoutResult = { timedOut: true };
       type ResumeResult = { grantedOnResume: true };
+      let requestTimeoutHandle: ReturnType<typeof setTimeout> | null = null;
       const timeoutPromise = new Promise<TimeoutResult>(resolve =>
-        setTimeout(() => resolve({ timedOut: true }), REQUEST_TIMEOUT)
+        requestTimeoutHandle = setTimeout(() => resolve({ timedOut: true }), REQUEST_TIMEOUT)
       );
       const grantedOnResumePromise = new Promise<ResumeResult>((resolve) => {
         resolveByResume = resolve;
@@ -274,6 +272,10 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         timeoutPromise,
         grantedOnResumePromise,
       ]);
+
+      if (requestTimeoutHandle) {
+        clearTimeout(requestTimeoutHandle);
+      }
 
       if ('grantedOnResume' in result) {
         console.log('[SmsPermissionPrompt] permission confirmed on app resume — continuing immediately');
