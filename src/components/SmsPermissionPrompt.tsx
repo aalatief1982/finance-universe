@@ -57,7 +57,7 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   const [isBusy, setIsBusy] = useState(false);
   const [busyMessage, setBusyMessage] = useState('');
   const [permanentlyDenied, setPermanentlyDenied] = useState(false);
-  const [showImportScopeDialog, setShowImportScopeDialog] = useState(false);
+  
   const hasTransitionedRef = useRef(false);
   const navigate = useNavigate();
 
@@ -68,19 +68,15 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   }, [open]);
 
   const completePermissionGrantFlow = async () => {
-    console.log('[SmsPermissionPrompt] permission granted — opening 30-day import scope dialog');
+    console.log('[SmsPermissionPrompt] permission granted — proceeding to import directly');
     safeStorage.setItem('sms_prompt_shown', 'true');
     onOpenChange(false);
-    setShowImportScopeDialog(true);
     try {
       refreshPermission();
     } catch (e) {
       void e;
     }
-  };
 
-  const handleConfirmImportScope = async () => {
-    setShowImportScopeDialog(false);
     setIsBusy(true);
     setBusyMessage('Importing SMS messages...');
 
@@ -133,7 +129,6 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         await smsPermissionService.initSmsListener();
         await new Promise((res) => setTimeout(res, 500));
 
-        // Invoke flow coordinator immediately after permission-confirmed setup.
         const flowDecision = getNextSmsFlowStep({
           onboardingState: safeStorage.getItem('xpensia_onb_done') === 'true' ? 'subsequent_run' : 'not_completed',
           permissionState: 'granted',
@@ -147,8 +142,6 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           return;
         }
 
-        // Sender discovery prerequisites are met, continue canonical SMS flow
-        // /process-sms -> /vendor-mapping -> /review-sms-transactions.
         if (!SMS_AUTO_IMPORT_ENABLED) {
           safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
           console.log('[SMS_IMPORT] disabled -> skipping permission-grant auto import trigger');
@@ -465,21 +458,6 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       {/* Use shared LoadingOverlay for both requesting and importing */}
       <LoadingOverlay isOpen={isRequesting || isBusy} message={isRequesting ? 'Completing permission flow…' : busyMessage} />
 
-      <AlertDialog open={showImportScopeDialog} onOpenChange={setShowImportScopeDialog}>
-        <AlertDialogContent className="max-w-[340px] rounded-2xl">
-          <AlertDialogHeader className="space-y-3">
-            <AlertDialogTitle className="text-center text-lg">Permission Granted ✅</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-sm text-muted-foreground">
-              To set up your history, Xpensia will now read financial SMS from the last 30 days.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-            <Button onClick={handleConfirmImportScope} className="w-full">
-              Continue
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </AlertDialog>
   );
 };
