@@ -1,6 +1,5 @@
 import { safeStorage } from '@/utils/safe-storage';
 import { normalizeVendorNameForCompare } from './vendorFallbackUtils';
-import { loadKeywordBank } from './keywordBankUtils';
 
 export type PromotableField = 'category' | 'subcategory' | 'fromAccount' | 'type';
 
@@ -28,11 +27,12 @@ interface PromotionOverlayContext {
   accountCandidates?: string[];
   fields: Partial<Record<PromotableField, { value?: string; score: number; source?: string }>>;
   fromAccountDeterministic?: boolean;
+  fromAccountSource?: string;
 }
 
 interface PromotionEvidence {
   field: 'type' | 'fromAccount';
-  sourceKind: 'promoted_by_rule' | 'promoted_by_history';
+  sourceKind: 'promoted_by_rule' | 'promoted_by_history' | 'promoted_by_history_warm';
   ruleId: string;
   matchedText?: string;
   sampleCount?: number;
@@ -53,9 +53,9 @@ const CATEGORY_PROMOTION_SCORE = 0.85;
 const TYPE_PROMOTION_SCORE = 0.85;
 const FROM_ACCOUNT_WARMING_SCORE = 0.6;
 const FROM_ACCOUNT_PROMOTION_SCORE = 0.85;
-const TYPE_HISTORY_MIN_CONFIRMATIONS = 5;
 const FROM_ACCOUNT_WARMING_CONFIRMATIONS = 3;
 const FROM_ACCOUNT_PROMOTE_CONFIRMATIONS = 7;
+const MAX_CONTRADICTION_RATE = 0.05;
 
 const getSenderScope = (senderHint?: string): string => {
   const normalized = (senderHint || '').trim().toLowerCase();
@@ -94,6 +94,7 @@ const savePromotionStats = (stats: PromotionStatsStore): void => {
 
 interface FieldReliabilityStat {
   key: string;
+  contextKey: string;
   fieldName: 'type' | 'fromAccount';
   value: string;
   templateHash: string;
@@ -124,14 +125,16 @@ const saveFieldReliabilityStats = (stats: FieldReliabilityStore): void => {
   safeStorage.setItem(RELIABILITY_STORE_KEY, JSON.stringify(stats));
 };
 
+const getContextKey = (senderScope: string, templateHash: string, normalizedVendor: string): string =>
+  `${senderScope || '__unknown__'}:${templateHash || '__nohash__'}:${normalizedVendor || '__novendor__'}`;
+
 const getReliabilityKey = (
-  templateHash: string,
-  normalizedVendor: string,
+  contextKey: string,
   fieldName: 'type' | 'fromAccount',
   value: string,
-): string => `${templateHash || '__nohash__'}::${normalizedVendor || '__novendor__'}::${fieldName}::${value}`;
+): string => `${contextKey}:${fieldName}:${value}`;
 
-const isFeatureEnabled = (flagName: 'PROMOTE_TYPE_CONFIDENCE' | 'PROMOTE_FROM_ACCOUNT_CONFIDENCE'): boolean => {
+const isFeatureEnabled = (flagName: 'PROMOTE_TYPE_CONFIDENCE' | 'PROMOTE_FROMACCOUNT_CONFIDENCE'): boolean => {
   const env = (import.meta as ImportMeta & { env?: Record<string, string | boolean | undefined> }).env || {};
   const processEnv = typeof process !== 'undefined' ? process.env : undefined;
   const raw =
@@ -139,6 +142,12 @@ const isFeatureEnabled = (flagName: 'PROMOTE_TYPE_CONFIDENCE' | 'PROMOTE_FROM_AC
     env[`VITE_${flagName}`] ??
     processEnv?.[flagName] ??
     processEnv?.[`VITE_${flagName}`] ??
+    (flagName === 'PROMOTE_FROMACCOUNT_CONFIDENCE'
+      ? env.PROMOTE_FROM_ACCOUNT_CONFIDENCE ??
+        env.VITE_PROMOTE_FROM_ACCOUNT_CONFIDENCE ??
+        processEnv?.PROMOTE_FROM_ACCOUNT_CONFIDENCE ??
+        processEnv?.VITE_PROMOTE_FROM_ACCOUNT_CONFIDENCE
+      : undefined) ??
     'false';
   return String(raw).toLowerCase() === 'true';
 };
@@ -151,14 +160,13 @@ const evaluateCategoryPromotion = (stat?: FieldPromotionStat): PromotionDecision
   return { promoted: false };
 };
 
-const POS_MARKERS = ['شراء عبر نقاط البيع', 'نقاط البيع', 'pos', 'mada', 'samsung pay'];
-const REVERSAL_MARKERS = ['عكس', 'استرجاع', 'refund', 'reversal', 'إلغاء', 'مرتجع'];
+const POS_MARKERS = ['شراء عبر نقاط البيع', 'نقاط البيع', 'pos', 'mada', 'samsung pay', 'apple pay', 'بطاقة', 'شراء'];
+const REVERSAL_MARKERS = ['استرجاع', 'مرتجع', 'عكس', 'إلغاء', 'refund', 'reversal', 'chargeback', 'reverse', 'عكس القيد'];
 
 const normalizeInput = (value: string): string => value.toLowerCase();
 
-const hasAnyMarker = (haystack: string, markers: string[]): string | undefined => {
-  return markers.find((marker) => haystack.includes(marker.toLowerCase()));
-};
+const getMatchedMarkers = (haystack: string, markers: string[]): string[] =>
+  markers.filter((marker) => haystack.includes(marker.toLowerCase()));
 
 const isInvalidAccountCandidate = (candidate: string): boolean => {
   const value = candidate.trim();
@@ -176,52 +184,26 @@ export function promoteTypeConfidenceIfEligible(context: PromotionOverlayContext
   if (!isFeatureEnabled('PROMOTE_TYPE_CONFIDENCE')) return {};
   const typeField = context.fields.type;
   if (!typeField || (typeField.score ?? 0) >= 0.8) return {};
+  if (typeField.value && typeField.value !== 'expense') return {};
 
   const normalizedMessage = normalizeInput(context.rawMessage || '');
-  const matchedPos = hasAnyMarker(normalizedMessage, POS_MARKERS);
-  const matchedReversal = hasAnyMarker(normalizedMessage, REVERSAL_MARKERS);
+  const matchedPos = getMatchedMarkers(normalizedMessage, POS_MARKERS);
+  const matchedReversal = getMatchedMarkers(normalizedMessage, REVERSAL_MARKERS);
 
-  if (matchedPos && !matchedReversal) {
+  if (matchedPos.length >= 2 && matchedReversal.length === 0) {
     return {
       score: TYPE_PROMOTION_SCORE,
       evidence: {
         field: 'type',
         sourceKind: 'promoted_by_rule',
         ruleId: 'type_promotion:pos_markers',
-        matchedText: matchedPos,
-        message: 'Promoted by deterministic POS marker rule overlay.',
+        matchedText: matchedPos.join(', '),
+        message: `Promoted by rule: POS markers matched: ${matchedPos.join(', ')}; no refund markers detected.`,
       },
     };
   }
 
-  const keywordBank = loadKeywordBank();
-  const typeKeyword = keywordBank.find((entry) => {
-    const keyword = sanitize(entry.keyword).toLowerCase();
-    if (!keyword || !normalizedMessage.includes(keyword)) return false;
-    return entry.mappings.some((mapping) => mapping.field === 'type' && mapping.value === typeField.value);
-  });
-
-  if (!typeKeyword) return {};
-
-  const sampleCount = typeKeyword.mappingCount || 0;
-  const normalizedVendor = normalizeVendorNameForCompare(context.vendor || '');
-  const statKey = getReliabilityKey(sanitize(context.templateHash), normalizedVendor, 'type', sanitize(typeField.value));
-  const reliability = loadFieldReliabilityStats()[statKey];
-  const contradictionCount = reliability?.contradictionCount || 0;
-  if (sampleCount < TYPE_HISTORY_MIN_CONFIRMATIONS || contradictionCount > 1) return {};
-
-  return {
-    score: TYPE_PROMOTION_SCORE,
-    evidence: {
-      field: 'type',
-      sourceKind: 'promoted_by_history',
-      ruleId: 'type_promotion:keyword_history',
-      matchedText: typeKeyword.keyword,
-      sampleCount,
-      contradictionCount,
-      message: 'Promoted by historical keyword confirmation overlay.',
-    },
-  };
+  return {};
 }
 
 export function promoteFromAccountConfidenceIfEligible(context: PromotionOverlayContext): {
@@ -229,23 +211,26 @@ export function promoteFromAccountConfidenceIfEligible(context: PromotionOverlay
   stage?: 'warming' | 'promoted';
   evidence?: PromotionEvidence;
 } {
-  if (!isFeatureEnabled('PROMOTE_FROM_ACCOUNT_CONFIDENCE')) return {};
+  if (!isFeatureEnabled('PROMOTE_FROMACCOUNT_CONFIDENCE')) return {};
   const fromAccount = context.fields.fromAccount;
   if (!fromAccount || (fromAccount.score ?? 0) >= 0.8) return {};
   if (!context.fromAccountDeterministic) return {};
 
+  const cameFromExtractionPath = ['direct-field', 'token-remap'].includes(context.fromAccountSource || '');
   const hasInvalidCandidate = (context.accountCandidates || []).some(isInvalidAccountCandidate);
-  if (hasInvalidCandidate) return {};
+  if (cameFromExtractionPath && hasInvalidCandidate) return {};
 
-  const normalizedVendor = normalizeVendorNameForCompare(context.vendor || '');
+  const senderScope = getSenderScope(context.senderHint);
+  const normalizedVendor = normalizeVendorNameForCompare(context.vendor || '') || '__novendor__';
   const templateHash = sanitize(context.templateHash);
-  const statKey = getReliabilityKey(templateHash, normalizedVendor, 'fromAccount', sanitize(fromAccount.value));
+  const contextKey = getContextKey(senderScope, templateHash, normalizedVendor);
+  const statKey = getReliabilityKey(contextKey, 'fromAccount', sanitize(fromAccount.value));
   const reliability = loadFieldReliabilityStats()[statKey];
   if (!reliability) return {};
 
   const totalCount = reliability.confirmCount + reliability.contradictionCount;
   const contradictionRate = totalCount > 0 ? reliability.contradictionCount / totalCount : 1;
-  if (contradictionRate >= 0.05) return {};
+  if (reliability.confirmCount <= 0 || contradictionRate > MAX_CONTRADICTION_RATE) return {};
 
   if (reliability.confirmCount >= FROM_ACCOUNT_PROMOTE_CONFIRMATIONS) {
     return {
@@ -258,7 +243,7 @@ export function promoteFromAccountConfidenceIfEligible(context: PromotionOverlay
         sampleCount: reliability.confirmCount,
         contradictionCount: reliability.contradictionCount,
         mappingKey: statKey,
-        message: 'Promoted by deterministic fromAccount reliability overlay.',
+        message: `Promoted by history: ${fromAccount.value} confirmed ${reliability.confirmCount} times for contextKey ${contextKey}; contradictionRate ${(contradictionRate * 100).toFixed(1)}%.`,
       },
     };
   }
@@ -269,12 +254,12 @@ export function promoteFromAccountConfidenceIfEligible(context: PromotionOverlay
       stage: 'warming',
       evidence: {
         field: 'fromAccount',
-        sourceKind: 'promoted_by_history',
+        sourceKind: 'promoted_by_history_warm',
         ruleId: 'from_account_promotion:reliability_warming',
         sampleCount: reliability.confirmCount,
         contradictionCount: reliability.contradictionCount,
         mappingKey: statKey,
-        message: 'Warming score applied by deterministic fromAccount reliability overlay.',
+        message: `Promoted by history (warm): ${fromAccount.value} confirmed ${reliability.confirmCount} times for contextKey ${contextKey}; contradictionRate ${(contradictionRate * 100).toFixed(1)}%.`,
       },
     };
   }
@@ -309,6 +294,7 @@ export function applyFieldPromotionOverlay(context: PromotionOverlayContext): {
       promotedFields[field] = decision.stage || 'promoted';
     }
   });
+
   const typePromotion = promoteTypeConfidenceIfEligible(context);
   if (typePromotion.score && typePromotion.score > (context.fields.type?.score ?? 0)) {
     promotedScores.type = typePromotion.score;
@@ -373,11 +359,34 @@ const upsertFieldStat = (
   } else {
     next.contradictionCount += 1;
     next.consecutiveConfirmedCount = 0;
-    // Demotion + fast adaptation to corrected value
     next.value = confirmedValue;
   }
 
   stats[key] = next;
+};
+
+const getFieldReliabilityByContext = (
+  stats: FieldReliabilityStore,
+  contextKey: string,
+  fieldName: 'type' | 'fromAccount',
+): FieldReliabilityStat[] => {
+  const prefix = `${contextKey}:${fieldName}:`;
+  return Object.values(stats).filter((entry) => entry?.key?.startsWith(prefix));
+};
+
+const incrementContradictionsForOtherValues = (
+  stats: FieldReliabilityStore,
+  contextKey: string,
+  fieldName: 'type' | 'fromAccount',
+  confirmedValue: string,
+): void => {
+  getFieldReliabilityByContext(stats, contextKey, fieldName).forEach((entry) => {
+    if (entry.value === confirmedValue) return;
+    stats[entry.key] = {
+      ...entry,
+      contradictionCount: (entry.contradictionCount || 0) + 1,
+    };
+  });
 };
 
 export function recordFieldPromotionLearning(input: RecordLearningInput): void {
@@ -385,7 +394,7 @@ export function recordFieldPromotionLearning(input: RecordLearningInput): void {
   if (!templateHash) return;
 
   const senderScope = getSenderScope(input.senderHint);
-  const normalizedVendor = normalizeVendorNameForCompare(input.vendor || '');
+  const normalizedVendor = normalizeVendorNameForCompare(input.vendor || '') || '__novendor__';
   const stats = loadPromotionStats();
   const reliabilityStats = loadFieldReliabilityStats();
 
@@ -412,34 +421,45 @@ export function recordFieldPromotionLearning(input: RecordLearningInput): void {
       'fromAccount',
       senderScope,
       templateHash,
-      normalizedVendor || '__novendor__',
+      normalizedVendor,
       predictedFromAccount,
       confirmedFromAccount,
     );
   }
 
-  const normalizedVendorForReliability = normalizeVendorNameForCompare(input.vendor || '');
-  const upsertReliability = (fieldName: 'type' | 'fromAccount', predictedValue: string, confirmedValue: string) => {
-    if (!predictedValue || !confirmedValue) return;
-    const key = getReliabilityKey(templateHash, normalizedVendorForReliability, fieldName, predictedValue);
+  const contextKey = getContextKey(senderScope, templateHash, normalizedVendor);
+  const upsertReliability = (
+    fieldName: 'type' | 'fromAccount',
+    predictedValue: string,
+    confirmedValue: string,
+    deterministicOnly = false,
+  ) => {
+    if (!confirmedValue) return;
+    if (deterministicOnly && !input.fromAccountDeterministic) return;
+
+    const key = getReliabilityKey(contextKey, fieldName, confirmedValue);
     const existing = reliabilityStats[key];
-    const isConfirmed = predictedValue === confirmedValue;
+    const isConfirmedPrediction = Boolean(predictedValue) && predictedValue === confirmedValue;
+
     reliabilityStats[key] = {
       key,
+      contextKey,
       fieldName,
-      value: predictedValue,
+      value: confirmedValue,
       templateHash,
-      normalizedVendor: normalizedVendorForReliability,
-      confirmCount: (existing?.confirmCount || 0) + (isConfirmed ? 1 : 0),
-      contradictionCount: (existing?.contradictionCount || 0) + (isConfirmed ? 0 : 1),
-      lastConfirmedAt: isConfirmed ? new Date().toISOString() : existing?.lastConfirmedAt,
+      normalizedVendor,
+      confirmCount: (existing?.confirmCount || 0) + 1,
+      contradictionCount: existing?.contradictionCount || 0,
+      lastConfirmedAt: new Date().toISOString(),
     };
+
+    if (!isConfirmedPrediction) {
+      incrementContradictionsForOtherValues(reliabilityStats, contextKey, fieldName, confirmedValue);
+    }
   };
 
   upsertReliability('type', sanitize(input.predicted.type), sanitize(input.confirmed.type));
-  if (input.fromAccountDeterministic) {
-    upsertReliability('fromAccount', predictedFromAccount, confirmedFromAccount);
-  }
+  upsertReliability('fromAccount', predictedFromAccount, confirmedFromAccount, true);
 
   savePromotionStats(stats);
   saveFieldReliabilityStats(reliabilityStats);
