@@ -252,28 +252,45 @@ class SmsPermissionService {
         const readerPermissionGranted = await SmsReaderService.hasPermission();
         const wasAlreadyGranted = cachedPermissionGranted || readerPermissionGranted;
 
-        // Request reader and listener permissions in parallel
-        await Promise.all([
-          withTimeout(SmsReaderService.requestPermission(), 8000),
-          withTimeout(smsListener.requestPermission(), 8000),
-        ]);
-
-        // Immediate check — if already granted, skip polling entirely
-        let finalStatus = await this.checkPermissionStatus();
-
-        if (!finalStatus.granted && !finalStatus.permanentlyDenied) {
-          // Poll for definitive permission state
-          const POLL_INTERVAL_MS = 1000;
-          const POLL_TIMEOUT_MS = 10000;
-          const maxRetries = Math.ceil(POLL_TIMEOUT_MS / POLL_INTERVAL_MS);
-
-          let attempt = 0;
-          while (!finalStatus.granted && !finalStatus.permanentlyDenied && attempt < maxRetries) {
-            if (finalStatus.shouldShowRationale) break;
-            await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
-            finalStatus = await this.checkPermissionStatus();
-            attempt += 1;
+        // Request reader permission with timeout
+        const readerResult = await withTimeout(SmsReaderService.requestPermission(), 8000);
+        if (readerResult && typeof readerResult === 'object' && '__timedOut' in readerResult) {
+          if (import.meta.env.MODE === 'development') {
+            console.warn('[SMS] SmsReaderService.requestPermission timed out');
           }
+          // proceed to polling to determine final state
+        } else if (!readerResult) {
+          this.savePermissionStatus(false);
+          // After a failed request, continue to polling for final state
+        }
+
+        // Request listener permission with timeout
+        const listenerResult = await withTimeout(smsListener.requestPermission(), 8000);
+        if (listenerResult && typeof listenerResult === 'object' && '__timedOut' in listenerResult) {
+          if (import.meta.env.MODE === 'development') {
+            console.warn('[SMS] smsListener.requestPermission timed out');
+          }
+          // continue to polling
+        } else if (listenerResult && typeof listenerResult === 'object' && 'granted' in listenerResult && !(listenerResult as { granted: boolean }).granted) {
+          this.savePermissionStatus(false);
+          // continue to polling to determine if user granted via system
+        }
+
+        // Poll for definitive permission state using checkPermissionStatus
+        // Increase interval to reduce native calls, and add stop conditions
+        const POLL_INTERVAL_MS = 1000; // increased from 300ms
+        const POLL_TIMEOUT_MS = 15000; // extended total poll timeout
+        const maxRetries = Math.ceil(POLL_TIMEOUT_MS / POLL_INTERVAL_MS);
+
+        let attempt = 0;
+        let finalStatus = await this.checkPermissionStatus();
+        while (!finalStatus.granted && !finalStatus.permanentlyDenied && attempt < maxRetries) {
+          // If rationale is required (UI/dialog likely visible), stop polling to avoid flooding the user with checks
+          if (finalStatus.shouldShowRationale) break;
+
+          await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
+          finalStatus = await this.checkPermissionStatus();
+          attempt += 1;
         }
 
         const granted = !!finalStatus.granted;

@@ -1,27 +1,20 @@
 
 
-## Problem: Slow Permission Flow After Granting
+## Plan: Remove the "30 days" Import Scope Dialog
 
-After the user grants SMS permission, the flow takes too long before proceeding. Two causes:
+The popup at lines 468-482 in `SmsPermissionPrompt.tsx` is a secondary `AlertDialog` that appears after SMS permission is granted, telling the user "Xpensia will now read financial SMS from the last 30 days" with a "Continue" button.
 
-### Cause 1: Sequential permission requests in `SmsPermissionService.requestPermission()`
-Lines 256-277: Reader and listener permissions are requested **sequentially** with 8-second timeouts each. If one is slow, the other waits. Then a polling loop runs up to 15 seconds at 1-second intervals. Total worst case: ~31 seconds.
+### Change
 
-**Fix**: Request reader and listener permissions **in parallel** using `Promise.all`. This cuts the worst-case request phase from 16s to 8s.
+**In `src/components/SmsPermissionPrompt.tsx`:**
 
-### Cause 2: Unnecessary 500ms delay in `completePermissionGrantFlow`
-Line 130 in `SmsPermissionPrompt.tsx`: `await new Promise((res) => setTimeout(res, 500))` — an artificial delay with no purpose since `initSmsListener` already awaits properly.
+1. In `completePermissionGrantFlow` (line 70-80): instead of closing the main dialog and opening the import scope dialog, directly call the import logic currently inside `handleConfirmImportScope`. Essentially merge the two steps — when permission is granted, immediately proceed to import without showing the intermediate popup.
 
-**Fix**: Remove this delay.
+2. Remove the `showImportScopeDialog` state variable (line 60).
 
-### Changes
+3. Remove the second `AlertDialog` block (lines 468-482).
 
-**`src/services/SmsPermissionService.ts`** (lines 256-277):
-- Run `SmsReaderService.requestPermission()` and `smsListener.requestPermission()` in parallel via `Promise.all` instead of sequentially.
-- After parallel requests complete, do a single `checkPermissionStatus()` — if granted, skip the polling loop entirely.
+4. Remove the now-unused `handleConfirmImportScope` function — its body gets merged into `completePermissionGrantFlow`.
 
-**`src/components/SmsPermissionPrompt.tsx`** (line 130):
-- Remove `await new Promise((res) => setTimeout(res, 500))`.
-
-No other logic changes. The permission is still verified canonically before proceeding.
+The flow becomes: permission granted → close main dialog → show loading overlay → run import logic → navigate. No intermediate popup.
 
