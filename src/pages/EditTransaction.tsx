@@ -22,7 +22,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
 import { Transaction } from '@/types/transaction';
-import type { InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
+import type { InferenceDecisionTrace, InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -68,6 +68,7 @@ interface EditTransactionState {
   origin?: InferenceOrigin | null;
   matchOrigin?: InferenceOrigin | null;
   parsingStatus?: InferenceParsingStatus | null;
+  debugTrace?: InferenceDecisionTrace;
   smsInboxId?: string;
 }
 
@@ -105,6 +106,7 @@ const EditTransaction = () => {
   const matchOrigin = state?.matchOrigin;
   const parsingStatus = state?.parsingStatus;
   const smsInboxId = state?.smsInboxId;
+  const fieldSourceKinds = Object.fromEntries((state?.debugTrace?.fields || []).map((field) => [field.field, field.sourceKind])) as Record<string, InferenceDecisionTrace['fields'][number]['sourceKind']>;
   const isNewTransaction = isSmartEntryCreate ? true : !transaction;
 
   const DEBUG_INFERENCE_FLOW = import.meta.env.VITE_DEBUG_INFERENCE_FLOW === 'true';
@@ -379,6 +381,7 @@ const EditTransaction = () => {
               compact
               showNotes={false}
               fieldConfidences={fieldConfidences}
+              fieldSourceKinds={fieldSourceKinds as Partial<Record<keyof Transaction, InferenceDecisionTrace['fields'][number]['sourceKind']>>}
               confidence={state?.confidence}
               origin={inferenceOrigin}
               matchOrigin={matchOrigin}

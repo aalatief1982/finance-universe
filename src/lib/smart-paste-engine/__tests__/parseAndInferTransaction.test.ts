@@ -22,7 +22,13 @@ vi.mock('../structureParser', () => ({
       subcategory: { value: 'Groceries', confidenceScore: 0.7, source: 'inferred' },
       vendor: { value: 'Shop', confidenceScore: 0.7, source: 'inferred' }
     },
-    defaultValues: {}
+    defaultValues: {},
+    candidates: { accountCandidates: [] },
+    accountInference: {
+      templateHashAccountMapHit: false,
+      fromAccountSource: 'direct-field',
+      toAccountSource: 'empty',
+    },
   }))
 }));
 

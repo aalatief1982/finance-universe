@@ -69,6 +69,8 @@ import {
 } from '@/lib/transaction-validation';
 import { normalizeDraftTransactionForSave } from '@/lib/transactions/normalizeDraftTransactionForSave';
 import { recordPreferredFromAccount } from './templateHashAccountMap';
+import { parseSmsMessage } from './structureParser';
+import { recordFieldPromotionLearning } from './fieldPromotionOverlay';
 
 // ============================================================================
 // SECTION: Save Options Interface
@@ -387,6 +389,31 @@ export function saveTransactionWithLearning(
         JSON.stringify(fromAccountMap),
       );
     }
+
+    const parsedForPromotion = parseSmsMessage(rawMessage, senderHint);
+    const predictedVendor = parsedForPromotion.inferredFields.vendor?.value || parsedForPromotion.directFields.vendor?.value || '';
+
+    recordFieldPromotionLearning({
+      senderHint,
+      templateHash,
+      vendor: newTransaction.vendor || predictedVendor,
+      predicted: {
+        category: parsedForPromotion.inferredFields.category?.value || parsedForPromotion.directFields.category?.value,
+        subcategory: parsedForPromotion.inferredFields.subcategory?.value || parsedForPromotion.directFields.subcategory?.value,
+        fromAccount:
+          parsedForPromotion.directFields.fromAccount?.value ||
+          parsedForPromotion.inferredFields.fromAccount?.value ||
+          parsedForPromotion.defaultValues.fromAccount?.value,
+      },
+      confirmed: {
+        category: newTransaction.category,
+        subcategory: newTransaction.subcategory || 'none',
+        fromAccount: newTransaction.fromAccount,
+      },
+      fromAccountDeterministic: ['token-remap', 'template-hash-map', 'template-default', 'direct-field'].includes(
+        parsedForPromotion.accountInference?.fromAccountSource || '',
+      ),
+    });
 
     // Preferred account by template hash (source-agnostic, post-confirm only)
     if (templateHash) {
