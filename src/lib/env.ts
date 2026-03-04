@@ -64,6 +64,9 @@ export const ENABLE_SMS_INTEGRATION = getEnvironmentVariable('ENABLE_SMS_INTEGRA
 export const ENABLE_SMS_SENDER_FIRST_FLOW_V2 =
   getEnvironmentVariable('SMS_SENDER_FIRST_FLOW_V2', 'false') === 'true';
 
+// Master kill-switch for all SMS auto-import entry points and import flow routes.
+export const SMS_AUTO_IMPORT_ENABLED = false;
+
 
 // Configuration options
 export const DEFAULT_CURRENCY = getEnvironmentVariable('DEFAULT_CURRENCY', 'USD');

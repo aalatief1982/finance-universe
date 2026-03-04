@@ -38,7 +38,7 @@ import { getNextSmsFlowStep, resolveProviderSelectionState } from '@/services/Sm
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useNavigate } from 'react-router-dom';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
-import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/envFlags';
+import { SMS_AUTO_IMPORT_ENABLED } from '@/lib/env';
 
 const HOME_ROUTE = '/home';
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
@@ -149,9 +149,9 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
 
         // Sender discovery prerequisites are met, continue canonical SMS flow
         // /process-sms -> /vendor-mapping -> /review-sms-transactions.
-        if (!SMS_STARTUP_IMPORT_ENABLED) {
+        if (!SMS_AUTO_IMPORT_ENABLED) {
           safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
-          console.log('[SMS_IMPORT] Permission-grant auto-import disabled (SMS_STARTUP_IMPORT_ENABLED=false)');
+          console.log('[SMS_IMPORT] disabled -> skipping permission-grant auto import trigger');
           transitionOnce(HOME_ROUTE, { replace: true });
           return;
         }

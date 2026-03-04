@@ -59,10 +59,10 @@ import { getNextSmsFlowStep, resolveProviderSelectionState, type OnboardingState
 import { migrateSmsFlowSchema } from '@/services/SmsFlowMigrationService';
 import {
   ENABLE_SMS_INTEGRATION,
+  SMS_AUTO_IMPORT_ENABLED,
   consumeSmsSenderFirstFlowV2RollbackToggle,
   isSmsSenderFirstFlowV2Enabled,
 } from '@/lib/env';
-import { SMS_STARTUP_IMPORT_ENABLED } from '@/lib/envFlags';
 import { useUser } from './context/UserContext';
 import { toast } from '@/components/ui/use-toast';
 import { useAppUpdate } from '@/hooks/useAppUpdate';
@@ -78,12 +78,42 @@ import { enqueueSms, getInboxCount } from '@/lib/sms-inbox/smsInboxQueue';
 const HOME_ROUTE = '/home';
 const IMPORT_ROUTE = '/import-transactions';
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
-const BLOCK_STARTUP_IMPORT_ROUTE = true;
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
   const now = performance.now().toFixed(2);
   console.log(`${TRACE_PREFIX}[${now}ms] ${message}`, ...args);
+};
+
+
+const IMPORT_ROUTES = new Set([
+  '/import-transactions',
+  '/process-sms',
+  '/sms-providers',
+  '/sms/process-vendors',
+  '/sms/vendors',
+  '/vendor-mapping',
+  '/review-sms-transactions',
+]);
+
+let hasLoggedImportDisabledWarning = false;
+
+const ImportDisabledGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+
+  if (!SMS_AUTO_IMPORT_ENABLED && IMPORT_ROUTES.has(location.pathname)) {
+    if (!hasLoggedImportDisabledWarning) {
+      console.warn('[SMS_IMPORT] import route access blocked while SMS auto-import is disabled', {
+        blockedPath: location.pathname,
+        redirectTo: HOME_ROUTE,
+      });
+      hasLoggedImportDisabledWarning = true;
+    }
+
+    return <Navigate to={HOME_ROUTE} replace />;
+  }
+
+  return <>{children}</>;
 };
 
 const traceState = (message: string, payload?: Record<string, unknown>) => {
@@ -327,12 +357,10 @@ function AppWrapper() {
       try {
         const pendingRoute = await BackgroundSmsListener.consumePendingOpenRoute();
         if (pendingRoute?.route === IMPORT_ROUTE) {
-          if (BLOCK_STARTUP_IMPORT_ROUTE) {
-            if (import.meta.env.MODE === 'development') {
-              console.log('[ROUTE_GUARD] blocked native startup navigation to import route', {
-                pathname: location.pathname,
-              });
-            }
+          if (!SMS_AUTO_IMPORT_ENABLED) {
+            console.log('[SMS_IMPORT] disabled -> skipping native pending import route', {
+              pathname: location.pathname,
+            });
             return;
           }
           navigate(IMPORT_ROUTE);
@@ -535,14 +563,14 @@ function AppWrapper() {
         permissionState,
         providerSelectionState,
         autoImportEnabled: Boolean(user?.preferences?.sms?.autoImport),
-        startupImportEnabled: SMS_STARTUP_IMPORT_ENABLED,
+        startupImportEnabled: SMS_AUTO_IMPORT_ENABLED,
         smsSenderFirstFlowV2Enabled,
         rollbackToLegacyRoutingOnce,
       });
 
       if (isCancelled) return;
 
-      if (!SMS_STARTUP_IMPORT_ENABLED && location.pathname === IMPORT_ROUTE) {
+      if (!SMS_AUTO_IMPORT_ENABLED && location.pathname === IMPORT_ROUTE) {
         safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
         console.log('[SMS_IMPORT] startup import disabled -> replace(HOME_ROUTE)', {
           pathnameBefore: location.pathname,
@@ -553,14 +581,11 @@ function AppWrapper() {
       }
 
       if (flowDecision.nextStep === 'route_sender_discovery' && flowDecision.route && location.pathname !== flowDecision.route) {
-        if (BLOCK_STARTUP_IMPORT_ROUTE && (flowDecision.route as string) === IMPORT_ROUTE) {
-          if (import.meta.env.MODE === 'development') {
-            console.log('[ROUTE_GUARD] blocked startup sender-discovery navigation to import route', {
-              pathname: location.pathname,
-              permissionState,
-              providerSelectionState,
-            });
-          }
+        if (!SMS_AUTO_IMPORT_ENABLED && IMPORT_ROUTES.has(flowDecision.route as string)) {
+          console.log('[SMS_IMPORT] disabled -> skipping startup sender-discovery navigation', {
+            pathname: location.pathname,
+            targetPathname: flowDecision.route,
+          });
           return;
         }
 
@@ -577,6 +602,11 @@ function AppWrapper() {
       }
 
       if (flowDecision.shouldTriggerAutoImport) {
+        if (!SMS_AUTO_IMPORT_ENABLED) {
+          console.log('[SMS_IMPORT] disabled -> skipping startup auto import trigger');
+          return;
+        }
+
         SmsImportService.checkForNewMessages(navigateRef.current, {
           auto: true,
           usePermissionDate: true,
@@ -789,9 +819,11 @@ function AppRoutes() {
         <Route
           path="/import-transactions"
           element={
-            <ErrorBoundary name="Import Transactions Page">
-              <ImportTransactions />
-            </ErrorBoundary>
+            <ImportDisabledGuard>
+              <ErrorBoundary name="Import Transactions Page">
+                <ImportTransactions />
+              </ErrorBoundary>
+            </ImportDisabledGuard>
           }
         />
         <Route
@@ -852,19 +884,21 @@ function AppRoutes() {
           }
         />
         {/* Canonical SMS flow order: /process-sms -> /vendor-mapping -> /review-sms-transactions */}
-        <Route path="/process-sms" element={<ProcessSmsMessages />} />
+        <Route path="/process-sms" element={<ImportDisabledGuard><ProcessSmsMessages /></ImportDisabledGuard>} />
         <Route
           path="/sms-providers"
           element={
-            <OnboardingGuard>
-              <SmsProviderSelection />
-            </OnboardingGuard>
+            <ImportDisabledGuard>
+              <OnboardingGuard>
+                <SmsProviderSelection />
+              </OnboardingGuard>
+            </ImportDisabledGuard>
           }
         />
-        <Route path="/sms/process-vendors" element={<ProcessVendors />} />
-        <Route path="/sms/vendors" element={<VendorCategorization />} />
-        <Route path="/vendor-mapping" element={<VendorMapping />} />
-        <Route path="/review-sms-transactions" element={<ReviewSmsTransactions />} />
+        <Route path="/sms/process-vendors" element={<ImportDisabledGuard><ProcessVendors /></ImportDisabledGuard>} />
+        <Route path="/sms/vendors" element={<ImportDisabledGuard><VendorCategorization /></ImportDisabledGuard>} />
+        <Route path="/vendor-mapping" element={<ImportDisabledGuard><VendorMapping /></ImportDisabledGuard>} />
+        <Route path="/review-sms-transactions" element={<ImportDisabledGuard><ReviewSmsTransactions /></ImportDisabledGuard>} />
         <Route path="/exchange-rates" element={<ExchangeRates />} />
         <Route path="/budget" element={<BudgetHubPage />} />
         <Route path="/budget/:budgetId" element={<BudgetDetailPage />} />

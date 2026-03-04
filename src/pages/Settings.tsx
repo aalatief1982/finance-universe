@@ -87,6 +87,7 @@ import { isAdminMode, activateAdminMode, deactivateAdminMode } from '@/utils/adm
 import { isDefaultCurrencySet } from '@/utils/default-currency';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck } from 'lucide-react';
+import { SMS_AUTO_IMPORT_ENABLED } from '@/lib/env';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -130,6 +131,8 @@ const Settings = () => {
   const [lastAdminTap, setLastAdminTap] = useState(0);
   const [showPinDialog, setShowPinDialog] = useState(false);
   const [adminPin, setAdminPin] = useState('');
+
+  const canAccessSmsImportSettings = SMS_AUTO_IMPORT_ENABLED || adminMode;
 
   const handleVersionTap = () => {
     const now = Date.now();
@@ -520,6 +523,7 @@ const Settings = () => {
           </div>
         </section>
 
+        {canAccessSmsImportSettings && (
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
             <MessageSquare className="mr-2" size={20} />
@@ -593,7 +597,11 @@ const Settings = () => {
                           await smsPermissionService.initSmsListener();
                           const SmsImportService = (await import('@/services/SmsImportService')).default;
                           await new Promise(r => setTimeout(r, 500)); // Small delay for listener ready
-                          await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
+                          if (!SMS_AUTO_IMPORT_ENABLED) {
+                            console.log('[SMS_IMPORT] disabled -> skipping settings-triggered import');
+                          } else {
+                            await SmsImportService.checkForNewMessages(navigate, { auto: false, usePermissionDate: true });
+                          }
                           console.log('[Settings] (toggle) Initial SMS import triggered');
                         } catch (e) {
                           console.warn('[Settings] (toggle) Error during import:', e);
@@ -634,6 +642,7 @@ const Settings = () => {
             </div>
           </LockedFeature>
         </section>
+        )}
 
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
