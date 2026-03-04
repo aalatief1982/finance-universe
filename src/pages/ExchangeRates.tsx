@@ -103,7 +103,7 @@ const ExchangeRates: React.FC = () => {
 
   return (
     <Layout withPadding={false} showBack fullWidth>
-      <div className="container px-1">
+      <div className="container px-0">
         <div className="px-[var(--page-padding-x)] pt-2 pb-24 space-y-4">
 
           {Object.keys(groupedRates).length === 0 ? (

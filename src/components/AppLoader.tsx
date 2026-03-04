@@ -19,6 +19,11 @@
 import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
 
+
+type XpensiaWindow = Window & {
+  __xpensiaHideInitialLoading?: () => void;
+};
+
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 let traceCounter = 0;
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -68,6 +73,31 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
       return () => clearTimeout(timer);
     }
   }, [isInitializing]);
+
+  useEffect(() => {
+    if (showSplash) {
+      return;
+    }
+
+    const hideInitialLoading = () => {
+      (window as XpensiaWindow).__xpensiaHideInitialLoading?.();
+    };
+
+    if (typeof window.requestAnimationFrame === 'function') {
+      const raf1 = window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(hideInitialLoading);
+      });
+
+      return () => {
+        window.cancelAnimationFrame(raf1);
+      };
+    }
+
+    const timeout = window.setTimeout(hideInitialLoading, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [showSplash]);
 
   if (showSplash) {
     return <SplashScreen />;
