@@ -1,51 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { safeStorage } from '@/utils/safe-storage';
-import {
-  applyFieldPromotionOverlay,
-  loadPromotionStats,
-  recordFieldPromotionLearning,
-} from '../fieldPromotionOverlay';
+import { applyFieldPromotionOverlay } from '../fieldPromotionOverlay';
+import { getConfidenceGraph, getTemplateEdgeKey, getVendorEdgeKey, saveConfidenceGraph } from '../confidenceGraph';
 
-const STORE_KEY = 'xpensia_field_promotion_stats';
-const RELIABILITY_KEY = 'xpensia_field_reliability_stats';
+const mockNow = new Date('2025-03-01T12:00:00.000Z');
 
-describe('fieldPromotionOverlay', () => {
+describe('fieldPromotionOverlay confidence graph', () => {
   beforeEach(() => {
-    safeStorage.removeItem(STORE_KEY);
-    safeStorage.removeItem(RELIABILITY_KEY);
+    localStorage.clear();
     vi.unstubAllEnvs();
+    vi.useFakeTimers();
+    vi.setSystemTime(mockNow);
   });
 
-  it('promotes category/subcategory to detected after 3 confirmations', () => {
-    for (let i = 0; i < 3; i += 1) {
-      recordFieldPromotionLearning({
-        senderHint: 'BANK',
-        templateHash: 'hash-1',
-        vendor: 'Amazon',
-        predicted: { category: 'Shopping', subcategory: 'Online' },
-        confirmed: { category: 'Shopping', subcategory: 'Online' },
-      });
-    }
+  it('promotes type to 0.85 when strict template evidence exists', () => {
+    vi.stubEnv('VITE_CONFIDENCE_OVERLAY_ENABLED', 'true');
+    const graph = getConfidenceGraph();
+    const edgeKey = getTemplateEdgeKey('alrajhi', 'tmpl-123');
+    graph.templateEdges[edgeKey] = {
+      'type:expense': { confirm: 5, contradict: 0, lastConfirmed: '2025-02-15' },
+    };
+    saveConfidenceGraph(graph);
 
     const result = applyFieldPromotionOverlay({
-      senderHint: 'BANK',
-      templateHash: 'hash-1',
+      senderHint: 'ALRAJHI',
+      templateHash: 'tmpl-123',
       vendor: 'Amazon',
-      fields: {
-        category: { value: 'Shopping', score: 0.7, source: 'inferred' },
-        subcategory: { value: 'Online', score: 0.7, source: 'inferred' },
-      },
-    });
-
-    expect(result.promotedScores.category).toBe(0.85);
-    expect(result.promotedScores.subcategory).toBe(0.85);
-  });
-
-  it('type promotion happens with >=2 POS markers and no refund markers (flag on)', () => {
-    vi.stubEnv('VITE_PROMOTE_TYPE_CONFIDENCE', 'true');
-
-    const result = applyFieldPromotionOverlay({
-      rawMessage: 'شراء عبر نقاط البيع بواسطة بطاقة mada',
+      templateExactMatch: true,
       fields: {
         type: { value: 'expense', score: 0.7, source: 'inferred' },
       },
@@ -53,14 +33,23 @@ describe('fieldPromotionOverlay', () => {
 
     expect(result.promotedScores.type).toBe(0.85);
     expect(result.promotedFields.type).toBe('promoted');
-    expect(result.evidence[0]?.sourceKind).toBe('promoted_by_rule');
+    expect(result.evidence[0]?.message).toContain('Promoted by historical confirmation overlay');
   });
 
-  it('type promotion is blocked by refund marker', () => {
-    vi.stubEnv('VITE_PROMOTE_TYPE_CONFIDENCE', 'true');
+  it('blocks type promotion when contradictions reduce purity below 0.95', () => {
+    vi.stubEnv('VITE_CONFIDENCE_OVERLAY_ENABLED', 'true');
+    const graph = getConfidenceGraph();
+    const edgeKey = getTemplateEdgeKey('alrajhi', 'tmpl-123');
+    graph.templateEdges[edgeKey] = {
+      'type:expense': { confirm: 5, contradict: 1, lastConfirmed: '2025-02-15' },
+    };
+    saveConfidenceGraph(graph);
 
     const result = applyFieldPromotionOverlay({
-      rawMessage: 'شراء عبر نقاط البيع بواسطة mada ثم استرجاع العملية',
+      senderHint: 'ALRAJHI',
+      templateHash: 'tmpl-123',
+      vendor: 'Amazon',
+      templateExactMatch: true,
       fields: {
         type: { value: 'expense', score: 0.7, source: 'inferred' },
       },
@@ -69,164 +58,65 @@ describe('fieldPromotionOverlay', () => {
     expect(result.promotedScores.type).toBeUndefined();
   });
 
-  it('fromAccount warm promotion at >=3 confirmations with no contradictions', () => {
-    vi.stubEnv('VITE_PROMOTE_FROMACCOUNT_CONFIDENCE', 'true');
+  it('applies stricter fromAccount promotion only for template/account-token edges', () => {
+    vi.stubEnv('VITE_CONFIDENCE_OVERLAY_ENABLED', 'true');
+    const graph = getConfidenceGraph();
+    const vendorEdge = getVendorEdgeKey('amazon');
+    const templateEdge = getTemplateEdgeKey('alrajhi', 'tmpl-123');
 
-    for (let i = 0; i < 3; i += 1) {
-      recordFieldPromotionLearning({
-        senderHint: 'BANK',
-        templateHash: 'hash-acc',
-        vendor: 'Uber',
-        predicted: { fromAccount: 'SAB' },
-        confirmed: { fromAccount: 'SAB' },
-        fromAccountDeterministic: true,
-      });
-    }
+    graph.vendorEdges[vendorEdge] = {
+      'fromAccount:SAB': { confirm: 12, contradict: 0, lastConfirmed: '2025-02-20' },
+    };
 
-    const result = applyFieldPromotionOverlay({
-      senderHint: 'BANK',
-      templateHash: 'hash-acc',
-      vendor: 'Uber',
-      fromAccountDeterministic: true,
-      fromAccountSource: 'template-default',
+    let result = applyFieldPromotionOverlay({
+      senderHint: 'ALRAJHI',
+      templateHash: 'tmpl-123',
+      vendor: 'Amazon',
+      templateExactMatch: true,
       fields: {
         fromAccount: { value: 'SAB', score: 0.3, source: 'default' },
       },
-      accountCandidates: ['****7413'],
     });
 
-    expect(result.promotedScores.fromAccount).toBe(0.6);
-    expect(result.promotedFields.fromAccount).toBe('warming');
-    expect(result.evidence[0]?.sourceKind).toBe('promoted_by_history_warm');
-  });
+    expect(result.promotedScores.fromAccount).toBeUndefined();
 
-  it('fromAccount detected promotion at >=7 confirmations with no contradictions', () => {
-    vi.stubEnv('VITE_PROMOTE_FROMACCOUNT_CONFIDENCE', 'true');
+    graph.templateEdges[templateEdge] = {
+      'fromAccount:SAB': { confirm: 7, contradict: 0, lastConfirmed: '2025-02-20' },
+    };
+    saveConfidenceGraph(graph);
 
-    for (let i = 0; i < 7; i += 1) {
-      recordFieldPromotionLearning({
-        senderHint: 'BANK',
-        templateHash: 'hash-acc2',
-        vendor: 'Uber',
-        predicted: { fromAccount: 'SAB' },
-        confirmed: { fromAccount: 'SAB' },
-        fromAccountDeterministic: true,
-      });
-    }
-
-    const result = applyFieldPromotionOverlay({
-      senderHint: 'BANK',
-      templateHash: 'hash-acc2',
-      vendor: 'Uber',
-      fromAccountDeterministic: true,
-      fromAccountSource: 'template-default',
+    result = applyFieldPromotionOverlay({
+      senderHint: 'ALRAJHI',
+      templateHash: 'tmpl-123',
+      vendor: 'Amazon',
+      templateExactMatch: true,
       fields: {
         fromAccount: { value: 'SAB', score: 0.3, source: 'default' },
       },
-      accountCandidates: ['****7413'],
     });
 
     expect(result.promotedScores.fromAccount).toBe(0.85);
-    expect(result.promotedFields.fromAccount).toBe('promoted');
   });
 
-  it('fromAccount promotion is blocked when contradiction rate exceeds threshold', () => {
-    vi.stubEnv('VITE_PROMOTE_FROMACCOUNT_CONFIDENCE', 'true');
-
-    for (let i = 0; i < 7; i += 1) {
-      recordFieldPromotionLearning({
-        senderHint: 'BANK',
-        templateHash: 'hash-acc3',
-        vendor: 'Uber',
-        predicted: { fromAccount: 'SAB' },
-        confirmed: { fromAccount: 'SAB' },
-        fromAccountDeterministic: true,
-      });
-    }
-
-    recordFieldPromotionLearning({
-      senderHint: 'BANK',
-      templateHash: 'hash-acc3',
-      vendor: 'Uber',
-      predicted: { fromAccount: 'SAB' },
-      confirmed: { fromAccount: 'Riyad' },
-      fromAccountDeterministic: true,
-    });
+  it('respects kill switch and prevents promotions when disabled', () => {
+    vi.stubEnv('VITE_CONFIDENCE_OVERLAY_ENABLED', 'false');
+    const graph = getConfidenceGraph();
+    const edgeKey = getTemplateEdgeKey('alrajhi', 'tmpl-123');
+    graph.templateEdges[edgeKey] = {
+      'type:expense': { confirm: 10, contradict: 0, lastConfirmed: '2025-02-15' },
+    };
+    saveConfidenceGraph(graph);
 
     const result = applyFieldPromotionOverlay({
-      senderHint: 'BANK',
-      templateHash: 'hash-acc3',
-      vendor: 'Uber',
-      fromAccountDeterministic: true,
-      fromAccountSource: 'template-default',
-      fields: {
-        fromAccount: { value: 'SAB', score: 0.3, source: 'default' },
-      },
-      accountCandidates: ['****7413'],
-    });
-
-    expect(result.promotedScores.fromAccount).toBeUndefined();
-  });
-
-  it('fromAccount promotion is blocked when confirmed counts are missing', () => {
-    vi.stubEnv('VITE_PROMOTE_FROMACCOUNT_CONFIDENCE', 'true');
-
-    const result = applyFieldPromotionOverlay({
-      senderHint: 'BANK',
-      templateHash: 'hash-acc4',
-      vendor: 'Uber',
-      fromAccountDeterministic: true,
-      fromAccountSource: 'template-default',
-      fields: {
-        fromAccount: { value: 'SAB', score: 0.3, source: 'default' },
-      },
-      accountCandidates: ['****7413'],
-    });
-
-    expect(result.promotedScores.fromAccount).toBeUndefined();
-  });
-
-  it('flags off => no type/fromAccount promotion', () => {
-    for (let i = 0; i < 8; i += 1) {
-      recordFieldPromotionLearning({
-        senderHint: 'BANK',
-        templateHash: 'hash-acc5',
-        vendor: 'Uber',
-        predicted: { fromAccount: 'SAB' },
-        confirmed: { fromAccount: 'SAB' },
-        fromAccountDeterministic: true,
-      });
-    }
-
-    const result = applyFieldPromotionOverlay({
-      rawMessage: 'شراء عبر نقاط البيع بواسطة بطاقة mada',
-      senderHint: 'BANK',
-      templateHash: 'hash-acc5',
-      vendor: 'Uber',
-      fromAccountDeterministic: true,
-      fromAccountSource: 'template-default',
+      senderHint: 'ALRAJHI',
+      templateHash: 'tmpl-123',
+      templateExactMatch: true,
       fields: {
         type: { value: 'expense', score: 0.7, source: 'inferred' },
-        fromAccount: { value: 'SAB', score: 0.3, source: 'default' },
       },
-      accountCandidates: ['****7413'],
     });
 
     expect(result.promotedScores.type).toBeUndefined();
-    expect(result.promotedScores.fromAccount).toBeUndefined();
-  });
-
-  it('does not change confidence when stats are missing', () => {
-    const result = applyFieldPromotionOverlay({
-      senderHint: 'BANK',
-      templateHash: 'hash-missing',
-      vendor: 'Random',
-      fields: {
-        category: { value: 'Food', score: 0.7, source: 'inferred' },
-      },
-    });
-
-    expect(result.promotedScores.category).toBeUndefined();
-    expect(loadPromotionStats()).toEqual({});
+    expect(result.evidence).toEqual([]);
   });
 });

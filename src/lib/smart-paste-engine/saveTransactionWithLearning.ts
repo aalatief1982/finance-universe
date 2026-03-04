@@ -402,8 +402,6 @@ export function saveTransactionWithLearning(
           parsedForPromotion.directFields.type?.value ||
           parsedForPromotion.inferredFields.type?.value ||
           parsedForPromotion.defaultValues.type?.value,
-        category: parsedForPromotion.inferredFields.category?.value || parsedForPromotion.directFields.category?.value,
-        subcategory: parsedForPromotion.inferredFields.subcategory?.value || parsedForPromotion.directFields.subcategory?.value,
         fromAccount:
           parsedForPromotion.directFields.fromAccount?.value ||
           parsedForPromotion.inferredFields.fromAccount?.value ||
@@ -411,13 +409,11 @@ export function saveTransactionWithLearning(
       },
       confirmed: {
         type: newTransaction.type,
-        category: newTransaction.category,
-        subcategory: newTransaction.subcategory || 'none',
         fromAccount: newTransaction.fromAccount,
       },
-      fromAccountDeterministic: ['token-remap', 'template-hash-map', 'template-default', 'direct-field'].includes(
-        parsedForPromotion.accountInference?.fromAccountSource || '',
-      ),
+      accountToken:
+        parsedForPromotion.directFields.account?.value ||
+        parsedForPromotion.candidates.accountCandidates[0],
     });
 
     // Preferred account by template hash (source-agnostic, post-confirm only)
