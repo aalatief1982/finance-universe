@@ -65,7 +65,7 @@ const SetDefaultCurrency: React.FC = () => {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden overscroll-none bg-background text-foreground">
-      <div className="sticky top-0 z-10 space-y-3 border-b bg-background p-4">
+      <div className="sticky top-0 z-10 space-y-3 border-b bg-background px-4 pb-4 pt-[calc(var(--safe-area-top)+1rem)]">
         <Button onClick={handleSave} disabled={!selectedCurrency || isSaving} className="w-full">
           {isSaving ? 'Saving...' : 'Save & Continue'}
         </Button>
