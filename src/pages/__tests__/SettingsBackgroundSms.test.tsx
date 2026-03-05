@@ -50,7 +50,7 @@ describe('Settings background SMS toggle', () => {
       </UserProvider>
     );
 
-    const toggle = await screen.findByLabelText(/enable sms auto-import/i);
+    const toggle = await screen.findByLabelText(/read sms transactions/i);
     expect(toggle).toBeDisabled();
   });
 });
