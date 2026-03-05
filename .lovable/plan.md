@@ -1,29 +1,20 @@
 
 
-## Plan: Currency Page Spacing + Header Icon Sizes
+## Plan: Remove the "30 days" Import Scope Dialog
 
-### Issue 4: Exchange Rates Page Spacing
+The popup at lines 468-482 in `SmsPermissionPrompt.tsx` is a secondary `AlertDialog` that appears after SMS permission is granted, telling the user "Xpensia will now read financial SMS from the last 30 days" with a "Continue" button.
 
-The page uses `Layout` with `fullWidth` and then manually wraps content in `<div className="container px-1">`, creating only 4px edge padding — inconsistent with other pages.
+### Change
 
-**Fix in `src/pages/ExchangeRates.tsx`:**
-- Remove `fullWidth` prop from `<Layout>` (so Layout applies its standard `container` + `max-w-[var(--content-max-width)]`)
-- Remove the redundant `<div className="container px-1">` wrapper
-- Keep `withPadding={false}` and the inner padding div with `px-[var(--page-padding-x)]` for content spacing
+**In `src/components/SmsPermissionPrompt.tsx`:**
 
-This makes the page use the same container constraints as Dashboard, Transactions, etc.
+1. In `completePermissionGrantFlow` (line 70-80): instead of closing the main dialog and opening the import scope dialog, directly call the import logic currently inside `handleConfirmImportScope`. Essentially merge the two steps — when permission is granted, immediately proceed to import without showing the intermediate popup.
 
-### Issue 5: Header Icon Sizes
+2. Remove the `showImportScopeDialog` state variable (line 60).
 
-Currently the Mail icon is 20px and the hamburger Menu icon is 28px. Both sit inside `size="icon"` buttons which are 32x32px (`h-8 w-8`).
+3. Remove the second `AlertDialog` block (lines 468-482).
 
-**Fix — increase icon sizes only (no global button changes):**
-- `src/components/header/Header.tsx`: Change `Mail` from `size={20}` to `size={26}`, and `ArrowLeft` from `size={20}` to `size={24}`
-- `src/components/header/MobileNavigation.tsx`: Keep `Menu` at `size={28}` (already appropriate)
+4. Remove the now-unused `handleConfirmImportScope` function — its body gets merged into `completePermissionGrantFlow`.
 
-No changes to `button.constants.ts` — the global icon button dimensions stay as-is to avoid ripple effects across the app. The Lucide `size` prop controls the SVG viewBox rendering, so increasing it makes the icon visually larger within the existing touch target.
-
-### Files to change
-- `src/pages/ExchangeRates.tsx` — remove `fullWidth`, remove manual container wrapper
-- `src/components/header/Header.tsx` — increase Mail to 26px, ArrowLeft to 24px
+The flow becomes: permission granted → close main dialog → show loading overlay → run import logic → navigate. No intermediate popup.
 

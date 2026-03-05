@@ -63,7 +63,7 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
                 }}
                 className="mr-2"
               >
-                <ArrowLeft size={24} />
+                <ArrowLeft size={20} />
               </Button>
             )}
             <LogoLink
@@ -82,7 +82,7 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
               title="SMS Review Inbox"
               aria-label="SMS Review Inbox"
             >
-              <Mail size={26} />
+              <Mail size={20} />
               {pendingSmsCount > 0 && (
                 <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
                   {pendingSmsCount}
