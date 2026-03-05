@@ -88,6 +88,7 @@ import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { openAndroidAppPermissionsSettings, openAndroidNotificationSettings } from '@/lib/androidSettings';
 import { Device } from '@capacitor/device';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -197,20 +198,6 @@ const Settings = () => {
     if (!(await isAndroid13OrAbove())) return true;
     const status = await LocalNotifications.checkPermissions();
     return status.display === 'granted';
-  };
-
-  const openAndroidAppSettings = async () => {
-    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return;
-    try {
-      const appPlugin = App as unknown as { openSettings?: () => Promise<void> };
-      if (typeof appPlugin.openSettings === 'function') {
-        await appPlugin.openSettings();
-        return;
-      }
-      window.open('app-settings:');
-    } catch {
-      window.open('app-settings:');
-    }
   };
 
   // Track screen view
@@ -822,7 +809,11 @@ const Settings = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                await openAndroidAppSettings();
+                if (disablePermissionTarget === 'notifications') {
+                  await openAndroidNotificationSettings();
+                } else {
+                  await openAndroidAppPermissionsSettings();
+                }
                 setDisablePermissionTarget(null);
               }}
             >
