@@ -34,6 +34,16 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -61,7 +71,7 @@ import {
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 
-import { useToast, toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/context/UserContext";
 import { useTheme } from "next-themes";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -78,11 +88,12 @@ import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { Device } from '@capacitor/device';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
 import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
-import { useSmsPermission } from '@/hooks/useSmsPermission';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { isAdminMode, activateAdminMode, deactivateAdminMode } from '@/utils/admin-utils';
 import { isDefaultCurrencySet } from '@/utils/default-currency';
@@ -104,9 +115,6 @@ const Settings = () => {
   );
   
   const [backgroundSmsEnabled, setBackgroundSmsEnabled] = useState(
-    user?.preferences?.sms?.backgroundSmsEnabled || false,
-  );
-  const [baselineBackgroundSmsEnabled, setBaselineBackgroundSmsEnabled] = useState(
     user?.preferences?.sms?.backgroundSmsEnabled || false,
   );
   const [autoImport, setAutoImport] = useState(
@@ -137,6 +145,7 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.preferences?.notifications !== false
   );
+  const [disablePermissionTarget, setDisablePermissionTarget] = useState<"notifications" | "sms" | null>(null);
 
   const handleVersionTap = () => {
     const now = Date.now();
@@ -170,8 +179,39 @@ const Settings = () => {
     toast({ title: 'Admin mode deactivated' });
   };
 
-  const { hasPermission: hasSmsPermission, refreshPermission } = useSmsPermission();
   const { updateUserPreferences } = useUser();
+
+  const isAndroid13OrAbove = async () => {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return false;
+    try {
+      const deviceInfo = await Device.getInfo();
+      const majorVersion = Number.parseInt((deviceInfo.osVersion || '0').split('.')[0], 10);
+      return Number.isFinite(majorVersion) && majorVersion >= 13;
+    } catch {
+      return true;
+    }
+  };
+
+  const checkNotificationPermission = async () => {
+    if (!Capacitor.isNativePlatform()) return true;
+    if (!(await isAndroid13OrAbove())) return true;
+    const status = await LocalNotifications.checkPermissions();
+    return status.display === 'granted';
+  };
+
+  const openAndroidAppSettings = async () => {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return;
+    try {
+      const appPlugin = App as unknown as { openSettings?: () => Promise<void> };
+      if (typeof appPlugin.openSettings === 'function') {
+        await appPlugin.openSettings();
+        return;
+      }
+      window.open('app-settings:');
+    } catch {
+      window.open('app-settings:');
+    }
+  };
 
   // Track screen view
   useEffect(() => {
@@ -186,7 +226,6 @@ const Settings = () => {
       if (user.preferences.sms) {
         const initialBg = user.preferences.sms.backgroundSmsEnabled || false;
         setBackgroundSmsEnabled(initialBg);
-        setBaselineBackgroundSmsEnabled(initialBg);
         setAutoImport(user.preferences.sms.autoImport || false);
       }
 
@@ -199,37 +238,19 @@ const Settings = () => {
   }, [user]);
 
   useEffect(() => {
-    const handleFocus = () => {
-      refreshPermission();
+    const syncPermissionToggles = async () => {
+      const [smsPermissionStatus, notificationPermissionStatus] = await Promise.all([
+        smsPermissionService.checkPermissionStatus(),
+        checkNotificationPermission(),
+      ]);
+
+      setBackgroundSmsEnabled(smsPermissionStatus.granted);
+      setAutoImport(smsPermissionStatus.granted);
+      setNotificationsEnabled(notificationPermissionStatus);
     };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [refreshPermission]);
 
-  // Sync toggle state with actual permission status
-  useEffect(() => {
-    const platform = Capacitor.getPlatform();
-    if (platform === 'web') return;
-
-    const prefEnabled = user?.preferences?.sms?.backgroundSmsEnabled || false;
-    const prefAutoImport = user?.preferences?.sms?.autoImport || false;
-
-    // Permission denied but preference says enabled → turn off toggle
-    if (!hasSmsPermission && (prefEnabled || backgroundSmsEnabled)) {
-      setBackgroundSmsEnabled(false);
-      setAutoImport(false);
-    }
-    // Permission granted and preference enabled → ensure toggle is on
-    else if (hasSmsPermission && prefEnabled) {
-      setBackgroundSmsEnabled(true);
-      setAutoImport(prefAutoImport || true);
-    }
-  }, [
-    hasSmsPermission,
-    backgroundSmsEnabled,
-    user?.preferences?.sms?.backgroundSmsEnabled,
-    user?.preferences?.sms?.autoImport,
-  ]);
+    void syncPermissionToggles();
+  }, []);
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -546,11 +567,23 @@ const Settings = () => {
             <Switch
               id="notifications-toggle"
               checked={notificationsEnabled}
-              onCheckedChange={(checked) => {
-                setNotificationsEnabled(checked);
-                updateUserPreferences({
-                  notifications: checked,
-                });
+              onCheckedChange={async (checked) => {
+                if (!checked) {
+                  setDisablePermissionTarget('notifications');
+                  return;
+                }
+
+                const alreadyGranted = await checkNotificationPermission();
+                if (alreadyGranted) {
+                  setNotificationsEnabled(true);
+                  updateUserPreferences({ notifications: true });
+                  return;
+                }
+
+                await LocalNotifications.requestPermissions();
+                const grantedAfterRequest = await checkNotificationPermission();
+                setNotificationsEnabled(grantedAfterRequest);
+                updateUserPreferences({ notifications: grantedAfterRequest });
               }}
             />
           </div>
@@ -582,7 +615,7 @@ const Settings = () => {
               </div>
               <Switch
                 id="sms-auto-import"
-                checked={backgroundSmsEnabled && autoImport}
+                checked={backgroundSmsEnabled}
                 onCheckedChange={async (checked) => {
                   if (checked) {
                     const platform = Capacitor.getPlatform();
@@ -593,7 +626,6 @@ const Settings = () => {
                       updateUserPreferences({
                         sms: { ...user?.preferences?.sms, autoImport: true, backgroundSmsEnabled: true }
                       });
-                      setBaselineBackgroundSmsEnabled(true);
                       return;
                     }
 
@@ -607,7 +639,10 @@ const Settings = () => {
                     setSmsBusyMessage('Requesting SMS permission...');
 
                     try {
-                      await smsPermissionService.requestPermission();
+                      const currentStatus = await smsPermissionService.checkPermissionStatus();
+                      if (!currentStatus.granted) {
+                        await smsPermissionService.requestPermission();
+                      }
                       
                       // Always re-check canonical permission status
                       const canonicalStatus = await smsPermissionService.checkPermissionStatus();
@@ -621,7 +656,6 @@ const Settings = () => {
                         updateUserPreferences({
                           sms: { ...user?.preferences?.sms, autoImport: true, backgroundSmsEnabled: true }
                         });
-                        setBaselineBackgroundSmsEnabled(true);
 
                         // Initialize listener and trigger initial import
                         setSmsBusyMessage('Importing SMS messages...');
@@ -661,13 +695,7 @@ const Settings = () => {
                       setSmsBusyMessage('');
                     }
                   } else {
-                    setBackgroundSmsEnabled(false);
-                    setAutoImport(false);
-                    // Persist immediately
-                    updateUserPreferences({
-                      sms: { ...user?.preferences?.sms, autoImport: false, backgroundSmsEnabled: false }
-                    });
-                    setBaselineBackgroundSmsEnabled(false);
+                    setDisablePermissionTarget('sms');
                   }
                 }}
                 disabled={!betaActive}
@@ -781,6 +809,29 @@ const Settings = () => {
       </motion.div>
       </div>
       
+
+      <AlertDialog open={disablePermissionTarget !== null} onOpenChange={(open) => { if (!open) setDisablePermissionTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disable Permission</AlertDialogTitle>
+            <AlertDialogDescription>
+              Android requires you to disable this permission in system settings.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                await openAndroidAppSettings();
+                setDisablePermissionTarget(null);
+              }}
+            >
+              Open Settings
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <LoadingOverlay isOpen={smsBusy} message={smsBusyMessage} />
     </Layout>
   );
