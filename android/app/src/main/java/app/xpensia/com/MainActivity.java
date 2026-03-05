@@ -8,6 +8,7 @@ import com.getcapacitor.BridgeActivity;
 import com.xpensia.plugins.smsreader.SmsReaderPlugin;
 
 import app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin;
+import app.xpensia.com.plugins.settings.AndroidSettingsPlugin;
 
 public class MainActivity extends BridgeActivity {
   private static final String TAG = "XpensiaMainActivity";
@@ -29,6 +30,13 @@ public class MainActivity extends BridgeActivity {
       Log.d(TAG, "BackgroundSmsListenerPlugin registered");
     } catch (Exception e) {
       Log.e(TAG, "Error registering BackgroundSmsListenerPlugin", e);
+    }
+
+    try {
+      registerPlugin(AndroidSettingsPlugin.class);
+      Log.d(TAG, "AndroidSettingsPlugin registered");
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering AndroidSettingsPlugin", e);
     }
 
     handleRouteIntent(getIntent());
