@@ -8,6 +8,11 @@ import { beforeEach, vi } from 'vitest';
 
 vi.mock('@/services/SmsPermissionService', () => ({
   smsPermissionService: {
+    checkPermissionStatus: vi.fn().mockResolvedValue({
+      granted: true,
+      shouldShowRationale: false,
+      permanentlyDenied: false,
+    }),
     hasPermission: vi.fn().mockResolvedValue(true),
     requestPermission: vi.fn().mockResolvedValue({ granted: true, permanentlyDenied: false }),
   },
