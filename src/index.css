@@ -70,7 +70,7 @@
     --page-padding-x: 0.375rem;
     --page-padding-y: 0.375rem;
     --content-max-width: 1200px;
-    --header-height: 4rem; /* Adjusted header height */
+    --header-height: 3.5rem; /* Mobile-standard header content height (56px), excluding safe area */
     --safe-area-top: env(safe-area-inset-top, 0px); /* For mobile notches and status bars */
     --safe-area-bottom: env(safe-area-inset-bottom, 0px); /* For mobile home indicator */
     --bottom-nav-height: 0px;

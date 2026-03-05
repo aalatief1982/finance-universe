@@ -47,8 +47,8 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
         className
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto h-[var(--header-height)] px-4 sm:px-6 lg:px-8">
+        <div className="flex h-full items-center justify-between">
           <div className="flex items-center">
             {showBack && (
               <Button
@@ -61,7 +61,7 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
                   }
                   navigateBackSafely(navigate);
                 }}
-                className="mr-2"
+                className="mr-2 h-11 w-11 p-0"
               >
                 <ArrowLeft size={20} />
               </Button>
