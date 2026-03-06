@@ -560,31 +560,23 @@ const Settings = () => {
             <div className="space-y-0.5">
               <Label htmlFor="notifications-toggle">Transaction Alerts</Label>
               <p className="text-sm text-muted-foreground">
-                Get notified when new expenses are detected from SMS
+                {notificationsEnabled
+                  ? "Notifications are enabled. To disable, go to your phone's Settings > Apps > Xpensia > Notifications"
+                  : "Get notified when new expenses are detected from SMS"}
               </p>
             </div>
             <Switch
               id="notifications-toggle"
               checked={notificationsEnabled}
+              disabled={notificationsEnabled}
               onCheckedChange={async (checked) => {
-                if (!checked) {
-                  setNotificationsEnabled(false);
-                  updateUserPreferences({ notifications: false });
-                  if (Capacitor.isNativePlatform()) {
-                    toast({ title: "Opening notification settings..." });
-                    try {
-                      await openAndroidNotificationSettings();
-                    } catch {
-                      toast({ title: "Could not open notification settings", variant: "destructive" });
-                    }
-                  }
-                  return;
-                }
+                if (!checked) return;
 
                 const alreadyGranted = await checkNotificationPermission();
                 if (alreadyGranted) {
                   setNotificationsEnabled(true);
                   updateUserPreferences({ notifications: true });
+                  toast({ title: "Notifications enabled" });
                   return;
                 }
 
@@ -592,6 +584,11 @@ const Settings = () => {
                 const grantedAfterRequest = await checkNotificationPermission();
                 setNotificationsEnabled(grantedAfterRequest);
                 updateUserPreferences({ notifications: grantedAfterRequest });
+                if (grantedAfterRequest) {
+                  toast({ title: "Notifications enabled" });
+                } else {
+                  toast({ title: "Permission not granted", variant: "destructive" });
+                }
               }}
             />
           </div>
