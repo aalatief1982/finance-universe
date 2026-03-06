@@ -88,7 +88,6 @@ const traceAppRoot = (message: string, ...args: unknown[]) => {
 
 
 const IMPORT_ROUTES = new Set([
-  '/import-transactions',
   '/process-sms',
   '/sms-providers',
   '/sms/process-vendors',
@@ -518,9 +517,6 @@ function AppWrapper() {
       const startupImportDone = safeStorage.getItem(SMS_STARTUP_IMPORT_DONE_KEY) === '1';
       if (startupImportDone) {
         console.log('[SMS_FLOW] startup flow skipped (already done)');
-        if (location.pathname === IMPORT_ROUTE) {
-          navigateRef.current(HOME_ROUTE, { replace: true });
-        }
         return;
       }
 
@@ -570,16 +566,6 @@ function AppWrapper() {
       });
 
       if (isCancelled) return;
-
-      if (!SMS_AUTO_IMPORT_ENABLED && location.pathname === IMPORT_ROUTE) {
-        safeStorage.setItem(SMS_STARTUP_IMPORT_DONE_KEY, '1');
-        console.log('[SMS_IMPORT] startup import disabled -> replace(HOME_ROUTE)', {
-          pathnameBefore: location.pathname,
-          targetPathname: HOME_ROUTE,
-        });
-        navigateRef.current(HOME_ROUTE, { replace: true });
-        return;
-      }
 
       if (flowDecision.nextStep === 'route_sender_discovery' && flowDecision.route && location.pathname !== flowDecision.route) {
         if (!SMS_AUTO_IMPORT_ENABLED && IMPORT_ROUTES.has(flowDecision.route as string)) {
@@ -820,11 +806,9 @@ function AppRoutes() {
         <Route
           path="/import-transactions"
           element={
-            <ImportDisabledGuard>
-              <ErrorBoundary name="Import Transactions Page">
-                <ImportTransactions />
-              </ErrorBoundary>
-            </ImportDisabledGuard>
+            <ErrorBoundary name="Import Transactions Page">
+              <ImportTransactions />
+            </ErrorBoundary>
           }
         />
         <Route
