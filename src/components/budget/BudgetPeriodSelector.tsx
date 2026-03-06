@@ -6,8 +6,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PeriodFilter } from '@/hooks/useBudgetPeriodParams';
 
 const PERIOD_OPTIONS: Array<{ value: PeriodFilter; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'weekly', label: 'Week' },
   { value: 'monthly', label: 'Month' },
   { value: 'quarterly', label: 'Quarter' },
   { value: 'yearly', label: 'Year' },
@@ -31,13 +29,13 @@ export function BudgetPeriodSelector({
   className,
 }: BudgetPeriodSelectorProps) {
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-2", className)}>
       {/* Period Type Tabs */}
       <Tabs 
         value={period} 
         onValueChange={(v) => onPeriodChange(v as PeriodFilter)}
       >
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3">
           {PERIOD_OPTIONS.map(option => (
             <TabsTrigger key={option.value} value={option.value}>
               {option.label}
@@ -46,9 +44,7 @@ export function BudgetPeriodSelector({
         </TabsList>
       </Tabs>
 
-      {/* Period Navigation (hidden for 'all') */}
-      {period !== 'all' && (
-        <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2">
           <Button
             variant="ghost"
             size="icon"
@@ -68,8 +64,7 @@ export function BudgetPeriodSelector({
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

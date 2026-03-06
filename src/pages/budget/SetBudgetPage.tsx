@@ -67,7 +67,6 @@ import {
 } from 'lucide-react';
 
 const PERIODS: { value: BudgetPeriod; label: string }[] = [
-  { value: 'weekly', label: 'Weekly' },
   { value: 'monthly', label: 'Monthly' },
   { value: 'quarterly', label: 'Quarterly' },
   { value: 'yearly', label: 'Yearly' },
@@ -110,13 +109,21 @@ const QUARTER_OPTIONS = [
   { value: 4, label: 'Q4 (Oct-Dec)' },
 ];
 
+
+const ALLOWED_PERIODS: BudgetPeriod[] = ['monthly', 'quarterly', 'yearly'];
+
+function normalizeBudgetPeriod(period: BudgetPeriod | null | undefined): BudgetPeriod {
+  if (!period) return 'yearly';
+  return ALLOWED_PERIODS.includes(period) ? period : 'monthly';
+}
+
 const SetBudgetPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const prefillScope = searchParams.get('scope') as BudgetScope | null;
   const prefillTarget = searchParams.get('target');
-  const prefillPeriod = searchParams.get('period') as BudgetPeriod | null;
+  const prefillPeriod = normalizeBudgetPeriod(searchParams.get('period') as BudgetPeriod | null);
 
   // Load existing budget if editing
   const existingBudget = React.useMemo(() => {
@@ -140,7 +147,7 @@ const SetBudgetPage = () => {
   const [amount, setAmount] = React.useState(existingBudget?.amount || 0);
   const [currency, setCurrency] = React.useState(existingBudget?.currency || getUserSettings().currency || 'USD');
   const [period, setPeriod] = React.useState<BudgetPeriod>(
-    existingBudget?.period || prefillPeriod || 'yearly'
+    normalizeBudgetPeriod(existingBudget?.period || prefillPeriod)
   );
   const [year, setYear] = React.useState(existingBudget?.year || currentPeriodInfo.year);
   const [periodIndex, setPeriodIndex] = React.useState<number>(
@@ -421,7 +428,7 @@ const SetBudgetPage = () => {
     }
   };
 
-  // Handle period index change (month/quarter/week) - check for existing budget
+  // Handle period index change (month/quarter) - check for existing budget
   const handlePeriodIndexChange = (newIndex: number) => {
     const searchTargetId = scope === 'overall' ? '_overall' : targetId;
     const existingForIndex = existingBudgets.find(
@@ -452,7 +459,7 @@ const SetBudgetPage = () => {
     );
   };
 
-  // Create cascaded budgets (quarters, months, weeks) from yearly budget
+  // Create cascaded budgets (quarters, months) from yearly budget
   const createCascadedBudgets = (yearlyBudget: CreateBudgetInput) => {
     const quarterlyAmount = yearlyBudget.amount / 4;
     const monthlyAmount = yearlyBudget.amount / 12;
@@ -481,18 +488,6 @@ const SetBudgetPage = () => {
       });
     }
     
-    // Create weekly budgets (52 weeks)
-    const weeklyAmount = yearlyBudget.amount / 52;
-    for (let w = 1; w <= 52; w++) {
-      budgetService.addBudget({
-        ...yearlyBudget,
-        period: 'weekly',
-        periodIndex: w,
-        amount: weeklyAmount,
-        isOverride: false,
-        notes: `Auto-distributed from ${year} yearly budget`,
-      });
-    }
   };
 
   // Handle save
@@ -760,7 +755,7 @@ const SetBudgetPage = () => {
                 <div className="flex-1">
                   <p className="text-sm font-medium text-primary">Overall Budget</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    This is your total spending budget. It distributes across time periods (yearly → quarterly → monthly → weekly).
+                    This is your total spending budget. It distributes across time periods (yearly → quarterly → monthly).
                   </p>
                   
                   {/* Show edit/delete for existing overall budget */}
@@ -831,7 +826,7 @@ const SetBudgetPage = () => {
             {period !== 'yearly' && (
               <div>
                 <Label className="text-xs text-muted-foreground">
-                  {period === 'weekly' ? 'Week' : period === 'monthly' ? 'Month' : 'Quarter'}
+                  {period === 'monthly' ? 'Month' : 'Quarter'}
                 </Label>
                 {period === 'monthly' && (
                   <Select value={periodIndex.toString()} onValueChange={val => handlePeriodIndexChange(parseInt(val))}>
@@ -856,16 +851,6 @@ const SetBudgetPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                )}
-                {period === 'weekly' && (
-                  <Input
-                    type="number"
-                    min={1}
-                    max={53}
-                    value={periodIndex}
-                    onChange={e => handlePeriodIndexChange(parseInt(e.target.value) || 1)}
-                    placeholder="Week number (1-53)"
-                  />
                 )}
               </div>
             )}
@@ -1071,12 +1056,11 @@ const SetBudgetPage = () => {
             <DialogTitle>Distribute to Child Periods?</DialogTitle>
           </DialogHeader>
           <CardDescription>
-            Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters, months, and weeks.
+            Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters and months.
           </CardDescription>
           <CardContent className="space-y-2 px-0 text-sm text-muted-foreground">
             <p>• 4 quarterly budgets: ~{formatCurrency(amount / 4, currency)} each</p>
             <p>• 12 monthly budgets: ~{formatCurrency(amount / 12, currency)} each</p>
-            <p>• 52 weekly budgets: ~{formatCurrency(amount / 52, currency)} each</p>
           </CardContent>
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
             <Button

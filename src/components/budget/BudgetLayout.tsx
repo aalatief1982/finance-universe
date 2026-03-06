@@ -32,16 +32,10 @@ export function BudgetLayout({
   return (
     <Layout withPadding={false} showBack fullWidth>
       <div className="w-full">
-        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 space-y-2">
-          {(headerActions || showAddButton) && (
+        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-1 space-y-1.5">
+          {headerActions && (
             <div className="flex items-center justify-end gap-2">
               {headerActions}
-              {showAddButton && (
-                <Button size="sm" onClick={() => navigate('/budget/set')}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
-                </Button>
-              )}
             </div>
           )}
 
@@ -61,7 +55,7 @@ export function BudgetLayout({
           )}
         </div>
 
-        <div className="px-[var(--page-padding-x)] pt-2 mt-1">
+        <div className="px-[var(--page-padding-x)] pt-2">
           <div className={showAddButton ? 'pb-24' : 'pb-20'}>
             {/* Page Content */}
             {children}
