@@ -1,57 +1,36 @@
 
 
-## Plan: Fix Notification Toggle OFF Not Triggering System Settings
+## Plan: Make Notification Toggle Grant-Only, Disabled Once Granted
 
-### Problem
-
-When toggling the notification switch OFF, the system notification settings page should open so the user can revoke permission. Based on code analysis, there are two issues:
-
-1. **No app resume re-sync**: The `syncPermissionToggles` effect only runs once on mount (empty dependency array `[]`). When the user returns from system settings, the toggle doesn't update to reflect the actual permission state.
-
-2. **Possible silent failure**: The `openAndroidNotificationSettings()` call may silently fail or not be reached if the Capacitor native bridge isn't resolving properly — there's no user feedback if it fails.
+### Concept
+The toggle becomes a one-way "grant permission" button:
+- **OFF + no permission**: Toggle is enabled — user can tap to grant
+- **ON (permission granted)**: Toggle is disabled/greyed out — user cannot revoke from within the app
+- **Permission revoked externally**: Toggle returns to OFF and becomes enabled again (via app resume listener already in place)
 
 ### Changes in `src/pages/Settings.tsx`
 
-**1. Add an App state change listener to re-sync permissions on resume**
+**1. Disable the Switch when permission is granted**
 
-Add a `useEffect` that listens to `App.addListener('appStateChange', ...)`. When `isActive` becomes `true` (user returns from system settings), re-run `syncPermissionToggles` to update the toggle state based on actual system permission.
+Add `disabled={notificationsEnabled}` to the `<Switch>` component. This prevents interaction when notifications are already granted.
 
-```typescript
-useEffect(() => {
-  const listener = App.addListener('appStateChange', async ({ isActive }) => {
-    if (isActive) {
-      const notifGranted = await checkNotificationPermission();
-      setNotificationsEnabled(notifGranted);
-      updateUserPreferences({ notifications: notifGranted });
-    }
-  });
-  return () => { listener.then(l => l.remove()); };
-}, []);
-```
+**2. Simplify the `onCheckedChange` handler**
 
-**2. Add error handling and toast feedback on the toggle OFF path**
+Since the toggle can only go from OFF → ON (it's disabled when ON), remove the `!checked` branch entirely. The handler only needs to handle granting:
+- Request permission via `LocalNotifications.requestPermissions()`
+- Check if granted, update state accordingly
+- Show toast on success/failure
 
-In the `onCheckedChange` handler for `!checked`, wrap the `openAndroidNotificationSettings()` call with a try-catch and show a toast if it fails, so the user knows something went wrong:
+**3. Add helper text when disabled**
 
-```typescript
-if (!checked) {
-  setNotificationsEnabled(false);
-  updateUserPreferences({ notifications: false });
-  if (Capacitor.isNativePlatform()) {
-    try {
-      await openAndroidNotificationSettings();
-    } catch {
-      toast({ title: "Could not open notification settings", variant: "destructive" });
-    }
-  }
-  return;
-}
-```
+Update the description text dynamically:
+- When granted (disabled): "Notifications are enabled. To disable, go to your phone's Settings > Apps > Xpensia > Notifications"
+- When not granted: "Get notified when new expenses are detected from SMS"
 
-**3. Add a toast confirmation when toggling OFF**
+**4. No changes needed to the app resume listener**
 
-Show a brief toast: "Opening notification settings..." so the user sees immediate feedback that the action was triggered.
+The existing `appStateChange` listener already re-syncs `notificationsEnabled` from system permission when the user returns, so if they revoke externally, the toggle will flip back to OFF and become interactive again.
 
 ### Files to change
-- `src/pages/Settings.tsx` — add resume listener, add toast feedback on toggle OFF
+- `src/pages/Settings.tsx` — add `disabled` prop, simplify handler, dynamic description
 
