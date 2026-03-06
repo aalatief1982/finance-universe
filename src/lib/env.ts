@@ -65,7 +65,7 @@ export const ENABLE_SMS_SENDER_FIRST_FLOW_V2 =
   getEnvironmentVariable('SMS_SENDER_FIRST_FLOW_V2', 'false') === 'true';
 
 // Master kill-switch for all SMS auto-import entry points and import flow routes.
-export const SMS_AUTO_IMPORT_ENABLED = true;
+export const SMS_AUTO_IMPORT_ENABLED = false;
 
 
 // Configuration options
