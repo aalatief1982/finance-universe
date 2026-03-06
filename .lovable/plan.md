@@ -1,20 +1,27 @@
 
 
-## Plan: Remove the "30 days" Import Scope Dialog
+## Plan: Remove Notification Permission Popup, Direct Toggle
 
-The popup at lines 468-482 in `SmsPermissionPrompt.tsx` is a secondary `AlertDialog` that appears after SMS permission is granted, telling the user "Xpensia will now read financial SMS from the last 30 days" with a "Continue" button.
+The "Disable Permission" popup appears when the user toggles notifications OFF because Android doesn't allow apps to revoke notification permissions programmatically — it must be done in system settings. Currently this is gated behind a confirmation dialog.
 
-### Change
+### Changes in `src/pages/Settings.tsx`
 
-**In `src/components/SmsPermissionPrompt.tsx`:**
+**1. Notification toggle OFF — skip popup, go directly to system settings**
 
-1. In `completePermissionGrantFlow` (line 70-80): instead of closing the main dialog and opening the import scope dialog, directly call the import logic currently inside `handleConfirmImportScope`. Essentially merge the two steps — when permission is granted, immediately proceed to import without showing the intermediate popup.
+In the `onCheckedChange` handler for the notifications toggle (line 557-574), when `checked` is `false`:
+- Instead of `setDisablePermissionTarget('notifications')` (which shows the AlertDialog), directly call `openAndroidNotificationSettings()` and optimistically set `notificationsEnabled(false)` + update preferences.
+- On non-native platforms, just toggle the state directly without opening settings.
 
-2. Remove the `showImportScopeDialog` state variable (line 60).
+**2. Keep the AlertDialog only for SMS**
 
-3. Remove the second `AlertDialog` block (lines 468-482).
+Update the `disablePermissionTarget` state to only handle `'sms' | null` (remove `'notifications'` from the union). The AlertDialog stays for SMS permission revocation only (since that's a separate concern). If SMS also shouldn't show the popup, we can remove the dialog entirely and have both go directly to settings.
 
-4. Remove the now-unused `handleConfirmImportScope` function — its body gets merged into `completePermissionGrantFlow`.
+**3. Re-sync on resume**
 
-The flow becomes: permission granted → close main dialog → show loading overlay → run import logic → navigate. No intermediate popup.
+The existing `syncPermissionToggles` effect already re-checks notification permission status, so when the user returns from system settings after revoking/granting, the toggle will update automatically.
+
+### Result
+- Toggle ON: requests permission via `LocalNotifications.requestPermissions()` (unchanged, no popup)
+- Toggle OFF: opens Android notification settings directly without the intermediate "Disable Permission" dialog
+- State syncs when user returns from settings
 
