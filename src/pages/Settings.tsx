@@ -146,7 +146,7 @@ const Settings = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     user?.preferences?.notifications !== false
   );
-  const [disablePermissionTarget, setDisablePermissionTarget] = useState<"notifications" | "sms" | null>(null);
+  const [disablePermissionTarget, setDisablePermissionTarget] = useState<"sms" | null>(null);
 
   const handleVersionTap = () => {
     const now = Date.now();
@@ -556,7 +556,11 @@ const Settings = () => {
               checked={notificationsEnabled}
               onCheckedChange={async (checked) => {
                 if (!checked) {
-                  setDisablePermissionTarget('notifications');
+                  setNotificationsEnabled(false);
+                  updateUserPreferences({ notifications: false });
+                  if (Capacitor.isNativePlatform()) {
+                    await openAndroidNotificationSettings();
+                  }
                   return;
                 }
 
@@ -809,11 +813,7 @@ const Settings = () => {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                if (disablePermissionTarget === 'notifications') {
-                  await openAndroidNotificationSettings();
-                } else {
-                  await openAndroidAppPermissionsSettings();
-                }
+                await openAndroidAppPermissionsSettings();
                 setDisablePermissionTarget(null);
               }}
             >
