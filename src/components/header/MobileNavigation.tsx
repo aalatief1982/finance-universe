@@ -60,6 +60,24 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   const { user } = useUser();
   const navItems = getNavItems();
   const [betaActive] = React.useState(() => isBetaActive());
+  const baseMenuItemClass =
+    "flex w-full items-center h-12 px-4 gap-3 rounded-md transition-colors";
+
+  const renderMenuItemContent = (
+    title: string,
+    IconComponent?: React.ComponentType<{ size?: number; className?: string }>,
+    showLock?: boolean,
+  ) => (
+    <>
+      <span className="w-6 h-6 flex items-center justify-center shrink-0">
+        {IconComponent && <IconComponent size={20} />}
+      </span>
+      <span className="text-base font-medium flex items-center gap-1">
+        {title}
+        {showLock && <Lock className="h-3 w-3" />}
+      </span>
+    </>
+  );
 
   return (
     <div className="md:hidden">
@@ -119,20 +137,11 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                         type="button"
                         onClick={() => handleLockedFeatureClick('Budget')}
                         className={cn(
-                          "flex w-full items-center px-4 py-3 rounded-md transition-colors",
+                          baseMenuItemClass,
                           "text-foreground hover:bg-accent"
                         )}
                       >
-                        {IconComponent && <IconComponent size={20} className="mr-3" />}
-                        <div className="flex-1 text-left">
-                          <p className="font-medium flex items-center">
-                            {item.title}
-                            <Lock className="h-3 w-3 ml-1" />
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
+                        {renderMenuItemContent(item.title, IconComponent, true)}
                       </button>
                     );
                   }
@@ -142,19 +151,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                       <Link
                         to={item.path ?? "/budget"}
                         className={cn(
-                          "flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors",
+                          baseMenuItemClass,
                           location.pathname.startsWith("/budget")
                             ? "bg-primary/10 text-primary"
                             : "text-foreground"
                         )}
                       >
-                        {IconComponent && <IconComponent size={20} className="mr-3" />}
-                        <div>
-                          <p className="font-medium">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.description}
-                          </p>
-                        </div>
+                        {renderMenuItemContent(item.title, IconComponent)}
                       </Link>
                     </SheetClose>
                   );
@@ -174,22 +177,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                         }
                       }}
                       className={cn(
-                        "flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors w-full",
+                        baseMenuItemClass,
                         location.pathname === item.path
                           ? "bg-primary/10 text-primary"
                           : "text-foreground"
                       )}
                     >
-                      {IconComponent && <IconComponent size={20} className="mr-3" />}
-                      <div>
-                        <p className="font-medium flex items-center">
-                          {item.title}
-                          {!betaActive && <Lock className="h-3 w-3 ml-1" />}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.description}
-                        </p>
-                      </div>
+                      {renderMenuItemContent(item.title, IconComponent, !betaActive)}
                     </button>
                   );
                 }
@@ -201,13 +195,9 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                       <button
                         type="button"
                         onClick={onOpenFeedback}
-                        className="flex w-full items-center px-4 py-3 rounded-md hover:bg-accent transition-colors text-foreground"
+                        className={cn(baseMenuItemClass, "hover:bg-accent text-foreground")}
                       >
-                        {IconComponent && <IconComponent size={20} className="mr-3" />}
-                        <div>
-                          <p className="font-medium">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
-                        </div>
+                        {renderMenuItemContent(item.title, IconComponent)}
                       </button>
                     </SheetClose>
                   );
@@ -218,20 +208,14 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                     <Link
                       to={item.path ?? ""}
                       className={cn(
-                        "flex items-center px-4 py-3 rounded-md hover:bg-accent transition-colors",
+                        baseMenuItemClass,
                         location.pathname === item.path
                           ? "bg-primary/10 text-primary"
                           : "text-foreground"
                       )}
                       aria-current={location.pathname === item.path ? "page" : undefined}
                     >
-                      {IconComponent && <IconComponent size={20} className="mr-3" />}
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.description}
-                        </p>
-                      </div>
+                      {renderMenuItemContent(item.title, IconComponent)}
                     </Link>
                   </SheetClose>
                 );
