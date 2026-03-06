@@ -239,6 +239,18 @@ const Settings = () => {
     void syncPermissionToggles();
   }, []);
 
+  // Re-sync notification permission when user returns from system settings
+  useEffect(() => {
+    const listener = App.addListener('appStateChange', async ({ isActive }) => {
+      if (isActive) {
+        const notifGranted = await checkNotificationPermission();
+        setNotificationsEnabled(notifGranted);
+        updateUserPreferences({ notifications: notifGranted });
+      }
+    });
+    return () => { listener.then(l => l.remove()); };
+  }, []);
+
   useEffect(() => {
     const fetchVersion = async () => {
       if (Capacitor.isNativePlatform()) {
@@ -559,7 +571,12 @@ const Settings = () => {
                   setNotificationsEnabled(false);
                   updateUserPreferences({ notifications: false });
                   if (Capacitor.isNativePlatform()) {
-                    await openAndroidNotificationSettings();
+                    toast({ title: "Opening notification settings..." });
+                    try {
+                      await openAndroidNotificationSettings();
+                    } catch {
+                      toast({ title: "Could not open notification settings", variant: "destructive" });
+                    }
                   }
                   return;
                 }
