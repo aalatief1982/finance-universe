@@ -1,33 +1,36 @@
 
 
-## Plan: Fix Build Errors and Smart Entry Navigation
+## Plan: Make Notification Toggle Grant-Only, Disabled Once Granted
 
-### Problem
-Two issues are blocking Smart Entry:
+### Concept
+The toggle becomes a one-way "grant permission" button:
+- **OFF + no permission**: Toggle is enabled — user can tap to grant
+- **ON (permission granted)**: Toggle is disabled/greyed out — user cannot revoke from within the app
+- **Permission revoked externally**: Toggle returns to OFF and becomes enabled again (via app resume listener already in place)
 
-1. **Build error in MobileNavigation.tsx**: The `renderMenuItemContent` function's `IconComponent` parameter type `React.ComponentType<{ size?: number; className?: string }>` is incompatible with Lucide's `ForwardRefExoticComponent`. This causes 5 TypeScript errors that break the build.
+### Changes in `src/pages/Settings.tsx`
 
-2. **Route guard blocks `/import-transactions`**: `SMS_AUTO_IMPORT_ENABLED` is hardcoded to `false` in `src/lib/env.ts`, causing `ImportDisabledGuard` to redirect away from the Smart Entry page.
+**1. Disable the Switch when permission is granted**
 
-### Changes
+Add `disabled={notificationsEnabled}` to the `<Switch>` component. This prevents interaction when notifications are already granted.
 
-**1. Fix type error in `src/components/header/MobileNavigation.tsx` (line 68)**
+**2. Simplify the `onCheckedChange` handler**
 
-Change the `IconComponent` parameter type to `React.ComponentType<any>` to accept Lucide icon components:
+Since the toggle can only go from OFF → ON (it's disabled when ON), remove the `!checked` branch entirely. The handler only needs to handle granting:
+- Request permission via `LocalNotifications.requestPermissions()`
+- Check if granted, update state accordingly
+- Show toast on success/failure
 
-```typescript
-// Before
-IconComponent?: React.ComponentType<{ size?: number; className?: string }>,
-// After  
-IconComponent?: React.ComponentType<any>,
-```
+**3. Add helper text when disabled**
 
-**2. Enable Smart Entry route in `src/lib/env.ts` (line 68)**
+Update the description text dynamically:
+- When granted (disabled): "Notifications are enabled. To disable, go to your phone's Settings > Apps > Xpensia > Notifications"
+- When not granted: "Get notified when new expenses are detected from SMS"
 
-```typescript
-// Before
-export const SMS_AUTO_IMPORT_ENABLED = false;
-// After
-export const SMS_AUTO_IMPORT_ENABLED = true;
-```
+**4. No changes needed to the app resume listener**
+
+The existing `appStateChange` listener already re-syncs `notificationsEnabled` from system permission when the user returns, so if they revoke externally, the toggle will flip back to OFF and become interactive again.
+
+### Files to change
+- `src/pages/Settings.tsx` — add `disabled` prop, simplify handler, dynamic description
 

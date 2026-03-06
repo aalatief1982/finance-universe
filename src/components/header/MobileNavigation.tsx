@@ -65,7 +65,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
   const renderMenuItemContent = (
     title: string,
-    IconComponent?: React.ComponentType<{ size?: number; className?: string }>,
+    IconComponent?: React.ComponentType<any>,
     showLock?: boolean,
   ) => (
     <>
