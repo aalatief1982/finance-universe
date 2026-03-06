@@ -1,27 +1,57 @@
 
 
-## Plan: Remove Notification Permission Popup, Direct Toggle
+## Plan: Fix Notification Toggle OFF Not Triggering System Settings
 
-The "Disable Permission" popup appears when the user toggles notifications OFF because Android doesn't allow apps to revoke notification permissions programmatically — it must be done in system settings. Currently this is gated behind a confirmation dialog.
+### Problem
+
+When toggling the notification switch OFF, the system notification settings page should open so the user can revoke permission. Based on code analysis, there are two issues:
+
+1. **No app resume re-sync**: The `syncPermissionToggles` effect only runs once on mount (empty dependency array `[]`). When the user returns from system settings, the toggle doesn't update to reflect the actual permission state.
+
+2. **Possible silent failure**: The `openAndroidNotificationSettings()` call may silently fail or not be reached if the Capacitor native bridge isn't resolving properly — there's no user feedback if it fails.
 
 ### Changes in `src/pages/Settings.tsx`
 
-**1. Notification toggle OFF — skip popup, go directly to system settings**
+**1. Add an App state change listener to re-sync permissions on resume**
 
-In the `onCheckedChange` handler for the notifications toggle (line 557-574), when `checked` is `false`:
-- Instead of `setDisablePermissionTarget('notifications')` (which shows the AlertDialog), directly call `openAndroidNotificationSettings()` and optimistically set `notificationsEnabled(false)` + update preferences.
-- On non-native platforms, just toggle the state directly without opening settings.
+Add a `useEffect` that listens to `App.addListener('appStateChange', ...)`. When `isActive` becomes `true` (user returns from system settings), re-run `syncPermissionToggles` to update the toggle state based on actual system permission.
 
-**2. Keep the AlertDialog only for SMS**
+```typescript
+useEffect(() => {
+  const listener = App.addListener('appStateChange', async ({ isActive }) => {
+    if (isActive) {
+      const notifGranted = await checkNotificationPermission();
+      setNotificationsEnabled(notifGranted);
+      updateUserPreferences({ notifications: notifGranted });
+    }
+  });
+  return () => { listener.then(l => l.remove()); };
+}, []);
+```
 
-Update the `disablePermissionTarget` state to only handle `'sms' | null` (remove `'notifications'` from the union). The AlertDialog stays for SMS permission revocation only (since that's a separate concern). If SMS also shouldn't show the popup, we can remove the dialog entirely and have both go directly to settings.
+**2. Add error handling and toast feedback on the toggle OFF path**
 
-**3. Re-sync on resume**
+In the `onCheckedChange` handler for `!checked`, wrap the `openAndroidNotificationSettings()` call with a try-catch and show a toast if it fails, so the user knows something went wrong:
 
-The existing `syncPermissionToggles` effect already re-checks notification permission status, so when the user returns from system settings after revoking/granting, the toggle will update automatically.
+```typescript
+if (!checked) {
+  setNotificationsEnabled(false);
+  updateUserPreferences({ notifications: false });
+  if (Capacitor.isNativePlatform()) {
+    try {
+      await openAndroidNotificationSettings();
+    } catch {
+      toast({ title: "Could not open notification settings", variant: "destructive" });
+    }
+  }
+  return;
+}
+```
 
-### Result
-- Toggle ON: requests permission via `LocalNotifications.requestPermissions()` (unchanged, no popup)
-- Toggle OFF: opens Android notification settings directly without the intermediate "Disable Permission" dialog
-- State syncs when user returns from settings
+**3. Add a toast confirmation when toggling OFF**
+
+Show a brief toast: "Opening notification settings..." so the user sees immediate feedback that the action was triggered.
+
+### Files to change
+- `src/pages/Settings.tsx` — add resume listener, add toast feedback on toggle OFF
 
