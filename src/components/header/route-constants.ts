@@ -39,6 +39,18 @@ export const getNavItems = () => {
       description: "Overview of your finances",
     },
     {
+      title: "Smart Entry",
+      path: "/import-transactions",
+      icon: "Upload",
+      description: "Import transactions from SMS or paste",
+    },
+    {
+      title: "Transactions",
+      path: "/transactions",
+      icon: "List",
+      description: "View and manage your transactions",
+    },
+    {
       title: "Analytics",
       path: "/analytics",
       icon: "PieChart",
@@ -49,24 +61,6 @@ export const getNavItems = () => {
       path: "/budget",
       icon: "Scale",
       description: "Manage budgets and accounts",
-    },
-    {
-      title: "Transactions",
-      path: "/transactions",
-      icon: "List",
-      description: "View and manage your transactions",
-    },
-    {
-      title: "Smart Entry",
-      path: "/import-transactions",
-      icon: "Upload",
-      description: "Import transactions from SMS or paste",
-    },
-    {
-      title: "Import SMS",
-      path: "/process-sms",
-      icon: "MessageSquare",
-      description: "Import transactions from SMS",
     },
     {
       title: "SMS Review",
