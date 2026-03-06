@@ -503,7 +503,7 @@ function AppWrapper() {
         }
       });
     };
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     if (!ENABLE_SMS_INTEGRATION) return;
@@ -621,7 +621,7 @@ function AppWrapper() {
     return () => {
       isCancelled = true;
     };
-  }, [user, location.pathname]);
+  }, [location.pathname, user]);
 
 
 

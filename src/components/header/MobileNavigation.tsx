@@ -16,6 +16,7 @@ import {
   Info,
   Mail,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -65,7 +66,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
   const renderMenuItemContent = (
     title: string,
-    IconComponent?: React.ComponentType<any>,
+    IconComponent?: LucideIcon,
     showLock?: boolean,
   ) => (
     <>
