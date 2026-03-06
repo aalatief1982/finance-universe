@@ -88,7 +88,7 @@ import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
-import { openAndroidAppPermissionsSettings, openAndroidNotificationSettings } from '@/lib/androidSettings';
+import { openAndroidAppPermissionsSettings } from '@/lib/androidSettings';
 import { Device } from '@capacitor/device';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -560,13 +560,6 @@ const Settings = () => {
             <div className="space-y-2">
               <Label>Transaction Alerts</Label>
               <p className="text-sm text-muted-foreground">Notifications are enabled</p>
-              <Button
-                variant="ghost"
-                className="h-auto p-0 text-sm text-primary"
-                onClick={openAndroidNotificationSettings}
-              >
-                Manage in system settings
-              </Button>
             </div>
           ) : (
             <div className="flex items-center justify-between">
@@ -620,19 +613,25 @@ const Settings = () => {
             featureName="Read SMS Transactions"
             onLockedClick={() => handleLockedFeatureClick('Read SMS Transactions')}
           >
-            <div className="flex items-center justify-between">
+            {backgroundSmsEnabled ? (
               <div className="space-y-0.5">
-                <Label htmlFor="sms-auto-import">
-                  Read SMS Transactions
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Allow Xpensia to read your bank SMS messages and import transactions automatically
-                </p>
+                <Label>Read SMS Transactions</Label>
+                <p className="text-sm text-muted-foreground">SMS permission is enabled</p>
               </div>
-              <Switch
-                id="sms-auto-import"
-                checked={backgroundSmsEnabled}
-                onCheckedChange={async (checked) => {
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="sms-auto-import">
+                    Read SMS Transactions
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Allow Xpensia to read your bank SMS messages and import transactions automatically
+                  </p>
+                </div>
+                <Switch
+                  id="sms-auto-import"
+                  checked={backgroundSmsEnabled}
+                  onCheckedChange={async (checked) => {
                   if (checked) {
                     const platform = Capacitor.getPlatform();
                     if (platform === 'web') {
@@ -713,10 +712,11 @@ const Settings = () => {
                   } else {
                     setDisablePermissionTarget('sms');
                   }
-                }}
-                disabled={!betaActive}
-              />
-            </div>
+                  }}
+                  disabled={!betaActive}
+                />
+              </div>
+            )}
           </LockedFeature>
         </section>
 
