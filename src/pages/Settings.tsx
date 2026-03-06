@@ -26,7 +26,7 @@
  * - [ ] Unsaved changes prompt on exit
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
@@ -193,12 +193,12 @@ const Settings = () => {
     }
   };
 
-  const checkNotificationPermission = async () => {
+  const checkNotificationPermission = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) return true;
     if (!(await isAndroid13OrAbove())) return true;
     const status = await LocalNotifications.checkPermissions();
     return status.display === 'granted';
-  };
+  }, []);
 
   // Track screen view
   useEffect(() => {
@@ -237,7 +237,7 @@ const Settings = () => {
     };
 
     void syncPermissionToggles();
-  }, []);
+  }, [checkNotificationPermission]);
 
   // Re-sync notification permission when user returns from system settings
   useEffect(() => {
@@ -249,7 +249,7 @@ const Settings = () => {
       }
     });
     return () => { listener.then(l => l.remove()); };
-  }, []);
+  }, [checkNotificationPermission, updateUserPreferences]);
 
   useEffect(() => {
     const fetchVersion = async () => {
