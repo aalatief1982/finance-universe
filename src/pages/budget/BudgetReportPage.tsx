@@ -84,8 +84,7 @@ const BudgetReportPage = () => {
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
   const categories = React.useMemo(() => transactionService.getCategories(), []);
 
-  // Use selected period or default to monthly
-  const selectedPeriod: BudgetPeriod = period === 'all' ? 'monthly' : period;
+  const selectedPeriod: BudgetPeriod = period;
 
   // Get display name with specific period instance
   const getBudgetDisplayName = React.useCallback((b: Budget) => {
@@ -112,9 +111,6 @@ const BudgetReportPage = () => {
         // Filter by scope
         if (scopeFilter !== 'all' && b.scope !== scopeFilter) return false;
         
-        // For "all" view, show all budgets of that period type
-        if (period === 'all') return true;
-        
         // Filter by year only (not periodIndex) to show all periods in the year
         if (b.year !== year) return false;
         
@@ -133,7 +129,7 @@ const BudgetReportPage = () => {
         };
       })
       .sort((a, b) => (a.periodIndex ?? 0) - (b.periodIndex ?? 0)); // Sort chronologically
-  }, [budgets, selectedPeriod, period, year, scopeFilter, getBudgetDisplayName]);
+  }, [budgets, selectedPeriod, year, scopeFilter, getBudgetDisplayName]);
 
   // Total summary
   const totalSummary = React.useMemo(() => {

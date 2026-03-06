@@ -44,10 +44,7 @@ const BudgetHubPage = () => {
   }, []);
   
   // Build filter based on URL params
-  const budgetFilter = useMemo(() => {
-    if (period === 'all') return undefined;
-    return { period, year, periodIndex };
-  }, [period, year, periodIndex]);
+  const budgetFilter = useMemo(() => ({ period, year, periodIndex }), [period, year, periodIndex]);
   
   const { data: budgetsWithProgress, loading, summary } = useBudgetsWithProgress(budgetFilter);
   const { alerts, dismissAlert } = useBudgetAlerts();
@@ -116,7 +113,7 @@ const BudgetHubPage = () => {
     >
       {/* Alerts */}
       {alerts.length > 0 && (
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2 mb-4">
           {alerts.slice(0, 3).map(alert => (
             <BudgetAlertBanner
               key={`${alert.budgetId}-${alert.threshold}`}
@@ -146,7 +143,7 @@ const BudgetHubPage = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Overall Budget Card - Top Level */}
           {overallBudget && (
             <div 

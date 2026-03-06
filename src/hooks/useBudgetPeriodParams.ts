@@ -27,7 +27,15 @@ import { BudgetPeriod } from '@/models/budget';
 import { getCurrentPeriodInfo, formatPeriodLabel, navigatePeriod as navPeriod } from '@/utils/budget-period-utils';
 import { useCallback, useMemo } from 'react';
 
-export type PeriodFilter = 'all' | BudgetPeriod;
+export type PeriodFilter = Extract<BudgetPeriod, 'monthly' | 'quarterly' | 'yearly'>;
+
+const ALLOWED_PERIODS: PeriodFilter[] = ['monthly', 'quarterly', 'yearly'];
+
+function normalizePeriod(rawPeriod: string | null | undefined, fallback: PeriodFilter): PeriodFilter {
+  if (!rawPeriod) return fallback;
+  if (rawPeriod === 'all' || rawPeriod === 'week' || rawPeriod === 'weekly') return 'monthly';
+  return ALLOWED_PERIODS.includes(rawPeriod as PeriodFilter) ? (rawPeriod as PeriodFilter) : fallback;
+}
 
 interface BudgetPeriodParams {
   period: PeriodFilter;
@@ -51,13 +59,12 @@ export function useBudgetPeriodParams(defaultPeriod: PeriodFilter = 'monthly'): 
   const currentMonthly = useMemo(() => getCurrentPeriodInfo('monthly'), []);
   
   // Read from URL or use defaults
-  const period = (searchParams.get('period') as PeriodFilter) || defaultPeriod;
+  const period = normalizePeriod(searchParams.get('period'), defaultPeriod);
   const year = parseInt(searchParams.get('year') || '') || currentMonthly.year;
   const periodIndex = parseInt(searchParams.get('index') || '') || currentMonthly.periodIndex;
   
   // Generate period label
   const periodLabel = useMemo(() => {
-    if (period === 'all') return 'All Time';
     return formatPeriodLabel(period, year, periodIndex);
   }, [period, year, periodIndex]);
   
@@ -65,15 +72,12 @@ export function useBudgetPeriodParams(defaultPeriod: PeriodFilter = 'monthly'): 
     const newParams = new URLSearchParams(searchParams);
     
     if (updates.period !== undefined) {
-      if (updates.period === 'all') {
-        newParams.delete('period');
-      } else {
-        newParams.set('period', updates.period);
-      }
+      const normalized = normalizePeriod(updates.period, defaultPeriod);
+      newParams.set('period', normalized);
       
       // When period changes, reset to current period
-      if (updates.period !== 'all' && updates.period !== period) {
-        const newInfo = getCurrentPeriodInfo(updates.period);
+      if (normalized !== period) {
+        const newInfo = getCurrentPeriodInfo(normalized);
         newParams.set('year', String(newInfo.year));
         newParams.set('index', String(newInfo.periodIndex));
       }
@@ -88,7 +92,7 @@ export function useBudgetPeriodParams(defaultPeriod: PeriodFilter = 'monthly'): 
     }
     
     setSearchParams(newParams);
-  }, [searchParams, setSearchParams, period]);
+  }, [searchParams, setSearchParams, period, defaultPeriod]);
   
   const setPeriod = useCallback((newPeriod: PeriodFilter) => {
     updateParams({ period: newPeriod });
@@ -107,8 +111,6 @@ export function useBudgetPeriodParams(defaultPeriod: PeriodFilter = 'monthly'): 
   }, [updateParams]);
   
   const navigatePeriod = useCallback((direction: 'prev' | 'next') => {
-    if (period === 'all') return;
-    
     const result = navPeriod(period, year, periodIndex, direction);
     updateParams({ year: result.year, periodIndex: result.periodIndex });
   }, [period, year, periodIndex, updateParams]);
