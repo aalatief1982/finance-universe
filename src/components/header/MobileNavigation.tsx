@@ -17,9 +17,7 @@ import {
   Mail,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useUser } from "@/context/UserContext";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sheet,
   SheetContent,
@@ -58,7 +56,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onOpenFeedback,
 }) => {
   const location = useLocation();
-  const { user } = useUser();
   const navItems = getNavItems();
   const [betaActive] = React.useState(() => isBetaActive());
   const baseMenuItemClass =
@@ -103,28 +100,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
           </SheetHeader>
 
           <div className="py-2">
-            {user && (
-              <div className="flex items-center space-x-3 p-4 mb-4 bg-muted/50 rounded-lg">
-                <Avatar>
-                  <AvatarImage
-                    src={user.avatar || "/placeholder.svg"}
-                    alt={user.fullName || "User"}
-                  />
-                  <AvatarFallback>
-                    {user.fullName ? user.fullName.charAt(0) : "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">
-                    {user.fullName || "User"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {user.email || user.phone || "No contact info"}
-                  </p>
-                </div>
-              </div>
-            )}
-
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const IconComponent = iconMap[item.icon as keyof typeof iconMap];
@@ -161,31 +136,6 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                         {renderMenuItemContent(item.title, IconComponent)}
                       </Link>
                     </SheetClose>
-                  );
-                }
-
-                // Handle Import SMS with beta lock
-                if (item.title === "Import SMS") {
-                  return (
-                    <button
-                      key={item.title}
-                      type="button"
-                      onClick={() => {
-                        if (!betaActive) {
-                          handleLockedFeatureClick('Import SMS');
-                        } else {
-                          window.location.href = item.path ?? "";
-                        }
-                      }}
-                      className={cn(
-                        baseMenuItemClass,
-                        location.pathname === item.path
-                          ? "bg-primary/10 text-primary"
-                          : "text-foreground"
-                      )}
-                    >
-                      {renderMenuItemContent(item.title, IconComponent, !betaActive)}
-                    </button>
                   );
                 }
 
