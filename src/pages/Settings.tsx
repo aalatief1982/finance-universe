@@ -460,7 +460,7 @@ const Settings = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="space-y-6 pb-24 mt-2"
+        className="space-y-8 pb-24 mt-2"
       >
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
@@ -556,42 +556,53 @@ const Settings = () => {
           <p className="text-sm text-muted-foreground">
             Manage how you get notified
           </p>
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="notifications-toggle">Transaction Alerts</Label>
-              <p className="text-sm text-muted-foreground">
-                {notificationsEnabled
-                  ? "Notifications are enabled. To disable, go to your phone's Settings > Apps > Xpensia > Notifications"
-                  : "Get notified when new expenses are detected from SMS"}
-              </p>
+          {notificationsEnabled ? (
+            <div className="space-y-2">
+              <Label>Transaction Alerts</Label>
+              <p className="text-sm text-muted-foreground">Notifications are enabled</p>
+              <Button
+                variant="ghost"
+                className="h-auto p-0 text-sm text-primary"
+                onClick={openAndroidNotificationSettings}
+              >
+                Manage in system settings
+              </Button>
             </div>
-            <Switch
-              id="notifications-toggle"
-              checked={notificationsEnabled}
-              disabled={notificationsEnabled}
-              onCheckedChange={async (checked) => {
-                if (!checked) return;
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notifications-toggle">Transaction Alerts</Label>
+                <p className="text-sm text-muted-foreground">
+                  Get notified when new expenses are detected from SMS
+                </p>
+              </div>
+              <Switch
+                id="notifications-toggle"
+                checked={notificationsEnabled}
+                onCheckedChange={async (checked) => {
+                  if (!checked) return;
 
-                const alreadyGranted = await checkNotificationPermission();
-                if (alreadyGranted) {
-                  setNotificationsEnabled(true);
-                  updateUserPreferences({ notifications: true });
-                  toast({ title: "Notifications enabled" });
-                  return;
-                }
+                  const alreadyGranted = await checkNotificationPermission();
+                  if (alreadyGranted) {
+                    setNotificationsEnabled(true);
+                    updateUserPreferences({ notifications: true });
+                    toast({ title: "Notifications enabled" });
+                    return;
+                  }
 
-                await LocalNotifications.requestPermissions();
-                const grantedAfterRequest = await checkNotificationPermission();
-                setNotificationsEnabled(grantedAfterRequest);
-                updateUserPreferences({ notifications: grantedAfterRequest });
-                if (grantedAfterRequest) {
-                  toast({ title: "Notifications enabled" });
-                } else {
-                  toast({ title: "Permission not granted", variant: "destructive" });
-                }
-              }}
-            />
-          </div>
+                  await LocalNotifications.requestPermissions();
+                  const grantedAfterRequest = await checkNotificationPermission();
+                  setNotificationsEnabled(grantedAfterRequest);
+                  updateUserPreferences({ notifications: grantedAfterRequest });
+                  if (grantedAfterRequest) {
+                    toast({ title: "Notifications enabled" });
+                  } else {
+                    toast({ title: "Permission not granted", variant: "destructive" });
+                  }
+                }}
+              />
+            </div>
+          )}
         </section>
 
         {/* SMS Import */}
@@ -716,7 +727,7 @@ const Settings = () => {
           </h2>
           <p className="text-sm text-muted-foreground">Manage your data</p>
           
-          <div className="flex items-center justify-between">
+          <div className="space-y-3">
             <div>
               <p className="font-medium">Export Data</p>
               <p className="text-sm text-muted-foreground">
