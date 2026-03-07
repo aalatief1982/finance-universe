@@ -98,6 +98,21 @@ const IMPORT_ROUTES = new Set([
   '/review-sms-transactions',
 ]);
 
+const NOTIFICATION_SOURCE_SMS = 'sms_notification';
+const NOTIFICATION_TAP_SUPPRESS_TOAST_WINDOW_MS = 15000;
+let suppressSmsToastUntil = 0;
+
+const markNotificationTapFlow = (reason: string, source?: string) => {
+  suppressSmsToastUntil = Date.now() + NOTIFICATION_TAP_SUPPRESS_TOAST_WINDOW_MS;
+  console.log('[SMS_NOTIFICATION_FLOW] notification tap flow activated', {
+    reason,
+    source: source ?? null,
+    suppressSmsToastUntil,
+  });
+};
+
+const shouldSuppressSmsToast = () => Date.now() < suppressSmsToastUntil;
+
 let hasLoggedImportDisabledWarning = false;
 
 const ImportDisabledGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -467,6 +482,11 @@ function AppWrapper() {
 
       try {
         const pendingRoute = await BackgroundSmsListener.consumePendingOpenRoute();
+        console.log('[SMS_NOTIFICATION_FLOW] consumePendingOpenRoute result (resume/active)', {
+          route: pendingRoute?.route ?? null,
+          source: pendingRoute?.source ?? null,
+          pathname: location.pathname,
+        });
         if (pendingRoute?.route === IMPORT_ROUTE) {
           if (!SMS_AUTO_IMPORT_ENABLED) {
             console.log('[SMS_IMPORT] disabled -> skipping native pending import route', {
@@ -474,7 +494,17 @@ function AppWrapper() {
             });
             return;
           }
-          navigate(IMPORT_ROUTE);
+
+          if (pendingRoute?.source === NOTIFICATION_SOURCE_SMS) {
+            markNotificationTapFlow('resume_pending_route', pendingRoute.source);
+          }
+
+          console.log('[SMS_NOTIFICATION_FLOW] routing to import route from pending route (resume/active)', {
+            fromPath: location.pathname,
+            targetPath: IMPORT_ROUTE,
+            source: pendingRoute?.source ?? null,
+          });
+          navigateRef.current(IMPORT_ROUTE);
         }
       } catch (err) {
         if (import.meta.env.MODE === 'development') {
@@ -564,6 +594,15 @@ function AppWrapper() {
 
               const appState = await CapacitorApp.getState();
               if (!appState.isActive) {
+                return;
+              }
+
+              const suppressToast = shouldSuppressSmsToast();
+              if (suppressToast) {
+                console.log('[SMS_NOTIFICATION_FLOW] toast suppressed', {
+                  reason: 'notification_tap_flow_active',
+                  sender: sender ?? null,
+                });
                 return;
               }
 
@@ -790,12 +829,85 @@ function AppRoutes() {
   const requiresDefaultCurrency = onboardingDone && isDefaultCurrencySelectionRequired();
   const location = useLocation();
   const previousOnboardingDoneRef = React.useRef(onboardingDone);
+  const [initialRouteCheckDone, setInitialRouteCheckDone] = React.useState(Capacitor.getPlatform() === 'web');
+  const [pendingLaunchRoute, setPendingLaunchRoute] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (Capacitor.getPlatform() === 'web') {
+      return;
+    }
+
+    let cancelled = false;
+    const resolveInitialLaunchRoute = async () => {
+      try {
+        const pendingRoute = await BackgroundSmsListener.consumePendingOpenRoute();
+        console.log('[SMS_NOTIFICATION_FLOW] consumePendingOpenRoute result (startup)', {
+          route: pendingRoute?.route ?? null,
+          source: pendingRoute?.source ?? null,
+          pathname: location.pathname,
+        });
+
+        if (cancelled) {
+          return;
+        }
+
+        if (pendingRoute?.route === IMPORT_ROUTE && SMS_AUTO_IMPORT_ENABLED) {
+          if (pendingRoute?.source === NOTIFICATION_SOURCE_SMS) {
+            markNotificationTapFlow('cold_start_pending_route', pendingRoute.source);
+          }
+          setPendingLaunchRoute(IMPORT_ROUTE);
+          console.log('[SMS_NOTIFICATION_FLOW] startup route selected', {
+            finalRoute: IMPORT_ROUTE,
+            source: pendingRoute?.source ?? null,
+          });
+          return;
+        }
+
+        if (pendingRoute?.route === IMPORT_ROUTE && !SMS_AUTO_IMPORT_ENABLED) {
+          console.log('[SMS_IMPORT] disabled -> skipping startup pending import route', {
+            pathname: location.pathname,
+            source: pendingRoute?.source ?? null,
+          });
+        }
+
+        console.log('[SMS_NOTIFICATION_FLOW] startup route selected', {
+          finalRoute: null,
+          source: pendingRoute?.source ?? null,
+        });
+      } catch (error) {
+        console.warn('[SMS_NOTIFICATION_FLOW] failed to resolve startup route', error);
+      } finally {
+        if (!cancelled) {
+          setInitialRouteCheckDone(true);
+        }
+      }
+    };
+
+    void resolveInitialLaunchRoute();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   traceAppRoot(`AppRoutes render pathname=${location.pathname} onboardingDone=${onboardingDone}`);
   traceState('AppRoutes render flags', {
     onboardingDone,
     pathname: location.pathname,
   });
+
+
+  React.useEffect(() => {
+    if (!pendingLaunchRoute) {
+      return;
+    }
+
+    if (location.pathname === pendingLaunchRoute) {
+      console.log('[SMS_NOTIFICATION_FLOW] pending launch route reached', {
+        pathname: location.pathname,
+      });
+    }
+  }, [location.pathname, pendingLaunchRoute]);
 
   React.useEffect(() => {
     if (previousOnboardingDoneRef.current !== onboardingDone) {
@@ -813,6 +925,21 @@ function AppRoutes() {
       pathname: location.pathname,
     });
   }, [location.pathname, onboardingDone]);
+
+  if (!initialRouteCheckDone) {
+    traceAppRoot('AppRoutes waiting for startup route resolution');
+    return <AppWrapper />;
+  }
+
+  if (pendingLaunchRoute && location.pathname !== pendingLaunchRoute) {
+    traceAppRoot(`AppRoutes notification launch redirect -> ${pendingLaunchRoute}`);
+    return (
+      <>
+        <AppWrapper />
+        <Navigate to={pendingLaunchRoute} replace />
+      </>
+    );
+  }
 
   if (requiresDefaultCurrency && !location.pathname.startsWith('/onboarding') && location.pathname !== '/set-default-currency') {
     traceAppRoot('AppRoutes redirect branch selected: enforce /set-default-currency');

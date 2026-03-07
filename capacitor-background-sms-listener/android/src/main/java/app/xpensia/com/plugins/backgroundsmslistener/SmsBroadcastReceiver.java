@@ -94,8 +94,13 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                     .setPackage(context.getPackageName());
         }
         openIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        openIntent.putExtra("xpensia_open_route", "/import-transactions");
-        openIntent.putExtra("xpensia_open_source", "sms_notification");
+        String targetRoute = "/import-transactions";
+        String targetSource = "sms_notification";
+        openIntent.putExtra("xpensia_open_route", targetRoute);
+        openIntent.putExtra("xpensia_open_source", targetSource);
+        Log.d(TAG, "[" + LOG_TAG + "] notification payload prepared route=" + targetRoute + " source=" + targetSource + " count=" + messageCount);
+
+        Log.d(TAG, "[" + LOG_TAG + "] creating content intent requestCode=1001 flags=FLAG_UPDATE_CURRENT|FLAG_IMMUTABLE");
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context,
