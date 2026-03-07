@@ -72,12 +72,16 @@ const ImportTransactions = () => {
   }, [loadSmsInbox]);
 
 
-  React.useEffect(() => {
+  const hydratePendingSharedText = React.useCallback(() => {
     const pending = readPendingSharedText();
     if (pending?.text) {
       setPendingSharedText(pending.text);
     }
   }, []);
+
+  React.useEffect(() => {
+    hydratePendingSharedText();
+  }, [hydratePendingSharedText, location.key]);
 
   const handleSharedTextConsumed = React.useCallback(() => {
     clearPendingSharedText();
