@@ -17,6 +17,12 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     Log.d(TAG, "MainActivity.onCreate() - START");
+
+    // Handle any launch intent payload before Capacitor bridge boot so JS can reliably
+    // consume pending data even on cold start.
+    handleRouteIntent(getIntent());
+    handleShareIntent(getIntent());
+
     super.onCreate(savedInstanceState);
 
     try {
@@ -47,8 +53,6 @@ public class MainActivity extends BridgeActivity {
       Log.e(TAG, "Error registering ShareTargetPlugin", e);
     }
 
-    handleRouteIntent(getIntent());
-    handleShareIntent(getIntent());
     Log.d(TAG, "MainActivity.onCreate() - END");
   }
 
@@ -79,22 +83,26 @@ public class MainActivity extends BridgeActivity {
 
   private void handleShareIntent(Intent intent) {
     if (intent == null) {
+      Log.d(TAG, "[SHARE_FLOW][NATIVE] handleShareIntent skipped: intent is null");
       return;
     }
 
     String action = intent.getAction();
     String type = intent.getType();
+    Log.d(TAG, "[SHARE_FLOW][NATIVE] handleShareIntent received action=" + action + " type=" + type);
     if (!Intent.ACTION_SEND.equals(action) || type == null || !"text/plain".equals(type)) {
+      Log.d(TAG, "[SHARE_FLOW][NATIVE] handleShareIntent ignored action=" + action + " type=" + type);
       return;
     }
 
     String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
     if (sharedText == null || sharedText.trim().isEmpty()) {
+      Log.d(TAG, "[SHARE_FLOW][NATIVE] handleShareIntent ignored: empty EXTRA_TEXT");
       return;
     }
 
     ShareTargetPlugin.setPendingSharedText(this, sharedText, "android_share_sheet");
-    Log.d(TAG, "Stored pending shared text from Android share sheet");
+    Log.d(TAG, "[SHARE_FLOW][NATIVE] Stored pending shared text from Android share sheet. length=" + sharedText.trim().length());
     intent.removeExtra(Intent.EXTRA_TEXT);
   }
 }
