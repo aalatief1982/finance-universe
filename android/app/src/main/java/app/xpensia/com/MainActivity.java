@@ -71,12 +71,15 @@ public class MainActivity extends BridgeActivity {
 
     String route = intent.getStringExtra("xpensia_open_route");
     String source = intent.getStringExtra("xpensia_open_source");
+    Log.d(TAG, "[SMS_NOTIFICATION_FLOW][NATIVE] handleRouteIntent extras route=" + route + " source=" + source);
     if (route == null || route.isEmpty()) {
+      Log.d(TAG, "[SMS_NOTIFICATION_FLOW][NATIVE] no pending route extras found");
       return;
     }
 
-    BackgroundSmsListenerPlugin.setPendingOpenRoute(this, route, source != null ? source : "unknown");
-    Log.d(TAG, "Stored pending route=" + route + " source=" + source);
+    String resolvedSource = source != null ? source : "unknown";
+    BackgroundSmsListenerPlugin.setPendingOpenRoute(this, route, resolvedSource);
+    Log.d(TAG, "[SMS_NOTIFICATION_FLOW][NATIVE] Stored pending route=" + route + " source=" + resolvedSource);
     intent.removeExtra("xpensia_open_route");
     intent.removeExtra("xpensia_open_source");
   }
