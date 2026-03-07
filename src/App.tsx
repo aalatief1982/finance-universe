@@ -174,42 +174,100 @@ function AppWrapper() {
       return;
     }
 
-    const handleSharedText = (payload: { text?: string; source?: string; receivedAt?: number }) => {
-      if (!payload.text?.trim()) {
+    const TRACE_PREFIX = '[SHARE_FLOW][APP]';
+    const logShareFlow = (message: string, payload?: Record<string, unknown>) => {
+      const ts = new Date().toISOString();
+      if (payload) {
+        console.log(`${TRACE_PREFIX}[${ts}] ${message}`, payload);
+        return;
+      }
+      console.log(`${TRACE_PREFIX}[${ts}] ${message}`);
+    };
+
+    const lastHandledFingerprintRef = { current: '' };
+
+    const persistAndRouteSharedText = (
+      payload: { text?: string; source?: string; receivedAt?: number },
+      intake: 'consumePendingSharedText' | 'sharedTextReceived',
+    ) => {
+      const normalizedText = payload.text?.trim();
+      if (!normalizedText) {
+        logShareFlow('ignored empty payload', {
+          intake,
+          source: payload.source ?? null,
+          receivedAt: payload.receivedAt ?? null,
+        });
         return;
       }
 
+      const fingerprint = `${normalizedText}|${payload.source ?? 'unknown'}|${payload.receivedAt ?? 0}`;
+      if (lastHandledFingerprintRef.current === fingerprint) {
+        logShareFlow('duplicate payload ignored', {
+          intake,
+          fingerprint,
+        });
+        return;
+      }
+
+      lastHandledFingerprintRef.current = fingerprint;
+
+      logShareFlow('payload received', {
+        intake,
+        source: payload.source ?? null,
+        receivedAt: payload.receivedAt ?? null,
+        textLength: normalizedText.length,
+      });
+
       const stored = savePendingSharedText({
-        text: payload.text,
+        text: normalizedText,
         source: payload.source,
         receivedAt: payload.receivedAt,
       });
 
-      if (stored) {
+      if (!stored) {
+        logShareFlow('failed to persist payload', {
+          intake,
+          source: payload.source ?? null,
+        });
+        return;
+      }
+
+      const currentPath = window.location.pathname;
+      const shouldNavigate = currentPath !== IMPORT_ROUTE;
+
+      logShareFlow('payload persisted', {
+        intake,
+        shouldNavigate,
+        currentPath,
+        targetPath: IMPORT_ROUTE,
+      });
+
+      if (shouldNavigate) {
         navigateRef.current(IMPORT_ROUTE);
       }
     };
 
     let shareListener: { remove: () => Promise<void> } | null = null;
 
+    logShareFlow('share coordinator bootstrap start', {
+      pathname: window.location.pathname,
+    });
+
     void ShareTarget.consumePendingSharedText()
       .then((payload) => {
-        handleSharedText(payload);
+        persistAndRouteSharedText(payload, 'consumePendingSharedText');
       })
       .catch((err) => {
-        if (import.meta.env.MODE === 'development') {
-          console.warn('[SHARE_TARGET] Error consuming pending shared text', err);
-        }
+        console.warn('[SHARE_TARGET] Error consuming pending shared text', err);
       });
 
     void ShareTarget.addListener('sharedTextReceived', (payload) => {
-      handleSharedText(payload);
+      persistAndRouteSharedText(payload, 'sharedTextReceived');
     }).then((listener) => {
       shareListener = listener;
+      logShareFlow('sharedTextReceived listener attached');
     }).catch((err) => {
-      if (import.meta.env.MODE === 'development') {
-        console.warn('[SHARE_TARGET] Error attaching share listener', err);
-      }
+      console.warn('[SHARE_TARGET] Error attaching share listener', err);
     });
 
     return () => {

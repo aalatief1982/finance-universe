@@ -74,16 +74,25 @@ const ImportTransactions = () => {
 
   const hydratePendingSharedText = React.useCallback(() => {
     const pending = readPendingSharedText();
+    console.log('[SHARE_FLOW][IMPORT] hydratePendingSharedText read', {
+      hasPendingText: Boolean(pending?.text),
+      textLength: pending?.text?.length ?? 0,
+      source: pending?.source ?? null,
+      receivedAt: pending?.receivedAt ?? null,
+      locationKey: location.key,
+    });
+
     if (pending?.text) {
       setPendingSharedText(pending.text);
     }
-  }, []);
+  }, [location.key]);
 
   React.useEffect(() => {
     hydratePendingSharedText();
   }, [hydratePendingSharedText, location.key]);
 
   const handleSharedTextConsumed = React.useCallback(() => {
+    console.log('[SHARE_FLOW][IMPORT] handleSharedTextConsumed clearing pending payload');
     clearPendingSharedText();
     setPendingSharedText(null);
   }, []);
