@@ -76,10 +76,11 @@ import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
 import { ToastAction } from '@/components/ui/toast';
 import { enqueueSms, getInboxCount } from '@/lib/sms-inbox/smsInboxQueue';
 import { ShareTarget } from '@/plugins/ShareTargetPlugin';
-import { savePendingSharedText } from '@/lib/share-target/pendingSharedText';
+import { readPendingSharedText, savePendingSharedText } from '@/lib/share-target/pendingSharedText';
 
 const HOME_ROUTE = '/home';
 const IMPORT_ROUTE = '/import-transactions';
+const SHARE_DEDUPE_WINDOW_MS = 30_000;
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
@@ -199,7 +200,34 @@ function AppWrapper() {
       console.log(`${TRACE_PREFIX}[${ts}] ${message}`);
     };
 
-    const lastHandledFingerprintRef = { current: '' };
+    const recentlyHandledShareRef = { current: new Map<string, number>() };
+
+    const buildShareSignature = (text: string, source?: string) => `${text}|${source ?? 'unknown'}`;
+
+    const shouldHandleShare = (signature: string, intake: 'consumePendingSharedText' | 'sharedTextReceived') => {
+      const now = Date.now();
+      const dedupeMap = recentlyHandledShareRef.current;
+
+      for (const [key, lastSeenAt] of dedupeMap.entries()) {
+        if (now - lastSeenAt > SHARE_DEDUPE_WINDOW_MS) {
+          dedupeMap.delete(key);
+        }
+      }
+
+      const lastSeenAt = dedupeMap.get(signature) ?? 0;
+      if (now - lastSeenAt <= SHARE_DEDUPE_WINDOW_MS) {
+        logShareFlow('duplicate payload ignored by in-memory dedupe window', {
+          intake,
+          signature,
+          dedupeWindowMs: SHARE_DEDUPE_WINDOW_MS,
+          ageMs: now - lastSeenAt,
+        });
+        return false;
+      }
+
+      dedupeMap.set(signature, now);
+      return true;
+    };
 
     const persistAndRouteSharedText = (
       payload: { text?: string; source?: string; receivedAt?: number },
@@ -215,16 +243,21 @@ function AppWrapper() {
         return;
       }
 
-      const fingerprint = `${normalizedText}|${payload.source ?? 'unknown'}|${payload.receivedAt ?? 0}`;
-      if (lastHandledFingerprintRef.current === fingerprint) {
-        logShareFlow('duplicate payload ignored', {
-          intake,
-          fingerprint,
-        });
+      const signature = buildShareSignature(normalizedText, payload.source);
+      if (!shouldHandleShare(signature, intake)) {
         return;
       }
 
-      lastHandledFingerprintRef.current = fingerprint;
+      const existingPending = readPendingSharedText();
+      if (existingPending?.text === normalizedText && (existingPending?.source ?? 'unknown') === (payload.source ?? 'unknown')) {
+        logShareFlow('duplicate payload ignored: same pending shared text already staged', {
+          intake,
+          signature,
+          existingReceivedAt: existingPending?.receivedAt ?? null,
+          incomingReceivedAt: payload.receivedAt ?? null,
+        });
+        return;
+      }
 
       logShareFlow('payload received', {
         intake,
