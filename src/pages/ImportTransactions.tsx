@@ -30,6 +30,7 @@ import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
 import { createInferenceDTOFromDetection } from '@/lib/inference/createInferenceDTOFromDetection';
 import { getInbox, markSmsStatus, SmsInboxItem } from '@/lib/sms-inbox/smsInboxQueue';
 import { isAdminMode } from '@/utils/admin-utils';
+import { clearPendingSharedText, readPendingSharedText } from '@/lib/share-target/pendingSharedText';
 
 
 interface ImportTransactionsLocationState {
@@ -45,6 +46,7 @@ const ImportTransactions = () => {
   const [smsInboxItems, setSmsInboxItems] = React.useState<SmsInboxItem[]>([]);
   const smsInboxRef = React.useRef<HTMLDivElement | null>(null);
   const locationState = (location.state as ImportTransactionsLocationState | null) || null;
+  const [pendingSharedText, setPendingSharedText] = React.useState<string | null>(null);
 
   const effectiveSenderHint =
     locationState?.senderHint ||
@@ -68,6 +70,19 @@ const ImportTransactions = () => {
   React.useEffect(() => {
     loadSmsInbox();
   }, [loadSmsInbox]);
+
+
+  React.useEffect(() => {
+    const pending = readPendingSharedText();
+    if (pending?.text) {
+      setPendingSharedText(pending.text);
+    }
+  }, []);
+
+  const handleSharedTextConsumed = React.useCallback(() => {
+    clearPendingSharedText();
+    setPendingSharedText(null);
+  }, []);
 
   React.useEffect(() => {
     if (!locationState?.scrollToInbox) {
@@ -386,6 +401,8 @@ const ImportTransactions = () => {
           <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
             <SmartPaste
               senderHint={effectiveSenderHint}
+              prefillText={pendingSharedText}
+              onPrefillConsumed={handleSharedTextConsumed}
               onTransactionsDetected={handleTransactionsDetected}
             />
           </div>

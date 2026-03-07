@@ -19,6 +19,7 @@
 declare module '@capacitor/core' {
   interface PluginRegistry {
     BackgroundSmsListener: unknown;
+    ShareTarget: unknown;
   }
 }
 
