@@ -59,6 +59,8 @@ const normalizeFieldConfidences = (
 
 interface SmartPasteProps {
   senderHint?: string;
+  prefillText?: string | null;
+  onPrefillConsumed?: () => void;
   onTransactionsDetected?: (
     transactions: Transaction[],
     rawMessage?: string,
@@ -77,6 +79,8 @@ interface SmartPasteProps {
 
 const SmartPaste = ({
   senderHint,
+  prefillText,
+  onPrefillConsumed,
   onTransactionsDetected,
 }: SmartPasteProps) => {
   const [text, setText] = useState('');
@@ -101,9 +105,36 @@ const SmartPaste = ({
   const [keywordScore, setKeywordScore] = useState<number | null>(null);
   const [debugTrace, setDebugTrace] = useState<InferenceDecisionTrace | undefined>();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const blockedSharedTextRef = React.useRef<string | null>(null);
 
   const { toast } = useToast();
   const navigate = useNavigate();
+
+
+
+  useEffect(() => {
+    if (!prefillText?.trim()) {
+      blockedSharedTextRef.current = null;
+      return;
+    }
+
+    if (!text.trim()) {
+      setText(prefillText);
+      blockedSharedTextRef.current = null;
+      onPrefillConsumed?.();
+      return;
+    }
+
+    if (blockedSharedTextRef.current === prefillText) {
+      return;
+    }
+
+    blockedSharedTextRef.current = prefillText;
+    toast({
+      title: 'Shared text received',
+      description: 'Smart Entry already has unsaved text. Clear it to use the shared text.',
+    });
+  }, [onPrefillConsumed, prefillText, text, toast]);
 
   useEffect(() => {
     if (!text.trim()) {

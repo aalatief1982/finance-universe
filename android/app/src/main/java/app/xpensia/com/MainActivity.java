@@ -8,6 +8,7 @@ import com.getcapacitor.BridgeActivity;
 import com.xpensia.plugins.smsreader.SmsReaderPlugin;
 
 import app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin;
+import app.xpensia.com.plugins.sharetarget.ShareTargetPlugin;
 import app.xpensia.com.plugins.settings.AndroidSettingsPlugin;
 
 public class MainActivity extends BridgeActivity {
@@ -39,7 +40,15 @@ public class MainActivity extends BridgeActivity {
       Log.e(TAG, "Error registering AndroidSettingsPlugin", e);
     }
 
+    try {
+      registerPlugin(ShareTargetPlugin.class);
+      Log.d(TAG, "ShareTargetPlugin registered");
+    } catch (Exception e) {
+      Log.e(TAG, "Error registering ShareTargetPlugin", e);
+    }
+
     handleRouteIntent(getIntent());
+    handleShareIntent(getIntent());
     Log.d(TAG, "MainActivity.onCreate() - END");
   }
 
@@ -48,6 +57,7 @@ public class MainActivity extends BridgeActivity {
     super.onNewIntent(intent);
     setIntent(intent);
     handleRouteIntent(intent);
+    handleShareIntent(intent);
   }
 
   private void handleRouteIntent(Intent intent) {
@@ -65,5 +75,26 @@ public class MainActivity extends BridgeActivity {
     Log.d(TAG, "Stored pending route=" + route + " source=" + source);
     intent.removeExtra("xpensia_open_route");
     intent.removeExtra("xpensia_open_source");
+  }
+
+  private void handleShareIntent(Intent intent) {
+    if (intent == null) {
+      return;
+    }
+
+    String action = intent.getAction();
+    String type = intent.getType();
+    if (!Intent.ACTION_SEND.equals(action) || type == null || !"text/plain".equals(type)) {
+      return;
+    }
+
+    String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+    if (sharedText == null || sharedText.trim().isEmpty()) {
+      return;
+    }
+
+    ShareTargetPlugin.setPendingSharedText(this, sharedText, "android_share_sheet");
+    Log.d(TAG, "Stored pending shared text from Android share sheet");
+    intent.removeExtra(Intent.EXTRA_TEXT);
   }
 }

@@ -75,6 +75,8 @@ import { isDefaultCurrencySelectionRequired } from '@/utils/default-currency';
 import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
 import { ToastAction } from '@/components/ui/toast';
 import { enqueueSms, getInboxCount } from '@/lib/sms-inbox/smsInboxQueue';
+import { ShareTarget } from '@/plugins/ShareTargetPlugin';
+import { savePendingSharedText } from '@/lib/share-target/pendingSharedText';
 
 const HOME_ROUTE = '/home';
 const IMPORT_ROUTE = '/import-transactions';
@@ -165,6 +167,57 @@ function AppWrapper() {
   useEffect(() => {
     navigateRef.current = navigate;
   }, [navigate]);
+
+
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'android') {
+      return;
+    }
+
+    const handleSharedText = (payload: { text?: string; source?: string; receivedAt?: number }) => {
+      if (!payload.text?.trim()) {
+        return;
+      }
+
+      const stored = savePendingSharedText({
+        text: payload.text,
+        source: payload.source,
+        receivedAt: payload.receivedAt,
+      });
+
+      if (stored) {
+        navigateRef.current(IMPORT_ROUTE);
+      }
+    };
+
+    let shareListener: { remove: () => Promise<void> } | null = null;
+
+    void ShareTarget.consumePendingSharedText()
+      .then((payload) => {
+        handleSharedText(payload);
+      })
+      .catch((err) => {
+        if (import.meta.env.MODE === 'development') {
+          console.warn('[SHARE_TARGET] Error consuming pending shared text', err);
+        }
+      });
+
+    void ShareTarget.addListener('sharedTextReceived', (payload) => {
+      handleSharedText(payload);
+    }).then((listener) => {
+      shareListener = listener;
+    }).catch((err) => {
+      if (import.meta.env.MODE === 'development') {
+        console.warn('[SHARE_TARGET] Error attaching share listener', err);
+      }
+    });
+
+    return () => {
+      if (shareListener) {
+        void shareListener.remove();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (previousPathRef.current !== location.pathname) {
