@@ -116,7 +116,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
   }, [language, cleanupListeners, showError]);
 
   const startListeningWeb = useCallback(() => {
-    const SpeechRecognitionClass = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const SpeechRecognitionClass = (window as unknown as { webkitSpeechRecognition?: typeof SpeechRecognition; SpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition || window.SpeechRecognition;
     if (!SpeechRecognitionClass) {
       setIsSupported(false);
       return;
@@ -128,7 +128,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const last = event.results[event.results.length - 1];
       const text = last[0].transcript;
       if (last.isFinal) {
