@@ -5,6 +5,23 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import type { PluginListenerHandle } from '@capacitor/core';
 
+interface WebSpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface WebSpeechWindow {
+  webkitSpeechRecognition?: new () => WebSpeechRecognition;
+  SpeechRecognition?: new () => WebSpeechRecognition;
+}
+
 interface UseSpeechToTextOptions {
   onResult?: (text: string) => void;
   onPartialResult?: (text: string) => void;
@@ -22,7 +39,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const listenersRef = useRef<PluginListenerHandle[]>([]);
-  const webRecognizerRef = useRef<SpeechRecognition | null>(null);
+  const webRecognizerRef = useRef<WebSpeechRecognition | null>(null);
   const onResultRef = useRef(onResult);
   const onPartialResultRef = useRef(onPartialResult);
 
