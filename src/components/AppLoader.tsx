@@ -18,6 +18,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
+import { toast } from '@/hooks/use-toast'; // [REMOVABLE-DEBUG-TOAST]
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 let traceCounter = 0;
