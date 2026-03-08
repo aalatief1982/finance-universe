@@ -1,12 +1,11 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { navigateBackSafely } from '@/utils/navigation';
 import { cn } from '@/lib/utils';
 import { LogoLink } from './LogoLink';
 import { MainNavigation } from './MainNavigation';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSmsInboxPendingCount } from '@/hooks/useSmsInboxPendingCount';
 import FeedbackModal from '@/components/FeedbackModal';
