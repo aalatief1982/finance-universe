@@ -228,7 +228,7 @@ const BudgetInsightsPage = () => {
     >
       {/* Summary Cards */}
       {budgets.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <Card className={summaryStats.onTrack > 0 ? 'border-green-500/30' : ''}>
             <CardContent className="pt-4 pb-3 text-center">
               <div className="text-2xl font-bold text-green-500">{summaryStats.onTrack}</div>

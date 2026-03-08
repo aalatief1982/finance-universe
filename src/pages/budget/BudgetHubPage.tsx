@@ -143,7 +143,7 @@ const BudgetHubPage = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Overall Budget Card - Top Level */}
           {overallBudget && (
             <div 

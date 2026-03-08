@@ -332,7 +332,7 @@ const BudgetReportPage = () => {
       )}
 
       {/* Charts Tabs */}
-      <Tabs defaultValue="comparison" className="space-y-4 mb-6">
+      <Tabs defaultValue="comparison" className="space-y-4 mb-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
           <TabsTrigger value="breakdown">Breakdown</TabsTrigger>

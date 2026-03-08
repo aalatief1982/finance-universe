@@ -66,11 +66,12 @@ export function BudgetLayout({
       {/* Floating Action Button for Mobile */}
       {isMobile && showAddButton && (
         <Button
-          size="lg"
-          className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-50"
+          size="icon"
+          className="fixed bottom-16 right-4 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg"
           onClick={() => navigate('/budget/set')}
+          aria-label="Add Budget"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-5 w-5" />
         </Button>
       )}
     </Layout>
