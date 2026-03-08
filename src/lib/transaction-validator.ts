@@ -60,7 +60,7 @@ export function validateTransactionInput(input: unknown): TransactionValidationR
   const txn = toTransactionValidatorShape(input);
 
   if (!txn) {
-    toast({ title: 'Invalid transaction', description: 'Transaction payload is malformed' });
+    toast({ title: 'Invalid transaction', description: 'Transaction data is incomplete or malformed.' });
     return { valid: false, error: 'Transaction payload is malformed' };
   }
 
