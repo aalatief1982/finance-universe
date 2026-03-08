@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectFade } from 'swiper/modules';
+
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
