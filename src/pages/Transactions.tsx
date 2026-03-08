@@ -33,6 +33,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { CATEGORIES } from '@/lib/mock-data';
 import { useNavigate } from 'react-router-dom';
 import { logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const Transactions = () => {
   const [filter, setFilter] = React.useState<'all' | 'income' | 'expense' | 'transfer'>('all');
