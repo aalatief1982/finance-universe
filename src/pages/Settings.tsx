@@ -610,7 +610,7 @@ const Settings = () => {
                   setNotificationsEnabled(grantedAfterRequest);
                   updateUserPreferences({ notifications: grantedAfterRequest });
                   if (grantedAfterRequest) {
-                    toast({ title: "Notifications enabled" });
+                    toast({ title: t("toast.notificationsEnabled") });
                   } else {
                     toast({ title: "Permission not granted", variant: "destructive" });
                   }
