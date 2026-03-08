@@ -48,6 +48,8 @@ import { CATEGORY_ICON_MAP } from "@/constants/categoryIconMap";
 import { format } from "date-fns";
 
 import ResponsiveFAB from "@/components/dashboard/ResponsiveFAB";
+import MicButton from "@/components/smart-paste/MicButton";
+import { useSpeechToText } from "@/hooks/useSpeechToText";
 import { Transaction } from "@/types/transaction";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
