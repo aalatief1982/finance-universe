@@ -773,9 +773,9 @@ const Settings = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Import Data</p>
+                <p className="font-medium">{t('settings.importData')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Import transactions from a file
+                  {t('settings.importDataDesc')}
                 </p>
               </div>
               <Button
