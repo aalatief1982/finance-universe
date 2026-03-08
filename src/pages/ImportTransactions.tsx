@@ -200,8 +200,8 @@ const ImportTransactions = () => {
       });
 
       toast({
-        title: 'Unable to open SMS',
-        description: 'We could not open this SMS right now. Please try again.',
+        title: 'Could not open SMS',
+        description: 'Please try again.',
         variant: 'destructive',
       });
     }
@@ -236,8 +236,8 @@ const ImportTransactions = () => {
       });
 
       toast({
-        title: 'Unable to continue SMS',
-        description: 'We could not continue this SMS right now. Please try again.',
+        title: 'Could not continue SMS import',
+        description: 'Please try again.',
         variant: 'destructive',
       });
     }

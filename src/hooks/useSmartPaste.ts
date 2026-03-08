@@ -83,8 +83,8 @@ export const useSmartPaste = (
         console.error("[useSmartPaste] Clipboard error:", err);
       }
       toast({
-        title: 'Clipboard Error',
-        description: 'Could not read from clipboard.',
+        title: 'Could not read clipboard',
+        description: 'Try pasting the message manually.',
         variant: 'destructive',
       });
     }
@@ -288,7 +288,7 @@ export const useSmartPaste = (
           // console.log("[useSmartPaste] No transaction could be detected");
         }
         setDetectedTransactions([]);
-        toast({ title: 'No transaction detected', description: 'Message could not be parsed.' });
+        toast({ title: 'Message could not be parsed', description: 'Try another message or review it manually.' });
       }
 
     } catch (error) {

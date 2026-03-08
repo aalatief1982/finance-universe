@@ -66,8 +66,8 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
 
     if (!text.trim()) {
       toast({
-        title: "Error",
-        description: "Please paste or enter a message first",
+        title: "No message entered",
+        description: "Paste or type a message first.",
         variant: "destructive",
       });
       return;
@@ -119,8 +119,8 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
       }
       setError("Could not parse the message. Try again or report.");
       toast({
-        title: "Error",
-        description: "Could not parse the message. Try again or report.",
+        title: "Message could not be parsed",
+        description: "Try another message or review it manually.",
         variant: "destructive",
       });
       setConfidence(null);
@@ -139,8 +139,8 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
       setText(clipboardText);
     } catch (err) {
       toast({
-        title: "Clipboard Error",
-        description: "Could not access clipboard.",
+        title: "Could not read clipboard",
+        description: "Try pasting the message manually.",
         variant: "destructive",
       });
     }

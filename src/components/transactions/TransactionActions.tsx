@@ -40,7 +40,7 @@ const TransactionActions = ({
 
     toast({
       title: "Transaction deleted",
-      description: "The transaction has been successfully deleted",
+      description: "",
     });
   };
 

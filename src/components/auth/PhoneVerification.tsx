@@ -48,8 +48,8 @@ const PhoneVerification = ({
       setError('Please enter a valid phone number with country code');
       setErrorType('validation');
       toast({
-        title: 'Error',
-        description: 'Please enter a valid phone number with country code',
+        title: 'Invalid phone number',
+        description: 'Enter a valid phone number with country code.',
         variant: 'destructive',
       });
       return;
@@ -65,12 +65,8 @@ const PhoneVerification = ({
         setIsVerificationSent(true);
         setSuccess('Verification code sent successfully!');
         toast({
-          title: 'Success',
-          description: 'Verification code sent successfully!',
-        });
-        toast({
-          title: 'Demo Code',
-          description: 'For this demo, please use code: 1234',
+          title: 'Verification code sent',
+          description: 'Enter the code to continue.',
         });
         
         // Clear success message after a few seconds
@@ -87,8 +83,8 @@ const PhoneVerification = ({
       setError('Failed to send code. Please check your phone number and try again.');
       setErrorType('network');
       toast({
-        title: 'Error',
-        description: 'Failed to send code. Please check your phone number and try again.',
+        title: 'Invalid phone number',
+        description: 'Enter a valid phone number with country code.',
         variant: 'destructive',
       });
     } finally {
@@ -140,8 +136,8 @@ const PhoneVerification = ({
           setError('Verification session has expired. Please request a new code.');
           setErrorType('auth');
           toast({
-            title: 'Error',
-            description: 'Verification session has expired. Please request a new code.',
+            title: 'Verification code expired',
+            description: 'Request a new code and try again.',
             variant: 'destructive',
           });
         }
@@ -214,8 +210,8 @@ const PhoneVerification = ({
       setError('Please enter a valid 4-digit code');
       setErrorType('validation');
       toast({
-        title: 'Error',
-        description: 'Please enter a valid 4-digit code',
+        title: 'Invalid verification code',
+        description: 'Check the code and try again.',
         variant: 'destructive',
       });
       return;
@@ -225,8 +221,8 @@ const PhoneVerification = ({
       setError('Verification session has expired. Please request a new code.');
       setErrorType('auth');
       toast({
-        title: 'Error',
-        description: 'Verification session has expired. Please request a new code.',
+        title: 'Verification code expired',
+        description: 'Request a new code and try again.',
         variant: 'destructive',
       });
       return;
@@ -241,8 +237,8 @@ const PhoneVerification = ({
       if (success) {
         setSuccess('Phone number verified successfully!');
         toast({
-          title: 'Success',
-          description: 'Phone number verified successfully!',
+          title: 'Phone verified',
+          description: 'Your phone number has been verified successfully.',
         });
         
         if (onVerificationComplete) {
@@ -265,8 +261,8 @@ const PhoneVerification = ({
       setError(`Invalid code. ${attemptsRemaining} attempts remaining.`);
       setErrorType('validation');
       toast({
-        title: 'Error',
-        description: `Invalid code. ${attemptsRemaining} attempts remaining. For this demo, use 1234.`,
+        title: 'Invalid verification code',
+        description: 'Check the code and try again.',
         variant: 'destructive',
       });
     } finally {

@@ -44,7 +44,7 @@ const DataManagementSettings = () => {
       if (!transactions.length) {
         toast({
           title: "No data to export",
-          description: "You don't have any transactions to export.",
+          description: "There are no transactions available to export.",
           variant: "destructive",
         });
         return;
@@ -108,13 +108,13 @@ const DataManagementSettings = () => {
           storeTransactions(merged);
           toast({
             title: "Import successful",
-            description: `Added ${data.length} transactions successfully.`,
+            description: "Transactions were imported successfully.",
           });
           window.dispatchEvent(new StorageEvent('storage', { key: 'xpensia_transactions' }));
         } catch (error) {
           toast({
             title: "Import failed",
-            description: "Failed to parse the imported file. Make sure it's a valid JSON or CSV file.",
+            description: "Make sure the selected file is a valid JSON or CSV file.",
             variant: "destructive",
           });
         }
@@ -141,7 +141,7 @@ const DataManagementSettings = () => {
       });
       
       toast({
-        title: "🎉 Beta Features Activated!",
+        title: "Beta features activated",
         description: "You now have access to all beta features including Budget and Import SMS.",
       });
     } else {
@@ -151,7 +151,7 @@ const DataManagementSettings = () => {
       });
       
       toast({
-        title: "❌ Invalid Beta Code",
+        title: "Invalid beta code",
         description: "Please enter a valid beta code to activate premium features.",
         variant: "destructive",
       });

@@ -24,8 +24,8 @@ export const updateUserPreferences = (
   });
   
   toast({
-    title: "Settings updated",
-    description: "Your preferences have been saved successfully."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };
 
@@ -54,8 +54,8 @@ export const updateDisplayOptions = (
   });
   
   toast({
-    title: "Display settings updated",
-    description: "Your display preferences have been saved."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };
 
@@ -84,8 +84,8 @@ export const updatePrivacySettings = (
   });
   
   toast({
-    title: "Privacy settings updated",
-    description: "Your privacy preferences have been saved."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };
 
@@ -114,7 +114,7 @@ export const updateDataManagement = (
   });
   
   toast({
-    title: "Data management updated",
-    description: "Your data management preferences have been saved."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };

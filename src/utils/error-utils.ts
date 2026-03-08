@@ -185,7 +185,7 @@ export const handleValidationError = (
   
   if (!isSilent) {
     toast({
-      title: "Validation Error",
+      title: "Invalid transaction",
       description: message,
       variant: "default",
     });
@@ -287,26 +287,26 @@ export const tryCatch = async <T>(
 const getTitleFromErrorType = (type: ErrorType): string => {
   switch (type) {
     case ErrorType.VALIDATION:
-      return "Validation Error";
+      return "Invalid transaction";
     case ErrorType.API:
-      return "API Error";
+      return "Could not complete request";
     case ErrorType.PARSING:
-      return "Parsing Error";
+      return "Message could not be parsed";
     case ErrorType.STORAGE:
-      return "Storage Error";
+      return "Could not save data";
     case ErrorType.PERMISSION:
-      return "Permission Error";
+      return "Permission required";
     case ErrorType.CURRENCY:
-      return "Currency Error";
+      return "Could not update exchange rate";
     case ErrorType.NETWORK:
-      return "Network Error";
+      return "Connection issue";
     case ErrorType.AUTH:
-      return "Authentication Error";
+      return "Authentication failed";
     case ErrorType.TIMEOUT:
-      return "Timeout Error";
+      return "Request timed out";
     case ErrorType.TRANSACTION:
-      return "Transaction Error";
+      return "Could not save transaction";
     default:
-      return "Error";
+      return "Something went wrong";
   }
 };

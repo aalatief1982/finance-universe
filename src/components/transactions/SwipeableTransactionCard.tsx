@@ -34,7 +34,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
     deleteTransaction(transaction.id);
     toast({
       title: "Transaction deleted",
-      description: "The transaction has been successfully deleted",
+      description: "",
     });
   };
 

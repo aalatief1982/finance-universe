@@ -341,7 +341,7 @@ const Settings = () => {
       if (!transactions.length) {
         toast({
           title: "No data to export",
-          description: "You don't have any transactions to export.",
+          description: "There are no transactions available to export.",
           variant: "destructive",
         });
         return;
@@ -434,14 +434,14 @@ const Settings = () => {
           
           toast({
             title: "Import successful",
-            description: `Added ${data.length} transactions successfully.`,
+            description: "Transactions were imported successfully.",
           });
           setTimeout(() => window.location.reload(), 1500);
         } catch {
           toast({
             title: "Import failed",
             description:
-              "Failed to parse the imported file. Make sure it's a valid JSON or CSV file.",
+              "Make sure the selected file is a valid JSON or CSV file.",
             variant: "destructive",
           });
         }
@@ -690,15 +690,15 @@ const Settings = () => {
                         }
 
                         toast({
-                          title: 'SMS Auto-Import Enabled! 🎉',
-                          description: 'Your transactions will now be imported automatically.'
+                          title: 'SMS permission granted',
+                          description: 'Xpensia can now read supported bank SMS messages for import.',
                         });
                       } else {
                         if (canonicalStatus.permanentlyDenied) {
                           toast({
-                            title: 'SMS permission permanently denied',
+                            title: 'SMS permission required',
                             description:
-                              'Enable SMS permissions in your device Settings > Apps > Xpensia > Permissions to use SMS auto-import.',
+                              'Enable SMS access in Android Settings to continue.',
                             variant: 'destructive',
                           });
                         }

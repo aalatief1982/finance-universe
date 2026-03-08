@@ -75,8 +75,8 @@ const VendorCategorization: React.FC = () => {
   const handleSave = () => {
     safeStorage.setItem("xpensia_vendor_categorization", JSON.stringify(vendors));
     toast({
-      title: "Saved!",
-      description: "Vendor categorization saved successfully.",
+      title: "Transaction saved",
+      description: "",
     });
     navigate("/process-sms"); // Optional: back to SMS flow
   };

@@ -141,8 +141,8 @@ const SmartPaste = ({
     blockedSharedTextRef.current = prefillText;
     console.log('[SHARE_FLOW][SMART_PASTE] prefill blocked due to existing text');
     toast({
-      title: 'Shared text received',
-      description: 'Smart Entry already has unsaved text. Clear it to use the shared text.',
+      title: 'Shared text not loaded',
+      description: 'Smart Entry already has unsaved text. Clear it first to use the shared text.',
     });
   }, [onPrefillConsumed, prefillText, text, toast]);
 
@@ -205,8 +205,8 @@ const SmartPaste = ({
 
     if (!text.trim()) {
       toast({
-        title: 'Error',
-        description: 'Please paste or enter a message first',
+        title: 'No message entered',
+        description: 'Paste or type a message first.',
         variant: 'destructive',
       });
       return;
@@ -217,9 +217,9 @@ const SmartPaste = ({
     // 🚫 Check if message contains financial transaction pattern
     if (!isFinancialTransactionMessage(text)) {
       toast({
-        title: 'Non-transactional message',
+        title: 'No transaction detected',
         description:
-          'This message does not appear to contain any transaction data.',
+          'This message does not appear to contain transaction data.',
         variant: 'default',
       });
       return;
@@ -307,8 +307,8 @@ const SmartPaste = ({
       }
       setError('Could not parse the message. Try again or report.');
       toast({
-        title: 'Error',
-        description: 'Could not parse the message. Try again or report.',
+        title: 'Message could not be parsed',
+        description: 'Try another message or review it manually.',
         variant: 'destructive',
       });
       setConfidence(null);
@@ -344,8 +344,8 @@ const SmartPaste = ({
       setText(clipboardText);
     } catch (err) {
       toast({
-        title: 'Clipboard Error',
-        description: 'Could not access clipboard.',
+        title: 'Could not read clipboard',
+        description: 'Try pasting the message manually.',
         variant: 'destructive',
       });
     }

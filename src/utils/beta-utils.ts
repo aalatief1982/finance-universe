@@ -26,8 +26,8 @@ export const deactivateBetaFeatures = (): void => {
 
 export const handleLockedFeatureClick = (featureName: string): void => {
   toast({
-    title: `🚧 ${featureName} Coming Soon!`,
-    description: "This feature is currently under development. Stay tuned for exciting updates!",
+    title: `${featureName} coming soon`,
+    description: "This feature is currently under development.",
   });
 };
 
@@ -40,13 +40,13 @@ export const handleBetaCodeSubmit = (
     activateBetaFeatures();
     onSuccess();
     toast({
-      title: "🎉 Beta Features Activated!",
+      title: "Beta features activated",
       description: "You now have access to all beta features including Budget and Import SMS.",
     });
   } else {
     onError();
     toast({
-      title: "❌ Invalid Beta Code",
+      title: "Invalid beta code",
       description: "Please enter a valid beta code to activate premium features.",
       variant: "destructive",
     });

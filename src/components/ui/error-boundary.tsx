@@ -65,7 +65,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (this.props.fallbackType === 'alert') {
       toast({
         variant: 'destructive',
-        title: `Error: ${this.props.name || 'Component'} failed to load`,
+        title: `${this.props.name || 'Component'} failed to load`,
         description: `${friendly} Please try again using the Retry button.`
       });
     }

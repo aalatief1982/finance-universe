@@ -161,8 +161,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       }
 
       toast({
-        title: 'SMS Import Enabled! 🎉',
-        description: 'Your transactions will now be imported automatically.'
+        title: 'SMS permission granted',
+        description: 'Xpensia can now read supported bank SMS messages for import.',
       });
     } finally {
       setIsBusy(false);
@@ -277,8 +277,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       if ('timedOut' in result) {
         console.warn('[SmsPermissionPrompt] requestPermission timed out after', REQUEST_TIMEOUT, 'ms');
         toast({
-          title: 'Still waiting…',
-          description: 'The permission dialog is still open. Please accept or deny it, or enable SMS from Settings later.',
+          title: 'Could not confirm SMS permission',
+          description: 'Please try again or enable it later from Settings.',
         });
         try {
           logAnalyticsEvent('sms_permission_request_timed_out');
@@ -309,16 +309,16 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           console.log('[SmsPermissionPrompt] canonical status: permanentlyDenied — showing fallback UI');
           setPermanentlyDenied(true);
           toast({
-            title: 'Permission Required',
-            description: 'Enable SMS in Settings → Apps → Xpensia → Permissions',
+            title: 'SMS permission required',
+            description: 'Enable SMS access in Android Settings to continue.',
             variant: 'destructive'
           });
           // do not mark sms_prompt_shown so user can act
         } else {
           console.log('[SmsPermissionPrompt] canonical status: denied (temporary) — marking shown and closing');
           toast({
-            title: 'Permission Denied',
-            description: 'You can enable SMS auto-import later in Settings.',
+            title: 'SMS permission denied',
+            description: 'You can enable SMS access later from Settings.',
           });
           safeStorage.setItem('sms_prompt_shown', 'true');
           onOpenChange(false);
@@ -327,8 +327,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
     } catch (error) {
       console.error('[SmsPermissionPrompt] Error requesting SMS permission:', error);
       toast({
-        title: 'Something went wrong',
-        description: 'Please try enabling SMS import from Settings.',
+        title: 'Could not confirm SMS permission',
+        description: 'Please try again or enable it later from Settings.',
         variant: 'destructive'
       });
       try {
@@ -354,8 +354,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   const handleLater = () => {
     console.log('[SmsPermissionPrompt] User selected Maybe Later for SMS permission.');
     toast({
-      title: 'No problem!',
-      description: 'Enable SMS auto-import anytime in Profile → Settings → SMS Settings'
+      title: 'SMS permission denied',
+      description: 'You can enable SMS access later from Settings.'
     });
     safeStorage.setItem('sms_prompt_shown', 'true');
     onOpenChange(false);

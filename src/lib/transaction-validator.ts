@@ -60,31 +60,31 @@ export function validateTransactionInput(input: unknown): TransactionValidationR
   const txn = toTransactionValidatorShape(input);
 
   if (!txn) {
-    toast({ title: 'Invalid transaction', description: 'Transaction payload is malformed' });
+    toast({ title: 'Invalid transaction', description: 'Transaction data is incomplete or malformed.' });
     return { valid: false, error: 'Transaction payload is malformed' };
   }
 
   if (!isValidAmount(txn.amount)) {
     const error = 'Amount must be a number greater than 0';
-    toast({ title: 'Invalid amount', description: error });
+    toast({ title: 'Invalid amount', description: 'Enter a valid amount to continue.' });
     return { valid: false, error };
   }
 
   if (!isValidDate(txn.date)) {
     const error = 'Date must be valid and not in the future';
-    toast({ title: 'Invalid date', description: error });
+    toast({ title: 'Invalid date', description: 'Enter a valid date to continue.' });
     return { valid: false, error };
   }
 
   if (!isValidCategory(txn.type, txn.category)) {
     const error = 'Category must be a predefined value';
-    toast({ title: 'Invalid category', description: error });
+    toast({ title: 'Invalid category', description: 'Select a valid category to continue.' });
     return { valid: false, error };
   }
 
   if (!isValidSubcategory(txn.category, txn.subcategory)) {
     const error = 'Subcategory must be a predefined value';
-    toast({ title: 'Invalid subcategory', description: error });
+    toast({ title: 'Invalid subcategory', description: 'Select a valid subcategory to continue.' });
     return { valid: false, error };
   }
 
