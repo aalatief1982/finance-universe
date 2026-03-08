@@ -131,12 +131,6 @@ const SmartPaste = ({
       pendingPrefillConfirmationRef.current = prefillText;
       blockedSharedTextRef.current = null;
       console.log('[SHARE_FLOW][SMART_PASTE] prefill staged');
-      // [REMOVABLE-DEBUG-TOAST]
-      toast({
-        title: `[DBG-SHARE] 12: SmartPaste prefill`,
-        description: `applied=true | blocked=false | textLen=${prefillText.length}`,
-        duration: 8000,
-      });
       return;
     }
 
@@ -146,12 +140,6 @@ const SmartPaste = ({
 
     blockedSharedTextRef.current = prefillText;
     console.log('[SHARE_FLOW][SMART_PASTE] prefill blocked due to existing text');
-    // [REMOVABLE-DEBUG-TOAST]
-    toast({
-      title: `[DBG-SHARE] 12: SmartPaste prefill`,
-      description: `applied=false | blocked=true | textLen=${prefillText.length}`,
-      duration: 8000,
-    });
     toast({
       title: 'Shared text received',
       description: 'Smart Entry already has unsaved text. Clear it to use the shared text.',
