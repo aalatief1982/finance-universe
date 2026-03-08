@@ -68,8 +68,6 @@ const Layout = ({
       {showHeader && (
         <Header
           showNavigation={!hideNavigation}
-          showBack={showBack}
-          onBack={onBack}
           onLogoClick={onLogoClick}
         />
       )}

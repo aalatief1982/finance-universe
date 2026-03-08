@@ -1,14 +1,9 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { navigateBackSafely } from '@/utils/navigation';
 
 interface PageHeaderProps {
   title: React.ReactNode;
-  showBack?: boolean;
   actions?: React.ReactNode;
   className?: string;
   description?: string;
@@ -16,36 +11,21 @@ interface PageHeaderProps {
 
 const PageHeader = ({
   title,
-  showBack = false,
   actions,
   className = '',
   description
 }: PageHeaderProps) => {
-  const navigate = useNavigate();
-
   return (
     <div className="sticky top-[calc(var(--header-height)+var(--safe-area-top))] z-20 bg-background border-b">
       <div className="px-[var(--page-padding-x)] py-1.5">
         <div className={cn("flex items-center justify-between gap-2", className)}>
-          <div className="flex items-center gap-2">
-            {showBack && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigateBackSafely(navigate)}
-                className="flex lg:hidden"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
+          <div>
+            {title && (
+              <h1 className="text-xl font-bold tracking-tight">{title}</h1>
             )}
-            <div>
-              {title && (
-                <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-              )}
-              {description && (
-                <p className="text-xs text-muted-foreground">{description}</p>
-              )}
-            </div>
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
           </div>
           {actions && (
             <div className="flex items-center gap-1.5">
