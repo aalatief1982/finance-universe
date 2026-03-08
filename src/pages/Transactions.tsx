@@ -190,7 +190,7 @@ const Transactions = () => {
         </ToggleGroup>
 
         <Input
-          placeholder="Search transactions..."
+          placeholder={t('transactions.searchPlaceholder')}
           className="h-8 text-sm rounded-md w-full px-3 py-1.5 bg-secondary-light border-secondary/20 focus-visible:border-secondary focus-visible:ring-secondary"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
