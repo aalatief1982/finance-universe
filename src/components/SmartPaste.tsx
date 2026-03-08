@@ -217,9 +217,9 @@ const SmartPaste = ({
     // 🚫 Check if message contains financial transaction pattern
     if (!isFinancialTransactionMessage(text)) {
       toast({
-        title: 'Non-transactional message',
+        title: 'No transaction detected',
         description:
-          'This message does not appear to contain any transaction data.',
+          'This message does not appear to contain transaction data.',
         variant: 'default',
       });
       return;
