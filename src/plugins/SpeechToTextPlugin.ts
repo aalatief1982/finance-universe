@@ -21,6 +21,6 @@ export interface SpeechToTextPlugin {
   ): Promise<PluginListenerHandle>;
 }
 
-const SpeechToText = registerPlugin<SpeechToTextPlugin>('SpeechToText');
+const SpeechToText = Capacitor.registerPlugin<SpeechToTextPlugin>('SpeechToText');
 
 export { SpeechToText };
