@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 import DashboardStats from '../DashboardStats';
 
 const formatNumericAmount = (amount: number) =>
@@ -18,7 +19,9 @@ const formatNumericAmount = (amount: number) =>
 describe('DashboardStats', () => {
   it('renders income, expenses and balance values without currency prefix', () => {
     render(
-      <DashboardStats income={1000} expenses={200} balance={800} currencyCode="USD" />
+      <LanguageProvider>
+        <DashboardStats income={1000} expenses={200} balance={800} currencyCode="USD" />
+      </LanguageProvider>
     );
 
     expect(screen.getByText('Income [USD]')).toBeInTheDocument();
@@ -32,7 +35,9 @@ describe('DashboardStats', () => {
 
   it('shows percentage change when previousBalance provided', () => {
     render(
-      <DashboardStats income={500} expenses={200} balance={300} previousBalance={200} currencyCode="USD" />
+      <LanguageProvider>
+        <DashboardStats income={500} expenses={200} balance={300} previousBalance={200} currencyCode="USD" />
+      </LanguageProvider>
     );
 
     expect(screen.getByText(/50\.0% from last month/)).toBeInTheDocument();

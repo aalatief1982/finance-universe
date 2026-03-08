@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 import PageHeader from '@/components/layout/PageHeader';
 import BottomNav from '@/components/BottomNav';
 
@@ -19,9 +20,11 @@ describe('Fixed navigation layout', () => {
 
   it('keeps bottom navigation fixed with safe area bottom padding', () => {
     render(
-      <MemoryRouter initialEntries={['/home']}>
-        <BottomNav />
-      </MemoryRouter>
+      <LanguageProvider>
+        <MemoryRouter initialEntries={['/home']}>
+          <BottomNav />
+        </MemoryRouter>
+      </LanguageProvider>
     );
 
     const homeLink = screen.getByRole('link', { name: 'Home' });
