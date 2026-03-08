@@ -48,12 +48,14 @@ describe('Settings background SMS toggle', () => {
 
   it('is disabled when feature is locked', async () => {
     render(
-      <UserProvider>
-        <BrowserRouter>
-          <Settings />
-          <StateViewer />
-        </BrowserRouter>
-      </UserProvider>
+      <LanguageProvider>
+        <UserProvider>
+          <BrowserRouter>
+            <Settings />
+            <StateViewer />
+          </BrowserRouter>
+        </UserProvider>
+      </LanguageProvider>
     );
 
     const toggle = await screen.findByLabelText(/read sms transactions/i);
