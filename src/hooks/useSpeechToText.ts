@@ -5,6 +5,23 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import type { PluginListenerHandle } from '@capacitor/core';
 
+interface WebSpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+}
+
+interface WebSpeechWindow {
+  webkitSpeechRecognition?: new () => WebSpeechRecognition;
+  SpeechRecognition?: new () => WebSpeechRecognition;
+}
+
 interface UseSpeechToTextOptions {
   onResult?: (text: string) => void;
   onPartialResult?: (text: string) => void;
@@ -22,7 +39,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const listenersRef = useRef<PluginListenerHandle[]>([]);
-  const webRecognizerRef = useRef<any>(null);
+  const webRecognizerRef = useRef<WebSpeechRecognition | null>(null);
   const onResultRef = useRef(onResult);
   const onPartialResultRef = useRef(onPartialResult);
 
@@ -116,7 +133,8 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
   }, [language, cleanupListeners, showError]);
 
   const startListeningWeb = useCallback(() => {
-    const SpeechRecognitionClass = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const speechWindow = window as unknown as WebSpeechWindow;
+    const SpeechRecognitionClass = speechWindow.webkitSpeechRecognition || speechWindow.SpeechRecognition;
     if (!SpeechRecognitionClass) {
       setIsSupported(false);
       return;
@@ -128,7 +146,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const last = event.results[event.results.length - 1];
       const text = last[0].transcript;
       if (last.isFinal) {
@@ -139,7 +157,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       const map: Record<string, string> = {
         'not-allowed': 'permission_denied',
         'no-speech': 'no_match',
