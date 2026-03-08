@@ -325,12 +325,6 @@ function AppWrapper() {
       });
 
     void ShareTarget.addListener('sharedTextReceived', (payload) => {
-      // [REMOVABLE-DEBUG-TOAST]
-      toast({
-        title: `[DBG-SHARE] 13: sharedTextReceived event`,
-        description: `textLen=${payload?.text?.length ?? 0} | source=${payload?.source ?? '(none)'}`,
-        duration: 8000,
-      });
       persistAndRouteSharedText(payload, 'sharedTextReceived');
     }).then((listener) => {
       shareListener = listener;
