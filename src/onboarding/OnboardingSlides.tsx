@@ -6,7 +6,6 @@ import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 
 import 'swiper/css';
 import 'swiper/css/effect-fade';
-import { toast } from '@/hooks/use-toast'; // [REMOVABLE-DEBUG-TOAST]
 
 interface Slide {
   image: string;
