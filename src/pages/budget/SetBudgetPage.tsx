@@ -915,27 +915,27 @@ const SetBudgetPage = () => {
           <Switch checked={rollover} onCheckedChange={setRollover} />
         </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Notes</h2>
+        {/* Notes — collapsible feel */}
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-medium text-muted-foreground">Notes (optional)</h2>
           <Textarea
-            placeholder="Add any notes about this budget..."
+            placeholder="Add notes..."
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            rows={3}
+            rows={2}
+            className="resize-none"
           />
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3">
+        {/* Actions — sticky CTA */}
+        <div className="sticky bottom-4 z-10 flex gap-2 bg-background pt-2 pb-1">
           {isEditMode && (
             <Button 
               variant="destructive" 
-              className="flex-1"
+              size="sm"
               onClick={handleDelete}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
           <Button 
