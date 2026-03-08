@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 import PageHeader from '@/components/layout/PageHeader';
 import BottomNav from '@/components/BottomNav';
 
