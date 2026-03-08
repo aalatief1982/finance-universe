@@ -624,38 +624,24 @@ const SetBudgetPage = () => {
           {isEditMode ? 'Edit Budget' : 'Create Budget'}
         </h1>
 
-        {/* Scope Selection */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Budget Scope</h2>
-          <div className="grid gap-2">
-            {SCOPES.map(({ value, label, description, icon: Icon }) => (
-              <div
+        {/* Scope Selection — inline chips */}
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-medium text-muted-foreground">Scope</h2>
+          <div className="flex flex-wrap gap-2">
+            {SCOPES.map(({ value, label, icon: Icon }) => (
+              <button
                 key={value}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
                   scope === value 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border hover:bg-accent/5'
-                }`}
-                onClick={() => handleScopeChange(value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleScopeChange(value)}
-                role="button"
-                tabIndex={0}
-              >
-                <div className={`p-2 rounded-full ${
-                  scope === value ? 'bg-primary/10' : 'bg-muted'
-                }`}>
-                  <Icon className={`h-4 w-4 ${
-                    scope === value ? 'text-primary' : 'text-muted-foreground'
-                  }`} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{label}</p>
-                  <p className="text-xs text-muted-foreground">{description}</p>
-                </div>
-                {scope === value && (
-                  <Check className="h-4 w-4 text-primary" />
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-border text-muted-foreground hover:bg-accent/5'
                 )}
-              </div>
+                onClick={() => handleScopeChange(value)}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
             ))}
           </div>
         </div>
