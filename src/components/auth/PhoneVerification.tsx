@@ -237,8 +237,8 @@ const PhoneVerification = ({
       if (success) {
         setSuccess('Phone number verified successfully!');
         toast({
-          title: 'Success',
-          description: 'Phone number verified successfully!',
+          title: 'Phone verified',
+          description: 'Your phone number has been verified successfully.',
         });
         
         if (onVerificationComplete) {
