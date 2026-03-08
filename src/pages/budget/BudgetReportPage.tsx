@@ -312,7 +312,7 @@ const BudgetReportPage = () => {
 
       {/* Over Budget Alert */}
       {overBudgetItems.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5 mb-6">
+        <Card className="border-destructive/50 bg-destructive/5 mb-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-destructive">
               Over Budget ({overBudgetItems.length})
