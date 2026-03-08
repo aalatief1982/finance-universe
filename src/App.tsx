@@ -298,12 +298,7 @@ function AppWrapper() {
         targetPath: IMPORT_ROUTE,
       });
 
-      // [REMOVABLE-DEBUG-TOAST]
-      toast({
-        title: `[DBG-SHARE] 7: saved=${stored} | navigate=${shouldNavigate}`,
-        description: `from=${currentPath} | to=${IMPORT_ROUTE}`,
-        duration: 8000,
-      });
+
 
       if (shouldNavigate) {
         setTimeout(() => navigateRef.current(IMPORT_ROUTE), 300);
