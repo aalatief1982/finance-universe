@@ -327,8 +327,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
     } catch (error) {
       console.error('[SmsPermissionPrompt] Error requesting SMS permission:', error);
       toast({
-        title: 'Something went wrong',
-        description: 'Please try enabling SMS import from Settings.',
+        title: 'Could not confirm SMS permission',
+        description: 'Please try again or enable it later from Settings.',
         variant: 'destructive'
       });
       try {
