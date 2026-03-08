@@ -576,12 +576,7 @@ function AppWrapper() {
             willNavigate = stored && window.location.pathname !== IMPORT_ROUTE;
           }
 
-          // [REMOVABLE-DEBUG-TOAST]
-          toast({
-            title: `[DBG-SHARE] 8: Resume check`,
-            description: `text=${normalizedText.slice(0, 30)} | empty=${!hasText} | stored=${stored} | willNavigate=${willNavigate}`,
-            duration: 8000,
-          });
+
 
           if (willNavigate) {
             console.log('[SHARE_FLOW][RESUME] navigating to Smart Entry from app resume');
