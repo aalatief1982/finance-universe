@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getNavItems } from "./route-constants";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 // Map of icon names to their components
 const iconMap = {
