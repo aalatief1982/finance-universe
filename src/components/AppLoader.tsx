@@ -38,6 +38,8 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
 
   useEffect(() => {
     traceAppRoot('AppLoader mounted');
+    // [REMOVABLE-DEBUG-TOAST] Toast 3
+    toast({ title: `[DBG-FLICKER] 3: AppLoader mounted | initializing=${isInitializing} | t=${performance.now().toFixed(0)}` });
 
     return () => {
       traceAppRoot('AppLoader unmounted');
