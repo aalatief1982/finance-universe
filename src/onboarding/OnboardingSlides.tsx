@@ -49,7 +49,10 @@ interface Props {
   flickerDiag?: number; // [REMOVABLE-FLICKER-DIAG]
 }
 
-const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false }) => {
+const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, flickerDiag = 0 }) => {
+  // [REMOVABLE-FLICKER-DIAG] helpers
+  const noAnim = flickerDiag === 2;
+  const fixedDims = flickerDiag === 3;
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
