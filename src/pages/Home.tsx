@@ -280,7 +280,7 @@ const Home = () => {
                 </TabsContent>
 
                 <TabsContent value="net" className="space-y-2">
-                  <h2 className="text-lg font-semibold">Net Growth Summary</h2>
+                  <h2 className="text-lg font-semibold">{t('home.netGrowthSummary')}</h2>
                   <ChartErrorBoundary chartName="Net Balance">
                     <NetBalanceChart data={timelineData} />
                   </ChartErrorBoundary>
