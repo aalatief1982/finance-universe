@@ -281,7 +281,7 @@ const BudgetReportPage = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="pt-4">
             <div className="text-sm text-muted-foreground">Total Budget</div>
