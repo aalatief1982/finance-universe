@@ -235,12 +235,6 @@ function AppWrapper() {
     ) => {
       const normalizedText = payload.text?.trim();
 
-      // [REMOVABLE-DEBUG-TOAST]
-      toast({
-        title: `[DBG-SHARE] 4: persistAndRoute called`,
-        description: `intake=${intake} | textLen=${normalizedText?.length ?? 0} | empty=${!normalizedText}`,
-        duration: 8000,
-      });
 
       if (!normalizedText) {
         logShareFlow('ignored empty payload', {
