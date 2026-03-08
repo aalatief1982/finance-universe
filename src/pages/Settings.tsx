@@ -27,6 +27,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
@@ -104,6 +105,7 @@ import { SMS_AUTO_IMPORT_ENABLED } from '@/lib/env';
 
 const Settings = () => {
   const { toast } = useToast();
+  const { t, language, setLanguage: setAppLanguage } = useLanguage();
   const { user, updateUser } = useUser();
 
   const navigate = useNavigate();
@@ -464,14 +466,14 @@ const Settings = () => {
       >
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Sun className="mr-2" size={20} />
-            <span>Appearance</span>
+            <Sun className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.appearance')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Customize how the application looks
+            {t('settings.customizeLook')}
           </p>
           <div className="space-y-2">
-            <Label>Theme</Label>
+            <Label>{t('settings.theme')}</Label>
             <ToggleGroup
               type="single"
               value={theme}
@@ -482,11 +484,11 @@ const Settings = () => {
             >
               <ToggleGroupItem value="light" className="gap-1">
                 <Sun size={16} />
-                Light
+                {t('settings.light')}
               </ToggleGroupItem>
               <ToggleGroupItem value="dark" className="gap-1">
                 <Moon size={16} />
-                Dark
+                {t('settings.dark')}
               </ToggleGroupItem>
               <ToggleGroupItem value="system" className="gap-1">
                 <svg
@@ -505,13 +507,13 @@ const Settings = () => {
                   <line x1="8" x2="16" y1="21" y2="21" />
                   <line x1="12" x2="12" y1="17" y2="21" />
                 </svg>
-                System
+                {t('settings.system')}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
+            <Label htmlFor="currency">{t('settings.currency')}</Label>
             <CurrencyCombobox
               id="currency"
               value={currency}
@@ -521,16 +523,36 @@ const Settings = () => {
 
         </section>
 
+        {/* Language */}
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Eye className="mr-2" size={20} />
-            <span>Display Options</span>
+            <span className="mr-2 rtl:ml-2 rtl:mr-0 text-lg">🌐</span>
+            <span>{t('settings.language')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Customize how information is displayed
+            {t('settings.selectLanguage')}
+          </p>
+          <ToggleGroup
+            type="single"
+            value={language}
+            onValueChange={(value) => { if (value) setAppLanguage(value as 'en' | 'ar'); }}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="en">English</ToggleGroupItem>
+            <ToggleGroupItem value="ar">العربية</ToggleGroupItem>
+          </ToggleGroup>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
+            <Eye className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.displayOptions')}</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('settings.customizeDisplay')}
           </p>
           <div className="space-y-2">
-            <Label>Week Starts On</Label>
+            <Label>{t('settings.weekStartsOn')}</Label>
             <ToggleGroup
               type="single"
               value={weekStartsOn}
@@ -540,9 +562,9 @@ const Settings = () => {
               }
               className="justify-start"
             >
-              <ToggleGroupItem value="sunday">Sunday</ToggleGroupItem>
-              <ToggleGroupItem value="monday">Monday</ToggleGroupItem>
-              <ToggleGroupItem value="saturday">Saturday</ToggleGroupItem>
+              <ToggleGroupItem value="sunday">{t('settings.sunday')}</ToggleGroupItem>
+              <ToggleGroupItem value="monday">{t('settings.monday')}</ToggleGroupItem>
+              <ToggleGroupItem value="saturday">{t('settings.saturday')}</ToggleGroupItem>
             </ToggleGroup>
           </div>
         </section>
@@ -550,23 +572,23 @@ const Settings = () => {
         {/* Alerts & Notifications */}
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Bell className="mr-2" size={20} />
-            <span>Alerts & Notifications</span>
+            <Bell className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.alertsNotifications')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage how you get notified
+            {t('settings.manageNotifications')}
           </p>
           {notificationsEnabled ? (
             <div className="space-y-2">
-              <Label>Transaction Alerts</Label>
-              <p className="text-sm text-muted-foreground">Notifications are enabled</p>
+              <Label>{t('settings.transactionAlerts')}</Label>
+              <p className="text-sm text-muted-foreground">{t('settings.notificationsEnabled')}</p>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="notifications-toggle">Transaction Alerts</Label>
+                <Label htmlFor="notifications-toggle">{t('settings.transactionAlerts')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Get notified when new expenses are detected from SMS
+                  {t('settings.notificationsDesc')}
                 </p>
               </div>
               <Switch
@@ -579,7 +601,7 @@ const Settings = () => {
                   if (alreadyGranted) {
                     setNotificationsEnabled(true);
                     updateUserPreferences({ notifications: true });
-                    toast({ title: "Notifications enabled" });
+                    toast({ title: t("toast.notificationsEnabled") });
                     return;
                   }
 
@@ -588,9 +610,9 @@ const Settings = () => {
                   setNotificationsEnabled(grantedAfterRequest);
                   updateUserPreferences({ notifications: grantedAfterRequest });
                   if (grantedAfterRequest) {
-                    toast({ title: "Notifications enabled" });
+                    toast({ title: t("toast.notificationsEnabled") });
                   } else {
-                    toast({ title: "Permission not granted", variant: "destructive" });
+                    toast({ title: t("toast.permissionNotGranted"), variant: "destructive" });
                   }
                 }}
               />
@@ -601,11 +623,11 @@ const Settings = () => {
         {/* SMS Import */}
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <MessageSquare className="mr-2" size={20} />
-            <span>SMS Import</span>
+            <MessageSquare className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.smsImport')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage SMS transaction importing
+            {t('settings.manageSmsImport')}
           </p>
           
           <LockedFeature
@@ -722,16 +744,16 @@ const Settings = () => {
 
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Database className="mr-2" size={20} />
-            <span>Data Management</span>
+            <Database className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.dataManagement')}</span>
           </h2>
-          <p className="text-sm text-muted-foreground">Manage your data</p>
+          <p className="text-sm text-muted-foreground">{t('settings.manageData')}</p>
           
           <div className="space-y-3">
             <div>
-              <p className="font-medium">Export Data</p>
+              <p className="font-medium">{t('settings.exportData')}</p>
               <p className="text-sm text-muted-foreground">
-                Download all your transaction data
+                {t('settings.exportDataDesc')}
               </p>
             </div>
             <Button
@@ -740,7 +762,7 @@ const Settings = () => {
               className="gap-2"
             >
               <Download size={16} />
-              Export
+              {t('settings.export')}
             </Button>
           </div>
 
@@ -751,9 +773,9 @@ const Settings = () => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Import Data</p>
+                <p className="font-medium">{t('settings.importData')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Import transactions from a file
+                  {t('settings.importDataDesc')}
                 </p>
               </div>
               <Button
@@ -762,7 +784,7 @@ const Settings = () => {
                 className="gap-2"
               >
                 <UploadCloud size={16} />
-                Import
+                {t('settings.import')}
               </Button>
             </div>
           </LockedFeature>

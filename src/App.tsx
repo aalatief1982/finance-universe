@@ -20,6 +20,7 @@ import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import { UserProvider } from './context/UserContext';
 import { TransactionProvider } from './context/TransactionContext';
+import { LanguageProvider } from './i18n/LanguageContext';
 import { Toaster } from "@/components/ui/toaster";
 import ImportTransactions from './pages/ImportTransactions';
 import EditTransaction from './pages/EditTransaction';
@@ -1323,6 +1324,7 @@ function App() {
   }, []);
 
   return (
+    <LanguageProvider>
     <ThemeProvider defaultTheme="light" attribute="class">
       <UserProvider>
         <TransactionProvider>
@@ -1344,6 +1346,7 @@ function App() {
         </TransactionProvider>
       </UserProvider>
     </ThemeProvider>
+    </LanguageProvider>
   );
 }
 

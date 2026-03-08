@@ -33,11 +33,13 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { CATEGORIES } from '@/lib/mock-data';
 import { useNavigate } from 'react-router-dom';
 import { logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const Transactions = () => {
   const [filter, setFilter] = React.useState<'all' | 'income' | 'expense' | 'transfer'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // ============================================================================
   // SECTION: Analytics
@@ -152,14 +154,14 @@ const Transactions = () => {
               value={r}
               className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
-              {r.charAt(0).toUpperCase() + r.slice(1)}
+              {t(`range.${r}`)}
             </ToggleGroupItem>
           ))}
           <ToggleGroupItem
             value="custom"
             className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
           >
-            Custom
+            {t('range.custom')}
           </ToggleGroupItem>
         </ToggleGroup>
 
@@ -182,13 +184,13 @@ const Transactions = () => {
               value={f}
               className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {t(`transactions.${f}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
 
         <Input
-          placeholder="Search transactions..."
+          placeholder={t('transactions.searchPlaceholder')}
           className="h-8 text-sm rounded-md w-full px-3 py-1.5 bg-secondary-light border-secondary/20 focus-visible:border-secondary focus-visible:ring-secondary"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
@@ -201,7 +203,7 @@ const Transactions = () => {
             <TransactionsByDate transactions={filteredTransactions} />
           ) : (
           <div className="flex flex-col items-center justify-center py-[var(--section-gap)] text-center">
-            <p className="text-muted-foreground mb-3">No transactions found</p>
+            <p className="text-muted-foreground mb-3">{t('transactions.noFound')}</p>
           </div>
         )}
         </div>

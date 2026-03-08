@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getNavItems } from "./route-constants";
 import { isBetaActive, handleLockedFeatureClick } from "@/utils/beta-utils";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 // Map of icon names to their components
 const iconMap = {
@@ -56,7 +57,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onOpenFeedback,
 }) => {
   const location = useLocation();
-  const navItems = getNavItems();
+  const { t } = useLanguage();
+  const navItems = getNavItems(t);
   const [betaActive] = React.useState(() => isBetaActive());
   const baseMenuItemClass =
     "flex w-full items-center h-12 px-4 gap-3 rounded-md transition-colors";

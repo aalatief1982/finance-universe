@@ -1,108 +1,109 @@
-// Map routes to their corresponding titles
-export const routeTitleMap: Record<string, string> = {
+// Map routes to their corresponding translation keys
+export const routeTitleKeyMap: Record<string, string> = {
   "/": "Xpensia",
   "/home": "Xpensia",
-  "/transactions": "Transactions",
-  "/analytics": "Analytics",
-  "/budget": "Budgets",
-  "/process-sms": "Import SMS",
-  "/settings": "Settings",
-  "/profile": "Profile",
-  "/sms-providers": "SMS Senders (Advanced, Legacy)",
-  "/wireframes": "Wireframes",
-  "/wireframes/dashboard": "Dashboard",
-  "/wireframes/onboarding": "Onboarding",
-  "/wireframes/add-transaction": "Add Transaction",
-  "/wireframes/reports": "Reports",
-  "/wireframes/settings": "Settings",
-  "/wireframes/sms-provider": "SMS Provider",
-  "/wireframes/sms-transaction": "SMS Transaction",
-  "/import-transactions": "Smart Entry",
-  "/review-sms-transactions": "Review Details",
-  "/sms-review": "SMS Review",
-  "/edit-transaction": "Transaction",
-  "/budget/accounts": "Accounts & Balances",
-  "/budget/set": "Set Budget",
-  "/budget/report": "Budget vs Actual",
-  "/budget/insights": "Suggestions & Insights",
-  "/exchange-rates": "Exchange Rates",
-  "/about": "About",
+  "/transactions": "nav.transactions",
+  "/analytics": "nav.analytics",
+  "/budget": "budget.budgets",
+  "/process-sms": "nav.importSms",
+  "/settings": "nav.settings",
+  "/profile": "nav.profile",
+  "/sms-providers": "nav.smsProviders",
+  "/import-transactions": "nav.smartEntry",
+  "/review-sms-transactions": "nav.reviewDetails",
+  "/sms-review": "nav.smsReview",
+  "/edit-transaction": "nav.transaction",
+  "/budget/accounts": "nav.accounts",
+  "/budget/set": "nav.setBudget",
+  "/budget/report": "nav.budgetReport",
+  "/budget/insights": "nav.budgetInsights",
+  "/exchange-rates": "nav.exchangeRates",
+  "/about": "nav.about",
+};
+
+// For backward compatibility - returns translated titles
+export const getRouteTitleMap = (t: (key: string) => string): Record<string, string> => {
+  const result: Record<string, string> = {};
+  for (const [path, key] of Object.entries(routeTitleKeyMap)) {
+    result[path] = key === 'Xpensia' ? 'Xpensia' : t(key);
+  }
+  return result;
 };
 
 // Navigation items that appear in the header
-export const getNavItems = () => {
+export const getNavItems = (t?: (key: string) => string) => {
+  const tr = t || ((key: string) => key);
   const items = [
     {
-      title: "Home",
+      title: tr("nav.home"),
       path: "/home",
       icon: "Home",
-      description: "Overview of your finances",
+      description: tr("nav.desc.home"),
     },
     {
-      title: "Smart Entry",
+      title: tr("nav.smartEntry"),
       path: "/import-transactions",
       icon: "Upload",
-      description: "Import transactions from SMS or paste",
+      description: tr("nav.desc.smartEntry"),
     },
     {
-      title: "Transactions",
+      title: tr("nav.transactions"),
       path: "/transactions",
       icon: "List",
-      description: "View and manage your transactions",
+      description: tr("nav.desc.transactions"),
     },
     {
-      title: "Analytics",
+      title: tr("nav.analytics"),
       path: "/analytics",
       icon: "PieChart",
-      description: "Detailed reports and charts",
+      description: tr("nav.desc.analytics"),
     },
     {
-      title: "Budget",
+      title: tr("nav.budget"),
       path: "/budget",
       icon: "Scale",
-      description: "Manage budgets and accounts",
+      description: tr("nav.desc.budget"),
     },
     {
-      title: "SMS Review",
+      title: tr("nav.smsReview"),
       path: "/sms-review",
       icon: "Mail",
-      description: "Review imported SMS transactions",
+      description: tr("nav.desc.smsReview"),
       mobileOnly: true,
     },
     {
-      title: "Exchange Rates",
+      title: tr("nav.exchangeRates"),
       path: "/exchange-rates",
       icon: "ArrowLeftRight",
-      description: "Manage currency exchange rates",
+      description: tr("nav.desc.exchangeRates"),
     },
     {
-      title: "Settings",
+      title: tr("nav.settings"),
       path: "/settings",
       icon: "Settings",
-      description: "Configure app preferences",
+      description: tr("nav.desc.settings"),
     },
     {
-      title: "Feedback",
+      title: tr("nav.feedback"),
       path: "__feedback__",
       icon: "Mail",
-      description: "Share your feedback",
+      description: tr("nav.desc.feedback"),
       mobileOnly: true,
     },
     {
-      title: "Profile",
+      title: tr("nav.profile"),
       path: "/profile",
       icon: "User",
-      description: "Manage your profile",
+      description: tr("nav.desc.profile"),
     },
     {
-      title: "About",
+      title: tr("nav.about"),
       path: "/about",
       icon: "Info",
-      description: "Learn about Xpensia",
+      description: tr("nav.desc.about"),
       mobileOnly: true,
     },
   ];
-
 
   return items;
 };

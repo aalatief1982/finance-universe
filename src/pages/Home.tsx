@@ -29,6 +29,7 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import Layout from "@/components/Layout";
 import DashboardStats from "@/components/DashboardStats";
 import TimelineChart from "@/components/charts/TimelineChart";
@@ -59,12 +60,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getHomeFilteredTransactions, getHomeSummary, HomeDateRange } from "@/utils/home-transactions";
 
 const Home = () => {
+  const { t } = useLanguage();
   const { transactions } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
   const firstName = user?.fullName?.split(' ')[0] || 'there';
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+  const greeting = hour < 12 ? t('home.goodMorning') : hour < 18 ? t('home.goodAfternoon') : t('home.goodEvening');
   
   // State to dismiss the unconverted warning
   const [dismissedWarning, setDismissedWarning] = useState(false);
@@ -193,14 +195,14 @@ const Home = () => {
                 value={r}
                 className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
               >
-                {r.charAt(0).toUpperCase() + r.slice(1)}
+                {t(`range.${r}`)}
               </ToggleGroupItem>
             ))}
             <ToggleGroupItem
               value="custom"
               className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
-              Custom
+              {t('range.custom')}
             </ToggleGroupItem>
           </ToggleGroup>
           {range === "custom" && (
@@ -248,37 +250,37 @@ const Home = () => {
                     value="trends"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
                   >
-                    Trends
+                    {t('home.trends')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="net"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
                   >
-                    Net Balance
+                    {t('home.netBalance')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="category"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
                   >
-                    Category
+                    {t('home.category')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="subcategory"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
                   >
-                    Subcategory
+                    {t('home.subcategory')}
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="trends" className="space-y-2">
-                  <h2 className="text-lg font-semibold">Spending Trends</h2>
+                  <h2 className="text-lg font-semibold">{t('home.spendingTrends')}</h2>
                   <ChartErrorBoundary chartName="Spending Trends">
                     <TimelineChart data={timelineData} />
                   </ChartErrorBoundary>
                 </TabsContent>
 
                 <TabsContent value="net" className="space-y-2">
-                  <h2 className="text-lg font-semibold">Net Growth Summary</h2>
+                  <h2 className="text-lg font-semibold">{t('home.netGrowthSummary')}</h2>
                   <ChartErrorBoundary chartName="Net Balance">
                     <NetBalanceChart data={timelineData} />
                   </ChartErrorBoundary>
@@ -300,7 +302,7 @@ const Home = () => {
 
             <div className="bg-card p-[var(--card-padding)] rounded-lg shadow flex flex-col justify-between">
               <h2 className="text-lg font-semibold mb-2">
-                Recent Transactions
+                {t('home.recentTransactions')}
               </h2>
 
               {filteredTransactions.length > 0 ? (
@@ -389,7 +391,7 @@ const Home = () => {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-6">
-                  No transactions found for this period.
+                  {t('home.noTransactions')}
                 </p>
               )}
 
@@ -399,7 +401,7 @@ const Home = () => {
                   aria-label="View full transaction history"
                   className="text-sm text-blue-600 hover:underline flex items-center space-x-1"
                 >
-                  <span>View All</span>
+                  <span>{t('home.viewAll')}</span>
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>

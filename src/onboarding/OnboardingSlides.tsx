@@ -3,15 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { EffectFade } from 'swiper/modules';
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
 interface Slide {
   image: string;
-  title: string;
-  subtitle: string;
-  description: string;
+  titleKey: string;
+  subtitleKey: string;
+  descriptionKey: string;
   icon: React.ReactNode;
   gradient: string;
 }
@@ -19,25 +20,25 @@ interface Slide {
 const slides: Slide[] = [
   {
     image: '/assets/onboarding1-1.png',
-    title: 'Track Expenses Instantly',
-    subtitle: 'Smart parsing of SMS in seconds',
-    description: 'Never miss a transaction. Our AI automatically reads your SMS notifications and tracks every expense.',
+    titleKey: 'onboarding.slide1.title',
+    subtitleKey: 'onboarding.slide1.subtitle',
+    descriptionKey: 'onboarding.slide1.description',
     icon: <Zap className="w-8 h-8" />,
     gradient: 'from-primary/20 via-primary/10 to-transparent'
   },
   {
     image: '/assets/onboarding2-2.png',
-    title: 'Auto-Categorized for You',
-    subtitle: 'No setup needed, we learn as you go!',
-    description: 'Intelligent categorization that gets smarter with every transaction. Spend time living, not organizing.',
+    titleKey: 'onboarding.slide2.title',
+    subtitleKey: 'onboarding.slide2.subtitle',
+    descriptionKey: 'onboarding.slide2.description',
     icon: <Brain className="w-8 h-8" />,
     gradient: 'from-secondary/20 via-secondary/10 to-transparent'
   },
   {
     image: '/assets/onboarding3-3.png',
-    title: 'See Where Your Money Goes',
-    subtitle: 'Real-time dashboards & easy reports',
-    description: 'Beautiful insights and reports that help you make informed financial decisions instantly.',
+    titleKey: 'onboarding.slide3.title',
+    subtitleKey: 'onboarding.slide3.subtitle',
+    descriptionKey: 'onboarding.slide3.description',
     icon: <PieChart className="w-8 h-8" />,
     gradient: 'from-accent/20 via-accent/10 to-transparent'
   }
@@ -46,18 +47,17 @@ const slides: Slide[] = [
 interface Props {
   onComplete: () => void;
   isSubmitting?: boolean;
-  flickerDiag?: number; // [REMOVABLE-FLICKER-DIAG]
+  flickerDiag?: number;
 }
 
 const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, flickerDiag = 0 }) => {
-  // [REMOVABLE-FLICKER-DIAG] helpers
+  const { t, language, setLanguage } = useLanguage();
   const noAnim = flickerDiag === 2;
   const fixedDims = flickerDiag === 3;
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
   const shouldLogImageLoadErrors = import.meta.env.MODE === 'development';
-  const isRtl = typeof document !== 'undefined' && document.documentElement.dir === 'rtl';
   const handleCompleteOnce = React.useCallback(() => {
     if (isSubmitting) return;
     onComplete();
@@ -82,7 +82,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     });
 
     setIsVisible(true);
-    // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)
     const setVh = () => {
       const previousValue = document.documentElement.style.getPropertyValue('--vh-onb');
       const nextValue = `${window.innerHeight * 0.01}px`;
@@ -130,12 +129,28 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     >
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
+      
+      {/* Language selector - top center, only on first slide */}
+      {index === 0 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as 'en' | 'ar')}
+            className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-1.5 text-sm font-medium text-foreground shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+            style={{ paddingRight: '2rem', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center' }}
+          >
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+          </select>
+        </div>
+      )}
+
       {/* Pagination dots */}
       <div
         className="absolute left-1/2 z-20 -translate-x-1/2"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 rtl:space-x-reverse">
           {slides.map((_, i) => (
             <div
               key={i}
@@ -164,25 +179,24 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
               <div
                 className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-8`}
               >
-                <div className="flex flex-col items-center text-center px-4">
+                <div className="flex flex-col items-center text-center px-4" style={index === 0 ? { paddingTop: '2rem' } : undefined}>
                   <div className="mb-3 p-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
                     <div className="text-primary">
                       {slide.icon}
                     </div>
                   </div>
                   <h1 className={`text-2xl sm:text-3xl font-bold text-foreground mb-2 ${noAnim ? '' : 'animate-slide-up'}`}>
-                    {slide.title}
+                    {t(slide.titleKey)}
                   </h1>
                   <p className={`text-base sm:text-lg font-medium text-primary mb-2 ${noAnim ? '' : 'animate-slide-up'}`} style={noAnim ? undefined : { animationDelay: '0.1s' }}>
-                    {slide.subtitle}
+                    {t(slide.subtitleKey)}
                   </p>
                   <p className={`text-sm text-muted-foreground max-w-sm leading-relaxed ${noAnim ? '' : 'animate-slide-up'}`} style={noAnim ? undefined : { animationDelay: '0.2s' }}>
-                    {slide.description}
+                    {t(slide.descriptionKey)}
                   </p>
                 </div>
               </div>
               {/* Image section */}
-              {/* [REMOVABLE-FLICKER-DIAG] fixedDims adds explicit sizing */}
               <div className="flex-1 flex items-center justify-center px-4 min-h-0 overflow-hidden">
                 <div
                   className="relative w-full max-w-xs flex items-center justify-center"
@@ -192,7 +206,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                   <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit flex items-center justify-center">
                     <img
                       src={slide.image.trim()}
-                      alt={slide.title}
+                      alt={t(slide.titleKey)}
                       className={`w-full h-auto max-h-[35vh] object-contain rounded-lg ${noAnim ? '' : 'animate-scale-in'}`}
                       style={fixedDims ? { width: 280, height: 360, animationDelay: noAnim ? undefined : '0.3s' } : noAnim ? undefined : { animationDelay: '0.3s' }}
                       onLoad={
@@ -227,17 +241,17 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                       onClick={handleCompleteOnce}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? 'Starting...' : 'Start Your Journey'}
-                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                      {isSubmitting ? t('onboarding.starting') : t('onboarding.startJourney')}
+                      <ArrowRight className="ml-2 rtl:mr-2 rtl:ml-0 rtl:rotate-180 w-5 h-5 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform duration-200" />
                     </Button>
                     <p className="text-xs text-muted-foreground text-center pb-2">
-                      Join thousands who are already in control of their finances
+                      {t('onboarding.joinThousands')}
                     </p>
                   </div>
                 ) : (
                   <div className="h-16 flex items-center justify-center">
                     <p className="text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                      Swipe to continue
+                      {t('onboarding.swipeToContinue')}
                     </p>
                   </div>
                 )}

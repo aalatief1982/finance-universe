@@ -1,34 +1,18 @@
-/**
- * @file BottomNav.tsx
- * @description UI component for BottomNav.
- *
- * @module components/BottomNav
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
- */
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Upload, List, LineChart } from 'lucide-react';
-
-const navItems = [
-  { name: 'Home', path: '/home', icon: Home, color: 'text-primary' },
-  { name: 'Smart Entry', path: '/import-transactions', icon: Upload, color: 'text-success' },
-  { name: 'Transactions', path: '/transactions', icon: List, color: 'text-secondary' },
-  { name: 'Analytics', path: '/analytics', icon: LineChart, color: 'text-accent' }
-];
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
+  const { t } = useLanguage();
+
+  const navItems = [
+    { nameKey: 'nav.home', path: '/home', icon: Home, color: 'text-primary' },
+    { nameKey: 'nav.smartEntry', path: '/import-transactions', icon: Upload, color: 'text-success' },
+    { nameKey: 'nav.transactions', path: '/transactions', icon: List, color: 'text-secondary' },
+    { nameKey: 'nav.analytics', path: '/analytics', icon: LineChart, color: 'text-accent' }
+  ];
 
   const navRef = React.useRef<HTMLElement>(null);
 
@@ -60,15 +44,15 @@ const BottomNav: React.FC = () => {
       className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-background border-t border-border will-change-transform [transform:translateZ(0)] [backface-visibility:hidden]"
     >
       <ul className="flex justify-around pt-2 pb-[calc(0.5rem+var(--safe-area-bottom))]">
-        {navItems.map(({ name, path, icon: Icon, color }) => (
+        {navItems.map(({ nameKey, path, icon: Icon, color }) => (
           <li key={path}>
             <Link
               to={path}
               className={`flex flex-col items-center text-xs ${location.pathname === path ? color : 'text-muted-foreground'}`}
-            aria-label={name}
-          >
+              aria-label={t(nameKey)}
+            >
               <Icon size={20} className={location.pathname === path ? color : ''} />
-              {name}
+              {t(nameKey)}
             </Link>
           </li>
         ))}

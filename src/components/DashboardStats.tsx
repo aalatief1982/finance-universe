@@ -18,6 +18,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown } from 'lucide-react';
@@ -188,6 +189,7 @@ const DashboardStats = ({
   previousBalance,
   currencyCode,
 }: DashboardStatsProps) => {
+  const { t } = useLanguage();
   const resolvedCurrency = currencyCode || getCurrencyOrAppFallback();
 
   React.useEffect(() => {
@@ -203,7 +205,7 @@ const DashboardStats = ({
   const formatValue = (val: number) => formatNumericAmount(val, resolvedCurrency);
   const renderSubtitle = (val: number) =>
     Number.isFinite(val) ? null : (
-      <p className="text-xs text-muted-foreground">No data yet</p>
+      <p className="text-xs text-muted-foreground">{t('home.noDataYet')}</p>
     );
   
   return (
@@ -219,7 +221,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income [{resolvedCurrency}]</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.income')} [{resolvedCurrency}]</p>
                     <ArrowUpCircle className="text-success" size={20} />
                   </div>
                   <AutoFitAmount className="mt-1 text-left font-semibold text-success tabular-nums whitespace-nowrap" value={formatValue(income)} />
@@ -243,7 +245,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses [{resolvedCurrency}]</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.expenses')} [{resolvedCurrency}]</p>
                     <ArrowDownCircle className="text-destructive" size={20} />
                   </div>
                   <AutoFitAmount className="mt-1 text-left font-semibold text-destructive tabular-nums whitespace-nowrap" value={formatValue(Math.abs(expenses))} />
@@ -267,7 +269,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance [{resolvedCurrency}]</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.balance')} [{resolvedCurrency}]</p>
                     <div className={`${balance >= 0 ? 'text-info' : 'text-destructive'}`}>
                       {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
@@ -281,7 +283,7 @@ const DashboardStats = ({
                       ) : (
                         <TrendingDown size={14} className="mr-1" />
                       )}
-                      {Math.abs(balanceChange).toFixed(1)}% from last month
+                      {Math.abs(balanceChange).toFixed(1)}% {t('home.fromLastMonth')}
                     </p>
                   )}
                 </CardContent>
