@@ -203,7 +203,7 @@ const Transactions = () => {
             <TransactionsByDate transactions={filteredTransactions} />
           ) : (
           <div className="flex flex-col items-center justify-center py-[var(--section-gap)] text-center">
-            <p className="text-muted-foreground mb-3">No transactions found</p>
+            <p className="text-muted-foreground mb-3">{t('transactions.noFound')}</p>
           </div>
         )}
         </div>
