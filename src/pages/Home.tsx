@@ -29,6 +29,7 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import Layout from "@/components/Layout";
 import DashboardStats from "@/components/DashboardStats";
 import TimelineChart from "@/components/charts/TimelineChart";
