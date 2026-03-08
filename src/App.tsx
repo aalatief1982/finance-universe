@@ -595,12 +595,6 @@ function AppWrapper() {
           }
         } catch (err) {
           console.warn('[SHARE_TARGET] Error consuming shared text on resume', err);
-          // [REMOVABLE-DEBUG-TOAST]
-          toast({
-            title: `[DBG-SHARE] 9: Resume ERROR`,
-            description: String(err),
-            duration: 8000,
-          });
         }
 
         await syncNativeInboxAndRoute();
