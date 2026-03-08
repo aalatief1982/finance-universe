@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 import DashboardStats from '../DashboardStats';
 
 const formatNumericAmount = (amount: number) =>
