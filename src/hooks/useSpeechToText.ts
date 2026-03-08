@@ -139,7 +139,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       const map: Record<string, string> = {
         'not-allowed': 'permission_denied',
         'no-speech': 'no_match',
