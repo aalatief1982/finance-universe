@@ -309,8 +309,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
           console.log('[SmsPermissionPrompt] canonical status: permanentlyDenied — showing fallback UI');
           setPermanentlyDenied(true);
           toast({
-            title: 'Permission Required',
-            description: 'Enable SMS in Settings → Apps → Xpensia → Permissions',
+            title: 'SMS permission required',
+            description: 'Enable SMS access in Android Settings to continue.',
             variant: 'destructive'
           });
           // do not mark sms_prompt_shown so user can act
