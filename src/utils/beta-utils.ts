@@ -40,7 +40,7 @@ export const handleBetaCodeSubmit = (
     activateBetaFeatures();
     onSuccess();
     toast({
-      title: "🎉 Beta Features Activated!",
+      title: "Beta features activated",
       description: "You now have access to all beta features including Budget and Import SMS.",
     });
   } else {
