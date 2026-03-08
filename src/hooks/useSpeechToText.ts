@@ -22,7 +22,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const listenersRef = useRef<PluginListenerHandle[]>([]);
-  const webRecognizerRef = useRef<any>(null);
+  const webRecognizerRef = useRef<SpeechRecognition | null>(null);
   const onResultRef = useRef(onResult);
   const onPartialResultRef = useRef(onPartialResult);
 
