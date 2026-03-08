@@ -1,12 +1,11 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { navigateBackSafely } from '@/utils/navigation';
 import { cn } from '@/lib/utils';
 import { LogoLink } from './LogoLink';
 import { MainNavigation } from './MainNavigation';
 import { MobileNavigation } from './MobileNavigation';
 import { routeTitleMap } from './route-constants';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSmsInboxPendingCount } from '@/hooks/useSmsInboxPendingCount';
 import FeedbackModal from '@/components/FeedbackModal';
@@ -14,12 +13,10 @@ import FeedbackModal from '@/components/FeedbackModal';
 interface HeaderProps {
   className?: string;
   showNavigation?: boolean;
-  showBack?: boolean;
-  onBack?: () => void;
   onLogoClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
-const Header = ({ className, showNavigation = true, showBack = false, onBack, onLogoClick }: HeaderProps) => {
+const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const pendingSmsCount = useSmsInboxPendingCount();
@@ -50,22 +47,6 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
       <div className="max-w-7xl mx-auto h-[var(--header-height)] px-4 sm:px-6 lg:px-8">
         <div className="flex h-full items-center justify-between">
           <div className="flex items-center">
-            {showBack && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  if (onBack) {
-                    onBack();
-                    return;
-                  }
-                  navigateBackSafely(navigate);
-                }}
-                className="mr-2 h-11 w-11 p-0"
-              >
-                <ArrowLeft size={20} />
-              </Button>
-            )}
             <LogoLink
               isLandingPage={isLandingPage}
               currentPageTitle={currentPageTitle}
@@ -82,7 +63,7 @@ const Header = ({ className, showNavigation = true, showBack = false, onBack, on
               title="SMS Review Inbox"
               aria-label="SMS Review Inbox"
             >
-              <Mail size={24} />
+              <Mail size={30} />
               {pendingSmsCount > 0 && (
                 <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
                   {pendingSmsCount}

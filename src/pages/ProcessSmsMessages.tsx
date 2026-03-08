@@ -347,7 +347,7 @@ const handleReadSms = async () => {
   return (
     <>
       <LoadingOverlay isOpen={loading} message="Reading SMS..." />
-    <Layout showBack>
+    <Layout>
       <div className="pt-4 pb-4">
         <div className="px-2 mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-2 mb-1">

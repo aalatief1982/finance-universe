@@ -92,7 +92,7 @@ const EngineOutPage = () => {
   const highlightedFields = ['vendor', 'category', 'subcategory', 'type'];
 
   return (
-    <Layout withPadding fullWidth showBack>
+    <Layout withPadding fullWidth>
       <div className="space-y-4 p-3 pb-[calc(var(--bottom-nav-height,72px)+env(safe-area-inset-bottom,0px)+9rem)]">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl font-semibold">Engine Out (Debug)</h1>

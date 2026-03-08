@@ -325,10 +325,8 @@ const EditTransaction = () => {
 
   return (
     <Layout
-      showBack
       withPadding={false}
       fullWidth
-      onBack={guardedNavigateBack}
       onLogoClick={() => confirmDiscardIfDirty(() => navigate('/'))}
     >
       <LoadingOverlay isOpen={saving} message="Saving..." />

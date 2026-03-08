@@ -454,7 +454,7 @@ const Settings = () => {
   };
 
   return (
-    <Layout showBack>
+    <Layout>
       <div className="px-1">
       <motion.div
         initial={{ opacity: 0 }}

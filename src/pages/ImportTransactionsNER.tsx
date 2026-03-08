@@ -98,7 +98,7 @@ const ImportTransactionsNER = () => {
   };
 
   return (
-    <Layout withPadding={false} fullWidth showBack>
+    <Layout withPadding={false} fullWidth>
       <div className="px-1">
 
         <motion.div

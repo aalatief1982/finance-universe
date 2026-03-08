@@ -82,7 +82,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="h-11 w-11 p-0" aria-label="Open navigation menu">
-            <Menu size={24} />
+            <Menu size={30} />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[300px] sm:w-[400px] max-h-[100dvh] overflow-y-auto">

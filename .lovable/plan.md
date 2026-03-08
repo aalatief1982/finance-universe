@@ -1,47 +1,36 @@
 
 
-## Plan: Remove Back Buttons & Resize Header Icons
+## Plan: Make Notification Toggle Grant-Only, Disabled Once Granted
 
-### What We're Doing
+### Concept
+The toggle becomes a one-way "grant permission" button:
+- **OFF + no permission**: Toggle is enabled — user can tap to grant
+- **ON (permission granted)**: Toggle is disabled/greyed out — user cannot revoke from within the app
+- **Permission revoked externally**: Toggle returns to OFF and becomes enabled again (via app resume listener already in place)
 
-1. **Remove all back buttons** from the app — rely on Android's native back gesture and the Xpensia logo (which already navigates to `/home`).
-2. **Increase hamburger menu icon and mail/envelope icon** by ~30% within their existing touch targets.
+### Changes in `src/pages/Settings.tsx`
 
-### Changes
+**1. Disable the Switch when permission is granted**
 
-**File: `src/components/header/Header.tsx`**
-- Remove the `showBack` prop, `onBack` prop, and the entire back button `<Button>` block (lines 53-68).
-- Remove `ArrowLeft` import and `navigateBackSafely` import.
-- Change Mail icon from `size={24}` to `size={30}`.
-- Remove `showBack`/`onBack` from the `HeaderProps` interface.
+Add `disabled={notificationsEnabled}` to the `<Switch>` component. This prevents interaction when notifications are already granted.
 
-**File: `src/components/header/MobileNavigation.tsx`**
-- Change Menu icon from `size={24}` to `size={30}`.
+**2. Simplify the `onCheckedChange` handler**
 
-**File: `src/components/Layout.tsx`**
-- Remove `showBack` and `onBack` props from `LayoutProps` interface.
-- Remove passing `showBack`/`onBack` to `<Header>`.
+Since the toggle can only go from OFF → ON (it's disabled when ON), remove the `!checked` branch entirely. The handler only needs to handle granting:
+- Request permission via `LocalNotifications.requestPermissions()`
+- Check if granted, update state accordingly
+- Show toast on success/failure
 
-**File: `src/components/layout/PageHeader.tsx`**
-- Remove `showBack` prop and the back button block entirely.
-- Remove `ArrowLeft`, `navigateBackSafely`, `useNavigate` imports.
+**3. Add helper text when disabled**
 
-**All consumer pages** (14 files that pass `showBack`):
-- Remove `showBack` prop from `<Layout>` calls in: `BudgetLayout.tsx`, `ImportTransactions.tsx`, `ExchangeRates.tsx`, `ImportTransactionsNER.tsx`, `Settings.tsx`, `ProcessSmsMessages.tsx`, `ReviewSmsTransactions.tsx`, `SetBudgetPage.tsx`, `Analytics.tsx`, `Transactions.tsx`, `SmsReviewInboxPage.tsx`, `About.tsx`, `EngineOutPage.tsx`, `BudgetDetailPage.tsx`.
-- Remove `onBack` prop where passed.
+Update the description text dynamically:
+- When granted (disabled): "Notifications are enabled. To disable, go to your phone's Settings > Apps > Xpensia > Notifications"
+- When not granted: "Get notified when new expenses are detected from SMS"
 
-### Icon Sizing Detail
+**4. No changes needed to the app resume listener**
 
-Current: `Menu size={24}` in `h-11 w-11` button, `Mail size={24}` in `h-11 w-11` button.
-New: Both at `size={30}` — a 25% increase that stays well within the 44px touch target. This avoids overflow on smaller screens while being noticeably larger.
+The existing `appStateChange` listener already re-syncs `notificationsEnabled` from system permission when the user returns, so if they revoke externally, the toggle will flip back to OFF and become interactive again.
 
-### Files Changed Summary
-
-| File | Change |
-|------|--------|
-| `src/components/header/Header.tsx` | Remove back button, increase Mail to 30 |
-| `src/components/header/MobileNavigation.tsx` | Increase Menu to 30 |
-| `src/components/Layout.tsx` | Remove showBack/onBack props |
-| `src/components/layout/PageHeader.tsx` | Remove back button entirely |
-| 14 page files | Remove `showBack` prop usage |
+### Files to change
+- `src/pages/Settings.tsx` — add `disabled` prop, simplify handler, dynamic description
 

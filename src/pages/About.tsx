@@ -11,7 +11,7 @@ import "./About.css";
 
 const About = () => {
   return (
-    <Layout showBack withPadding={false}>
+    <Layout withPadding={false}>
       <div className="aboutPageContent">
         <header className="aboutPageHeader space-y-3">
           <p className="aboutPageLabel text-sm font-semibold uppercase tracking-[0.2em]">
