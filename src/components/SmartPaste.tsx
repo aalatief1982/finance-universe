@@ -141,8 +141,8 @@ const SmartPaste = ({
     blockedSharedTextRef.current = prefillText;
     console.log('[SHARE_FLOW][SMART_PASTE] prefill blocked due to existing text');
     toast({
-      title: 'Shared text received',
-      description: 'Smart Entry already has unsaved text. Clear it to use the shared text.',
+      title: 'Shared text not loaded',
+      description: 'Smart Entry already has unsaved text. Clear it first to use the shared text.',
     });
   }, [onPrefillConsumed, prefillText, text, toast]);
 
