@@ -189,6 +189,7 @@ const DashboardStats = ({
   previousBalance,
   currencyCode,
 }: DashboardStatsProps) => {
+  const { t } = useLanguage();
   const resolvedCurrency = currencyCode || getCurrencyOrAppFallback();
 
   React.useEffect(() => {
