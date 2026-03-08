@@ -317,8 +317,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
         } else {
           console.log('[SmsPermissionPrompt] canonical status: denied (temporary) — marking shown and closing');
           toast({
-            title: 'Permission Denied',
-            description: 'You can enable SMS auto-import later in Settings.',
+            title: 'SMS permission denied',
+            description: 'You can enable SMS access later from Settings.',
           });
           safeStorage.setItem('sms_prompt_shown', 'true');
           onOpenChange(false);
