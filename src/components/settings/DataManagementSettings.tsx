@@ -114,7 +114,7 @@ const DataManagementSettings = () => {
         } catch (error) {
           toast({
             title: "Import failed",
-            description: "Failed to parse the imported file. Make sure it's a valid JSON or CSV file.",
+            description: "Make sure the selected file is a valid JSON or CSV file.",
             variant: "destructive",
           });
         }
