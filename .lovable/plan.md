@@ -1,36 +1,30 @@
+## Plan: Voice Capture for Smart Entry (Android Native)
 
+### Status: ✅ Implemented
 
-## Plan: Make Notification Toggle Grant-Only, Disabled Once Granted
+### What was built
+- **Native Android plugin** (`SpeechToTextPlugin.java`) wrapping `android.speech.SpeechRecognizer`
+- **TypeScript bridge** (`src/plugins/SpeechToTextPlugin.ts`)
+- **React hook** (`src/hooks/useSpeechToText.ts`) with Web Speech API fallback for browser preview
+- **MicButton component** (`src/components/smart-paste/MicButton.tsx`) with pulsing animation
+- **Home page**: Mic FAB above the + FAB, navigates to Smart Entry with transcript
+- **Smart Entry page**: Mic button next to "Transaction details" label, appends transcript to textarea
+- **i18n**: Arabic + English voice error messages
 
-### Concept
-The toggle becomes a one-way "grant permission" button:
-- **OFF + no permission**: Toggle is enabled — user can tap to grant
-- **ON (permission granted)**: Toggle is disabled/greyed out — user cannot revoke from within the app
-- **Permission revoked externally**: Toggle returns to OFF and becomes enabled again (via app resume listener already in place)
+### Post-build steps (required)
+1. `git pull` the project
+2. `npx cap sync` to sync native plugin
+3. `npx cap run android` to test on device
 
-### Changes in `src/pages/Settings.tsx`
+### Files created
+- `android/app/src/main/java/app/xpensia/com/plugins/speechtotext/SpeechToTextPlugin.java`
+- `src/plugins/SpeechToTextPlugin.ts`
+- `src/hooks/useSpeechToText.ts`
+- `src/components/smart-paste/MicButton.tsx`
 
-**1. Disable the Switch when permission is granted**
-
-Add `disabled={notificationsEnabled}` to the `<Switch>` component. This prevents interaction when notifications are already granted.
-
-**2. Simplify the `onCheckedChange` handler**
-
-Since the toggle can only go from OFF → ON (it's disabled when ON), remove the `!checked` branch entirely. The handler only needs to handle granting:
-- Request permission via `LocalNotifications.requestPermissions()`
-- Check if granted, update state accordingly
-- Show toast on success/failure
-
-**3. Add helper text when disabled**
-
-Update the description text dynamically:
-- When granted (disabled): "Notifications are enabled. To disable, go to your phone's Settings > Apps > Xpensia > Notifications"
-- When not granted: "Get notified when new expenses are detected from SMS"
-
-**4. No changes needed to the app resume listener**
-
-The existing `appStateChange` listener already re-syncs `notificationsEnabled` from system permission when the user returns, so if they revoke externally, the toggle will flip back to OFF and become interactive again.
-
-### Files to change
-- `src/pages/Settings.tsx` — add `disabled` prop, simplify handler, dynamic description
-
+### Files modified
+- `android/app/src/main/java/app/xpensia/com/MainActivity.java` — registered SpeechToTextPlugin
+- `src/components/SmartPaste.tsx` — added MicButton to textarea
+- `src/pages/Home.tsx` — added mic FAB with speech hook
+- `src/pages/ImportTransactions.tsx` — reads `voiceTranscript` from navigation state
+- `src/i18n/en.ts` / `src/i18n/ar.ts` — added voice.* keys
