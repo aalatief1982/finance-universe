@@ -22,6 +22,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Transaction } from '@/types/transaction';
 import { Loader2 } from 'lucide-react';
+import MicButton from './smart-paste/MicButton';
+import { useSpeechToText } from '@/hooks/useSpeechToText';
 import { Label } from './ui/label';
 import { Card } from './ui/card';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
