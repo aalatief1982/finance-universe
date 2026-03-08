@@ -117,7 +117,7 @@ const BudgetDetailPage = () => {
 
   if (!budget || !progress) {
     return (
-      <Layout showBack>
+      <Layout>
         <div className="container px-4 py-12 text-center">
           <p className="text-muted-foreground">Budget not found</p>
           <Button onClick={() => navigate('/budget')} className="mt-4">
