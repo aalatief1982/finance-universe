@@ -2,7 +2,6 @@ import React from 'react';
 import { Budget, BudgetScope } from '@/models/budget';
 import { BudgetProgress } from '@/models/budget-period';
 import { formatCurrency } from '@/utils/format-utils';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { 
@@ -12,7 +11,6 @@ import {
   ChevronRight,
   AlertTriangle,
   PiggyBank,
-  Edit2
 } from 'lucide-react';
 import { getPeriodLabel } from '@/utils/budget-period-utils';
 

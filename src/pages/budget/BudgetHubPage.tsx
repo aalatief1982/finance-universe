@@ -19,7 +19,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BudgetLayout } from '@/components/budget/BudgetLayout';
-import { Settings, ChevronRight, PiggyBank } from 'lucide-react';
+import { Settings, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBudgetsWithProgress, useBudgetAlerts, useOverallBudgetProgress } from '@/hooks/useBudgets';
 import { useBudgetPeriodParams } from '@/hooks/useBudgetPeriodParams';
