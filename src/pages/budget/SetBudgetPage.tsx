@@ -800,14 +800,11 @@ const SetBudgetPage = () => {
             </div>
           )}
 
-          <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-            Budget for: <strong>{periodLabel}</strong>
-          </div>
         </div>
 
         {/* Budget Amount */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Budget Amount</h2>
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium text-muted-foreground">Amount — {periodLabel}</h2>
           <div className="flex gap-3">
             <div className="flex-1">
               <Label htmlFor="amount" className="sr-only">Amount</Label>
