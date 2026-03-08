@@ -466,14 +466,14 @@ const Settings = () => {
       >
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Sun className="mr-2" size={20} />
-            <span>Appearance</span>
+            <Sun className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.appearance')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Customize how the application looks
+            {t('settings.customizeLook')}
           </p>
           <div className="space-y-2">
-            <Label>Theme</Label>
+            <Label>{t('settings.theme')}</Label>
             <ToggleGroup
               type="single"
               value={theme}
