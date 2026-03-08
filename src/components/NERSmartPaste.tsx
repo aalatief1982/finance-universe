@@ -119,8 +119,8 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
       }
       setError("Could not parse the message. Try again or report.");
       toast({
-        title: "Error",
-        description: "Could not parse the message. Try again or report.",
+        title: "Message could not be parsed",
+        description: "Try another message or review it manually.",
         variant: "destructive",
       });
       setConfidence(null);
