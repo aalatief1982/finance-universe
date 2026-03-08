@@ -79,7 +79,7 @@ const ExchangeRates: React.FC = () => {
     if (rateToDelete) {
       const success = deleteExchangeRate(rateToDelete.id);
       if (success) {
-        toast({ title: 'Exchange rate deleted' });
+        toast({ title: 'Exchange rate deleted', description: '' });
         refreshRates();
       } else {
         toast({ title: 'Failed to delete rate', variant: 'destructive' });
