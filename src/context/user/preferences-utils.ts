@@ -54,8 +54,8 @@ export const updateDisplayOptions = (
   });
   
   toast({
-    title: "Display settings updated",
-    description: "Your display preferences have been saved."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };
 
