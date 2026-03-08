@@ -42,7 +42,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTransactions } from "@/context/TransactionContext";
 import { useNavigate } from "react-router-dom";
 import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Mic } from "lucide-react";
 import { TYPE_ICON_MAP } from "@/constants/typeIconMap";
 import { CATEGORY_ICON_MAP } from "@/constants/categoryIconMap";
 import { format } from "date-fns";
