@@ -187,20 +187,12 @@ const AccountsPage = () => {
     return accountService.getLinkedTransactionCount(account.id);
   };
 
-  const headerActions = (
-    <Button size="sm" onClick={openAddDialog}>
-      <Plus className="h-4 w-4 mr-1" />
-      Add
-    </Button>
-  );
-
   return (
     <BudgetLayout 
       title="Accounts" 
       description="Manage your financial accounts"
       showPeriodFilter={false}
       showAddButton={false}
-      headerActions={headerActions}
     >
       {/* Unmanaged Accounts Alert */}
       {unmanagedAccounts.length > 0 && (
