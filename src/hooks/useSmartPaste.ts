@@ -83,8 +83,8 @@ export const useSmartPaste = (
         console.error("[useSmartPaste] Clipboard error:", err);
       }
       toast({
-        title: 'Clipboard Error',
-        description: 'Could not read from clipboard.',
+        title: 'Could not read clipboard',
+        description: 'Try pasting the message manually.',
         variant: 'destructive',
       });
     }
