@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 import { UserProvider, useUser } from '@/context/UserContext';
 import Settings from '../Settings';
 import { beforeEach, vi } from 'vitest';
