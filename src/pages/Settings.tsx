@@ -690,8 +690,8 @@ const Settings = () => {
                         }
 
                         toast({
-                          title: 'SMS Auto-Import Enabled! 🎉',
-                          description: 'Your transactions will now be imported automatically.'
+                          title: 'SMS permission granted',
+                          description: 'Xpensia can now read supported bank SMS messages for import.',
                         });
                       } else {
                         if (canonicalStatus.permanentlyDenied) {
