@@ -37,6 +37,7 @@ interface ImportTransactionsLocationState {
   senderHint?: string;
   sender?: string;
   scrollToInbox?: boolean;
+  voiceTranscript?: string;
 }
 
 const ImportTransactions = () => {
