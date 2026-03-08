@@ -154,7 +154,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         body: formData.toString(),
       });
 
-      toast({ title: 'Feedback sent', description: 'Thank you for your feedback!' });
+      toast({ title: 'Feedback sent', description: 'Thank you for your feedback.' });
       
       // Log feedback send event
       logAnalyticsEvent('feedback_send', {
