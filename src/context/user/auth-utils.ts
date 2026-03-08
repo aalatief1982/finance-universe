@@ -402,7 +402,7 @@ export const logOut = async (
     
     toast({
       title: "Signed out",
-      description: "You have been successfully signed out."
+      description: "You have been signed out successfully."
     });
   } catch (error) {
     if (import.meta.env.MODE === 'development') {

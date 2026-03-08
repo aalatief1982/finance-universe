@@ -110,7 +110,7 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
         'manual',
         notes.trim() || undefined
       );
-      toast({ title: 'Exchange rate added' });
+      toast({ title: 'Exchange rate updated', description: '' });
     }
 
     onSave?.(savedRate);

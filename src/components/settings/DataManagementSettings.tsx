@@ -151,7 +151,7 @@ const DataManagementSettings = () => {
       });
       
       toast({
-        title: "❌ Invalid Beta Code",
+        title: "Invalid beta code",
         description: "Please enter a valid beta code to activate premium features.",
         variant: "destructive",
       });

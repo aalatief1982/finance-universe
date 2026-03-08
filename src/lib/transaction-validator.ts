@@ -84,7 +84,7 @@ export function validateTransactionInput(input: unknown): TransactionValidationR
 
   if (!isValidSubcategory(txn.category, txn.subcategory)) {
     const error = 'Subcategory must be a predefined value';
-    toast({ title: 'Invalid subcategory', description: error });
+    toast({ title: 'Invalid subcategory', description: 'Select a valid subcategory to continue.' });
     return { valid: false, error };
   }
 

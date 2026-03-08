@@ -82,7 +82,7 @@ const ExchangeRates: React.FC = () => {
         toast({ title: 'Exchange rate deleted', description: '' });
         refreshRates();
       } else {
-        toast({ title: 'Failed to delete rate', variant: 'destructive' });
+        toast({ title: 'Could not update exchange rate', description: 'Please try again.', variant: 'destructive' });
       }
     }
     setDeleteConfirmOpen(false);

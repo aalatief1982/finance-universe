@@ -236,8 +236,8 @@ const ImportTransactions = () => {
       });
 
       toast({
-        title: 'Unable to continue SMS',
-        description: 'We could not continue this SMS right now. Please try again.',
+        title: 'Could not continue SMS import',
+        description: 'Please try again.',
         variant: 'destructive',
       });
     }

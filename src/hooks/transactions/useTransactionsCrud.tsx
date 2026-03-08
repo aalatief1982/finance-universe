@@ -104,8 +104,8 @@ export function useTransactionsCrud() {
   const deleteTransaction = useCallback(
     (id: TransactionId): void => {
       toast({
-        title: 'Transaction Deleted',
-        description: 'Your transaction has been deleted successfully.',
+        title: 'Transaction deleted',
+        description: '',
       });
       void id;
     },

@@ -261,8 +261,8 @@ const PhoneVerification = ({
       setError(`Invalid code. ${attemptsRemaining} attempts remaining.`);
       setErrorType('validation');
       toast({
-        title: 'Error',
-        description: `Invalid code. ${attemptsRemaining} attempts remaining. For this demo, use 1234.`,
+        title: 'Invalid verification code',
+        description: 'Check the code and try again.',
         variant: 'destructive',
       });
     } finally {

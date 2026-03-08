@@ -354,8 +354,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
   const handleLater = () => {
     console.log('[SmsPermissionPrompt] User selected Maybe Later for SMS permission.');
     toast({
-      title: 'No problem!',
-      description: 'Enable SMS auto-import anytime in Profile → Settings → SMS Settings'
+      title: 'SMS permission denied',
+      description: 'You can enable SMS access later from Settings.'
     });
     safeStorage.setItem('sms_prompt_shown', 'true');
     onOpenChange(false);

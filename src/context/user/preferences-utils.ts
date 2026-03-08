@@ -114,7 +114,7 @@ export const updateDataManagement = (
   });
   
   toast({
-    title: "Data management updated",
-    description: "Your data management preferences have been saved."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };

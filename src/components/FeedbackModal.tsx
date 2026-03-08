@@ -170,8 +170,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       onOpenChange(false);
     } catch (err) {
       toast({
-        title: 'Submission failed',
-        description: 'Could not send feedback. Please try again later.',
+        title: 'Could not send feedback',
+        description: 'Please try again later.',
         variant: 'destructive',
       });
     } finally {
