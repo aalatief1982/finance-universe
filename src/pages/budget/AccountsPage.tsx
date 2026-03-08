@@ -35,6 +35,7 @@ import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import AddAccountDialog from '@/components/budget/AddAccountDialog';
+import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { 
   Plus,
   Edit2,
