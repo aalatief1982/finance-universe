@@ -603,21 +603,40 @@ function AppWrapper() {
         // Re-check for shared text on resume (warm start from share sheet)
         try {
           const sharePayload = await ShareTarget.consumePendingSharedText();
-          if (sharePayload?.text?.trim()) {
-            const normalizedText = sharePayload.text.trim();
-            const stored = savePendingSharedText({
+          const hasText = Boolean(sharePayload?.text?.trim());
+          const normalizedText = sharePayload?.text?.trim() ?? '';
+          let stored = false;
+          let willNavigate = false;
+          
+          if (hasText) {
+            stored = savePendingSharedText({
               text: normalizedText,
               source: sharePayload.source,
               receivedAt: sharePayload.receivedAt,
             });
-            if (stored && window.location.pathname !== IMPORT_ROUTE) {
-              console.log('[SHARE_FLOW][RESUME] navigating to Smart Entry from app resume');
-              navigateRef.current(IMPORT_ROUTE);
-              return; // Skip SMS flow — share takes priority
-            }
+            willNavigate = stored && window.location.pathname !== IMPORT_ROUTE;
+          }
+
+          // [REMOVABLE-DEBUG-TOAST]
+          toast({
+            title: `[DBG-SHARE] 8: Resume check`,
+            description: `text=${normalizedText.slice(0, 30)} | empty=${!hasText} | stored=${stored} | willNavigate=${willNavigate}`,
+            duration: 8000,
+          });
+
+          if (willNavigate) {
+            console.log('[SHARE_FLOW][RESUME] navigating to Smart Entry from app resume');
+            navigateRef.current(IMPORT_ROUTE);
+            return; // Skip SMS flow — share takes priority
           }
         } catch (err) {
           console.warn('[SHARE_TARGET] Error consuming shared text on resume', err);
+          // [REMOVABLE-DEBUG-TOAST]
+          toast({
+            title: `[DBG-SHARE] 9: Resume ERROR`,
+            description: String(err),
+            duration: 8000,
+          });
         }
 
         await syncNativeInboxAndRoute();
