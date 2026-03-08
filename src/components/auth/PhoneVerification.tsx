@@ -83,8 +83,8 @@ const PhoneVerification = ({
       setError('Failed to send code. Please check your phone number and try again.');
       setErrorType('network');
       toast({
-        title: 'Error',
-        description: 'Failed to send code. Please check your phone number and try again.',
+        title: 'Invalid phone number',
+        description: 'Enter a valid phone number with country code.',
         variant: 'destructive',
       });
     } finally {
