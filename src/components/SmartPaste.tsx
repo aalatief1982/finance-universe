@@ -131,12 +131,6 @@ const SmartPaste = ({
       pendingPrefillConfirmationRef.current = prefillText;
       blockedSharedTextRef.current = null;
       console.log('[SHARE_FLOW][SMART_PASTE] prefill staged');
-      // [REMOVABLE-DEBUG-TOAST]
-      toast({
-        title: `[DBG-SHARE] 12: SmartPaste prefill`,
-        description: `applied=true | blocked=false | textLen=${prefillText.length}`,
-        duration: 8000,
-      });
       return;
     }
 
