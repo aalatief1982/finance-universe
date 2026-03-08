@@ -623,11 +623,11 @@ const Settings = () => {
         {/* SMS Import */}
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <MessageSquare className="mr-2" size={20} />
-            <span>SMS Import</span>
+            <MessageSquare className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.smsImport')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage SMS transaction importing
+            {t('settings.manageSmsImport')}
           </p>
           
           <LockedFeature
