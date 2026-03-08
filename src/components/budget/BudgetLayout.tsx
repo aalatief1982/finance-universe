@@ -30,7 +30,7 @@ export function BudgetLayout({
   const { period, year, periodIndex, setPeriod, navigatePeriod, periodLabel } = useBudgetPeriodParams();
 
   return (
-    <Layout withPadding={false} showBack fullWidth>
+    <Layout withPadding={false} fullWidth>
       <div className="w-full">
         <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-1.5 space-y-1">
           {/* Navigation Tabs */}

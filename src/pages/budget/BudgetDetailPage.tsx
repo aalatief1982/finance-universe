@@ -140,7 +140,7 @@ const BudgetDetailPage = () => {
   };
 
   return (
-    <Layout showBack>
+    <Layout>
       <div className="container px-4 py-6 pb-24 space-y-6 max-w-2xl mx-auto">
         {/* Breadcrumb */}
         <BudgetBreadcrumb items={breadcrumbItems} className="mb-2" />

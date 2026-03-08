@@ -619,7 +619,7 @@ const SetBudgetPage = () => {
 
   return (
     <>
-    <Layout showBack>
+    <Layout>
       <div className="container px-4 py-3 pb-24 space-y-4 max-w-lg mx-auto">
         <h1 className="text-xl font-bold">
           {isEditMode ? 'Edit Budget' : 'Create Budget'}

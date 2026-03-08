@@ -458,7 +458,7 @@ const toggleSkipAll = () => {
   return (
     <>
       <LoadingOverlay isOpen={loading} message="Parsing messages..." />
-      <Layout showBack>
+      <Layout>
         <div className="flex justify-end mb-4 gap-2">
           <Button variant="outline" onClick={toggleSkipAll}>
             {transactions.every(t => t.skipped) ? 'Unskip All' : 'Skip All'}

@@ -91,7 +91,7 @@ const SmsReviewInboxPage = () => {
   }, [loadPendingItems]);
 
   return (
-    <Layout withPadding={false} fullWidth showBack>
+    <Layout withPadding={false} fullWidth>
       <div className="px-1">
         <Card>
           <CardHeader className="pb-3">
