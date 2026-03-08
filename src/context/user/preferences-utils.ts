@@ -24,8 +24,8 @@ export const updateUserPreferences = (
   });
   
   toast({
-    title: "Settings updated",
-    description: "Your preferences have been saved successfully."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };
 
