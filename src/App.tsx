@@ -968,6 +968,10 @@ function AppRoutes() {
     onboardingDone,
     pathname: location.pathname,
   });
+  // [REMOVABLE-DEBUG-TOAST] Toast 7
+  React.useEffect(() => {
+    toast({ title: `[DBG-FLICKER] 7: Route decided | path=${location.pathname} | onbDone=${onboardingDone} | t=${performance.now().toFixed(0)}` });
+  }, [location.pathname]);
 
 
   React.useEffect(() => {
