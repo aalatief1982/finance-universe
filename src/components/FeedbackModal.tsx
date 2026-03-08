@@ -128,8 +128,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     if (!rating) {
       toast({
-        title: 'Missing rating',
-        description: 'Please select a rating between 1 and 5.',
+        title: 'Rating required',
+        description: 'Select a rating between 1 and 5.',
         variant: 'destructive',
       });
       return;
