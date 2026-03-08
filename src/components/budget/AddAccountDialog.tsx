@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import CurrencySelect from '@/components/currency/CurrencySelect';
 import { DatePicker } from '@/components/ui/date-picker';
 import { CURRENCIES } from '@/lib/categories-data';
+import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Account } from '@/models/account';
 import { accountService } from '@/services/AccountService';
 import { toast } from '@/hooks/use-toast';
@@ -43,10 +44,11 @@ interface AddAccountDialogProps {
 
 const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAccountCreated, initialAccount }) => {
   const today = React.useMemo(() => new Date().toISOString().split('T')[0], []);
+  const defaultCurrency = React.useMemo(() => getCurrencyOrAppFallback(), []);
   const [form, setForm] = React.useState<Omit<Account, 'id'>>({
     name: '',
     type: 'Bank',
-    currency: 'USD',
+    currency: defaultCurrency,
     initialBalance: 0,
     startDate: today,
     tags: []
@@ -70,7 +72,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
     setForm({
       name: '',
       type: 'Bank',
-      currency: 'USD',
+      currency: defaultCurrency,
       initialBalance: 0,
       startDate: today,
       tags: []

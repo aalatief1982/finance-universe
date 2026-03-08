@@ -35,6 +35,7 @@ import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import AddAccountDialog from '@/components/budget/AddAccountDialog';
+import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { 
   Plus,
   Edit2,
@@ -165,11 +166,12 @@ const AccountsPage = () => {
   };
 
   const handleImportUnmanaged = (name: string) => {
+    const defaultCurrency = getCurrencyOrAppFallback();
     const newAccount: Account = {
       id: uuidv4(),
       name,
       type: 'Bank',
-      currency: 'USD',
+      currency: defaultCurrency,
       initialBalance: 0,
       startDate: today,
       tags: []
@@ -187,20 +189,12 @@ const AccountsPage = () => {
     return accountService.getLinkedTransactionCount(account.id);
   };
 
-  const headerActions = (
-    <Button size="sm" onClick={openAddDialog}>
-      <Plus className="h-4 w-4 mr-1" />
-      Add
-    </Button>
-  );
-
   return (
     <BudgetLayout 
       title="Accounts" 
       description="Manage your financial accounts"
       showPeriodFilter={false}
       showAddButton={false}
-      headerActions={headerActions}
     >
       {/* Unmanaged Accounts Alert */}
       {unmanagedAccounts.length > 0 && (
@@ -211,7 +205,7 @@ const AccountsPage = () => {
               {unmanagedAccounts.length} account{unmanagedAccounts.length > 1 ? 's' : ''} found in transactions but not managed
             </p>
             <div className="flex flex-wrap gap-2">
-              {unmanagedAccounts.slice(0, 5).map(name => (
+              {unmanagedAccounts.map(name => (
                 <Badge
                   key={name}
                   variant="outline"
@@ -222,9 +216,6 @@ const AccountsPage = () => {
                   <Plus className="h-3 w-3 ml-1" />
                 </Badge>
               ))}
-              {unmanagedAccounts.length > 5 && (
-                <Badge variant="outline">+{unmanagedAccounts.length - 5} more</Badge>
-              )}
             </div>
           </AlertDescription>
         </Alert>
@@ -462,6 +453,15 @@ const AccountsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* FAB for adding accounts */}
+      <Button
+        size="icon"
+        className="md:hidden fixed bottom-16 right-4 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg"
+        onClick={openAddDialog}
+        aria-label="Add Account"
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
     </BudgetLayout>
   );
 };

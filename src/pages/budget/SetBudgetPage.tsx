@@ -27,7 +27,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { formatCurrency } from '@/utils/format-utils';
@@ -620,7 +619,7 @@ const SetBudgetPage = () => {
   return (
     <>
     <Layout showBack>
-      <div className="container px-4 py-6 pb-24 space-y-6 max-w-lg mx-auto">
+      <div className="container px-4 py-4 pb-24 space-y-6 max-w-lg mx-auto">
         <div>
           <h1 className="text-2xl font-bold">
             {isEditMode ? 'Edit Budget' : 'Create Budget'}
@@ -634,12 +633,9 @@ const SetBudgetPage = () => {
         </div>
 
         {/* Scope Selection */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Budget Scope</CardTitle>
-            <CardDescription>What do you want to budget?</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-2">
+        <div className="space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground">Budget Scope</h2>
+          <div className="grid gap-2">
             {SCOPES.map(({ value, label, description, icon: Icon }) => (
               <div
                 key={value}
@@ -669,355 +665,297 @@ const SetBudgetPage = () => {
                 )}
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Target Selection - Hidden for Overall scope */}
+        {/* Target Selection */}
         {scope !== 'overall' && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">
-                Select {scope === 'account' ? 'Account' : scope === 'category' ? 'Category' : 'Subcategory'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-1">
-                <Select value={targetId} onValueChange={setTargetId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={`Select ${scope}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {scope === 'subcategory' ? (
-                      parentCategories.map(parent => {
-                        const children = targets.filter(t => t.parentId === parent.id);
-                        if (children.length === 0) return null;
-                        return (
-                          <React.Fragment key={parent.id}>
-                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
-                              {parent.name}
-                            </div>
-                            {children.map(child => (
-                              <SelectItem key={child.id} value={child.id}>
-                                <span className="pl-2">{child.name}</span>
-                              </SelectItem>
-                            ))}
-                          </React.Fragment>
-                        );
-                      })
-                    ) : (
-                      targets.map(target => (
-                        <SelectItem key={target.id} value={target.id}>
-                          {target.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-                {scope === 'account' && (
-                  <Button variant="outline" size="icon" type="button" onClick={() => setAddAccountOpen(true)}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Existing budget actions - Edit or Delete */}
-              {existingBudgetMatch && !isEditMode && (
-                <Alert className="mt-3" variant="default">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription className="flex flex-col gap-2">
-                    <span>
-                      A budget already exists for{' '}
-                      <strong>{getTargetName(existingBudgetMatch.targetId)}</strong>{' '}
-                      for {formatPeriodLabel(existingBudgetMatch.period, existingBudgetMatch.year, existingBudgetMatch.periodIndex)}.
-                    </span>
-                    <div className="flex gap-2 mt-1">
-                      <Button size="sm" variant="outline" onClick={handleEditExisting}>
-                        Edit Existing
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Overall Scope Info Card */}
-        {scope === 'overall' && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="py-4">
-              <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">Overall Budget</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    This is your total spending budget. It distributes across time periods (yearly → quarterly → monthly).
-                  </p>
-                  
-                  {/* Show edit/delete for existing overall budget */}
-                  {existingBudgetMatch && !isEditMode && (
-                    <div className="mt-3 pt-3 border-t border-primary/20">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        An overall budget exists for {formatPeriodLabel(existingBudgetMatch.period, existingBudgetMatch.year, existingBudgetMatch.periodIndex)}.
-                      </p>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={handleEditExisting}>
-                          Edit Existing
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
+          <div className="space-y-2">
+            <h2 className="text-sm font-medium text-muted-foreground">
+              Select {scope === 'account' ? 'Account' : scope === 'category' ? 'Category' : 'Subcategory'}
+            </h2>
+            <div className="flex items-center gap-1">
+              <Select value={targetId} onValueChange={setTargetId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={`Select ${scope}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {scope === 'subcategory' ? (
+                    parentCategories.map(parent => {
+                      const children = targets.filter(t => t.parentId === parent.id);
+                      if (children.length === 0) return null;
+                      return (
+                        <React.Fragment key={parent.id}>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">
+                            {parent.name}
+                          </div>
+                          {children.map(child => (
+                            <SelectItem key={child.id} value={child.id}>
+                              <span className="pl-2">{child.name}</span>
+                            </SelectItem>
+                          ))}
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    targets.map(target => (
+                      <SelectItem key={target.id} value={target.id}>
+                        {target.name}
+                      </SelectItem>
+                    ))
                   )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Period Selection */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Budget Period
-            </CardTitle>
-            <CardDescription>
-              Select the time period for this budget
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs text-muted-foreground">Period Type</Label>
-                <Select value={period} onValueChange={val => handlePeriodChange(val as BudgetPeriod)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PERIODS.map(p => (
-                      <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Year</Label>
-                <Select value={year.toString()} onValueChange={val => handleYearChange(parseInt(val))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {YEAR_OPTIONS.map(y => (
-                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                </SelectContent>
+              </Select>
+              {scope === 'account' && (
+                <Button variant="outline" size="icon" type="button" onClick={() => setAddAccountOpen(true)}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
             </div>
 
-            {/* Period Index Selection (not shown for yearly) */}
-            {period !== 'yearly' && (
-              <div>
-                <Label className="text-xs text-muted-foreground">
-                  {period === 'monthly' ? 'Month' : 'Quarter'}
-                </Label>
-                {period === 'monthly' && (
-                  <Select value={periodIndex.toString()} onValueChange={val => handlePeriodIndexChange(parseInt(val))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {MONTH_OPTIONS.map(m => (
-                        <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {period === 'quarterly' && (
-                  <Select value={periodIndex.toString()} onValueChange={val => handlePeriodIndexChange(parseInt(val))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {QUARTER_OPTIONS.map(q => (
-                        <SelectItem key={q.value} value={q.value.toString()}>{q.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            )}
-
-            <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-              Budget for: <strong>{periodLabel}</strong>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Budget Amount */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Budget Amount</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Label htmlFor="amount" className="sr-only">Amount</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={amount || ''}
-                  onChange={e => setAmount(parseFloat(e.target.value) || 0)}
-                  className="text-lg font-medium"
-                />
-              </div>
-              <CurrencySelect
-                value={currency}
-                onChange={setCurrency}
-                currencies={CURRENCIES}
-                className="w-24"
-              />
-            </div>
-
-            {/* Cascade Preview for Overall scope */}
-            {cascadePreview && (
-              <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-start gap-2">
-                  <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {cascadePreview.message}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Parent Period Warning */}
-            {parentPeriodWarning && (
-              <Alert className="mt-4" variant="default">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-sm">
-                  <span className="font-medium text-amber-600">Exceeds parent budget allocation</span>
-                  <br />
-                  <span className="text-muted-foreground">
-                    Your {parentPeriodWarning.parentBudget.period} budget of{' '}
-                    <strong>{formatCurrency(parentPeriodWarning.parentBudget.amount, currency)}</strong>{' '}
-                    suggests ~<strong>{formatCurrency(parentPeriodWarning.derivedAmount, currency)}</strong> for this period.
-                    You&apos;re over by {formatCurrency(parentPeriodWarning.excess, currency)}.
+            {existingBudgetMatch && !isEditMode && (
+              <Alert className="mt-2" variant="default">
+                <Info className="h-4 w-4" />
+                <AlertDescription className="flex flex-col gap-2">
+                  <span>
+                    A budget already exists for{' '}
+                    <strong>{getTargetName(existingBudgetMatch.targetId)}</strong>{' '}
+                    for {formatPeriodLabel(existingBudgetMatch.period, existingBudgetMatch.year, existingBudgetMatch.periodIndex)}.
                   </span>
+                  <div className="flex gap-2 mt-1">
+                    <Button size="sm" variant="outline" onClick={handleEditExisting}>
+                      Edit Existing
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
-            
-            {/* Parent Impact Preview */}
-            {parentImpactPreview && (
-              <ParentImpactPreview 
-                propagationResult={parentImpactPreview}
-                currency={currency}
-                year={year}
-              />
-            )}
-            
-            {/* Sibling Budgets Context */}
-            {siblingBudgets.length > 0 && (
-              <div className="mt-4">
-                <SiblingBudgetsContext
-                  siblings={siblingBudgets}
-                  currentAmount={amount}
-                  currentPeriodIndex={periodIndex}
-                  period={period}
-                  year={year}
-                  currency={currency}
-                  parentPeriodLabel={parentPeriodLabel}
-                />
-              </div>
-            )}
-            
-            {/* Upward Propagation Option */}
-            {parentImpactPreview && (parentImpactPreview.quarterUpdate || parentImpactPreview.yearlyUpdate) && (
-              <div className="mt-4 flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                <div className="flex items-center gap-2">
-                  <ArrowUp className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Update parent budgets</p>
-                    <p className="text-xs text-muted-foreground">Adjust parent totals to match</p>
+          </div>
+        )}
+
+        {/* Overall Scope Info */}
+        {scope === 'overall' && (
+          <div className="flex items-start gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-primary">Overall Budget</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total spending budget — distributes across time periods.
+              </p>
+              {existingBudgetMatch && !isEditMode && (
+                <div className="mt-3 pt-3 border-t border-primary/20">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    An overall budget exists for {formatPeriodLabel(existingBudgetMatch.period, existingBudgetMatch.year, existingBudgetMatch.periodIndex)}.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={handleEditExisting}>
+                      Edit Existing
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
-                <Switch checked={propagateUp} onCheckedChange={setPropagateUp} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Period Selection */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Budget Period
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">Period Type</Label>
+              <Select value={period} onValueChange={val => handlePeriodChange(val as BudgetPeriod)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PERIODS.map(p => (
+                    <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Year</Label>
+              <Select value={year.toString()} onValueChange={val => handleYearChange(parseInt(val))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {YEAR_OPTIONS.map(y => (
+                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {period !== 'yearly' && (
+            <div>
+              <Label className="text-xs text-muted-foreground">
+                {period === 'monthly' ? 'Month' : 'Quarter'}
+              </Label>
+              {period === 'monthly' && (
+                <Select value={periodIndex.toString()} onValueChange={val => handlePeriodIndexChange(parseInt(val))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {MONTH_OPTIONS.map(m => (
+                      <SelectItem key={m.value} value={m.value.toString()}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {period === 'quarterly' && (
+                <Select value={periodIndex.toString()} onValueChange={val => handlePeriodIndexChange(parseInt(val))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {QUARTER_OPTIONS.map(q => (
+                      <SelectItem key={q.value} value={q.value.toString()}>{q.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
+
+          <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+            Budget for: <strong>{periodLabel}</strong>
+          </div>
+        </div>
+
+        {/* Budget Amount */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-medium text-muted-foreground">Budget Amount</h2>
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <Label htmlFor="amount" className="sr-only">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder="0.00"
+                value={amount || ''}
+                onChange={e => setAmount(parseFloat(e.target.value) || 0)}
+                className="text-lg font-medium"
+              />
+            </div>
+            <CurrencySelect
+              value={currency}
+              onChange={setCurrency}
+              currencies={CURRENCIES}
+              className="w-24"
+            />
+          </div>
+
+          {cascadePreview && (
+            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">{cascadePreview.message}</p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+
+          {parentPeriodWarning && (
+            <Alert variant="default">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-sm">
+                <span className="font-medium text-amber-600">Exceeds parent budget allocation</span>
+                <br />
+                <span className="text-muted-foreground">
+                  Your {parentPeriodWarning.parentBudget.period} budget of{' '}
+                  <strong>{formatCurrency(parentPeriodWarning.parentBudget.amount, currency)}</strong>{' '}
+                  suggests ~<strong>{formatCurrency(parentPeriodWarning.derivedAmount, currency)}</strong> for this period.
+                  You&apos;re over by {formatCurrency(parentPeriodWarning.excess, currency)}.
+                </span>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {parentImpactPreview && (
+            <ParentImpactPreview 
+              propagationResult={parentImpactPreview}
+              currency={currency}
+              year={year}
+            />
+          )}
+          
+          {siblingBudgets.length > 0 && (
+            <SiblingBudgetsContext
+              siblings={siblingBudgets}
+              currentAmount={amount}
+              currentPeriodIndex={periodIndex}
+              period={period}
+              year={year}
+              currency={currency}
+              parentPeriodLabel={parentPeriodLabel}
+            />
+          )}
+          
+          {parentImpactPreview && (parentImpactPreview.quarterUpdate || parentImpactPreview.yearlyUpdate) && (
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+              <div className="flex items-center gap-2">
+                <ArrowUp className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">Update parent budgets</p>
+                  <p className="text-xs text-muted-foreground">Adjust parent totals to match</p>
+                </div>
+              </div>
+              <Switch checked={propagateUp} onCheckedChange={setPropagateUp} />
+            </div>
+          )}
+        </div>
 
         {/* Alert Thresholds */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Alert Thresholds
-            </CardTitle>
-            <CardDescription>
-              Get notified when you reach these spending levels
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {ALERT_THRESHOLDS.map(threshold => (
-                <Badge
-                  key={threshold}
-                  variant={alertThresholds.includes(threshold) ? 'default' : 'outline'}
-                  className="cursor-pointer transition-colors"
-                  onClick={() => toggleAlertThreshold(threshold)}
-                >
-                  {threshold}%
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Alert Thresholds
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {ALERT_THRESHOLDS.map(threshold => (
+              <Badge
+                key={threshold}
+                variant={alertThresholds.includes(threshold) ? 'default' : 'outline'}
+                className="cursor-pointer transition-colors"
+                onClick={() => toggleAlertThreshold(threshold)}
+              >
+                {threshold}%
+              </Badge>
+            ))}
+          </div>
+        </div>
 
         {/* Rollover */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <RotateCcw className="h-4 w-4 text-muted-foreground" />
-                <CardTitle className="text-base">Rollover</CardTitle>
-              </div>
-              <Switch checked={rollover} onCheckedChange={setRollover} />
+        <div className="flex items-center justify-between p-3 rounded-lg border">
+          <div className="flex items-center gap-2">
+            <RotateCcw className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Rollover</p>
+              <p className="text-xs text-muted-foreground">
+                Carry over unused budget to the next period
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-sm text-muted-foreground">
-              Carry over unused budget to the next period. 
-              {rollover && ' Unused funds will be added to your next period\'s budget.'}
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <Switch checked={rollover} onCheckedChange={setRollover} />
+        </div>
 
         {/* Notes */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              placeholder="Add any notes about this budget..."
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              rows={3}
-            />
-          </CardContent>
-        </Card>
+        <div className="space-y-2">
+          <h2 className="text-sm font-medium text-muted-foreground">Notes</h2>
+          <Textarea
+            placeholder="Add any notes about this budget..."
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            rows={3}
+          />
+        </div>
 
         {/* Actions */}
         <div className="flex gap-3">
@@ -1055,13 +993,13 @@ const SetBudgetPage = () => {
           <DialogHeader>
             <DialogTitle>Distribute to Child Periods?</DialogTitle>
           </DialogHeader>
-          <CardDescription>
+          <p className="text-sm text-muted-foreground">
             Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters and months.
-          </CardDescription>
-          <CardContent className="space-y-2 px-0 text-sm text-muted-foreground">
+          </p>
+          <div className="space-y-2 text-sm text-muted-foreground">
             <p>• 4 quarterly budgets: ~{formatCurrency(amount / 4, currency)} each</p>
             <p>• 12 monthly budgets: ~{formatCurrency(amount / 12, currency)} each</p>
-          </CardContent>
+          </div>
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
             <Button
               variant="outline"
