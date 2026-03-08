@@ -4,11 +4,12 @@ import { cn } from '@/lib/utils';
 import { LogoLink } from './LogoLink';
 import { MainNavigation } from './MainNavigation';
 import { MobileNavigation } from './MobileNavigation';
-import { routeTitleMap } from './route-constants';
+import { getRouteTitleMap } from './route-constants';
 import { Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSmsInboxPendingCount } from '@/hooks/useSmsInboxPendingCount';
 import FeedbackModal from '@/components/FeedbackModal';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface HeaderProps {
   className?: string;
@@ -21,10 +22,12 @@ const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) 
   const navigate = useNavigate();
   const pendingSmsCount = useSmsInboxPendingCount();
   const [feedbackOpen, setFeedbackOpen] = React.useState(false);
+  const { t } = useLanguage();
+  const routeTitleMap = getRouteTitleMap(t);
   
   const currentPageTitle =
     routeTitleMap[location.pathname] ||
-    (location.pathname.startsWith('/edit-transaction') ? 'Transaction' : 'Xpensia');
+    (location.pathname.startsWith('/edit-transaction') ? t('nav.transaction') : 'Xpensia');
   const isLandingPage = location.pathname === '/';
   const isAuthPage = location.pathname === '/onboarding';
   // Show navigation on all pages except landing and onboarding

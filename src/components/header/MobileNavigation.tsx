@@ -57,7 +57,8 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onOpenFeedback,
 }) => {
   const location = useLocation();
-  const navItems = getNavItems();
+  const { t } = useLanguage();
+  const navItems = getNavItems(t);
   const [betaActive] = React.useState(() => isBetaActive());
   const baseMenuItemClass =
     "flex w-full items-center h-12 px-4 gap-3 rounded-md transition-colors";

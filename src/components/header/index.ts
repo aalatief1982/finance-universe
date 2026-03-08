@@ -7,5 +7,5 @@ export { AuthHeader } from './AuthHeader';
 export { MainNavigation } from './MainNavigation';
 export { UserMenu } from './UserMenu';
 export { MobileNavigation } from './MobileNavigation';
-export { routeTitleMap, getNavItems } from './route-constants';
+export { routeTitleKeyMap, getRouteTitleMap, getNavItems } from './route-constants';
 export { XpensiaLogo } from './XpensiaLogo';
