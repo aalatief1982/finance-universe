@@ -32,13 +32,7 @@ export function BudgetLayout({
   return (
     <Layout withPadding={false} showBack fullWidth>
       <div className="w-full">
-        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-1 space-y-1.5">
-          {headerActions && (
-            <div className="flex items-center justify-end gap-2">
-              {headerActions}
-            </div>
-          )}
-
+        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 space-y-1.5">
           {/* Navigation Tabs */}
           <BudgetNav />
 
@@ -53,6 +47,12 @@ export function BudgetLayout({
               onNavigate={navigatePeriod}
             />
           )}
+
+          {headerActions && (
+            <div className="flex items-center justify-end gap-2">
+              {headerActions}
+            </div>
+          )}
         </div>
 
         <div className="px-[var(--page-padding-x)] pt-2">
@@ -66,11 +66,12 @@ export function BudgetLayout({
       {/* Floating Action Button for Mobile */}
       {isMobile && showAddButton && (
         <Button
-          size="lg"
-          className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-50"
+          size="icon"
+          className="fixed bottom-16 right-4 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg"
           onClick={() => navigate('/budget/set')}
+          aria-label="Add Budget"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-5 w-5" />
         </Button>
       )}
     </Layout>

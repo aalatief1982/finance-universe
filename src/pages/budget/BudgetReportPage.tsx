@@ -281,7 +281,7 @@ const BudgetReportPage = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="pt-4">
             <div className="text-sm text-muted-foreground">Total Budget</div>
@@ -312,7 +312,7 @@ const BudgetReportPage = () => {
 
       {/* Over Budget Alert */}
       {overBudgetItems.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5 mb-6">
+        <Card className="border-destructive/50 bg-destructive/5 mb-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-destructive">
               Over Budget ({overBudgetItems.length})
@@ -332,7 +332,7 @@ const BudgetReportPage = () => {
       )}
 
       {/* Charts Tabs */}
-      <Tabs defaultValue="comparison" className="space-y-4 mb-6">
+      <Tabs defaultValue="comparison" className="space-y-4 mb-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="comparison">Comparison</TabsTrigger>
           <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
