@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import CurrencySelect from '@/components/currency/CurrencySelect';
 import { DatePicker } from '@/components/ui/date-picker';
 import { CURRENCIES } from '@/lib/categories-data';
+import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Account } from '@/models/account';
 import { accountService } from '@/services/AccountService';
 import { toast } from '@/hooks/use-toast';
