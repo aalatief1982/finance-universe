@@ -523,16 +523,36 @@ const Settings = () => {
 
         </section>
 
+        {/* Language */}
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Eye className="mr-2" size={20} />
-            <span>Display Options</span>
+            <span className="mr-2 rtl:ml-2 rtl:mr-0 text-lg">🌐</span>
+            <span>{t('settings.language')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Customize how information is displayed
+            {t('settings.selectLanguage')}
+          </p>
+          <ToggleGroup
+            type="single"
+            value={language}
+            onValueChange={(value) => { if (value) setAppLanguage(value as 'en' | 'ar'); }}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="en">English</ToggleGroupItem>
+            <ToggleGroupItem value="ar">العربية</ToggleGroupItem>
+          </ToggleGroup>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="flex items-center justify-center text-lg font-semibold">
+            <Eye className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.displayOptions')}</span>
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('settings.customizeDisplay')}
           </p>
           <div className="space-y-2">
-            <Label>Week Starts On</Label>
+            <Label>{t('settings.weekStartsOn')}</Label>
             <ToggleGroup
               type="single"
               value={weekStartsOn}
@@ -542,9 +562,9 @@ const Settings = () => {
               }
               className="justify-start"
             >
-              <ToggleGroupItem value="sunday">Sunday</ToggleGroupItem>
-              <ToggleGroupItem value="monday">Monday</ToggleGroupItem>
-              <ToggleGroupItem value="saturday">Saturday</ToggleGroupItem>
+              <ToggleGroupItem value="sunday">{t('settings.sunday')}</ToggleGroupItem>
+              <ToggleGroupItem value="monday">{t('settings.monday')}</ToggleGroupItem>
+              <ToggleGroupItem value="saturday">{t('settings.saturday')}</ToggleGroupItem>
             </ToggleGroup>
           </div>
         </section>
