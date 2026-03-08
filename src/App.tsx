@@ -1346,6 +1346,7 @@ function App() {
         </TransactionProvider>
       </UserProvider>
     </ThemeProvider>
+    </LanguageProvider>
   );
 }
 
