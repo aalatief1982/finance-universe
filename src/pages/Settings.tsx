@@ -27,6 +27,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Layout from "@/components/Layout";
