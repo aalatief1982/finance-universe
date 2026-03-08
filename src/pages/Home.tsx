@@ -101,6 +101,12 @@ const Home = () => {
     navigate("/edit-transaction");
   };
 
+  const { startListening, isListening, isSupported: micSupported } = useSpeechToText({
+    onResult: (transcript) => {
+      navigate('/import-transactions', { state: { voiceTranscript: transcript } });
+    },
+  });
+
   const filteredTransactions = React.useMemo(() => {
     return getHomeFilteredTransactions({
       transactions,
