@@ -23,11 +23,16 @@ type XpensiaWindow = Window & {
     }
   }
 
+  // [REMOVABLE-DEBUG-TOAST] Toast 1 & 2 — store timestamps for later reporting
+  ;(window as any).__flickerTimestamps = (window as any).__flickerTimestamps || {};
+  ;(window as any).__flickerTimestamps.reactRenderCall = performance.now(); // Toast 1
+
   const root = createRoot(document.getElementById('root')!)
   root.render(<AppWithLoader />)
 
   const hideInitialLoading = () => {
     ;(window as XpensiaWindow).__xpensiaHideInitialLoading?.()
+    ;(window as any).__flickerTimestamps.htmlLoaderHideTriggered = performance.now(); // [REMOVABLE-DEBUG-TOAST] Toast 2
   }
 
   if (typeof window.requestAnimationFrame === 'function') {

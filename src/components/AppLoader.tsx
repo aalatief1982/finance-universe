@@ -18,6 +18,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
+import { toast } from '@/hooks/use-toast'; // [REMOVABLE-DEBUG-TOAST]
 
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 let traceCounter = 0;
@@ -37,6 +38,8 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
 
   useEffect(() => {
     traceAppRoot('AppLoader mounted');
+    // [REMOVABLE-DEBUG-TOAST] Toast 3
+    toast({ title: `[DBG-FLICKER] 3: AppLoader mounted | initializing=${isInitializing} | t=${performance.now().toFixed(0)}` });
 
     return () => {
       traceAppRoot('AppLoader unmounted');
@@ -57,11 +60,18 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
   useEffect(() => {
     if (!isInitializing) {
       traceAppRoot('AppLoader detected isInitializing=false');
+      // [REMOVABLE-DEBUG-TOAST] Toast 4
+      toast({ title: `[DBG-FLICKER] 4: Init done | t=${performance.now().toFixed(0)}` });
       // Show splash for minimum 1 second for better UX
       traceAppRoot('AppLoader splash hide timer started (1000ms)');
       const timer = setTimeout(() => {
         traceAppRoot('AppLoader 1000ms timer callback executing');
         traceAppRoot('AppLoader calling setShowSplash(false)');
+        // [REMOVABLE-DEBUG-TOAST] Toast 5
+        toast({ title: `[DBG-FLICKER] 5: Splash hiding | t=${performance.now().toFixed(0)}` });
+        // [REMOVABLE-DEBUG-TOAST] Toast 6 — timeline summary
+        const ts = (window as any).__flickerTimestamps || {};
+        toast({ title: `[DBG-FLICKER] 6: Timeline | render=${ts.reactRenderCall?.toFixed(0) ?? '?'} | htmlHide=${ts.htmlLoaderHide?.toFixed(0) ?? '?'} | htmlHideTrigger=${ts.htmlLoaderHideTriggered?.toFixed(0) ?? '?'} | splashHide=${performance.now().toFixed(0)}` });
         setShowSplash(false);
       }, 1000);
 

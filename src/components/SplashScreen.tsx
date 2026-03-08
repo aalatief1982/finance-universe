@@ -16,10 +16,16 @@
  * - [ ] Props have sensible defaults
  * - [ ] Component renders without crashing
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { XpensiaLogo } from './header/XpensiaLogo';
+import { toast } from '@/hooks/use-toast'; // [REMOVABLE-DEBUG-TOAST]
 
 export const SplashScreen: React.FC = () => {
+  // [REMOVABLE-DEBUG-TOAST] Toast 13
+  useEffect(() => {
+    toast({ title: `[DBG-FLICKER] 13: SplashScreen mounted | t=${performance.now().toFixed(0)}` });
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
       <div className="flex flex-col items-center space-y-6">
