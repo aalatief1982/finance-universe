@@ -10,6 +10,7 @@ import com.xpensia.plugins.smsreader.SmsReaderPlugin;
 import app.xpensia.com.plugins.backgroundsmslistener.BackgroundSmsListenerPlugin;
 import app.xpensia.com.plugins.sharetarget.ShareTargetPlugin;
 import app.xpensia.com.plugins.settings.AndroidSettingsPlugin;
+import app.xpensia.com.plugins.speechtotext.SpeechToTextPlugin;
 
 public class MainActivity extends BridgeActivity {
   private static final String TAG = "XpensiaMainActivity";
