@@ -33,13 +33,11 @@ interface LayoutProps {
   withPadding?: boolean;
   showHeader?: boolean;
   fullWidth?: boolean;
-  showBack?: boolean;
   /**
    * Apply safe area padding to the top and bottom of the layout.
    * Useful for pages that need to manage safe areas themselves.
    */
   safeAreaPadding?: boolean;
-  onBack?: () => void;
   onLogoClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
