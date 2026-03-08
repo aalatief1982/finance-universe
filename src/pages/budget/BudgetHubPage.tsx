@@ -19,7 +19,7 @@
 import React, { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BudgetLayout } from '@/components/budget/BudgetLayout';
-import { Settings, ChevronRight, PiggyBank } from 'lucide-react';
+import { Settings, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBudgetsWithProgress, useBudgetAlerts, useOverallBudgetProgress } from '@/hooks/useBudgets';
 import { useBudgetPeriodParams } from '@/hooks/useBudgetPeriodParams';
@@ -143,81 +143,61 @@ const BudgetHubPage = () => {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          {/* Overall Budget Card - Top Level */}
+        <div className="space-y-3">
+          {/* Overall Budget Summary — compact */}
           {overallBudget && (
             <div 
-              className="bg-card rounded-xl p-6 border cursor-pointer hover:border-primary/50 transition-colors"
+              className="bg-card rounded-xl p-4 border cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => navigate(`/budget/set?edit=${overallBudget.id}`)}
               onKeyDown={(e) => e.key === 'Enter' && navigate(`/budget/set?edit=${overallBudget.id}`)}
               role="button"
               tabIndex={0}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-primary/10">
-                    <PiggyBank className="h-5 w-5 text-primary" />
+              <div className="flex items-center gap-4">
+                <OverallBudgetRing
+                  progress={overallBudget.progress}
+                  currency={overallBudget.currency}
+                  size="sm"
+                  showLabels={false}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-sm font-semibold">Overall Budget</h2>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div>
-                    <h2 className="text-lg font-semibold">Overall Budget</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {overallBudget.period.charAt(0).toUpperCase() + overallBudget.period.slice(1)} spending limit
-                    </p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={cn("text-lg font-bold", overallBudget.progress.isOverBudget && "text-destructive")}>
+                      {formatCurrency(overallBudget.progress.spent, overallBudget.currency)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      / {formatCurrency(overallBudget.progress.budgeted, overallBudget.currency)}
+                    </span>
                   </div>
+                  <p className={cn(
+                    "text-xs font-medium mt-0.5",
+                    overallBudget.progress.isOverBudget ? "text-destructive" : "text-primary"
+                  )}>
+                    {overallBudget.progress.isOverBudget 
+                      ? `Over by ${formatCurrency(Math.abs(overallBudget.progress.remaining), overallBudget.currency)}`
+                      : `${formatCurrency(overallBudget.progress.remaining, overallBudget.currency)} remaining`
+                    }
+                  </p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
-              
-              <OverallBudgetRing
-                progress={overallBudget.progress}
-                currency={overallBudget.currency}
-                size="lg"
-                dimensionLabel={formatPeriodLabel(overallBudget.period, overallBudget.year, overallBudget.periodIndex)}
-              />
             </div>
           )}
 
-          {/* Yearly Budget Ring (for non-overall yearly budgets) */}
+          {/* Yearly Budget (non-overall) — compact */}
           {(yearlyBudgets.length > 0 || (overallProgress && !overallBudget)) && (
-            <div className="bg-card rounded-xl p-6 border">
+            <div className="bg-card rounded-xl p-4 border">
               <OverallBudgetRing
                 progress={yearlyBudgets[0]?.progress || overallProgress}
                 currency={yearlyBudgets[0]?.currency || getUserSettings().currency || 'USD'}
-                size="lg"
+                size="sm"
                 dimensionLabel={yearlyBudgets[0] 
                   ? `${getTargetName(yearlyBudgets[0])} • ${formatPeriodLabel(yearlyBudgets[0].period, yearlyBudgets[0].year, yearlyBudgets[0].periodIndex)}` 
                   : `${new Date().getFullYear()}`}
               />
-            </div>
-          )}
-
-          {/* Summary Stats */}
-          {hasAnyBudgets && (
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-card rounded-lg p-3 border text-center">
-                <p className="text-xs text-muted-foreground">Total Budget</p>
-                <p className="text-lg font-bold">
-                  {formatCurrency(summary.totalBudgeted, getUserSettings().currency || 'USD')}
-                </p>
-              </div>
-              <div className="bg-card rounded-lg p-3 border text-center">
-                <p className="text-xs text-muted-foreground">Total Spent</p>
-                <p className={cn(
-                  "text-lg font-bold",
-                  summary.totalSpent > summary.totalBudgeted && "text-destructive"
-                )}>
-                  {formatCurrency(summary.totalSpent, getUserSettings().currency || 'USD')}
-                </p>
-              </div>
-              <div className="bg-card rounded-lg p-3 border text-center">
-                <p className="text-xs text-muted-foreground">Remaining</p>
-                <p className={cn(
-                  "text-lg font-bold",
-                  summary.totalRemaining < 0 ? "text-destructive" : "text-primary"
-                )}>
-                  {formatCurrency(summary.totalRemaining, getUserSettings().currency || 'USD')}
-                </p>
-              </div>
             </div>
           )}
 

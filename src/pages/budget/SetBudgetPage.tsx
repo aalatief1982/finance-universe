@@ -17,6 +17,7 @@
  * - [ ] Navigation hooks are wired correctly
  */
 import React from 'react';
+import { cn } from '@/lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -619,51 +620,29 @@ const SetBudgetPage = () => {
   return (
     <>
     <Layout showBack>
-      <div className="container px-4 py-4 pb-24 space-y-6 max-w-lg mx-auto">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {isEditMode ? 'Edit Budget' : 'Create Budget'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isEditMode 
-              ? 'Update your budget settings'
-              : 'Set up a new spending limit'
-            }
-          </p>
-        </div>
+      <div className="container px-4 py-3 pb-24 space-y-4 max-w-lg mx-auto">
+        <h1 className="text-xl font-bold">
+          {isEditMode ? 'Edit Budget' : 'Create Budget'}
+        </h1>
 
-        {/* Scope Selection */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Budget Scope</h2>
-          <div className="grid gap-2">
-            {SCOPES.map(({ value, label, description, icon: Icon }) => (
-              <div
+        {/* Scope Selection — inline chips */}
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-medium text-muted-foreground">Scope</h2>
+          <div className="flex flex-wrap gap-2">
+            {SCOPES.map(({ value, label, icon: Icon }) => (
+              <button
                 key={value}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors",
                   scope === value 
-                    ? 'border-primary bg-primary/5' 
-                    : 'border-border hover:bg-accent/5'
-                }`}
-                onClick={() => handleScopeChange(value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleScopeChange(value)}
-                role="button"
-                tabIndex={0}
-              >
-                <div className={`p-2 rounded-full ${
-                  scope === value ? 'bg-primary/10' : 'bg-muted'
-                }`}>
-                  <Icon className={`h-4 w-4 ${
-                    scope === value ? 'text-primary' : 'text-muted-foreground'
-                  }`} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{label}</p>
-                  <p className="text-xs text-muted-foreground">{description}</p>
-                </div>
-                {scope === value && (
-                  <Check className="h-4 w-4 text-primary" />
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-border text-muted-foreground hover:bg-accent/5'
                 )}
-              </div>
+                onClick={() => handleScopeChange(value)}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
             ))}
           </div>
         </div>
@@ -767,14 +746,11 @@ const SetBudgetPage = () => {
         )}
 
         {/* Period Selection */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Budget Period
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium text-muted-foreground">Period</h2>
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs text-muted-foreground">Period Type</Label>
+              <Label className="text-xs text-muted-foreground">Type</Label>
               <Select value={period} onValueChange={val => handlePeriodChange(val as BudgetPeriod)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -825,14 +801,11 @@ const SetBudgetPage = () => {
             </div>
           )}
 
-          <div className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">
-            Budget for: <strong>{periodLabel}</strong>
-          </div>
         </div>
 
         {/* Budget Amount */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Budget Amount</h2>
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium text-muted-foreground">Amount — {periodLabel}</h2>
           <div className="flex gap-3">
             <div className="flex-1">
               <Label htmlFor="amount" className="sr-only">Amount</Label>
@@ -913,11 +886,8 @@ const SetBudgetPage = () => {
         </div>
 
         {/* Alert Thresholds */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Alert Thresholds
-          </h2>
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-medium text-muted-foreground">Alerts</h2>
           <div className="flex flex-wrap gap-2">
             {ALERT_THRESHOLDS.map(threshold => (
               <Badge
@@ -946,27 +916,27 @@ const SetBudgetPage = () => {
           <Switch checked={rollover} onCheckedChange={setRollover} />
         </div>
 
-        {/* Notes */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Notes</h2>
+        {/* Notes — collapsible feel */}
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-medium text-muted-foreground">Notes (optional)</h2>
           <Textarea
-            placeholder="Add any notes about this budget..."
+            placeholder="Add notes..."
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            rows={3}
+            rows={2}
+            className="resize-none"
           />
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3">
+        {/* Actions — sticky CTA */}
+        <div className="sticky bottom-4 z-10 flex gap-2 bg-background pt-2 pb-1">
           {isEditMode && (
             <Button 
               variant="destructive" 
-              className="flex-1"
+              size="sm"
               onClick={handleDelete}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
           <Button 

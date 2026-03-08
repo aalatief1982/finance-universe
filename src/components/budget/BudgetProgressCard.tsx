@@ -2,7 +2,6 @@ import React from 'react';
 import { Budget, BudgetScope } from '@/models/budget';
 import { BudgetProgress } from '@/models/budget-period';
 import { formatCurrency } from '@/utils/format-utils';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { 
@@ -12,7 +11,6 @@ import {
   ChevronRight,
   AlertTriangle,
   PiggyBank,
-  Edit2
 } from 'lucide-react';
 import { getPeriodLabel } from '@/utils/budget-period-utils';
 
@@ -145,7 +143,7 @@ export function BudgetProgressCard({
   return (
     <div 
       className={cn(
-        "p-4 rounded-xl bg-card border transition-all",
+        "p-3 rounded-lg bg-card border transition-all",
         onClick && "cursor-pointer hover:shadow-md hover:border-primary/20"
       )}
       onClick={onClick}
@@ -154,50 +152,39 @@ export function BudgetProgressCard({
       tabIndex={onClick ? 0 : undefined}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2.5">
           <div className={cn(
-            "p-2.5 rounded-full",
+            "p-2 rounded-full",
             isOverBudget ? "bg-destructive/10" : "bg-primary/10"
           )}>
             <Icon className={cn(
-              "h-5 w-5",
+              "h-4 w-4",
               isOverBudget ? "text-destructive" : "text-primary"
             )} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-foreground">{targetName}</h3>
+            <div className="flex items-center gap-1.5">
+              <h3 className="font-semibold text-sm text-foreground">{targetName}</h3>
               {SourceBadge}
+              {isOverBudget && (
+                <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+              )}
             </div>
             {dimensionLabel && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[11px] text-muted-foreground">
                 {dimensionLabel}
               </span>
             )}
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          {isOverBudget && (
-            <div className="flex items-center gap-1 text-destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs font-medium">Over budget</span>
-            </div>
-          )}
-          
-          {onClick && (
-            <div className="flex items-center gap-1 p-1.5 rounded-md hover:bg-accent/10 transition-colors">
-              <Edit2 className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground hidden sm:inline">Edit</span>
-            </div>
-          )}
-        </div>
+        {onClick && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
       </div>
 
       {/* Progress bar */}
-      <div className="mb-3">
-        <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
+      <div className="mb-2">
+        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
           <div 
             className={cn("h-full rounded-full transition-all duration-300", getProgressColor())}
             style={{ width: `${visualProgress}%` }}
@@ -205,38 +192,20 @@ export function BudgetProgressCard({
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center justify-between text-sm">
-        <div>
-          <span className="text-muted-foreground">Spent: </span>
-          <span className={cn("font-medium", isOverBudget && "text-destructive")}>
-            {formatCurrency(spent, budget.currency)}
-          </span>
-        </div>
-        <div>
-          <span className="text-muted-foreground">of </span>
-          <span className="font-medium">
-            {formatCurrency(budgeted, budget.currency)}
-          </span>
-        </div>
-      </div>
-
-      {/* Additional info */}
-      <div className="mt-2 pt-2 border-t flex items-center justify-between text-xs text-muted-foreground">
-        <span>
+      {/* Stats — single row */}
+      <div className="flex items-center justify-between text-xs">
+        <span className={cn("font-medium", isOverBudget && "text-destructive")}>
+          {formatCurrency(spent, budget.currency)} / {formatCurrency(budgeted, budget.currency)}
+        </span>
+        <span className={cn(
+          "font-medium",
+          isOverBudget ? "text-destructive" : "text-primary"
+        )}>
           {isOverBudget 
             ? `${formatCurrency(Math.abs(remaining), budget.currency)} over`
             : `${formatCurrency(remaining, budget.currency)} left`
           }
         </span>
-        {daysRemaining > 0 && !isOverBudget && (
-          <span>
-            ~{formatCurrency(dailyBudgetRemaining, budget.currency)}/day
-          </span>
-        )}
-        {daysRemaining > 0 && (
-          <span>{daysRemaining} days left</span>
-        )}
       </div>
     </div>
   );
