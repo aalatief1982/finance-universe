@@ -60,12 +60,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getHomeFilteredTransactions, getHomeSummary, HomeDateRange } from "@/utils/home-transactions";
 
 const Home = () => {
+  const { t } = useLanguage();
   const { transactions } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
   const firstName = user?.fullName?.split(' ')[0] || 'there';
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+  const greeting = hour < 12 ? t('home.goodMorning') : hour < 18 ? t('home.goodAfternoon') : t('home.goodEvening');
   
   // State to dismiss the unconverted warning
   const [dismissedWarning, setDismissedWarning] = useState(false);
