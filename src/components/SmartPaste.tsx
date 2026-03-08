@@ -111,7 +111,13 @@ const SmartPaste = ({
   const pendingPrefillConfirmationRef = React.useRef<string | null>(null);
   const consumedPrefillRef = React.useRef<string | null>(null);
 
-  const { toast } = useToast();
+  const { startListening, isListening, isSupported: micSupported } = useSpeechToText({
+    onResult: (transcript) => {
+      setText((prev) => (prev ? prev + ' ' + transcript : transcript));
+    },
+  });
+
+
   const navigate = useNavigate();
 
 
