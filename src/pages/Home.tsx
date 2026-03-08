@@ -417,7 +417,7 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-16 right-4 z-40 flex flex-col gap-2 md:hidden">
+      <div className="fixed bottom-[7.5rem] right-4 z-40 md:hidden">
         <MicButton
           isListening={isListening}
           isSupported={micSupported}
