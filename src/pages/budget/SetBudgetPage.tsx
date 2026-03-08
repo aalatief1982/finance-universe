@@ -885,11 +885,8 @@ const SetBudgetPage = () => {
         </div>
 
         {/* Alert Thresholds */}
-        <div className="space-y-2">
-          <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Alert Thresholds
-          </h2>
+        <div className="space-y-1.5">
+          <h2 className="text-xs font-medium text-muted-foreground">Alerts</h2>
           <div className="flex flex-wrap gap-2">
             {ALERT_THRESHOLDS.map(threshold => (
               <Badge
