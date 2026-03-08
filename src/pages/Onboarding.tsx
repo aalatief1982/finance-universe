@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { toast } from '@/hooks/use-toast'; // [REMOVABLE-DEBUG-TOAST]
 
 const Onboarding = () => {
   const navigate = useNavigate();
