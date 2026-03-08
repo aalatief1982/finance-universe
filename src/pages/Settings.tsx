@@ -586,9 +586,9 @@ const Settings = () => {
           ) : (
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="notifications-toggle">Transaction Alerts</Label>
+                <Label htmlFor="notifications-toggle">{t('settings.transactionAlerts')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Get notified when new expenses are detected from SMS
+                  {t('settings.notificationsDesc')}
                 </p>
               </div>
               <Switch
