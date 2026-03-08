@@ -268,7 +268,7 @@ const Home = () => {
                     value="subcategory"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
                   >
-                    Subcategory
+                    {t('home.subcategory')}
                   </TabsTrigger>
                 </TabsList>
 
