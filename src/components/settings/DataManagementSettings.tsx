@@ -108,7 +108,7 @@ const DataManagementSettings = () => {
           storeTransactions(merged);
           toast({
             title: "Import successful",
-            description: `Added ${data.length} transactions successfully.`,
+            description: "Transactions were imported successfully.",
           });
           window.dispatchEvent(new StorageEvent('storage', { key: 'xpensia_transactions' }));
         } catch (error) {
