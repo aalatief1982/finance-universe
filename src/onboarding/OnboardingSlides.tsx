@@ -132,12 +132,12 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
       
       {/* Language selector - top center, only on first slide */}
       {index === 0 && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+        <div className="absolute left-4 rtl:left-auto rtl:right-4 z-30" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'ar')}
-            className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg px-3 py-1.5 text-sm font-medium text-foreground shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
-            style={{ paddingRight: '2rem', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.5rem center' }}
+            className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl px-4 py-2.5 text-base font-medium text-foreground shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+            style={{ paddingRight: '2.5rem', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center' }}
           >
             <option value="en">English</option>
             <option value="ar">العربية</option>
@@ -174,7 +174,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
       >
         {slides.map((slide, i) => (
           <SwiperSlide key={i}>
-            <div className={`flex flex-col flex-1 min-h-0 h-full transition-all duration-700 ${noAnim ? '' : 'animate-fade-in'}`}>
+            <div className="flex flex-col flex-1 min-h-0 h-full transition-all duration-700">
               {/* Header with icon and gradient */}
               <div
                 className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-8`}
