@@ -106,6 +106,8 @@ const SmartPaste = ({
   const [debugTrace, setDebugTrace] = useState<InferenceDecisionTrace | undefined>();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const blockedSharedTextRef = React.useRef<string | null>(null);
+  const pendingPrefillConfirmationRef = React.useRef<string | null>(null);
+  const consumedPrefillRef = React.useRef<string | null>(null);
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -118,10 +120,17 @@ const SmartPaste = ({
       return;
     }
 
+    console.log('[SHARE_FLOW][SMART_PASTE] prefill received');
+
+    if (pendingPrefillConfirmationRef.current === prefillText) {
+      return;
+    }
+
     if (!text.trim()) {
       setText(prefillText);
+      pendingPrefillConfirmationRef.current = prefillText;
       blockedSharedTextRef.current = null;
-      onPrefillConsumed?.();
+      console.log('[SHARE_FLOW][SMART_PASTE] prefill staged');
       return;
     }
 
@@ -130,11 +139,34 @@ const SmartPaste = ({
     }
 
     blockedSharedTextRef.current = prefillText;
+    console.log('[SHARE_FLOW][SMART_PASTE] prefill blocked due to existing text');
     toast({
       title: 'Shared text received',
       description: 'Smart Entry already has unsaved text. Clear it to use the shared text.',
     });
   }, [onPrefillConsumed, prefillText, text, toast]);
+
+  useEffect(() => {
+    const pendingPrefill = pendingPrefillConfirmationRef.current;
+
+    if (!pendingPrefill) {
+      return;
+    }
+
+    if (text !== pendingPrefill) {
+      return;
+    }
+
+    console.log('[SHARE_FLOW][SMART_PASTE] prefill confirmed in state');
+
+    if (consumedPrefillRef.current !== pendingPrefill) {
+      onPrefillConsumed?.();
+      consumedPrefillRef.current = pendingPrefill;
+      console.log('[SHARE_FLOW][SMART_PASTE] onPrefillConsumed fired');
+    }
+
+    pendingPrefillConfirmationRef.current = null;
+  }, [onPrefillConsumed, text]);
 
   useEffect(() => {
     if (!text.trim()) {
