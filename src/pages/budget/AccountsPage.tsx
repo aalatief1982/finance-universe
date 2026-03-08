@@ -451,6 +451,15 @@ const AccountsPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* FAB for adding accounts */}
+      <Button
+        size="icon"
+        className="md:hidden fixed bottom-16 right-4 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg"
+        onClick={openAddDialog}
+        aria-label="Add Account"
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
     </BudgetLayout>
   );
 };
