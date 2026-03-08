@@ -66,7 +66,7 @@ export function validateTransactionInput(input: unknown): TransactionValidationR
 
   if (!isValidAmount(txn.amount)) {
     const error = 'Amount must be a number greater than 0';
-    toast({ title: 'Invalid amount', description: error });
+    toast({ title: 'Invalid amount', description: 'Enter a valid amount to continue.' });
     return { valid: false, error };
   }
 
