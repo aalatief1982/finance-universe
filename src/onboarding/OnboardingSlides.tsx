@@ -46,9 +46,13 @@ const slides: Slide[] = [
 interface Props {
   onComplete: () => void;
   isSubmitting?: boolean;
+  flickerDiag?: number; // [REMOVABLE-FLICKER-DIAG]
 }
 
-const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false }) => {
+const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, flickerDiag = 0 }) => {
+  // [REMOVABLE-FLICKER-DIAG] helpers
+  const noAnim = flickerDiag === 2;
+  const fixedDims = flickerDiag === 3;
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
@@ -155,7 +159,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
       >
         {slides.map((slide, i) => (
           <SwiperSlide key={i}>
-            <div className="flex flex-col flex-1 min-h-0 h-full transition-all duration-700 animate-fade-in">
+            <div className={`flex flex-col flex-1 min-h-0 h-full transition-all duration-700 ${noAnim ? '' : 'animate-fade-in'}`}>
               {/* Header with icon and gradient */}
               <div
                 className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-8`}
@@ -166,27 +170,31 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
                       {slide.icon}
                     </div>
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 animate-slide-up">
+                  <h1 className={`text-2xl sm:text-3xl font-bold text-foreground mb-2 ${noAnim ? '' : 'animate-slide-up'}`}>
                     {slide.title}
                   </h1>
-                  <p className="text-base sm:text-lg font-medium text-primary mb-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                  <p className={`text-base sm:text-lg font-medium text-primary mb-2 ${noAnim ? '' : 'animate-slide-up'}`} style={noAnim ? undefined : { animationDelay: '0.1s' }}>
                     {slide.subtitle}
                   </p>
-                  <p className="text-sm text-muted-foreground max-w-sm leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                  <p className={`text-sm text-muted-foreground max-w-sm leading-relaxed ${noAnim ? '' : 'animate-slide-up'}`} style={noAnim ? undefined : { animationDelay: '0.2s' }}>
                     {slide.description}
                   </p>
                 </div>
               </div>
               {/* Image section */}
+              {/* [REMOVABLE-FLICKER-DIAG] fixedDims adds explicit sizing */}
               <div className="flex-1 flex items-center justify-center px-4 min-h-0 overflow-hidden">
-                <div className="relative w-full max-w-xs flex items-center justify-center" style={{ maxHeight: '42vh' }}>
+                <div
+                  className="relative w-full max-w-xs flex items-center justify-center"
+                  style={fixedDims ? { width: 280, height: 400 } : { maxHeight: '42vh' }}
+                >
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-2xl transform rotate-1" />
                   <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit flex items-center justify-center">
                     <img
                       src={slide.image.trim()}
                       alt={slide.title}
-                      className="w-full h-auto max-h-[35vh] object-contain rounded-lg animate-scale-in"
-                      style={{ animationDelay: '0.3s' }}
+                      className={`w-full h-auto max-h-[35vh] object-contain rounded-lg ${noAnim ? '' : 'animate-scale-in'}`}
+                      style={fixedDims ? { width: 280, height: 360, animationDelay: noAnim ? undefined : '0.3s' } : noAnim ? undefined : { animationDelay: '0.3s' }}
                       onLoad={
                         i === 0
                           ? (event) => {
