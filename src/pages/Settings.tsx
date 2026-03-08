@@ -612,7 +612,7 @@ const Settings = () => {
                   if (grantedAfterRequest) {
                     toast({ title: t("toast.notificationsEnabled") });
                   } else {
-                    toast({ title: "Permission not granted", variant: "destructive" });
+                    toast({ title: t("toast.permissionNotGranted"), variant: "destructive" });
                   }
                 }}
               />
