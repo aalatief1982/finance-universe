@@ -65,12 +65,8 @@ const PhoneVerification = ({
         setIsVerificationSent(true);
         setSuccess('Verification code sent successfully!');
         toast({
-          title: 'Success',
-          description: 'Verification code sent successfully!',
-        });
-        toast({
-          title: 'Demo Code',
-          description: 'For this demo, please use code: 1234',
+          title: 'Verification code sent',
+          description: 'Enter the code to continue.',
         });
         
         // Clear success message after a few seconds
