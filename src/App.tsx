@@ -316,13 +316,6 @@ function AppWrapper() {
       pathname: window.location.pathname,
     });
 
-    // [REMOVABLE-DEBUG-TOAST]
-    toast({
-      title: `[DBG-SHARE] 1: Share coordinator started`,
-      description: `platform=android | path=${window.location.pathname}`,
-      duration: 8000,
-    });
-
     void ShareTarget.consumePendingSharedText()
       .then((payload) => {
         // [REMOVABLE-DEBUG-TOAST]
