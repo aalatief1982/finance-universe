@@ -210,8 +210,8 @@ const PhoneVerification = ({
       setError('Please enter a valid 4-digit code');
       setErrorType('validation');
       toast({
-        title: 'Error',
-        description: 'Please enter a valid 4-digit code',
+        title: 'Invalid verification code',
+        description: 'Check the code and try again.',
         variant: 'destructive',
       });
       return;
