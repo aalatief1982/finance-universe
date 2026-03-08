@@ -203,7 +203,7 @@ const AccountsPage = () => {
               {unmanagedAccounts.length} account{unmanagedAccounts.length > 1 ? 's' : ''} found in transactions but not managed
             </p>
             <div className="flex flex-wrap gap-2">
-              {unmanagedAccounts.slice(0, 5).map(name => (
+              {unmanagedAccounts.map(name => (
                 <Badge
                   key={name}
                   variant="outline"
@@ -214,9 +214,6 @@ const AccountsPage = () => {
                   <Plus className="h-3 w-3 ml-1" />
                 </Badge>
               ))}
-              {unmanagedAccounts.length > 5 && (
-                <Badge variant="outline">+{unmanagedAccounts.length - 5} more</Badge>
-              )}
             </div>
           </AlertDescription>
         </Alert>
