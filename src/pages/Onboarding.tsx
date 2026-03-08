@@ -85,9 +85,22 @@ const Onboarding = () => {
     }
   };
 
+  // [REMOVABLE-FLICKER-DIAG] Variant 1: static placeholder
+  if (flickerDiag === 1) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-muted/30 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-primary/20 rounded-2xl mx-auto" />
+          <h1 className="text-2xl font-bold text-foreground">Static Placeholder</h1>
+          <p className="text-muted-foreground">No image, no animation, no Swiper</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 overflow-hidden">
-      <OnboardingSlides onComplete={handleComplete} isSubmitting={isSubmitting} />
+      <OnboardingSlides onComplete={handleComplete} isSubmitting={isSubmitting} flickerDiag={flickerDiag} />
     </div>
   );
 };

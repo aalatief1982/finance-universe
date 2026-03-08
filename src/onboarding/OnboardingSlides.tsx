@@ -182,15 +182,19 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                 </div>
               </div>
               {/* Image section */}
+              {/* [REMOVABLE-FLICKER-DIAG] fixedDims adds explicit sizing */}
               <div className="flex-1 flex items-center justify-center px-4 min-h-0 overflow-hidden">
-                <div className="relative w-full max-w-xs flex items-center justify-center" style={{ maxHeight: '42vh' }}>
+                <div
+                  className="relative w-full max-w-xs flex items-center justify-center"
+                  style={fixedDims ? { width: 280, height: 400 } : { maxHeight: '42vh' }}
+                >
                   <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-2xl transform rotate-1" />
                   <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-3 shadow-xl w-full h-fit flex items-center justify-center">
                     <img
                       src={slide.image.trim()}
                       alt={slide.title}
-                      className="w-full h-auto max-h-[35vh] object-contain rounded-lg animate-scale-in"
-                      style={{ animationDelay: '0.3s' }}
+                      className={`w-full h-auto max-h-[35vh] object-contain rounded-lg ${noAnim ? '' : 'animate-scale-in'}`}
+                      style={fixedDims ? { width: 280, height: 360, animationDelay: noAnim ? undefined : '0.3s' } : noAnim ? undefined : { animationDelay: '0.3s' }}
                       onLoad={
                         i === 0
                           ? (event) => {
