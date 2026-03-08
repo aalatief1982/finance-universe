@@ -18,6 +18,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown } from 'lucide-react';
