@@ -78,6 +78,9 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
       logViewportMetrics('after-first-paint');
     });
 
+    // [REMOVABLE-DEBUG-TOAST] Toast 10
+    toast({ title: `[DBG-FLICKER] 10: OnboardingSlides mounted | t=${performance.now().toFixed(0)}` });
+
     setIsVisible(true);
     // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)
     const setVh = () => {
