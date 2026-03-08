@@ -84,8 +84,8 @@ export const updatePrivacySettings = (
   });
   
   toast({
-    title: "Privacy settings updated",
-    description: "Your privacy preferences have been saved."
+    title: "Profile updated",
+    description: "Your profile has been saved.",
   });
 };
 
