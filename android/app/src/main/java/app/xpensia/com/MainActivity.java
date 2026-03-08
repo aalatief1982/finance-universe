@@ -18,40 +18,19 @@ public class MainActivity extends BridgeActivity {
   public void onCreate(Bundle savedInstanceState) {
     Log.d(TAG, "MainActivity.onCreate() - START");
 
+    // Register plugins BEFORE super.onCreate() so the Capacitor bridge discovers them
+    registerPlugin(SmsReaderPlugin.class);
+    registerPlugin(BackgroundSmsListenerPlugin.class);
+    registerPlugin(AndroidSettingsPlugin.class);
+    registerPlugin(ShareTargetPlugin.class);
+    Log.d(TAG, "All plugins registered");
+
     // Handle any launch intent payload before Capacitor bridge boot so JS can reliably
     // consume pending data even on cold start.
     handleRouteIntent(getIntent());
     handleShareIntent(getIntent());
 
     super.onCreate(savedInstanceState);
-
-    try {
-      registerPlugin(SmsReaderPlugin.class);
-      Log.d(TAG, "SmsReaderPlugin registered");
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering SmsReaderPlugin", e);
-    }
-
-    try {
-      registerPlugin(BackgroundSmsListenerPlugin.class);
-      Log.d(TAG, "BackgroundSmsListenerPlugin registered");
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering BackgroundSmsListenerPlugin", e);
-    }
-
-    try {
-      registerPlugin(AndroidSettingsPlugin.class);
-      Log.d(TAG, "AndroidSettingsPlugin registered");
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering AndroidSettingsPlugin", e);
-    }
-
-    try {
-      registerPlugin(ShareTargetPlugin.class);
-      Log.d(TAG, "ShareTargetPlugin registered");
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering ShareTargetPlugin", e);
-    }
 
     Log.d(TAG, "MainActivity.onCreate() - END");
   }

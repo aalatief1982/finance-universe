@@ -24,5 +24,9 @@
 -keep class com.xpensia.** { *; }
 -dontwarn com.xpensia.**
 
+# Keep app plugins (correct package prefix)
+-keep class app.xpensia.** { *; }
+-dontwarn app.xpensia.**
+
 # Optional: Keep Capacitor plugin classes
 -keep class com.getcapacitor.** { *; }
