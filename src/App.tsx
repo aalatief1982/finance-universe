@@ -327,15 +327,40 @@ function AppWrapper() {
       pathname: window.location.pathname,
     });
 
+    // [REMOVABLE-DEBUG-TOAST]
+    toast({
+      title: `[DBG-SHARE] 1: Share coordinator started`,
+      description: `platform=android | path=${window.location.pathname}`,
+      duration: 8000,
+    });
+
     void ShareTarget.consumePendingSharedText()
       .then((payload) => {
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 2: consumePending result`,
+          description: `text=${payload?.text?.slice(0, 30) ?? '(none)'} | empty=${!payload?.text?.trim()}`,
+          duration: 8000,
+        });
         persistAndRouteSharedText(payload, 'consumePendingSharedText');
       })
       .catch((err) => {
         console.warn('[SHARE_TARGET] Error consuming pending shared text', err);
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 3: consumePending ERROR`,
+          description: String(err),
+          duration: 8000,
+        });
       });
 
     void ShareTarget.addListener('sharedTextReceived', (payload) => {
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 13: sharedTextReceived event`,
+        description: `textLen=${payload?.text?.length ?? 0} | source=${payload?.source ?? '(none)'}`,
+        duration: 8000,
+      });
       persistAndRouteSharedText(payload, 'sharedTextReceived');
     }).then((listener) => {
       shareListener = listener;
