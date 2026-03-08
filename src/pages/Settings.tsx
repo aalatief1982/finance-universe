@@ -744,10 +744,10 @@ const Settings = () => {
 
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Database className="mr-2" size={20} />
-            <span>Data Management</span>
+            <Database className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.dataManagement')}</span>
           </h2>
-          <p className="text-sm text-muted-foreground">Manage your data</p>
+          <p className="text-sm text-muted-foreground">{t('settings.manageData')}</p>
           
           <div className="space-y-3">
             <div>
