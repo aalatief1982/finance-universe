@@ -318,12 +318,6 @@ function AppWrapper() {
 
     void ShareTarget.consumePendingSharedText()
       .then((payload) => {
-        // [REMOVABLE-DEBUG-TOAST]
-        toast({
-          title: `[DBG-SHARE] 2: consumePending result`,
-          description: `text=${payload?.text?.slice(0, 30) ?? '(none)'} | empty=${!payload?.text?.trim()}`,
-          duration: 8000,
-        });
         persistAndRouteSharedText(payload, 'consumePendingSharedText');
       })
       .catch((err) => {
