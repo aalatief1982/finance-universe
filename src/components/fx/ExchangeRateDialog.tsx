@@ -96,7 +96,7 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
         notes: notes.trim() || undefined,
       });
       if (!updated) {
-        toast({ title: 'Failed to update rate', variant: 'destructive' });
+        toast({ title: 'Could not update exchange rate', description: 'Please try again.', variant: 'destructive' });
         return;
       }
       savedRate = updated;
