@@ -572,16 +572,16 @@ const Settings = () => {
         {/* Alerts & Notifications */}
         <section className="space-y-4">
           <h2 className="flex items-center justify-center text-lg font-semibold">
-            <Bell className="mr-2" size={20} />
-            <span>Alerts & Notifications</span>
+            <Bell className="mr-2 rtl:ml-2 rtl:mr-0" size={20} />
+            <span>{t('settings.alertsNotifications')}</span>
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage how you get notified
+            {t('settings.manageNotifications')}
           </p>
           {notificationsEnabled ? (
             <div className="space-y-2">
-              <Label>Transaction Alerts</Label>
-              <p className="text-sm text-muted-foreground">Notifications are enabled</p>
+              <Label>{t('settings.transactionAlerts')}</Label>
+              <p className="text-sm text-muted-foreground">{t('settings.notificationsEnabled')}</p>
             </div>
           ) : (
             <div className="flex items-center justify-between">
