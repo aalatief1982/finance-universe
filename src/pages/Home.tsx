@@ -250,7 +250,7 @@ const Home = () => {
                     value="trends"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
                   >
-                    Trends
+                    {t('home.trends')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="net"
