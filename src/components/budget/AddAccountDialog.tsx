@@ -72,7 +72,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
     setForm({
       name: '',
       type: 'Bank',
-      currency: 'USD',
+      currency: defaultCurrency,
       initialBalance: 0,
       startDate: today,
       tags: []
