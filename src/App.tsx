@@ -253,12 +253,6 @@ function AppWrapper() {
 
       const signature = buildShareSignature(normalizedText, payload.source);
       if (!shouldHandleShare(signature, intake)) {
-        // [REMOVABLE-DEBUG-TOAST]
-        toast({
-          title: `[DBG-SHARE] 5: SKIPPED by dedupe`,
-          description: `signature=${signature}`,
-          duration: 8000,
-        });
         return;
       }
 
