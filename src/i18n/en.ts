@@ -304,4 +304,11 @@ export const en: Record<string, string> = {
   'common.search': 'Search',
   'common.noResults': 'No results',
   'common.expense': 'Expense',
+
+  // Voice input
+  'voice.noSpeechDetected': 'No speech detected. Try again.',
+  'voice.micPermissionDenied': 'Microphone permission required for voice input.',
+  'voice.recognitionFailed': 'Voice recognition failed. Try typing instead.',
+  'voice.notSupported': 'Voice input is not supported on this device.',
+  'voice.listening': 'Listening...',
 };

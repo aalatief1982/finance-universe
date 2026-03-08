@@ -304,4 +304,11 @@ export const ar: Record<string, string> = {
   'common.search': 'بحث',
   'common.noResults': 'لا توجد نتائج',
   'common.expense': 'مصروف',
+
+  // Voice input
+  'voice.noSpeechDetected': 'لم يتم اكتشاف كلام. حاول مرة أخرى.',
+  'voice.micPermissionDenied': 'صلاحية الميكروفون مطلوبة للإدخال الصوتي.',
+  'voice.recognitionFailed': 'فشل التعرف على الصوت. حاول الكتابة بدلاً من ذلك.',
+  'voice.notSupported': 'الإدخال الصوتي غير مدعوم على هذا الجهاز.',
+  'voice.listening': 'جارٍ الاستماع...',
 };

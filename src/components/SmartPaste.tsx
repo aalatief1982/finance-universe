@@ -22,6 +22,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Transaction } from '@/types/transaction';
 import { Loader2 } from 'lucide-react';
+import MicButton from './smart-paste/MicButton';
+import { useSpeechToText } from '@/hooks/useSpeechToText';
 import { Label } from './ui/label';
 import { Card } from './ui/card';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
@@ -111,6 +113,12 @@ const SmartPaste = ({
 
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const { startListening, isListening, isSupported: micSupported } = useSpeechToText({
+    onResult: (transcript) => {
+      setText((prev) => (prev ? prev + ' ' + transcript : transcript));
+    },
+  });
 
 
 
@@ -404,7 +412,15 @@ const SmartPaste = ({
           methods.
         </p>
         <div className="grid gap-2">
-          <Label htmlFor="message">Transaction details</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="message">Transaction details</Label>
+            <MicButton
+              isListening={isListening}
+              isSupported={micSupported}
+              onClick={startListening}
+              size="sm"
+            />
+          </div>
           <Textarea
             id="message"
             placeholder="Type or paste transaction details here…"
