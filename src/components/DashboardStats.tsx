@@ -269,7 +269,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Balance [{resolvedCurrency}]</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.balance')} [{resolvedCurrency}]</p>
                     <div className={`${balance >= 0 ? 'text-info' : 'text-destructive'}`}>
                       {balance >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                     </div>
