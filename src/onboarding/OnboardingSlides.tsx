@@ -170,13 +170,13 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                       {slide.icon}
                     </div>
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 animate-slide-up">
+                  <h1 className={`text-2xl sm:text-3xl font-bold text-foreground mb-2 ${noAnim ? '' : 'animate-slide-up'}`}>
                     {slide.title}
                   </h1>
-                  <p className="text-base sm:text-lg font-medium text-primary mb-2 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                  <p className={`text-base sm:text-lg font-medium text-primary mb-2 ${noAnim ? '' : 'animate-slide-up'}`} style={noAnim ? undefined : { animationDelay: '0.1s' }}>
                     {slide.subtitle}
                   </p>
-                  <p className="text-sm text-muted-foreground max-w-sm leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                  <p className={`text-sm text-muted-foreground max-w-sm leading-relaxed ${noAnim ? '' : 'animate-slide-up'}`} style={noAnim ? undefined : { animationDelay: '0.2s' }}>
                     {slide.description}
                   </p>
                 </div>
