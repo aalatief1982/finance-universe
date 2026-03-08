@@ -291,7 +291,7 @@ function AppWrapper() {
       });
 
       if (shouldNavigate) {
-        navigateRef.current(IMPORT_ROUTE);
+        setTimeout(() => navigateRef.current(IMPORT_ROUTE), 300);
       }
     };
 
