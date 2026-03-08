@@ -513,7 +513,7 @@ const Settings = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
+            <Label htmlFor="currency">{t('settings.currency')}</Label>
             <CurrencyCombobox
               id="currency"
               value={currency}
