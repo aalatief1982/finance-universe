@@ -47,22 +47,6 @@ const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) 
       <div className="max-w-7xl mx-auto h-[var(--header-height)] px-4 sm:px-6 lg:px-8">
         <div className="flex h-full items-center justify-between">
           <div className="flex items-center">
-            {showBack && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  if (onBack) {
-                    onBack();
-                    return;
-                  }
-                  navigateBackSafely(navigate);
-                }}
-                className="mr-2 h-11 w-11 p-0"
-              >
-                <ArrowLeft size={20} />
-              </Button>
-            )}
             <LogoLink
               isLandingPage={isLandingPage}
               currentPageTitle={currentPageTitle}
