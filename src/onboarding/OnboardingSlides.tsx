@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectFade } from 'swiper/modules';
+
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -136,8 +136,8 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value as 'en' | 'ar')}
-            className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl px-4 py-2.5 text-base font-medium text-foreground shadow-md focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
-            style={{ paddingRight: '2.5rem', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center' }}
+            className="bg-card/90 backdrop-blur-sm border border-border/60 rounded-xl px-5 py-3 text-lg font-semibold text-foreground shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+            style={{ paddingRight: '3rem', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.875rem center' }}
           >
             <option value="en">English</option>
             <option value="ar">العربية</option>
@@ -165,9 +165,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
       </div>
       <Swiper
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
-        modules={[EffectFade]}
-        effect="fade"
-        fadeEffect={{ crossFade: true }}
         className="h-full"
         style={{ height: '100%' }}
         speed={600}
