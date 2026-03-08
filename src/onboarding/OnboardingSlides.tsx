@@ -159,7 +159,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
       >
         {slides.map((slide, i) => (
           <SwiperSlide key={i}>
-            <div className="flex flex-col flex-1 min-h-0 h-full transition-all duration-700 animate-fade-in">
+            <div className={`flex flex-col flex-1 min-h-0 h-full transition-all duration-700 ${noAnim ? '' : 'animate-fade-in'}`}>
               {/* Header with icon and gradient */}
               <div
                 className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-8`}
