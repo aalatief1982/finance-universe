@@ -322,12 +322,6 @@ function AppWrapper() {
       })
       .catch((err) => {
         console.warn('[SHARE_TARGET] Error consuming pending shared text', err);
-        // [REMOVABLE-DEBUG-TOAST]
-        toast({
-          title: `[DBG-SHARE] 3: consumePending ERROR`,
-          description: String(err),
-          duration: 8000,
-        });
       });
 
     void ShareTarget.addListener('sharedTextReceived', (payload) => {
