@@ -161,7 +161,7 @@ const Transactions = () => {
             value="custom"
             className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
           >
-            Custom
+            {t('range.custom')}
           </ToggleGroupItem>
         </ToggleGroup>
 
