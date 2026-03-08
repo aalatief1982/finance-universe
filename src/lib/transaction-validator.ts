@@ -72,7 +72,7 @@ export function validateTransactionInput(input: unknown): TransactionValidationR
 
   if (!isValidDate(txn.date)) {
     const error = 'Date must be valid and not in the future';
-    toast({ title: 'Invalid date', description: error });
+    toast({ title: 'Invalid date', description: 'Enter a valid date to continue.' });
     return { valid: false, error };
   }
 
