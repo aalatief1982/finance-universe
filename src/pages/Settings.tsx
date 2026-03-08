@@ -601,7 +601,7 @@ const Settings = () => {
                   if (alreadyGranted) {
                     setNotificationsEnabled(true);
                     updateUserPreferences({ notifications: true });
-                    toast({ title: "Notifications enabled" });
+                    toast({ title: t("toast.notificationsEnabled") });
                     return;
                   }
 
