@@ -245,7 +245,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Expenses [{resolvedCurrency}]</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.expenses')} [{resolvedCurrency}]</p>
                     <ArrowDownCircle className="text-destructive" size={20} />
                   </div>
                   <AutoFitAmount className="mt-1 text-left font-semibold text-destructive tabular-nums whitespace-nowrap" value={formatValue(Math.abs(expenses))} />
