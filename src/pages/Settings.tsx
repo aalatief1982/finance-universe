@@ -507,7 +507,7 @@ const Settings = () => {
                   <line x1="8" x2="16" y1="21" y2="21" />
                   <line x1="12" x2="12" y1="17" y2="21" />
                 </svg>
-                System
+                {t('settings.system')}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
