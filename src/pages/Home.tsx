@@ -256,7 +256,7 @@ const Home = () => {
                     value="net"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
                   >
-                    Net Balance
+                    {t('home.netBalance')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="category"
