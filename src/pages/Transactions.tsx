@@ -184,7 +184,7 @@ const Transactions = () => {
               value={f}
               className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {t(`transactions.${f}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
