@@ -165,11 +165,12 @@ const AccountsPage = () => {
   };
 
   const handleImportUnmanaged = (name: string) => {
+    const defaultCurrency = getCurrencyOrAppFallback();
     const newAccount: Account = {
       id: uuidv4(),
       name,
       type: 'Bank',
-      currency: 'USD',
+      currency: defaultCurrency,
       initialBalance: 0,
       startDate: today,
       tags: []
