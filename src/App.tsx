@@ -1324,6 +1324,7 @@ function App() {
   }, []);
 
   return (
+    <LanguageProvider>
     <ThemeProvider defaultTheme="light" attribute="class">
       <UserProvider>
         <TransactionProvider>
