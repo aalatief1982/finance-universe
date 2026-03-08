@@ -133,7 +133,8 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
   }, [language, cleanupListeners, showError]);
 
   const startListeningWeb = useCallback(() => {
-    const SpeechRecognitionClass = (window as unknown as { webkitSpeechRecognition?: typeof SpeechRecognition; SpeechRecognition?: typeof SpeechRecognition }).webkitSpeechRecognition || window.SpeechRecognition;
+    const speechWindow = window as unknown as WebSpeechWindow;
+    const SpeechRecognitionClass = speechWindow.webkitSpeechRecognition || speechWindow.SpeechRecognition;
     if (!SpeechRecognitionClass) {
       setIsSupported(false);
       return;
