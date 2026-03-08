@@ -48,8 +48,8 @@ const PhoneVerification = ({
       setError('Please enter a valid phone number with country code');
       setErrorType('validation');
       toast({
-        title: 'Error',
-        description: 'Please enter a valid phone number with country code',
+        title: 'Invalid phone number',
+        description: 'Enter a valid phone number with country code.',
         variant: 'destructive',
       });
       return;
