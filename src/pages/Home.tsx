@@ -391,7 +391,7 @@ const Home = () => {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-6">
-                  No transactions found for this period.
+                  {t('home.noTransactions')}
                 </p>
               )}
 
