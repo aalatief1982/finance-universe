@@ -105,6 +105,7 @@ import { SMS_AUTO_IMPORT_ENABLED } from '@/lib/env';
 
 const Settings = () => {
   const { toast } = useToast();
+  const { t, language, setLanguage: setAppLanguage } = useLanguage();
   const { user, updateUser } = useUser();
 
   const navigate = useNavigate();
