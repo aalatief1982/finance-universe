@@ -797,6 +797,12 @@ function AppWrapper() {
 
       // Share intent takes priority over startup SMS flow
       const pendingShare = readPendingSharedText();
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 10: SMS flow priority check`,
+        description: `hasPendingShare=${Boolean(pendingShare?.text)}`,
+        duration: 8000,
+      });
       if (pendingShare?.text) {
         console.log('[SMS_FLOW] startup flow skipped: pending shared text takes priority');
         return;
