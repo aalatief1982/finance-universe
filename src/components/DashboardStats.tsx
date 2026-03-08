@@ -283,7 +283,7 @@ const DashboardStats = ({
                       ) : (
                         <TrendingDown size={14} className="mr-1" />
                       )}
-                      {Math.abs(balanceChange).toFixed(1)}% from last month
+                      {Math.abs(balanceChange).toFixed(1)}% {t('home.fromLastMonth')}
                     </p>
                   )}
                 </CardContent>
