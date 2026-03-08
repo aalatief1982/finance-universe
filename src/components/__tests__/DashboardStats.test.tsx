@@ -19,7 +19,9 @@ const formatNumericAmount = (amount: number) =>
 describe('DashboardStats', () => {
   it('renders income, expenses and balance values without currency prefix', () => {
     render(
-      <DashboardStats income={1000} expenses={200} balance={800} currencyCode="USD" />
+      <LanguageProvider>
+        <DashboardStats income={1000} expenses={200} balance={800} currencyCode="USD" />
+      </LanguageProvider>
     );
 
     expect(screen.getByText('Income [USD]')).toBeInTheDocument();
