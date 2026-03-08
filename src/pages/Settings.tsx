@@ -341,7 +341,7 @@ const Settings = () => {
       if (!transactions.length) {
         toast({
           title: "No data to export",
-          description: "You don't have any transactions to export.",
+          description: "There are no transactions available to export.",
           variant: "destructive",
         });
         return;
