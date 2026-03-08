@@ -234,6 +234,14 @@ function AppWrapper() {
       intake: 'consumePendingSharedText' | 'sharedTextReceived',
     ) => {
       const normalizedText = payload.text?.trim();
+
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 4: persistAndRoute called`,
+        description: `intake=${intake} | textLen=${normalizedText?.length ?? 0} | empty=${!normalizedText}`,
+        duration: 8000,
+      });
+
       if (!normalizedText) {
         logShareFlow('ignored empty payload', {
           intake,
@@ -245,6 +253,12 @@ function AppWrapper() {
 
       const signature = buildShareSignature(normalizedText, payload.source);
       if (!shouldHandleShare(signature, intake)) {
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 5: SKIPPED by dedupe`,
+          description: `signature=${signature}`,
+          duration: 8000,
+        });
         return;
       }
 
@@ -255,6 +269,11 @@ function AppWrapper() {
           signature,
           existingReceivedAt: existingPending?.receivedAt ?? null,
           incomingReceivedAt: payload.receivedAt ?? null,
+        });
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 6: SKIPPED duplicate pending`,
+          duration: 8000,
         });
         return;
       }
@@ -288,6 +307,13 @@ function AppWrapper() {
         shouldNavigate,
         currentPath,
         targetPath: IMPORT_ROUTE,
+      });
+
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 7: saved=${stored} | navigate=${shouldNavigate}`,
+        description: `from=${currentPath} | to=${IMPORT_ROUTE}`,
+        duration: 8000,
       });
 
       if (shouldNavigate) {
