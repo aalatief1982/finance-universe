@@ -44,10 +44,11 @@ interface AddAccountDialogProps {
 
 const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAccountCreated, initialAccount }) => {
   const today = React.useMemo(() => new Date().toISOString().split('T')[0], []);
+  const defaultCurrency = React.useMemo(() => getCurrencyOrAppFallback(), []);
   const [form, setForm] = React.useState<Omit<Account, 'id'>>({
     name: '',
     type: 'Bank',
-    currency: 'USD',
+    currency: defaultCurrency,
     initialBalance: 0,
     startDate: today,
     tags: []
