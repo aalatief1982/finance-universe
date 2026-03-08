@@ -136,8 +136,8 @@ const PhoneVerification = ({
           setError('Verification session has expired. Please request a new code.');
           setErrorType('auth');
           toast({
-            title: 'Error',
-            description: 'Verification session has expired. Please request a new code.',
+            title: 'Verification code expired',
+            description: 'Request a new code and try again.',
             variant: 'destructive',
           });
         }
