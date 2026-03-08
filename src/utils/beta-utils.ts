@@ -26,8 +26,8 @@ export const deactivateBetaFeatures = (): void => {
 
 export const handleLockedFeatureClick = (featureName: string): void => {
   toast({
-    title: `🚧 ${featureName} Coming Soon!`,
-    description: "This feature is currently under development. Stay tuned for exciting updates!",
+    title: `${featureName} coming soon`,
+    description: "This feature is currently under development.",
   });
 };
 
