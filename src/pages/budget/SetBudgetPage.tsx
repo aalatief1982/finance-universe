@@ -745,14 +745,11 @@ const SetBudgetPage = () => {
         )}
 
         {/* Period Selection */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Budget Period
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium text-muted-foreground">Period</h2>
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs text-muted-foreground">Period Type</Label>
+              <Label className="text-xs text-muted-foreground">Type</Label>
               <Select value={period} onValueChange={val => handlePeriodChange(val as BudgetPeriod)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
