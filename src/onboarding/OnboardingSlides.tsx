@@ -46,6 +46,7 @@ const slides: Slide[] = [
 interface Props {
   onComplete: () => void;
   isSubmitting?: boolean;
+  flickerDiag?: number; // [REMOVABLE-FLICKER-DIAG]
 }
 
 const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false }) => {
