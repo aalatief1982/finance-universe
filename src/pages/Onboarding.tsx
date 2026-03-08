@@ -18,19 +18,27 @@
  */
 import { safeStorage } from "@/utils/safe-storage";
 import { setDefaultCurrencyRequired } from '@/utils/default-currency';
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasCompletedRef = useRef(false);
   const hasNavigatedRef = useRef(false);
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // [REMOVABLE-FLICKER-DIAG] Read diagnostic mode from URL param
+  const flickerDiag = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const val = parseInt(params.get('flickerDiag') || '0', 10);
+    return (val >= 1 && val <= 3) ? val : 0;
+  }, [location.search]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
