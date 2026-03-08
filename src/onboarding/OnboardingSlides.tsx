@@ -165,9 +165,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
       </div>
       <Swiper
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
-        modules={[EffectFade]}
-        effect="fade"
-        fadeEffect={{ crossFade: true }}
         className="h-full"
         style={{ height: '100%' }}
         speed={600}
