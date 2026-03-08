@@ -205,8 +205,8 @@ const SmartPaste = ({
 
     if (!text.trim()) {
       toast({
-        title: 'Error',
-        description: 'Please paste or enter a message first',
+        title: 'No message entered',
+        description: 'Paste or type a message first.',
         variant: 'destructive',
       });
       return;
