@@ -401,7 +401,7 @@ const Home = () => {
                   aria-label="View full transaction history"
                   className="text-sm text-blue-600 hover:underline flex items-center space-x-1"
                 >
-                  <span>View All</span>
+                  <span>{t('home.viewAll')}</span>
                   <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
