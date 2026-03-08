@@ -412,7 +412,15 @@ const SmartPaste = ({
           methods.
         </p>
         <div className="grid gap-2">
-          <Label htmlFor="message">Transaction details</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="message">Transaction details</Label>
+            <MicButton
+              isListening={isListening}
+              isSupported={micSupported}
+              onClick={startListening}
+              size="sm"
+            />
+          </div>
           <Textarea
             id="message"
             placeholder="Type or paste transaction details here…"

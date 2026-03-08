@@ -24,6 +24,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(BackgroundSmsListenerPlugin.class);
     registerPlugin(AndroidSettingsPlugin.class);
     registerPlugin(ShareTargetPlugin.class);
+    registerPlugin(SpeechToTextPlugin.class);
     Log.d(TAG, "All plugins registered");
 
     // Handle any launch intent payload before Capacitor bridge boot so JS can reliably

@@ -417,6 +417,15 @@ const Home = () => {
           </div>
         </div>
       </div>
+      <div className="fixed bottom-16 right-4 z-40 flex flex-col gap-2 md:hidden">
+        <MicButton
+          isListening={isListening}
+          isSupported={micSupported}
+          onClick={startListening}
+          size="icon"
+          className="h-12 w-12 rounded-full shadow-lg"
+        />
+      </div>
       <ResponsiveFAB onClick={handleAddTransaction} />
     </Layout>
   );

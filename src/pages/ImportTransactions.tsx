@@ -74,6 +74,15 @@ const ImportTransactions = () => {
 
 
   const hydratePendingSharedText = React.useCallback(() => {
+    // Voice transcript from Home mic takes priority
+    if (locationState?.voiceTranscript?.trim()) {
+      console.log('[VOICE_FLOW][IMPORT] voiceTranscript from navigation state', {
+        length: locationState.voiceTranscript.length,
+      });
+      setPendingSharedText(locationState.voiceTranscript);
+      return;
+    }
+
     const pending = readPendingSharedText();
     console.log('[SHARE_FLOW][IMPORT] hydratePendingSharedText read', {
       hasPendingText: Boolean(pending?.text),
@@ -88,7 +97,7 @@ const ImportTransactions = () => {
     if (pending?.text) {
       setPendingSharedText(pending.text);
     }
-  }, [location.key, toast]);
+  }, [location.key, toast, locationState?.voiceTranscript]);
 
   React.useEffect(() => {
     hydratePendingSharedText();
