@@ -185,7 +185,7 @@ export const handleValidationError = (
   
   if (!isSilent) {
     toast({
-      title: "Validation Error",
+      title: "Invalid transaction",
       description: message,
       variant: "default",
     });
