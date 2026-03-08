@@ -195,6 +195,8 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
                         i === 0
                           ? (event) => {
                               const imageElement = event.currentTarget;
+                              // [REMOVABLE-DEBUG-TOAST] Toast 11
+                              toast({ title: `[DBG-FLICKER] 11: Slide1 image loaded | naturalW=${imageElement.naturalWidth} | t=${performance.now().toFixed(0)}` });
                               console.trace('[TRACE][OnboardingSlides] slide image loaded', {
                                 slideIndex: i,
                                 imageUrl: imageElement.currentSrc || slide.image,
@@ -206,9 +208,15 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
                           : undefined
                       }
                       onError={
-                        shouldLogImageLoadErrors
-                          ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
-                          : undefined
+                        i === 0
+                          ? () => {
+                              // [REMOVABLE-DEBUG-TOAST] Toast 12
+                              toast({ variant: 'destructive', title: `[DBG-FLICKER] 12: Slide1 image FAILED | t=${performance.now().toFixed(0)}` });
+                              if (shouldLogImageLoadErrors) console.error(`Failed to load image at slide ${i}: ${slide.image}`);
+                            }
+                          : (shouldLogImageLoadErrors
+                              ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
+                              : undefined)
                       }
                     />
                   </div>

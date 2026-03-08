@@ -60,11 +60,18 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
   useEffect(() => {
     if (!isInitializing) {
       traceAppRoot('AppLoader detected isInitializing=false');
+      // [REMOVABLE-DEBUG-TOAST] Toast 4
+      toast({ title: `[DBG-FLICKER] 4: Init done | t=${performance.now().toFixed(0)}` });
       // Show splash for minimum 1 second for better UX
       traceAppRoot('AppLoader splash hide timer started (1000ms)');
       const timer = setTimeout(() => {
         traceAppRoot('AppLoader 1000ms timer callback executing');
         traceAppRoot('AppLoader calling setShowSplash(false)');
+        // [REMOVABLE-DEBUG-TOAST] Toast 5
+        toast({ title: `[DBG-FLICKER] 5: Splash hiding | t=${performance.now().toFixed(0)}` });
+        // [REMOVABLE-DEBUG-TOAST] Toast 6 — timeline summary
+        const ts = (window as any).__flickerTimestamps || {};
+        toast({ title: `[DBG-FLICKER] 6: Timeline | render=${ts.reactRenderCall?.toFixed(0) ?? '?'} | htmlHide=${ts.htmlLoaderHide?.toFixed(0) ?? '?'} | htmlHideTrigger=${ts.htmlLoaderHideTriggered?.toFixed(0) ?? '?'} | splashHide=${performance.now().toFixed(0)}` });
         setShowSplash(false);
       }, 1000);
 
