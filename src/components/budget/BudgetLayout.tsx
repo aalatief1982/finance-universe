@@ -32,13 +32,7 @@ export function BudgetLayout({
   return (
     <Layout withPadding={false} showBack fullWidth>
       <div className="w-full">
-        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-1 space-y-1.5">
-          {headerActions && (
-            <div className="flex items-center justify-end gap-2">
-              {headerActions}
-            </div>
-          )}
-
+        <div className="sticky top-0 z-10 bg-background px-[var(--page-padding-x)] pt-0 pb-2 space-y-1.5">
           {/* Navigation Tabs */}
           <BudgetNav />
 
@@ -52,6 +46,12 @@ export function BudgetLayout({
               onPeriodChange={setPeriod}
               onNavigate={navigatePeriod}
             />
+          )}
+
+          {headerActions && (
+            <div className="flex items-center justify-end gap-2">
+              {headerActions}
+            </div>
           )}
         </div>
 
