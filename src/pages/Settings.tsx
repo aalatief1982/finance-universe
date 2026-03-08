@@ -784,7 +784,7 @@ const Settings = () => {
                 className="gap-2"
               >
                 <UploadCloud size={16} />
-                Import
+                {t('settings.import')}
               </Button>
             </div>
           </LockedFeature>
