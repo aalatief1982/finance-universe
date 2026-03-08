@@ -234,6 +234,14 @@ function AppWrapper() {
       intake: 'consumePendingSharedText' | 'sharedTextReceived',
     ) => {
       const normalizedText = payload.text?.trim();
+
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 4: persistAndRoute called`,
+        description: `intake=${intake} | textLen=${normalizedText?.length ?? 0} | empty=${!normalizedText}`,
+        duration: 8000,
+      });
+
       if (!normalizedText) {
         logShareFlow('ignored empty payload', {
           intake,
@@ -245,6 +253,12 @@ function AppWrapper() {
 
       const signature = buildShareSignature(normalizedText, payload.source);
       if (!shouldHandleShare(signature, intake)) {
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 5: SKIPPED by dedupe`,
+          description: `signature=${signature}`,
+          duration: 8000,
+        });
         return;
       }
 
@@ -255,6 +269,11 @@ function AppWrapper() {
           signature,
           existingReceivedAt: existingPending?.receivedAt ?? null,
           incomingReceivedAt: payload.receivedAt ?? null,
+        });
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 6: SKIPPED duplicate pending`,
+          duration: 8000,
         });
         return;
       }
@@ -290,6 +309,13 @@ function AppWrapper() {
         targetPath: IMPORT_ROUTE,
       });
 
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 7: saved=${stored} | navigate=${shouldNavigate}`,
+        description: `from=${currentPath} | to=${IMPORT_ROUTE}`,
+        duration: 8000,
+      });
+
       if (shouldNavigate) {
         setTimeout(() => navigateRef.current(IMPORT_ROUTE), 300);
       }
@@ -301,15 +327,40 @@ function AppWrapper() {
       pathname: window.location.pathname,
     });
 
+    // [REMOVABLE-DEBUG-TOAST]
+    toast({
+      title: `[DBG-SHARE] 1: Share coordinator started`,
+      description: `platform=android | path=${window.location.pathname}`,
+      duration: 8000,
+    });
+
     void ShareTarget.consumePendingSharedText()
       .then((payload) => {
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 2: consumePending result`,
+          description: `text=${payload?.text?.slice(0, 30) ?? '(none)'} | empty=${!payload?.text?.trim()}`,
+          duration: 8000,
+        });
         persistAndRouteSharedText(payload, 'consumePendingSharedText');
       })
       .catch((err) => {
         console.warn('[SHARE_TARGET] Error consuming pending shared text', err);
+        // [REMOVABLE-DEBUG-TOAST]
+        toast({
+          title: `[DBG-SHARE] 3: consumePending ERROR`,
+          description: String(err),
+          duration: 8000,
+        });
       });
 
     void ShareTarget.addListener('sharedTextReceived', (payload) => {
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 13: sharedTextReceived event`,
+        description: `textLen=${payload?.text?.length ?? 0} | source=${payload?.source ?? '(none)'}`,
+        duration: 8000,
+      });
       persistAndRouteSharedText(payload, 'sharedTextReceived');
     }).then((listener) => {
       shareListener = listener;
@@ -552,21 +603,40 @@ function AppWrapper() {
         // Re-check for shared text on resume (warm start from share sheet)
         try {
           const sharePayload = await ShareTarget.consumePendingSharedText();
-          if (sharePayload?.text?.trim()) {
-            const normalizedText = sharePayload.text.trim();
-            const stored = savePendingSharedText({
+          const hasText = Boolean(sharePayload?.text?.trim());
+          const normalizedText = sharePayload?.text?.trim() ?? '';
+          let stored = false;
+          let willNavigate = false;
+          
+          if (hasText) {
+            stored = savePendingSharedText({
               text: normalizedText,
               source: sharePayload.source,
               receivedAt: sharePayload.receivedAt,
             });
-            if (stored && window.location.pathname !== IMPORT_ROUTE) {
-              console.log('[SHARE_FLOW][RESUME] navigating to Smart Entry from app resume');
-              navigateRef.current(IMPORT_ROUTE);
-              return; // Skip SMS flow — share takes priority
-            }
+            willNavigate = stored && window.location.pathname !== IMPORT_ROUTE;
+          }
+
+          // [REMOVABLE-DEBUG-TOAST]
+          toast({
+            title: `[DBG-SHARE] 8: Resume check`,
+            description: `text=${normalizedText.slice(0, 30)} | empty=${!hasText} | stored=${stored} | willNavigate=${willNavigate}`,
+            duration: 8000,
+          });
+
+          if (willNavigate) {
+            console.log('[SHARE_FLOW][RESUME] navigating to Smart Entry from app resume');
+            navigateRef.current(IMPORT_ROUTE);
+            return; // Skip SMS flow — share takes priority
           }
         } catch (err) {
           console.warn('[SHARE_TARGET] Error consuming shared text on resume', err);
+          // [REMOVABLE-DEBUG-TOAST]
+          toast({
+            title: `[DBG-SHARE] 9: Resume ERROR`,
+            description: String(err),
+            duration: 8000,
+          });
         }
 
         await syncNativeInboxAndRoute();
@@ -727,6 +797,12 @@ function AppWrapper() {
 
       // Share intent takes priority over startup SMS flow
       const pendingShare = readPendingSharedText();
+      // [REMOVABLE-DEBUG-TOAST]
+      toast({
+        title: `[DBG-SHARE] 10: SMS flow priority check`,
+        description: `hasPendingShare=${Boolean(pendingShare?.text)}`,
+        duration: 8000,
+      });
       if (pendingShare?.text) {
         console.log('[SMS_FLOW] startup flow skipped: pending shared text takes priority');
         return;
