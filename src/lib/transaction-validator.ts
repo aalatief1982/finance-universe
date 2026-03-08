@@ -78,7 +78,7 @@ export function validateTransactionInput(input: unknown): TransactionValidationR
 
   if (!isValidCategory(txn.type, txn.category)) {
     const error = 'Category must be a predefined value';
-    toast({ title: 'Invalid category', description: error });
+    toast({ title: 'Invalid category', description: 'Select a valid category to continue.' });
     return { valid: false, error };
   }
 
