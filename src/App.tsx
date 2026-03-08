@@ -291,7 +291,7 @@ function AppWrapper() {
       });
 
       if (shouldNavigate) {
-        navigateRef.current(IMPORT_ROUTE);
+        setTimeout(() => navigateRef.current(IMPORT_ROUTE), 300);
       }
     };
 
@@ -549,6 +549,26 @@ function AppWrapper() {
     let appStateListener: { remove: () => void } | null = null;
     void CapacitorApp.addListener('appStateChange', async (state) => {
       if (state.isActive) {
+        // Re-check for shared text on resume (warm start from share sheet)
+        try {
+          const sharePayload = await ShareTarget.consumePendingSharedText();
+          if (sharePayload?.text?.trim()) {
+            const normalizedText = sharePayload.text.trim();
+            const stored = savePendingSharedText({
+              text: normalizedText,
+              source: sharePayload.source,
+              receivedAt: sharePayload.receivedAt,
+            });
+            if (stored && window.location.pathname !== IMPORT_ROUTE) {
+              console.log('[SHARE_FLOW][RESUME] navigating to Smart Entry from app resume');
+              navigateRef.current(IMPORT_ROUTE);
+              return; // Skip SMS flow — share takes priority
+            }
+          }
+        } catch (err) {
+          console.warn('[SHARE_TARGET] Error consuming shared text on resume', err);
+        }
+
         await syncNativeInboxAndRoute();
       }
     }).then((listenerHandle) => {
@@ -704,6 +724,13 @@ function AppWrapper() {
       }
 
       startupSmsFlowRanRef.current = true;
+
+      // Share intent takes priority over startup SMS flow
+      const pendingShare = readPendingSharedText();
+      if (pendingShare?.text) {
+        console.log('[SMS_FLOW] startup flow skipped: pending shared text takes priority');
+        return;
+      }
 
       const onboardingState: OnboardingState =
         safeStorage.getItem('xpensia_onb_done') === 'true'
