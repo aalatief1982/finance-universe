@@ -13,12 +13,10 @@ import FeedbackModal from '@/components/FeedbackModal';
 interface HeaderProps {
   className?: string;
   showNavigation?: boolean;
-  showBack?: boolean;
-  onBack?: () => void;
   onLogoClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
-const Header = ({ className, showNavigation = true, showBack = false, onBack, onLogoClick }: HeaderProps) => {
+const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const pendingSmsCount = useSmsInboxPendingCount();
