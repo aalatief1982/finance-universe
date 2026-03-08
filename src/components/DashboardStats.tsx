@@ -205,7 +205,7 @@ const DashboardStats = ({
   const formatValue = (val: number) => formatNumericAmount(val, resolvedCurrency);
   const renderSubtitle = (val: number) =>
     Number.isFinite(val) ? null : (
-      <p className="text-xs text-muted-foreground">No data yet</p>
+      <p className="text-xs text-muted-foreground">{t('home.noDataYet')}</p>
     );
   
   return (
