@@ -48,9 +48,7 @@ const Layout = ({
   withPadding = true,
   showHeader = true,
   fullWidth = false,
-  showBack = false,
   safeAreaPadding = true,
-  onBack,
   onLogoClick,
 }: LayoutProps) => {
   const isMobile = useIsMobile();
