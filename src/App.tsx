@@ -157,10 +157,6 @@ function AppWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // [REMOVABLE-DEBUG-TOAST] Toast 8
-  React.useEffect(() => {
-    toast({ title: `[DBG-FLICKER] 8: AppWrapper mounted | path=${location.pathname} | t=${performance.now().toFixed(0)}` });
-  }, []);
   const navigateRef = React.useRef(navigate);
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const hasScheduledSmsPrompt = React.useRef(false);
