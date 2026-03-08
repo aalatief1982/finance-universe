@@ -264,11 +264,6 @@ function AppWrapper() {
           existingReceivedAt: existingPending?.receivedAt ?? null,
           incomingReceivedAt: payload.receivedAt ?? null,
         });
-        // [REMOVABLE-DEBUG-TOAST]
-        toast({
-          title: `[DBG-SHARE] 6: SKIPPED duplicate pending`,
-          duration: 8000,
-        });
         return;
       }
 
