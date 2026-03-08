@@ -484,11 +484,11 @@ const Settings = () => {
             >
               <ToggleGroupItem value="light" className="gap-1">
                 <Sun size={16} />
-                Light
+                {t('settings.light')}
               </ToggleGroupItem>
               <ToggleGroupItem value="dark" className="gap-1">
                 <Moon size={16} />
-                Dark
+                {t('settings.dark')}
               </ToggleGroupItem>
               <ToggleGroupItem value="system" className="gap-1">
                 <svg
