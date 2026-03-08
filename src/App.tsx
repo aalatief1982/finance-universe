@@ -725,6 +725,13 @@ function AppWrapper() {
 
       startupSmsFlowRanRef.current = true;
 
+      // Share intent takes priority over startup SMS flow
+      const pendingShare = readPendingSharedText();
+      if (pendingShare?.text) {
+        console.log('[SMS_FLOW] startup flow skipped: pending shared text takes priority');
+        return;
+      }
+
       const onboardingState: OnboardingState =
         safeStorage.getItem('xpensia_onb_done') === 'true'
           ? (safeStorage.getItem('xpensia_onb_just_completed') === 'true'
