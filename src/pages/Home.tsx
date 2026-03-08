@@ -302,7 +302,7 @@ const Home = () => {
 
             <div className="bg-card p-[var(--card-padding)] rounded-lg shadow flex flex-col justify-between">
               <h2 className="text-lg font-semibold mb-2">
-                Recent Transactions
+                {t('home.recentTransactions')}
               </h2>
 
               {filteredTransactions.length > 0 ? (
