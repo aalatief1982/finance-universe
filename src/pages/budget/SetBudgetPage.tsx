@@ -619,18 +619,10 @@ const SetBudgetPage = () => {
   return (
     <>
     <Layout showBack>
-      <div className="container px-4 py-4 pb-24 space-y-6 max-w-lg mx-auto">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {isEditMode ? 'Edit Budget' : 'Create Budget'}
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {isEditMode 
-              ? 'Update your budget settings'
-              : 'Set up a new spending limit'
-            }
-          </p>
-        </div>
+      <div className="container px-4 py-3 pb-24 space-y-4 max-w-lg mx-auto">
+        <h1 className="text-xl font-bold">
+          {isEditMode ? 'Edit Budget' : 'Create Budget'}
+        </h1>
 
         {/* Scope Selection */}
         <div className="space-y-2">
