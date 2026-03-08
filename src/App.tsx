@@ -1002,7 +1002,7 @@ function AppRoutes() {
 
   if (!initialRouteCheckDone) {
     traceAppRoot('AppRoutes waiting for startup route resolution');
-    return <AppWrapper />;
+    return <SplashScreen />;
   }
 
   if (pendingLaunchRoute && location.pathname !== pendingLaunchRoute) {
