@@ -39,6 +39,7 @@ const Transactions = () => {
   const [filter, setFilter] = React.useState<'all' | 'income' | 'expense' | 'transfer'>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // ============================================================================
   // SECTION: Analytics
