@@ -762,7 +762,7 @@ const Settings = () => {
               className="gap-2"
             >
               <Download size={16} />
-              Export
+              {t('settings.export')}
             </Button>
           </div>
 
