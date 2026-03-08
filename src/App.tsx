@@ -46,6 +46,7 @@ import BudgetHubPage from './pages/budget/BudgetHubPage';
 import BudgetDetailPage from './pages/budget/BudgetDetailPage';
 import ExchangeRates from './pages/ExchangeRates';
 import ScrollToTop from './components/layout/ScrollToTop';
+import ErrorBoundary from './components/ErrorBoundary';
 import { SplashScreen } from './components/SplashScreen';
 
 
