@@ -277,8 +277,8 @@ const SmsPermissionPrompt: React.FC<SmsPermissionPromptProps> = ({
       if ('timedOut' in result) {
         console.warn('[SmsPermissionPrompt] requestPermission timed out after', REQUEST_TIMEOUT, 'ms');
         toast({
-          title: 'Still waiting…',
-          description: 'The permission dialog is still open. Please accept or deny it, or enable SMS from Settings later.',
+          title: 'Could not confirm SMS permission',
+          description: 'Please try again or enable it later from Settings.',
         });
         try {
           logAnalyticsEvent('sms_permission_request_timed_out');
