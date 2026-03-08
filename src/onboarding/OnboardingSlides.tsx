@@ -6,7 +6,6 @@ import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 
 import 'swiper/css';
 import 'swiper/css/effect-fade';
-import { toast } from '@/hooks/use-toast'; // [REMOVABLE-DEBUG-TOAST]
 
 interface Slide {
   image: string;
@@ -77,9 +76,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
     const rafId = window.requestAnimationFrame(() => {
       logViewportMetrics('after-first-paint');
     });
-
-    // [REMOVABLE-DEBUG-TOAST] Toast 10
-    toast({ title: `[DBG-FLICKER] 10: OnboardingSlides mounted | t=${performance.now().toFixed(0)}` });
 
     setIsVisible(true);
     // Set a local --vh-onb CSS variable to handle mobile browser chrome (address bar)
@@ -195,8 +191,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
                         i === 0
                           ? (event) => {
                               const imageElement = event.currentTarget;
-                              // [REMOVABLE-DEBUG-TOAST] Toast 11
-                              toast({ title: `[DBG-FLICKER] 11: Slide1 image loaded | naturalW=${imageElement.naturalWidth} | t=${performance.now().toFixed(0)}` });
                               console.trace('[TRACE][OnboardingSlides] slide image loaded', {
                                 slideIndex: i,
                                 imageUrl: imageElement.currentSrc || slide.image,
@@ -208,15 +202,9 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false })
                           : undefined
                       }
                       onError={
-                        i === 0
-                          ? () => {
-                              // [REMOVABLE-DEBUG-TOAST] Toast 12
-                              toast({ variant: 'destructive', title: `[DBG-FLICKER] 12: Slide1 image FAILED | t=${performance.now().toFixed(0)}` });
-                              if (shouldLogImageLoadErrors) console.error(`Failed to load image at slide ${i}: ${slide.image}`);
-                            }
-                          : (shouldLogImageLoadErrors
-                              ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
-                              : undefined)
+                        shouldLogImageLoadErrors
+                          ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
+                          : undefined
                       }
                     />
                   </div>

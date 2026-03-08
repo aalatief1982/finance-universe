@@ -18,6 +18,7 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
     <link rel="icon" href="/xpensia-icon.png" type="image/png" />
+    <link rel="preload" as="image" href="/assets/onboarding1-1.png" />
   </head>
 
   <body style="background: hsl(210, 20%, 98%);">
@@ -77,8 +78,6 @@
     </style>
     
     <script>
-      // Flicker debug timestamps — React will read these later // [REMOVABLE-DEBUG-TOAST]
-      window.__flickerTimestamps = {}; // [REMOVABLE-DEBUG-TOAST]
 
       // Explicit hide signal called by React after first render is queued.
       // Idempotent and safe if called multiple times.
@@ -100,7 +99,7 @@
 
           traceInitialLoading('before querying #initial-loading for removal');
           hidden = true;
-          window.__flickerTimestamps.htmlLoaderHide = performance.now(); // [REMOVABLE-DEBUG-TOAST]
+          
 
           const initialLoading = document.getElementById('initial-loading');
           if (initialLoading && initialLoading.parentNode) {

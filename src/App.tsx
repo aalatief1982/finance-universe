@@ -47,6 +47,7 @@ import BudgetDetailPage from './pages/budget/BudgetDetailPage';
 import ExchangeRates from './pages/ExchangeRates';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
+import { SplashScreen } from './components/SplashScreen';
 
 
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -157,10 +158,6 @@ function AppWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // [REMOVABLE-DEBUG-TOAST] Toast 8
-  React.useEffect(() => {
-    toast({ title: `[DBG-FLICKER] 8: AppWrapper mounted | path=${location.pathname} | t=${performance.now().toFixed(0)}` });
-  }, []);
   const navigateRef = React.useRef(navigate);
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const hasScheduledSmsPrompt = React.useRef(false);
@@ -973,10 +970,6 @@ function AppRoutes() {
     onboardingDone,
     pathname: location.pathname,
   });
-  // [REMOVABLE-DEBUG-TOAST] Toast 7
-  React.useEffect(() => {
-    toast({ title: `[DBG-FLICKER] 7: Route decided | path=${location.pathname} | onbDone=${onboardingDone} | t=${performance.now().toFixed(0)}` });
-  }, [location.pathname]);
 
 
   React.useEffect(() => {
@@ -1010,7 +1003,7 @@ function AppRoutes() {
 
   if (!initialRouteCheckDone) {
     traceAppRoot('AppRoutes waiting for startup route resolution');
-    return <AppWrapper />;
+    return <SplashScreen />;
   }
 
   if (pendingLaunchRoute && location.pathname !== pendingLaunchRoute) {

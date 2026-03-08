@@ -23,7 +23,6 @@ import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
-import { toast } from '@/hooks/use-toast'; // [REMOVABLE-DEBUG-TOAST]
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -35,8 +34,6 @@ const Onboarding = () => {
 
   // Cleanup timeout on unmount
   useEffect(() => {
-    // [REMOVABLE-DEBUG-TOAST] Toast 9
-    toast({ title: `[DBG-FLICKER] 9: Onboarding mounted | t=${performance.now().toFixed(0)}` });
     console.trace('[TRACE][Onboarding] component mounted', {
       timestamp: new Date().toISOString(),
     });
