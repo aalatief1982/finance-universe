@@ -221,7 +221,7 @@ const DashboardStats = ({
               <Card className="overflow-hidden border border-border" role="button">
                 <CardContent className="p-[var(--card-padding)]">
                   <div className="flex justify-between items-start">
-                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">Income [{resolvedCurrency}]</p>
+                    <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.income')} [{resolvedCurrency}]</p>
                     <ArrowUpCircle className="text-success" size={20} />
                   </div>
                   <AutoFitAmount className="mt-1 text-left font-semibold text-success tabular-nums whitespace-nowrap" value={formatValue(income)} />
