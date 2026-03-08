@@ -751,9 +751,9 @@ const Settings = () => {
           
           <div className="space-y-3">
             <div>
-              <p className="font-medium">Export Data</p>
+              <p className="font-medium">{t('settings.exportData')}</p>
               <p className="text-sm text-muted-foreground">
-                Download all your transaction data
+                {t('settings.exportDataDesc')}
               </p>
             </div>
             <Button
