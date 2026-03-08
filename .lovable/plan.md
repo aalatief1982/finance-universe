@@ -1,36 +1,47 @@
 
 
-## Plan: Make Notification Toggle Grant-Only, Disabled Once Granted
+## Root Cause: Plugin Registration Order in MainActivity
 
-### Concept
-The toggle becomes a one-way "grant permission" button:
-- **OFF + no permission**: Toggle is enabled — user can tap to grant
-- **ON (permission granted)**: Toggle is disabled/greyed out — user cannot revoke from within the app
-- **Permission revoked externally**: Toggle returns to OFF and becomes enabled again (via app resume listener already in place)
+The error `"ShareTarget" plugin is not implemented on android` occurs because **`registerPlugin()` calls happen AFTER `super.onCreate()`** in `MainActivity.java`.
 
-### Changes in `src/pages/Settings.tsx`
+In Capacitor 6, `registerPlugin()` must be called **before** `super.onCreate()`. The bridge boots during `super.onCreate()`, and any plugins registered after that point are not available to the JS layer. That's why `consumePendingSharedText()` throws "not implemented".
 
-**1. Disable the Switch when permission is granted**
+BackgroundSmsListener works because it's a separate Gradle module listed in `capacitor.settings.gradle`, so Capacitor auto-discovers it. ShareTargetPlugin and AndroidSettingsPlugin are local app plugins that rely on manual `registerPlugin()` -- which currently runs too late.
 
-Add `disabled={notificationsEnabled}` to the `<Switch>` component. This prevents interaction when notifications are already granted.
+### Additional Issue: ProGuard (Release Builds)
 
-**2. Simplify the `onCheckedChange` handler**
+The ProGuard rules in `android/app/proguard-rules.pro` keep `com.xpensia.**` but the actual plugin package is `app.xpensia.com.**`. This means release builds will strip the plugin classes. Need to add `app.xpensia.**` to the keep rules.
 
-Since the toggle can only go from OFF → ON (it's disabled when ON), remove the `!checked` branch entirely. The handler only needs to handle granting:
-- Request permission via `LocalNotifications.requestPermissions()`
-- Check if granted, update state accordingly
-- Show toast on success/failure
+### Changes
 
-**3. Add helper text when disabled**
+**1. `android/app/src/main/java/app/xpensia/com/MainActivity.java`**
 
-Update the description text dynamically:
-- When granted (disabled): "Notifications are enabled. To disable, go to your phone's Settings > Apps > Xpensia > Notifications"
-- When not granted: "Get notified when new expenses are detected from SMS"
+Move all four `registerPlugin()` calls to **before** `super.onCreate(savedInstanceState)`:
 
-**4. No changes needed to the app resume listener**
+```java
+@Override
+public void onCreate(Bundle savedInstanceState) {
+    // Register plugins BEFORE super.onCreate() so the bridge knows about them
+    registerPlugin(SmsReaderPlugin.class);
+    registerPlugin(BackgroundSmsListenerPlugin.class);
+    registerPlugin(AndroidSettingsPlugin.class);
+    registerPlugin(ShareTargetPlugin.class);
 
-The existing `appStateChange` listener already re-syncs `notificationsEnabled` from system permission when the user returns, so if they revoke externally, the toggle will flip back to OFF and become interactive again.
+    handleRouteIntent(getIntent());
+    handleShareIntent(getIntent());
 
-### Files to change
-- `src/pages/Settings.tsx` — add `disabled` prop, simplify handler, dynamic description
+    super.onCreate(savedInstanceState);
+}
+```
+
+**2. `android/app/proguard-rules.pro`**
+
+Add keep rule for the correct package prefix:
+
+```
+-keep class app.xpensia.** { *; }
+-dontwarn app.xpensia.**
+```
+
+After these changes, you need to rebuild the Android app (`npx cap sync && npx cap run android`).
 
