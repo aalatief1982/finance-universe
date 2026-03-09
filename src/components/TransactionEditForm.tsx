@@ -31,6 +31,7 @@
  */
 
 import { safeStorage } from '@/utils/safe-storage';
+import { useLanguage } from '@/i18n/LanguageContext';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import {

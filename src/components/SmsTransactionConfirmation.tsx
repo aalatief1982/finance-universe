@@ -17,6 +17,7 @@
  * - [ ] Component renders without crashing
  */
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { motion } from 'framer-motion';
 import { Check, X, Edit, Globe, Coins, Building, ArrowRightLeft, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';

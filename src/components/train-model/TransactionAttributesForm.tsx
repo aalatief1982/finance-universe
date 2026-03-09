@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Transaction, TransactionType } from '@/types/transaction';
