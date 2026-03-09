@@ -47,7 +47,19 @@ export function isFinancialTransactionMessage(text: string): boolean {
     }
   }
 
-  const fallbackKeywords = ["مبلغ", "حوالة", "رصيد", "بطاقة", "شراء", "تحويل", "دفع", "إيداع"];
+  // Fallback financial keywords — used when user has no stored custom keywords.
+  // Kept focused on high-signal transaction terms to avoid false positives.
+  const fallbackKeywords = [
+    // Arabic (original)
+    "مبلغ", "حوالة", "رصيد", "بطاقة", "شراء", "تحويل", "دفع", "إيداع",
+    // Arabic (enriched)
+    "عملية", "مشتريات", "سحب", "استلام", "رسوم", "الرسوم", "خصم",
+    "الرصيد", "مدفوعات",
+    // English (aligned with native classifier + common bank SMS terms)
+    "transaction", "purchase", "debit", "debited", "credit", "credited",
+    "withdrawal", "withdraw", "deposit", "deposited", "payment", "paid",
+    "transfer", "transferred", "remittance", "charged", "balance", "fee", "fees",
+  ];
   const financialKeywords = storedKeywords.length > 0 ? storedKeywords : fallbackKeywords;
 
   const normalize = (str: unknown): string =>
@@ -72,6 +84,8 @@ export function isFinancialTransactionMessage(text: string): boolean {
       String.raw`\d{1,2}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-\d{2,4}`,
       String.raw`\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}`,
       String.raw`(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}`,
+      // Compact bank-style: 09MAR26, 09MAR2026, 09-Mar-26, 09 Mar 26
+      String.raw`\d{2}[\s-]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s-]?\d{2,4}`,
       String.raw`\d{2}[01]\d{3}`,
       String.raw`\d{8}`
     ].join('|') +

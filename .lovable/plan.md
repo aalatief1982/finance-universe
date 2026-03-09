@@ -1,50 +1,31 @@
+## Plan: Fix Smart Entry Typing Latency
 
+### Status: ✅ Implemented
 
-## Plan: SMS Detection Logic Enrichment (4 Parts)
+### Root Cause
+`parseSmsMessage()` (full parsing pipeline: template matching, regex, localStorage reads, inference) was called on **every keystroke** via a `useEffect` watching `text` in `SmartPaste.tsx`. Additionally, `computeCapturedFields()` ran on every render without memoization.
 
-### Part 1 — JS Fallback Keyword Enrichment (`messageFilter.ts` L50)
+### What was changed
 
-Add English and Arabic high-signal financial keywords to the fallback list. The normalization at L53-56 strips whitespace and lowercases, so multi-word terms like "cash withdrawal" collapse to "cashwithdrawal" — meaning multi-word phrases must be included as their collapsed form to match. Single words are safe as-is.
+**`src/components/SmartPaste.tsx`**
+1. **Removed `parseSmsMessage` from keystroke path** — deleted the `useEffect` (formerly L179-209) that ran the full parser on every text change. Match status is now computed only after the user taps "Review Transaction" inside `handleSubmit`.
+2. **Memoized `computeCapturedFields`** — wrapped in `useMemo` with proper dependencies to avoid recalculation on unrelated re-renders.
+3. **Removed unused import** — `parseSmsMessage` import removed since it's no longer called directly.
 
-**Current list (8 Arabic terms):**
-```
-"مبلغ", "حوالة", "رصيد", "بطاقة", "شراء", "تحويل", "دفع", "إيداع"
-```
+### What is NOT changed
+- `handleSubmit` and full parse pipeline — unchanged (runs on Review tap)
+- SMS parsing logic (`structureParser.ts`, `suggestionEngine.ts`) — untouched
+- Voice transcript merging — unchanged
+- Shared text prefill logic — unchanged
+- `NERSmartPaste.tsx` — unchanged
+- `DetectedTransactionCard`, `NoTransactionMessage` — unchanged
+- Parser files — unchanged
 
-**New list — add English terms + additional Arabic terms:**
-- English: `transaction`, `purchase`, `debit`, `debited`, `credit`, `credited`, `withdrawal`, `withdraw`, `deposit`, `deposited`, `payment`, `paid`, `transfer`, `transferred`, `remittance`, `charged`, `balance`, `fee`, `fees`
-- Arabic: `عملية`, `مشتريات`, `سحب`, `استلام`, `رسوم`, `الرسوم`, `خصم`, `الرصيد`, `مدفوعات`
-
-Excluded: generic terms like "card", "pos", multi-word phrases that collapse oddly. Existing terms preserved.
-
-### Part 2 — JS Date Pattern Enrichment (`messageFilter.ts` L69-77)
-
-Add one new pattern to the date regex array for compact bank-style dates:
-```
-\d{2}[\s-]?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s-]?\d{2,4}
-```
-This covers: `09MAR26`, `09MAR2026`, `09-Mar-26`, `09 Mar 26`, `09MAR 26`. The regex is already case-insensitive (`gi` flag). Existing patterns unchanged.
-
-### Part 3 — Native Amount Pattern Enrichment (`FinancialSmsClassifier.java` L12)
-
-The current second branch `\d+(?:[.,]\d{1,2})?\s*\b(?:sar|...)\b` fails on `56,325.00 SAR` because `\d+` can't consume past commas.
-
-Fix: change second branch from `\d+(?:[.,]\d{1,2})?` to `\d{1,3}(?:,\d{3})*(?:[.,]\d{1,2})?` — same pattern already used in the third branch for Arabic currency words.
-
-### Part 4 — Build Fix (`BudgetInsightsPage.tsx` L74)
-
-Replace `.replaceAll(...)` with `.replace(new RegExp(..., 'g'), ...)` — local fix, no tsconfig change needed.
-
-### Part 5 — Tests
-
-Add test cases to existing `messageFilter.test.ts`:
-- HSBC sample with `09MAR26` + English keyword "payment" → should pass
-- International transfer sample with Arabic keywords + standard date → should pass
-- Existing tests remain unchanged
-
-### Files Changed
-1. `src/lib/smart-paste-engine/messageFilter.ts` — keywords + date pattern
-2. `capacitor-background-sms-listener/.../FinancialSmsClassifier.java` — amount regex
-3. `src/pages/budget/BudgetInsightsPage.tsx` — replaceAll fix
-4. `src/lib/smart-paste-engine/messageFilter.test.ts` — new test cases
-
+### Verification checklist
+- [ ] Typing in Smart Entry is responsive (no lag per keystroke)
+- [ ] Pasting large text works
+- [ ] Shared text prefill works
+- [ ] Voice transcript insertion works
+- [ ] Tapping "Review Transaction" runs parser and shows results
+- [ ] Match status updates correctly after review
+- [ ] No regressions in Smart Entry flow

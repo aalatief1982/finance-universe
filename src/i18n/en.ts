@@ -503,48 +503,4 @@ export const en: Record<string, string> = {
   'budget.insights.allGoodTitle': 'All budgets look good!',
   'budget.insights.allGoodDesc': 'No issues or suggestions at the moment.',
 
-  // Actions
-  'actions.fix': 'Fix',
-  'actions.setBudget': 'Set budget',
-  'actions.confirmRecurring': 'Confirm recurring',
-
-  // Common
-  'common.tryAgain': 'Please try again.',
-
-  // Profile
-  'profile.user': 'User',
-  'profile.fallbackInitial': 'U',
-  'profile.newUser': 'New User',
-  'profile.editProfile': 'Edit Profile',
-  'profile.dangerZone': 'Danger Zone',
-  'profile.deleteWarning': 'Permanently delete your account and all associated data.',
-  'profile.deleteAccount': 'Delete Account',
-  'profile.confirmDeleteTitle': 'Are you absolutely sure?',
-  'profile.confirmDeleteDesc': 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
-  'profile.fullName': 'Full Name',
-  'profile.email': 'Email',
-  'profile.mobile': 'Mobile',
-  'profile.enterFullName': 'Enter your full name',
-  'profile.enterEmail': 'Enter your email address',
-  'profile.enterMobile': 'Enter your mobile number',
-  'profile.saveChanges': 'Save Changes',
-  'profile.fullNameRequired': 'Full name is required',
-  'profile.updated': 'Profile updated',
-  'profile.saved': 'Your profile has been saved.',
-  'profile.accountDeleted': 'Account deleted',
-  'profile.accountDeletedDesc': 'Your account has been permanently deleted.',
-  'profile.loadingImage': 'Loading image...',
-
-  // Analytics labels
-  'analytics.uncategorizedLabel': 'Uncategorized',
-  'analytics.unknownMerchant': 'Unknown merchant',
-  'analytics.categoriesApproachingBudget': 'categories are approaching or above 80% of budget usage.',
-  'analytics.missingRateImpact': 'transactions are missing conversion rates and may affect totals.',
-  'analytics.needCategories': 'transactions still need categories for cleaner analytics.',
-  'analytics.recurringMerchantsHint': 'merchants look recurring based on recent cadence.',
-
-  // Exchange Rates
-  'exchangeRates.deleted': 'Exchange rate deleted',
-  'exchangeRates.updateFailed': 'Could not update exchange rate',
-
 };

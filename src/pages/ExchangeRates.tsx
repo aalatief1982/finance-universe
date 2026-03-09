@@ -29,10 +29,8 @@ import {
 } from '@/services/ExchangeRateService';
 import ExchangeRateDialog from '@/components/fx/ExchangeRateDialog';
 import { toast } from '@/components/ui/use-toast';
-import { useLanguage } from '@/i18n/LanguageContext';
 
 const ExchangeRates: React.FC = () => {
-  const { t, language } = useLanguage();
   const baseCurrency = getUserSettings()?.currency || 'SAR';
 
   const [rates, setRates] = useState<ExchangeRate[]>(() => getAllExchangeRates());
@@ -81,10 +79,10 @@ const ExchangeRates: React.FC = () => {
     if (rateToDelete) {
       const success = deleteExchangeRate(rateToDelete.id);
       if (success) {
-        toast({ title: t('exchangeRates.deleted'), description: '' });
+        toast({ title: 'Exchange rate deleted', description: '' });
         refreshRates();
       } else {
-        toast({ title: t('exchangeRates.updateFailed'), description: t('common.tryAgain'), variant: 'destructive' });
+        toast({ title: 'Could not update exchange rate', description: 'Please try again.', variant: 'destructive' });
       }
     }
     setDeleteConfirmOpen(false);
@@ -96,7 +94,7 @@ const ExchangeRates: React.FC = () => {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
+    return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -112,13 +110,13 @@ const ExchangeRates: React.FC = () => {
             <Card>
               <CardContent className="py-12 text-center">
                 <ArrowRightLeft className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">{t('exchangeRates.noRates')}</h3>
+                <h3 className="text-lg font-medium mb-2">No Exchange Rates</h3>
                 <p className="text-muted-foreground mb-4">
-                  {t('exchangeRates.addRatesToConvert')} {baseCurrency}
+                  Add exchange rates to convert transactions to {baseCurrency}
                 </p>
                 <Button onClick={handleAddNew}>
                   <Plus className="h-4 w-4 mr-1" />
-                  {t('exchangeRates.addFirstRate')}
+                  Add First Rate
                 </Button>
               </CardContent>
             </Card>
@@ -152,12 +150,12 @@ const ExchangeRates: React.FC = () => {
                             </span>
                             {index === 0 && (
                               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                                {t('exchangeRates.latest')}
+                                Latest
                               </span>
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {t('exchangeRates.effective')}: {formatDate(rate.effectiveDate)}
+                            Effective: {formatDate(rate.effectiveDate)}
                             {rate.notes && ` • ${rate.notes}`}
                           </div>
                         </div>
@@ -197,14 +195,15 @@ const ExchangeRates: React.FC = () => {
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('exchangeRates.deleteRate')}</AlertDialogTitle>
+            <AlertDialogTitle>Delete Exchange Rate</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('exchangeRates.deleteRateDesc')}
+              Are you sure you want to delete this rate? This won&apos;t affect historical
+              transactions that already used this rate.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>{t('exchangeRates.delete')}</AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

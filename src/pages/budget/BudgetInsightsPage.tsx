@@ -71,7 +71,7 @@ const BudgetInsightsPage = () => {
   const tf = React.useCallback((key: string, vars: Record<string, string | number> = {}) => {
     let value = t(key);
     Object.entries(vars).forEach(([k, v]) => {
-      value = value.replaceAll(`{${k}}`, String(v));
+      value = value.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
     });
     return value;
   }, [t]);

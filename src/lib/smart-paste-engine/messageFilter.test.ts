@@ -29,4 +29,30 @@ describe('isFinancialTransactionMessage', () => {
     const message = 'Deposit completed on 2024-02-01';
     expect(isFinancialTransactionMessage(message)).toBe(false);
   });
+
+  it('passes HSBC compact date (DDMonYY) with English keyword', () => {
+    // Uses fallback keywords — "payment" is now in the enriched fallback list
+    const message = 'From HSBC: 09MAR26 Internet Banking TT Payment from 045-076***-001 EGP 551,393.00- Your available balance is EGP 329,306.55';
+    expect(isFinancialTransactionMessage(message)).toBe(true);
+  });
+
+  it('passes international transfer with Arabic keywords and standard date', () => {
+    const message = 'حوالة صادرة: دولية\nدولة: EGYPT\nمن: ***001 احمد عبد الرحمن\nإلى: 110 Ahmed Abdellatief HSBC USD\nمبلغ: 56,325.00 SAR\nالرسوم: 57.50\nفي: 2026-03-08 11:22:36';
+    expect(isFinancialTransactionMessage(message)).toBe(true);
+  });
+
+  it('continues passing standard Arabic purchase SMS', () => {
+    const message = 'شراء عبر نقاط البيع\nباستخدام بطاقة الأول VISA My Card الائتمانية (0275) لدى bolt.eu بمبلغ SAR 29.00 في 2026-03-08 19:43:38\nالرصيد: SAR 75.62';
+    expect(isFinancialTransactionMessage(message)).toBe(true);
+  });
+
+  it('continues passing short Arabic purchase with short date', () => {
+    const message = 'شراء\nعبر:3965;مدى-سامسونج باي\nبـSAR 4\nلـSaba Restaurant\n26/3/9 00:32';
+    expect(isFinancialTransactionMessage(message)).toBe(true);
+  });
+
+  it('rejects promotional SMS without transaction signal', () => {
+    const message = 'احصل على خصم 50% على جميع المنتجات! تسوق الآن';
+    expect(isFinancialTransactionMessage(message)).toBe(false);
+  });
 });
