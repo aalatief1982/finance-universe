@@ -920,7 +920,7 @@ const SetBudgetPage = () => {
 
         {/* Notes — collapsible feel */}
         <div className="space-y-1.5">
-          <h2 className="text-xs font-medium text-muted-foreground">Notes (optional)</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">{t('setBudget.notesOptional')}</h2>
           <Textarea
             placeholder="Add notes..."
             value={notes}
