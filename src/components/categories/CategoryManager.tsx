@@ -169,8 +169,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       
       onCategoriesChange(updatedCategories);
       toast({
-        title: "Category updated",
-        description: `Category "${values.name}" has been updated.`,
+        title: t('toast.categoryUpdated'),
+        description: `${t('category.updated')} "${values.name}" ${t('category.updatedDesc')}`,
       });
     } else if (isAddingCategory) {
       // Add new category
