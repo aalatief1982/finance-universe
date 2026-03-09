@@ -239,7 +239,7 @@ const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: n
             <CardContent className="space-y-4">
               {monthlyBalance.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Spending trend line</p>
+                  <p className="text-sm font-medium mb-2">{t('analytics.spendingTrendLine')}</p>
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={monthlyBalance} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
