@@ -8,8 +8,10 @@ final class FinancialSmsClassifier {
             "transaction", "purchase", "debit", "credit", "withdraw", "deposit", "payment"
     };
 
+    // Amount regex: 3 branches — currency-before-number, number-before-currency-code, number-before-arabic-currency.
+    // Branch 2 uses comma-thousands support (\d{1,3}(?:,\d{3})*) to match e.g. 56,325.00 SAR.
     private static final Pattern AMOUNT_PATTERN = Pattern.compile(
-            "(?i)(?:\\b(?:sar|usd|egp|aed|bhd|eur|gbp|jpy|inr|cny|cad|aud)\\b\\s*\\d+(?:[.,]\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?\\s*\\b(?:sar|usd|egp|aed|bhd|eur|gbp|jpy|inr|cny|cad|aud)\\b|\\d{1,3}(?:,\\d{3})*(?:[.,]\\d{1,2})?\\s*(?:ر\\.?\\s?س|ريال|جنيه))"
+            "(?i)(?:\\b(?:sar|usd|egp|aed|bhd|eur|gbp|jpy|inr|cny|cad|aud)\\b\\s*\\d{1,3}(?:,\\d{3})*(?:[.,]\\d{1,2})?|\\d{1,3}(?:,\\d{3})*(?:[.,]\\d{1,2})?\\s*\\b(?:sar|usd|egp|aed|bhd|eur|gbp|jpy|inr|cny|cad|aud)\\b|\\d{1,3}(?:,\\d{3})*(?:[.,]\\d{1,2})?\\s*(?:ر\\.?\\s?س|ريال|جنيه))"
     );
 
     private FinancialSmsClassifier() {
