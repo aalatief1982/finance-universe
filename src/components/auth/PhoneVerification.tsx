@@ -392,7 +392,7 @@ const PhoneVerification = ({
               aria-label={`Session expires in ${formatTime(timeRemaining)}`}
               aria-live="polite"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Clock className={`h-4 w-4 ${getTimeWarningColor()}`} aria-hidden="true" />
                 <span className={`text-sm font-medium ${getTimeWarningColor()}`}>
                   Session expires in: {formatTime(timeRemaining)}
