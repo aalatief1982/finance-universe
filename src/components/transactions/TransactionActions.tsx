@@ -27,6 +27,7 @@ const TransactionActions = ({
   const navigate = useNavigate();
   const { deleteTransaction } = useTransactions();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
