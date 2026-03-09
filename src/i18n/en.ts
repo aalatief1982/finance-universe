@@ -311,6 +311,7 @@ export const en: Record<string, string> = {
   'voice.recognitionFailed': 'Voice recognition failed. Try typing instead.',
   'voice.notSupported': 'Voice input is not supported on this device.',
   'voice.listening': 'Listening...',
+  'voice.lowConfidence': 'Could not understand clearly. Please try again.',
 
   // Transaction actions
   'transaction.deleted': 'Transaction deleted',

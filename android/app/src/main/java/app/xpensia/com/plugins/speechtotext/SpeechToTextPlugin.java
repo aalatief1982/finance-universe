@@ -2,6 +2,7 @@ package app.xpensia.com.plugins.speechtotext;
 
 import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -30,6 +31,17 @@ public class SpeechToTextPlugin extends Plugin {
     private SpeechRecognizer speechRecognizer;
     private boolean isListening = false;
 
+    private SpeechRecognizer createRecognizer() {
+        if (Build.VERSION.SDK_INT >= 31) {
+            if (SpeechRecognizer.isOnDeviceRecognitionAvailable(getContext())) {
+                Log.d(TAG, "Using on-device speech recognizer (API 31+)");
+                return SpeechRecognizer.createOnDeviceSpeechRecognizer(getContext());
+            }
+            Log.d(TAG, "On-device recognizer not available, falling back to default");
+        }
+        return SpeechRecognizer.createSpeechRecognizer(getContext());
+    }
+
     @PluginMethod
     public void startListening(PluginCall call) {
         if (!SpeechRecognizer.isRecognitionAvailable(getContext())) {
@@ -46,7 +58,7 @@ public class SpeechToTextPlugin extends Plugin {
                     speechRecognizer.destroy();
                 }
 
-                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
+                speechRecognizer = createRecognizer();
                 speechRecognizer.setRecognitionListener(new RecognitionListener() {
                     @Override
                     public void onReadyForSpeech(Bundle params) {
@@ -62,14 +74,10 @@ public class SpeechToTextPlugin extends Plugin {
                     }
 
                     @Override
-                    public void onRmsChanged(float rmsdB) {
-                        // Not used
-                    }
+                    public void onRmsChanged(float rmsdB) {}
 
                     @Override
-                    public void onBufferReceived(byte[] buffer) {
-                        // Not used
-                    }
+                    public void onBufferReceived(byte[] buffer) {}
 
                     @Override
                     public void onEndOfSpeech() {
@@ -113,14 +121,34 @@ public class SpeechToTextPlugin extends Plugin {
                     public void onResults(Bundle results) {
                         isListening = false;
                         ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                        if (matches != null && !matches.isEmpty()) {
-                            String text = matches.get(0);
-                            Log.d(TAG, "onResults: " + text);
-                            JSObject event = new JSObject();
-                            event.put("text", text);
-                            event.put("isFinal", true);
-                            notifyListeners("speechResult", event);
+                        if (matches == null || matches.isEmpty()) {
+                            return;
                         }
+
+                        float[] scores = results.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES);
+                        String bestText = matches.get(0);
+                        float bestConfidence = 1.0f;
+
+                        if (scores != null && scores.length > 0) {
+                            int bestIdx = 0;
+                            bestConfidence = scores[0];
+                            for (int i = 1; i < Math.min(matches.size(), scores.length); i++) {
+                                if (scores[i] > bestConfidence) {
+                                    bestConfidence = scores[i];
+                                    bestIdx = i;
+                                }
+                            }
+                            bestText = matches.get(bestIdx);
+                            Log.d(TAG, "onResults: " + matches.size() + " alternatives, best[" + bestIdx + "]=\"" + bestText + "\" confidence=" + bestConfidence);
+                        } else {
+                            Log.d(TAG, "onResults: no confidence scores, using first match: " + bestText);
+                        }
+
+                        JSObject event = new JSObject();
+                        event.put("text", bestText);
+                        event.put("confidence", (double) bestConfidence);
+                        event.put("isFinal", true);
+                        notifyListeners("speechResult", event);
                     }
 
                     @Override
@@ -131,14 +159,13 @@ public class SpeechToTextPlugin extends Plugin {
                             JSObject event = new JSObject();
                             event.put("text", text);
                             event.put("isFinal", false);
+                            event.put("confidence", 0.0);
                             notifyListeners("speechResult", event);
                         }
                     }
 
                     @Override
-                    public void onEvent(int eventType, Bundle params) {
-                        // Not used
-                    }
+                    public void onEvent(int eventType, Bundle params) {}
                 });
 
                 Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -146,7 +173,8 @@ public class SpeechToTextPlugin extends Plugin {
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale);
                 intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, locale);
                 intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-                intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+                intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+                intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
 
                 speechRecognizer.startListening(intent);
                 isListening = true;

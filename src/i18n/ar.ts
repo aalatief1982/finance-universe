@@ -311,6 +311,7 @@ export const ar: Record<string, string> = {
   'voice.recognitionFailed': 'فشل التعرف على الصوت. حاول الكتابة بدلاً من ذلك.',
   'voice.notSupported': 'الإدخال الصوتي غير مدعوم على هذا الجهاز.',
   'voice.listening': 'جارٍ الاستماع...',
+  'voice.lowConfidence': 'لم يتم فهم الكلام بوضوح. حاول مرة أخرى.',
 
   // Transaction actions
   'transaction.deleted': 'تم حذف المعاملة',
