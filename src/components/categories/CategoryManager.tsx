@@ -264,7 +264,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <div key={category.id} className="category-item">
         <div 
           className={`flex items-center p-2 rounded-md hover:bg-muted/50 ${
-            level > 0 ? 'ltr:ml-6 rtl:mr-6' : ''
+            level > 0 ? 'ltr:ml-6 rtl:mrr:ml-6 rtl:mr-6' : ''
           }`}
         >
           <div className="flex-1 flex items-center">
@@ -272,7 +272,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="p-1 mr-1" 
+                clltr:mr-1 rtl:mlsName="p-1 mr-1" 
                 onClick={() => toggleExpand(category.id)}
               >
                 {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
