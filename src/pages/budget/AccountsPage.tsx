@@ -361,8 +361,8 @@ const AccountsPage = () => {
             
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium mb-1.5 block" htmlFor="account-currency">
-                  Currency
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="account-currency">
+                  {t('accounts.currency')}
                 </label>
                 <CurrencySelect
                   id="account-currency"
