@@ -313,6 +313,7 @@ const getPeriodWindow = (range: Range, customStart: Date | null, customEnd: Date
 };
 
 const Analytics: React.FC = () => {
+  const { t } = useLanguage();
   const { transactions } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
