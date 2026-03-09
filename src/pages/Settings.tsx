@@ -694,7 +694,7 @@ const Settings = () => {
                         });
 
                         // Initialize listener and trigger initial import
-                        setSmsBusyMessage('Importing SMS messages...');
+                        setSmsBusyMessage(t('toast.importingSmsMessages'));
                         try {
                           console.log('[Settings] (toggle) Initializing SMS listener and triggering import...');
                           await smsPermissionService.initSmsListener();
