@@ -424,8 +424,8 @@ const BudgetReportPage = () => {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base">Spending Trend</CardTitle>
-                  <CardDescription>Monthly spending over time</CardDescription>
+                  <CardTitle className="text-base">{t('report.spendingTrend')}</CardTitle>
+                  <CardDescription>{t('report.monthlyOverTime')}</CardDescription>
                 </div>
                 <Select value={timeRange} onValueChange={v => setTimeRange(v as '3m' | '6m' | '12m')}>
                   <SelectTrigger className="w-20">
