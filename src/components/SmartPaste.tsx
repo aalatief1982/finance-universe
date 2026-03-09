@@ -267,6 +267,22 @@ const SmartPaste = ({
       setKeywordScore(keywordScore);
       setDebugTrace(debugTrace);
 
+      // Update match status from parsed result (moved out of keystroke path)
+      if (parsed.matched) {
+        const bank =
+          parsed.inferredFields?.vendor?.value ||
+          parsed.directFields?.vendor?.value ||
+          parsed.directFields?.fromAccount?.value ||
+          '';
+        setMatchStatus(`Matched template from ${bank || 'saved template'}`);
+        setHasMatch(true);
+      } else {
+        setMatchStatus(
+          'Ready to review. We can still extract transaction details from this message.',
+        );
+        setHasMatch(false);
+      }
+
       if (import.meta.env.MODE === 'development') {
         // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
       }
