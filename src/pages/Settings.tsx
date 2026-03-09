@@ -370,8 +370,8 @@ const Settings = () => {
           encoding: 'utf8' as unknown as import('@capacitor/filesystem').Encoding
         });
         toast({
-          title: 'Export successful',
-          description: `Saved to Documents/${fileName}`
+          title: t('toast.exportSuccessful'),
+          description: `${t('toast.exportSavedTo')}${fileName}`
         });
         return;
       }
