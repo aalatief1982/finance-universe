@@ -336,14 +336,15 @@ const BudgetDetailPage = () => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Recent Transactions</CardTitle>
+              <CardTitle className="text-base">{t('detail.recentTransactions')}</CardTitle>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => navigate('/transactions')}
               >
-                View All
-                <ChevronRight className="h-4 w-4 ml-1" />
+                {t('detail.viewAll')}
+                <ChevronRight className={cn("h-4 w-4 ltr:ml-1 rtl:mr-1", isRtl && "rotate-180")} />
+              </Button>
               </Button>
             </div>
           </CardHeader>
