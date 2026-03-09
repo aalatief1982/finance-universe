@@ -230,8 +230,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     onCategoriesChange(updatedCategories);
     
     toast({
-      title: "Category deleted",
-      description: "Category has been deleted successfully.",
+      title: t('toast.categoryDeleted'),
+      description: t('category.deletedDesc'),
     });
   };
 
