@@ -130,7 +130,7 @@ const TelegramBotSetup: React.FC = () => {
               </p>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Switch
                 id="enable-learning"
                 checked={enableLearning}
