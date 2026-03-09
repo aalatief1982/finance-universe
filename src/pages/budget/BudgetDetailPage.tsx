@@ -51,6 +51,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 const BudgetDetailPage = () => {
   const { budgetId } = useParams();
   const navigate = useNavigate();
+  const { t, isRtl } = useLanguage();
   useTransactions();
 
   // Load budget data
