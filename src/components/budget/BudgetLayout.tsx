@@ -28,6 +28,7 @@ export function BudgetLayout({
 }: BudgetLayoutProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
   const { period, year, periodIndex, setPeriod, navigatePeriod, periodLabel } = useBudgetPeriodParams();
 
   return (
