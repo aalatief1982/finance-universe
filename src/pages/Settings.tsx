@@ -711,8 +711,8 @@ const Settings = () => {
                         }
 
                         toast({
-                          title: 'SMS permission granted',
-                          description: 'Xpensia can now read supported bank SMS messages for import.',
+                          title: t('toast.smsPermissionGranted'),
+                          description: t('toast.smsPermissionGrantedDesc'),
                         });
                       } else {
                         if (canonicalStatus.permanentlyDenied) {
