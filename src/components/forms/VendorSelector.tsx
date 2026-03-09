@@ -164,7 +164,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
               </label>
               <Select value={newVendor.category} onValueChange={val => setNewVendor(prev => ({ ...prev, category: val, subcategory: '' }))}>
                 <SelectTrigger id="vendor-selector-category" className="w-full">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t('form.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
                   {getCategoriesForType(newVendor.type).map(category => (
