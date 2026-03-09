@@ -31,7 +31,7 @@ const SmsProviderSelection = () => {
   useEffect(() => {
     const loadProviders = async () => {
       try {
-        const loadedProviders = await smsProviderSelectionService.loadProviders();
+        const loadedProviders = smsProviderSelectionService.getSelectedProviders?.() || smsProviderSelectionService.getAllProviders?.() || [];
         const detected = loadedProviders.some(p => p.isDetected);
         setHasDetectedProviders(detected);
         setProviders(loadedProviders);
