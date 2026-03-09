@@ -129,7 +129,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return (
       <div className="flex items-center">
         <Icon 
-          className={`mr-1 h-4 w-4 ${isIncome ? 'text-success' : 'text-destructive'}`} 
+          className={`ltr:mr-1 rtl:ml-1 h-4 w-4 ${isIncome ? 'text-success' : 'text-destructive'}`} 
         />
         <span className={isIncome ? 'text-success' : 'text-destructive'}>
           {formatCurrency(Math.abs(transaction.amount), transaction.currency)}
