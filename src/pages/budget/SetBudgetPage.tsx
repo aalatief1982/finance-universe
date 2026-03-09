@@ -552,9 +552,9 @@ const SetBudgetPage = () => {
           });
         }
         
-        toast({ title: 'Budget and parent periods updated' });
+        toast({ title: t('toast.budgetUpdatedWithParent') });
       } else {
-        toast({ title: 'Budget updated successfully' });
+        toast({ title: t('toast.budgetUpdated') });
       }
     } else {
       budgetService.addBudget(budgetData);
@@ -562,9 +562,9 @@ const SetBudgetPage = () => {
       // If yearly and user confirmed cascade, create child period budgets
       if (cascade && period === 'yearly') {
         createCascadedBudgets(budgetData);
-        toast({ title: 'Budget created with time distribution' });
+        toast({ title: t('toast.budgetCreatedDistributed') });
       } else {
-        toast({ title: 'Budget created successfully' });
+        toast({ title: t('toast.budgetCreated') });
       }
     }
 
