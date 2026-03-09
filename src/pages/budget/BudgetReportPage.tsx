@@ -451,8 +451,8 @@ const BudgetReportPage = () => {
                     <Line 
                       type="monotone" 
                       dataKey="spent" 
-                      name="Spent"
-                      stroke="hsl(var(--destructive))" 
+                      name={t('report.chartSpent')}
+                      stroke="hsl(var(--destructive))"
                       strokeWidth={2}
                       dot={{ r: 4 }}
                     />
