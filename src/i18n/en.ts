@@ -559,6 +559,12 @@ export const en: Record<string, string> = {
   // NoTransactionMessage
   'smartEntry.noTransactionDefault': 'No transaction detected.',
 
+
+  // MicButton
+  'smartEntry.mic.start': 'Start voice input',
+  'smartEntry.mic.stop': 'Stop listening',
+
 };
+
 
 

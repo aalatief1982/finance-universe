@@ -559,6 +559,12 @@ export const ar: Record<string, string> = {
   // NoTransactionMessage
   'smartEntry.noTransactionDefault': 'لم يتم اكتشاف معاملة.',
 
+
+  // MicButton
+  'smartEntry.mic.start': 'بدء الإدخال الصوتي',
+  'smartEntry.mic.stop': 'إيقاف الاستماع',
+
 };
+
 
 

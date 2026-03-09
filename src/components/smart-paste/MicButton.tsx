@@ -2,6 +2,7 @@ import React from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface MicButtonProps {
   isListening: boolean;
@@ -18,6 +19,7 @@ const MicButton: React.FC<MicButtonProps> = ({
   size = 'icon',
   className,
 }) => {
+  const { t } = useLanguage();
   if (!isSupported) return null;
 
   return (
@@ -26,7 +28,7 @@ const MicButton: React.FC<MicButtonProps> = ({
       variant={isListening ? 'destructive' : 'outline'}
       size={size}
       onClick={onClick}
-      aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+      aria-label={isListening ? t('smartEntry.mic.stop') : t('smartEntry.mic.start')}
       className={cn(
         'shrink-0 transition-all',
         isListening && 'animate-pulse',
