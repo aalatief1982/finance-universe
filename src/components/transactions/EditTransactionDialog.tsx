@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ExpenseForm from '@/components/ExpenseForm';
 import { Transaction } from '@/types/transaction';
 import { TransactionFormValues } from '@/components/forms/transaction-form-schema';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface EditTransactionDialogProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
   categories,
   origin
 }) => {
+  const { t } = useLanguage();
+  
   if (!currentTransaction) return null;
 
   return (
@@ -32,7 +35,7 @@ const EditTransactionDialog: React.FC<EditTransactionDialogProps> = ({
       <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto pt-2">
         {origin === 'ml' && (
           <p className="text-yellow-600 text-xs mb-2">
-            AI-generated fields – please verify.
+            {t('edit.aiGeneratedFields')}
           </p>
         )}
         <ExpenseForm

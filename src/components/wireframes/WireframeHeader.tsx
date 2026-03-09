@@ -43,15 +43,17 @@ const WireframeHeader = ({
   contextTitle = false 
 }: WireframeHeaderProps) => {
   const location = useLocation();
+  const { t } = useLanguage();
   
   // Determine the title to display
   const getDisplayTitle = () => {
     if (title) return title; // Explicitly provided title takes precedence
     if (contextTitle) {
       // Use route mapping for context-aware title
-      return routeTitleMap[location.pathname] || 'Expense Tracker';
+      const titleKey = getRouteTitleKey(location.pathname);
+      return t(titleKey);
     }
-    return title || 'Expense Tracker'; // Fallback to default
+    return title || t('wireframe.expenseTracker'); // Fallback to default
   };
 
   const displayTitle = getDisplayTitle();
