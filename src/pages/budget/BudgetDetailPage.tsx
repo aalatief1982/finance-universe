@@ -120,10 +120,10 @@ const BudgetDetailPage = () => {
     return (
       <Layout>
         <div className="container px-4 py-12 text-center">
-          <p className="text-muted-foreground">Budget not found</p>
+          <p className="text-muted-foreground">{t('detail.budgetNotFound')}</p>
           <Button onClick={() => navigate('/budget')} className="mt-4">
-            <ArrowLeft className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-            Back to Budgets
+            <ArrowLeft className={cn("h-4 w-4 ltr:mr-2 rtl:ml-2", isRtl && "rotate-180")} />
+            {t('detail.backToBudgets')}
           </Button>
         </div>
       </Layout>
