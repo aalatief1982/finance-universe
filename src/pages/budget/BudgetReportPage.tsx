@@ -363,8 +363,8 @@ const BudgetReportPage = () => {
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
-                      <Bar dataKey="budget" name="Budget" fill="hsl(var(--primary))" />
-                      <Bar dataKey="spent" name="Spent" fill="hsl(var(--destructive))" />
+                      <Bar dataKey="budget" name={t('report.chartBudget')} fill="hsl(var(--primary))" />
+                      <Bar dataKey="spent" name={t('report.chartSpent')} fill="hsl(var(--destructive))" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
