@@ -1,22 +1,3 @@
-/**
- * @file DashboardContent.tsx
- * @description UI component for DashboardContent.
- *
- * @module components/dashboard/DashboardContent
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
- */
-
 import React from 'react';
 import DashboardStats from '@/components/DashboardStats';
 import ExpenseChart from '@/components/ExpenseChart';
@@ -26,6 +7,7 @@ import { generateChartData } from '@/lib/mock-data';
 import { motion } from 'framer-motion';
 import { useUser } from '@/context/UserContext';
 import { AnalyticsService } from '@/services/AnalyticsService';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface DashboardContentProps {
   transactions: Transaction[];
@@ -35,87 +17,46 @@ interface DashboardContentProps {
   isLoading?: boolean;
 }
 
-const DashboardContent = ({ 
-  transactions, 
-  filter, 
-  setFilter,
-  setIsAddingExpense,
-  isLoading = false
-}: DashboardContentProps) => {
+const DashboardContent = ({ transactions, filter, setFilter, setIsAddingExpense, isLoading = false }: DashboardContentProps) => {
   const { user } = useUser();
-  
-  // Defensive check for transactions array
+  const { t } = useLanguage();
   const safeTransactions = React.useMemo(() => (Array.isArray(transactions) ? transactions : []), [transactions]);
 
   const baseCurrency = user?.preferences?.currency || 'SAR';
-  const fxSummary = React.useMemo(() => {
-    return AnalyticsService.getFxAwareTotals(safeTransactions, baseCurrency);
-  }, [safeTransactions, baseCurrency]);
-  
+  const fxSummary = React.useMemo(() => AnalyticsService.getFxAwareTotals(safeTransactions, baseCurrency), [safeTransactions, baseCurrency]);
   const income = fxSummary.income;
   const expenses = fxSummary.expenses;
   const balance = income - expenses;
 
-  // Calculate previous month's balance with defensive approach
   const lastMonthTransactions = React.useMemo(() => {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
     return safeTransactions.filter(tx => {
-      // Skip invalid transactions
       if (!tx || !tx.date) return false;
-
-      try {
-        const txDate = new Date(tx.date);
-        return txDate < firstDayOfMonth;
-      } catch (error) {
-        if (import.meta.env.MODE === 'development') {
-          console.warn('Invalid date format in transaction:', tx);
-        }
-        return false;
-      }
+      try { return new Date(tx.date) < firstDayOfMonth; }
+      catch { return false; }
     });
   }, [safeTransactions]);
 
-  const previousFxSummary = React.useMemo(() => {
-    return AnalyticsService.getFxAwareTotals(lastMonthTransactions, baseCurrency);
-  }, [lastMonthTransactions, baseCurrency]);
-  
-  const previousIncome = previousFxSummary.income;
-  const previousExpenses = previousFxSummary.expenses;
-  
-  const previousBalance = previousIncome - previousExpenses;
+  const previousFxSummary = React.useMemo(() => AnalyticsService.getFxAwareTotals(lastMonthTransactions, baseCurrency), [lastMonthTransactions, baseCurrency]);
+  const previousBalance = previousFxSummary.income - previousFxSummary.expenses;
 
-  // Generate chart data with error handling
-  let categoryData = [];
-  let subcategoryData = [];
-  
+  let categoryData: any[] = [];
+  let subcategoryData: any[] = [];
   try {
     const chartData = generateChartData(safeTransactions);
     categoryData = AnalyticsService.getFxAwareCategoryData(safeTransactions, baseCurrency) || chartData.categoryData || [];
     subcategoryData = AnalyticsService.getFxAwareSubcategoryData(safeTransactions, baseCurrency).slice(0, 10);
-  } catch (error) {
-    if (import.meta.env.MODE === 'development') {
-      console.error('Error generating chart data:', error);
-    }
-    // Provide empty arrays as fallback
-    categoryData = [];
-    subcategoryData = [];
-  }
+  } catch { categoryData = []; subcategoryData = []; }
 
-  // Placeholder skeleton for loading state
   if (isLoading) {
     return (
       <div className="space-y-4 animate-pulse">
         <div className="h-5 bg-muted rounded w-1/3 mb-2"></div>
         <div className="h-4 bg-muted rounded w-2/3 mb-4"></div>
-        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-28 bg-muted rounded-lg"></div>
-          ))}
+          {[1, 2, 3].map(i => (<div key={i} className="h-28 bg-muted rounded-lg"></div>))}
         </div>
-        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="h-72 bg-muted rounded-lg"></div>
           <div className="h-72 bg-muted rounded-lg"></div>
@@ -124,52 +65,25 @@ const DashboardContent = ({
     );
   }
 
+  const firstName = user?.fullName?.split(' ')[0];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-4"
-    >
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-4">
       <div className="pb-2">
         <h2 className="text-xl font-bold">
-          {user?.fullName ? `Hi, ${user.fullName.split(' ')[0]}` : 'Welcome to your Dashboard'}
+          {firstName ? `${t('dashboard.hi')}, ${firstName}` : t('dashboard.welcomeDashboard')}
         </h2>
-        <p className="text-muted-foreground text-sm">
-          Here&apos;s an overview of your finances
-        </p>
+        <p className="text-muted-foreground text-sm">{t('dashboard.financesOverview')}</p>
       </div>
       
-      <DashboardStats 
-        income={income} 
-        expenses={expenses} 
-        balance={balance}
-        previousBalance={previousBalance}
-      />
+      <DashboardStats income={income} expenses={expenses} balance={balance} previousBalance={previousBalance} />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <ExpenseChart
-            expensesByCategory={categoryData}
-            expensesBySubcategory={subcategoryData}
-          />
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+          <ExpenseChart expensesByCategory={categoryData} expensesBySubcategory={subcategoryData} />
         </motion.div>
-        
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <RecentTransactions 
-            filter={filter}
-            setFilter={setFilter}
-            transactions={safeTransactions}
-            setIsAddingExpense={setIsAddingExpense}
-          />
+        <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
+          <RecentTransactions filter={filter} setFilter={setFilter} transactions={safeTransactions} setIsAddingExpense={setIsAddingExpense} />
         </motion.div>
       </div>
     </motion.div>

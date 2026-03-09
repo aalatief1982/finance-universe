@@ -1,24 +1,6 @@
-/**
- * @file SmartPasteSummary.tsx
- * @description UI component for SmartPasteSummary.
- *
- * @module components/SmartPasteSummary
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
- */
-
 import React from 'react';
 import { Card } from './ui/card';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   confidence: number;
@@ -29,44 +11,34 @@ interface Props {
 }
 
 const SmartPasteSummary: React.FC<Props> = ({
-  confidence,
-  matchedCount,
-  totalTemplates,
-  fieldScore,
-  keywordScore,
+  confidence, matchedCount, totalTemplates, fieldScore, keywordScore,
 }) => {
+  const { t } = useLanguage();
+
   const qualityLabel =
     confidence >= 0.8
-      ? 'Looks good'
+      ? t('smartPaste.looksGood')
       : confidence >= 0.5
-      ? 'Needs quick review'
-      : 'Needs careful review';
+      ? t('smartPaste.needsQuickReview')
+      : t('smartPaste.needsCarefulReview');
 
   return (
-    <Card className="bg-accent/10 border-l-4 border-accent text-accent-foreground p-[var(--card-padding)] text-sm rounded-md">
-      <h2 className="font-semibold mb-2 text-accent">
-        Review before saving
-      </h2>
-      <ul className="list-disc list-inside space-y-1">
-        <li>
-          Quality check: <strong>{qualityLabel}</strong>
-        </li>
-        <li>
-          Confidence estimate: <strong>{(confidence * 100).toFixed(0)}%</strong>
-        </li>
+    <Card className="bg-accent/10 border-l-4 rtl:border-l-0 rtl:border-r-4 border-accent text-accent-foreground p-[var(--card-padding)] text-sm rounded-md">
+      <h2 className="font-semibold mb-2 text-accent">{t('smartPaste.reviewBeforeSaving')}</h2>
+      <ul className="list-disc ltr:list-inside rtl:list-inside space-y-1">
+        <li>{t('smartPaste.qualityCheck')}: <strong>{qualityLabel}</strong></li>
+        <li>{t('smartPaste.confidenceEstimate')}: <strong>{(confidence * 100).toFixed(0)}%</strong></li>
         {typeof fieldScore === 'number' && fieldScore < 0.75 && (
-          <li>Some important details may still need confirmation.</li>
+          <li>{t('smartPaste.detailsNeedConfirmation')}</li>
         )}
         {typeof keywordScore === 'number' && keywordScore < 0.5 && (
-          <li>Category may need review before you save.</li>
+          <li>{t('smartPaste.categoryNeedsReview')}</li>
         )}
-        <li>Saving helps improve similar message detection on this device.</li>
+        <li>{t('smartPaste.savingHelps')}</li>
       </ul>
 
       {typeof matchedCount === 'number' && typeof totalTemplates === 'number' && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          We used your past confirmations to improve this suggestion.
-        </p>
+        <p className="mt-2 text-xs text-muted-foreground">{t('smartPaste.usedPastConfirmations')}</p>
       )}
     </Card>
   );

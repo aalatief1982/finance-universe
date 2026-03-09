@@ -167,8 +167,8 @@ const Transactions = () => {
 
         {range === 'custom' && (
           <div className="flex items-center justify-center gap-2 animate-in fade-in">
-            <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
-            <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
+            <DatePicker date={customStart} setDate={setCustomStart} placeholder={t('datePicker.start')} />
+            <DatePicker date={customEnd} setDate={setCustomEnd} placeholder={t('datePicker.end')} />
           </div>
         )}
 
