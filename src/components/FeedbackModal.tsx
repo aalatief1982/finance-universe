@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 // Rating dropdown replaced with stars - select no longer used
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Star } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Device } from '@capacitor/device';
 import { App } from '@capacitor/app';
 import { cn } from '@/lib/utils';
