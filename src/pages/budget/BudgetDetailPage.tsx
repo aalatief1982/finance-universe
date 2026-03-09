@@ -280,9 +280,9 @@ const BudgetDetailPage = () => {
         {/* Spending Trend */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Spending Trend</CardTitle>
+            <CardTitle className="text-base">{t('detail.spendingTrend')}</CardTitle>
             <CardDescription>
-              Cumulative spending vs. target pace
+              {t('detail.cumulativeVsTarget')}
             </CardDescription>
           </CardHeader>
           <CardContent>
