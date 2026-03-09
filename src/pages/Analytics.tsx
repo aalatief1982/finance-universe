@@ -111,9 +111,9 @@ const AnalyticsDeltaSection: React.FC<{
             <CardContent className="py-4">
               {budgetConfigured ? (
                 <>
-                  <p className="text-xs text-muted-foreground">Budget risk summary</p>
+                  <p className="text-xs text-muted-foreground">{t('analytics.budgetRiskSummary')}</p>
                   <p className="mt-2 text-lg font-semibold">
-                    {budgetRiskCount} categor{budgetRiskCount === 1 ? 'y is' : 'ies are'} at risk this period
+                    {budgetRiskCount} {budgetRiskCount === 1 ? t('analytics.categoryIs') : t('analytics.categoriesAre')} {t('analytics.categoriesAtRisk')}
                   </p>
                 </>
               ) : (
