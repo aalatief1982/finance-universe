@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Check } from 'lucide-react';
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/utils/format-utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface DetectedTransactionCardProps {
   transaction: Transaction;
@@ -21,31 +22,33 @@ const DetectedTransactionCard = ({
   onAddTransaction,
   origin,
 }: DetectedTransactionCardProps) => {
+  const { t } = useLanguage();
+
   const getOriginDisplay = () => {
     switch (origin) {
       case 'template':
         return {
-          label: 'Template Match',
+          label: t('smartEntry.card.originTemplate'),
           color: 'bg-success/10 text-success border border-success/20',
         };
       case 'structure':
         return {
-          label: 'Structure Match',
+          label: t('smartEntry.card.originStructure'),
           color: 'bg-info/10 text-info border border-info/20',
         };
       case 'ml':
         return {
-          label: 'AI Extracted',
+          label: t('smartEntry.card.originMl'),
           color: 'bg-warning/10 text-warning border border-warning/20',
         };
       case 'fallback':
         return {
-          label: 'Fallback',
+          label: t('smartEntry.card.originFallback'),
           color: 'bg-muted text-muted-foreground border border-border',
         };
       default:
         return {
-          label: 'Unknown',
+          label: t('smartEntry.card.originUnknown'),
           color: 'bg-muted text-muted-foreground border border-border',
         };
     }
@@ -73,7 +76,7 @@ const DetectedTransactionCard = ({
               {isSmartMatch && (
                 <span className="bg-success/10 text-success text-xs px-2 py-0.5 rounded-full border border-success/20">
                   <Check className="inline h-3 w-3 mr-1" />
-                  Smart Match
+                  {t('smartEntry.card.smartMatch')}
                 </span>
               )}
               {origin && (
@@ -85,7 +88,7 @@ const DetectedTransactionCard = ({
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {transaction.description || transaction.fromAccount || 'No description'}
+              {transaction.description || transaction.fromAccount || t('smartEntry.card.noDescription')}
             </p>
             <p className="text-lg font-semibold mt-2">
               {formatCurrency(transaction.amount, transaction.currency)}
@@ -110,7 +113,7 @@ const DetectedTransactionCard = ({
           </div>
           <Button className="w-full" onClick={() => onAddTransaction(transaction)}>
             <Plus className="h-4 w-4 mr-1" />
-            Add Transaction
+            {t('smartEntry.card.addTransaction')}
           </Button>
         </div>
       </CardContent>
