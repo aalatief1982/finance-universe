@@ -140,7 +140,7 @@ const AccountsPage = () => {
 
     const existingAccount = accountService.getAccountByName(form.name);
     if (existingAccount && existingAccount.id !== editingAccount.id) {
-      toast({ title: 'An account with this name already exists', variant: 'destructive' });
+      toast({ title: t('toast.accountNameExists'), variant: 'destructive' });
       return;
     }
 
