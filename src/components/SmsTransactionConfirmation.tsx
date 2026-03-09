@@ -111,6 +111,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   onDecline,
   onEdit
 }) => {
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editedTransaction, setEditedTransaction] = useState({ ...transaction });
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
