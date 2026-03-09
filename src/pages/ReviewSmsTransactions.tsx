@@ -496,7 +496,7 @@ const toggleSkipAll = () => {
             <p className="text-sm text-gray-500 break-words">{txn.rawMessage}</p>
             <div className="flex items-center gap-1">
               {txn.confidence !== undefined && (
-                <Badge variant={badgeVariant} className="shrink-0 ml-2">
+                <Badge variant={badgeVariant} className="shrink-0 ltr:ml-2 rtl:mr-2">
                   {Math.round(txn.confidence * 100)}%
                 </Badge>
               )}
