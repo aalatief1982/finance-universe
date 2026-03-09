@@ -264,7 +264,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <div key={category.id} className="category-item">
         <div 
           className={`flex items-center p-2 rounded-md hover:bg-muted/50 ${
-            level > 0 ? 'ml-6' : ''
+            level > 0 ? 'ltr:ml-6 rtl:mr-6' : ''
           }`}
         >
           <div className="flex-1 flex items-center">
@@ -272,7 +272,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="p-1 mr-1" 
+                className="p-1 ltr:mr-1 rtl:ml-1" 
                 onClick={() => toggleExpand(category.id)}
               >
                 {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -280,24 +280,24 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             )}
             
             <div 
-              className="w-4 h-4 mr-2 rounded-full" 
+              className="w-4 h-4 ltr:mr-2 rtl:ml-2 rounded-full" 
               style={{ backgroundColor: category.metadata?.color || '#8B5CF6' }} 
             />
             
             {hasSubcategories ? (
-              isExpanded ? <FolderOpen size={18} className="mr-2" /> : <Folder size={18} className="mr-2" />
+              isExpanded ? <FolderOpen size={18} className="ltr:mr-2 rtl:ml-2" /> : <Folder size={18} className="ltr:mr-2 rtl:ml-2" />
             ) : null}
             
             <span className="font-medium">{category.name}</span>
             
             {category.metadata?.budget && (
-              <span className="ml-2 text-sm text-muted-foreground">
+              <span className="ltr:ml-2 rtl:mr-2 text-sm text-muted-foreground">
                 Budget: ${category.metadata.budget}
               </span>
             )}
           </div>
           
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center gap-1">
             <Button 
               variant="ghost" 
               size="sm" 
@@ -327,7 +327,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         
         {/* Subcategories */}
         {isExpanded && hasSubcategories && (
-          <div className="ml-6 border-l-2 border-muted pl-2 mt-1">
+          <div className="ltr:ml-6 rtl:mr-6 border-l-2 rtl:border-l-0 rtl:border-r-2 border-muted ltr:pl-2 rtl:pr-2 mt-1">
             {categories
               .filter(c => c.parentId === category.id)
               .map(subcategory => renderCategoryItem(subcategory, level + 1))}
@@ -345,7 +345,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Category Manager</CardTitle>
         <Button onClick={() => startAddingCategory()} size="sm">
-          <Plus size={16} className="mr-1" /> Add Category
+          <Plus size={16} className="ltr:mr-1 rtl:ml-1" /> Add Category
         </Button>
       </CardHeader>
       

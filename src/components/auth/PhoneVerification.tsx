@@ -375,7 +375,7 @@ const PhoneVerification = ({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className="ltr:mr-2 rtl:ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                   <span>Sending...</span>
                 </>
               ) : (
@@ -392,7 +392,7 @@ const PhoneVerification = ({
               aria-label={`Session expires in ${formatTime(timeRemaining)}`}
               aria-live="polite"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <Clock className={`h-4 w-4 ${getTimeWarningColor()}`} aria-hidden="true" />
                 <span className={`text-sm font-medium ${getTimeWarningColor()}`}>
                   Session expires in: {formatTime(timeRemaining)}
@@ -462,12 +462,12 @@ const PhoneVerification = ({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className="ltr:mr-2 rtl:ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                   <span>Verifying...</span>
                 </>
               ) : success ? (
                 <>
-                  <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                  <CheckCircle2 className="ltr:mr-2 rtl:ml-2 h-4 w-4" aria-hidden="true" />
                   <span>Verified!</span>
                 </>
               ) : (

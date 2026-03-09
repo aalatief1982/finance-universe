@@ -21,8 +21,8 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
   const { t } = useLanguage();
   
   return (
-    <div className="flex items-center space-x-2 mb-2">
-      <div className="flex items-center space-x-2">
+    <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center gap-2">
         <span className="text-sm font-medium">{t('sort.sortBy')}:</span>
         <Select
           value={sortField || "date"}
@@ -47,9 +47,9 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
         onClick={() => onSortDirectionChange(sortDirection === 'asc' ? 'desc' : 'asc')}
       >
         {sortDirection === 'asc' ? (
-          <ChevronUp className="h-4 w-4 mr-1" />
+          <ChevronUp className="h-4 w-4 ltr:mr-1 rtl:ml-1" />
         ) : (
-          <ChevronDown className="h-4 w-4 mr-1" />
+          <ChevronDown className="h-4 w-4 ltr:mr-1 rtl:ml-1" />
         )}
         {sortDirection === 'asc' ? t('sort.ascending') : t('sort.descending')}
       </Button>

@@ -241,7 +241,7 @@ const SmsProviderSelection = () => {
             role="button"
             tabIndex={0}
           >
-            <Calendar className={`mr-2 ${startDate ? 'text-primary' : 'text-muted-foreground'}`} size={20} />
+            <Calendar className={`ltr:mr-2 rtl:ml-2 ${startDate ? 'text-primary' : 'text-muted-foreground'}`} size={20} />
             <span className={startDate ? 'text-foreground' : 'text-muted-foreground'}>
               {startDate ? startDate.toLocaleDateString() : 'Choose Date (Up to 6 months)'}
             </span>

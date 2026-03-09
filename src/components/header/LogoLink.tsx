@@ -33,11 +33,11 @@ export const LogoLink: React.FC<LogoLinkProps> = ({ isLandingPage, currentPageTi
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <Link to="/" className="flex items-center space-x-2" onClick={handleLogoClick}>
+      <Link to="/" className="flex items-center gap-2" onClick={handleLogoClick}>
         <XpensiaLogo />
         <span className="text-xl font-semibold tracking-tight">
           {isLandingPage ? 'Xpensia' : currentPageTitle}

@@ -407,7 +407,7 @@ const Home = () => {
                 <button
                   onClick={() => navigate("/transactions")}
                   aria-label={t('home.viewAllAriaLabel')}
-                  className="text-sm text-blue-600 hover:underline flex items-center space-x-1"
+                  className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                 >
                   <span>{t('home.viewAll')}</span>
                   <ChevronRight className="w-3 h-3" />

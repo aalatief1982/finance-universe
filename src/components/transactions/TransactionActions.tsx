@@ -77,8 +77,8 @@ const TransactionActions = ({
               role="button"
               tabIndex={0}
             >
-              <Pen className="mr-2 h-4 w-4" />
-              <span>Edit</span>
+              <Pen className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+              <span>{t('txCard.edit')}</span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
@@ -89,8 +89,8 @@ const TransactionActions = ({
               role="button"
               tabIndex={0}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span>Delete</span>
+              <Trash2 className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+              <span>{t('txCard.delete')}</span>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -99,7 +99,7 @@ const TransactionActions = ({
   }
 
   return (
-    <div className="flex items-center space-x-1">
+    <div className="flex items-center gap-1">
       <Button
         variant="ghost"
         size="icon"
@@ -107,7 +107,7 @@ const TransactionActions = ({
         onClick={handleEdit}
       >
         <Pen className="h-4 w-4" />
-        <span className="sr-only">Edit</span>
+        <span className="sr-only">{t('txCard.edit')}</span>
       </Button>
       <Button
         variant="ghost"
@@ -116,7 +116,7 @@ const TransactionActions = ({
         onClick={handleDelete}
       >
         <Trash2 className="h-4 w-4" />
-        <span className="sr-only">Delete</span>
+        <span className="sr-only">{t('txCard.delete')}</span>
       </Button>
     </div>
   );

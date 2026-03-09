@@ -706,7 +706,7 @@ const SetBudgetPage = () => {
                       Edit Existing
                     </Button>
                     <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
-                      <Trash2 className="h-3 w-3 mr-1" />
+                      <Trash2 className="h-3 w-3 ltr:mr-1 rtl:ml-1" />
                       Delete
                     </Button>
                   </div>
@@ -735,7 +735,7 @@ const SetBudgetPage = () => {
                       Edit Existing
                     </Button>
                     <Button size="sm" variant="destructive" onClick={handleDeleteExisting}>
-                      <Trash2 className="h-3 w-3 mr-1" />
+                      <Trash2 className="h-3 w-3 ltr:mr-1 rtl:ml-1" />
                       Delete
                     </Button>
                   </div>

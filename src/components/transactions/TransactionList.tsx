@@ -118,8 +118,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
     if (sortField !== field) return null;
     
     return sortDirection === 'asc' ? 
-      <ChevronUp className="ml-1 h-4 w-4" /> : 
-      <ChevronDown className="ml-1 h-4 w-4" />;
+      <ChevronUp className="ltr:ml-1 rtl:mr-1 h-4 w-4" /> : 
+      <ChevronDown className="ltr:ml-1 rtl:mr-1 h-4 w-4" />;
   };
 
   const renderAmount = (transaction: Transaction) => {
@@ -129,7 +129,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return (
       <div className="flex items-center">
         <Icon 
-          className={`mr-1 h-4 w-4 ${isIncome ? 'text-success' : 'text-destructive'}`} 
+          className={`ltr:mr-1 rtl:ml-1 h-4 w-4 ${isIncome ? 'text-success' : 'text-destructive'}`} 
         />
         <span className={isIncome ? 'text-success' : 'text-destructive'}>
           {formatCurrency(Math.abs(transaction.amount), transaction.currency)}
@@ -246,8 +246,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <DropdownMenuContent>
                     {onEdit && (
                       <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                        <Edit className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+                        {t('txCard.edit')}
                       </DropdownMenuItem>
                     )}
                     {onDelete && (
@@ -276,7 +276,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
         
         {/* Mobile pagination */}
         {showPagination && totalPages > 1 && (
-          <div className="flex justify-center mt-4 space-x-2">
+          <div className="flex justify-center mt-4 gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -385,8 +385,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                         >
                           {isExpanded ? 'Hide details' : 'Show details'}
                           {isExpanded ? 
-                            <ChevronUp className="ml-1 h-3 w-3" /> : 
-                            <ChevronDown className="ml-1 h-3 w-3" />
+                            <ChevronUp className="ltr:ml-1 rtl:mr-1 h-3 w-3" /> : 
+                            <ChevronDown className="ltr:ml-1 rtl:mr-1 h-3 w-3" />
                           }
                         </Button>
                       )}
@@ -395,7 +395,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     <TableCell>{renderCategory(transaction)}</TableCell>
                     <TableCell>{renderDate(transaction.date)}</TableCell>
                     <TableCell>{renderType(transaction.type)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="ltr:text-right rtl:text-left">
                       <div className="flex justify-end">
                         {onEdit && (
                           <Button
@@ -467,7 +467,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <div className="text-sm text-muted-foreground">
             Showing page {currentPage} of {totalPages}
           </div>
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"

@@ -130,14 +130,14 @@ const TelegramBotSetup: React.FC = () => {
               </p>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <Switch
                 id="enable-learning"
                 checked={enableLearning}
                 onCheckedChange={setEnableLearning}
               />
               <Label htmlFor="enable-learning" className="text-sm flex items-center">
-                <Brain className="h-4 w-4 mr-1" />
+                <Brain className="h-4 w-4 ltr:mr-1 rtl:ml-1" />
                 Enable smart learning from messages
               </Label>
             </div>
@@ -172,14 +172,14 @@ const TelegramBotSetup: React.FC = () => {
             </p>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Switch
               id="enable-learning"
               checked={config.enabled}
               onCheckedChange={(checked) => updateConfig({ enabled: checked })}
             />
             <Label htmlFor="enable-learning" className="text-sm flex items-center">
-              <Brain className="h-4 w-4 mr-1" />
+              <Brain className="h-4 w-4 ltr:mr-1 rtl:ml-1" />
               Smart learning is {config.enabled ? 'enabled' : 'disabled'}
             </Label>
           </div>
