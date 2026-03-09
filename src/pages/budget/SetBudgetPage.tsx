@@ -999,7 +999,7 @@ const SetBudgetPage = () => {
       <Dialog open={pendingDeleteAction !== null} onOpenChange={(open) => !open && setPendingDeleteAction(null)}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete budget?</DialogTitle>
+            <DialogTitle>{t('setBudget.deleteBudgetTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Are you sure you want to delete this budget? This action cannot be undone.
