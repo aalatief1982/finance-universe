@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { normalizeInferenceDTO } from "@/lib/inference/inferenceDTO";
 import { UnconvertedBadge } from "@/components/fx";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface TransactionsByDateProps {
   transactions: Transaction[];
