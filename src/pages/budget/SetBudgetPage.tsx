@@ -629,7 +629,7 @@ const SetBudgetPage = () => {
 
         {/* Scope Selection — inline chips */}
         <div className="space-y-1.5">
-          <h2 className="text-xs font-medium text-muted-foreground">Scope</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">{t('setBudget.scope')}</h2>
           <div className="flex flex-wrap gap-2">
             {SCOPES.map(({ value, label, icon: Icon }) => (
               <button
