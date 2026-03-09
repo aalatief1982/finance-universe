@@ -603,7 +603,7 @@ const Analytics: React.FC = () => {
 
               {budgetData.length > 0 && (
                 <Card>
-                  <CardHeader><CardTitle>Budget Utilization</CardTitle></CardHeader>
+                  <CardHeader><CardTitle>{t('analytics.budgetUtilization')}</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {budgetData.map(b => (
