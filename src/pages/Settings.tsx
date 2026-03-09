@@ -383,8 +383,8 @@ const Settings = () => {
       });
 
       toast({
-        title: 'Export successful',
-        description: 'Your data has been exported successfully.',
+        title: t('toast.exportSuccessful'),
+        description: t('toast.exportedDesc'),
       });
     } catch (error) {
       toast({
