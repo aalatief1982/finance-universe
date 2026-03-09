@@ -28,7 +28,7 @@ import { Label } from './ui/label';
 import { Card } from './ui/card';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
-import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
+// parseSmsMessage removed from keystroke path — only used via parseAndInferTransaction on submit
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { getTemplateFailureCount } from '@/lib/smart-paste-engine/templateUtils';
 import { useNavigate } from 'react-router-dom';
