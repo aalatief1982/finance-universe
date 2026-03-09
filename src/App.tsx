@@ -85,7 +85,7 @@ const IMPORT_ROUTE = '/import-transactions';
 const SHARE_DEDUPE_WINDOW_MS = 30_000;
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
 
-const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1' || localStorage.getItem('xpensia_debug_startup') === '1';
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
   const now = performance.now().toFixed(2);

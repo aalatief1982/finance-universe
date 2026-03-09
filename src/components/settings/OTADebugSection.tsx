@@ -39,6 +39,19 @@ const OTADebugSection: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [lastError, setLastError] = useState<StoredError | null>(null);
+  const [startupDebugEnabled, setStartupDebugEnabled] = useState(
+    () => localStorage.getItem('xpensia_debug_startup') === '1'
+  );
+
+  const toggleStartupDebug = () => {
+    const next = !startupDebugEnabled;
+    if (next) {
+      localStorage.setItem('xpensia_debug_startup', '1');
+    } else {
+      localStorage.removeItem('xpensia_debug_startup');
+    }
+    setStartupDebugEnabled(next);
+  };
 
   useEffect(() => {
     loadDebugInfo();

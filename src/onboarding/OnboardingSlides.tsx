@@ -8,7 +8,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
-const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1' || localStorage.getItem('xpensia_debug_startup') === '1';
 
 interface Slide {
   image: string;
