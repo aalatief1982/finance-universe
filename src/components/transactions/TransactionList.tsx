@@ -27,6 +27,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { format } from 'date-fns';
 import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
 import CategoryIcon from '@/components/CategoryIcon';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionListProps {
   transactions: Transaction[];
