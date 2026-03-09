@@ -45,6 +45,7 @@ const ImportTransactions = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [smsInboxItems, setSmsInboxItems] = React.useState<SmsInboxItem[]>([]);
   const smsInboxRef = React.useRef<HTMLDivElement | null>(null);
   const locationState = (location.state as ImportTransactionsLocationState | null) || null;
