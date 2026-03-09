@@ -60,7 +60,7 @@ describe('TransactionList', () => {
 
   it('shows loading skeleton when isLoading', () => {
     const { container } = render(
-      <TransactionList transactions={[transaction]} isLoading />,
+      <LanguageProvider><TransactionList transactions={[transaction]} isLoading /></LanguageProvider>,
     );
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
