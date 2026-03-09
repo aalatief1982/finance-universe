@@ -18,6 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
