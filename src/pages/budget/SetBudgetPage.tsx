@@ -1002,7 +1002,7 @@ const SetBudgetPage = () => {
             <DialogTitle>{t('setBudget.deleteBudgetTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete this budget? This action cannot be undone.
+            {t('setBudget.deleteBudgetDesc')}
           </p>
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
             <Button variant="outline" className="w-full sm:w-auto" onClick={() => setPendingDeleteAction(null)}>
