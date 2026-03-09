@@ -496,11 +496,11 @@ const SetBudgetPage = () => {
   const handleSave = (cascade: boolean = false) => {
     // For overall scope, targetId is '_overall', for others require selection
     if (!targetId && scope !== 'overall') {
-      toast({ title: 'Please select a target', variant: 'destructive' });
+      toast({ title: t('setBudget.selectTarget.label'), variant: 'destructive' });
       return;
     }
     if (amount <= 0) {
-      toast({ title: 'Please enter a valid amount', variant: 'destructive' });
+      toast({ title: t('setBudget.validAmount'), variant: 'destructive' });
       return;
     }
 
