@@ -66,6 +66,7 @@ const ACCOUNT_ICONS: Record<Account['type'], React.ElementType> = {
 };
 
 const AccountsPage = () => {
+  const { t } = useLanguage();
   const [accounts, setAccounts] = React.useState<Account[]>(() => accountService.getAccounts());
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
