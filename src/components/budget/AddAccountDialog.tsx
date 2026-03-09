@@ -98,7 +98,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
         toast({ title: t('account.failedToUpdate'), variant: 'destructive' });
         return;
       }
-      toast({ title: 'Account updated successfully' });
+      toast({ title: t('toast.accountUpdated') });
       onAccountCreated(updatedAccount);
       onClose();
       return;
