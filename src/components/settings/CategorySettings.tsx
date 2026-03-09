@@ -56,7 +56,7 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({ categories: propCat
   };
 
   const applyRulesToAll = () => {
-    const changedCount = transactionService.applyCategorizationRules();
+    const changedCount = transactionService.applyAllCategoryRules();
     toast({
       title: t('toast.rulesApplied'),
       description: t('toast.rulesAppliedDesc').replace('{count}', String(changedCount)),
