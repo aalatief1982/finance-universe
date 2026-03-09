@@ -462,7 +462,7 @@ const PhoneVerification = ({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2 className="ltr:mr-2 rtl:ml-2 h-4 w-4 animate-spin" aria-hidden="true" />
                   <span>Verifying...</span>
                 </>
               ) : success ? (
