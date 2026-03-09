@@ -13,6 +13,7 @@ interface SummaryCardsProps {
 }
 
 const SummaryCards = ({ totals }: SummaryCardsProps) => {
+  const { t } = useLanguage();
   const { income, expenses, savingsRate } = totals;
   
   // Determine if savings rate is positive (good) or negative (bad)
