@@ -927,5 +927,39 @@ export const en: Record<string, string> = {
   'quarter.3': 'Q3 (Jul-Sep)',
   'quarter.4': 'Q4 (Oct-Dec)',
 
+  // OverallBudgetRing
+  'ring.noBudget': 'No budget set',
+  'ring.used': 'used',
+  'ring.spent': 'Spent:',
+  'ring.budget': 'Budget:',
+  'ring.overBy': 'Over by {amount}',
+  'ring.remaining': '{amount} remaining',
+
+  // BudgetAlertBanner
+  'alert.overall': 'Overall',
+  'alert.budget': 'Budget',
+  'alert.exceeded': "You've exceeded your {target} budget!",
+  'alert.used': "You've used {percent}% of your {target} budget",
+  'alert.threshold': '{value}% threshold reached',
+
+  // SpendingTrendChart legend
+  'trendChart.budgetLimit': 'Budget limit',
+  'trendChart.targetPace': 'Target pace',
+  'trendChart.actualSpending': 'Actual spending',
+
+  // BudgetLayout
+  'budget.addBudget': 'Add Budget',
+
+  // BudgetHierarchyView
+  'hierarchy.title': 'Period Hierarchy',
+  'hierarchy.description': 'View related time period budgets',
+  'hierarchy.current': 'Current',
+  'hierarchy.calculated': 'Calculated',
+  'hierarchy.parent': 'Parent Period',
+  'hierarchy.samePeriod': 'Same Period Type',
+  'hierarchy.currentPeriod': 'Current Period',
+  'hierarchy.childPeriods': 'Child Periods',
+  'hierarchy.more': '+{count} more',
+
 };
 

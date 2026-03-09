@@ -15,6 +15,7 @@ import { BudgetProgress } from '@/models/budget-period';
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/utils/format-utils';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SpendingTrendChartProps {
   budget: Budget;
@@ -38,7 +39,8 @@ export function SpendingTrendChart({
   transactions,
   className,
 }: SpendingTrendChartProps) {
-  // Generate daily data points
+  const { t } = useLanguage();
+
   const chartData = React.useMemo(() => {
     const { periodStart, periodEnd } = progress;
     const days = eachDayOfInterval({ start: periodStart, end: periodEnd });
@@ -46,7 +48,6 @@ export function SpendingTrendChart({
     let cumulativeSpent = 0;
     
     return days.map((day, index) => {
-      // Sum expenses for this day
       const dayExpenses = transactions
         .filter(tx => {
           const txDate = typeof tx.date === 'string' ? parseISO(tx.date) : tx.date;
@@ -55,11 +56,7 @@ export function SpendingTrendChart({
         .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
       
       cumulativeSpent += dayExpenses;
-      
-      // Calculate ideal pace (linear)
       const idealPace = (budget.amount / days.length) * (index + 1);
-      
-      // Only show actual data up to today
       const isInFuture = day > new Date();
       
       return {
@@ -73,7 +70,6 @@ export function SpendingTrendChart({
     });
   }, [budget, progress, transactions]);
 
-  // Custom tooltip
   const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (!active || !payload?.length) return null;
     
@@ -86,21 +82,21 @@ export function SpendingTrendChart({
         <p className="font-medium mb-2">{label}</p>
         {data.spent !== null && (
           <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Spent:</span>
+            <span className="text-muted-foreground">{t('trendChart.spent')}</span>
             <span className="font-medium text-destructive">
               {formatCurrency(data.spent, budget.currency)}
             </span>
           </div>
         )}
         <div className="flex justify-between gap-4">
-          <span className="text-muted-foreground">Target:</span>
+          <span className="text-muted-foreground">{t('trendChart.target')}</span>
           <span className="font-medium text-primary">
             {formatCurrency(data.ideal, budget.currency)}
           </span>
         </div>
         {data.dayExpense !== null && data.dayExpense > 0 && (
           <div className="flex justify-between gap-4 mt-1 pt-1 border-t">
-            <span className="text-muted-foreground">Day:</span>
+            <span className="text-muted-foreground">{t('trendChart.day')}</span>
             <span className="font-medium">
               {formatCurrency(data.dayExpense, budget.currency)}
             </span>
@@ -134,7 +130,6 @@ export function SpendingTrendChart({
           />
           <Tooltip content={<CustomTooltip />} />
           
-          {/* Budget limit line */}
           <Line
             type="monotone"
             dataKey="budget"
@@ -142,10 +137,9 @@ export function SpendingTrendChart({
             strokeDasharray="5 5"
             strokeWidth={2}
             dot={false}
-            name="Budget limit"
+            name={t('trendChart.budgetLimit')}
           />
           
-          {/* Ideal spending pace */}
           <Line
             type="monotone"
             dataKey="ideal"
@@ -153,17 +147,16 @@ export function SpendingTrendChart({
             strokeWidth={2}
             strokeDasharray="3 3"
             dot={false}
-            name="Target pace"
+            name={t('trendChart.targetPace')}
           />
           
-          {/* Actual spending */}
           <Line
             type="monotone"
             dataKey="spent"
             stroke="hsl(var(--destructive))"
             strokeWidth={2}
             dot={false}
-            name="Actual spending"
+            name={t('trendChart.actualSpending')}
             connectNulls={false}
           />
         </LineChart>

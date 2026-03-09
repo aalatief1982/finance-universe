@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useBudgetPeriodParams } from '@/hooks/useBudgetPeriodParams';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface BudgetLayoutProps {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ export function BudgetLayout({
 }: BudgetLayoutProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { t } = useLanguage();
   const { period, year, periodIndex, setPeriod, navigatePeriod, periodLabel } = useBudgetPeriodParams();
 
   return (
@@ -69,7 +71,7 @@ export function BudgetLayout({
           size="icon"
           className="fixed bottom-16 right-4 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg"
           onClick={() => navigate('/budget/set')}
-          aria-label="Add Budget"
+          aria-label={t('budget.addBudget')}
         >
           <Plus className="h-5 w-5" />
         </Button>
