@@ -1,8 +1,6 @@
 /**
  * @file ExchangeRateDialog.tsx
  * @description Dialog for adding or editing exchange rates.
- *
- * @module components/fx/ExchangeRateDialog
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,27 +17,22 @@ import AddCurrencyDialog from '@/components/currency/AddCurrencyDialog';
 import { formatCurrencyFlagCode, getAvailableCurrencies } from '@/lib/currency-utils';
 import { toast } from '@/components/ui/use-toast';
 import CurrencySelect from '@/components/currency/CurrencySelect';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ExchangeRateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Existing rate to edit, or undefined for new rate */
   existingRate?: ExchangeRate;
-  /** Pre-fill the fromCurrency field */
   defaultFromCurrency?: string;
-  /** Called when rate is saved */
   onSave?: (rate: ExchangeRate) => void;
 }
 
 const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
-  open,
-  onOpenChange,
-  existingRate,
-  defaultFromCurrency,
-  onSave,
+  open, onOpenChange, existingRate, defaultFromCurrency, onSave,
 }) => {
+  const { t } = useLanguage();
   const baseCurrency = getUserSettings()?.currency || 'SAR';
-  
+
   const [fromCurrency, setFromCurrency] = useState(defaultFromCurrency || '');
   const [rate, setRate] = useState('');
   const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().split('T')[0]);
@@ -49,7 +42,6 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
     getAvailableCurrencies().filter((c) => c !== baseCurrency)
   );
 
-  // Reset form when dialog opens or existingRate changes
   useEffect(() => {
     if (open) {
       if (existingRate) {
@@ -72,45 +64,33 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
 
   const handleSave = () => {
     if (!fromCurrency.trim()) {
-      toast({ title: 'Please select a currency', variant: 'destructive' });
+      toast({ title: t('fx.selectCurrency'), variant: 'destructive' });
       return;
     }
-    
     const rateValue = parseFloat(rate);
     if (isNaN(rateValue) || rateValue <= 0) {
-      toast({ title: 'Please enter a valid rate greater than 0', variant: 'destructive' });
+      toast({ title: t('fx.invalidRate'), variant: 'destructive' });
       return;
     }
-
     if (!effectiveDate) {
-      toast({ title: 'Please select an effective date', variant: 'destructive' });
+      toast({ title: t('fx.selectDate'), variant: 'destructive' });
       return;
     }
 
     let savedRate: ExchangeRate;
-    
     if (existingRate) {
       const updated = updateExchangeRate(existingRate.id, {
-        rate: rateValue,
-        effectiveDate,
-        notes: notes.trim() || undefined,
+        rate: rateValue, effectiveDate, notes: notes.trim() || undefined,
       });
       if (!updated) {
-        toast({ title: 'Could not update exchange rate', description: 'Please try again.', variant: 'destructive' });
+        toast({ title: t('toast.couldNotUpdateRate'), description: t('toast.pleaseTryAgain'), variant: 'destructive' });
         return;
       }
       savedRate = updated;
-      toast({ title: 'Exchange rate updated', description: '' });
+      toast({ title: t('fx.rateUpdated'), description: '' });
     } else {
-      savedRate = addExchangeRate(
-        fromCurrency.toUpperCase(),
-        baseCurrency,
-        rateValue,
-        effectiveDate,
-        'manual',
-        notes.trim() || undefined
-      );
-      toast({ title: 'Exchange rate updated', description: '' });
+      savedRate = addExchangeRate(fromCurrency.toUpperCase(), baseCurrency, rateValue, effectiveDate, 'manual', notes.trim() || undefined);
+      toast({ title: t('fx.rateUpdated'), description: '' });
     }
 
     onSave?.(savedRate);
@@ -123,35 +103,18 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Exchange Rate' : 'Add Exchange Rate'}</DialogTitle>
+          <DialogTitle>{isEditing ? t('fx.editRate') : t('fx.addRate')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="from-currency">From Currency</Label>
+            <Label htmlFor="from-currency">{t('fx.fromCurrency')}</Label>
             {isEditing ? (
-              <Input
-                id="from-currency"
-                value={formatCurrencyFlagCode(fromCurrency, '')}
-                disabled
-                className="bg-muted"
-              />
+              <Input id="from-currency" value={formatCurrencyFlagCode(fromCurrency, '')} disabled className="bg-muted" />
             ) : (
               <div className="flex items-center gap-1">
-                <CurrencySelect
-                  id="from-currency"
-                  value={fromCurrency}
-                  onChange={setFromCurrency}
-                  currencies={availableCurrencies}
-                  displayMode="codePlusCountry"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setAddCurrencyOpen(true)}
-                  title="Add new currency"
-                >
+                <CurrencySelect id="from-currency" value={fromCurrency} onChange={setFromCurrency} currencies={availableCurrencies} displayMode="codePlusCountry" />
+                <Button type="button" variant="outline" size="icon" onClick={() => setAddCurrencyOpen(true)} title={t('fx.addNewCurrency')}>
                   <Plus className="size-4" />
                 </Button>
               </div>
@@ -159,63 +122,30 @@ const ExchangeRateDialog: React.FC<ExchangeRateDialogProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="to-currency">To Currency (Base)</Label>
-            <Input
-              id="to-currency"
-              value={formatCurrencyFlagCode(baseCurrency, '')}
-              disabled
-              className="bg-muted"
-            />
+            <Label htmlFor="to-currency">{t('fx.toCurrencyBase')}</Label>
+            <Input id="to-currency" value={formatCurrencyFlagCode(baseCurrency, '')} disabled className="bg-muted" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="rate">
-              Rate (1 {fromCurrency || '???'} = ? {baseCurrency})
-            </Label>
-            <Input
-              id="rate"
-              type="number"
-              step="0.00000001"
-              min="0"
-              value={rate}
-              onChange={(e) => setRate(e.target.value)}
-              placeholder="e.g., 3.75"
-            />
+            <Label htmlFor="rate">{t('fx.rate')} (1 {fromCurrency || '???'} = ? {baseCurrency})</Label>
+            <Input id="rate" type="number" step="0.00000001" min="0" value={rate} onChange={(e) => setRate(e.target.value)} placeholder={t('fx.ratePlaceholder')} />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="effective-date">Effective Date</Label>
-            <Input
-              id="effective-date"
-              type="date"
-              value={effectiveDate}
-              max={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setEffectiveDate(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Rate applies to transactions on or after this date
-            </p>
+            <Label htmlFor="effective-date">{t('fx.effectiveDate')}</Label>
+            <Input id="effective-date" type="date" value={effectiveDate} max={new Date().toISOString().split('T')[0]} onChange={(e) => setEffectiveDate(e.target.value)} />
+            <p className="text-xs text-muted-foreground">{t('fx.effectiveDateHint')}</p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., Bank transfer rate"
-              rows={2}
-            />
+            <Label htmlFor="notes">{t('fx.notesOptional')}</Label>
+            <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t('fx.notesPlaceholder')} rows={2} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            {isEditing ? 'Update' : 'Add'} Rate
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
+          <Button onClick={handleSave}>{isEditing ? t('fx.updateRate') : t('fx.addRateBtn')}</Button>
         </DialogFooter>
       </DialogContent>
 
