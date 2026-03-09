@@ -532,14 +532,14 @@ const Analytics: React.FC = () => {
                 value={r}
                 className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
               >
-                {r.charAt(0).toUpperCase() + r.slice(1)}
+                {t(`range.${r}`)}
               </ToggleGroupItem>
             ))}
             <ToggleGroupItem
               value="custom"
               className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
-              Custom
+              {t('analytics.custom')}
             </ToggleGroupItem>
           </ToggleGroup>
           {range === 'custom' && (
