@@ -41,8 +41,8 @@ const DashboardContent = ({ transactions, filter, setFilter, setIsAddingExpense,
   const previousFxSummary = React.useMemo(() => AnalyticsService.getFxAwareTotals(lastMonthTransactions, baseCurrency), [lastMonthTransactions, baseCurrency]);
   const previousBalance = previousFxSummary.income - previousFxSummary.expenses;
 
-  let categoryData: any[] = [];
-  let subcategoryData: any[] = [];
+  let categoryData: FxAwareCategoryData[] = [];
+  let subcategoryData: FxAwareCategoryData[] = [];
   try {
     const chartData = generateChartData(safeTransactions);
     categoryData = AnalyticsService.getFxAwareCategoryData(safeTransactions, baseCurrency) || chartData.categoryData || [];

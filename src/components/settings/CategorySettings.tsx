@@ -244,7 +244,7 @@ const CategorySettings: React.FC<CategorySettingsProps> = ({ categories: propCat
                         <div className="flex flex-col space-y-2">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-medium">{t('catSettings.pattern')} "{suggestion.pattern}"</h3>
+                              <h3 className="font-medium">{t('catSettings.pattern')} &ldquo;{suggestion.pattern}&rdquo;</h3>
                               <p className="text-sm text-muted-foreground">
                                 {t('catSettings.wouldMatch').replace('{count}', String(suggestion.matchCount))}
                               </p>
