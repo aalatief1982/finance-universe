@@ -36,11 +36,13 @@ describe('TransactionList', () => {
     const handleEdit = vi.fn();
     const handleDelete = vi.fn();
     render(
-      <TransactionList
-        transactions={[transaction]}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />,
+      <LanguageProvider>
+        <TransactionList
+          transactions={[transaction]}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </LanguageProvider>,
     );
 
     const row = screen.getByText(transaction.title).closest('tr')!;
