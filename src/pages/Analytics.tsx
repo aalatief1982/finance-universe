@@ -189,12 +189,13 @@ const AnalyticsDriversSection: React.FC<{
 };
 
 const AnalyticsActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions }) => {
+  const { t } = useLanguage();
   if (!actions.length) return null;
   const recommendedKey = [...actions].sort((a, b) => b.priority - a.priority)[0]?.key;
 
   return (
     <section className="space-y-2">
-      <h2 className="text-sm font-medium text-muted-foreground">Actions & Risks</h2>
+      <h2 className="text-sm font-medium text-muted-foreground">{t('analytics.actionsAndRisks')}</h2>
       <div className="space-y-3">
         {actions.map(action => {
           const recommended = action.key === recommendedKey;
@@ -203,7 +204,7 @@ const AnalyticsActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions 
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{action.title}</CardTitle>
-                  {recommended && <Badge variant="secondary">Recommended</Badge>}
+                  {recommended && <Badge variant="secondary">{t('analytics.recommended')}</Badge>}
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
