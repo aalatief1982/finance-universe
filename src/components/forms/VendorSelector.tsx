@@ -30,6 +30,7 @@ import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/ven
 import { getVendorData } from '@/services/VendorSyncService';
 import { getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
 import { TransactionType } from '@/types/transaction';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface VendorSelectorProps {
   form: UseFormReturn<TransactionFormValues>;
