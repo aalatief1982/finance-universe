@@ -167,7 +167,8 @@ const DriverRows: React.FC<{ title: string; rows: DriverItem[]; onClickRow: (nam
       )}
     </CardContent>
   </Card>
-);
+  );
+};
 
 const AnalyticsDriversSection: React.FC<{
   categoryDrivers: DriverItem[];
