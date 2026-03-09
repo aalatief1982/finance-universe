@@ -337,9 +337,9 @@ const BudgetReportPage = () => {
       {/* Charts Tabs */}
       <Tabs defaultValue="comparison" className="space-y-4 mb-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="comparison">Comparison</TabsTrigger>
-          <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
-          <TabsTrigger value="trend">Trend</TabsTrigger>
+          <TabsTrigger value="comparison">{t('report.comparison')}</TabsTrigger>
+          <TabsTrigger value="breakdown">{t('report.breakdown')}</TabsTrigger>
+          <TabsTrigger value="trend">{t('report.trend')}</TabsTrigger>
         </TabsList>
 
         {/* Budget vs Spent Comparison */}
