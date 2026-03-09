@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 import { 
   Category, CategoryMetadata, CategoryIcon 
@@ -38,32 +39,7 @@ const categoryFormSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
-// Color options for categories
-const colorOptions = [
-  { value: '#8B5CF6', label: 'Purple' },
-  { value: '#D946EF', label: 'Pink' },
-  { value: '#F97316', label: 'Orange' },
-  { value: '#0EA5E9', label: 'Blue' },
-  { value: '#10B981', label: 'Green' },
-  { value: '#EF4444', label: 'Red' },
-  { value: '#F59E0B', label: 'Amber' },
-  { value: '#6366F1', label: 'Indigo' },
-  { value: '#64748B', label: 'Slate' },
-];
-
-// Icon options for categories
-const iconOptions = [
-  { value: 'home', label: 'Home' },
-  { value: 'shopping-bag', label: 'Shopping' },
-  { value: 'utensils', label: 'Food' },
-  { value: 'car', label: 'Transport' },
-  { value: 'heartbeat', label: 'Health' },
-  { value: 'graduation-cap', label: 'Education' },
-  { value: 'film', label: 'Entertainment' },
-  { value: 'briefcase', label: 'Work' },
-  { value: 'gift', label: 'Gifts' },
-  { value: 'piggy-bank', label: 'Savings' },
-];
+// Color and icon options will use translations
 
 interface CategoryManagerProps {
   categories: Category[];
