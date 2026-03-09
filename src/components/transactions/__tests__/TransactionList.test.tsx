@@ -23,7 +23,7 @@ describe('TransactionList', () => {
   };
 
   it('renders transaction title, amount and category', () => {
-    render(<TransactionList transactions={[transaction]} />);
+    render(<LanguageProvider><TransactionList transactions={[transaction]} /></LanguageProvider>);
 
     expect(screen.getByText(transaction.title)).toBeInTheDocument();
     expect(
