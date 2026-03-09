@@ -276,7 +276,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
         
         {/* Mobile pagination */}
         {showPagination && totalPages > 1 && (
-          <div className="flex justify-center mt-4 space-x-2">
+          <div className="flex justify-center mt-4 gap-2">
             <Button
               variant="outline"
               size="sm"
