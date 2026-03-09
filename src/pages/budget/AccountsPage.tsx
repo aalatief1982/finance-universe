@@ -145,7 +145,7 @@ const AccountsPage = () => {
     }
 
     accountService.updateAccount(editingAccount.id, form);
-    toast({ title: 'Account updated successfully' });
+    toast({ title: t('toast.accountUpdated') });
     refreshAccounts();
     setIsDialogOpen(false);
     resetForm();
