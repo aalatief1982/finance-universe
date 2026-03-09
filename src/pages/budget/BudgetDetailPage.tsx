@@ -161,7 +161,7 @@ const BudgetDetailPage = () => {
             onClick={() => navigate(`/budget/set?edit=${budget.id}`)}
           >
             <Edit className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-            Edit
+            {t('detail.edit')}
           </Button>
         </div>
 
