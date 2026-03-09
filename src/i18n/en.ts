@@ -419,7 +419,7 @@ export const en: Record<string, string> = {
   'toast.lowConfidenceMatch': 'Low confidence match',
   'toast.lowConfidenceMatchDesc': 'This transaction was matched using a saved template structure with partial confidence (40%). You can review and adjust the fields before saving to improve future detection.',
   'toast.telegramConnected': 'Telegram connected',
-  'toast.telegramConnected': 'Telegram connected',
+  'toast.telegramConnectedDesc': 'Your Telegram bot is now set up and ready to receive transaction messages.',
   'toast.telegramConnectedDesc': 'Your Telegram bot is now set up and ready to receive transaction messages.',
   'toast.telegramDisconnected': 'Telegram disconnected',
   'toast.telegramDisconnectedDesc': 'Your Telegram bot has been disconnected.',
