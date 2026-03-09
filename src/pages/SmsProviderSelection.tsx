@@ -1,20 +1,6 @@
 /**
  * @file SmsProviderSelection.tsx
  * @description Page component for SmsProviderSelection.
- *
- * @module pages/SmsProviderSelection
- *
- * @responsibilities
- * 1. Compose layout and section components
- * 2. Load data or invoke services for the page
- * 3. Handle navigation and page-level actions
- *
- * @review-tags
- * - @ui: page composition
- *
- * @review-checklist
- * - [ ] Data loading handles empty states
- * - [ ] Navigation hooks are wired correctly
  */
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
@@ -27,38 +13,37 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { smsProviderSelectionService, SmsProvider } from '@/services/SmsProviderSelectionService';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const SmsProviderSelection = () => {
-  const [providers, setProviders] = useState<SmsProvider[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasDetectedProviders, setHasDetectedProviders] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { t, language } = useLanguage();
+  const isRtl = language === 'ar';
+  const [providers, setProviders] = useState<SmsProvider[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [hasDetectedProviders, setHasDetectedProviders] = useState(false);
 
-  // Load persisted providers and detected metadata on mount.
   useEffect(() => {
     const loadProviders = async () => {
-      setIsLoading(true);
       try {
-        await smsProviderSelectionService.hydrateProvidersFromStableStorage();
-
-        const loadedProviders = smsProviderSelectionService.getSmsProviders();
-        setHasDetectedProviders(loadedProviders.some((p) => p.isSelected && p.isDetected));
-        
+        const loadedProviders = await smsProviderSelectionService.loadProviders();
+        const detected = loadedProviders.some(p => p.isDetected);
+        setHasDetectedProviders(detected);
         setProviders(loadedProviders);
         
-        // Check if there's a previously saved start date
         const savedDate = smsProviderSelectionService.getSmsStartDate();
         if (savedDate) {
           setStartDate(new Date(savedDate));
         }
       } catch (error) {
         toast({
-          title: "Error loading providers",
-          description: "Failed to load SMS providers. Please try again.",
+          title: t('toast.errorLoadingProviders'),
+          description: t('toast.errorLoadingProvidersDesc'),
           variant: "destructive",
         });
       } finally {
@@ -67,7 +52,7 @@ const SmsProviderSelection = () => {
     };
     
     loadProviders();
-  }, [toast]);
+  }, [toast, t]);
 
   const filteredProviders = providers.filter(provider => 
     provider.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -79,17 +64,14 @@ const SmsProviderSelection = () => {
   };
 
   const handleDateSelect = () => {
-    // Set to 6 months ago for a reasonable history
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
     setStartDate(sixMonthsAgo);
-    
-    // Save the date
     smsProviderSelectionService.saveSmsStartDate(sixMonthsAgo.toISOString());
     
     toast({
-      title: "Date selected",
-      description: `We'll analyze messages from ${sixMonthsAgo.toLocaleDateString()} forward.`,
+      title: t('toast.dateSelected'),
+      description: t('toast.dateSelectedDesc').replace('{date}', sixMonthsAgo.toLocaleDateString()),
     });
   };
 
@@ -98,23 +80,21 @@ const SmsProviderSelection = () => {
     
     if (selectedProviders.length === 0) {
       toast({
-        title: "Selection required",
-        description: "Please select at least one SMS provider",
+        title: t('toast.selectionRequired'),
+        description: t('toast.selectionRequiredDesc'),
         variant: "destructive",
       });
       return;
     }
 
     smsProviderSelectionService.saveSelectedProviders(providers);
-
-    // Legacy storage is still updated for users on older app versions.
     safeStorage.setItem('smsProviders', JSON.stringify(
       selectedProviders.map(p => ({ id: p.id, name: p.name }))
     ));
     
     toast({
-      title: "Providers selected",
-      description: `${selectedProviders.length} providers configured successfully`,
+      title: t('toast.providersSelected'),
+      description: t('toast.providersSelectedDesc').replace('{count}', String(selectedProviders.length)),
     });
     
     navigate('/dashboard');
@@ -129,10 +109,8 @@ const SmsProviderSelection = () => {
         className="max-w-md mx-auto space-y-6"
       >
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Select SMS Providers</h1>
-          <p className="text-muted-foreground">
-            Choose the financial institutions that send you SMS alerts so we can track your expenses automatically.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">{t('smsProvider.title')}</h1>
+          <p className="text-muted-foreground">{t('smsProvider.subtitle')}</p>
         </div>
 
         {hasDetectedProviders && (
@@ -143,20 +121,18 @@ const SmsProviderSelection = () => {
           >
             <Check className="text-green-500 mt-0.5" size={18} />
             <div>
-              <h3 className="font-medium text-green-800">Providers Detected!</h3>
-              <p className="text-sm text-green-700">
-                We&apos;ve detected some SMS providers and pre-selected them for you. You can modify this selection.
-              </p>
+              <h3 className="font-medium text-green-800">{t('smsProvider.detected')}</h3>
+              <p className="text-sm text-green-700">{t('smsProvider.detectedDesc')}</p>
             </div>
           </motion.div>
         )}
 
         {providers.length > 0 && (
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+            <Search className="absolute ltr:left-3 rtl:right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
             <Input 
-              placeholder="Search SMS providers..." 
-              className="pl-10"
+              placeholder={t('smsProvider.searchPlaceholder')}
+              className="ltr:pl-10 rtl:pr-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -167,8 +143,8 @@ const SmsProviderSelection = () => {
           <div className="space-y-2">
             {Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="p-[var(--card-padding)] border rounded-lg animate-pulse">
-                <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-100 rounded w-full"></div>
+                <div className="h-5 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-muted/50 rounded w-full"></div>
               </div>
             ))}
           </div>
@@ -198,28 +174,26 @@ const SmsProviderSelection = () => {
                       <h3 className="font-medium">{provider.name}</h3>
                       {provider.isDetected && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
-                          Detected
+                          {t('smsProvider.detectedBadge')}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">Matches: {provider.pattern}</p>
+                    <p className="text-sm text-muted-foreground">{t('smsProvider.matches')} {provider.pattern}</p>
                   </div>
                   {provider.isSelected && (
-                    <ChevronRight className="text-primary" size={24} />
+                    <ChevronRight className={cn("text-primary", isRtl && "rotate-180")} size={24} />
                   )}
                 </motion.div>
               ))
             ) : (
               providers.length > 0 ? (
-                <p className="text-center text-muted-foreground py-4">No providers found</p>
+                <p className="text-center text-muted-foreground py-4">{t('smsProvider.noProvidersFound')}</p>
               ) : (
                 <div className="border rounded-lg p-[var(--card-padding)] space-y-4 text-center">
-                  <p className="font-medium">No providers configured yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Import SMS senders first so you can map them to providers.
-                  </p>
+                  <p className="font-medium">{t('smsProvider.noProvidersConfigured')}</p>
+                  <p className="text-sm text-muted-foreground">{t('smsProvider.importFromSms')}</p>
                   <Button variant="outline" onClick={() => navigate('/process-sms')}>
-                    Import from SMS scan
+                    {t('smsProvider.importFromScan')}
                   </Button>
                 </div>
               )
@@ -229,7 +203,7 @@ const SmsProviderSelection = () => {
 
         <div className="space-y-2">
           <label className="block text-sm font-medium" htmlFor="sms-provider-start-date">
-            Select Start Date
+            {t('smsProvider.selectStartDate')}
           </label>
           <div 
             id="sms-provider-start-date"
@@ -243,12 +217,10 @@ const SmsProviderSelection = () => {
           >
             <Calendar className={`ltr:mr-2 rtl:ml-2 ${startDate ? 'text-primary' : 'text-muted-foreground'}`} size={20} />
             <span className={startDate ? 'text-foreground' : 'text-muted-foreground'}>
-              {startDate ? startDate.toLocaleDateString() : 'Choose Date (Up to 6 months)'}
+              {startDate ? startDate.toLocaleDateString() : t('smsProvider.chooseDate')}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            We&apos;ll analyze messages from this date forward. For privacy, we only access financial SMS.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('smsProvider.privacyNote')}</p>
         </div>
 
         <Button 
@@ -257,7 +229,7 @@ const SmsProviderSelection = () => {
           onClick={handleContinue}
           disabled={isLoading || providers.length === 0}
         >
-          Continue
+          {t('smsProvider.continue')}
         </Button>
       </motion.div>
     </Layout>
