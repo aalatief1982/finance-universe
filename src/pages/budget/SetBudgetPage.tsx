@@ -963,7 +963,7 @@ const SetBudgetPage = () => {
       <Dialog open={showCascadeConfirm} onOpenChange={setShowCascadeConfirm}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Distribute to Child Periods?</DialogTitle>
+            <DialogTitle>{t('setBudget.distributeTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters and months.
