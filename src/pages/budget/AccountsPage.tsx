@@ -157,10 +157,10 @@ const AccountsPage = () => {
     const result = accountService.deleteAccount(accountToDelete.id);
     
     if (result.success) {
-      toast({ title: 'Account deleted successfully' });
+      toast({ title: t('toast.accountDeleted') });
       refreshAccounts();
     } else {
-      toast({ title: 'Cannot delete account', description: result.error, variant: 'destructive' });
+      toast({ title: t('toast.cannotDeleteAccount'), description: result.error, variant: 'destructive' });
     }
 
     setIsDeleteDialogOpen(false);
