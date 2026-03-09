@@ -1049,6 +1049,7 @@ function AppRoutes() {
     );
   }
 
+  if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #8] Route Decided\nTime: ${performance.now().toFixed(2)}ms\nonboardingDone: ${onboardingDone}\nrequiresDefaultCurrency: ${requiresDefaultCurrency}\npathname: ${location.pathname}\npendingLaunchRoute: ${pendingLaunchRoute}`);
   return (
     <>
       <AppWrapper />

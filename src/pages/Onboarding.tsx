@@ -47,6 +47,7 @@ const Onboarding = () => {
     console.trace('[TRACE][Onboarding] component mounted', {
       timestamp: new Date().toISOString(),
     });
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #9] Onboarding Page Mounted\nTime: ${performance.now().toFixed(2)}ms`);
     return () => {
       if (navigationTimeoutRef.current) {
         clearTimeout(navigationTimeoutRef.current);

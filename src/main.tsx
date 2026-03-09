@@ -31,6 +31,7 @@ type XpensiaWindow = Window & {
   if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #2] React Root Rendered\nTime: ${performance.now().toFixed(2)}ms`);
 
   const hideInitialLoading = () => {
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #3] HTML Loader Hide\nTime: ${performance.now().toFixed(2)}ms`);
     ;(window as XpensiaWindow).__xpensiaHideInitialLoading?.()
   }
 
