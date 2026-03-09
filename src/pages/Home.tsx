@@ -329,7 +329,7 @@ const Home = () => {
                           state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }),
                         })
                       }
-                      aria-label="Edit transaction"
+                      aria-label={t('home.editTransaction')}
                       role="button"
                       tabIndex={0}
                       className="bg-card text-card-foreground dark:bg-black dark:text-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer"
