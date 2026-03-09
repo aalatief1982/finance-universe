@@ -449,7 +449,7 @@ const AccountsPage = () => {
             </Button>
             {linkedCount === 0 && (
               <Button variant="destructive" onClick={handleDelete}>
-                Delete Account
+                {t('accounts.deleteAccountBtn')}
               </Button>
             )}
           </DialogFooter>
