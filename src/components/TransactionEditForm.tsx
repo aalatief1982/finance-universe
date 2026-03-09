@@ -31,6 +31,7 @@
  */
 
 import { safeStorage } from '@/utils/safe-storage';
+import { useLanguage } from '@/i18n/LanguageContext';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Transaction, TransactionType } from '@/types/transaction';
 import {
@@ -345,6 +346,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   onDirtyChange,
 }) => {
   // Serialize fieldConfidences to prevent object reference changes triggering re-renders
+  const { t } = useLanguage();
   const fieldConfidencesKey = JSON.stringify(fieldConfidences);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
@@ -1383,12 +1385,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             )}
             isAutoFilled={isDriven('type', drivenFields) && isHighTier(getFieldTier('type'))}
           >
-            <SelectValue placeholder="Select type" />
+            <SelectValue placeholder={t('form.selectType')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="expense">Expense</SelectItem>
-            <SelectItem value="income">Income</SelectItem>
-            <SelectItem value="transfer">Transfer</SelectItem>
+            <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+            <SelectItem value="income">{t('transactions.income')}</SelectItem>
+            <SelectItem value="transfer">{t('transactions.transfer')}</SelectItem>
           </SelectContent>
         </Select>
         {renderFeedbackIcons('type')}
@@ -1581,12 +1583,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   id="new-category-type"
                   className={cn('w-full', darkFieldClass)}
                 >
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('form.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+                  <SelectItem value="income">{t('transactions.income')}</SelectItem>
+                  <SelectItem value="transfer">{t('transactions.transfer')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1704,12 +1706,12 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
                   id="new-vendor-type"
                   className={cn('w-full', darkFieldClass)}
                 >
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('form.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+                  <SelectItem value="income">{t('transactions.income')}</SelectItem>
+                  <SelectItem value="transfer">{t('transactions.transfer')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

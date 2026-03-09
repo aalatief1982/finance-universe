@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Transaction, TransactionType } from '@/types/transaction';
@@ -17,6 +18,7 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
   transaction,
   onChange
 }) => {
+  const { t } = useLanguage();
   const handleChange = <K extends keyof Transaction>(field: K, value: Transaction[K]) => {
     onChange({
       ...transaction,
@@ -73,12 +75,12 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
             onValueChange={(value) => handleChange('type', value as TransactionType)}
           >
             <SelectTrigger id="type" className="h-9">
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder={t('form.selectType')} />
             </SelectTrigger>
             <SelectContent>
               {transactionTypes.map((type) => (
                 <SelectItem key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {t(`transactions.${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>

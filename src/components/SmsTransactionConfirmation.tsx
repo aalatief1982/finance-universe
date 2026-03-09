@@ -17,6 +17,7 @@
  * - [ ] Component renders without crashing
  */
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { motion } from 'framer-motion';
 import { Check, X, Edit, Globe, Coins, Building, ArrowRightLeft, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -110,6 +111,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
   onDecline,
   onEdit
 }) => {
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editedTransaction, setEditedTransaction] = useState({ ...transaction });
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -354,12 +356,12 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
                 onValueChange={(value) => handleChange('type', value as TransactionType)}
               >
                 <SelectTrigger id="sms-edit-transaction-type">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('form.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+                  <SelectItem value="income">{t('transactions.income')}</SelectItem>
+                  <SelectItem value="transfer">{t('transactions.transfer')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

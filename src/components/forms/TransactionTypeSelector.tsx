@@ -18,6 +18,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
@@ -31,6 +32,7 @@ interface TransactionTypeSelectorProps {
 const TransactionTypeSelector: React.FC<TransactionTypeSelectorProps> = ({
   form
 }) => {
+  const { t } = useLanguage();
   const vendor = form.watch('vendor')
   const [matches, setMatches] = useState<KeywordEntry[]>([])
 
@@ -58,13 +60,13 @@ const TransactionTypeSelector: React.FC<TransactionTypeSelectorProps> = ({
           <Select value={field.value} onValueChange={field.onChange}>
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t('form.selectType')} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="expense">Expense</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="transfer">Transfer</SelectItem>
+              <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+              <SelectItem value="income">{t('transactions.income')}</SelectItem>
+              <SelectItem value="transfer">{t('transactions.transfer')}</SelectItem>
             </SelectContent>
           </Select>
           {matches.length > 1 && (

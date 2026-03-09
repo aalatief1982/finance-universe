@@ -154,9 +154,9 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
                   <SelectValue placeholder={t('form.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="transfer">Transfer</SelectItem>
+                  <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+                  <SelectItem value="income">{t('transactions.income')}</SelectItem>
+                  <SelectItem value="transfer">{t('transactions.transfer')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

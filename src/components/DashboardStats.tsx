@@ -114,13 +114,13 @@ const DashboardStats = ({ income, expenses, balance, previousBalance, currencyCo
     Number.isFinite(val) ? null : (<p className="text-xs text-muted-foreground">{t('home.noDataYet')}</p>);
 
   return (
-    <div className="grid grid-cols-3 gap-2 mb-6">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
+    <div className="grid grid-cols-3 gap-2 mb-6 items-stretch">
+      <motion.div className="h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-[var(--card-padding)]">
+              <Card className="overflow-hidden border border-border h-full" role="button">
+                <CardContent className="p-[var(--card-padding)] h-full">
                   <div className="flex justify-between items-start">
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.income')} [{resolvedCurrency}]</p>
                     <ArrowUpCircle className="text-success" size={20} />
@@ -135,12 +135,12 @@ const DashboardStats = ({ income, expenses, balance, previousBalance, currencyCo
         </TooltipProvider>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+      <motion.div className="h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-[var(--card-padding)]">
+              <Card className="overflow-hidden border border-border h-full" role="button">
+                <CardContent className="p-[var(--card-padding)] h-full">
                   <div className="flex justify-between items-start">
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.expenses')} [{resolvedCurrency}]</p>
                     <ArrowDownCircle className="text-destructive" size={20} />
@@ -155,12 +155,12 @@ const DashboardStats = ({ income, expenses, balance, previousBalance, currencyCo
         </TooltipProvider>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
+      <motion.div className="h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-[var(--card-padding)]">
+              <Card className="overflow-hidden border border-border h-full" role="button">
+                <CardContent className="p-[var(--card-padding)] h-full">
                   <div className="flex justify-between items-start">
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.balance')} [{resolvedCurrency}]</p>
                     <div className={`${balance >= 0 ? 'text-info' : 'text-destructive'}`}>
