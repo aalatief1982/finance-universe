@@ -24,9 +24,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
 import { FileQuestion } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const NotFound = () => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (import.meta.env.MODE === 'development') {
