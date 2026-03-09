@@ -36,6 +36,8 @@ import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageF
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { computeCapturedFields } from '@/lib/inference/fieldStatus';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { parseFreeformTransaction } from '@/lib/freeform-entry';
+import { nanoid } from 'nanoid';
 import type { InferenceDecisionTrace, InferenceParsingStatus } from '@/types/inference';
 
 const normalizeFieldConfidences = (
