@@ -25,6 +25,7 @@ interface WebSpeechWindow {
 interface UseSpeechToTextOptions {
   onResult?: (text: string) => void;
   onPartialResult?: (text: string) => void;
+  minConfidence?: number;
 }
 
 const LOCALE_MAP: Record<string, string> = {
@@ -32,8 +33,10 @@ const LOCALE_MAP: Record<string, string> = {
   ar: 'ar-SA',
 };
 
+const DEFAULT_MIN_CONFIDENCE = 0.35;
+
 export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
-  const { onResult, onPartialResult } = options;
+  const { onResult, onPartialResult, minConfidence = DEFAULT_MIN_CONFIDENCE } = options;
   const { language, t } = useLanguage();
   const { toast } = useToast();
   const [isListening, setIsListening] = useState(false);
@@ -107,6 +110,20 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
 
       const resultHandle = await SpeechToText.addListener('speechResult', (data) => {
         if (data.isFinal) {
+          if (import.meta.env.DEV) {
+            console.log('[SpeechToText] Final result:', data.text, 'confidence:', data.confidence);
+          }
+
+          if (data.confidence > 0 && data.confidence < minConfidence) {
+            toast({
+              title: t('voice.lowConfidence'),
+              variant: 'destructive',
+            });
+            setIsListening(false);
+            cleanupListeners();
+            return;
+          }
+
           onResultRef.current?.(data.text);
           setIsListening(false);
           cleanupListeners();
@@ -130,7 +147,7 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
       showError('recognition_error');
       setIsListening(false);
     }
-  }, [language, cleanupListeners, showError]);
+  }, [language, cleanupListeners, showError, minConfidence, t, toast]);
 
   const startListeningWeb = useCallback(() => {
     const speechWindow = window as unknown as WebSpeechWindow;
@@ -190,7 +207,6 @@ export function useSpeechToText(options: UseSpeechToTextOptions = {}) {
     }
   }, [isListening, isNative, startListeningNative, startListeningWeb, stopListening]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (isNative) {

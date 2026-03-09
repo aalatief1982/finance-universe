@@ -9,7 +9,7 @@ export interface SpeechToTextPlugin {
   requestPermissions(): Promise<{ microphone: string }>;
   addListener(
     eventName: 'speechResult',
-    listenerFunc: (data: { text: string; isFinal: boolean }) => void
+    listenerFunc: (data: { text: string; isFinal: boolean; confidence: number }) => void
   ): Promise<PluginListenerHandle>;
   addListener(
     eventName: 'speechError',
