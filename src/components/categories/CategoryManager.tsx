@@ -51,6 +51,34 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   onCategoriesChange 
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
+  
+  // Color and icon options using translations
+  const colorOptions = [
+    { value: '#8B5CF6', label: t('color.purple') },
+    { value: '#D946EF', label: t('color.pink') },
+    { value: '#F97316', label: t('color.orange') },
+    { value: '#0EA5E9', label: t('color.blue') },
+    { value: '#10B981', label: t('color.green') },
+    { value: '#EF4444', label: t('color.red') },
+    { value: '#F59E0B', label: t('color.amber') },
+    { value: '#6366F1', label: t('color.indigo') },
+    { value: '#64748B', label: t('color.slate') },
+  ];
+
+  const iconOptions = [
+    { value: 'home', label: t('icon.home') },
+    { value: 'shopping-bag', label: t('icon.shopping') },
+    { value: 'utensils', label: t('icon.food') },
+    { value: 'car', label: t('icon.transport') },
+    { value: 'heartbeat', label: t('icon.health') },
+    { value: 'graduation-cap', label: t('icon.education') },
+    { value: 'film', label: t('icon.entertainment') },
+    { value: 'briefcase', label: t('icon.work') },
+    { value: 'gift', label: t('icon.gifts') },
+    { value: 'piggy-bank', label: t('icon.savings') },
+  ];
+  
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
