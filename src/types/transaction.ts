@@ -24,7 +24,7 @@ export type AccountId = string;
 export type MoneyAmount = number;
 export type ISODateString = string;
 // Source type used throughout the app
-export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smart-paste' | 'sms-import';
+export type TransactionSource = 'manual' | 'import' | 'sms' | 'telegram' | 'smart-paste' | 'sms-import' | 'smart-paste-freeform' | 'voice-freeform';
 
 /**
  * Source of the exchange rate used for conversion.
