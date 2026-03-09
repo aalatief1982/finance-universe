@@ -37,6 +37,7 @@ interface VendorSelectorProps {
 }
 
 const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
+  const { t } = useLanguage();
   const [vendors, setVendors] = useState<string[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [newVendor, setNewVendor] = useState({
