@@ -213,7 +213,7 @@ const BudgetDetailPage = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                   <Clock className="h-3.5 w-3.5" />
-                  <span className="text-xs">Days Left</span>
+                  <span className="text-xs">{t('detail.daysLeft')}</span>
                 </div>
                 <div className="text-lg font-semibold">{daysRemaining}</div>
               </div>
