@@ -1005,6 +1005,7 @@ function AppRoutes() {
 
   if (!initialRouteCheckDone) {
     traceAppRoot('AppRoutes waiting for startup route resolution');
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #7] Splash Still Showing (route check pending)\nTime: ${performance.now().toFixed(2)}ms\npathname: ${location.pathname}`);
     return <SplashScreen />;
   }
 
