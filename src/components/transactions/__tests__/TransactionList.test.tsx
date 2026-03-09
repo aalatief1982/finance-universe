@@ -67,7 +67,9 @@ describe('TransactionList', () => {
 
   it('renders empty message when no transactions', () => {
     render(
-      <TransactionList transactions={[]} emptyMessage="Nothing here" />,
+      <LanguageProvider>
+        <TransactionList transactions={[]} emptyMessage="Nothing here" />
+      </LanguageProvider>,
     );
     expect(screen.getByText('Nothing here')).toBeInTheDocument();
   });
