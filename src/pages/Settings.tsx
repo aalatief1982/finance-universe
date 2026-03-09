@@ -179,7 +179,7 @@ const Settings = () => {
   const handleExitAdminMode = () => {
     deactivateAdminMode();
     setAdminMode(false);
-    toast({ title: 'Admin mode deactivated' });
+    toast({ title: t('toast.adminDeactivated') });
   };
 
   const { updateUserPreferences } = useUser();
