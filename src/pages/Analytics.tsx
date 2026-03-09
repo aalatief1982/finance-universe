@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { ArrowDownRight, ArrowUpRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
