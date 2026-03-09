@@ -70,6 +70,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const transactionContext = useOptionalTransactions();
   const contextDeleteTransaction = transactionContext?.deleteTransaction;
   const { toast } = useToast();
+  const { t } = useLanguage();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Reset selection when transactions change
