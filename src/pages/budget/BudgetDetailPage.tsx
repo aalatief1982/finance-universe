@@ -246,7 +246,7 @@ const BudgetDetailPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Period</span>
+                <span className="text-muted-foreground">{t('detail.period')}</span>
               </div>
               <Badge variant="outline">{getPeriodLabel(budget.period)}</Badge>
             </div>
