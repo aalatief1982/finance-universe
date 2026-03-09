@@ -368,9 +368,15 @@ const ImportTransactions = () => {
         >
           <Card ref={smsInboxRef}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t('smsInbox.title')}   <CardContent className="space-y-3">
+              <CardTitle className="text-base">{t('smsInbox.title')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="space-y-2">
-                <p classNam{t('smsInbox.newSms')}-se="text-sm font-medium">e="text-sm font-medium">{t('smsInbox.newSms')}   <div className="rounded-md border px-3 py-2 text{t('smsInbox.noNewSms')}uted-foreground-sm text-muted-foreground">{t('smsInbox.noNewSms')}        newItems.map((item) => (
+                <p className="text-sm font-medium">{t('smsInbox.newSms')}</p>
+                {newItems.length === 0 ? (
+                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">{t('smsInbox.noNewSms')}</div>
+                ) : (
+                  newItems.map((item) => (
                     <div
                       key={item.id}
                       className="flex flex-col gap-3 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
