@@ -555,5 +555,10 @@ export const ar: Record<string, string> = {
   'smartEntry.card.noDescription': 'بدون وصف',
   'smartEntry.card.addTransaction': 'إضافة معاملة',
 
+
+  // NoTransactionMessage
+  'smartEntry.noTransactionDefault': 'لم يتم اكتشاف معاملة.',
+
 };
+
 

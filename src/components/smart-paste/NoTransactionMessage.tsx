@@ -1,19 +1,16 @@
 
 import React from 'react';
 import { XCircle, Lamp } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface NoTransactionMessageProps {
   show: boolean;
-  /**
-   * Optional message to display inside the placeholder. Defaults to
-   * "No transaction detected." when not provided.
-   */
   message?: string;
-  /** Whether a template match was found */
   matched?: boolean;
 }
 
 const NoTransactionMessage: React.FC<NoTransactionMessageProps> = ({ show, message, matched }) => {
+  const { t } = useLanguage();
   if (!show) return null;
 
   const Icon = matched ? Lamp : XCircle;
@@ -24,7 +21,7 @@ const NoTransactionMessage: React.FC<NoTransactionMessageProps> = ({ show, messa
   return (
     <div className={classes}>
       <Icon className="h-4 w-4" />
-      {message || 'No transaction detected.'}
+      {message || t('smartEntry.noTransactionDefault')}
     </div>
   );
 };

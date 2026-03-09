@@ -555,5 +555,10 @@ export const en: Record<string, string> = {
   'smartEntry.card.noDescription': 'No description',
   'smartEntry.card.addTransaction': 'Add Transaction',
 
+
+  // NoTransactionMessage
+  'smartEntry.noTransactionDefault': 'No transaction detected.',
+
 };
+
 
