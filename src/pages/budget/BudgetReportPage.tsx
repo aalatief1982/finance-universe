@@ -370,7 +370,7 @@ const BudgetReportPage = () => {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-12">
-                  No {selectedPeriod} budgets found
+                  {t('report.noPeriodBudgets').replace('{period}', selectedPeriod)}
                 </p>
               )}
             </CardContent>
