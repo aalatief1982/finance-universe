@@ -832,11 +832,11 @@ const Settings = () => {
                 inputMode="numeric"
                 value={adminPin}
                 onChange={(e) => setAdminPin(e.target.value)}
-                placeholder="Enter PIN"
+                placeholder={t('settings.enterPin')}
                 onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()}
               />
               <Button onClick={handlePinSubmit} className="w-full">
-                Unlock
+                {t('settings.unlock')}
               </Button>
             </div>
           </DialogContent>
