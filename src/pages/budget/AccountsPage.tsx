@@ -325,7 +325,7 @@ const AccountsPage = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-name">
-                Name
+                {t('accounts.name')}
               </label>
               <Input
                 id="account-name"
