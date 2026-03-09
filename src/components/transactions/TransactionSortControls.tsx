@@ -3,6 +3,7 @@ import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionSortControlsProps {
   sortField: string;
@@ -17,22 +18,24 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
   onSort,
   onSortDirectionChange
 }) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="flex items-center space-x-2 mb-2">
       <div className="flex items-center space-x-2">
-        <span className="text-sm font-medium">Sort by:</span>
+        <span className="text-sm font-medium">{t('sort.sortBy')}:</span>
         <Select
           value={sortField || "date"}
           onValueChange={(value) => onSort(value)}
         >
           <SelectTrigger className="h-8 w-[130px]">
-            <SelectValue placeholder="Select field" />
+            <SelectValue placeholder={t('sort.selectField')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="date">Date</SelectItem>
-            <SelectItem value="title">Description</SelectItem>
-            <SelectItem value="category">Category</SelectItem>
-            <SelectItem value="amount">Amount</SelectItem>
+            <SelectItem value="date">{t('sort.date')}</SelectItem>
+            <SelectItem value="title">{t('sort.description')}</SelectItem>
+            <SelectItem value="category">{t('sort.category')}</SelectItem>
+            <SelectItem value="amount">{t('sort.amount')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -48,7 +51,7 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
         ) : (
           <ChevronDown className="h-4 w-4 mr-1" />
         )}
-        {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+        {sortDirection === 'asc' ? t('sort.ascending') : t('sort.descending')}
       </Button>
     </div>
   );

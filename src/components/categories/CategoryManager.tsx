@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 import { 
   Category, CategoryMetadata, CategoryIcon 
@@ -38,32 +39,7 @@ const categoryFormSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
-// Color options for categories
-const colorOptions = [
-  { value: '#8B5CF6', label: 'Purple' },
-  { value: '#D946EF', label: 'Pink' },
-  { value: '#F97316', label: 'Orange' },
-  { value: '#0EA5E9', label: 'Blue' },
-  { value: '#10B981', label: 'Green' },
-  { value: '#EF4444', label: 'Red' },
-  { value: '#F59E0B', label: 'Amber' },
-  { value: '#6366F1', label: 'Indigo' },
-  { value: '#64748B', label: 'Slate' },
-];
-
-// Icon options for categories
-const iconOptions = [
-  { value: 'home', label: 'Home' },
-  { value: 'shopping-bag', label: 'Shopping' },
-  { value: 'utensils', label: 'Food' },
-  { value: 'car', label: 'Transport' },
-  { value: 'heartbeat', label: 'Health' },
-  { value: 'graduation-cap', label: 'Education' },
-  { value: 'film', label: 'Entertainment' },
-  { value: 'briefcase', label: 'Work' },
-  { value: 'gift', label: 'Gifts' },
-  { value: 'piggy-bank', label: 'Savings' },
-];
+// Color and icon options will use translations
 
 interface CategoryManagerProps {
   categories: Category[];
@@ -75,6 +51,34 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   onCategoriesChange 
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
+  
+  // Color and icon options using translations
+  const colorOptions = [
+    { value: '#8B5CF6', label: t('color.purple') },
+    { value: '#D946EF', label: t('color.pink') },
+    { value: '#F97316', label: t('color.orange') },
+    { value: '#0EA5E9', label: t('color.blue') },
+    { value: '#10B981', label: t('color.green') },
+    { value: '#EF4444', label: t('color.red') },
+    { value: '#F59E0B', label: t('color.amber') },
+    { value: '#6366F1', label: t('color.indigo') },
+    { value: '#64748B', label: t('color.slate') },
+  ];
+
+  const iconOptions = [
+    { value: 'home', label: t('icon.home') },
+    { value: 'shopping-bag', label: t('icon.shopping') },
+    { value: 'utensils', label: t('icon.food') },
+    { value: 'car', label: t('icon.transport') },
+    { value: 'heartbeat', label: t('icon.health') },
+    { value: 'graduation-cap', label: t('icon.education') },
+    { value: 'film', label: t('icon.entertainment') },
+    { value: 'briefcase', label: t('icon.work') },
+    { value: 'gift', label: t('icon.gifts') },
+    { value: 'piggy-bank', label: t('icon.savings') },
+  ];
+  
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -165,8 +169,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       
       onCategoriesChange(updatedCategories);
       toast({
-        title: "Category updated",
-        description: `Category "${values.name}" has been updated.`,
+        title: t('toast.categoryUpdated'),
+        description: `${t('category.updated')} "${values.name}" ${t('category.updatedDesc')}`,
       });
     } else if (isAddingCategory) {
       // Add new category
@@ -199,8 +203,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       }
       
       toast({
-        title: "Category created",
-        description: `New category "${values.name}" has been created.`,
+        title: t('toast.categoryCreated'),
+        description: `${t('category.created')} "${values.name}" ${t('category.createdDesc')}`,
       });
     }
     
@@ -215,8 +219,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     
     if (hasSubcategories) {
       toast({
-        title: "Cannot delete category",
-        description: "Delete or reassign its subcategories first.",
+        title: t('toast.cannotDeleteCategory'),
+        description: t('category.cannotDeleteDesc'),
         variant: "destructive"
       });
       return;
@@ -226,8 +230,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     onCategoriesChange(updatedCategories);
     
     toast({
-      title: "Category deleted",
-      description: "Category has been deleted successfully.",
+      title: t('toast.categoryDeleted'),
+      description: t('category.deletedDesc'),
     });
   };
 
@@ -370,9 +374,9 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Name</FormLabel>
+                            <FormLabel>{t('category.name')}</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Category name" />
+                              <Input {...field} placeholder={t('category.categoryName')} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -469,7 +473,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Select icon" />
+                                    <SelectValue placeholder={t('category.selectIcon')} />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>

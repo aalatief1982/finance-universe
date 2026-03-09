@@ -337,4 +337,138 @@ export const ar: Record<string, string> = {
   'filter.to': 'إلى',
   'filter.min': 'الأدنى',
   'filter.max': 'الأعلى',
+  'filter.allCategories': 'كل الفئات',
+
+  // View and Sort
+  'view.gridView': 'عرض شبكي',
+  'view.tableView': 'عرض جدول',
+  'sort.sortBy': 'ترتيب حسب',
+  'sort.selectField': 'اختر حقل',
+  'sort.date': 'التاريخ',
+  'sort.description': 'الوصف',
+  'sort.category': 'الفئة',
+  'sort.amount': 'المبلغ',
+  'sort.ascending': 'تصاعدي',
+  'sort.descending': 'تنازلي',
+
+  // Pagination
+  'pagination.showing': 'عرض',
+  'pagination.to': 'إلى',
+  'pagination.of': 'من',
+  'pagination.transactions': 'معاملة',
+  'pagination.noTransactionsFound': 'لا توجد معاملات',
+  'pagination.show': 'عرض',
+
+  // Transaction Summary
+  'summary.totalIncome': 'إجمالي الدخل',
+  'summary.totalExpenses': 'إجمالي المصروفات',
+  'summary.balance': 'الرصيد',
+  'summary.positiveBalance': 'رصيد إيجابي',
+  'summary.negativeBalance': 'رصيد سلبي',
+
+  // Not Found Page
+  'notFound.pageNotFound': 'الصفحة غير موجودة',
+  'notFound.pageNotFoundDesc': 'لم نتمكن من العثور على الصفحة المطلوبة. ربما تم حذف الصفحة أو الرابط معطوب.',
+  'notFound.returnToDashboard': 'العودة إلى لوحة التحكم',
+
+  // Category Manager
+  'category.updated': 'تم تحديث الفئة',
+  'category.updatedDesc': 'تم تحديثها.',
+  'category.created': 'تم إنشاء الفئة',
+  'category.createdDesc': 'تم إنشاؤها.',
+  'category.cannotDelete': 'لا يمكن حذف الفئة',
+  'category.cannotDeleteDesc': 'احذف أو أعد تعيين الفئات الفرعية أولاً.',
+  'category.deleted': 'تم حذف الفئة',
+  'category.deletedDesc': 'تم حذف الفئة بنجاح.',
+  'category.name': 'الاسم',
+  'category.categoryName': 'اسم الفئة',
+  'category.selectIcon': 'اختر أيقونة',
+
+  // Forms
+  'form.title': 'العنوان*',
+  'form.transactionTitle': 'عنوان المعاملة',
+  'form.description': 'الوصف',
+  'form.detailedDescription': 'أدخل وصفاً مفصلاً...',
+  'form.selectType': 'اختر النوع',
+  'form.selectCategory': 'اختر الفئة',
+  'form.selectSubcategory': 'اختر الفئة الفرعية',
+
+  // Accounts
+  'account.selectType': 'اختر النوع',
+  'account.egMySavings': 'مثال: حسابي التوفيري',
+  'account.egIban': 'مثال: SA0380000000608010167519',
+  'account.failedToUpdate': 'فشل تحديث الحساب',
+  'account.createdSuccessfully': 'تم إنشاء الحساب بنجاح',
+
+  // Budget
+  'budget.addNotes': 'إضافة ملاحظات...',
+
+  // Toasts (additional)
+  'toast.categoryUpdated': 'تم تحديث الفئة',
+  'toast.categoryCreated': 'تم إنشاء الفئة',
+  'toast.categoryDeleted': 'تم حذف الفئة',
+  'toast.cannotDeleteCategory': 'لا يمكن حذف الفئة',
+  'toast.accountCreated': 'تم إنشاء الحساب بنجاح',
+  'toast.accountFailedToUpdate': 'فشل تحديث الحساب',
+  'toast.newSmsDetected': 'تم اكتشاف معاملة رسائل جديدة',
+  'toast.newSmsDetectedDesc': 'راجع معاملات الرسائل المستوردة عندما تكون جاهزاً.',
+  'toast.transactionSaved': 'تم حفظ المعاملة',
+  'toast.stillHaveSmsToReview': 'لا يزال لديك {{count}} رسائل جديدة للمراجعة.',
+  'toast.suggestedTransaction': 'معاملة مقترحة',
+  'toast.suggestedTransactionDesc': 'تم اقتراح هذه المعاملة تلقائياً بناءً على الأنماط السابقة. يمكنك تعديل أي حقل قبل الحفظ.',
+  'toast.lowConfidenceMatch': 'تطابق بثقة منخفضة',
+  'toast.lowConfidenceMatchDesc': 'تم مطابقة هذه المعاملة باستخدام بنية قالب محفوظة بثقة جزئية (40%). يمكنك المراجعة والتعديل قبل الحفظ لتحسين الاكتشاف المستقبلي.',
+  'toast.telegramConnected': 'تم الاتصال بـ Telegram',
+  'toast.telegramConnectedDesc': 'تم إعداد بوت Telegram الخاص بك وهو جاهز لاستقبال رسائل المعاملات.',
+  'toast.telegramDisconnected': 'تم فصل Telegram',
+  'toast.telegramDisconnectedDesc': 'تم فصل بوت Telegram الخاص بك.',
+
+  // Budget Insights
+  'insights.noBudgetsSet': 'لا توجد ميزانيات',
+  'insights.noBudgetsSetDesc': 'ابدأ بتتبع إنفاقك بإنشاء ميزانيتك الأولى. حدد حدوداً للفئات أو الحسابات أو الإنفاق الإجمالي.',
+  'insights.createBudget': 'إنشاء ميزانية',
+  'insights.considerYearly': 'فكّر في ميزانية سنوية',
+  'insights.considerYearlyDesc': 'لديك ميزانيات فترات ولكن لا يوجد حد إنفاق سنوي. الميزانية السنوية تساعد في تتبع الإنفاق الإجمالي عبر العام.',
+  'insights.addYearlyBudget': 'إضافة ميزانية سنوية',
+
+  // Edit Transaction Dialog
+  'edit.aiGeneratedFields': 'حقول تم إنشاؤها بالذكاء الاصطناعي – يرجى التحقق.',
+
+  // Wireframe Header
+  'wireframe.expenseTracker': 'تتبع المصروفات',
+  'wireframe.smartEntry': 'إدخال ذكي',
+
+  // Colors
+  'color.purple': 'بنفسجي',
+  'color.pink': 'وردي',
+  'color.orange': 'برتقالي',
+  'color.blue': 'أزرق',
+  'color.green': 'أخضر',
+  'color.red': 'أحمر',
+  'color.amber': 'عنبري',
+  'color.indigo': 'نيلي',
+  'color.slate': 'رمادي',
+
+  // Icons
+  'icon.home': 'منزل',
+  'icon.shopping': 'تسوق',
+  'icon.food': 'طعام',
+  'icon.transport': 'مواصلات',
+  'icon.health': 'صحة',
+  'icon.education': 'تعليم',
+  'icon.entertainment': 'ترفيه',
+  'icon.work': 'عمل',
+  'icon.gifts': 'هدايا',
+  'icon.savings': 'توفير',
+
+  // Smart Entry
+  'smartEntry.title': 'إدخال ذكي',
+
+  // Date Filters
+  'date.dateNewest': 'التاريخ (الأحدث)',
+
+  // Budget Chart
+  'chart.budgetLimit': 'حد الميزانية',
+  'chart.targetPace': 'الوتيرة المستهدفة',
+  'chart.actualSpending': 'الإنفاق الفعلي',
 };

@@ -24,9 +24,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
 import { FileQuestion } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const NotFound = () => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (import.meta.env.MODE === 'development') {
@@ -49,12 +51,12 @@ const NotFound = () => {
         <div className="mx-auto h-24 w-24 rounded-full bg-muted flex items-center justify-center mb-6">
           <FileQuestion className="h-12 w-12 text-muted-foreground" />
         </div>
-        <h1 className="text-4xl font-bold mb-3">Page Not Found</h1>
+        <h1 className="text-4xl font-bold mb-3">{t('notFound.pageNotFound')}</h1>
         <p className="text-muted-foreground mb-6">
-          We couldn&apos;t find the page you&apos;re looking for. The page might have been removed or the link might be broken.
+          {t('notFound.pageNotFoundDesc')}
         </p>
         <Button asChild size="lg">
-          <Link to="/">Return to Dashboard</Link>
+          <Link to="/">{t('notFound.returnToDashboard')}</Link>
         </Button>
       </motion.div>
       </div>

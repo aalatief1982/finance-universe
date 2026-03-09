@@ -11,6 +11,7 @@ import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Account } from '@/models/account';
 import { accountService } from '@/services/AccountService';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   Wallet,
   Building2,
@@ -43,6 +44,7 @@ interface AddAccountDialogProps {
 }
 
 const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAccountCreated, initialAccount }) => {
+  const { t } = useLanguage();
   const today = React.useMemo(() => new Date().toISOString().split('T')[0], []);
   const defaultCurrency = React.useMemo(() => getCurrencyOrAppFallback(), []);
   const [form, setForm] = React.useState<Omit<Account, 'id'>>({
@@ -81,24 +83,24 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
   const handleSave = () => {
     if (!form.name.trim()) {
-      toast({ title: 'Account name is required', variant: 'destructive' });
+      toast({ title: t('toast.accountNameRequired'), variant: 'destructive' });
       return;
     }
 
     const existingAccount = accountService.getAccountByName(form.name);
     const isDuplicateName = existingAccount && existingAccount.id !== initialAccount?.id;
     if (isDuplicateName) {
-      toast({ title: 'An account with this name already exists', variant: 'destructive' });
+      toast({ title: t('toast.accountNameExists'), variant: 'destructive' });
       return;
     }
 
     if (initialAccount?.id) {
       const updatedAccount = accountService.updateAccount(initialAccount.id, form);
       if (!updatedAccount) {
-        toast({ title: 'Failed to update account', variant: 'destructive' });
+        toast({ title: t('account.failedToUpdate'), variant: 'destructive' });
         return;
       }
-      toast({ title: 'Account updated successfully' });
+      toast({ title: t('toast.accountUpdated') });
       onAccountCreated(updatedAccount);
       onClose();
       return;
@@ -106,7 +108,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
     const newAccount: Account = { id: uuidv4(), ...form };
     accountService.addAccount(newAccount);
-    toast({ title: 'Account created successfully' });
+    toast({ title: t('account.createdSuccessfully') });
     onAccountCreated(newAccount);
     onClose();
   };
@@ -142,7 +144,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
             </label>
             <Select value={form.type} onValueChange={val => setForm({ ...form, type: val as Account['type'] })}>
               <SelectTrigger id="account-type">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t('account.selectType')} />
               </SelectTrigger>
               <SelectContent>
                 {ACCOUNT_TYPES.map(t => {

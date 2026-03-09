@@ -5,17 +5,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/format-utils';
 import { getUserSettings } from '@/utils/storage-utils';
 import { TransactionSummary as TransactionSummaryType } from '@/types/transaction';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionSummaryProps {
   summary: TransactionSummaryType;
 }
 
 const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
+  const { t } = useLanguage();
   const { income, expenses, balance } = summary;
   
   const balanceChange = balance >= 0 
-    ? { icon: ArrowUpRight, color: 'text-success', bgColor: 'bg-success/10', label: 'Positive balance' }
-    : { icon: ArrowDownRight, color: 'text-destructive', bgColor: 'bg-destructive/10', label: 'Negative balance' };
+    ? { icon: ArrowUpRight, color: 'text-success', bgColor: 'bg-success/10', label: t('summary.positiveBalance') }
+    : { icon: ArrowDownRight, color: 'text-destructive', bgColor: 'bg-destructive/10', label: t('summary.negativeBalance') };
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -23,7 +25,7 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
         <CardContent className="pt-6">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Total Income</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('summary.totalIncome')}</p>
               <h3 className="text-2xl font-bold text-success">{formatCurrency(income, getUserSettings().currency || 'USD')}</h3>
             </div>
             <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
@@ -37,7 +39,7 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
         <CardContent className="pt-6">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Total Expenses</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('summary.totalExpenses')}</p>
               <h3 className="text-2xl font-bold text-destructive">{formatCurrency(expenses, getUserSettings().currency || 'USD')}</h3>
             </div>
             <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
@@ -51,7 +53,7 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
         <CardContent className="pt-6">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Balance</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('summary.balance')}</p>
               <h3 className="text-2xl font-bold">{formatCurrency(balance, getUserSettings().currency || 'USD')}</h3>
             </div>
             <div className={`h-12 w-12 rounded-full ${balanceChange.bgColor} flex items-center justify-center`}>

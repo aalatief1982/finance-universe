@@ -30,12 +30,14 @@ import { loadVendorFallbacks, addUserVendor } from '@/lib/smart-paste-engine/ven
 import { getVendorData } from '@/services/VendorSyncService';
 import { getCategoriesForType, getSubcategoriesForCategory } from '@/lib/categories-data';
 import { TransactionType } from '@/types/transaction';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface VendorSelectorProps {
   form: UseFormReturn<TransactionFormValues>;
 }
 
 const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
+  const { t } = useLanguage();
   const [vendors, setVendors] = useState<string[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [newVendor, setNewVendor] = useState({
@@ -149,7 +151,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
               </label>
               <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType, category: '', subcategory: '' }))}>
                 <SelectTrigger id="vendor-selector-type" className="w-full">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('form.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="expense">Expense</SelectItem>
@@ -164,7 +166,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
               </label>
               <Select value={newVendor.category} onValueChange={val => setNewVendor(prev => ({ ...prev, category: val, subcategory: '' }))}>
                 <SelectTrigger id="vendor-selector-category" className="w-full">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t('form.selectCategory')} />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
                   {getCategoriesForType(newVendor.type).map(category => (
@@ -182,7 +184,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
                 </label>
                 <Select value={newVendor.subcategory} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val }))}>
                   <SelectTrigger id="vendor-selector-subcategory" className="w-full">
-                    <SelectValue placeholder="Select subcategory" />
+                    <SelectValue placeholder={t('form.selectSubcategory')} />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     <SelectItem value="">None</SelectItem>
