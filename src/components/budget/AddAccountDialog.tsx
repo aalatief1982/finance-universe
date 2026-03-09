@@ -11,6 +11,7 @@ import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Account } from '@/models/account';
 import { accountService } from '@/services/AccountService';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   Wallet,
   Building2,
