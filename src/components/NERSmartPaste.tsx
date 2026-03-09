@@ -69,8 +69,8 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
 
     if (!text.trim()) {
       toast({
-        title: "No message entered",
-        description: "Paste or type a message first.",
+        title: t('toast.smartEntry.noMessage'),
+        description: t('toast.smartEntry.noMessageDesc'),
         variant: "destructive",
       });
       return;
