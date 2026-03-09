@@ -990,7 +990,7 @@ const SetBudgetPage = () => {
                 handleSave(true);
               }}
             >
-              Distribute All
+              {t('setBudget.distributeAll')}
             </Button>
           </DialogFooter>
         </DialogContent>
