@@ -220,6 +220,7 @@ const AnalyticsActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions 
 };
 
 const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: number }[]; monthlyBalance: { date: string; balance: number }[] }> = ({ topCategories, monthlyBalance }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -229,7 +230,7 @@ const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: n
           <CardHeader>
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between">
-                <CardTitle>Trends</CardTitle>
+                <CardTitle>{t('analytics.trends')}</CardTitle>
                 {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </div>
             </CollapsibleTrigger>
