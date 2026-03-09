@@ -193,8 +193,8 @@ const AccountsPage = () => {
 
   return (
     <BudgetLayout 
-      title="Accounts" 
-      description="Manage your financial accounts"
+      title={t('accounts.title')} 
+      description={t('accounts.description')}
       showPeriodFilter={false}
       showAddButton={false}
     >
