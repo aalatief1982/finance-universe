@@ -310,23 +310,25 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               {transaction.subcategory && ` / ${transaction.subcategory}`}
             </p>
           </div>
-          <div className="flex gap-2">    size="sm" 
-              variant="outline" 
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
               className="p-1 h-8 w-8"
               onClick={handleEdit}
             >
               <Edit size={16} />
             </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
+            <Button
+              size="sm"
+              variant="outline"
               className="p-1 h-8 w-8 text-destructive hover:bg-destructive/10"
               onClick={() => onDecline(transaction.id)}
             >
               <X size={16} />
             </Button>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               variant="outline"
               className="p-1 h-8 w-8 text-success hover:bg-success/10"
               onClick={() => onConfirm(transaction)}
