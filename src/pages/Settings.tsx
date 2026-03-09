@@ -441,9 +441,8 @@ const Settings = () => {
           setTimeout(() => window.location.reload(), 1500);
         } catch {
           toast({
-            title: "Import failed",
-            description:
-              "Make sure the selected file is a valid JSON or CSV file.",
+            title: t('toast.importFailed'),
+            description: t('toast.importFailedDesc'),
             variant: "destructive",
           });
         }
