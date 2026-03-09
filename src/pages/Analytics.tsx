@@ -544,8 +544,8 @@ const Analytics: React.FC = () => {
           </ToggleGroup>
           {range === 'custom' && (
             <div className="mt-2 flex items-center gap-2 animate-in fade-in">
-              <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
-              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
+              <DatePicker date={customStart} setDate={setCustomStart} placeholder={t('home.datePicker.start')} />
+              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder={t('home.datePicker.end')} />
             </div>
           )}
         </div>
