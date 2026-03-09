@@ -312,9 +312,9 @@ const BudgetDetailPage = () => {
         {subcategoryBudgets.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Subcategory Budgets</CardTitle>
+              <CardTitle className="text-base">{t('detail.subcategoryBudgets')}</CardTitle>
               <CardDescription>
-                Breakdown by subcategory
+                {t('detail.breakdownBySubcategory')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
