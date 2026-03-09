@@ -257,28 +257,28 @@ const BudgetReportPage = () => {
   const headerActions = (
     <Button variant="outline" size="sm" onClick={handleExport}>
       <Download className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-      Export
+      {t('report.export')}
     </Button>
   );
 
   return (
     <BudgetLayout 
-      title="Reports" 
-      description="Analyze your budget performance"
+      title={t('report.title')} 
+      description={t('report.description')}
       showAddButton={false}
       headerActions={headerActions}
     >
       {/* Scope Filter */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-        {SCOPE_OPTIONS.map(opt => (
+        {SCOPE_VALUES.map(val => (
           <Button
-            key={opt.value}
-            variant={scopeFilter === opt.value ? 'default' : 'outline'}
+            key={val}
+            variant={scopeFilter === val ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setScopeFilter(opt.value)}
+            onClick={() => setScopeFilter(val)}
             className="whitespace-nowrap"
           >
-            {opt.label}
+            {t(SCOPE_LABEL_KEYS[val])}
           </Button>
         ))}
       </div>
