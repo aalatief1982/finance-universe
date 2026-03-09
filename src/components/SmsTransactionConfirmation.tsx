@@ -310,8 +310,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               {transaction.subcategory && ` / ${transaction.subcategory}`}
             </p>
           </div>
-          <div className="flex gap-2"> 
-              size="sm" 
+          <div className="flex gap-2">    size="sm" 
               variant="outline" 
               className="p-1 h-8 w-8"
               onClick={handleEdit}
@@ -485,8 +484,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               />
             </div>
             
-            <div className="flex justify-end spacgaptgap            <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-              <Button onClick={handleSaveEdit}>Save</Button>
+            <div className="flex justify-end spacgaptgap gap-2 pt-2"    <Button onClick={handleSaveEdit}>Save</Button>
             </div>
           </div>
         </DialogContent>
