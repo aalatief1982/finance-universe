@@ -337,4 +337,144 @@ export const en: Record<string, string> = {
   'filter.to': 'To',
   'filter.min': 'Min',
   'filter.max': 'Max',
+  'filter.allCategories': 'All Categories',
+
+  // View and Sort
+  'view.gridView': 'Grid view',
+  'view.tableView': 'Table view',
+  'sort.sortBy': 'Sort by',
+  'sort.selectField': 'Select field',
+  'sort.date': 'Date',
+  'sort.description': 'Description',
+  'sort.category': 'Category',
+  'sort.amount': 'Amount',
+  'sort.ascending': 'Ascending',
+  'sort.descending': 'Descending',
+
+  // Pagination
+  'pagination.showing': 'Showing',
+  'pagination.to': 'to',
+  'pagination.of': 'of',
+  'pagination.transactions': 'transactions',
+  'pagination.noTransactionsFound': 'No transactions found',
+  'pagination.show': 'Show',
+
+  // Transaction Summary
+  'summary.totalIncome': 'Total Income',
+  'summary.totalExpenses': 'Total Expenses',
+  'summary.balance': 'Balance',
+  'summary.positiveBalance': 'Positive balance',
+  'summary.negativeBalance': 'Negative balance',
+
+  // Not Found Page
+  'notFound.pageNotFound': 'Page Not Found',
+  'notFound.pageNotFoundDesc': "We couldn't find the page you're looking for. The page might have been removed or the link might be broken.",
+  'notFound.returnToDashboard': 'Return to Dashboard',
+
+  // Category Manager
+  'category.updated': 'Category updated',
+  'category.updatedDesc': 'has been updated.',
+  'category.created': 'Category created',
+  'category.createdDesc': 'has been created.',
+  'category.cannotDelete': 'Cannot delete category',
+  'category.cannotDeleteDesc': 'Delete or reassign its subcategories first.',
+  'category.deleted': 'Category deleted',
+  'category.deletedDesc': 'Category has been deleted successfully.',
+  'category.name': 'Name',
+  'category.categoryName': 'Category name',
+  'category.selectIcon': 'Select icon',
+
+  // Forms
+  'form.title': 'Title*',
+  'form.transactionTitle': 'Transaction title',
+  'form.description': 'Description',
+  'form.detailedDescription': 'Enter a detailed description...',
+  'form.selectType': 'Select type',
+  'form.selectCategory': 'Select category',
+  'form.selectSubcategory': 'Select subcategory',
+
+  // Accounts
+  'account.selectType': 'Select type',
+  'account.egMySavings': 'e.g. My Savings',
+  'account.egIban': 'e.g. SA0380000000608010167519',
+  'account.failedToUpdate': 'Failed to update account',
+  'account.createdSuccessfully': 'Account created successfully',
+
+  // Budget
+  'budget.addNotes': 'Add notes...',
+
+  // Toasts (additional)
+  'toast.categoryUpdated': 'Category updated',
+  'toast.categoryCreated': 'Category created',
+  'toast.categoryDeleted': 'Category deleted',
+  'toast.cannotDeleteCategory': 'Cannot delete category',
+  'toast.accountCreated': 'Account created successfully',
+  'toast.accountFailedToUpdate': 'Failed to update account',
+  'toast.newSmsDetected': 'New SMS transaction detected',
+  'toast.newSmsDetectedDesc': 'Review imported SMS transactions when you are ready.',
+  'toast.transactionSaved': 'Transaction saved',
+  'toast.stillHaveSmsToReview': 'You still have {{count}} new SMS to review.',
+  'toast.suggestedTransaction': 'Suggested transaction',
+  'toast.suggestedTransactionDesc': 'This transaction was automatically suggested based on previous patterns. You can edit any field before saving.',
+  'toast.lowConfidenceMatch': 'Low confidence match',
+  'toast.lowConfidenceMatchDesc': 'This transaction was matched using a saved template structure with partial confidence (40%). You can review and adjust the fields before saving to improve future detection.',
+  'toast.ratingRequired': 'Rating required',
+  'toast.ratingRequiredDesc': 'Select a rating between 1 and 5.',
+  'toast.feedbackSent': 'Feedback sent',
+  'toast.feedbackSentDesc': 'Thank you for your feedback.',
+  'toast.couldNotSendFeedback': 'Could not send feedback',
+  'toast.couldNotSendFeedbackDesc': 'Please try again later.',
+  'toast.telegramConnected': 'Telegram connected',
+  'toast.telegramConnectedDesc': 'Your Telegram bot is now set up and ready to receive transaction messages.',
+  'toast.telegramDisconnected': 'Telegram disconnected',
+  'toast.telegramDisconnectedDesc': 'Your Telegram bot has been disconnected.',
+
+  // Budget Insights
+  'insights.noBudgetsSet': 'No Budgets Set',
+  'insights.noBudgetsSetDesc': 'Start tracking your spending by creating your first budget. Set limits for categories, accounts, or overall spending.',
+  'insights.createBudget': 'Create Budget',
+  'insights.considerYearly': 'Consider a Yearly Budget',
+  'insights.considerYearlyDesc': 'You have period budgets but no yearly spending limit. A yearly budget helps track total spending across the year.',
+  'insights.addYearlyBudget': 'Add Yearly Budget',
+
+  // Edit Transaction Dialog
+  'edit.aiGeneratedFields': 'AI-generated fields – please verify.',
+
+  // Wireframe Header
+  'wireframe.expenseTracker': 'Expense Tracker',
+  'wireframe.smartEntry': 'Smart Entry',
+
+  // Colors
+  'color.purple': 'Purple',
+  'color.pink': 'Pink',
+  'color.orange': 'Orange',
+  'color.blue': 'Blue',
+  'color.green': 'Green',
+  'color.red': 'Red',
+  'color.amber': 'Amber',
+  'color.indigo': 'Indigo',
+  'color.slate': 'Slate',
+
+  // Icons
+  'icon.home': 'Home',
+  'icon.shopping': 'Shopping',
+  'icon.food': 'Food',
+  'icon.transport': 'Transport',
+  'icon.health': 'Health',
+  'icon.education': 'Education',
+  'icon.entertainment': 'Entertainment',
+  'icon.work': 'Work',
+  'icon.gifts': 'Gifts',
+  'icon.savings': 'Savings',
+
+  // Smart Entry
+  'smartEntry.title': 'Smart Entry',
+
+  // Date Filters
+  'date.dateNewest': 'Date (newest)',
+
+  // Budget Chart
+  'chart.budgetLimit': 'Budget limit',
+  'chart.targetPace': 'Target pace',
+  'chart.actualSpending': 'Actual spending',
 };
