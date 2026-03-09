@@ -232,7 +232,7 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
 
       {detectedTransactions.length > 0 && (
         <div className="space-y-3 mt-2">
-          <h3 className="text-sm font-medium">Detected Transaction:</h3>
+          <h3 className="text-sm font-medium">{t('smartEntry.detectedTransaction')}</h3>
           {detectedTransactions.map((txn) => (
             <DetectedTransactionCard
               key={txn.id}
