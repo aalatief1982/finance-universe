@@ -294,15 +294,15 @@ const BudgetDetailPage = () => {
             <div className="flex items-center justify-center gap-6 mt-4 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-destructive" />
-                <span className="text-muted-foreground">Actual</span>
+                <span className="text-muted-foreground">{t('detail.actual')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-primary" style={{ borderStyle: 'dashed' }} />
-                <span className="text-muted-foreground">Target</span>
+                <span className="text-muted-foreground">{t('detail.target')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-destructive opacity-50" style={{ borderStyle: 'dashed' }} />
-                <span className="text-muted-foreground">Limit</span>
+                <span className="text-muted-foreground">{t('detail.limit')}</span>
               </div>
             </div>
           </CardContent>
