@@ -3,6 +3,7 @@ import React from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionSortControlsProps {
   sortField: string;
@@ -17,16 +18,18 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
   onSort,
   onSortDirectionChange
 }) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="flex items-center space-x-2 mb-2">
       <div className="flex items-center space-x-2">
-        <span className="text-sm font-medium">Sort by:</span>
+        <span className="text-sm font-medium">{t('sort.sortBy')}:</span>
         <Select
           value={sortField || "date"}
           onValueChange={(value) => onSort(value)}
         >
           <SelectTrigger className="h-8 w-[130px]">
-            <SelectValue placeholder="Select field" />
+            <SelectValue placeholder={t('sort.selectField')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="date">Date</SelectItem>
