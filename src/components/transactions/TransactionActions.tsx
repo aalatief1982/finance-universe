@@ -13,6 +13,7 @@ import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { Transaction } from '@/types/transaction';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionActionsProps {
   transaction: Transaction;
