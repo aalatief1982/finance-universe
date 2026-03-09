@@ -118,8 +118,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
     if (sortField !== field) return null;
     
     return sortDirection === 'asc' ? 
-      <ChevronUp className="ml-1 h-4 w-4" /> : 
-      <ChevronDown className="ml-1 h-4 w-4" />;
+      <ChevronUp className="ltr:ml-1 rtl:mr-1 h-4 w-4" /> : 
+      <ChevronDown className="ltr:ml-1 rtl:mr-1 h-4 w-4" />;
   };
 
   const renderAmount = (transaction: Transaction) => {
