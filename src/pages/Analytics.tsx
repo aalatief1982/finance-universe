@@ -256,7 +256,7 @@ const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: n
 
               {topCategories.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Category distribution</p>
+                  <p className="text-sm font-medium mb-2">{t('analytics.categoryDistribution')}</p>
                   <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={topCategories} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
