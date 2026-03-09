@@ -200,7 +200,7 @@ const AccountsPage = () => {
       {unmanagedAccounts.length > 0 && (
         <Alert className="border-amber-500/50 bg-amber-500/5 mb-4">
           <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="ltr:ml-2 rtl:mrr:ml-2 rtl:mr-2">
+          <AlertDescription className="ltr:ml-2 rtl:mrr:ml-2 rtl:mrr:ml-2 rtl:mr-2">
             <p className="font-medium text-amber-600 mb-2">
               {unmanagedAccounts.length} account{unmanagedAccounts.length > 1 ? 's' : ''} found in transactions but not managed
             </p>
@@ -213,7 +213,7 @@ const AccountsPage = () => {
                   onClick={() => handleImportUnmanaged(name)}
                 >
                   {name}
-                  <Plus classNltr:ml-1 rtl:mre="h-3 w-3 ml-1" />
+                 ltr:ml-1 rtl:mrPlus classNltr:ml-1 rtl:mre="h-3 w-3 ml-1" />
                 </Badge>
               ))}
             </div>
@@ -231,7 +231,7 @@ const AccountsPage = () => {
               Add your bank accounts, cash, crypto wallets and more.
             </p>
             <Button onClick={openAddDialog}>
-              <Plus className="h-4 w-4 mr-2" />
+             ltr:mr-2 rtl:mlPlus className="h-4 w-4 mr-2" />
               Add First Account
             </Button>
           </CardContent>
