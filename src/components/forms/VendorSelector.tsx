@@ -149,7 +149,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
               </label>
               <Select value={newVendor.type} onValueChange={val => setNewVendor(prev => ({ ...prev, type: val as TransactionType, category: '', subcategory: '' }))}>
                 <SelectTrigger id="vendor-selector-type" className="w-full">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('form.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="expense">Expense</SelectItem>
