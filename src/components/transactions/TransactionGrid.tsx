@@ -134,7 +134,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={() => {
                         onDeleteTransaction(transaction.id);
-                        toast({ description: 'Transaction deleted successfully' });
+                        toast({ description: t('transaction.deletedSuccessfully') });
                       }}
                     >
                       Delete

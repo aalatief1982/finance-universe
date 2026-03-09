@@ -41,7 +41,7 @@ const TransactionActions = ({
     deleteTransaction(transaction.id);
 
     toast({
-      title: "Transaction deleted",
+      title: t('transaction.deleted'),
       description: "",
     });
   };

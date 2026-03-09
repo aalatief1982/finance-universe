@@ -102,7 +102,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
       {/* Swipeable Card */}
       <motion.div
         drag="x"
-        dragConstraints={constraintsRef}
+        dragConstraints={{ left: -150, right: 150 }}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         animate={controls}

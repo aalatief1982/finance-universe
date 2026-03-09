@@ -80,7 +80,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
     if (transactionToDelete) {
       deleteTransaction(transactionToDelete.id);
       toast({
-        description: "Transaction deleted successfully"
+        description: t('transaction.deletedSuccessfully')
       });
       setDeleteDialogOpen(false);
       setTransactionToDelete(null);

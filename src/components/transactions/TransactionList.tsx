@@ -180,7 +180,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
     } else if (contextDeleteTransaction) {
       contextDeleteTransaction(transactionPendingDelete.id);
     }
-    toast({ description: 'Transaction deleted successfully' });
+    toast({ description: t('transaction.deletedSuccessfully') });
     setTransactionPendingDelete(null);
   };
 
