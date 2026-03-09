@@ -381,8 +381,8 @@ const BudgetReportPage = () => {
         <TabsContent value="breakdown">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Spending by Category</CardTitle>
-              <CardDescription>Distribution of spending across categories</CardDescription>
+              <CardTitle className="text-base">{t('report.spendingByCategory')}</CardTitle>
+              <CardDescription>{t('report.distributionAcrossCategories')}</CardDescription>
             </CardHeader>
             <CardContent>
               {categoryBreakdown.length > 0 ? (
