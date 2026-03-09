@@ -24,6 +24,8 @@ import { Capacitor } from '@capacitor/core';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
+
 const Onboarding = () => {
   const navigate = useNavigate();
   const location = useLocation();

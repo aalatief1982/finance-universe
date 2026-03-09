@@ -8,6 +8,7 @@ import { getFriendlyMessage } from './utils/errorMapper'
 import { ErrorSeverity, ErrorType } from './types/error'
 import { backgroundVendorSyncService } from './services/BackgroundVendorSyncService'
 
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
 const TRACE_PREFIX = '[TRACE][APP_ROOT]'
 let traceCounter = 0
 const GLOBAL_ERROR_DEDUPE_WINDOW_MS = 10_000
