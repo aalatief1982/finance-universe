@@ -200,7 +200,7 @@ const AccountsPage = () => {
       {unmanagedAccounts.length > 0 && (
         <Alert className="border-amber-500/50 bg-amber-500/5 mb-4">
           <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="ml-2">
+          <AlertDescription className="ltr:ml-2 rtl:mr-2">
             <p className="font-medium text-amber-600 mb-2">
               {unmanagedAccounts.length} account{unmanagedAccounts.length > 1 ? 's' : ''} found in transactions but not managed
             </p>
