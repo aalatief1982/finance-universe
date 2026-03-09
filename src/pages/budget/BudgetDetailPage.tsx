@@ -385,8 +385,8 @@ const BudgetDetailPage = () => {
         {budget.notes && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Notes</CardTitle>
-            </CardHeader>
+            <CardTitle className="text-base">{t('detail.notes')}</CardTitle>
+          </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{budget.notes}</p>
             </CardContent>
