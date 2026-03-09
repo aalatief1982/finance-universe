@@ -220,7 +220,7 @@ const BudgetDetailPage = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                   <TrendingDown className="h-3.5 w-3.5" />
-                  <span className="text-xs">Daily Limit</span>
+                  <span className="text-xs">{t('detail.dailyLimit')}</span>
                 </div>
                 <div className="text-lg font-semibold">
                   {formatCurrency(dailyBudgetRemaining, budget.currency)}
