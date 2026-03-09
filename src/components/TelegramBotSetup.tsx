@@ -179,7 +179,7 @@ const TelegramBotSetup: React.FC = () => {
               onCheckedChange={(checked) => updateConfig({ enabled: checked })}
             />
             <Label htmlFor="enable-learning" className="text-sm flex items-center">
-              <Brain className="h-4 w-4 mr-1" />
+              <Brain className="h-4 w-4 ltr:mr-1 rtl:ml-1" />
               Smart learning is {config.enabled ? 'enabled' : 'disabled'}
             </Label>
           </div>

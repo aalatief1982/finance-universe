@@ -496,7 +496,7 @@ const toggleSkipAll = () => {
             <p className="text-sm text-gray-500 break-words">{txn.rawMessage}</p>
             <div className="flex items-center gap-1">
               {txn.confidence !== undefined && (
-                <Badge variant={badgeVariant} className="shrink-0 ltr:ml-2 rtl:mr-2">
+                <Badge variant={badgeVariant} className="shrink-0 ltr:ml-2 rtl:mrr:ml-2 rtl:mr-2">
                   {Math.round(txn.confidence * 100)}%
                 </Badge>
               )}
@@ -648,7 +648,7 @@ const toggleSkipAll = () => {
               <Checkbox
                 checked={txn.alwaysApply || false}
                 onCheckedChange={checked => handleAlwaysApplyChange(index, !!checked)}
-                className="mr-2"
+              ltr:mr-2 rtl:mlclassName="mr-2"
                 aria-labelledby={`always-apply-label-${index}`}
               />
               <label id={`always-apply-label-${index}`} className="text-sm" htmlFor={`always-apply-${index}`}>

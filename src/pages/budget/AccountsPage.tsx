@@ -200,7 +200,7 @@ const AccountsPage = () => {
       {unmanagedAccounts.length > 0 && (
         <Alert className="border-amber-500/50 bg-amber-500/5 mb-4">
           <AlertTriangle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="ltr:ml-2 rtl:mrr:ml-2 rtl:mrr:ml-2 rtl:mr-2">
+          <AlertDescription className="ltr:ml-2 rtl:mrr:ml-2 rtl:mrr:ml-2 rtl:mrr:ml-2 rtl:mr-2">
             <p className="font-medium text-amber-600 mb-2">
               {unmanagedAccounts.length} account{unmanagedAccounts.length > 1 ? 's' : ''} found in transactions but not managed
             </p>
@@ -213,7 +213,7 @@ const AccountsPage = () => {
                   onClick={() => handleImportUnmanaged(name)}
                 >
                   {name}
-                 ltr:ml-1 rtl:mrPlus classNltr:ml-1 rtl:mre="h-3 w-3 ml-1" />
+    ltr:ml-1 rtl:mr           ltr:ml-1 rtl:mrPlus classNltr:ml-1 rtl:mre="h-3 w-3 ml-1" />
                 </Badge>
               ))}
             </div>
@@ -230,7 +230,7 @@ const AccountsPage = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Add your bank accounts, cash, crypto wallets and more.
             </p>
-            <Button onClick={openAddDialog}>
+            <Button onClick={opeltr:mr-2 rtl:mlddDialog}>
              ltr:mr-2 rtl:mlPlus className="h-4 w-4 mr-2" />
               Add First Account
             </Button>
@@ -254,7 +254,7 @@ const AccountsPage = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold truncate">{acc.name}</h3>
-                        <div className="flex items-center gap-1 ml-2">
+                        <ltr:ml-2 rtl:mrv className="flex items-center gap-1 ml-2">
                           <Button
                             variant="ghost"
                             size="icon"

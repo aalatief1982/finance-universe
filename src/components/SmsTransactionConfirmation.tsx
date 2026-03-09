@@ -310,8 +310,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               {transaction.subcategory && ` / ${transaction.subcategory}`}
             </p>
           </div>
-          <div className="flex gap
-            <Button 
+          <div className="flex gap         <Button 
               size="sm" 
               variant="outline" 
               className="p-1 h-8 w-8"
@@ -486,8 +485,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               />
             </div>
             
-            <div className="flex justify-end spacgapt-2">
-              <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+            <div className="flex justify-end spacgaptgap            <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
               <Button onClick={handleSaveEdit}>Save</Button>
             </div>
           </div>
@@ -521,8 +519,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               />
             </div>
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setAddPersonOpen(false)}>Cancel</Button>
+          <div className="flex justify-end space-x-gap         <Button variant="outline" onClick={() => setAddPersonOpen(false)}>Cancel</Button>
             <Button onClick={handleSavePerson}>Save</Button>
           </div>
         </DialogContent>

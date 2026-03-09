@@ -264,36 +264,32 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <div key={category.id} className="category-item">
         <div 
           className={`flex items-center p-2 rounded-md hover:bg-muted/50 ${
-            level > 0 ? 'ltr:ml-6 rtl:mrr:ml-6 rtl:mrr:ml-6 rtl:mrr:ml-6 rtl:mrr:ml-6 rtl:mr-6' : ''
+            level > 0 ? 'ltr:ml-6 rtl:mrr:ml-6 rtl:mrr:ml-6 rtl:mrr:ml-6 rtl:mrr:ml-6 rtl:mrr:ml-6 rtl:mr-6' : ''
           }`}
         >
           <div className="flex-1 flex items-center">
             {hasSubcategories && (
               <Button 
-                variant="ghost" 
+                variant="gltr:mr-1 rtl:mlst" 
       ltr:mr-1 rtl:ml        sizltr:mr-1 rtl:ml"sm" 
      ltr:mr-1 rtl:ml         clltr:mr-1 rtl:mlsName="p-1 mr-1" 
                 onClick={() => toggleExpand(category.id)}
               >
-                {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-              </Button>
+                {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}ltr:mr-2 rtl:ml             </Button>
  ltr:mr-2 rtl:ml         )}
             ltr:mr-2 rtl:ml           <div 
        ltr:mr-2 rtl:ml     className="w-4 h-4 mr-2 rounded-full" 
               style={{ backgroundColor: category.metadata?.color || '#8B5CF6' }} 
-            />
-            
-            {hasltr:mr-2 rtl:ml-2" /> : <Folder size={18} className="ltr:mr-2 rtl:ml:mr-2 rtl:ml-2" /> : <Folder size={18} className="ltr:mr-2 rtl:ml2" /> : <Folder size={18} className="mr-2" />
+     ltr:mr-2 rtl:ml-2" /> : <Folder size={18} className="ltr:mr-2 rtl:ml:mr-2 rtl:ml-2" /> : <Folder size={18} className="ltr:mr-2 rtl:ml:mr-2 rtl:ml-2" /> : <Folder size={18} className="ltr:mr-2 rtl:ml2" /> : <Folder size={18} className="mr-2" />
             ) : null}
             
-            <span className="font-medium">{category.name}</span>
+            <span classltr:ml-2 rtl:mrme="font-medium">{category.name}</span>
             
           ltr:ml-2 rtl:mr{category.metadata?.budget && (
               <span className="ml-2 text-sm text-muted-foreground">
                 Budget: ${category.metadata.budget}
               </span>
-            )}
-          </div>
+         gap         </div>
           
           <div className="flex items-center space-x-1">
             <Button 

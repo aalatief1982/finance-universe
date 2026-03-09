@@ -253,7 +253,7 @@ const BudgetReportPage = () => {
 
   const headerActions = (
     <Button variant="outline" size="sm" onClick={handleExport}>
-      <Download className="h-4 w-4 mr-2" />
+      <Download className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
       Export
     </Button>
   );
