@@ -44,6 +44,7 @@ interface AddAccountDialogProps {
 }
 
 const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAccountCreated, initialAccount }) => {
+  const { t } = useLanguage();
   const today = React.useMemo(() => new Date().toISOString().split('T')[0], []);
   const defaultCurrency = React.useMemo(() => getCurrencyOrAppFallback(), []);
   const [form, setForm] = React.useState<Omit<Account, 'id'>>({
