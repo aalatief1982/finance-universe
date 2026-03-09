@@ -254,10 +254,10 @@ const BudgetDetailPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <RotateCcw className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Rollover</span>
+                <span className="text-muted-foreground">{t('detail.rollover')}</span>
               </div>
               <Badge variant={budget.rollover ? 'default' : 'secondary'}>
-                {budget.rollover ? 'Enabled' : 'Disabled'}
+                {budget.rollover ? t('detail.enabled') : t('detail.disabled')}
               </Badge>
             </div>
 
