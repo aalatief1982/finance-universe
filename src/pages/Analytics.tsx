@@ -79,7 +79,7 @@ const AnalyticsDeltaSection: React.FC<{
         <button type="button" onClick={onScrollToDrivers} className="text-left">
           <Card>
             <CardContent className="py-4">
-              <p className="text-xs text-muted-foreground">Spending vs previous period</p>
+              <p className="text-xs text-muted-foreground">{t('analytics.spendingVsPrevious')}</p>
               <div className="mt-2 flex items-center justify-between">
                 <div>
                   <p className="text-lg font-semibold">{spendingDeltaPercent.toFixed(1)}%</p>
