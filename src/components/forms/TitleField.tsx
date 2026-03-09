@@ -22,6 +22,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from './transaction-form-schema';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TitleFieldProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -30,6 +31,7 @@ interface TitleFieldProps {
 const TitleField: React.FC<TitleFieldProps> = ({
   form
 }) => {
+  const { t } = useLanguage();
   return (
     <FormField
       control={form.control}
