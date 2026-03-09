@@ -717,9 +717,8 @@ const Settings = () => {
                       } else {
                         if (canonicalStatus.permanentlyDenied) {
                           toast({
-                            title: 'SMS permission required',
-                            description:
-                              'Enable SMS access in Android Settings to continue.',
+                            title: t('toast.smsPermissionRequired'),
+                            description: t('toast.smsPermissionRequiredDesc'),
                             variant: 'destructive',
                           });
                         }
