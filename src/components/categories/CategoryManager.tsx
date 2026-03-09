@@ -203,8 +203,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       }
       
       toast({
-        title: "Category created",
-        description: `New category "${values.name}" has been created.`,
+        title: t('toast.categoryCreated'),
+        description: `${t('category.created')} "${values.name}" ${t('category.createdDesc')}`,
       });
     }
     
