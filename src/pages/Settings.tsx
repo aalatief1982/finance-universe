@@ -631,22 +631,22 @@ const Settings = () => {
           
           <LockedFeature
             isLocked={!betaActive}
-            featureName="Read SMS Transactions"
+            featureName={t('settings.readSmsTransactions')}
             onLockedClick={() => handleLockedFeatureClick('Read SMS Transactions')}
           >
             {backgroundSmsEnabled ? (
               <div className="space-y-0.5">
-                <Label>Read SMS Transactions</Label>
-                <p className="text-sm text-muted-foreground">SMS permission is enabled</p>
+                <Label>{t('settings.readSmsTransactions')}</Label>
+                <p className="text-sm text-muted-foreground">{t('settings.smsPermissionEnabled')}</p>
               </div>
             ) : (
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="sms-auto-import">
-                    Read SMS Transactions
+                    {t('settings.readSmsTransactions')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow Xpensia to read your bank SMS messages and import transactions automatically
+                    {t('settings.smsPermissionDesc')}
                   </p>
                 </div>
                 <Switch
