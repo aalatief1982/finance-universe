@@ -155,12 +155,12 @@ const DashboardStats = ({ income, expenses, balance, previousBalance, currencyCo
         </TooltipProvider>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
+      <motion.div className="h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Card className="overflow-hidden border border-border" role="button">
-                <CardContent className="p-[var(--card-padding)]">
+              <Card className="overflow-hidden border border-border h-full" role="button">
+                <CardContent className="p-[var(--card-padding)] h-full">
                   <div className="flex justify-between items-start">
                     <p className="flex-1 text-center text-sm font-medium text-muted-foreground">{t('home.balance')} [{resolvedCurrency}]</p>
                     <div className={`${balance >= 0 ? 'text-info' : 'text-destructive'}`}>
