@@ -170,9 +170,9 @@ const Settings = () => {
       setAdminMode(true);
       setShowPinDialog(false);
       setAdminPin('');
-      toast({ title: 'Admin mode activated' });
+      toast({ title: t('toast.adminActivated') });
     } else {
-      toast({ title: 'Invalid PIN', variant: 'destructive' });
+      toast({ title: t('toast.invalidPin'), variant: 'destructive' });
     }
   };
 
