@@ -824,7 +824,7 @@ const Settings = () => {
         <Dialog open={showPinDialog} onOpenChange={setShowPinDialog}>
           <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Enter Admin PIN</DialogTitle>
+              <DialogTitle>{t('settings.enterAdminPin')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <Input
