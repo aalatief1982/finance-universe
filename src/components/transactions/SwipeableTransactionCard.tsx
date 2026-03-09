@@ -10,6 +10,7 @@ import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SwipeableTransactionCardProps {
   transaction: Transaction;
