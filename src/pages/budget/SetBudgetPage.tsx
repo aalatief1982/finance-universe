@@ -1006,7 +1006,7 @@ const SetBudgetPage = () => {
           </p>
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
             <Button variant="outline" className="w-full sm:w-auto" onClick={() => setPendingDeleteAction(null)}>
-              Cancel
+              {t('setBudget.cancel')}
             </Button>
             <Button
               variant="destructive"
