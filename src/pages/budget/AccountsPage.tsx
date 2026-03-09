@@ -389,7 +389,7 @@ const AccountsPage = () => {
             
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-start-date">
-                Start Date
+                {t('accounts.startDate')}
               </label>
               <DatePicker
                 date={new Date(form.startDate)}
