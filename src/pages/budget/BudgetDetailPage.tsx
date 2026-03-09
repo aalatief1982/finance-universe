@@ -351,7 +351,7 @@ const BudgetDetailPage = () => {
           <CardContent>
             {transactions.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
-                No transactions in this period
+                {t('detail.noTransactions')}
               </p>
             ) : (
               <div className="space-y-3">
