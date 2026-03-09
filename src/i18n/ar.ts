@@ -598,5 +598,143 @@ export const ar: Record<string, string> = {
   'analytics.fix': 'إصلاح',
   'analytics.confirmRecurring': 'تأكيد التكرار',
 
+  // ── Batch 2 ──
+
+  // Profile
+  'profile.editProfile': 'تعديل الملف الشخصي',
+  'profile.newUser': 'مستخدم جديد',
+  'profile.dangerZone': 'منطقة الخطر',
+  'profile.dangerZoneDesc': 'حذف حسابك نهائياً وجميع البيانات المرتبطة.',
+  'profile.deleteAccount': 'حذف الحساب',
+  'profile.deleteConfirmTitle': 'هل أنت متأكد تماماً؟',
+  'profile.deleteConfirmDesc': 'لا يمكن التراجع عن هذا الإجراء. سيتم حذف حسابك نهائياً وإزالة بياناتك من خوادمنا.',
+  'profile.accountDeleted': 'تم حذف الحساب',
+  'profile.accountDeletedDesc': 'تم حذف حسابك نهائياً.',
+  'profile.fullName': 'الاسم الكامل',
+  'profile.fullNameRequired': 'الاسم الكامل مطلوب',
+  'profile.email': 'البريد الإلكتروني',
+  'profile.mobile': 'الجوال',
+  'profile.enterFullName': 'أدخل اسمك الكامل',
+  'profile.enterEmail': 'أدخل بريدك الإلكتروني',
+  'profile.enterMobile': 'أدخل رقم جوالك',
+  'profile.saveChanges': 'حفظ التغييرات',
+  'profile.profileUpdated': 'تم تحديث الملف الشخصي',
+  'profile.profileUpdatedDesc': 'تم حفظ ملفك الشخصي.',
+  'profile.loadingImage': 'جارٍ تحميل الصورة...',
+
+  // Exchange Rate Dialog
+  'fx.editRate': 'تعديل سعر الصرف',
+  'fx.addRate': 'إضافة سعر صرف',
+  'fx.fromCurrency': 'من العملة',
+  'fx.toCurrencyBase': 'إلى العملة (الأساسية)',
+  'fx.rate': 'السعر',
+  'fx.effectiveDate': 'تاريخ السريان',
+  'fx.effectiveDateHint': 'ينطبق السعر على المعاملات في هذا التاريخ أو بعده',
+  'fx.notesOptional': 'ملاحظات (اختياري)',
+  'fx.notesPlaceholder': 'مثال: سعر تحويل بنكي',
+  'fx.ratePlaceholder': 'مثال: 3.75',
+  'fx.addNewCurrency': 'إضافة عملة جديدة',
+  'fx.selectCurrency': 'يرجى اختيار عملة',
+  'fx.invalidRate': 'يرجى إدخال سعر صالح أكبر من 0',
+  'fx.selectDate': 'يرجى اختيار تاريخ السريان',
+  'fx.rateUpdated': 'تم تحديث سعر الصرف',
+  'fx.updateRate': 'تحديث السعر',
+  'fx.addRateBtn': 'إضافة السعر',
+  'fx.rateCount': 'سعر',
+  'fx.ratesCount': 'أسعار',
+
+  // Transaction Card actions
+  'txCard.edit': 'تعديل',
+  'txCard.delete': 'حذف',
+
+  // TransactionsByDate
+  'txByDate.net': 'الصافي',
+  'txByDate.deleteConfirm': 'هل أنت متأكد من حذف هذه المعاملة؟',
+  'txByDate.deleteTransaction': 'حذف المعاملة',
+  'txByDate.ok': 'موافق',
+
+  // Transaction Filters
+  'filters.title': 'الفلاتر',
+  'filters.category': 'الفئة',
+  'filters.allCategories': 'كل الفئات',
+  'filters.type': 'النوع',
+  'filters.allTypes': 'كل الأنواع',
+  'filters.income': 'دخل',
+  'filters.expense': 'مصروف',
+  'filters.dateRange': 'نطاق التاريخ',
+  'filters.startDate': 'تاريخ البدء',
+  'filters.endDate': 'تاريخ الانتهاء',
+  'filters.advancedFilters': 'فلاتر متقدمة',
+  'filters.amountRange': 'نطاق المبلغ',
+  'filters.sortBy': 'ترتيب حسب',
+  'filters.dateNewest': 'التاريخ (الأحدث)',
+  'filters.dateOldest': 'التاريخ (الأقدم)',
+  'filters.amountHighest': 'المبلغ (الأعلى)',
+  'filters.amountLowest': 'المبلغ (الأدنى)',
+  'filters.titleAZ': 'العنوان (أ-ي)',
+  'filters.titleZA': 'العنوان (ي-أ)',
+  'filters.clearAll': 'مسح الكل',
+  'filters.applyFilters': 'تطبيق الفلاتر',
+  'filters.clear': 'مسح',
+  'filters.clearDates': 'مسح التواريخ',
+  'filters.amount': 'المبلغ:',
+
+  // Dashboard
+  'dashboard.hi': 'مرحباً',
+  'dashboard.welcomeDashboard': 'مرحباً بك في لوحة التحكم',
+  'dashboard.financesOverview': 'إليك نظرة عامة على أموالك',
+  'dashboard.clickToSee': 'اضغط لعرض معاملات هذه الفترة',
+
+  // Recent Transactions
+  'recentTx.title': 'المعاملات الأخيرة',
+  'recentTx.all': 'الكل',
+  'recentTx.income': 'الدخل',
+  'recentTx.expenses': 'المصروفات',
+  'recentTx.refresh': 'تحديث المعاملات',
+  'recentTx.noFound': 'لا توجد معاملات',
+  'recentTx.importSms': 'استيراد الرسائل',
+  'recentTx.addManually': 'إضافة يدوياً',
+  'recentTx.viewAll': 'عرض كل المعاملات',
+
+  // Unconverted Warning Banner
+  'fxBanner.missingRate': '{count} معاملة تفتقر لسعر الصرف',
+  'fxBanner.missingRates': '{count} معاملات تفتقر لسعر الصرف',
+  'fxBanner.couldNotConvert': 'معاملات بعملة {currencies} لا يمكن تحويلها لعملتك الأساسية. قد تكون الإجماليات غير مكتملة.',
+  'fxBanner.andMore': 'و {count} أخرى',
+  'fxBanner.reviewTransactions': 'مراجعة المعاملات',
+  'fxBanner.dismiss': 'تجاهل',
+
+  // Expense Chart
+  'chart.expenseAnalysis': 'تحليل المصروفات',
+  'chart.categorizedView': 'عرض مصنف لإنفاقك',
+  'chart.byCategory': 'حسب الفئة',
+  'chart.subcategories': 'الفئات الفرعية',
+  'chart.noDataToShow': 'لا توجد بيانات لعرضها بعد',
+  'chart.notEnoughData': 'لا توجد بيانات كافية لعرض تفصيل ذي معنى',
+  'chart.noDataAvailable': 'لا توجد بيانات بعد. حاول إضافة بعض المعاملات أولاً.',
+
+  // SmartPasteSummary
+  'smartPaste.reviewBeforeSaving': 'راجع قبل الحفظ',
+  'smartPaste.looksGood': 'يبدو جيداً',
+  'smartPaste.needsQuickReview': 'يحتاج مراجعة سريعة',
+  'smartPaste.needsCarefulReview': 'يحتاج مراجعة دقيقة',
+  'smartPaste.qualityCheck': 'فحص الجودة',
+  'smartPaste.confidenceEstimate': 'تقدير الثقة',
+  'smartPaste.detailsNeedConfirmation': 'بعض التفاصيل المهمة قد تحتاج تأكيداً.',
+  'smartPaste.categoryNeedsReview': 'قد يحتاج التصنيف مراجعة قبل الحفظ.',
+  'smartPaste.savingHelps': 'الحفظ يساعد في تحسين اكتشاف الرسائل المشابهة على هذا الجهاز.',
+  'smartPaste.usedPastConfirmations': 'استخدمنا تأكيداتك السابقة لتحسين هذا الاقتراح.',
+
+  // AvatarGreeting
+  'greeting.goodMorning': 'صباح الخير',
+  'greeting.goodAfternoon': 'مساء الخير',
+  'greeting.goodEvening': 'مساء الخير',
+
+  // Transactions page date pickers
+  'datePicker.start': 'البداية',
+  'datePicker.end': 'النهاية',
+  'datePicker.from': 'من',
+  'datePicker.to': 'إلى',
+
 };
 

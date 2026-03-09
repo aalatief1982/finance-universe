@@ -598,5 +598,143 @@ export const en: Record<string, string> = {
   'analytics.fix': 'Fix',
   'analytics.confirmRecurring': 'Confirm recurring',
 
+  // ── Batch 2 ──
+
+  // Profile
+  'profile.editProfile': 'Edit Profile',
+  'profile.newUser': 'New User',
+  'profile.dangerZone': 'Danger Zone',
+  'profile.dangerZoneDesc': 'Permanently delete your account and all associated data.',
+  'profile.deleteAccount': 'Delete Account',
+  'profile.deleteConfirmTitle': 'Are you absolutely sure?',
+  'profile.deleteConfirmDesc': 'This action cannot be undone. This will permanently delete your account and remove your data from our servers.',
+  'profile.accountDeleted': 'Account deleted',
+  'profile.accountDeletedDesc': 'Your account has been permanently deleted.',
+  'profile.fullName': 'Full Name',
+  'profile.fullNameRequired': 'Full name is required',
+  'profile.email': 'Email',
+  'profile.mobile': 'Mobile',
+  'profile.enterFullName': 'Enter your full name',
+  'profile.enterEmail': 'Enter your email address',
+  'profile.enterMobile': 'Enter your mobile number',
+  'profile.saveChanges': 'Save Changes',
+  'profile.profileUpdated': 'Profile updated',
+  'profile.profileUpdatedDesc': 'Your profile has been saved.',
+  'profile.loadingImage': 'Loading image...',
+
+  // Exchange Rate Dialog
+  'fx.editRate': 'Edit Exchange Rate',
+  'fx.addRate': 'Add Exchange Rate',
+  'fx.fromCurrency': 'From Currency',
+  'fx.toCurrencyBase': 'To Currency (Base)',
+  'fx.rate': 'Rate',
+  'fx.effectiveDate': 'Effective Date',
+  'fx.effectiveDateHint': 'Rate applies to transactions on or after this date',
+  'fx.notesOptional': 'Notes (optional)',
+  'fx.notesPlaceholder': 'e.g., Bank transfer rate',
+  'fx.ratePlaceholder': 'e.g., 3.75',
+  'fx.addNewCurrency': 'Add new currency',
+  'fx.selectCurrency': 'Please select a currency',
+  'fx.invalidRate': 'Please enter a valid rate greater than 0',
+  'fx.selectDate': 'Please select an effective date',
+  'fx.rateUpdated': 'Exchange rate updated',
+  'fx.updateRate': 'Update Rate',
+  'fx.addRateBtn': 'Add Rate',
+  'fx.rateCount': 'rate',
+  'fx.ratesCount': 'rates',
+
+  // Transaction Card actions
+  'txCard.edit': 'Edit',
+  'txCard.delete': 'Delete',
+
+  // TransactionsByDate
+  'txByDate.net': 'Net',
+  'txByDate.deleteConfirm': 'Are you sure you want to delete this transaction?',
+  'txByDate.deleteTransaction': 'Delete transaction',
+  'txByDate.ok': 'OK',
+
+  // Transaction Filters
+  'filters.title': 'Filters',
+  'filters.category': 'Category',
+  'filters.allCategories': 'All Categories',
+  'filters.type': 'Type',
+  'filters.allTypes': 'All Types',
+  'filters.income': 'Income',
+  'filters.expense': 'Expense',
+  'filters.dateRange': 'Date Range',
+  'filters.startDate': 'Start Date',
+  'filters.endDate': 'End Date',
+  'filters.advancedFilters': 'Advanced Filters',
+  'filters.amountRange': 'Amount Range',
+  'filters.sortBy': 'Sort By',
+  'filters.dateNewest': 'Date (newest)',
+  'filters.dateOldest': 'Date (oldest)',
+  'filters.amountHighest': 'Amount (highest)',
+  'filters.amountLowest': 'Amount (lowest)',
+  'filters.titleAZ': 'Title (A-Z)',
+  'filters.titleZA': 'Title (Z-A)',
+  'filters.clearAll': 'Clear All',
+  'filters.applyFilters': 'Apply Filters',
+  'filters.clear': 'Clear',
+  'filters.clearDates': 'Clear Dates',
+  'filters.amount': 'Amount:',
+
+  // Dashboard
+  'dashboard.hi': 'Hi',
+  'dashboard.welcomeDashboard': 'Welcome to your Dashboard',
+  'dashboard.financesOverview': "Here's an overview of your finances",
+  'dashboard.clickToSee': 'Click to see transactions for this period',
+
+  // Recent Transactions
+  'recentTx.title': 'Recent Transactions',
+  'recentTx.all': 'All',
+  'recentTx.income': 'Income',
+  'recentTx.expenses': 'Expenses',
+  'recentTx.refresh': 'Refresh transactions',
+  'recentTx.noFound': 'No transactions found',
+  'recentTx.importSms': 'Import SMS',
+  'recentTx.addManually': 'Add Manually',
+  'recentTx.viewAll': 'View All Transactions',
+
+  // Unconverted Warning Banner
+  'fxBanner.missingRate': '{count} transaction missing exchange rate',
+  'fxBanner.missingRates': '{count} transactions missing exchange rate',
+  'fxBanner.couldNotConvert': 'Transactions in {currencies} could not be converted to your default currency. Totals may be incomplete.',
+  'fxBanner.andMore': 'and {count} more',
+  'fxBanner.reviewTransactions': 'Review Transactions',
+  'fxBanner.dismiss': 'Dismiss',
+
+  // Expense Chart
+  'chart.expenseAnalysis': 'Expense Analysis',
+  'chart.categorizedView': 'Categorized view of your spending',
+  'chart.byCategory': 'By Category',
+  'chart.subcategories': 'Subcategories',
+  'chart.noDataToShow': 'No data to show yet',
+  'chart.notEnoughData': 'Not enough data to show a meaningful breakdown',
+  'chart.noDataAvailable': 'No data available yet. Try adding a few transactions first.',
+
+  // SmartPasteSummary
+  'smartPaste.reviewBeforeSaving': 'Review before saving',
+  'smartPaste.looksGood': 'Looks good',
+  'smartPaste.needsQuickReview': 'Needs quick review',
+  'smartPaste.needsCarefulReview': 'Needs careful review',
+  'smartPaste.qualityCheck': 'Quality check',
+  'smartPaste.confidenceEstimate': 'Confidence estimate',
+  'smartPaste.detailsNeedConfirmation': 'Some important details may still need confirmation.',
+  'smartPaste.categoryNeedsReview': 'Category may need review before you save.',
+  'smartPaste.savingHelps': 'Saving helps improve similar message detection on this device.',
+  'smartPaste.usedPastConfirmations': 'We used your past confirmations to improve this suggestion.',
+
+  // AvatarGreeting
+  'greeting.goodMorning': 'Good Morning',
+  'greeting.goodAfternoon': 'Good Afternoon',
+  'greeting.goodEvening': 'Good Evening',
+
+  // Transactions page date pickers
+  'datePicker.start': 'Start',
+  'datePicker.end': 'End',
+  'datePicker.from': 'From',
+  'datePicker.to': 'To',
+
 };
 
