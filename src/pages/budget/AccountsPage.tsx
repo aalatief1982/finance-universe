@@ -134,7 +134,7 @@ const AccountsPage = () => {
   const handleSave = () => {
     if (!editingAccount) return;
     if (!form.name.trim()) {
-      toast({ title: 'Account name is required', variant: 'destructive' });
+      toast({ title: t('toast.accountNameRequired'), variant: 'destructive' });
       return;
     }
 
