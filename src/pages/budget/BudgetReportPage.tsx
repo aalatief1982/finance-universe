@@ -493,8 +493,8 @@ const BudgetReportPage = () => {
                 {budgetVsActual.map(item => (
                   <tr key={item.id} className="border-b last:border-0">
                     <td className="py-2">{item.name}</td>
-                    <td className="py-2 text-right">{formatCurrency(item.budget)}</td>
-                    <td className="py-2 text-right">{formatCurrency(item.spent)}</td>
+                    <td className="py-2 ltr:text-right rtl:text-left">{formatCurrency(item.budget)}</td>
+                    <td className="py-2 ltr:text-right rtl:text-left">{formatCurrency(item.spent)}</td>
                     <td className="py-2 text-right">
                       <Badge 
                         variant={item.percentUsed > 100 ? 'destructive' : item.percentUsed > 80 ? 'secondary' : 'outline'}
