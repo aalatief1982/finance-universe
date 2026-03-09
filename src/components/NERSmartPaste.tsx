@@ -28,6 +28,8 @@ import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 
 // SmartPaste component that uses regex-based extraction to parse transaction entities.
 // The learning engine will still learn from the saved transaction in the edit screen.
