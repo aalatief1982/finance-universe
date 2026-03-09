@@ -435,8 +435,8 @@ const Settings = () => {
           });
           
           toast({
-            title: "Import successful",
-            description: "Transactions were imported successfully.",
+            title: t('toast.importSuccessful'),
+            description: t('toast.importSuccessfulDesc'),
           });
           setTimeout(() => window.location.reload(), 1500);
         } catch {
