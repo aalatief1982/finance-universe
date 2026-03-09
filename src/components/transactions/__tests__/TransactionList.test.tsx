@@ -4,6 +4,7 @@ import TransactionList from '../TransactionList';
 import { formatCurrency } from '@/utils/format-utils';
 import type { Transaction } from '@/types/transaction';
 import { vi } from 'vitest';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 
 vi.mock('@/hooks/useMediaQuery', () => ({
   useMediaQuery: () => false,
