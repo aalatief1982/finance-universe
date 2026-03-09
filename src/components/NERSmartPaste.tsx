@@ -120,10 +120,10 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
       if (import.meta.env.MODE === 'development') {
         console.error('[SmartPaste] Extraction error:', err);
       }
-      setError("Could not parse the message. Try again or report.");
+      setError(t('smartEntry.parseError'));
       toast({
-        title: "Message could not be parsed",
-        description: "Try another message or review it manually.",
+        title: t('toast.smartEntry.parseFailed'),
+        description: t('toast.smartEntry.parseFailedDesc'),
         variant: "destructive",
       });
       setConfidence(null);
