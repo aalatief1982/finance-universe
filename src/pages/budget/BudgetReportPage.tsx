@@ -459,8 +459,8 @@ const BudgetReportPage = () => {
                     <Line 
                       type="monotone" 
                       dataKey="budget" 
-                      name="Budget"
-                      stroke="hsl(var(--primary))" 
+                      name={t('report.chartBudget')}
+                      stroke="hsl(var(--primary))"
                       strokeWidth={2}
                       strokeDasharray="5 5"
                       dot={{ r: 4 }}
