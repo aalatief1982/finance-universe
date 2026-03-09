@@ -586,9 +586,9 @@ const Analytics: React.FC = () => {
 
               {!hasHistory && (
                 <Card ref={driversRef as React.RefObject<HTMLDivElement>}>
-                  <CardHeader><CardTitle>Drivers of Change</CardTitle></CardHeader>
+                  <CardHeader><CardTitle>{t('analytics.driversOfChange')}</CardTitle></CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">Not enough history to detect changes yet.</p>
+                    <p className="text-sm text-muted-foreground">{t('analytics.notEnoughHistory')}</p>
                   </CardContent>
                 </Card>
               )}
