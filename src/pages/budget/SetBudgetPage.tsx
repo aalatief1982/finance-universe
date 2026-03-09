@@ -981,7 +981,7 @@ const SetBudgetPage = () => {
                 handleSave(false);
               }}
             >
-              Just Yearly
+              {t('setBudget.justYearly')}
             </Button>
             <Button
               className="w-full sm:w-auto"
