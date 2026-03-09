@@ -1,57 +1,31 @@
+## Plan: Fix Smart Entry Typing Latency
 
+### Status: ✅ Implemented
 
-## Investigation Report: Smart Entry Typing Latency
+### Root Cause
+`parseSmsMessage()` (full parsing pipeline: template matching, regex, localStorage reads, inference) was called on **every keystroke** via a `useEffect` watching `text` in `SmartPaste.tsx`. Additionally, `computeCapturedFields()` ran on every render without memoization.
 
-### Root Cause Found
+### What was changed
 
-**Primary cause (HIGH confidence):** In `SmartPaste.tsx` lines 179-209, a `useEffect` watches `text` and runs `parseSmsMessage(text, senderHint)` on **every keystroke**.
+**`src/components/SmartPaste.tsx`**
+1. **Removed `parseSmsMessage` from keystroke path** — deleted the `useEffect` (formerly L179-209) that ran the full parser on every text change. Match status is now computed only after the user taps "Review Transaction" inside `handleSubmit`.
+2. **Memoized `computeCapturedFields`** — wrapped in `useMemo` with proper dependencies to avoid recalculation on unrelated re-renders.
+3. **Removed unused import** — `parseSmsMessage` import removed since it's no longer called directly.
 
-```javascript
-useEffect(() => {
-    if (!text.trim()) { ... return; }
-    try {
-      const parsed = parseSmsMessage(text, senderHint);  // HEAVY — runs on every keystroke
-      // template matching, regex, localStorage reads, inference...
-```
-
-`parseSmsMessage` (in `structureParser.ts`, 468 lines) is the full structure parser pipeline: template extraction, template hash lookup, localStorage reads, regex matching, vendor inference, account candidate extraction, confidence scoring. This is an expensive operation designed to run once on submit — not on every character typed.
-
-**Secondary cause (MEDIUM):** `computeCapturedFields()` at line 335 runs on every render (not in a `useMemo`), recalculating field status each time the component re-renders from the `text` state change.
-
-**Tertiary cause (LOW):** The prefill confirmation `useEffect` at line 157 also watches `text`, but it's lightweight (ref comparisons only).
-
-### Files Involved
-
-| File | Issue |
-|------|-------|
-| `src/components/SmartPaste.tsx` L179-209 | `parseSmsMessage` called on every keystroke via useEffect |
-| `src/components/SmartPaste.tsx` L335-344 | `computeCapturedFields` not memoized |
-
-### What Does NOT Cause Lag
-- The `onChange` handler on the Textarea (L428) is just `setText(e.target.value)` — fine
-- Voice transcript merge (L118-120) — only on speech result, not on typing
-- `handleSubmit` — only on form submit
-- `NERSmartPaste.tsx` — separate component, no useEffect on text
-
----
-
-## Safe Fix Plan
-
-### Fix 1: Remove `parseSmsMessage` from the keystroke path (PRIMARY FIX)
-
-Remove the `useEffect` at lines 179-209 that calls `parseSmsMessage(text, senderHint)` on every `text` change. The match status preview is a nice-to-have but is the direct cause of lag. Instead, only show match status after the user taps "Review Transaction" (which already calls `parseAndInferTransaction`).
-
-**Change:** Delete the useEffect (lines 179-209). Set `matchStatus` and `hasMatch` inside `handleSubmit` instead, using the result that's already computed there.
-
-### Fix 2: Memoize `computeCapturedFields` (SECONDARY FIX)
-
-Wrap the `computeCapturedFields` call in `useMemo` depending on `detectedTransactions[0]`, `fieldConfidences`, `confidence`, and `matchOrigin`.
-
-### What stays the same
-- Textarea `onChange` handler — unchanged
-- `handleSubmit` and full parse pipeline — unchanged
-- SMS parsing logic — untouched
-- Voice/shared text prefill — unchanged
+### What is NOT changed
+- `handleSubmit` and full parse pipeline — unchanged (runs on Review tap)
+- SMS parsing logic (`structureParser.ts`, `suggestionEngine.ts`) — untouched
+- Voice transcript merging — unchanged
+- Shared text prefill logic — unchanged
 - `NERSmartPaste.tsx` — unchanged
+- `DetectedTransactionCard`, `NoTransactionMessage` — unchanged
 - Parser files — unchanged
 
+### Verification checklist
+- [ ] Typing in Smart Entry is responsive (no lag per keystroke)
+- [ ] Pasting large text works
+- [ ] Shared text prefill works
+- [ ] Voice transcript insertion works
+- [ ] Tapping "Review Transaction" runs parser and shows results
+- [ ] Match status updates correctly after review
+- [ ] No regressions in Smart Entry flow

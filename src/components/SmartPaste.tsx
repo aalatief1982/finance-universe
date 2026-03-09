@@ -16,7 +16,7 @@
  * - [ ] Props have sensible defaults
  * - [ ] Component renders without crashing
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -28,7 +28,7 @@ import { Label } from './ui/label';
 import { Card } from './ui/card';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
-import { parseSmsMessage } from '@/lib/smart-paste-engine/structureParser';
+// parseSmsMessage removed from keystroke path — only used via parseAndInferTransaction on submit
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { getTemplateFailureCount } from '@/lib/smart-paste-engine/templateUtils';
 import { useNavigate } from 'react-router-dom';
@@ -176,37 +176,15 @@ const SmartPaste = ({
     pendingPrefillConfirmationRef.current = null;
   }, [onPrefillConsumed, text]);
 
+  // Match status is now computed only on submit (inside handleSubmit)
+  // to avoid running the heavy parseSmsMessage pipeline on every keystroke.
   useEffect(() => {
     if (!text.trim()) {
       setMatchStatus('Paste a message to begin');
       setHasMatch(false);
       setIsSubmitted(false);
-      return;
     }
-
-    try {
-      const parsed = parseSmsMessage(text, senderHint);
-      if (parsed.matched) {
-        const bank =
-          parsed.inferredFields.vendor?.value ||
-          parsed.directFields.vendor?.value ||
-          parsed.directFields.fromAccount?.value ||
-          '';
-        setMatchStatus(`Matched template from ${bank || 'saved template'}`);
-        setHasMatch(true);
-      } else {
-        setMatchStatus(
-          'Ready to review. We can still extract transaction details from this message.',
-        );
-        setHasMatch(false);
-      }
-    } catch {
-      setMatchStatus(
-        'Ready to review. We can still extract transaction details from this message.',
-      );
-      setHasMatch(false);
-    }
-  }, [text, senderHint]);
+  }, [text]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -289,6 +267,22 @@ const SmartPaste = ({
       setKeywordScore(keywordScore);
       setDebugTrace(debugTrace);
 
+      // Update match status from parsed result (moved out of keystroke path)
+      if (parsed.matched) {
+        const bank =
+          parsed.inferredFields?.vendor?.value ||
+          parsed.directFields?.vendor?.value ||
+          parsed.directFields?.fromAccount?.value ||
+          '';
+        setMatchStatus(`Matched template from ${bank || 'saved template'}`);
+        setHasMatch(true);
+      } else {
+        setMatchStatus(
+          'Ready to review. We can still extract transaction details from this message.',
+        );
+        setHasMatch(false);
+      }
+
       if (import.meta.env.MODE === 'development') {
         // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
       }
@@ -332,15 +326,15 @@ const SmartPaste = ({
     }
   };
 
-  const capturedFieldStatus = computeCapturedFields(
-    detectedTransactions[0],
-    fieldConfidences,
-    {
-      fields: ['amount', 'date', 'vendor', 'category'],
-      confidence: confidence ?? undefined,
-      origin: matchOrigin ?? undefined,
-      matchOrigin: matchOrigin ?? undefined,
-    },
+  const capturedFieldStatus = useMemo(
+    () =>
+      computeCapturedFields(detectedTransactions[0], fieldConfidences, {
+        fields: ['amount', 'date', 'vendor', 'category'],
+        confidence: confidence ?? undefined,
+        origin: matchOrigin ?? undefined,
+        matchOrigin: matchOrigin ?? undefined,
+      }),
+    [detectedTransactions, fieldConfidences, confidence, matchOrigin],
   );
 
   const handlePaste = async () => {
