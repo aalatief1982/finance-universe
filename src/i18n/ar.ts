@@ -564,7 +564,39 @@ export const ar: Record<string, string> = {
   'smartEntry.mic.start': 'بدء الإدخال الصوتي',
   'smartEntry.mic.stop': 'إيقاف الاستماع',
 
+
+  // Home — remaining
+  'home.datePicker.start': 'من',
+  'home.datePicker.end': 'إلى',
+  'home.editTransaction': 'تعديل المعاملة',
+  'home.viewAllAriaLabel': 'عرض كل سجل المعاملات',
+
+  // SMS Inbox (ImportTransactions)
+  'smsInbox.title': 'صندوق الرسائل',
+  'smsInbox.newSms': 'رسائل جديدة',
+  'smsInbox.noNewSms': 'لا توجد رسائل جديدة',
+  'smsInbox.inReview': 'قيد المراجعة',
+  'smsInbox.noItemsInReview': 'لا توجد عناصر قيد المراجعة',
+  'smsInbox.review': 'مراجعة',
+  'smsInbox.continue': 'متابعة',
+  'smsInbox.ignore': 'تجاهل',
+
+  // Settings — additional
+  'settings.cancel': 'إلغاء',
+  'toast.importConfirm': 'سيتم إضافة {count} معاملة إلى {existing} معاملة موجودة. متابعة؟',
+
+  // Analytics — additional keys
+  'analytics.trends': 'الاتجاهات',
+  'analytics.custom': 'مخصص',
+  'analytics.categoryIs': 'فئة',
+  'analytics.categoriesAre': 'فئات',
+  'analytics.budgetRiskDesc': '{count} فئات تقترب أو تتجاوز 80% من الميزانية.',
+  'analytics.missingExchangeRatesDesc': '{count} معاملات تفتقر لأسعار التحويل وقد تؤثر على الإجماليات.',
+  'analytics.uncategorizedTransactionsDesc': '{count} معاملات لا تزال بحاجة لتصنيف لتحليلات أنظف.',
+  'analytics.possibleRecurringDesc': '{count} تجار يبدون متكررين بناءً على الوتيرة الأخيرة.',
+  'analytics.setBudget': 'تعيين ميزانية',
+  'analytics.fix': 'إصلاح',
+  'analytics.confirmRecurring': 'تأكيد التكرار',
+
 };
-
-
 

@@ -170,16 +170,16 @@ const Settings = () => {
       setAdminMode(true);
       setShowPinDialog(false);
       setAdminPin('');
-      toast({ title: 'Admin mode activated' });
+      toast({ title: t('toast.adminActivated') });
     } else {
-      toast({ title: 'Invalid PIN', variant: 'destructive' });
+      toast({ title: t('toast.invalidPin'), variant: 'destructive' });
     }
   };
 
   const handleExitAdminMode = () => {
     deactivateAdminMode();
     setAdminMode(false);
-    toast({ title: 'Admin mode deactivated' });
+    toast({ title: t('toast.adminDeactivated') });
   };
 
   const { updateUserPreferences } = useUser();
@@ -342,8 +342,8 @@ const Settings = () => {
       const transactions = getStoredTransactions();
       if (!transactions.length) {
         toast({
-          title: "No data to export",
-          description: "There are no transactions available to export.",
+          title: t('toast.noDataToExport'),
+          description: t('toast.noDataToExportDesc'),
           variant: "destructive",
         });
         return;
@@ -370,8 +370,8 @@ const Settings = () => {
           encoding: 'utf8' as unknown as import('@capacitor/filesystem').Encoding
         });
         toast({
-          title: 'Export successful',
-          description: `Saved to Documents/${fileName}`
+          title: t('toast.exportSuccessful'),
+          description: `${t('toast.exportSavedTo')}${fileName}`
         });
         return;
       }
@@ -383,13 +383,13 @@ const Settings = () => {
       });
 
       toast({
-        title: 'Export successful',
-        description: 'Your data has been exported successfully.',
+        title: t('toast.exportSuccessful'),
+        description: t('toast.exportedDesc'),
       });
     } catch (error) {
       toast({
-        title: 'Export failed',
-        description: 'An error occurred while exporting your data.',
+        title: t('toast.exportFailed'),
+        description: t('toast.exportFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -419,7 +419,7 @@ const Settings = () => {
 
           const existing = getStoredTransactions();
           const confirmImport = window.confirm(
-            `This will add ${data.length} transactions to your existing ${existing.length}. Continue?`,
+            t('toast.importConfirm').replace('{count}', String(data.length)).replace('{existing}', String(existing.length)),
           );
 
           if (!confirmImport) return;
@@ -435,15 +435,14 @@ const Settings = () => {
           });
           
           toast({
-            title: "Import successful",
-            description: "Transactions were imported successfully.",
+            title: t('toast.importSuccessful'),
+            description: t('toast.importSuccessfulDesc'),
           });
           setTimeout(() => window.location.reload(), 1500);
         } catch {
           toast({
-            title: "Import failed",
-            description:
-              "Make sure the selected file is a valid JSON or CSV file.",
+            title: t('toast.importFailed'),
+            description: t('toast.importFailedDesc'),
             variant: "destructive",
           });
         }
@@ -632,22 +631,22 @@ const Settings = () => {
           
           <LockedFeature
             isLocked={!betaActive}
-            featureName="Read SMS Transactions"
+            featureName={t('settings.readSmsTransactions')}
             onLockedClick={() => handleLockedFeatureClick('Read SMS Transactions')}
           >
             {backgroundSmsEnabled ? (
               <div className="space-y-0.5">
-                <Label>Read SMS Transactions</Label>
-                <p className="text-sm text-muted-foreground">SMS permission is enabled</p>
+                <Label>{t('settings.readSmsTransactions')}</Label>
+                <p className="text-sm text-muted-foreground">{t('settings.smsPermissionEnabled')}</p>
               </div>
             ) : (
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="sms-auto-import">
-                    Read SMS Transactions
+                    {t('settings.readSmsTransactions')}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow Xpensia to read your bank SMS messages and import transactions automatically
+                    {t('settings.smsPermissionDesc')}
                   </p>
                 </div>
                 <Switch
@@ -673,7 +672,7 @@ const Settings = () => {
 
                     // Show spinner
                     setSmsBusy(true);
-                    setSmsBusyMessage('Requesting SMS permission...');
+                    setSmsBusyMessage(t('toast.requestingSmsPermission'));
 
                     try {
                       const currentStatus = await smsPermissionService.checkPermissionStatus();
@@ -695,7 +694,7 @@ const Settings = () => {
                         });
 
                         // Initialize listener and trigger initial import
-                        setSmsBusyMessage('Importing SMS messages...');
+                        setSmsBusyMessage(t('toast.importingSmsMessages'));
                         try {
                           console.log('[Settings] (toggle) Initializing SMS listener and triggering import...');
                           await smsPermissionService.initSmsListener();
@@ -712,15 +711,14 @@ const Settings = () => {
                         }
 
                         toast({
-                          title: 'SMS permission granted',
-                          description: 'Xpensia can now read supported bank SMS messages for import.',
+                          title: t('toast.smsPermissionGranted'),
+                          description: t('toast.smsPermissionGrantedDesc'),
                         });
                       } else {
                         if (canonicalStatus.permanentlyDenied) {
                           toast({
-                            title: 'SMS permission required',
-                            description:
-                              'Enable SMS access in Android Settings to continue.',
+                            title: t('toast.smsPermissionRequired'),
+                            description: t('toast.smsPermissionRequiredDesc'),
                             variant: 'destructive',
                           });
                         }
@@ -768,7 +766,7 @@ const Settings = () => {
 
           <LockedFeature
             isLocked={!betaActive}
-            featureName="Import Data"
+            featureName={t('settings.importData')}
             onLockedClick={() => handleLockedFeatureClick('Import Data')}
           >
             <div className="flex items-center justify-between">
@@ -803,16 +801,16 @@ const Settings = () => {
               className="text-sm text-muted-foreground cursor-default select-none bg-transparent border-0 p-0"
               onClick={handleVersionTap}
             >
-              Version {appVersion || '...'}
+ {t('settings.version')}      Version {appVersion || '...'}
             </button>
             {adminMode && (
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Badge variant="outline" className="text-xs">
                   <ShieldCheck className="h-3 w-3 mr-1" />
-                  Admin Mode
+                  {t('settings.adminMode')}
                 </Badge>
                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleExitAdminMode}>
-                  Exit
+                  {t('settings.exit')}
                 </Button>
               </div>
             )}
@@ -826,7 +824,7 @@ const Settings = () => {
         <Dialog open={showPinDialog} onOpenChange={setShowPinDialog}>
           <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Enter Admin PIN</DialogTitle>
+              <DialogTitle>{t('settings.enterAdminPin')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <Input
@@ -834,11 +832,11 @@ const Settings = () => {
                 inputMode="numeric"
                 value={adminPin}
                 onChange={(e) => setAdminPin(e.target.value)}
-                placeholder="Enter PIN"
+                placeholder={t('settings.enterPin')}
                 onKeyDown={(e) => e.key === 'Enter' && handlePinSubmit()}
               />
               <Button onClick={handlePinSubmit} className="w-full">
-                Unlock
+                {t('settings.unlock')}
               </Button>
             </div>
           </DialogContent>
@@ -851,20 +849,20 @@ const Settings = () => {
       <AlertDialog open={disablePermissionTarget !== null} onOpenChange={(open) => { if (!open) setDisablePermissionTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disable Permission</AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.disablePermission')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Android requires you to disable this permission in system settings.
+              {t('settings.disablePermissionDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('settings.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 await openAndroidAppPermissionsSettings();
                 setDisablePermissionTarget(null);
               }}
             >
-              Open Settings
+              {t('settings.openSettings')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

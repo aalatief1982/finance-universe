@@ -564,7 +564,39 @@ export const en: Record<string, string> = {
   'smartEntry.mic.start': 'Start voice input',
   'smartEntry.mic.stop': 'Stop listening',
 
+
+  // Home — remaining
+  'home.datePicker.start': 'Start',
+  'home.datePicker.end': 'End',
+  'home.editTransaction': 'Edit transaction',
+  'home.viewAllAriaLabel': 'View full transaction history',
+
+  // SMS Inbox (ImportTransactions)
+  'smsInbox.title': 'SMS Inbox',
+  'smsInbox.newSms': 'New SMS',
+  'smsInbox.noNewSms': 'No new SMS',
+  'smsInbox.inReview': 'In review',
+  'smsInbox.noItemsInReview': 'No items in review',
+  'smsInbox.review': 'Review',
+  'smsInbox.continue': 'Continue',
+  'smsInbox.ignore': 'Ignore',
+
+  // Settings — additional
+  'settings.cancel': 'Cancel',
+  'toast.importConfirm': 'This will add {count} transactions to your existing {existing}. Continue?',
+
+  // Analytics — additional keys
+  'analytics.trends': 'Trends',
+  'analytics.custom': 'Custom',
+  'analytics.categoryIs': 'category is',
+  'analytics.categoriesAre': 'categories are',
+  'analytics.budgetRiskDesc': '{count} categories are approaching or above 80% of budget usage.',
+  'analytics.missingExchangeRatesDesc': '{count} transactions are missing conversion rates and may affect totals.',
+  'analytics.uncategorizedTransactionsDesc': '{count} transactions still need categories for cleaner analytics.',
+  'analytics.possibleRecurringDesc': '{count} merchants look recurring based on recent cadence.',
+  'analytics.setBudget': 'Set budget',
+  'analytics.fix': 'Fix',
+  'analytics.confirmRecurring': 'Confirm recurring',
+
 };
-
-
 

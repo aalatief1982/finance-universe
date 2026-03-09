@@ -218,12 +218,12 @@ const Home = () => {
               <DatePicker
                 date={customStart}
                 setDate={setCustomStart}
-                placeholder="Start"
+                placeholder={t('home.datePicker.start')}
               />
               <DatePicker
                 date={customEnd}
                 setDate={setCustomEnd}
-                placeholder="End"
+                placeholder={t('home.datePicker.end')}
               />
             </div>
           )}
@@ -329,7 +329,7 @@ const Home = () => {
                           state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }),
                         })
                       }
-                      aria-label="Edit transaction"
+                      aria-label={t('home.editTransaction')}
                       role="button"
                       tabIndex={0}
                       className="bg-card text-card-foreground dark:bg-black dark:text-white rounded-lg shadow-sm border px-4 py-3 hover:shadow-md transition-all cursor-pointer"
@@ -406,7 +406,7 @@ const Home = () => {
               <div className="flex justify-start mt-3 pb-[calc(var(--bottom-nav-height,0px)+var(--safe-area-bottom)+0.25rem)]">
                 <button
                   onClick={() => navigate("/transactions")}
-                  aria-label="View full transaction history"
+                  aria-label={t('home.viewAllAriaLabel')}
                   className="text-sm text-blue-600 hover:underline flex items-center space-x-1"
                 >
                   <span>{t('home.viewAll')}</span>

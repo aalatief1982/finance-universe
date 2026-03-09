@@ -368,13 +368,13 @@ const ImportTransactions = () => {
         >
           <Card ref={smsInboxRef}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">SMS Inbox</CardTitle>
+              <CardTitle className="text-base">{t('smsInbox.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
-                <p className="text-sm font-medium">New SMS</p>
+                <p className="text-sm font-medium">{t('smsInbox.newSms')}</p>
                 {newItems.length === 0 ? (
-                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">No new SMS</div>
+                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">{t('smsInbox.noNewSms')}</div>
                 ) : (
                   newItems.map((item) => (
                     <div
@@ -387,9 +387,9 @@ const ImportTransactions = () => {
                         <p className="text-xs text-muted-foreground">{item.receivedAt.slice(0, 16)}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button onClick={() => void handleReviewSms(item)}>Review</Button>
+                        <Button onClick={() => void handleReviewSms(item)}>{t('smsInbox.review')}</Button>
                         <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>
-                          Ignore
+                          {t('smsInbox.ignore')}
                         </Button>
                       </div>
                     </div>
@@ -398,9 +398,9 @@ const ImportTransactions = () => {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">In review</p>
+                <p className="text-sm font-medium">{t('smsInbox.inReview')}</p>
                 {openedItems.length === 0 ? (
-                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">No items in review</div>
+                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">{t('smsInbox.noItemsInReview')}</div>
                 ) : (
                   openedItems.map((item) => (
                     <div
@@ -413,9 +413,9 @@ const ImportTransactions = () => {
                         <p className="text-xs text-muted-foreground">{item.receivedAt.slice(0, 16)}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button onClick={() => void handleContinueSms(item)}>Continue</Button>
+                        <Button onClick={() => void handleContinueSms(item)}>{t('smsInbox.continue')}</Button>
                         <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>
-                          Ignore
+                          {t('smsInbox.ignore')}
                         </Button>
                       </div>
                     </div>
