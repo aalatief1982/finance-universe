@@ -191,12 +191,12 @@ const BudgetDetailPage = () => {
                   "font-medium",
                   isOverBudget ? "text-destructive" : "text-foreground"
                 )}>
-                  {Math.round(percentUsed)}% used
+                  {Math.round(percentUsed)}% {t('detail.used')}
                 </span>
                 <span className="text-muted-foreground">
                   {isOverBudget 
-                    ? `${formatCurrency(Math.abs(remaining), budget.currency)} over`
-                    : `${formatCurrency(remaining, budget.currency)} left`
+                    ? `${formatCurrency(Math.abs(remaining), budget.currency)} ${t('detail.over')}`
+                    : `${formatCurrency(remaining, budget.currency)} ${t('detail.left')}`
                   }
                 </span>
               </div>
