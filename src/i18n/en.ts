@@ -544,4 +544,16 @@ export const en: Record<string, string> = {
   'toast.smartEntry.sharedBlockedDesc': 'Smart Entry already has unsaved text. Clear it first to use the shared text.',
   'toast.smartEntry.templateFailing': 'Parsing failed repeatedly — help us improve this template',
 
+
+  // DetectedTransactionCard
+  'smartEntry.card.smartMatch': 'Smart Match',
+  'smartEntry.card.originTemplate': 'Template Match',
+  'smartEntry.card.originStructure': 'Structure Match',
+  'smartEntry.card.originMl': 'AI Extracted',
+  'smartEntry.card.originFallback': 'Fallback',
+  'smartEntry.card.originUnknown': 'Unknown',
+  'smartEntry.card.noDescription': 'No description',
+  'smartEntry.card.addTransaction': 'Add Transaction',
+
 };
+

@@ -544,4 +544,16 @@ export const ar: Record<string, string> = {
   'toast.smartEntry.sharedBlockedDesc': 'يحتوي الإدخال الذكي على نص غير محفوظ. امسحه أولاً لاستخدام النص المشارك.',
   'toast.smartEntry.templateFailing': 'فشل التحليل بشكل متكرر — ساعدنا في تحسين هذا القالب',
 
+
+  // DetectedTransactionCard
+  'smartEntry.card.smartMatch': 'تطابق ذكي',
+  'smartEntry.card.originTemplate': 'تطابق قالب',
+  'smartEntry.card.originStructure': 'تطابق بنية',
+  'smartEntry.card.originMl': 'استخراج ذكي',
+  'smartEntry.card.originFallback': 'احتياطي',
+  'smartEntry.card.originUnknown': 'غير معروف',
+  'smartEntry.card.noDescription': 'بدون وصف',
+  'smartEntry.card.addTransaction': 'إضافة معاملة',
+
 };
+
