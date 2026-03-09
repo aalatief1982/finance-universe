@@ -473,7 +473,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                               >
                                 <FormControl>
                                   <SelectTrigger>
-                                    <SelectValue placeholder="Select icon" />
+                                    <SelectValue placeholder={t('category.selectIcon')} />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
