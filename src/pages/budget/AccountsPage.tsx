@@ -228,13 +228,13 @@ const AccountsPage = () => {
         <Card>
           <CardContent className="py-12 text-center">
             <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-medium text-lg mb-2">No accounts yet</h3>
+            <h3 className="font-medium text-lg mb-2">{t('accounts.noAccountsYet')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Add your bank accounts, cash, crypto wallets and more.
+              {t('accounts.addBankAccounts')}
             </p>
             <Button onClick={openAddDialog}>
               <Plus className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-              Add First Account
+              {t('accounts.addFirstAccount')}
             </Button>
           </CardContent>
         </Card>
