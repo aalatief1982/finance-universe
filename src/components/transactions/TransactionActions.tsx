@@ -77,8 +77,8 @@ const TransactionActions = ({
               role="button"
               tabIndex={0}
             >
-              <Pen className="mr-2 h-4 w-4" />
-              <span>Edit</span>
+              <Pen className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+              <span>{t('txCard.edit')}</span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
@@ -89,8 +89,8 @@ const TransactionActions = ({
               role="button"
               tabIndex={0}
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              <span>Delete</span>
+              <Trash2 className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+              <span>{t('txCard.delete')}</span>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
