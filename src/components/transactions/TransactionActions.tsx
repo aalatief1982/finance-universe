@@ -107,7 +107,7 @@ const TransactionActions = ({
         onClick={handleEdit}
       >
         <Pen className="h-4 w-4" />
-        <span className="sr-only">Edit</span>
+        <span className="sr-only">{t('txCard.edit')}</span>
       </Button>
       <Button
         variant="ghost"
