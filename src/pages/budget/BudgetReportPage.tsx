@@ -287,7 +287,7 @@ const BudgetReportPage = () => {
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">Total Budget</div>
+            <div className="text-sm text-muted-foreground">{t('report.totalBudget')}</div>
             <div className="text-2xl font-bold mt-1">
               {formatCurrency(totalSummary.totalBudget)}
             </div>
@@ -295,7 +295,7 @@ const BudgetReportPage = () => {
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">Total Spent</div>
+            <div className="text-sm text-muted-foreground">{t('report.totalSpent')}</div>
             <div className="text-2xl font-bold mt-1">
               {formatCurrency(totalSummary.totalSpent)}
             </div>
@@ -307,7 +307,7 @@ const BudgetReportPage = () => {
               ) : (
                 <ArrowDownRight className="h-3 w-3" />
               )}
-              {Math.round(totalSummary.percentUsed)}% of budget
+              {Math.round(totalSummary.percentUsed)}% {t('report.ofBudget')}
             </div>
           </CardContent>
         </Card>
