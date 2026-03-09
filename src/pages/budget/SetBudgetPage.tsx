@@ -604,7 +604,7 @@ const SetBudgetPage = () => {
   const handleConfirmDelete = () => {
     if (pendingDeleteAction === 'existing' && existingBudgetMatch) {
       budgetService.deleteBudget(existingBudgetMatch.id);
-      toast({ title: 'Budget deleted' });
+      toast({ title: t('toast.budgetDeleted') });
       window.location.reload();
       return;
     }
