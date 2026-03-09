@@ -413,9 +413,9 @@ const ImportTransactions = () => {
                         <p className="text-xs text-muted-foreground">{item.receivedAt.slice(0, 16)}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button onClick={() => void handleContinueSms(item)}>Continue</Button>
+                        <Button onClick={() => void handleContinueSms(item)}>{t('smsInbox.continue')}</Button>
                         <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>
-                          Ignore
+                          {t('smsInbox.ignore')}
                         </Button>
                       </div>
                     </div>

@@ -406,7 +406,7 @@ const Home = () => {
               <div className="flex justify-start mt-3 pb-[calc(var(--bottom-nav-height,0px)+var(--safe-area-bottom)+0.25rem)]">
                 <button
                   onClick={() => navigate("/transactions")}
-                  aria-label="View full transaction history"
+                  aria-label={t('home.viewAllAriaLabel')}
                   className="text-sm text-blue-600 hover:underline flex items-center space-x-1"
                 >
                   <span>{t('home.viewAll')}</span>
