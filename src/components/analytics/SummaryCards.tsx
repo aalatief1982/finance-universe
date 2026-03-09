@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/format-utils';
 import { getUserSettings } from '@/utils/storage-utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { AnalyticsTotals } from '@/services/AnalyticsService';
 import { ArrowDown, ArrowUp, DollarSign, PiggyBank, CreditCard } from 'lucide-react';
 import { CHART_COLORS } from '@/constants/analytics';
