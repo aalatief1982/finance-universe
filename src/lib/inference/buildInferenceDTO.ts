@@ -6,7 +6,7 @@ interface BuildInferenceDTOArgs {
   rawMessage: string;
   senderHint?: string;
   smsId?: string;
-  source?: 'smart-paste' | 'sms' | 'sms-import';
+  source?: 'smart-paste' | 'sms' | 'sms-import' | 'smart-paste-freeform' | 'voice-freeform';
 }
 
 export async function buildInferenceDTO({

@@ -2,7 +2,7 @@ import type { Transaction } from '@/types/transaction';
 
 export type InferenceParsingStatus = 'success' | 'partial' | 'failed';
 
-export type InferenceOrigin = 'template' | 'structure' | 'ml' | 'fallback' | 'manual';
+export type InferenceOrigin = 'template' | 'structure' | 'ml' | 'fallback' | 'freeform' | 'manual';
 
 export interface InferenceMeta {
   matchedCount?: number;
