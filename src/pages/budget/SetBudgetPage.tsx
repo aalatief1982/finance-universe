@@ -611,7 +611,7 @@ const SetBudgetPage = () => {
 
     if (pendingDeleteAction === 'editing' && editId) {
       budgetService.deleteBudget(editId);
-      toast({ title: 'Budget deleted' });
+      toast({ title: t('toast.budgetDeleted') });
       navigate('/budget');
     }
   };
