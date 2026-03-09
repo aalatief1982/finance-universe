@@ -240,7 +240,7 @@ const BudgetDetailPage = () => {
         {/* Budget Settings */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Budget Settings</CardTitle>
+            <CardTitle className="text-base">{t('detail.budgetSettings')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
