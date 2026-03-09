@@ -185,12 +185,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Send Feedback</DialogTitle>
+          <DialogTitle>{t('feedback.title')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="fb-issue" className="text-sm font-medium">
-              What issue are you facing?
+              {t('feedback.issue')}
             </label>
             <Textarea
               id="fb-issue"
@@ -200,7 +200,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
           </div>
           <div className="space-y-2">
             <label htmlFor="fb-liked" className="text-sm font-medium">
-              What did you like?
+              {t('feedback.liked')}
             </label>
             <Textarea
               id="fb-liked"
@@ -210,7 +210,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
           </div>
           <div className="space-y-2">
             <label htmlFor="fb-improved" className="text-sm font-medium">
-              What can be improved?
+              {t('feedback.improved')}
             </label>
             <Textarea
               id="fb-improved"
@@ -221,7 +221,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
           {showEmailInput && (
             <div className="space-y-2">
               <label htmlFor="fb-email" className="text-sm font-medium">
-                Optional email/contact
+                {t('feedback.email')}
               </label>
               <Input
                 id="fb-email"
@@ -233,9 +233,9 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
           )}
           <div className="space-y-2">
             <label htmlFor="fb-rating" className="text-sm font-medium">
-              Rate your experience
+              {t('feedback.rateExperience')}
             </label>
-            <div id="fb-rating" className="flex space-x-1">
+            <div id="fb-rating" className="flex gap-1">
               {[1, 2, 3, 4, 5].map((num) => (
                 <Star
                   key={num}
@@ -254,11 +254,11 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="outline">
-                Cancel
+                {t('feedback.cancel')}
               </Button>
             </DialogClose>
             <Button type="submit" disabled={loading || !rating}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Submit
+              {loading && <Loader2 className="ltr:mr-2 rtl:ml-2 h-4 w-4 animate-spin" />}{t('feedback.submit')}
             </Button>
           </DialogFooter>
         </form>

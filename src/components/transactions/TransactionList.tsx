@@ -467,7 +467,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <div className="text-sm text-muted-foreground">
             Showing page {currentPage} of {totalPages}
           </div>
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"

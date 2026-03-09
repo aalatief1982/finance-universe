@@ -66,15 +66,15 @@ const SummaryCards = ({ totals }: SummaryCardsProps) => {
           <h3 className="text-2xl font-semibold" style={{ color: isPositiveSavings ? CHART_COLORS[1] : CHART_COLORS[3] }}>
             {savingsRate.toFixed(1)}%
           </h3>
-          <div className="mt-2 flex items-center text-sm">
+          <div className="mt-2 flex items-center gap-1 text-sm">
             {isPositiveSavings ? (
               <>
-                <ArrowUp size={16} className="text-success mr-1" />
+                <ArrowUp size={16} className="text-success" />
                 <span className="text-success font-medium">Good savings</span>
               </>
             ) : (
               <>
-                <ArrowDown size={16} className="text-destructive mr-1" />
+                <ArrowDown size={16} className="text-destructive" />
                 <span className="text-destructive font-medium">Needs improvement</span>
               </>
             )}

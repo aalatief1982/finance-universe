@@ -116,7 +116,7 @@ const TransactionActions = ({
         onClick={handleDelete}
       >
         <Trash2 className="h-4 w-4" />
-        <span className="sr-only">Delete</span>
+        <span className="sr-only">{t('txCard.delete')}</span>
       </Button>
     </div>
   );

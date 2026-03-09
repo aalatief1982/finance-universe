@@ -62,13 +62,13 @@ const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) 
               variant="ghost"
               size="icon"
               onClick={() => navigate('/sms-review')}
-              className="relative ml-2 h-11 w-11 p-0"
-              title="SMS Review Inbox"
-              aria-label="SMS Review Inbox"
+              className="relative ltr:ml-2 rtl:mr-2 h-11 w-11 p-0"
+              title={t('nav.smsReview')}
+              aria-label={t('nav.smsReview')}
             >
               <Mail size={39} />
               {pendingSmsCount > 0 && (
-                <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
+                <span className="absolute ltr:-right-1 rtl:-left-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
                   {pendingSmsCount}
                 </span>
               )}
