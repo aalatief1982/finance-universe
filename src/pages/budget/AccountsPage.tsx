@@ -401,10 +401,10 @@ const AccountsPage = () => {
           
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+              {t('accounts.cancel')}
             </Button>
             <Button onClick={handleSave}>
-              Update
+              {t('accounts.update')}
             </Button>
           </DialogFooter>
         </DialogContent>
