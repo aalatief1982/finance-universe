@@ -35,6 +35,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const { deleteTransaction } = useTransactions();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const userCurrency = getUserSettings().currency || 'USD';
 
