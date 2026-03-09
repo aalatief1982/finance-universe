@@ -175,15 +175,18 @@ const AnalyticsDriversSection: React.FC<{
   merchantDrivers: DriverItem[];
   onCategoryClick: (categoryName: string) => void;
   onMerchantClick: (merchantName: string) => void;
-}> = ({ categoryDrivers, merchantDrivers, onCategoryClick, onMerchantClick }) => (
+}> = ({ categoryDrivers, merchantDrivers, onCategoryClick, onMerchantClick }) => {
+  const { t } = useLanguage();
+  return (
   <section className="space-y-2">
-    <h2 className="text-sm font-medium text-muted-foreground">Drivers of Change</h2>
+    <h2 className="text-sm font-medium text-muted-foreground">{t('analytics.driversOfChange')}</h2>
     <div className="space-y-3">
-      <DriverRows title="Category Drivers" rows={categoryDrivers} onClickRow={onCategoryClick} />
-      <DriverRows title="Merchant Drivers" rows={merchantDrivers} onClickRow={onMerchantClick} />
+      <DriverRows title={t('analytics.categoryDrivers')} rows={categoryDrivers} onClickRow={onCategoryClick} />
+      <DriverRows title={t('analytics.merchantDrivers')} rows={merchantDrivers} onClickRow={onMerchantClick} />
     </div>
   </section>
-);
+  );
+};
 
 const AnalyticsActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions }) => {
   if (!actions.length) return null;
