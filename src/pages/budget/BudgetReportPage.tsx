@@ -54,6 +54,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const CHART_COLORS = [
   'hsl(var(--primary))',
@@ -66,13 +67,13 @@ const CHART_COLORS = [
   '#06b6d4',
 ];
 
-const SCOPE_OPTIONS: { value: BudgetScope | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Scopes' },
-  { value: 'overall', label: 'Overall' },
-  { value: 'category', label: 'Category' },
-  { value: 'subcategory', label: 'Subcategory' },
-  { value: 'account', label: 'Account' },
-];
+const SCOPE_LABEL_KEYS: Record<string, string> = {
+  all: 'report.allScopes',
+  overall: 'report.overall',
+  category: 'report.category',
+  subcategory: 'report.subcategory',
+  account: 'report.account',
+};
 
 const BudgetReportPage = () => {
   const { transactions } = useTransactions();
