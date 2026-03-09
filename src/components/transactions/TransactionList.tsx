@@ -385,8 +385,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                         >
                           {isExpanded ? 'Hide details' : 'Show details'}
                           {isExpanded ? 
-                            <ChevronUp className="ml-1 h-3 w-3" /> : 
-                            <ChevronDown className="ml-1 h-3 w-3" />
+                            <ChevronUp className="ltr:ml-1 rtl:mr-1 h-3 w-3" /> : 
+                            <ChevronDown className="ltr:ml-1 rtl:mr-1 h-3 w-3" />
                           }
                         </Button>
                       )}
