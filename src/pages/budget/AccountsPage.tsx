@@ -374,8 +374,8 @@ const AccountsPage = () => {
               </div>
               
               <div>
-                <label className="text-sm font-medium mb-1.5 block" htmlFor="account-initial-balance">
-                  Initial Balance
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="account-initial-balance">
+                  {t('accounts.initialBalance')}
                 </label>
                 <Input
                   id="account-initial-balance"
