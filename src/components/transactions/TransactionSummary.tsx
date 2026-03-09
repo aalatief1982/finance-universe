@@ -5,17 +5,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/format-utils';
 import { getUserSettings } from '@/utils/storage-utils';
 import { TransactionSummary as TransactionSummaryType } from '@/types/transaction';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionSummaryProps {
   summary: TransactionSummaryType;
 }
 
 const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
+  const { t } = useLanguage();
   const { income, expenses, balance } = summary;
   
   const balanceChange = balance >= 0 
-    ? { icon: ArrowUpRight, color: 'text-success', bgColor: 'bg-success/10', label: 'Positive balance' }
-    : { icon: ArrowDownRight, color: 'text-destructive', bgColor: 'bg-destructive/10', label: 'Negative balance' };
+    ? { icon: ArrowUpRight, color: 'text-success', bgColor: 'bg-success/10', label: t('summary.positiveBalance') }
+    : { icon: ArrowDownRight, color: 'text-destructive', bgColor: 'bg-destructive/10', label: t('summary.negativeBalance') };
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
