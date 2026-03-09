@@ -19,7 +19,7 @@
 import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
 
-const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1' || localStorage.getItem('xpensia_debug_startup') === '1';
+const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 let traceCounter = 0;
 const traceAppRoot = (message: string, ...args: unknown[]) => {
