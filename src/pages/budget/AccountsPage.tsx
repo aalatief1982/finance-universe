@@ -288,7 +288,7 @@ const AccountsPage = () => {
                       
                       <div className="flex items-center justify-between mt-3 pt-3 border-t">
                         <div>
-                          <p className="text-xs text-muted-foreground">Current Balance</p>
+                          <p className="text-xs text-muted-foreground">{t('accounts.currentBalanceLabel')}</p>
                           <p className={cn(
                             "font-semibold",
                             balance < 0 ? "text-destructive" : "text-foreground"
@@ -296,8 +296,8 @@ const AccountsPage = () => {
                             {formatCurrency(balance, acc.currency)}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Transactions</p>
+                        <div className="ltr:text-right rtl:text-left">
+                          <p className="text-xs text-muted-foreground">{t('accounts.transactionsLabel')}</p>
                           <p className="font-medium text-sm">{txCount}</p>
                         </div>
                       </div>
