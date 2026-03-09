@@ -121,7 +121,7 @@ const BudgetDetailPage = () => {
         <div className="container px-4 py-12 text-center">
           <p className="text-muted-foreground">Budget not found</p>
           <Button onClick={() => navigate('/budget')} className="mt-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
             Back to Budgets
           </Button>
         </div>
