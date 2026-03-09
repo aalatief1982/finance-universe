@@ -521,7 +521,8 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               />
             </div>
           </div>
-          <div className="flex justify-end space-x-gap         <Button variant="outline" onClick={() => setAddPersonOpen(false)}>Cancel</Button>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setAddPersonOpen(false)}>Cancel</Button>
             <Button onClick={handleSavePerson}>Save</Button>
           </div>
         </DialogContent>

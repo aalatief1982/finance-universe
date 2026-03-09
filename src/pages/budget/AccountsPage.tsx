@@ -254,7 +254,7 @@ const AccountsPage = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold truncate">{acc.name}</h3>
-                        <ltr:ml-2 rtl:mrv className="flex items-center gap-1 ml-2">
+                        <div className="flex items-center gap-1 ltr:ml-2 rtl:mr-2">
                           <Button
                             variant="ghost"
                             size="icon"

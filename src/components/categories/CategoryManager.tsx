@@ -345,7 +345,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Category Manager</CardTitle>
         <Button onClick={() => startAddingCategory()} size="sm">
-          <Plus size={16} className="mr-1" /> Add Category
+          <Plus size={16} className="ltr:mr-1 rtl:ml-1" /> Add Category
         </Button>
       </CardHeader>
       
