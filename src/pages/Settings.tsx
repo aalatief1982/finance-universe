@@ -766,7 +766,7 @@ const Settings = () => {
 
           <LockedFeature
             isLocked={!betaActive}
-            featureName="Import Data"
+            featureName={t('settings.importData')}
             onLockedClick={() => handleLockedFeatureClick('Import Data')}
           >
             <div className="flex items-center justify-between">
