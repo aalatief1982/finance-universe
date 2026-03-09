@@ -180,7 +180,7 @@ const AccountsPage = () => {
     };
     accountService.addAccount(newAccount);
     refreshAccounts();
-    toast({ title: `Account "${name}" added` });
+    toast({ title: t('toast.accountAdded') });
   };
 
   const getAccountBalance = (account: Account) => {
