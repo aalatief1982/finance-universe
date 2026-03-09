@@ -39,6 +39,19 @@ const OTADebugSection: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [lastError, setLastError] = useState<StoredError | null>(null);
+  const [startupDebugEnabled, setStartupDebugEnabled] = useState(
+    () => localStorage.getItem('xpensia_debug_startup') === '1'
+  );
+
+  const toggleStartupDebug = () => {
+    const next = !startupDebugEnabled;
+    if (next) {
+      localStorage.setItem('xpensia_debug_startup', '1');
+    } else {
+      localStorage.removeItem('xpensia_debug_startup');
+    }
+    setStartupDebugEnabled(next);
+  };
 
   useEffect(() => {
     loadDebugInfo();
@@ -232,6 +245,23 @@ const OTADebugSection: React.FC = () => {
           >
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
           </Button>
+        </div>
+
+        <div className="border-t pt-2 mt-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground">Startup Debug Breakpoints</p>
+              <p className="text-[10px] text-muted-foreground">Shows alert at each startup step on next app launch</p>
+            </div>
+            <Button
+              size="sm"
+              variant={startupDebugEnabled ? 'destructive' : 'outline'}
+              onClick={toggleStartupDebug}
+              className="h-7 px-3 text-xs"
+            >
+              {startupDebugEnabled ? 'ON' : 'OFF'}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

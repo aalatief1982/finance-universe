@@ -10,7 +10,7 @@ import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 
-const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1' || localStorage.getItem('xpensia_debug_startup') === '1';
 
 type XpensiaWindow = Window & {
   __xpensiaHideInitialLoading?: () => void
