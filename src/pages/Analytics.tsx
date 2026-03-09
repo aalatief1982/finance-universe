@@ -118,8 +118,8 @@ const AnalyticsDeltaSection: React.FC<{
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-muted-foreground">Budget tracking</p>
-                  <p className="mt-2 text-sm font-medium">No budgets set — create budgets to track risk</p>
+                  <p className="text-xs text-muted-foreground">{t('analytics.budgetTracking')}</p>
+                  <p className="mt-2 text-sm font-medium">{t('analytics.noBudgetsSet')}</p>
                 </>
               )}
             </CardContent>
