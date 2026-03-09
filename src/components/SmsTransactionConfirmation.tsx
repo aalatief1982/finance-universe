@@ -310,7 +310,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
               {transaction.subcategory && ` / ${transaction.subcategory}`}
             </p>
           </div>
-          <div className="flex gap         <Button 
+          <div className="flex gap-2"> 
               size="sm" 
               variant="outline" 
               className="p-1 h-8 w-8"
