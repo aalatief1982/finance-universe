@@ -476,17 +476,17 @@ const BudgetReportPage = () => {
       {/* Detailed Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Detailed Breakdown</CardTitle>
+          <CardTitle className="text-base">{t('report.detailedBreakdown')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 font-medium">Category</th>
-                  <th className="text-right py-2 font-medium">Budget</th>
-                  <th className="text-right py-2 font-medium">Spent</th>
-                  <th className="text-right py-2 font-medium">% Used</th>
+                  <th className="ltr:text-left rtl:text-right py-2 font-medium">{t('report.colCategory')}</th>
+                  <th className="ltr:text-right rtl:text-left py-2 font-medium">{t('report.colBudget')}</th>
+                  <th className="ltr:text-right rtl:text-left py-2 font-medium">{t('report.colSpent')}</th>
+                  <th className="ltr:text-right rtl:text-left py-2 font-medium">{t('report.colUsed')}</th>
                 </tr>
               </thead>
               <tbody>
