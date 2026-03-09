@@ -8,6 +8,8 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
+
 interface Slide {
   image: string;
   titleKey: string;
@@ -82,6 +84,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     });
 
     setIsVisible(true);
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`);
     const setVh = () => {
       const previousValue = document.documentElement.style.getPropertyValue('--vh-onb');
       const nextValue = `${window.innerHeight * 0.01}px`;
@@ -210,6 +213,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                         i === 0
                           ? (event) => {
                               const imageElement = event.currentTarget;
+                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #11] Slide 1 Image Loaded\nTime: ${performance.now().toFixed(2)}ms\nnaturalWidth: ${imageElement.naturalWidth}\nnaturalHeight: ${imageElement.naturalHeight}\nsrc: ${imageElement.currentSrc || slide.image}`);
                               console.trace('[TRACE][OnboardingSlides] slide image loaded', {
                                 slideIndex: i,
                                 imageUrl: imageElement.currentSrc || slide.image,
@@ -221,9 +225,14 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                           : undefined
                       }
                       onError={
-                        shouldLogImageLoadErrors
-                          ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
-                          : undefined
+                        i === 0
+                          ? () => {
+                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #12] Slide 1 Image FAILED\nTime: ${performance.now().toFixed(2)}ms\nsrc: ${slide.image}`);
+                              if (shouldLogImageLoadErrors) console.error(`Failed to load image at slide ${i}: ${slide.image}`);
+                            }
+                          : shouldLogImageLoadErrors
+                            ? () => console.error(`Failed to load image at slide ${i}: ${slide.image}`)
+                            : undefined
                       }
                     />
                   </div>

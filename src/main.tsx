@@ -10,11 +10,14 @@ import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
+
 type XpensiaWindow = Window & {
   __xpensiaHideInitialLoading?: () => void
 }
 
 ;(async () => {
+  if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #1] Boot Start\nTime: ${performance.now().toFixed(2)}ms`);
   try {
     await initializeCapacitor()
   } catch (err) {
@@ -25,8 +28,10 @@ type XpensiaWindow = Window & {
 
   const root = createRoot(document.getElementById('root')!)
   root.render(<AppWithLoader />)
+  if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #2] React Root Rendered\nTime: ${performance.now().toFixed(2)}ms`);
 
   const hideInitialLoading = () => {
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #3] HTML Loader Hide\nTime: ${performance.now().toFixed(2)}ms`);
     ;(window as XpensiaWindow).__xpensiaHideInitialLoading?.()
   }
 

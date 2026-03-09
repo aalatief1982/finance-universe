@@ -8,6 +8,7 @@ import { getFriendlyMessage } from './utils/errorMapper'
 import { ErrorSeverity, ErrorType } from './types/error'
 import { backgroundVendorSyncService } from './services/BackgroundVendorSyncService'
 
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
 const TRACE_PREFIX = '[TRACE][APP_ROOT]'
 let traceCounter = 0
 const GLOBAL_ERROR_DEDUPE_WINDOW_MS = 10_000
@@ -187,6 +188,7 @@ const AppWithLoader: React.FC = () => {
   useEffect(() => {
     const initialize = async () => {
       traceAppRoot('AppWithLoader initialize start')
+      if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #4] Init Sequence Start\nTime: ${performance.now().toFixed(2)}ms`);
       try {
         await initializeXpensiaStorageDefaults()
         traceAppRoot('initializeXpensiaStorageDefaults completed')
@@ -207,6 +209,7 @@ const AppWithLoader: React.FC = () => {
         traceAppRoot('backgroundVendorSyncService.initialize completed (fallback)')
       } finally {
         traceAppRoot('AppWithLoader initialize end')
+        if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #5] Init Complete\nTime: ${performance.now().toFixed(2)}ms`);
         setInitializing(false)
       }
     }

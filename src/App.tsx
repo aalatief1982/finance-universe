@@ -85,6 +85,7 @@ const IMPORT_ROUTE = '/import-transactions';
 const SHARE_DEDUPE_WINDOW_MS = 30_000;
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
 
+const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
   const now = performance.now().toFixed(2);
@@ -1004,6 +1005,7 @@ function AppRoutes() {
 
   if (!initialRouteCheckDone) {
     traceAppRoot('AppRoutes waiting for startup route resolution');
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #7] Splash Still Showing (route check pending)\nTime: ${performance.now().toFixed(2)}ms\npathname: ${location.pathname}`);
     return <SplashScreen />;
   }
 
@@ -1047,6 +1049,7 @@ function AppRoutes() {
     );
   }
 
+  if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #8] Route Decided\nTime: ${performance.now().toFixed(2)}ms\nonboardingDone: ${onboardingDone}\nrequiresDefaultCurrency: ${requiresDefaultCurrency}\npathname: ${location.pathname}\npendingLaunchRoute: ${pendingLaunchRoute}`);
   return (
     <>
       <AppWrapper />

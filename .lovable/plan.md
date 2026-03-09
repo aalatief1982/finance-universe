@@ -1,60 +1,48 @@
+## Plan: Non-Template Freeform Fallback Parser
 
+### Status: ✅ Implemented
 
-## Plan: Add Visual Debug Breakpoints to Splash → Onboarding Startup Path
+### Summary
+Added a completely isolated freeform fallback parser for Smart Entry that activates only when the existing structured/template parser produces weak results (confidence < 0.5 and no template match) or when input doesn't pass the SMS triple-gate filter.
 
-### Goal
-Insert temporary, visually obvious debug toasts/alerts at each major transition step in the startup pipeline so you can screenshot each stage on a real Android device.
+### Architecture
+- **Two learning domains**: SMS (existing, unchanged) and Freeform (new, isolated)
+- **Routing**: Structured first → if weak → freeform fallback
+- **Learning gate**: `source` field (`smart-paste-freeform` / `voice-freeform`) controls which store gets updated at save time
 
-### Approach
-Use a **URL query param** `?debugStartup=1` to gate all debug overlays. When absent, zero runtime impact. When present, each breakpoint shows a **blocking alert dialog** (not a toast — toasts auto-dismiss and you'd miss them) with the step name + timestamp + key state values. You dismiss each manually after screenshotting.
-
-We'll use `window.alert()` for simplicity — it blocks execution, guarantees you see it, and requires no UI component work. Each alert includes a numbered step ID for easy ordering.
-
-### Breakpoint Locations (12 steps)
-
-| # | File | Location | What It Captures |
-|---|---|---|---|
-| 1 | `src/main.tsx` | Before `initializeCapacitor()` | Boot start, timestamp |
-| 2 | `src/main.tsx` | After `root.render()` | React root rendered |
-| 3 | `src/main.tsx` | Inside `hideInitialLoading` callback | HTML loader hide moment |
-| 4 | `src/AppWithLoader.tsx` | Start of `initialize()` | Init sequence start |
-| 5 | `src/AppWithLoader.tsx` | After `setInitializing(false)` | Init complete |
-| 6 | `src/components/AppLoader.tsx` | When `setShowSplash(false)` fires | React splash hide moment |
-| 7 | `src/App.tsx` (`AppRoutes`) | At `initialRouteCheckDone` false branch | Splash still showing in router |
-| 8 | `src/App.tsx` (`AppRoutes`) | After route decision, before return | Route decided: shows target path, onboardingDone value |
-| 9 | `src/pages/Onboarding.tsx` | Mount effect | Onboarding page mounted |
-| 10 | `src/onboarding/OnboardingSlides.tsx` | Mount effect | Slides component mounted |
-| 11 | `src/onboarding/OnboardingSlides.tsx` | First slide image `onLoad` | Slide 1 image decoded |
-| 12 | `src/onboarding/OnboardingSlides.tsx` | First slide image `onError` | Slide 1 image failed |
-
-### Implementation Details
-
-**Gate mechanism:** Read `debugStartup` from URL once at module level:
-```ts
-const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1';
-```
-
-**Alert format:**
-```
-[XPENSIA DEBUG #3] HTML Loader Hide
-Time: 142.35ms
-```
-
-Each file that needs the gate reads it independently (no shared import needed — it's a one-liner).
+### Files Added
+- `src/lib/freeform-entry/freeformTypes.ts` — Type definitions
+- `src/lib/freeform-entry/freeformParser.ts` — Core extraction logic (amount, type, date, vendor, category, counterparty)
+- `src/lib/freeform-entry/freeformLearningStore.ts` — Isolated localStorage store (`xpensia_freeform_learned_mappings`)
+- `src/lib/freeform-entry/index.ts` — Barrel exports
+- `src/lib/freeform-entry/__tests__/freeformParser.test.ts` — 11 tests (EN/AR expense, income, transfer, edge cases)
 
 ### Files Changed
-- `src/main.tsx` — 3 breakpoints (#1, #2, #3)
-- `src/AppWithLoader.tsx` — 2 breakpoints (#4, #5)
-- `src/components/AppLoader.tsx` — 1 breakpoint (#6)
-- `src/App.tsx` — 2 breakpoints (#7, #8) in `AppRoutes` function
-- `src/pages/Onboarding.tsx` — 1 breakpoint (#9)
-- `src/onboarding/OnboardingSlides.tsx` — 3 breakpoints (#10, #11, #12)
+- `src/types/transaction.ts` — Added `smart-paste-freeform` | `voice-freeform` to `TransactionSource`
+- `src/types/inference.ts` — Added `'freeform'` to `InferenceOrigin`
+- `src/lib/inference/inferenceDTO.ts` — Added `'freeform'` to normalizeOrigin
+- `src/lib/inference/buildInferenceDTO.ts` — Added freeform source types
+- `src/components/SmartPaste.tsx` — Freeform fallback routing after structured path
+- `src/components/NERSmartPaste.tsx` — Same freeform fallback routing
+- `src/lib/smart-paste-engine/saveTransactionWithLearning.ts` — Learning branch by source (freeform → isolated store, SMS → existing stores)
 
-### Removal
-All breakpoints are gated by `debugStartup=1` query param. To remove later, search for `DEBUG_STARTUP` or `XPENSIA DEBUG` and delete.
+### Storage Keys
+| Domain | Key |
+|--------|-----|
+| SMS | `xpensia_template_bank`, `xpensia_keyword_bank`, `xpensia_vendor_map`, `xpensia_fromaccount_map`, `xpensia_template_account_map` |
+| Freeform | `xpensia_freeform_learned_mappings` |
 
-### No-Touch Guarantee
-- No layout, styling, or routing changes
-- No behavioral changes when param is absent
-- Alerts only fire on `?debugStartup=1`
+### What Was NOT Changed
+- SMS parser (`structureParser.ts`, `parseAndInferTransaction.ts`)
+- SMS template extraction / matching
+- SMS keyword bank logic
+- Native SMS listener / OTP / sender allow-list
+- `messageFilter.ts` triple-gate logic
+- Template failure tracking
+- Field promotion overlay
 
+### Verification
+- 11/11 unit tests pass
+- No build errors
+- SMS learning path unchanged (gated by `isLearningSource` check)
+- Freeform learning path isolated (gated by `isFreeformSource` check)
