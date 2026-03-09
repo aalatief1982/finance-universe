@@ -318,7 +318,7 @@ const BudgetReportPage = () => {
         <Card className="border-destructive/50 bg-destructive/5 mb-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-destructive">
-              Over Budget ({overBudgetItems.length})
+              {t('report.overBudget')} ({overBudgetItems.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
