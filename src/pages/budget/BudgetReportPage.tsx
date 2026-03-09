@@ -76,10 +76,12 @@ const SCOPE_LABEL_KEYS: Record<string, string> = {
 };
 
 const BudgetReportPage = () => {
+  const { t } = useLanguage();
   const { transactions } = useTransactions();
   const { period, year, periodIndex, periodLabel } = useBudgetPeriodParams();
   const [timeRange, setTimeRange] = React.useState<'3m' | '6m' | '12m'>('6m');
   const [scopeFilter, setScopeFilter] = React.useState<BudgetScope | 'all'>('overall');
+  const SCOPE_VALUES: (BudgetScope | 'all')[] = ['all', 'overall', 'category', 'subcategory', 'account'];
   
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
