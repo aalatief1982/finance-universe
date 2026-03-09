@@ -246,6 +246,23 @@ const OTADebugSection: React.FC = () => {
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
           </Button>
         </div>
+
+        <div className="border-t pt-2 mt-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground">Startup Debug Breakpoints</p>
+              <p className="text-[10px] text-muted-foreground">Shows alert at each startup step on next app launch</p>
+            </div>
+            <Button
+              size="sm"
+              variant={startupDebugEnabled ? 'destructive' : 'outline'}
+              onClick={toggleStartupDebug}
+              className="h-7 px-3 text-xs"
+            >
+              {startupDebugEnabled ? 'ON' : 'OFF'}
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
