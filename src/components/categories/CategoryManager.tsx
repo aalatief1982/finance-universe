@@ -264,7 +264,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       <div key={category.id} className="category-item">
         <div 
           className={`flex items-center p-2 rounded-md hover:bg-muted/50 ${
-            level > 0 ? 'ml-6' : ''
+            level > 0 ? 'ltr:ml-6 rtl:mr-6' : ''
           }`}
         >
           <div className="flex-1 flex items-center">
