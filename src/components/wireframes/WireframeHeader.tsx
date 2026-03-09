@@ -2,6 +2,7 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface WireframeHeaderProps {
   title?: string;
@@ -11,24 +12,27 @@ interface WireframeHeaderProps {
   contextTitle?: boolean;
 }
 
-// Map routes to their corresponding titles
-const routeTitleMap: Record<string, string> = {
-  '/': 'Home',
-  '/dashboard': 'Dashboard',
-  '/transactions': 'Transactions',
-  '/analytics': 'Analytics',
-  '/process-sms': 'Import SMS',
-  '/settings': 'Settings',
-  '/profile': 'Profile',
-  '/sms-providers': 'SMS Senders (Advanced, Legacy)',
-  '/wireframes': 'Wireframes',
-  '/wireframes/dashboard': 'Dashboard',
-  '/wireframes/onboarding': 'Onboarding',
-  '/wireframes/add-transaction': 'Add Transaction',
-  '/wireframes/reports': 'Reports',
-  '/wireframes/settings': 'Settings',
-  '/wireframes/sms-provider': 'SMS Provider',
-  '/wireframes/sms-transaction': 'SMS Transaction',
+// Map routes to their corresponding translation keys
+const getRouteTitleKey = (pathname: string): string => {
+  const routeMap: Record<string, string> = {
+    '/': 'nav.home',
+    '/dashboard': 'nav.home',
+    '/transactions': 'nav.transactions',
+    '/analytics': 'nav.analytics',
+    '/process-sms': 'nav.importSms',
+    '/settings': 'nav.settings',
+    '/profile': 'nav.profile',
+    '/sms-providers': 'nav.smsProviders',
+    '/wireframes': 'wireframe.expenseTracker',
+    '/wireframes/dashboard': 'nav.home',
+    '/wireframes/onboarding': 'onboarding.startJourney',
+    '/wireframes/add-transaction': 'nav.transaction',
+    '/wireframes/reports': 'nav.analytics',
+    '/wireframes/settings': 'nav.settings',
+    '/wireframes/sms-provider': 'nav.smsProviders',
+    '/wireframes/sms-transaction': 'wireframe.smartEntry',
+  };
+  return routeMap[pathname] || 'wireframe.expenseTracker';
 };
 
 const WireframeHeader = ({ 
