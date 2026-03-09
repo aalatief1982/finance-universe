@@ -419,7 +419,7 @@ const Settings = () => {
 
           const existing = getStoredTransactions();
           const confirmImport = window.confirm(
-            `This will add ${data.length} transactions to your existing ${existing.length}. Continue?`,
+            t('toast.importConfirm').replace('{count}', String(data.length)).replace('{existing}', String(existing.length)),
           );
 
           if (!confirmImport) return;
