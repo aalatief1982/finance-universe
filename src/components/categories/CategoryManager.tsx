@@ -39,8 +39,6 @@ const categoryFormSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
-// Color and icon options will use translations
-
 interface CategoryManagerProps {
   categories: Category[];
   onCategoriesChange: (categories: Category[]) => void;
@@ -53,7 +51,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   const { toast } = useToast();
   const { t } = useLanguage();
   
-  // Color and icon options using translations
   const colorOptions = [
     { value: '#8B5CF6', label: t('color.purple') },
     { value: '#D946EF', label: t('color.pink') },
@@ -84,20 +81,18 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [parentIdForNewCategory, setParentIdForNewCategory] = useState<string | undefined>(undefined);
 
-  // Form setup
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
       name: '',
       parentId: undefined,
       icon: undefined,
-      color: '#8B5CF6', // Default color
+      color: '#8B5CF6',
       budget: undefined,
       description: '',
     }
   });
 
-  // Reset form when editing category changes
   useEffect(() => {
     if (editingCategory) {
       form.reset({
@@ -120,7 +115,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     }
   }, [editingCategory, isAddingCategory, parentIdForNewCategory, form]);
 
-  // Toggle category expansion
   const toggleExpand = (categoryId: string) => {
     setExpandedCategories(prev => ({
       ...prev,
@@ -128,31 +122,26 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     }));
   };
 
-  // Start editing a category
   const startEditing = (category: Category) => {
     setEditingCategory(category);
     setIsAddingCategory(false);
   };
 
-  // Start adding a new category
   const startAddingCategory = (parentId?: string) => {
     setIsAddingCategory(true);
     setEditingCategory(null);
     setParentIdForNewCategory(parentId);
   };
 
-  // Cancel editing or adding
   const cancelEditing = () => {
     setEditingCategory(null);
     setIsAddingCategory(false);
   };
 
-  // Save category changes
   const saveCategory = (values: CategoryFormValues) => {
     const now = new Date().toISOString();
     
     if (editingCategory) {
-      // Update existing category
       const updatedCategories = updateCategoryInTree(categories, {
         ...editingCategory,
         name: values.name,
@@ -173,7 +162,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
         description: `${t('category.updated')} "${values.name}" ${t('category.updatedDesc')}`,
       });
     } else if (isAddingCategory) {
-      // Add new category
       const newCategory: Category = {
         id: uuidv4(),
         name: values.name,
@@ -194,7 +182,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
       const updatedCategories = [...categories, newCategory];
       onCategoriesChange(updatedCategories);
       
-      // Automatically expand parent category
       if (values.parentId) {
         setExpandedCategories(prev => ({
           ...prev,
@@ -212,9 +199,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     setIsAddingCategory(false);
   };
 
-  // Delete a category
   const deleteCategory = (categoryId: string) => {
-    // Check if category has subcategories
     const hasSubcategories = categories.some(c => c.parentId === categoryId);
     
     if (hasSubcategories) {
@@ -235,7 +220,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     });
   };
 
-  // Helper function to update a category in the tree
   const updateCategoryInTree = (categories: Category[], updatedCategory: Category): Category[] => {
     return categories.map(category => {
       if (category.id === updatedCategory.id) {
@@ -245,17 +229,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     });
   };
 
-  // Build category tree from flat list
-  const buildCategoryTree = (categories: Category[], parentId?: string): Category[] => {
-    return categories
-      .filter(category => category.parentId === parentId)
-      .map(category => ({
-        ...category,
-        subcategories: buildCategoryTree(categories, category.id)
-      }));
-  };
-
-  // Render a category item with its subcategories
   const renderCategoryItem = (category: Category, level = 0) => {
     const isExpanded = expandedCategories[category.id] || false;
     const hasSubcategories = categories.some(c => c.parentId === category.id);
@@ -292,31 +265,20 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
             
             {category.metadata?.budget && (
               <span className="ltr:ml-2 rtl:mr-2 text-sm text-muted-foreground">
-                Budget: ${category.metadata.budget}
+                {t('catMgr.budgetLabel')} ${category.metadata.budget}
               </span>
             )}
           </div>
           
           <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-1"
-              onClick={() => startAddingCategory(category.id)}
-            >
+            <Button variant="ghost" size="sm" className="p-1" onClick={() => startAddingCategory(category.id)}>
               <Plus size={16} />
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="p-1"
-              onClick={() => startEditing(category)}
-            >
+            <Button variant="ghost" size="sm" className="p-1" onClick={() => startEditing(category)}>
               <Edit size={16} />
             </Button>
             <Button 
-              variant="ghost" 
-              size="sm" 
+              variant="ghost" size="sm" 
               className="p-1 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
               onClick={() => deleteCategory(category.id)}
             >
@@ -325,7 +287,6 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
           </div>
         </div>
         
-        {/* Subcategories */}
         {isExpanded && hasSubcategories && (
           <div className="ltr:ml-6 rtl:mr-6 border-l-2 rtl:border-l-0 rtl:border-r-2 border-muted ltr:pl-2 rtl:pr-2 mt-1">
             {categories
@@ -337,20 +298,18 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     );
   };
 
-  // Get all root categories
   const rootCategories = categories.filter(c => !c.parentId);
 
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Category Manager</CardTitle>
+        <CardTitle>{t('catMgr.title')}</CardTitle>
         <Button onClick={() => startAddingCategory()} size="sm">
-          <Plus size={16} className="ltr:mr-1 rtl:ml-1" /> Add Category
+          <Plus size={16} className="ltr:mr-1 rtl:ml-1" /> {t('catMgr.addCategory')}
         </Button>
       </CardHeader>
       
       <CardContent>
-        {/* Category Editor */}
         <AnimatePresence>
           {(editingCategory || isAddingCategory) && (
             <motion.div
@@ -362,7 +321,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
               <Card className="border-dashed">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">
-                    {editingCategory ? 'Edit Category' : 'New Category'}
+                    {editingCategory ? t('catMgr.editCategory') : t('catMgr.newCategory')}
                   </CardTitle>
                 </CardHeader>
                 
@@ -388,23 +347,19 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         name="parentId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Parent Category</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
+                            <FormLabel>{t('catMgr.parentCategory')}</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="None (Root Category)" />
+                                  <SelectValue placeholder={t('catMgr.noneRoot')} />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="">None (Root Category)</SelectItem>
+                                <SelectItem value="">{t('catMgr.noneRoot')}</SelectItem>
                                 {categories.map(category => (
                                   <SelectItem 
                                     key={category.id} 
                                     value={category.id}
-                                    // Prevent setting itself as parent
                                     disabled={editingCategory?.id === category.id}
                                   >
                                     {category.name}
@@ -423,19 +378,16 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                           name="color"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Color</FormLabel>
+                              <FormLabel>{t('catMgr.color')}</FormLabel>
                               <Popover>
                                 <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className="w-full justify-start"
-                                  >
+                                  <Button variant="outline" className="w-full justify-start">
                                     <div
-                                      className="w-4 h-4 rounded-full mr-2"
+                                      className="w-4 h-4 rounded-full ltr:mr-2 rtl:ml-2"
                                       style={{ backgroundColor: field.value || '#8B5CF6' }}
                                     />
                                     <span>{
-                                      colorOptions.find(c => c.value === field.value)?.label || 'Select color'
+                                      colorOptions.find(c => c.value === field.value)?.label || t('catMgr.selectColor')
                                     }</span>
                                   </Button>
                                 </PopoverTrigger>
@@ -466,11 +418,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                           name="icon"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Icon</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                defaultValue={field.value}
-                              >
+                              <FormLabel>{t('catMgr.icon')}</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger>
                                     <SelectValue placeholder={t('category.selectIcon')} />
@@ -495,7 +444,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         name="budget"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Budget (optional)</FormLabel>
+                            <FormLabel>{t('catMgr.budgetOptional')}</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
@@ -518,21 +467,21 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Description (optional)</FormLabel>
+                            <FormLabel>{t('catMgr.descriptionOptional')}</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Description" />
+                              <Input {...field} placeholder={t('catMgr.description')} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       
-                      <div className="flex justify-end space-x-2 pt-2">
+                      <div className="flex justify-end gap-2 pt-2">
                         <Button variant="outline" type="button" onClick={cancelEditing}>
-                          <X size={16} className="mr-1" /> Cancel
+                          <X size={16} className="ltr:mr-1 rtl:ml-1" /> {t('common.cancel')}
                         </Button>
                         <Button type="submit">
-                          <Save size={16} className="mr-1" /> Save
+                          <Save size={16} className="ltr:mr-1 rtl:ml-1" /> {t('common.save')}
                         </Button>
                       </div>
                     </form>
@@ -543,15 +492,14 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
           )}
         </AnimatePresence>
         
-        {/* Categories List */}
         <div className="space-y-1 mt-4">
           {rootCategories.length > 0 ? (
             rootCategories.map(category => renderCategoryItem(category))
           ) : (
             <div className="text-center py-8">
-              <div className="text-muted-foreground mb-2">No categories found</div>
+              <div className="text-muted-foreground mb-2">{t('catMgr.noCategories')}</div>
               <Button onClick={() => startAddingCategory()}>
-                <PlusCircle size={16} className="mr-1" /> Create your first category
+                <PlusCircle size={16} className="ltr:mr-1 rtl:ml-1" /> {t('catMgr.createFirst')}
               </Button>
             </div>
           )}

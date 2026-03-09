@@ -922,7 +922,7 @@ const SetBudgetPage = () => {
         <div className="space-y-1.5">
           <h2 className="text-xs font-medium text-muted-foreground">{t('setBudget.notesOptional')}</h2>
           <Textarea
-            placeholder="Add notes..."
+            placeholder={t('budget.addNotes')}
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={2}

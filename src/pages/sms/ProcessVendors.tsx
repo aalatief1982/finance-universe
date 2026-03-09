@@ -1,20 +1,6 @@
 /**
  * @file ProcessVendors.tsx
  * @description Page component for ProcessVendors.
- *
- * @module pages/sms/ProcessVendors
- *
- * @responsibilities
- * 1. Compose layout and section components
- * 2. Load data or invoke services for the page
- * 3. Handle navigation and page-level actions
- *
- * @review-tags
- * - @ui: page composition
- *
- * @review-checklist
- * - [ ] Data loading handles empty states
- * - [ ] Navigation hooks are wired correctly
  */
 import { safeStorage } from "@/utils/safe-storage";
 import React, { useState, useEffect } from 'react';
@@ -24,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Select, SelectItem } from '@/components/ui/select';
 import { getAllCategories, getSubcategoriesForCategory } from '@/lib/category-utils';
 import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface VendorEntry {
   vendor: string;
@@ -33,6 +20,7 @@ interface VendorEntry {
 
 const ProcessVendors: React.FC = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [vendors, setVendors] = useState<VendorEntry[]>([]);
 
   useEffect(() => {
@@ -52,7 +40,7 @@ const ProcessVendors: React.FC = () => {
   const handleCategoryChange = (index: number, newCategory: string) => {
     const updated = [...vendors];
     updated[index].category = newCategory;
-    updated[index].subcategory = 'none'; // reset subcategory
+    updated[index].subcategory = 'none';
     setVendors(updated);
   };
 
@@ -65,20 +53,20 @@ const ProcessVendors: React.FC = () => {
   const handleSave = () => {
     safeStorage.setItem('xpensia_sms_vendors', JSON.stringify(vendors));
     toast({
-      title: 'Vendors Saved',
-      description: 'Vendor categorization saved successfully.',
+      title: t('toast.vendorsSaved'),
+      description: t('toast.vendorsSavedDesc'),
     });
   };
 
   return (
     <Layout>
       <div className="p-[var(--card-padding)]">
-        <h1 className="text-2xl font-bold mb-4">Vendor Categorization</h1>
+        <h1 className="text-2xl font-bold mb-4">{t('vendors.title')}</h1>
 
       <div className="space-y-4">
         {vendors.map((vendor, index) => (
           <Card key={index} className="p-[var(--card-padding)] flex flex-col space-y-2">
-            <p><strong>Vendor:</strong> {vendor.vendor}</p>
+            <p><strong>{t('vendors.vendor')}</strong> {vendor.vendor}</p>
 
             <Select
               value={vendor.category}
@@ -107,7 +95,7 @@ const ProcessVendors: React.FC = () => {
 
       {vendors.length > 0 && (
         <Button className="mt-6 w-full" onClick={handleSave}>
-          Save Vendors
+          {t('vendors.saveVendors')}
         </Button>
       )}
       </div>

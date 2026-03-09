@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { buildInferenceDTO } from '@/lib/inference/buildInferenceDTO';
 import { getInbox, markSmsStatus, SmsInboxItem } from '@/lib/sms-inbox/smsInboxQueue';
 import { isAdminMode } from '@/utils/admin-utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const amountPattern = /(?:\$|usd\s*)?(\d+[\d,]*(?:\.\d{1,2})?)/i;
 
@@ -19,6 +20,7 @@ const SmsReviewInboxPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [pendingItems, setPendingItems] = React.useState<SmsInboxItem[]>([]);
   const adminEnabled = isAdminMode();
 
@@ -30,63 +32,33 @@ const SmsReviewInboxPage = () => {
     setPendingItems(items);
   }, []);
 
-  React.useEffect(() => {
-    loadPendingItems();
-  }, [loadPendingItems]);
+  const handleReviewSms = async (item: SmsInboxItem) => {
+    markSmsStatus(item.id, 'opened');
 
-  const handleReviewSms = React.useCallback(async (item: SmsInboxItem) => {
-    try {
-      const inferenceDTO = await buildInferenceDTO({
-        rawMessage: item.body,
-        senderHint: item.sender,
-        source: 'sms',
-      });
+    const dto = await buildInferenceDTO({ rawMessage: item.body, senderHint: item.sender });
 
-      markSmsStatus(item.id, 'opened');
-      loadPendingItems();
-
-      const continueState = {
-        ...inferenceDTO,
-        mode: 'create' as const,
-        isSuggested: true,
-        smsInboxId: item.id,
-      };
-
-      if (adminEnabled) {
-        navigate('/engine-out', {
-          state: {
-            source: 'notification_review',
-            inferenceDTO,
-            continueState,
+    navigate('/review-sms-transactions', {
+      state: {
+        messages: [
+          {
+            body: item.body,
+            sender: item.sender,
+            timestamp: item.receivedAt,
           },
-        });
-        return;
-      }
+        ],
+        smsInboxId: item.id,
+        dto,
+        returnTo: location.pathname,
+      },
+    });
+  };
 
-      navigate('/edit-transaction', {
-        state: continueState,
-      });
-    } catch (error) {
-      console.error('[SmsReviewInboxPage] Failed to build inference DTO', {
-        module: 'pages/SmsReviewInboxPage',
-        fn: 'handleReviewSms',
-        action: 'review',
-        itemId: item.id,
-        sender: item.sender,
-        route: `${location.pathname}${location.search}${location.hash}`,
-        error,
-      });
-
-      toast({
-        title: 'Unable to open SMS',
-        description: 'We could not open this SMS right now. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  }, [adminEnabled, loadPendingItems, location.hash, location.pathname, location.search, navigate, toast]);
-
-  const handleIgnoreSms = React.useCallback((id: string) => {
+  const handleIgnoreSms = (id: string) => {
     markSmsStatus(id, 'ignored');
+    loadPendingItems();
+  };
+
+  React.useEffect(() => {
     loadPendingItems();
   }, [loadPendingItems]);
 
@@ -95,12 +67,12 @@ const SmsReviewInboxPage = () => {
       <div className="px-1">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">SMS Review Inbox</CardTitle>
+            <CardTitle className="text-base">{t('smsReview.title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {pendingItems.length === 0 ? (
               <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">
-                No SMS transactions waiting for review.
+                {t('smsReview.noItems')}
               </div>
             ) : (
               pendingItems.map((item) => (
@@ -110,14 +82,14 @@ const SmsReviewInboxPage = () => {
                 >
                   <div className="min-w-0 space-y-1">
                     <p className="font-semibold">{item.sender}</p>
-                    <p className="text-sm text-muted-foreground">Amount: {extractAmount(item.body)}</p>
-                    <p className="text-sm text-muted-foreground">Date: {new Date(item.receivedAt).toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">{t('smsReview.amount')} {extractAmount(item.body)}</p>
+                    <p className="text-sm text-muted-foreground">{t('smsReview.date')} {new Date(item.receivedAt).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button onClick={() => void handleReviewSms(item)}>
-                      {item.status === 'opened' ? 'Continue' : 'Review'}
+                      {item.status === 'opened' ? t('smsReview.continue') : t('smsReview.review')}
                     </Button>
-                    <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>Ignore</Button>
+                    <Button variant="destructive" onClick={() => handleIgnoreSms(item.id)}>{t('smsReview.ignore')}</Button>
                   </div>
                 </div>
               ))

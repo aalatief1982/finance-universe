@@ -1,20 +1,6 @@
 /**
  * @file PersonSelector.tsx
  * @description UI component for PersonSelector.
- *
- * @module components/forms/PersonSelector
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
  */
 
 import React, { useState } from 'react';
@@ -27,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface PersonSelectorProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -35,6 +22,7 @@ interface PersonSelectorProps {
 const PersonSelector: React.FC<PersonSelectorProps> = ({
   form
 }) => {
+  const { t } = useLanguage();
   const [people, setPeople] = useState<string[]>(() => getPeopleNames());
   const [addOpen, setAddOpen] = useState(false);
   const [newPerson, setNewPerson] = useState({ name: '', relation: '' });
@@ -55,7 +43,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
         name="person"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Main Person</FormLabel>
+            <FormLabel>{t('person.mainPerson')}</FormLabel>
             <div className="flex items-center gap-1">
               <Select
                 value={field.value || 'none'}
@@ -63,11 +51,11 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select person (optional)" />
+                    <SelectValue placeholder={t('person.selectOptional')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t('person.none')}</SelectItem>
                   {people.map(person => (
                     <SelectItem key={person} value={person}>
                       {person}
@@ -87,12 +75,12 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Person</DialogTitle>
+            <DialogTitle>{t('person.addPerson')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-2">
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="person-selector-name">
-                Name*
+                {t('person.name')}
               </label>
               <Input
                 id="person-selector-name"
@@ -102,7 +90,7 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="person-selector-relation">
-                Relation
+                {t('person.relation')}
               </label>
               <Input
                 id="person-selector-relation"
@@ -112,8 +100,8 @@ const PersonSelector: React.FC<PersonSelectorProps> = ({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
-            <Button type="button" onClick={handleSave}>Save</Button>
+            <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>{t('common.cancel')}</Button>
+            <Button type="button" onClick={handleSave}>{t('common.save')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
