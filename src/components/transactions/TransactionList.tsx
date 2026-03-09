@@ -395,7 +395,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                     <TableCell>{renderCategory(transaction)}</TableCell>
                     <TableCell>{renderDate(transaction.date)}</TableCell>
                     <TableCell>{renderType(transaction.type)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="ltr:text-right rtl:text-left">
                       <div className="flex justify-end">
                         {onEdit && (
                           <Button
