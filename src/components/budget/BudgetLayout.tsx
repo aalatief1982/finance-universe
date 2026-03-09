@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useBudgetPeriodParams } from '@/hooks/useBudgetPeriodParams';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface BudgetLayoutProps {
   children: React.ReactNode;
