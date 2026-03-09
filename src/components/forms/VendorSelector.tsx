@@ -182,7 +182,7 @@ const VendorSelector: React.FC<VendorSelectorProps> = ({ form }) => {
                 </label>
                 <Select value={newVendor.subcategory} onValueChange={val => setNewVendor(prev => ({ ...prev, subcategory: val }))}>
                   <SelectTrigger id="vendor-selector-subcategory" className="w-full">
-                    <SelectValue placeholder="Select subcategory" />
+                    <SelectValue placeholder={t('form.selectSubcategory')} />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     <SelectItem value="">None</SelectItem>

@@ -38,10 +38,10 @@ const DescriptionField: React.FC<DescriptionFieldProps> = ({
       name="description"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Description</FormLabel>
+          <FormLabel>{t('form.description')}</FormLabel>
           <FormControl>
             <Textarea 
-              placeholder="Enter a detailed description..." 
+              placeholder={t('form.detailedDescription')}
               className="min-h-[150px] resize-vertical font-mono text-sm"
               {...field}
             />

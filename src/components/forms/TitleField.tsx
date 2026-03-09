@@ -38,9 +38,9 @@ const TitleField: React.FC<TitleFieldProps> = ({
       name="title"
       render={({ field }) => (
         <FormItem data-field="title">
-          <FormLabel>Title*</FormLabel>
+          <FormLabel>{t('form.title')}</FormLabel>
           <FormControl>
-            <Input placeholder="Transaction title" {...field} />
+            <Input placeholder={t('form.transactionTitle')} {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>

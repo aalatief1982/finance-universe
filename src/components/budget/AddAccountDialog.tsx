@@ -142,7 +142,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
             </label>
             <Select value={form.type} onValueChange={val => setForm({ ...form, type: val as Account['type'] })}>
               <SelectTrigger id="account-type">
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t('account.selectType')} />
               </SelectTrigger>
               <SelectContent>
                 {ACCOUNT_TYPES.map(t => {
