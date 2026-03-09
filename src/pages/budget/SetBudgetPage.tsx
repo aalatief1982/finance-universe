@@ -179,7 +179,7 @@ const SetBudgetPage = () => {
     if (match) setTargetId(match.id);
     setNewAccount({ name: '', iban: '' });
     setAddAccountOpen(false);
-    toast({ title: 'Account added successfully' });
+    toast({ title: t('toast.accountAdded') });
   };
   const existingBudgets = React.useMemo(() => budgetService.getBudgets(), []);
 
