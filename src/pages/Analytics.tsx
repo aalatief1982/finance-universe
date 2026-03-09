@@ -475,8 +475,8 @@ const Analytics: React.FC = () => {
     if (budgetData.length && budgetRiskCount > 0) {
       list.push({
         key: 'budget-risk',
-        title: 'Budget risk detected',
-        description: `${budgetRiskCount} categories are approaching or above 80% of budget usage.`,
+        title: t('analytics.budgetRiskDetected'),
+        description: t('analytics.budgetRiskDesc').replace('{count}', String(budgetRiskCount)),
         ctaLabel: 'Set budget',
         onCta: () => navigate('/budget'),
         priority: 100,
@@ -485,8 +485,8 @@ const Analytics: React.FC = () => {
     if (unconvertedCount > 0) {
       list.push({
         key: 'missing-fx',
-        title: 'Missing exchange rates',
-        description: `${unconvertedCount} transactions are missing conversion rates and may affect totals.`,
+        title: t('analytics.missingExchangeRates'),
+        description: t('analytics.missingExchangeRatesDesc').replace('{count}', String(unconvertedCount)),
         ctaLabel: 'Fix',
         onCta: () => navigate('/exchange-rates'),
         priority: 90,
@@ -495,8 +495,8 @@ const Analytics: React.FC = () => {
     if (uncategorizedCount > 0) {
       list.push({
         key: 'uncategorized',
-        title: 'Uncategorized transactions',
-        description: `${uncategorizedCount} transactions still need categories for cleaner analytics.`,
+        title: t('analytics.uncategorizedTransactions'),
+        description: t('analytics.uncategorizedTransactionsDesc').replace('{count}', String(uncategorizedCount)),
         ctaLabel: 'Review',
         onCta: () => navigate('/transactions?filter=uncategorized'),
         priority: 80,
@@ -505,8 +505,8 @@ const Analytics: React.FC = () => {
     if (recurringVendorsCount > 0) {
       list.push({
         key: 'recurring',
-        title: 'Possible recurring transactions',
-        description: `${recurringVendorsCount} merchants look recurring based on recent cadence.`,
+        title: t('analytics.possibleRecurring'),
+        description: t('analytics.possibleRecurringDesc').replace('{count}', String(recurringVendorsCount)),
         ctaLabel: 'Confirm recurring',
         onCta: () => navigate('/transactions?filter=recurring'),
         priority: 70,
