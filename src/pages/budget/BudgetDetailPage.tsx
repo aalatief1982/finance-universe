@@ -99,15 +99,15 @@ const BudgetDetailPage = () => {
   // Build breadcrumb items
   const breadcrumbItems = React.useMemo(() => {
     if (!budget) {
-      return [{ label: 'Budgets', path: '/budget' }];
+      return [{ label: t('detail.breadcrumbBudgets'), path: '/budget' }];
     }
     const periodLabel = formatPeriodLabel(budget.period, budget.year, budget.periodIndex);
     return [
-      { label: 'Budgets', path: '/budget' },
+      { label: t('detail.breadcrumbBudgets'), path: '/budget' },
       { label: periodLabel, path: '/budget' },
       { label: targetName },
     ];
-  }, [budget, targetName]);
+  }, [budget, targetName, t]);
 
   // Get subcategory names
   const getSubcategoryName = (id: string) => {
