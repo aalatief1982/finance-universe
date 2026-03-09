@@ -909,9 +909,9 @@ const SetBudgetPage = () => {
           <div className="flex items-center gap-2">
             <RotateCcw className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-sm font-medium">Rollover</p>
+              <p className="text-sm font-medium">{t('setBudget.rolloverLabel')}</p>
               <p className="text-xs text-muted-foreground">
-                Carry over unused budget to the next period
+                {t('setBudget.rolloverDesc')}
               </p>
             </div>
           </div>
