@@ -24,7 +24,6 @@ import { BudgetBreadcrumb } from '@/components/budget/BudgetBreadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
@@ -47,6 +46,7 @@ import {
   RotateCcw,
   Bell
 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const BudgetDetailPage = () => {
   const { budgetId } = useParams();
