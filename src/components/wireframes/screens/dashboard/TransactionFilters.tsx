@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionFiltersProps {
   activeTab: string;
