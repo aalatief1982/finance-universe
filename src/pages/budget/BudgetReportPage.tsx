@@ -507,7 +507,7 @@ const BudgetReportPage = () => {
                 {budgetVsActual.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-muted-foreground">
-                      No budget data for this period
+                      {t('report.noBudgetData')}
                     </td>
                   </tr>
                 )}
