@@ -398,9 +398,9 @@ const ImportTransactions = () => {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">In review</p>
+                <p className="text-sm font-medium">{t('smsInbox.inReview')}</p>
                 {openedItems.length === 0 ? (
-                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">No items in review</div>
+                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">{t('smsInbox.noItemsInReview')}</div>
                 ) : (
                   openedItems.map((item) => (
                     <div
