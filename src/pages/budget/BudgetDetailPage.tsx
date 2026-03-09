@@ -264,7 +264,7 @@ const BudgetDetailPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Alerts</span>
+                <span className="text-muted-foreground">{t('detail.alerts')}</span>
               </div>
               <div className="flex gap-1">
                 {(budget.alertThresholds || [50, 80, 100]).map(t => (
