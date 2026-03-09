@@ -849,20 +849,20 @@ const Settings = () => {
       <AlertDialog open={disablePermissionTarget !== null} onOpenChange={(open) => { if (!open) setDisablePermissionTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Disable Permission</AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.disablePermission')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Android requires you to disable this permission in system settings.
+              {t('settings.disablePermissionDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('settings.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 await openAndroidAppPermissionsSettings();
                 setDisablePermissionTarget(null);
               }}
             >
-              Open Settings
+              {t('settings.openSettings')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
