@@ -25,7 +25,7 @@ const TransactionSummary: React.FC<TransactionSummaryProps> = ({ summary }) => {
         <CardContent className="pt-6">
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">Total Income</p>
+              <p className="text-sm font-medium text-muted-foreground mb-1">{t('summary.totalIncome')}</p>
               <h3 className="text-2xl font-bold text-success">{formatCurrency(income, getUserSettings().currency || 'USD')}</h3>
             </div>
             <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
