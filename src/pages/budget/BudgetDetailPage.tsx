@@ -180,7 +180,7 @@ const BudgetDetailPage = () => {
                 {formatCurrency(spent, budget.currency)}
               </div>
               <div className="text-muted-foreground mt-1">
-                of {formatCurrency(budgeted, budget.currency)}
+                {t('detail.of')} {formatCurrency(budgeted, budget.currency)}
               </div>
             </div>
 
