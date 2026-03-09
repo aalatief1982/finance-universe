@@ -219,8 +219,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
     
     if (hasSubcategories) {
       toast({
-        title: "Cannot delete category",
-        description: "Delete or reassign its subcategories first.",
+        title: t('toast.cannotDeleteCategory'),
+        description: t('category.cannotDeleteDesc'),
         variant: "destructive"
       });
       return;
