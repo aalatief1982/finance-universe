@@ -1,36 +1,31 @@
-## Plan: Optimize Android SpeechRecognizer for Better Voice Transcription
+## Plan: Fix Smart Entry Typing Latency
 
 ### Status: ✅ Implemented
 
+### Root Cause
+`parseSmsMessage()` (full parsing pipeline: template matching, regex, localStorage reads, inference) was called on **every keystroke** via a `useEffect` watching `text` in `SmartPaste.tsx`. Additionally, `computeCapturedFields()` ran on every render without memoization.
+
 ### What was changed
 
-**`SpeechToTextPlugin.java`** — Native Android plugin
-- On-device recognizer via `createOnDeviceSpeechRecognizer()` for API 31+ (Android 12+), fallback to `createSpeechRecognizer()` for older devices
-- Added `EXTRA_PREFER_OFFLINE = true` for offline-first recognition
-- Increased `EXTRA_MAX_RESULTS` from 1 to 5
-- Extracts `CONFIDENCE_SCORES`, picks highest-confidence alternative
-- Returns `{ text, confidence, isFinal }` to JS bridge
-
-**`src/plugins/SpeechToTextPlugin.ts`** — TypeScript bridge
-- Added `confidence: number` to `speechResult` event type
-
-**`src/hooks/useSpeechToText.ts`** — React hook
-- Added `minConfidence` option (default `0.35`)
-- Discards low-confidence results with user-friendly toast
-- Dev-mode debug logging for transcript + confidence
-
-**`src/i18n/en.ts` + `src/i18n/ar.ts`** — Added `voice.lowConfidence` translation key
+**`src/components/SmartPaste.tsx`**
+1. **Removed `parseSmsMessage` from keystroke path** — deleted the `useEffect` (formerly L179-209) that ran the full parser on every text change. Match status is now computed only after the user taps "Review Transaction" inside `handleSubmit`.
+2. **Memoized `computeCapturedFields`** — wrapped in `useMemo` with proper dependencies to avoid recalculation on unrelated re-renders.
+3. **Removed unused import** — `parseSmsMessage` import removed since it's no longer called directly.
 
 ### What is NOT changed
-- SmartPaste parser, SMS parsing, category detection — untouched
-- Home.tsx, MicButton.tsx — no UI changes
-- Web Speech API fallback — unchanged
+- `handleSubmit` and full parse pipeline — unchanged (runs on Review tap)
+- SMS parsing logic (`structureParser.ts`, `suggestionEngine.ts`) — untouched
+- Voice transcript merging — unchanged
+- Shared text prefill logic — unchanged
+- `NERSmartPaste.tsx` — unchanged
+- `DetectedTransactionCard`, `NoTransactionMessage` — unchanged
+- Parser files — unchanged
 
-### Post-build steps
-1. `git pull` → `npx cap sync` → `npx cap run android`
-
-### Known limitations
-- `createOnDeviceSpeechRecognizer` only on API 31+ (Android 12+)
-- Some devices may not return confidence scores (defaults to 1.0)
-- Offline language packs must be downloaded manually via Android Settings
-- Mixed Arabic/English accuracy depends on active language model
+### Verification checklist
+- [ ] Typing in Smart Entry is responsive (no lag per keystroke)
+- [ ] Pasting large text works
+- [ ] Shared text prefill works
+- [ ] Voice transcript insertion works
+- [ ] Tapping "Review Transaction" runs parser and shows results
+- [ ] Match status updates correctly after review
+- [ ] No regressions in Smart Entry flow
