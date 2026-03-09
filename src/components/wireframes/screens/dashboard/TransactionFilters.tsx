@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionFiltersProps {
   activeTab: string;
@@ -22,20 +23,28 @@ const TransactionFilters = ({
   period, 
   setPeriod 
 }: TransactionFiltersProps) => {
+  const { t } = useLanguage();
+  
+  const tabs = [
+    { value: 'all', label: t('transactions.all') },
+    { value: 'income', label: t('filter.income') },
+    { value: 'expenses', label: t('filter.expense') }
+  ];
+  
   return (
     <div className="flex justify-between mb-2">
       <div className="space-x-1 flex">
-        {['all', 'income', 'expenses'].map(tab => (
+        {tabs.map(tab => (
           <button 
-            key={tab}
+            key={tab.value}
             className={`px-3 py-1 text-sm rounded-md ${
-              activeTab === tab 
+              activeTab === tab.value
                 ? 'bg-blue-100 text-blue-600' 
                 : 'bg-gray-100'
             }`}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => setActiveTab(tab.value)}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -46,9 +55,9 @@ const TransactionFilters = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="year">This Year</SelectItem>
+            <SelectItem value="week">{t('range.week')}</SelectItem>
+            <SelectItem value="month">{t('range.month')}</SelectItem>
+            <SelectItem value="year">{t('range.year')}</SelectItem>
           </SelectContent>
         </Select>
         <button className="p-1 rounded-md bg-gray-100">

@@ -27,6 +27,7 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { format } from 'date-fns';
 import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
 import CategoryIcon from '@/components/CategoryIcon';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -69,6 +70,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const transactionContext = useOptionalTransactions();
   const contextDeleteTransaction = transactionContext?.deleteTransaction;
   const { toast } = useToast();
+  const { t } = useLanguage();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Reset selection when transactions change
@@ -178,7 +180,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
     } else if (contextDeleteTransaction) {
       contextDeleteTransaction(transactionPendingDelete.id);
     }
-    toast({ description: 'Transaction deleted successfully' });
+    toast({ description: t('transaction.deletedSuccessfully') });
     setTransactionPendingDelete(null);
   };
 

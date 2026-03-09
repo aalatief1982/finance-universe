@@ -311,4 +311,30 @@ export const en: Record<string, string> = {
   'voice.recognitionFailed': 'Voice recognition failed. Try typing instead.',
   'voice.notSupported': 'Voice input is not supported on this device.',
   'voice.listening': 'Listening...',
+
+  // Transaction actions
+  'transaction.deleted': 'Transaction deleted',
+  'transaction.deletedSuccessfully': 'Transaction deleted successfully',
+  'transaction.defaultTitle': 'Transaction',
+  'transaction.expenseLabel': 'Expense',
+
+  // Empty states
+  'empty.noTransactionsYet': "You haven't added any transactions yet.",
+  'empty.noMatchingFilters': 'No transactions match your current filters.',
+  'empty.addFirstTransaction': 'Add your first transaction',
+  'empty.clearFilters': 'Clear filters',
+
+  // Filters
+  'filter.category': 'Category',
+  'filter.type': 'Type',
+  'filter.allTypes': 'All Types',
+  'filter.income': 'Income',
+  'filter.expense': 'Expense',
+  'filter.dateRange': 'Date Range',
+  'filter.amountRange': 'Amount Range',
+  'filter.sortBy': 'Sort By',
+  'filter.from': 'From',
+  'filter.to': 'To',
+  'filter.min': 'Min',
+  'filter.max': 'Max',
 };

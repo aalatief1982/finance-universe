@@ -134,8 +134,8 @@ const Home = () => {
   // Calculate balance separately (income - expenses for display)
   const initials = firstName.charAt(0).toUpperCase();
   const formatDisplayTitle = (txn: Transaction) => {
-    const base = txn.title?.trim() || "Transaction";
-    return txn.type === "expense" ? `${base} (Expense)` : base;
+    const base = txn.title?.trim() || t('transaction.defaultTitle');
+    return txn.type === "expense" ? `${base} (${t('transaction.expenseLabel')})` : base;
   };
 
   const formatTxnDate = (dateStr: string) => {

@@ -10,6 +10,7 @@ import { normalizeInferenceDTO } from '@/lib/inference/inferenceDTO';
 import { useTransactions } from '@/context/TransactionContext';
 import { useToast } from '@/components/ui/use-toast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SwipeableTransactionCardProps {
   transaction: Transaction;
@@ -21,6 +22,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
   const navigate = useNavigate();
   const { deleteTransaction } = useTransactions();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const controls = useAnimation();
   const constraintsRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -33,7 +35,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
   const handleDelete = () => {
     deleteTransaction(transaction.id);
     toast({
-      title: "Transaction deleted",
+      title: t('transaction.deleted'),
       description: "",
     });
   };
@@ -100,7 +102,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
       {/* Swipeable Card */}
       <motion.div
         drag="x"
-        dragConstraints={constraintsRef}
+        dragConstraints={{ left: -150, right: 150 }}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         animate={controls}

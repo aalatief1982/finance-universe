@@ -29,6 +29,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ExpenseCard from '@/components/ExpenseCard';
 import { Transaction } from '@/types/transaction';
 import { formatDate } from '@/lib/formatters';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionGridProps {
   transactions: Transaction[];
@@ -42,6 +43,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
   onDeleteTransaction
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   // ============================================================================
   // SECTION: Animation Variants
   // PURPOSE: Provide consistent enter animations for list + items
@@ -132,7 +134,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={() => {
                         onDeleteTransaction(transaction.id);
-                        toast({ description: 'Transaction deleted successfully' });
+                        toast({ description: t('transaction.deletedSuccessfully') });
                       }}
                     >
                       Delete

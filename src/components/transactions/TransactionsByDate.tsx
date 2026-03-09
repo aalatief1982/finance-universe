@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { normalizeInferenceDTO } from "@/lib/inference/inferenceDTO";
 import { UnconvertedBadge } from "@/components/fx";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface TransactionsByDateProps {
   transactions: Transaction[];
@@ -34,6 +35,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const { deleteTransaction } = useTransactions();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const userCurrency = getUserSettings().currency || 'USD';
 
@@ -78,7 +80,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({
     if (transactionToDelete) {
       deleteTransaction(transactionToDelete.id);
       toast({
-        description: "Transaction deleted successfully"
+        description: t('transaction.deletedSuccessfully')
       });
       setDeleteDialogOpen(false);
       setTransactionToDelete(null);

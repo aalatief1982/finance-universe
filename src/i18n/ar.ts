@@ -311,4 +311,30 @@ export const ar: Record<string, string> = {
   'voice.recognitionFailed': 'فشل التعرف على الصوت. حاول الكتابة بدلاً من ذلك.',
   'voice.notSupported': 'الإدخال الصوتي غير مدعوم على هذا الجهاز.',
   'voice.listening': 'جارٍ الاستماع...',
+
+  // Transaction actions
+  'transaction.deleted': 'تم حذف المعاملة',
+  'transaction.deletedSuccessfully': 'تم حذف المعاملة بنجاح',
+  'transaction.defaultTitle': 'معاملة',
+  'transaction.expenseLabel': 'مصروف',
+
+  // Empty states
+  'empty.noTransactionsYet': 'لم تضف أي معاملات بعد.',
+  'empty.noMatchingFilters': 'لا توجد معاملات تطابق الفلاتر الحالية.',
+  'empty.addFirstTransaction': 'أضف معاملتك الأولى',
+  'empty.clearFilters': 'مسح الفلاتر',
+
+  // Filters
+  'filter.category': 'الفئة',
+  'filter.type': 'النوع',
+  'filter.allTypes': 'كل الأنواع',
+  'filter.income': 'دخل',
+  'filter.expense': 'مصروف',
+  'filter.dateRange': 'نطاق التاريخ',
+  'filter.amountRange': 'نطاق المبلغ',
+  'filter.sortBy': 'ترتيب حسب',
+  'filter.from': 'من',
+  'filter.to': 'إلى',
+  'filter.min': 'الأدنى',
+  'filter.max': 'الأعلى',
 };
