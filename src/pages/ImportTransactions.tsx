@@ -368,13 +368,13 @@ const ImportTransactions = () => {
         >
           <Card ref={smsInboxRef}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t('smsInbox.title')}box.title')}</CardTitle>
+              <CardTitle className="text-base">{t('smsInbox.title')}box.title')}box.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
-                <p className="text-sm f{t('smsInbox.newSms')}ium">New SMS</p>
+                <p classNam{t('smsInbox.newSms')}-sm f{t('smsInbox.newSms')}ium">New SMS</p>
                 {newItems.length === 0 ? (
-                  <div className="rounded-md border px-3 py-2 text-sm text-muted-foreground">No new SMS</div>
+                  <div className="rounded-md border px-3 py-2 text{t('smsInbox.noNewSms')}uted-foreground">No new SMS</div>
                 ) : (
                   newItems.map((item) => (
                     <div
