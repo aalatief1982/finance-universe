@@ -346,6 +346,7 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   onDirtyChange,
 }) => {
   // Serialize fieldConfidences to prevent object reference changes triggering re-renders
+  const { t } = useLanguage();
   const fieldConfidencesKey = JSON.stringify(fieldConfidences);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [isHydrating, setIsHydrating] = useState(true);
