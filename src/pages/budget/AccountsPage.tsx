@@ -445,7 +445,7 @@ const AccountsPage = () => {
           
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
+              {t('accounts.cancel')}
             </Button>
             {linkedCount === 0 && (
               <Button variant="destructive" onClick={handleDelete}>
