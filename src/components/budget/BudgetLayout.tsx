@@ -71,7 +71,7 @@ export function BudgetLayout({
           size="icon"
           className="fixed bottom-16 right-4 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg"
           onClick={() => navigate('/budget/set')}
-          aria-label="Add Budget"
+          aria-label={t('budget.addBudget')}
         >
           <Plus className="h-5 w-5" />
         </Button>

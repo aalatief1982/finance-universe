@@ -927,5 +927,39 @@ export const ar: Record<string, string> = {
   'quarter.3': 'ر3 (يوليو-سبتمبر)',
   'quarter.4': 'ر4 (أكتوبر-ديسمبر)',
 
+  // OverallBudgetRing
+  'ring.noBudget': 'لم يتم تعيين ميزانية',
+  'ring.used': 'مستخدم',
+  'ring.spent': 'المصروف:',
+  'ring.budget': 'الميزانية:',
+  'ring.overBy': 'تجاوز بمقدار {amount}',
+  'ring.remaining': '{amount} متبقي',
+
+  // BudgetAlertBanner
+  'alert.overall': 'الإجمالي',
+  'alert.budget': 'الميزانية',
+  'alert.exceeded': 'لقد تجاوزت ميزانية {target}!',
+  'alert.used': 'لقد استخدمت {percent}% من ميزانية {target}',
+  'alert.threshold': 'تم الوصول إلى حد {value}%',
+
+  // SpendingTrendChart legend
+  'trendChart.budgetLimit': 'حد الميزانية',
+  'trendChart.targetPace': 'المعدل المستهدف',
+  'trendChart.actualSpending': 'الإنفاق الفعلي',
+
+  // BudgetLayout
+  'budget.addBudget': 'إضافة ميزانية',
+
+  // BudgetHierarchyView
+  'hierarchy.title': 'تسلسل الفترات',
+  'hierarchy.description': 'عرض ميزانيات الفترات الزمنية المرتبطة',
+  'hierarchy.current': 'الحالي',
+  'hierarchy.calculated': 'محسوب',
+  'hierarchy.parent': 'الفترة الأم',
+  'hierarchy.samePeriod': 'نفس نوع الفترة',
+  'hierarchy.currentPeriod': 'الفترة الحالية',
+  'hierarchy.childPeriods': 'الفترات الفرعية',
+  'hierarchy.more': '+{count} المزيد',
+
 };
 

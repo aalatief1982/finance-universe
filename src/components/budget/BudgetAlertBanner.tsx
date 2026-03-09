@@ -5,6 +5,7 @@ import { budgetService } from '@/services/BudgetService';
 import { Button } from '@/components/ui/button';
 import { X, AlertTriangle, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface BudgetAlertBannerProps {
   alert: BudgetAlert;
@@ -13,23 +14,24 @@ interface BudgetAlertBannerProps {
 }
 
 export function BudgetAlertBanner({ alert, onDismiss, className }: BudgetAlertBannerProps) {
+  const { t } = useLanguage();
   const budget = budgetService.getBudgetById(alert.budgetId);
   
   if (!budget) return null;
 
   const getTargetName = (budget: Budget): string => {
-    if (budget.scope === 'overall') return 'Overall';
-    // For all scopes, return the target ID (simplified)
-    // In production, you'd look up the name from the appropriate service
-    return budget.targetId || 'Budget';
+    if (budget.scope === 'overall') return t('alert.overall');
+    return budget.targetId || t('alert.budget');
   };
 
   const getMessage = () => {
     const targetName = getTargetName(budget);
     if (alert.threshold >= 100) {
-      return `You've exceeded your ${targetName} budget!`;
+      return t('alert.exceeded').replace('{target}', targetName);
     }
-    return `You've used ${Math.round(alert.percentUsed)}% of your ${targetName} budget`;
+    return t('alert.used')
+      .replace('{percent}', String(Math.round(alert.percentUsed)))
+      .replace('{target}', targetName);
   };
 
   const getVariant = () => {
@@ -83,7 +85,7 @@ export function BudgetAlertBanner({ alert, onDismiss, className }: BudgetAlertBa
           {getMessage()}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          {alert.threshold}% threshold reached
+          {t('alert.threshold').replace('{value}', String(alert.threshold))}
         </p>
       </div>
       

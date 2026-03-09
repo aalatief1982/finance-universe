@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface BudgetHierarchyViewProps {
   currentBudget: Budget;
@@ -25,6 +26,7 @@ export function BudgetHierarchyView({
   getBudgetProgress,
 }: BudgetHierarchyViewProps) {
   const navigate = useNavigate();
+  const { t, isRtl } = useLanguage();
   
   const hasHierarchy = parentBudget || siblingBudgets.length > 0 || childBudgets.length > 0;
   
@@ -56,26 +58,26 @@ export function BudgetHierarchyView({
             {label}
           </span>
           {isCurrent && (
-            <Badge variant="secondary" className="text-xs">Current</Badge>
+            <Badge variant="secondary" className="text-xs">{t('hierarchy.current')}</Badge>
           )}
           {!budget.isOverride && (
-            <Badge variant="outline" className="text-xs border-dashed">Calculated</Badge>
+            <Badge variant="outline" className="text-xs border-dashed">{t('hierarchy.calculated')}</Badge>
           )}
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="text-right">
+          <div className={cn("text-sm", isRtl ? "text-left" : "text-right")}>
             <span className={cn(
-              "text-sm font-medium",
+              "font-medium",
               progress.isOverBudget && "text-destructive"
             )}>
               {formatCurrency(progress.spent, budget.currency)}
             </span>
-            <span className="text-muted-foreground text-sm"> / </span>
-            <span className="text-sm">{formatCurrency(budget.amount, budget.currency)}</span>
+            <span className="text-muted-foreground"> / </span>
+            <span>{formatCurrency(budget.amount, budget.currency)}</span>
           </div>
           
-          {!isCurrent && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+          {!isCurrent && <ChevronRight className={cn("h-4 w-4 text-muted-foreground", isRtl && "rotate-180")} />}
         </div>
       </div>
     );
@@ -84,29 +86,25 @@ export function BudgetHierarchyView({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Period Hierarchy</CardTitle>
-        <CardDescription>
-          View related time period budgets
-        </CardDescription>
+        <CardTitle className="text-base">{t('hierarchy.title')}</CardTitle>
+        <CardDescription>{t('hierarchy.description')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Parent Period */}
         {parentBudget && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <ArrowUp className="h-3 w-3" />
-              <span>Parent Period</span>
+              <span>{t('hierarchy.parent')}</span>
             </div>
             {renderBudgetRow(parentBudget)}
           </div>
         )}
         
-        {/* Siblings (including current) */}
         {siblingBudgets.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Minus className="h-3 w-3" />
-              <span>Same Period Type</span>
+              <span>{t('hierarchy.samePeriod')}</span>
             </div>
             <div className="space-y-1">
               {[...siblingBudgets, currentBudget]
@@ -116,32 +114,30 @@ export function BudgetHierarchyView({
           </div>
         )}
         
-        {/* No siblings - just show current */}
         {siblingBudgets.length === 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Minus className="h-3 w-3" />
-              <span>Current Period</span>
+              <span>{t('hierarchy.currentPeriod')}</span>
             </div>
             {renderBudgetRow(currentBudget, true)}
           </div>
         )}
         
-        {/* Child Periods */}
         {childBudgets.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <ArrowDown className="h-3 w-3" />
-              <span>Child Periods</span>
+              <span>{t('hierarchy.childPeriods')}</span>
             </div>
             <div className="space-y-1 max-h-48 overflow-y-auto">
               {childBudgets
                 .sort((a, b) => (a.periodIndex || 0) - (b.periodIndex || 0))
-                .slice(0, 6) // Limit to 6 children to avoid too long list
+                .slice(0, 6)
                 .map(b => renderBudgetRow(b))}
               {childBudgets.length > 6 && (
                 <p className="text-center text-xs text-muted-foreground py-2">
-                  +{childBudgets.length - 6} more
+                  {t('hierarchy.more').replace('{count}', String(childBudgets.length - 6))}
                 </p>
               )}
             </div>
