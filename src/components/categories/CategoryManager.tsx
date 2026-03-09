@@ -374,9 +374,9 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Name</FormLabel>
+                            <FormLabel>{t('category.name')}</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="Category name" />
+                              <Input {...field} placeholder={t('category.categoryName')} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
