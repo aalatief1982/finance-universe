@@ -176,37 +176,15 @@ const SmartPaste = ({
     pendingPrefillConfirmationRef.current = null;
   }, [onPrefillConsumed, text]);
 
+  // Match status is now computed only on submit (inside handleSubmit)
+  // to avoid running the heavy parseSmsMessage pipeline on every keystroke.
   useEffect(() => {
     if (!text.trim()) {
       setMatchStatus('Paste a message to begin');
       setHasMatch(false);
       setIsSubmitted(false);
-      return;
     }
-
-    try {
-      const parsed = parseSmsMessage(text, senderHint);
-      if (parsed.matched) {
-        const bank =
-          parsed.inferredFields.vendor?.value ||
-          parsed.directFields.vendor?.value ||
-          parsed.directFields.fromAccount?.value ||
-          '';
-        setMatchStatus(`Matched template from ${bank || 'saved template'}`);
-        setHasMatch(true);
-      } else {
-        setMatchStatus(
-          'Ready to review. We can still extract transaction details from this message.',
-        );
-        setHasMatch(false);
-      }
-    } catch {
-      setMatchStatus(
-        'Ready to review. We can still extract transaction details from this message.',
-      );
-      setHasMatch(false);
-    }
-  }, [text, senderHint]);
+  }, [text]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
