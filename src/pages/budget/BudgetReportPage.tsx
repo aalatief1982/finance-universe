@@ -54,6 +54,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const CHART_COLORS = [
   'hsl(var(--primary))',
@@ -66,19 +67,21 @@ const CHART_COLORS = [
   '#06b6d4',
 ];
 
-const SCOPE_OPTIONS: { value: BudgetScope | 'all'; label: string }[] = [
-  { value: 'all', label: 'All Scopes' },
-  { value: 'overall', label: 'Overall' },
-  { value: 'category', label: 'Category' },
-  { value: 'subcategory', label: 'Subcategory' },
-  { value: 'account', label: 'Account' },
-];
+const SCOPE_LABEL_KEYS: Record<string, string> = {
+  all: 'report.allScopes',
+  overall: 'report.overall',
+  category: 'report.category',
+  subcategory: 'report.subcategory',
+  account: 'report.account',
+};
 
 const BudgetReportPage = () => {
+  const { t } = useLanguage();
   const { transactions } = useTransactions();
   const { period, year, periodIndex, periodLabel } = useBudgetPeriodParams();
   const [timeRange, setTimeRange] = React.useState<'3m' | '6m' | '12m'>('6m');
   const [scopeFilter, setScopeFilter] = React.useState<BudgetScope | 'all'>('overall');
+  const SCOPE_VALUES: (BudgetScope | 'all')[] = ['all', 'overall', 'category', 'subcategory', 'account'];
   
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
@@ -254,28 +257,28 @@ const BudgetReportPage = () => {
   const headerActions = (
     <Button variant="outline" size="sm" onClick={handleExport}>
       <Download className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-      Export
+      {t('report.export')}
     </Button>
   );
 
   return (
     <BudgetLayout 
-      title="Reports" 
-      description="Analyze your budget performance"
+      title={t('report.title')} 
+      description={t('report.description')}
       showAddButton={false}
       headerActions={headerActions}
     >
       {/* Scope Filter */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-        {SCOPE_OPTIONS.map(opt => (
+        {SCOPE_VALUES.map(val => (
           <Button
-            key={opt.value}
-            variant={scopeFilter === opt.value ? 'default' : 'outline'}
+            key={val}
+            variant={scopeFilter === val ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setScopeFilter(opt.value)}
+            onClick={() => setScopeFilter(val)}
             className="whitespace-nowrap"
           >
-            {opt.label}
+            {t(SCOPE_LABEL_KEYS[val])}
           </Button>
         ))}
       </div>
@@ -284,7 +287,7 @@ const BudgetReportPage = () => {
       <div className="grid grid-cols-2 gap-3 mb-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">Total Budget</div>
+            <div className="text-sm text-muted-foreground">{t('report.totalBudget')}</div>
             <div className="text-2xl font-bold mt-1">
               {formatCurrency(totalSummary.totalBudget)}
             </div>
@@ -292,7 +295,7 @@ const BudgetReportPage = () => {
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-sm text-muted-foreground">Total Spent</div>
+            <div className="text-sm text-muted-foreground">{t('report.totalSpent')}</div>
             <div className="text-2xl font-bold mt-1">
               {formatCurrency(totalSummary.totalSpent)}
             </div>
@@ -304,7 +307,7 @@ const BudgetReportPage = () => {
               ) : (
                 <ArrowDownRight className="h-3 w-3" />
               )}
-              {Math.round(totalSummary.percentUsed)}% of budget
+              {Math.round(totalSummary.percentUsed)}% {t('report.ofBudget')}
             </div>
           </CardContent>
         </Card>
@@ -315,7 +318,7 @@ const BudgetReportPage = () => {
         <Card className="border-destructive/50 bg-destructive/5 mb-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-base text-destructive">
-              Over Budget ({overBudgetItems.length})
+              {t('report.overBudget')} ({overBudgetItems.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -334,17 +337,17 @@ const BudgetReportPage = () => {
       {/* Charts Tabs */}
       <Tabs defaultValue="comparison" className="space-y-4 mb-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="comparison">Comparison</TabsTrigger>
-          <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
-          <TabsTrigger value="trend">Trend</TabsTrigger>
+          <TabsTrigger value="comparison">{t('report.comparison')}</TabsTrigger>
+          <TabsTrigger value="breakdown">{t('report.breakdown')}</TabsTrigger>
+          <TabsTrigger value="trend">{t('report.trend')}</TabsTrigger>
         </TabsList>
 
         {/* Budget vs Spent Comparison */}
         <TabsContent value="comparison">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Budget vs. Spent</CardTitle>
-              <CardDescription>Compare budgeted amounts to actual spending</CardDescription>
+              <CardTitle className="text-base">{t('report.budgetVsSpent')}</CardTitle>
+              <CardDescription>{t('report.compareBudgetedToActual')}</CardDescription>
             </CardHeader>
             <CardContent>
               {budgetVsActual.length > 0 ? (
@@ -360,14 +363,14 @@ const BudgetReportPage = () => {
                       <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend />
-                      <Bar dataKey="budget" name="Budget" fill="hsl(var(--primary))" />
-                      <Bar dataKey="spent" name="Spent" fill="hsl(var(--destructive))" />
+                      <Bar dataKey="budget" name={t('report.chartBudget')} fill="hsl(var(--primary))" />
+                      <Bar dataKey="spent" name={t('report.chartSpent')} fill="hsl(var(--destructive))" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-12">
-                  No {selectedPeriod} budgets found
+                  {t('report.noPeriodBudgets').replace('{period}', selectedPeriod)}
                 </p>
               )}
             </CardContent>
@@ -378,8 +381,8 @@ const BudgetReportPage = () => {
         <TabsContent value="breakdown">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Spending by Category</CardTitle>
-              <CardDescription>Distribution of spending across categories</CardDescription>
+              <CardTitle className="text-base">{t('report.spendingByCategory')}</CardTitle>
+              <CardDescription>{t('report.distributionAcrossCategories')}</CardDescription>
             </CardHeader>
             <CardContent>
               {categoryBreakdown.length > 0 ? (
@@ -408,7 +411,7 @@ const BudgetReportPage = () => {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-12">
-                  No category spending data
+                  {t('report.noCategoryData')}
                 </p>
               )}
             </CardContent>
@@ -421,8 +424,8 @@ const BudgetReportPage = () => {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base">Spending Trend</CardTitle>
-                  <CardDescription>Monthly spending over time</CardDescription>
+                  <CardTitle className="text-base">{t('report.spendingTrend')}</CardTitle>
+                  <CardDescription>{t('report.monthlyOverTime')}</CardDescription>
                 </div>
                 <Select value={timeRange} onValueChange={v => setTimeRange(v as '3m' | '6m' | '12m')}>
                   <SelectTrigger className="w-20">
@@ -448,16 +451,16 @@ const BudgetReportPage = () => {
                     <Line 
                       type="monotone" 
                       dataKey="spent" 
-                      name="Spent"
-                      stroke="hsl(var(--destructive))" 
+                      name={t('report.chartSpent')}
+                      stroke="hsl(var(--destructive))"
                       strokeWidth={2}
                       dot={{ r: 4 }}
                     />
                     <Line 
                       type="monotone" 
                       dataKey="budget" 
-                      name="Budget"
-                      stroke="hsl(var(--primary))" 
+                      name={t('report.chartBudget')}
+                      stroke="hsl(var(--primary))"
                       strokeWidth={2}
                       strokeDasharray="5 5"
                       dot={{ r: 4 }}
@@ -473,26 +476,26 @@ const BudgetReportPage = () => {
       {/* Detailed Table */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Detailed Breakdown</CardTitle>
+          <CardTitle className="text-base">{t('report.detailedBreakdown')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 font-medium">Category</th>
-                  <th className="text-right py-2 font-medium">Budget</th>
-                  <th className="text-right py-2 font-medium">Spent</th>
-                  <th className="text-right py-2 font-medium">% Used</th>
+                  <th className="ltr:text-left rtl:text-right py-2 font-medium">{t('report.colCategory')}</th>
+                  <th className="ltr:text-right rtl:text-left py-2 font-medium">{t('report.colBudget')}</th>
+                  <th className="ltr:text-right rtl:text-left py-2 font-medium">{t('report.colSpent')}</th>
+                  <th className="ltr:text-right rtl:text-left py-2 font-medium">{t('report.colUsed')}</th>
                 </tr>
               </thead>
               <tbody>
                 {budgetVsActual.map(item => (
                   <tr key={item.id} className="border-b last:border-0">
                     <td className="py-2">{item.name}</td>
-                    <td className="py-2 text-right">{formatCurrency(item.budget)}</td>
-                    <td className="py-2 text-right">{formatCurrency(item.spent)}</td>
-                    <td className="py-2 text-right">
+                    <td className="py-2 ltr:text-right rtl:text-left">{formatCurrency(item.budget)}</td>
+                    <td className="py-2 ltr:text-right rtl:text-left">{formatCurrency(item.spent)}</td>
+                    <td className="py-2 ltr:text-right rtl:text-left">
                       <Badge 
                         variant={item.percentUsed > 100 ? 'destructive' : item.percentUsed > 80 ? 'secondary' : 'outline'}
                       >
@@ -504,7 +507,7 @@ const BudgetReportPage = () => {
                 {budgetVsActual.length === 0 && (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-muted-foreground">
-                      No budget data for this period
+                      {t('report.noBudgetData')}
                     </td>
                   </tr>
                 )}

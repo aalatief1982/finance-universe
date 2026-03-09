@@ -47,6 +47,7 @@ import { Budget, BudgetScope, BudgetPeriod, DEFAULT_ALERT_THRESHOLDS, CreateBudg
 import { getCurrentPeriodInfo, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { getUserSettings } from '@/utils/storage-utils';
 import { ParentImpactPreview } from '@/components/budget/ParentImpactPreview';
 import { SiblingBudgetsContext } from '@/components/budget/SiblingBudgetsContext';
@@ -118,6 +119,7 @@ function normalizeBudgetPeriod(period: BudgetPeriod | null | undefined): BudgetP
 }
 
 const SetBudgetPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
@@ -177,7 +179,7 @@ const SetBudgetPage = () => {
     if (match) setTargetId(match.id);
     setNewAccount({ name: '', iban: '' });
     setAddAccountOpen(false);
-    toast({ title: 'Account added successfully' });
+    toast({ title: t('toast.accountAdded') });
   };
   const existingBudgets = React.useMemo(() => budgetService.getBudgets(), []);
 
@@ -494,11 +496,11 @@ const SetBudgetPage = () => {
   const handleSave = (cascade: boolean = false) => {
     // For overall scope, targetId is '_overall', for others require selection
     if (!targetId && scope !== 'overall') {
-      toast({ title: 'Please select a target', variant: 'destructive' });
+      toast({ title: t('setBudget.selectTarget.label'), variant: 'destructive' });
       return;
     }
     if (amount <= 0) {
-      toast({ title: 'Please enter a valid amount', variant: 'destructive' });
+      toast({ title: t('setBudget.validAmount'), variant: 'destructive' });
       return;
     }
 
@@ -550,9 +552,9 @@ const SetBudgetPage = () => {
           });
         }
         
-        toast({ title: 'Budget and parent periods updated' });
+        toast({ title: t('toast.budgetUpdatedWithParent') });
       } else {
-        toast({ title: 'Budget updated successfully' });
+        toast({ title: t('toast.budgetUpdated') });
       }
     } else {
       budgetService.addBudget(budgetData);
@@ -560,9 +562,9 @@ const SetBudgetPage = () => {
       // If yearly and user confirmed cascade, create child period budgets
       if (cascade && period === 'yearly') {
         createCascadedBudgets(budgetData);
-        toast({ title: 'Budget created with time distribution' });
+        toast({ title: t('toast.budgetCreatedDistributed') });
       } else {
-        toast({ title: 'Budget created successfully' });
+        toast({ title: t('toast.budgetCreated') });
       }
     }
 
@@ -602,14 +604,14 @@ const SetBudgetPage = () => {
   const handleConfirmDelete = () => {
     if (pendingDeleteAction === 'existing' && existingBudgetMatch) {
       budgetService.deleteBudget(existingBudgetMatch.id);
-      toast({ title: 'Budget deleted' });
+      toast({ title: t('toast.budgetDeleted') });
       window.location.reload();
       return;
     }
 
     if (pendingDeleteAction === 'editing' && editId) {
       budgetService.deleteBudget(editId);
-      toast({ title: 'Budget deleted' });
+      toast({ title: t('toast.budgetDeleted') });
       navigate('/budget');
     }
   };
@@ -622,12 +624,12 @@ const SetBudgetPage = () => {
     <Layout>
       <div className="container px-4 py-3 pb-24 space-y-4 max-w-lg mx-auto">
         <h1 className="text-xl font-bold">
-          {isEditMode ? 'Edit Budget' : 'Create Budget'}
+          {isEditMode ? t('setBudget.editBudget') : t('setBudget.createBudget')}
         </h1>
 
         {/* Scope Selection — inline chips */}
         <div className="space-y-1.5">
-          <h2 className="text-xs font-medium text-muted-foreground">Scope</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">{t('setBudget.scope')}</h2>
           <div className="flex flex-wrap gap-2">
             {SCOPES.map(({ value, label, icon: Icon }) => (
               <button
@@ -887,7 +889,7 @@ const SetBudgetPage = () => {
 
         {/* Alert Thresholds */}
         <div className="space-y-1.5">
-          <h2 className="text-xs font-medium text-muted-foreground">Alerts</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">{t('setBudget.alertsLabel')}</h2>
           <div className="flex flex-wrap gap-2">
             {ALERT_THRESHOLDS.map(threshold => (
               <Badge
@@ -907,9 +909,9 @@ const SetBudgetPage = () => {
           <div className="flex items-center gap-2">
             <RotateCcw className="h-4 w-4 text-muted-foreground" />
             <div>
-              <p className="text-sm font-medium">Rollover</p>
+              <p className="text-sm font-medium">{t('setBudget.rolloverLabel')}</p>
               <p className="text-xs text-muted-foreground">
-                Carry over unused budget to the next period
+                {t('setBudget.rolloverDesc')}
               </p>
             </div>
           </div>
@@ -918,7 +920,7 @@ const SetBudgetPage = () => {
 
         {/* Notes — collapsible feel */}
         <div className="space-y-1.5">
-          <h2 className="text-xs font-medium text-muted-foreground">Notes (optional)</h2>
+          <h2 className="text-xs font-medium text-muted-foreground">{t('setBudget.notesOptional')}</h2>
           <Textarea
             placeholder="Add notes..."
             value={notes}
@@ -944,14 +946,14 @@ const SetBudgetPage = () => {
             className="flex-1"
             onClick={() => navigate('/budget')}
           >
-            Cancel
+            {t('setBudget.cancel')}
           </Button>
           <Button 
             className="flex-1"
             onClick={handleSaveClick}
             disabled={(!targetId && scope !== 'overall') || amount <= 0}
           >
-            {isEditMode ? 'Update' : 'Create'} Budget
+            {isEditMode ? t('setBudget.updateBudget') : t('setBudget.createBudgetBtn')}
           </Button>
         </div>
 
@@ -961,7 +963,7 @@ const SetBudgetPage = () => {
       <Dialog open={showCascadeConfirm} onOpenChange={setShowCascadeConfirm}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Distribute to Child Periods?</DialogTitle>
+            <DialogTitle>{t('setBudget.distributeTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Your yearly budget of {formatCurrency(amount, currency)} can be automatically distributed to quarters and months.
@@ -979,7 +981,7 @@ const SetBudgetPage = () => {
                 handleSave(false);
               }}
             >
-              Just Yearly
+              {t('setBudget.justYearly')}
             </Button>
             <Button
               className="w-full sm:w-auto"
@@ -988,7 +990,7 @@ const SetBudgetPage = () => {
                 handleSave(true);
               }}
             >
-              Distribute All
+              {t('setBudget.distributeAll')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -997,14 +999,14 @@ const SetBudgetPage = () => {
       <Dialog open={pendingDeleteAction !== null} onOpenChange={(open) => !open && setPendingDeleteAction(null)}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-sm">
           <DialogHeader>
-            <DialogTitle>Delete budget?</DialogTitle>
+            <DialogTitle>{t('setBudget.deleteBudgetTitle')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete this budget? This action cannot be undone.
+            {t('setBudget.deleteBudgetDesc')}
           </p>
           <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
             <Button variant="outline" className="w-full sm:w-auto" onClick={() => setPendingDeleteAction(null)}>
-              Cancel
+              {t('setBudget.cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -1014,7 +1016,7 @@ const SetBudgetPage = () => {
                 setPendingDeleteAction(null);
               }}
             >
-              Delete
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

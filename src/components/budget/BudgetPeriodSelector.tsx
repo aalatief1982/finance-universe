@@ -4,12 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PeriodFilter } from '@/hooks/useBudgetPeriodParams';
-
-const PERIOD_OPTIONS: Array<{ value: PeriodFilter; label: string }> = [
-  { value: 'monthly', label: 'Month' },
-  { value: 'quarterly', label: 'Quarter' },
-  { value: 'yearly', label: 'Year' },
-];
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface BudgetPeriodSelectorProps {
   period: PeriodFilter;
@@ -28,9 +23,16 @@ export function BudgetPeriodSelector({
   onNavigate,
   className,
 }: BudgetPeriodSelectorProps) {
+  const { t, isRtl } = useLanguage();
+
+  const PERIOD_OPTIONS: Array<{ value: PeriodFilter; labelKey: string }> = [
+    { value: 'monthly', labelKey: 'budgetPeriod.month' },
+    { value: 'quarterly', labelKey: 'budgetPeriod.quarter' },
+    { value: 'yearly', labelKey: 'budgetPeriod.year' },
+  ];
+
   return (
     <div className={cn("space-y-1.5", className)}>
-      {/* Period Type Tabs */}
       <Tabs 
         value={period} 
         onValueChange={(v) => onPeriodChange(v as PeriodFilter)}
@@ -38,7 +40,7 @@ export function BudgetPeriodSelector({
         <TabsList className="grid w-full grid-cols-3 h-8">
           {PERIOD_OPTIONS.map(option => (
             <TabsTrigger key={option.value} value={option.value} className="text-xs py-1">
-              {option.label}
+              {t(option.labelKey)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -51,7 +53,7 @@ export function BudgetPeriodSelector({
             className="h-7 w-7"
             onClick={() => onNavigate('prev')}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className={cn("h-3.5 w-3.5", isRtl && "rotate-180")} />
           </Button>
           <span className="text-xs font-medium min-w-[100px] text-center">
             {periodLabel}
@@ -62,7 +64,7 @@ export function BudgetPeriodSelector({
             className="h-7 w-7"
             onClick={() => onNavigate('next')}
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className={cn("h-3.5 w-3.5", isRtl && "rotate-180")} />
           </Button>
       </div>
     </div>

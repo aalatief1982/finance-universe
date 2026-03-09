@@ -1,11 +1,10 @@
 import React from 'react';
-import { Budget } from '@/models/budget';
 import { PropagationResult } from '@/services/BudgetHierarchyService';
 import { formatCurrency } from '@/utils/format-utils';
 import { formatPeriodLabel } from '@/utils/budget-period-utils';
-import { Card, CardContent } from '@/components/ui/card';
 import { ArrowUp, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ParentImpactPreviewProps {
   propagationResult: PropagationResult;
@@ -18,6 +17,7 @@ export function ParentImpactPreview({
   currency,
   year 
 }: ParentImpactPreviewProps) {
+  const { t } = useLanguage();
   const { quarterUpdate, yearlyUpdate } = propagationResult;
   
   if (!quarterUpdate && !yearlyUpdate) return null;
@@ -28,7 +28,7 @@ export function ParentImpactPreview({
     <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
       <div className="flex items-center gap-2 mb-2">
         <ArrowUp className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-foreground">Impact on Parent Periods</span>
+        <span className="text-sm font-medium text-foreground">{t('parentImpact.title')}</span>
       </div>
       
       <div className="space-y-2">

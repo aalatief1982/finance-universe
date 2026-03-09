@@ -34,6 +34,7 @@ import { Account } from '@/models/account';
 import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import AddAccountDialog from '@/components/budget/AddAccountDialog';
 import { getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { 
@@ -65,6 +66,7 @@ const ACCOUNT_ICONS: Record<Account['type'], React.ElementType> = {
 };
 
 const AccountsPage = () => {
+  const { t } = useLanguage();
   const [accounts, setAccounts] = React.useState<Account[]>(() => accountService.getAccounts());
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -132,18 +134,18 @@ const AccountsPage = () => {
   const handleSave = () => {
     if (!editingAccount) return;
     if (!form.name.trim()) {
-      toast({ title: 'Account name is required', variant: 'destructive' });
+      toast({ title: t('toast.accountNameRequired'), variant: 'destructive' });
       return;
     }
 
     const existingAccount = accountService.getAccountByName(form.name);
     if (existingAccount && existingAccount.id !== editingAccount.id) {
-      toast({ title: 'An account with this name already exists', variant: 'destructive' });
+      toast({ title: t('toast.accountNameExists'), variant: 'destructive' });
       return;
     }
 
     accountService.updateAccount(editingAccount.id, form);
-    toast({ title: 'Account updated successfully' });
+    toast({ title: t('toast.accountUpdated') });
     refreshAccounts();
     setIsDialogOpen(false);
     resetForm();
@@ -155,10 +157,10 @@ const AccountsPage = () => {
     const result = accountService.deleteAccount(accountToDelete.id);
     
     if (result.success) {
-      toast({ title: 'Account deleted successfully' });
+      toast({ title: t('toast.accountDeleted') });
       refreshAccounts();
     } else {
-      toast({ title: 'Cannot delete account', description: result.error, variant: 'destructive' });
+      toast({ title: t('toast.cannotDeleteAccount'), description: result.error, variant: 'destructive' });
     }
 
     setIsDeleteDialogOpen(false);
@@ -178,7 +180,7 @@ const AccountsPage = () => {
     };
     accountService.addAccount(newAccount);
     refreshAccounts();
-    toast({ title: `Account "${name}" added` });
+    toast({ title: t('toast.accountAdded') });
   };
 
   const getAccountBalance = (account: Account) => {
@@ -191,8 +193,8 @@ const AccountsPage = () => {
 
   return (
     <BudgetLayout 
-      title="Accounts" 
-      description="Manage your financial accounts"
+      title={t('accounts.title')} 
+      description={t('accounts.description')}
       showPeriodFilter={false}
       showAddButton={false}
     >
@@ -226,13 +228,13 @@ const AccountsPage = () => {
         <Card>
           <CardContent className="py-12 text-center">
             <Wallet className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-medium text-lg mb-2">No accounts yet</h3>
+            <h3 className="font-medium text-lg mb-2">{t('accounts.noAccountsYet')}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Add your bank accounts, cash, crypto wallets and more.
+              {t('accounts.addBankAccounts')}
             </p>
             <Button onClick={openAddDialog}>
               <Plus className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-              Add First Account
+              {t('accounts.addFirstAccount')}
             </Button>
           </CardContent>
         </Card>
@@ -286,7 +288,7 @@ const AccountsPage = () => {
                       
                       <div className="flex items-center justify-between mt-3 pt-3 border-t">
                         <div>
-                          <p className="text-xs text-muted-foreground">Current Balance</p>
+                          <p className="text-xs text-muted-foreground">{t('accounts.currentBalanceLabel')}</p>
                           <p className={cn(
                             "font-semibold",
                             balance < 0 ? "text-destructive" : "text-foreground"
@@ -294,8 +296,8 @@ const AccountsPage = () => {
                             {formatCurrency(balance, acc.currency)}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Transactions</p>
+                        <div className="ltr:text-right rtl:text-left">
+                          <p className="text-xs text-muted-foreground">{t('accounts.transactionsLabel')}</p>
                           <p className="font-medium text-sm">{txCount}</p>
                         </div>
                       </div>
@@ -313,17 +315,17 @@ const AccountsPage = () => {
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Edit Account
+              {t('accounts.editAccount')}
             </DialogTitle>
             <DialogDescription>
-              Update your account details
+              {t('accounts.updateDetails')}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-name">
-                Name
+                {t('accounts.name')}
               </label>
               <Input
                 id="account-name"
@@ -335,7 +337,7 @@ const AccountsPage = () => {
             
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-type">
-                Type
+                {t('accounts.type')}
               </label>
               <Select value={form.type} onValueChange={val => setForm({ ...form, type: val as Account['type'] })}>
                 <SelectTrigger id="account-type">
@@ -359,8 +361,8 @@ const AccountsPage = () => {
             
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium mb-1.5 block" htmlFor="account-currency">
-                  Currency
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="account-currency">
+                  {t('accounts.currency')}
                 </label>
                 <CurrencySelect
                   id="account-currency"
@@ -372,8 +374,8 @@ const AccountsPage = () => {
               </div>
               
               <div>
-                <label className="text-sm font-medium mb-1.5 block" htmlFor="account-initial-balance">
-                  Initial Balance
+              <label className="text-sm font-medium mb-1.5 block" htmlFor="account-initial-balance">
+                  {t('accounts.initialBalance')}
                 </label>
                 <Input
                   id="account-initial-balance"
@@ -387,7 +389,7 @@ const AccountsPage = () => {
             
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-start-date">
-                Start Date
+                {t('accounts.startDate')}
               </label>
               <DatePicker
                 date={new Date(form.startDate)}
@@ -399,10 +401,10 @@ const AccountsPage = () => {
           
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
+              {t('accounts.cancel')}
             </Button>
             <Button onClick={handleSave}>
-              Update
+              {t('accounts.update')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -425,7 +427,7 @@ const AccountsPage = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              Delete Account
+              {t('accounts.deleteAccount')}
             </DialogTitle>
             <DialogDescription>
               {linkedCount > 0 ? (
@@ -443,11 +445,11 @@ const AccountsPage = () => {
           
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
+              {t('accounts.cancel')}
             </Button>
             {linkedCount === 0 && (
               <Button variant="destructive" onClick={handleDelete}>
-                Delete Account
+                {t('accounts.deleteAccountBtn')}
               </Button>
             )}
           </DialogFooter>

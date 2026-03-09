@@ -24,7 +24,6 @@ import { BudgetBreadcrumb } from '@/components/budget/BudgetBreadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
@@ -47,10 +46,12 @@ import {
   RotateCcw,
   Bell
 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const BudgetDetailPage = () => {
   const { budgetId } = useParams();
   const navigate = useNavigate();
+  const { t, isRtl } = useLanguage();
   useTransactions();
 
   // Load budget data
@@ -98,15 +99,15 @@ const BudgetDetailPage = () => {
   // Build breadcrumb items
   const breadcrumbItems = React.useMemo(() => {
     if (!budget) {
-      return [{ label: 'Budgets', path: '/budget' }];
+      return [{ label: t('detail.breadcrumbBudgets'), path: '/budget' }];
     }
     const periodLabel = formatPeriodLabel(budget.period, budget.year, budget.periodIndex);
     return [
-      { label: 'Budgets', path: '/budget' },
+      { label: t('detail.breadcrumbBudgets'), path: '/budget' },
       { label: periodLabel, path: '/budget' },
       { label: targetName },
     ];
-  }, [budget, targetName]);
+  }, [budget, targetName, t]);
 
   // Get subcategory names
   const getSubcategoryName = (id: string) => {
@@ -119,10 +120,10 @@ const BudgetDetailPage = () => {
     return (
       <Layout>
         <div className="container px-4 py-12 text-center">
-          <p className="text-muted-foreground">Budget not found</p>
+          <p className="text-muted-foreground">{t('detail.budgetNotFound')}</p>
           <Button onClick={() => navigate('/budget')} className="mt-4">
-            <ArrowLeft className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-            Back to Budgets
+            <ArrowLeft className={cn("h-4 w-4 ltr:mr-2 rtl:ml-2", isRtl && "rotate-180")} />
+            {t('detail.backToBudgets')}
           </Button>
         </div>
       </Layout>
@@ -160,7 +161,7 @@ const BudgetDetailPage = () => {
             onClick={() => navigate(`/budget/set?edit=${budget.id}`)}
           >
             <Edit className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
-            Edit
+            {t('detail.edit')}
           </Button>
         </div>
 
@@ -179,7 +180,7 @@ const BudgetDetailPage = () => {
                 {formatCurrency(spent, budget.currency)}
               </div>
               <div className="text-muted-foreground mt-1">
-                of {formatCurrency(budgeted, budget.currency)}
+                {t('detail.of')} {formatCurrency(budgeted, budget.currency)}
               </div>
             </div>
 
@@ -190,12 +191,12 @@ const BudgetDetailPage = () => {
                   "font-medium",
                   isOverBudget ? "text-destructive" : "text-foreground"
                 )}>
-                  {Math.round(percentUsed)}% used
+                  {Math.round(percentUsed)}% {t('detail.used')}
                 </span>
                 <span className="text-muted-foreground">
                   {isOverBudget 
-                    ? `${formatCurrency(Math.abs(remaining), budget.currency)} over`
-                    : `${formatCurrency(remaining, budget.currency)} left`
+                    ? `${formatCurrency(Math.abs(remaining), budget.currency)} ${t('detail.over')}`
+                    : `${formatCurrency(remaining, budget.currency)} ${t('detail.left')}`
                   }
                 </span>
               </div>
@@ -212,14 +213,14 @@ const BudgetDetailPage = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                   <Clock className="h-3.5 w-3.5" />
-                  <span className="text-xs">Days Left</span>
+                  <span className="text-xs">{t('detail.daysLeft')}</span>
                 </div>
                 <div className="text-lg font-semibold">{daysRemaining}</div>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                   <TrendingDown className="h-3.5 w-3.5" />
-                  <span className="text-xs">Daily Limit</span>
+                  <span className="text-xs">{t('detail.dailyLimit')}</span>
                 </div>
                 <div className="text-lg font-semibold">
                   {formatCurrency(dailyBudgetRemaining, budget.currency)}
@@ -228,7 +229,7 @@ const BudgetDetailPage = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                   <TrendingUp className="h-3.5 w-3.5" />
-                  <span className="text-xs">Transactions</span>
+                  <span className="text-xs">{t('detail.transactions')}</span>
                 </div>
                 <div className="text-lg font-semibold">{transactions.length}</div>
               </div>
@@ -239,13 +240,13 @@ const BudgetDetailPage = () => {
         {/* Budget Settings */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Budget Settings</CardTitle>
+            <CardTitle className="text-base">{t('detail.budgetSettings')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Period</span>
+                <span className="text-muted-foreground">{t('detail.period')}</span>
               </div>
               <Badge variant="outline">{getPeriodLabel(budget.period)}</Badge>
             </div>
@@ -253,17 +254,17 @@ const BudgetDetailPage = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <RotateCcw className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Rollover</span>
+                <span className="text-muted-foreground">{t('detail.rollover')}</span>
               </div>
               <Badge variant={budget.rollover ? 'default' : 'secondary'}>
-                {budget.rollover ? 'Enabled' : 'Disabled'}
+                {budget.rollover ? t('detail.enabled') : t('detail.disabled')}
               </Badge>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Alerts</span>
+                <span className="text-muted-foreground">{t('detail.alerts')}</span>
               </div>
               <div className="flex gap-1">
                 {(budget.alertThresholds || [50, 80, 100]).map(t => (
@@ -279,9 +280,9 @@ const BudgetDetailPage = () => {
         {/* Spending Trend */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Spending Trend</CardTitle>
+            <CardTitle className="text-base">{t('detail.spendingTrend')}</CardTitle>
             <CardDescription>
-              Cumulative spending vs. target pace
+              {t('detail.cumulativeVsTarget')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -293,15 +294,15 @@ const BudgetDetailPage = () => {
             <div className="flex items-center justify-center gap-6 mt-4 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-destructive" />
-                <span className="text-muted-foreground">Actual</span>
+                <span className="text-muted-foreground">{t('detail.actual')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-primary" style={{ borderStyle: 'dashed' }} />
-                <span className="text-muted-foreground">Target</span>
+                <span className="text-muted-foreground">{t('detail.target')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-0.5 bg-destructive opacity-50" style={{ borderStyle: 'dashed' }} />
-                <span className="text-muted-foreground">Limit</span>
+                <span className="text-muted-foreground">{t('detail.limit')}</span>
               </div>
             </div>
           </CardContent>
@@ -311,9 +312,9 @@ const BudgetDetailPage = () => {
         {subcategoryBudgets.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Subcategory Budgets</CardTitle>
+              <CardTitle className="text-base">{t('detail.subcategoryBudgets')}</CardTitle>
               <CardDescription>
-                Breakdown by subcategory
+                {t('detail.breakdownBySubcategory')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -335,21 +336,20 @@ const BudgetDetailPage = () => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Recent Transactions</CardTitle>
+              <CardTitle className="text-base">{t('detail.recentTransactions')}</CardTitle>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => navigate('/transactions')}
               >
-                View All
-                <ChevronRight className="h-4 w-4 ml-1" />
+                {t('detail.viewAll')}
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             {transactions.length === 0 ? (
               <p className="text-center text-muted-foreground py-4">
-                No transactions in this period
+                {t('detail.noTransactions')}
               </p>
             ) : (
               <div className="space-y-3">
@@ -371,7 +371,7 @@ const BudgetDetailPage = () => {
                 ))}
                 {transactions.length > 5 && (
                   <p className="text-center text-sm text-muted-foreground pt-2">
-                    +{transactions.length - 5} more transactions
+                    {t('detail.moreTransactions').replace('{count}', String(transactions.length - 5))}
                   </p>
                 )}
               </div>
@@ -383,8 +383,8 @@ const BudgetDetailPage = () => {
         {budget.notes && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Notes</CardTitle>
-            </CardHeader>
+            <CardTitle className="text-base">{t('detail.notes')}</CardTitle>
+          </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">{budget.notes}</p>
             </CardContent>

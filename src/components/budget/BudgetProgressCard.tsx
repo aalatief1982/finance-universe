@@ -13,6 +13,7 @@ import {
   PiggyBank,
 } from 'lucide-react';
 import { getPeriodLabel } from '@/utils/budget-period-utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface BudgetProgressCardProps {
   budget: Budget;
@@ -32,11 +33,11 @@ const scopeIcons: Record<BudgetScope, React.ElementType> = {
   subcategory: Tags,
 };
 
-const scopeLabels: Record<BudgetScope, string> = {
-  overall: 'Overall',
-  account: 'Account',
-  category: 'Category',
-  subcategory: 'Subcategory',
+const scopeLabelKeys: Record<BudgetScope, string> = {
+  overall: 'budget.set.overall',
+  account: 'budget.set.account',
+  category: 'budget.set.category',
+  subcategory: 'budget.set.subcategory',
 };
 
 export function BudgetProgressCard({
@@ -44,27 +45,26 @@ export function BudgetProgressCard({
   progress,
   targetName,
   onClick,
-  showPeriod = true,  // Default to true - always show period
-  showScope = true,   // Default to true - always show scope
+  showPeriod = true,
+  showScope = true,
   compact = false,
-  showSourceBadge = false, // Show Set/Calculated badge
+  showSourceBadge = false,
 }: BudgetProgressCardProps) {
+  const { t } = useLanguage();
   const Icon = scopeIcons[budget.scope];
-  const { spent, budgeted, percentUsed, remaining, isOverBudget, daysRemaining, dailyBudgetRemaining } = progress;
+  const { spent, budgeted, percentUsed, remaining, isOverBudget } = progress;
   
-  // Build dimension label (e.g., "Category • Monthly" or "Subcategory • Q1 2024")
   const dimensionLabel = React.useMemo(() => {
     const parts: string[] = [];
     if (showScope && budget.scope !== 'overall') {
-      parts.push(scopeLabels[budget.scope]);
+      parts.push(t(scopeLabelKeys[budget.scope]));
     }
     if (showPeriod) {
       parts.push(getPeriodLabel(budget.period));
     }
     return parts.join(' • ');
-  }, [budget.scope, budget.period, showScope, showPeriod]);
+  }, [budget.scope, budget.period, showScope, showPeriod, t]);
 
-  // Determine progress bar color
   const getProgressColor = () => {
     if (percentUsed >= 100) return 'bg-destructive';
     if (percentUsed >= 80) return 'bg-amber-500';
@@ -72,10 +72,8 @@ export function BudgetProgressCard({
     return 'bg-primary';
   };
 
-  // Clamp visual progress to 100%
   const visualProgress = Math.min(percentUsed, 100);
   
-  // Source badge component
   const SourceBadge = showSourceBadge && (
     <Badge 
       variant={budget.isOverride ? "secondary" : "outline"} 
@@ -84,7 +82,7 @@ export function BudgetProgressCard({
         !budget.isOverride && "border-dashed"
       )}
     >
-      {budget.isOverride ? "Set" : "Calc"}
+      {budget.isOverride ? t('budgetProgress.set') : t('budgetProgress.calc')}
     </Badge>
   );
 
@@ -192,7 +190,7 @@ export function BudgetProgressCard({
         </div>
       </div>
 
-      {/* Stats — single row */}
+      {/* Stats */}
       <div className="flex items-center justify-between text-xs">
         <span className={cn("font-medium", isOverBudget && "text-destructive")}>
           {formatCurrency(spent, budget.currency)} / {formatCurrency(budgeted, budget.currency)}
@@ -202,8 +200,8 @@ export function BudgetProgressCard({
           isOverBudget ? "text-destructive" : "text-primary"
         )}>
           {isOverBudget 
-            ? `${formatCurrency(Math.abs(remaining), budget.currency)} over`
-            : `${formatCurrency(remaining, budget.currency)} left`
+            ? `${formatCurrency(Math.abs(remaining), budget.currency)} ${t('budgetProgress.over')}`
+            : `${formatCurrency(remaining, budget.currency)} ${t('budgetProgress.left')}`
           }
         </span>
       </div>

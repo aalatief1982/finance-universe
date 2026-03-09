@@ -119,20 +119,20 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Account' : 'Add Account'}</DialogTitle>
+          <DialogTitle>{isEditing ? t('addAccount.editAccount') : t('addAccount.addAccount')}</DialogTitle>
           <DialogDescription>
-            Add a new financial account to track
+            {t('addAccount.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-1.5 block" htmlFor="account-name">
-              Name
+              {t('addAccount.name')}
             </label>
             <Input
               id="account-name"
-              placeholder="e.g., Main Checking"
+              placeholder={t('account.egMySavings')}
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
             />
@@ -140,20 +140,20 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
           <div>
             <label className="text-sm font-medium mb-1.5 block" htmlFor="account-type">
-              Type
+              {t('addAccount.type')}
             </label>
             <Select value={form.type} onValueChange={val => setForm({ ...form, type: val as Account['type'] })}>
               <SelectTrigger id="account-type">
                 <SelectValue placeholder={t('account.selectType')} />
               </SelectTrigger>
               <SelectContent>
-                {ACCOUNT_TYPES.map(t => {
-                  const Icon = ACCOUNT_ICONS[t];
+                {ACCOUNT_TYPES.map(type => {
+                  const Icon = ACCOUNT_ICONS[type];
                   return (
-                    <SelectItem key={t} value={t}>
+                    <SelectItem key={type} value={type}>
                       <div className="flex items-center gap-2">
                         <Icon className="h-4 w-4" />
-                        <span>{t}</span>
+                        <span>{type}</span>
                       </div>
                     </SelectItem>
                   );
@@ -165,20 +165,20 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-currency">
-                Currency
+                {t('addAccount.currency')}
               </label>
                 <CurrencySelect
                   id="account-currency"
                   value={form.currency}
                   onChange={(val) => setForm({ ...form, currency: val })}
                   currencies={CURRENCIES}
-                  placeholder="Currency"
+                  placeholder={t('addAccount.currency')}
                 />
             </div>
 
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-initial-balance">
-                Initial Balance
+                {t('addAccount.initialBalance')}
               </label>
               <Input
                 id="account-initial-balance"
@@ -192,7 +192,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
           <div>
             <label className="text-sm font-medium mb-1.5 block" htmlFor="account-start-date">
-              Start Date
+              {t('addAccount.startDate')}
             </label>
             <DatePicker
               date={new Date(form.startDate)}
@@ -204,10 +204,10 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t('addAccount.cancel')}
           </Button>
           <Button onClick={handleSave}>
-            {isEditing ? 'Update' : 'Create'}
+            {isEditing ? t('addAccount.update') : t('addAccount.create')}
           </Button>
         </DialogFooter>
       </DialogContent>
