@@ -128,8 +128,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     if (!rating) {
       toast({
-        title: 'Rating required',
-        description: 'Select a rating between 1 and 5.',
+        title: t('toast.ratingRequired'),
+        description: t('toast.ratingRequiredDesc'),
         variant: 'destructive',
       });
       return;
@@ -154,7 +154,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         body: formData.toString(),
       });
 
-      toast({ title: 'Feedback sent', description: 'Thank you for your feedback.' });
+      toast({ title: t('toast.feedbackSent'), description: t('toast.feedbackSentDesc') });
       
       // Log feedback send event
       logAnalyticsEvent('feedback_send', {
@@ -170,8 +170,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
       onOpenChange(false);
     } catch (err) {
       toast({
-        title: 'Could not send feedback',
-        description: 'Please try again later.',
+        title: t('toast.feedbackFailed'),
+        description: t('toast.feedbackFailedDesc'),
         variant: 'destructive',
       });
     } finally {
