@@ -218,12 +218,12 @@ const Home = () => {
               <DatePicker
                 date={customStart}
                 setDate={setCustomStart}
-                placeholder="Start"
+                placeholder={t('home.datePicker.start')}
               />
               <DatePicker
                 date={customEnd}
                 setDate={setCustomEnd}
-                placeholder="End"
+                placeholder={t('home.datePicker.end')}
               />
             </div>
           )}
