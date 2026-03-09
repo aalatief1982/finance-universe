@@ -557,7 +557,7 @@ const Analytics: React.FC = () => {
           {filteredTransactions.length === 0 ? (
             <Card>
               <CardContent className="py-6 text-center text-sm text-muted-foreground">
-                Add a few transactions to unlock analytics insights.
+                {t('analytics.addTransactionsToUnlock')}
               </CardContent>
             </Card>
           ) : (
