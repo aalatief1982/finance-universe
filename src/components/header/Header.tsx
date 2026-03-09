@@ -42,7 +42,7 @@ const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) 
     <>
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 pt-[var(--safe-area-top)] bg-background border-b border-border",
+        "fixed top-0 inset-x-0 z-50 pt-[var(--safe-area-top)] bg-background border-b border-border",
         "will-change-transform [transform:translateZ(0)] [backface-visibility:hidden]",
         className
       )}
