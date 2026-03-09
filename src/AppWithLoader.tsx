@@ -188,6 +188,7 @@ const AppWithLoader: React.FC = () => {
   useEffect(() => {
     const initialize = async () => {
       traceAppRoot('AppWithLoader initialize start')
+      if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #4] Init Sequence Start\nTime: ${performance.now().toFixed(2)}ms`);
       try {
         await initializeXpensiaStorageDefaults()
         traceAppRoot('initializeXpensiaStorageDefaults completed')
