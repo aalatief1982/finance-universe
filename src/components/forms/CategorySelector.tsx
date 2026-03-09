@@ -1,8 +1,6 @@
 /**
  * @file CategorySelector.tsx
  * @description UI component for CategorySelector.
- *
- * @module components/forms/CategorySelector
  */
 
 import React from 'react';
@@ -13,6 +11,7 @@ import { TransactionFormValues } from './transaction-form-schema';
 import { TransactionType } from '@/types/transaction';
 import { getCategoriesForType } from '@/lib/categories-data';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface CategorySelectorProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -20,6 +19,7 @@ interface CategorySelectorProps {
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({ form, transactionType }) => {
+  const { t } = useLanguage();
   const categoriesForType = getCategoriesForType(transactionType);
 
   return (
@@ -28,7 +28,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ form, transactionTy
       name="category"
       render={({ field, fieldState }) => (
         <FormItem data-field="category">
-          <FormLabel>Category*</FormLabel>
+          <FormLabel>{t('catSelector.category')}</FormLabel>
           <Select
             value={field.value || ''}
             onValueChange={(value) => {
@@ -38,7 +38,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ form, transactionTy
           >
             <FormControl>
               <SelectTrigger className={cn(fieldState.error && 'border-destructive')}>
-                <SelectValue placeholder="Select category" />
+                <SelectValue placeholder={t('catSelector.selectCategory')} />
               </SelectTrigger>
             </FormControl>
             <SelectContent className="max-h-[300px]">

@@ -1,20 +1,6 @@
 /**
  * @file DataManagementSettings.tsx
  * @description Settings section for DataManagementSettings.
- *
- * @module components/settings/DataManagementSettings
- *
- * @responsibilities
- * 1. Render settings controls and labels
- * 2. Persist setting changes via callbacks/services
- * 3. Provide validation or feedback where required
- *
- * @review-tags
- * - @ui: settings state wiring
- *
- * @review-checklist
- * - [ ] Settings state reflects stored preferences
- * - [ ] Changes are persisted or bubbled up
  */
 
 import React, { useState } from 'react';
@@ -29,9 +15,11 @@ import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils'
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
 import type { Transaction } from '@/types/transaction';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const DataManagementSettings = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [betaDialogOpen, setBetaDialogOpen] = useState(false);
   const [betaCode, setBetaCode] = useState('');
   const [isBetaActive, setIsBetaActive] = useState(() => {
@@ -43,8 +31,8 @@ const DataManagementSettings = () => {
       const transactions = getStoredTransactions();
       if (!transactions.length) {
         toast({
-          title: "No data to export",
-          description: "There are no transactions available to export.",
+          title: t('toast.noDataToExport'),
+          description: t('toast.noDataToExportDesc'),
           variant: "destructive",
         });
         return;
@@ -63,13 +51,13 @@ const DataManagementSettings = () => {
       URL.revokeObjectURL(url);
 
       toast({
-        title: "Export successful",
-        description: "Your data has been exported successfully.",
+        title: t('toast.exportSuccessful'),
+        description: t('toast.exportedDesc'),
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: "An error occurred while exporting your data.",
+        title: t('toast.exportFailed'),
+        description: t('toast.exportFailedDesc'),
         variant: "destructive",
       });
     }
@@ -99,7 +87,7 @@ const DataManagementSettings = () => {
 
           const existing = getStoredTransactions();
           const confirmImport = window.confirm(
-            `This will add ${data.length} transactions to your existing ${existing.length}. Continue?`
+            t('dataMgmt.importConfirm').replace('{count}', String(data.length)).replace('{existing}', String(existing.length))
           );
 
           if (!confirmImport) return;
@@ -107,14 +95,14 @@ const DataManagementSettings = () => {
           const merged = [...existing, ...data];
           storeTransactions(merged);
           toast({
-            title: "Import successful",
-            description: "Transactions were imported successfully.",
+            title: t('toast.importSuccessful'),
+            description: t('toast.importSuccessfulDesc'),
           });
           window.dispatchEvent(new StorageEvent('storage', { key: 'xpensia_transactions' }));
         } catch (error) {
           toast({
-            title: "Import failed",
-            description: "Make sure the selected file is a valid JSON or CSV file.",
+            title: t('toast.importFailed'),
+            description: t('toast.importFailedDesc'),
             variant: "destructive",
           });
         }
@@ -126,8 +114,6 @@ const DataManagementSettings = () => {
     fileInput.click();
   };
 
-
-
   const handleBetaCodeSubmit = () => {
     if (betaCode === '0599572215') {
       localStorage.setItem('betaFeaturesActive', 'true');
@@ -135,24 +121,18 @@ const DataManagementSettings = () => {
       setBetaDialogOpen(false);
       setBetaCode('');
       
-      // Log beta activation event
-      logAnalyticsEvent('activate_beta', {
-        success: true
-      });
+      logAnalyticsEvent('activate_beta', { success: true });
       
       toast({
-        title: "Beta features activated",
-        description: "You now have access to all beta features including Budget and Import SMS.",
+        title: t('toast.betaActivated'),
+        description: t('toast.betaActivatedDesc'),
       });
     } else {
-      logAnalyticsEvent('activate_beta', {
-        success: false,
-        invalid_code: true
-      });
+      logAnalyticsEvent('activate_beta', { success: false, invalid_code: true });
       
       toast({
-        title: "Invalid beta code",
-        description: "Please enter a valid beta code to activate premium features.",
+        title: t('toast.invalidBetaCode'),
+        description: t('toast.invalidBetaCodeDesc'),
         variant: "destructive",
       });
       setBetaDialogOpen(false);
@@ -164,72 +144,68 @@ const DataManagementSettings = () => {
     <Card className="border border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Database className="mr-2" size={20} />
-          <span>Data Management</span>
+          <Database className="ltr:mr-2 rtl:ml-2" size={20} />
+          <span>{t('dataMgmt.title')}</span>
         </CardTitle>
-        <CardDescription>Manage your data and privacy settings</CardDescription>
+        <CardDescription>{t('dataMgmt.subtitle')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Export Data</p>
-              <p className="text-sm text-muted-foreground">Download all your transaction data</p>
+              <p className="font-medium">{t('dataMgmt.exportData')}</p>
+              <p className="text-sm text-muted-foreground">{t('dataMgmt.exportDataDesc')}</p>
             </div>
             <Button variant="outline" onClick={handleExportData} className="gap-2">
               <Download size={16} />
-              Export
+              {t('dataMgmt.export')}
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Import Data</p>
-              <p className="text-sm text-muted-foreground">Import transactions from a file</p>
+              <p className="font-medium">{t('dataMgmt.importData')}</p>
+              <p className="text-sm text-muted-foreground">{t('dataMgmt.importDataDesc')}</p>
             </div>
             <Button variant="outline" onClick={handleImportData} className="gap-2">
               <UploadCloud size={16} />
-              Import
+              {t('dataMgmt.import')}
             </Button>
           </div>
 
-
-
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Beta Features</p>
+              <p className="font-medium">{t('dataMgmt.betaFeatures')}</p>
               <p className="text-sm text-muted-foreground">
-                {isBetaActive ? 'Beta features are active' : 'Unlock exclusive beta features'}
+                {isBetaActive ? t('dataMgmt.betaActive') : t('dataMgmt.unlockBeta')}
               </p>
             </div>
             {isBetaActive ? (
               <div className="flex items-center text-green-600">
-                <Unlock className="h-4 w-4 mr-2" />
-                <span className="text-sm font-medium">Active</span>
+                <Unlock className="h-4 w-4 ltr:mr-2 rtl:ml-2" />
+                <span className="text-sm font-medium">{t('dataMgmt.active')}</span>
               </div>
             ) : (
               <Dialog open={betaDialogOpen} onOpenChange={setBetaDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline">
-                    Activate Beta Features
-                  </Button>
+                  <Button variant="outline">{t('dataMgmt.activateBeta')}</Button>
                 </DialogTrigger>
                 <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Enter Beta Code</DialogTitle>
+                    <DialogTitle>{t('dataMgmt.enterBetaCode')}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="betaCode">Beta Code</Label>
+                      <Label htmlFor="betaCode">{t('dataMgmt.betaCode')}</Label>
                       <Input
                         id="betaCode"
                         value={betaCode}
                         onChange={(e) => setBetaCode(e.target.value)}
-                        placeholder="Enter your beta code"
+                        placeholder={t('dataMgmt.enterBetaCodePlaceholder')}
                       />
                     </div>
                     <Button onClick={handleBetaCodeSubmit} className="w-full">
-                      Activate Features
+                      {t('dataMgmt.activateFeatures')}
                     </Button>
                   </div>
                 </DialogContent>
