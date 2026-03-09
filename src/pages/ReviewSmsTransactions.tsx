@@ -648,7 +648,7 @@ const toggleSkipAll = () => {
               <Checkbox
                 checked={txn.alwaysApply || false}
                 onCheckedChange={checked => handleAlwaysApplyChange(index, !!checked)}
-              ltr:mr-2 rtl:mlclassName="mr-2"
+              className="ltr:mr-2 rtl:ml-2"
                 aria-labelledby={`always-apply-label-${index}`}
               />
               <label id={`always-apply-label-${index}`} className="text-sm" htmlFor={`always-apply-${index}`}>
