@@ -106,7 +106,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
     const newAccount: Account = { id: uuidv4(), ...form };
     accountService.addAccount(newAccount);
-    toast({ title: 'Account created successfully' });
+    toast({ title: t('account.createdSuccessfully') });
     onAccountCreated(newAccount);
     onClose();
   };
