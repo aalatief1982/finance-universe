@@ -35,6 +35,7 @@ import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { computeCapturedFields } from '@/lib/inference/fieldStatus';
+import { useLanguage } from '@/i18n/LanguageContext';
 import type { InferenceDecisionTrace, InferenceParsingStatus } from '@/types/inference';
 
 const normalizeFieldConfidences = (
@@ -58,6 +59,13 @@ const normalizeFieldConfidences = (
 
   return normalized;
 };
+
+// --- i18n helper: simple {var} interpolation ---
+const interpolate = (template: string, vars: Record<string, string | number>): string =>
+  Object.entries(vars).reduce(
+    (s, [k, v]) => s.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v)),
+    template,
+  );
 
 interface SmartPasteProps {
   senderHint?: string;
@@ -85,13 +93,14 @@ const SmartPaste = ({
   onPrefillConsumed,
   onTransactionsDetected,
 }: SmartPasteProps) => {
+  const { t } = useLanguage();
   const [text, setText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detectedTransactions, setDetectedTransactions] = useState<
     Transaction[]
   >([]);
-  const [matchStatus, setMatchStatus] = useState('Paste a message to begin');
+  const [matchStatus, setMatchStatus] = useState(t('smartEntry.pasteToBegin'));
   const [hasMatch, setHasMatch] = useState(false);
   const [confidence, setConfidence] = useState<number | null>(null);
   const [matchOrigin, setMatchOrigin] = useState<
@@ -120,7 +129,24 @@ const SmartPaste = ({
     },
   });
 
+  // --- Origin display helpers (i18n) ---
+  const getOriginLabel = (origin: string | null): string => {
+    switch (origin) {
+      case 'template': return t('smartEntry.originTemplate');
+      case 'ml': return t('smartEntry.originMl');
+      case 'fallback': return t('smartEntry.originFallback');
+      default: return t('smartEntry.originStructure');
+    }
+  };
 
+  const getOriginShortLabel = (origin: string | null): string => {
+    switch (origin) {
+      case 'template': return t('smartEntry.originTemplateShort');
+      case 'fallback': return t('smartEntry.originFallbackShort');
+      case 'ml': return t('smartEntry.originMlShort');
+      default: return t('smartEntry.originStructureShort');
+    }
+  };
 
   useEffect(() => {
     if (!prefillText?.trim()) {
@@ -149,10 +175,10 @@ const SmartPaste = ({
     blockedSharedTextRef.current = prefillText;
     console.log('[SHARE_FLOW][SMART_PASTE] prefill blocked due to existing text');
     toast({
-      title: 'Shared text not loaded',
-      description: 'Smart Entry already has unsaved text. Clear it first to use the shared text.',
+      title: t('toast.smartEntry.sharedBlocked'),
+      description: t('toast.smartEntry.sharedBlockedDesc'),
     });
-  }, [onPrefillConsumed, prefillText, text, toast]);
+  }, [onPrefillConsumed, prefillText, text, toast, t]);
 
   useEffect(() => {
     const pendingPrefill = pendingPrefillConfirmationRef.current;
@@ -180,19 +206,19 @@ const SmartPaste = ({
   // to avoid running the heavy parseSmsMessage pipeline on every keystroke.
   useEffect(() => {
     if (!text.trim()) {
-      setMatchStatus('Paste a message to begin');
+      setMatchStatus(t('smartEntry.pasteToBegin'));
       setHasMatch(false);
       setIsSubmitted(false);
     }
-  }, [text]);
+  }, [text, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!text.trim()) {
       toast({
-        title: 'No message entered',
-        description: 'Paste or type a message first.',
+        title: t('toast.smartEntry.noMessage'),
+        description: t('toast.smartEntry.noMessageDesc'),
         variant: 'destructive',
       });
       return;
@@ -203,9 +229,8 @@ const SmartPaste = ({
     // 🚫 Check if message contains financial transaction pattern
     if (!isFinancialTransactionMessage(text)) {
       toast({
-        title: 'No transaction detected',
-        description:
-          'This message does not appear to contain transaction data.',
+        title: t('toast.smartEntry.noTransaction'),
+        description: t('toast.smartEntry.noTransactionDesc'),
         variant: 'default',
       });
       return;
@@ -274,12 +299,14 @@ const SmartPaste = ({
           parsed.directFields?.vendor?.value ||
           parsed.directFields?.fromAccount?.value ||
           '';
-        setMatchStatus(`Matched template from ${bank || 'saved template'}`);
+        setMatchStatus(
+          interpolate(t('smartEntry.matchedTemplate'), {
+            bank: bank || t('smartEntry.matchedTemplateFallback'),
+          }),
+        );
         setHasMatch(true);
       } else {
-        setMatchStatus(
-          'Ready to review. We can still extract transaction details from this message.',
-        );
+        setMatchStatus(t('smartEntry.readyToReview'));
         setHasMatch(false);
       }
 
@@ -294,7 +321,7 @@ const SmartPaste = ({
         );
         if (failCount >= 3) {
           toast({
-            title: 'Parsing failed repeatedly — help us improve this template',
+            title: t('toast.smartEntry.templateFailing'),
           });
           navigate(
             `/train-model?msg=${encodeURIComponent(text)}&sender=${encodeURIComponent(
@@ -307,10 +334,10 @@ const SmartPaste = ({
       if (import.meta.env.MODE === 'development') {
         console.error('[SmartPaste] Error in structure parsing:', err);
       }
-      setError('Could not parse the message. Try again or report.');
+      setError(t('smartEntry.parseError'));
       toast({
-        title: 'Message could not be parsed',
-        description: 'Try another message or review it manually.',
+        title: t('toast.smartEntry.parseFailed'),
+        description: t('toast.smartEntry.parseFailedDesc'),
         variant: 'destructive',
       });
       setConfidence(null);
@@ -346,8 +373,8 @@ const SmartPaste = ({
       setText(clipboardText);
     } catch (err) {
       toast({
-        title: 'Could not read clipboard',
-        description: 'Try pasting the message manually.',
+        title: t('toast.smartEntry.clipboardFailed'),
+        description: t('toast.smartEntry.clipboardFailedDesc'),
         variant: 'destructive',
       });
     }
@@ -402,12 +429,11 @@ const SmartPaste = ({
     <div className="space-y-4 pb-[calc(var(--safe-area-bottom,0px)+var(--bottom-nav-height,72px)+96px)] pt-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Add a transaction by typing it, pasting an SMS, or using smart input
-          methods.
+          {t('smartEntry.instructions')}
         </p>
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="message">Transaction details</Label>
+            <Label htmlFor="message">{t('smartEntry.label')}</Label>
             <MicButton
               isListening={isListening}
               isSupported={micSupported}
@@ -417,7 +443,7 @@ const SmartPaste = ({
           </div>
           <Textarea
             id="message"
-            placeholder="Type or paste transaction details here…"
+            placeholder={t('smartEntry.placeholder')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             className="min-h-[100px]"
@@ -432,7 +458,7 @@ const SmartPaste = ({
             disabled={isProcessing || !text.trim()}
           >
             {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Review Transaction
+            {t('smartEntry.reviewButton')}
           </Button>
         </div>
 
@@ -446,56 +472,44 @@ const SmartPaste = ({
                   : 'text-destructive'
             }`}
           >
-            How sure we are: {(confidence * 100).toFixed(0)}% ·{' '}
-            {matchOrigin === 'template'
-              ? 'Based on a saved pattern.'
-              : matchOrigin === 'ml'
-                ? 'Estimated from message text.'
-                : matchOrigin === 'fallback'
-                  ? 'Best effort guess from message text.'
-                  : 'Detected from message structure.'}
+            {t('smartEntry.confidence')} {(confidence * 100).toFixed(0)}% ·{' '}
+            {getOriginLabel(matchOrigin)}
           </p>
         )}
 
         {detectedTransactions.length > 0 && confidence !== null && (
           <Card className="p-3 bg-accent/10 border-accent/30">
-            <h3 className="text-sm font-medium mb-2">What we found</h3>
+            <h3 className="text-sm font-medium mb-2">{t('smartEntry.whatWeFound')}</h3>
             <div className="text-sm space-y-1">
               <p>
-                Detection basis:{' '}
+                {t('smartEntry.detectionBasis')}{' '}
                 <span className="font-medium">
-                  {matchOrigin === 'template'
-                    ? 'Based on your saved patterns'
-                    : matchOrigin === 'fallback'
-                      ? 'Estimated from message text'
-                      : matchOrigin === 'ml'
-                        ? 'Estimated from message text'
-                        : 'Detected from message structure'}
+                  {getOriginShortLabel(matchOrigin)}
                 </span>
               </p>
               <p>
-                Important details captured:{' '}
+                {t('smartEntry.fieldsCaptured')}{' '}
                 <span className="font-medium">
                   {capturedFieldStatus.capturedCount}/
                   {capturedFieldStatus.totalCount}
                 </span>
               </p>
-              <p>Suggested fields are filled but not confirmed yet.</p>
+              <p>{t('smartEntry.suggestedNotConfirmed')}</p>
               <p>
-                Currency:{' '}
+                {t('smartEntry.currency')}{' '}
                 <span className="font-medium">
-                  {detectedTransactions[0].currency || 'Unknown'}
+                  {detectedTransactions[0].currency || t('smartEntry.currencyUnknown')}
                 </span>
               </p>
               <p>
-                How sure we are:{' '}
+                {t('smartEntry.confidence')}{' '}
                 <span className="font-medium">
                   {(confidence * 100).toFixed(0)}%
                 </span>
               </p>
               {detectedTransactions[0].category === 'Uncategorized' && (
                 <p className="text-warning">
-                  Category still needs your confirmation.
+                  {t('smartEntry.categoryNeedsConfirmation')}
                 </p>
               )}
             </div>
@@ -505,7 +519,7 @@ const SmartPaste = ({
 
       {detectedTransactions.length > 0 && (
         <div className="space-y-3 mt-2">
-          <h3 className="text-sm font-medium">Detected transaction preview</h3>
+          <h3 className="text-sm font-medium">{t('smartEntry.detectedPreview')}</h3>
           {detectedTransactions.map((txn) => (
             <DetectedTransactionCard
               key={txn.id}
