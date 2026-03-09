@@ -35,6 +35,7 @@
  */
 
 import { safeStorage } from '@/utils/safe-storage';
+import { learnFromFreeformConfirmation } from '@/lib/freeform-entry';
 import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import {
