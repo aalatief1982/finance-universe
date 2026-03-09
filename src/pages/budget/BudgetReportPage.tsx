@@ -346,8 +346,8 @@ const BudgetReportPage = () => {
         <TabsContent value="comparison">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Budget vs. Spent</CardTitle>
-              <CardDescription>Compare budgeted amounts to actual spending</CardDescription>
+              <CardTitle className="text-base">{t('report.budgetVsSpent')}</CardTitle>
+              <CardDescription>{t('report.compareBudgetedToActual')}</CardDescription>
             </CardHeader>
             <CardContent>
               {budgetVsActual.length > 0 ? (
