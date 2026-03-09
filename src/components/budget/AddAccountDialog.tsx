@@ -81,7 +81,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
 
   const handleSave = () => {
     if (!form.name.trim()) {
-      toast({ title: 'Account name is required', variant: 'destructive' });
+      toast({ title: t('toast.accountNameRequired'), variant: 'destructive' });
       return;
     }
 
