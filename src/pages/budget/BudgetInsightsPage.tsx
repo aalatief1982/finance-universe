@@ -28,13 +28,14 @@ import { transactionService } from '@/services/TransactionService';
 import { Budget } from '@/models/budget';
 import { formatCurrency } from '@/utils/format-utils';
 import { getCurrentPeriodDates, getTotalDaysInPeriod, formatPeriodLabel } from '@/utils/budget-period-utils';
-import { 
+import {
   AlertTriangle, 
   Lightbulb,
   ArrowRight,
   CheckCircle2,
   XCircle
 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Insight {
   id: string;
@@ -47,6 +48,7 @@ interface Insight {
 
 const BudgetInsightsPage = () => {
   const navigate = useNavigate();
+  const { t, isRtl } = useLanguage();
   useTransactions();
   const budgets = React.useMemo(() => budgetService.getBudgets(), []);
   const accounts = React.useMemo(() => accountService.getAccounts(), []);
@@ -66,6 +68,14 @@ const BudgetInsightsPage = () => {
     return `${scopeName} • ${periodName}`;
   }, [accounts, categories]);
 
+  const tf = React.useCallback((key: string, vars: Record<string, string | number> = {}) => {
+    let value = t(key);
+    Object.entries(vars).forEach(([k, v]) => {
+      value = value.replaceAll(`{${k}}`, String(v));
+    });
+    return value;
+  }, [t]);
+
   // Generate insights
   const insights = React.useMemo(() => {
     const result: Insight[] = [];
@@ -83,9 +93,9 @@ const BudgetInsightsPage = () => {
         result.push({
           id: `${budget.id}_over`,
           type: 'danger',
-          title: `${targetName} Over Budget`,
-          description: `You've exceeded your budget by ${formatCurrency(Math.abs(progress.remaining), budget.currency)}. Consider reviewing your spending or adjusting the budget.`,
-          action: { label: 'View Details', path: `/budget/${budget.id}` },
+          title: tf('budget.insights.overBudgetTitle', { target: targetName }),
+          description: tf('budget.insights.overBudgetDesc', { amount: formatCurrency(Math.abs(progress.remaining), budget.currency) }),
+          action: { label: t('budget.insights.viewDetails'), path: `/budget/${budget.id}` },
           budgetId: budget.id,
         });
       }
@@ -94,9 +104,9 @@ const BudgetInsightsPage = () => {
         result.push({
           id: `${budget.id}_warning`,
           type: 'warning',
-          title: `${targetName} Approaching Limit`,
-          description: `You've used ${Math.round(progress.percentUsed)}% of your budget with ${progress.daysRemaining} days remaining. You have ${formatCurrency(progress.remaining, budget.currency)} left.`,
-          action: { label: 'View Details', path: `/budget/${budget.id}` },
+          title: tf('budget.insights.approachingTitle', { target: targetName }),
+          description: tf('budget.insights.approachingDesc', { percent: Math.round(progress.percentUsed), days: progress.daysRemaining, amount: formatCurrency(progress.remaining, budget.currency) }),
+          action: { label: t('budget.insights.viewDetails'), path: `/budget/${budget.id}` },
           budgetId: budget.id,
         });
       }
@@ -105,9 +115,9 @@ const BudgetInsightsPage = () => {
         result.push({
           id: `${budget.id}_ahead`,
           type: 'warning',
-          title: `${targetName} Spending Ahead`,
-          description: `Your spending is ${Math.round(progress.percentUsed - expectedPercent)}% ahead of target pace. At this rate, you may exceed your budget.`,
-          action: { label: 'View Trend', path: `/budget/${budget.id}` },
+          title: tf('budget.insights.spendingAheadTitle', { target: targetName }),
+          description: tf('budget.insights.spendingAheadDesc', { percent: Math.round(progress.percentUsed - expectedPercent) }),
+          action: { label: t('budget.insights.viewTrend'), path: `/budget/${budget.id}` },
           budgetId: budget.id,
         });
       }
@@ -116,8 +126,8 @@ const BudgetInsightsPage = () => {
         result.push({
           id: `${budget.id}_good`,
           type: 'success',
-          title: `${targetName} On Track`,
-          description: `Great job! Your spending is ${Math.round(expectedPercent - progress.percentUsed)}% below target pace. Keep it up!`,
+          title: tf('budget.insights.onTrackTitle', { target: targetName }),
+          description: tf('budget.insights.onTrackDesc', { percent: Math.round(expectedPercent - progress.percentUsed) }),
           budgetId: budget.id,
         });
       }
@@ -126,8 +136,8 @@ const BudgetInsightsPage = () => {
         result.push({
           id: `${budget.id}_under`,
           type: 'info',
-          title: `${targetName} Under-Utilized`,
-          description: `You've only spent ${Math.round(progress.percentUsed)}% of your budget. Consider if this budget amount is realistic or if you're missing transactions.`,
+          title: tf('budget.insights.underUtilizedTitle', { target: targetName }),
+          description: tf('budget.insights.underUtilizedDesc', { percent: Math.round(progress.percentUsed) }),
           budgetId: budget.id,
         });
       }
@@ -142,9 +152,9 @@ const BudgetInsightsPage = () => {
           result.push({
             id: `${budget.id}_projection`,
             type: 'warning',
-            title: `${targetName} Projection Warning`,
-            description: `At your current pace (~${formatCurrency(avgDailySpend, budget.currency)}/day), you're projected to exceed your budget by ${formatCurrency(projectedOverage, budget.currency)}.`,
-            action: { label: 'Adjust Budget', path: `/budget/set?edit=${budget.id}` },
+            title: tf('budget.insights.projectionTitle', { target: targetName }),
+            description: tf('budget.insights.projectionDesc', { daily: formatCurrency(avgDailySpend, budget.currency), amount: formatCurrency(projectedOverage, budget.currency) }),
+            action: { label: t('budget.insights.adjustBudget'), path: `/budget/set?edit=${budget.id}` },
             budgetId: budget.id,
           });
         }
@@ -156,9 +166,9 @@ const BudgetInsightsPage = () => {
       result.push({
         id: 'no_budgets',
         type: 'info',
-        title: 'No Budgets Set',
-        description: 'Start tracking your spending by creating your first budget. Set limits for categories, accounts, or overall spending.',
-        action: { label: 'Create Budget', path: '/budget/set' },
+        title: t('budget.insights.noBudgetsTitle'),
+        description: t('budget.insights.noBudgetsDesc'),
+        action: { label: t('budget.insights.createBudget'), path: '/budget/set' },
       });
     }
 
@@ -168,9 +178,9 @@ const BudgetInsightsPage = () => {
       result.push({
         id: 'no_yearly',
         type: 'info',
-        title: 'Consider a Yearly Budget',
-        description: 'You have period budgets but no yearly spending limit. A yearly budget helps track total spending across the year.',
-        action: { label: 'Add Yearly Budget', path: '/budget/set?period=yearly' },
+        title: t('budget.insights.yearlyTitle'),
+        description: t('budget.insights.yearlyDesc'),
+        action: { label: t('budget.insights.addYearly'), path: '/budget/set?period=yearly' },
       });
     }
 
@@ -221,8 +231,8 @@ const BudgetInsightsPage = () => {
 
   return (
     <BudgetLayout 
-      title="Insights" 
-      description="Smart analysis of your spending patterns"
+      title={t('budget.insights.title')} 
+      description={t('budget.insights.description')}
       showPeriodFilter={false}
       showAddButton={false}
     >
@@ -232,19 +242,19 @@ const BudgetInsightsPage = () => {
           <Card className={summaryStats.onTrack > 0 ? 'border-green-500/30' : ''}>
             <CardContent className="pt-4 pb-3 text-center">
               <div className="text-2xl font-bold text-green-500">{summaryStats.onTrack}</div>
-              <div className="text-xs text-muted-foreground">On Track</div>
+              <div className="text-xs text-muted-foreground">{t('budget.insights.onTrack')}</div>
             </CardContent>
           </Card>
           <Card className={summaryStats.atRisk > 0 ? 'border-amber-500/30' : ''}>
             <CardContent className="pt-4 pb-3 text-center">
               <div className="text-2xl font-bold text-amber-500">{summaryStats.atRisk}</div>
-              <div className="text-xs text-muted-foreground">At Risk</div>
+              <div className="text-xs text-muted-foreground">{t('budget.insights.atRisk')}</div>
             </CardContent>
           </Card>
           <Card className={summaryStats.overBudget > 0 ? 'border-destructive/30' : ''}>
             <CardContent className="pt-4 pb-3 text-center">
               <div className="text-2xl font-bold text-destructive">{summaryStats.overBudget}</div>
-              <div className="text-xs text-muted-foreground">Over Budget</div>
+              <div className="text-xs text-muted-foreground">{t('budget.insights.overBudget')}</div>
             </CardContent>
           </Card>
         </div>
@@ -272,7 +282,7 @@ const BudgetInsightsPage = () => {
                       onClick={() => navigate(insight.action!.path)}
                     >
                       {insight.action.label}
-                      <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                      <ArrowRight className={`h-3.5 w-3.5 ${isRtl ? 'mr-1.5 rotate-180' : 'ml-1.5'}`} />
                     </Button>
                   )}
                 </div>
@@ -285,9 +295,9 @@ const BudgetInsightsPage = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
-              <h3 className="font-medium text-lg">All budgets look good!</h3>
+              <h3 className="font-medium text-lg">{t('budget.insights.allGoodTitle')}</h3>
               <p className="text-sm text-muted-foreground mt-2">
-                No issues or suggestions at the moment.
+                {t('budget.insights.allGoodDesc')}
               </p>
             </CardContent>
           </Card>

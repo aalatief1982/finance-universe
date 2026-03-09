@@ -33,9 +33,11 @@ import { accountService } from '@/services/AccountService';
 import { getCategoryHierarchy } from '@/lib/categories-data';
 import { cn } from '@/lib/utils';
 import { logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const BudgetHubPage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { period, year, periodIndex } = useBudgetPeriodParams();
   
   // Track screen view
@@ -73,7 +75,7 @@ const BudgetHubPage = () => {
   }, []);
 
   const getTargetName = (budget: typeof budgetsWithProgress[0]): string => {
-    if (budget.scope === 'overall') return 'Overall Budget';
+    if (budget.scope === 'overall') return t('budget.overallBudget');
     return targetNames[budget.targetId] || budget.targetId;
   };
 
@@ -107,8 +109,8 @@ const BudgetHubPage = () => {
 
   return (
     <BudgetLayout 
-      title="Budgets" 
-      description="Track your spending limits"
+      title={t('budget.budgets')} 
+      description={t('budget.trackSpendingLimits')}
       showAddButton={!loading}
     >
       {/* Alerts */}
@@ -134,12 +136,12 @@ const BudgetHubPage = () => {
           <div className="p-4 rounded-full bg-muted mb-4">
             <Settings className="h-8 w-8 text-muted-foreground" />
           </div>
-          <h2 className="text-lg font-semibold mb-2">No budgets yet</h2>
+          <h2 className="text-lg font-semibold mb-2">{t('budget.noBudgetsYet')}</h2>
           <p className="text-muted-foreground mb-6 max-w-xs">
-            Create budgets to track your spending and stay on top of your finances.
+            {t('budget.createBudgetsDesc')}
           </p>
           <Button onClick={() => navigate('/budget/set')}>
-            Create Your First Budget
+            {t('budget.createFirstBudget')}
           </Button>
         </div>
       ) : (
@@ -162,7 +164,7 @@ const BudgetHubPage = () => {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h2 className="text-sm font-semibold">Overall Budget</h2>
+                    <h2 className="text-sm font-semibold">{t('budget.overallBudget')}</h2>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex items-baseline gap-1.5">
@@ -178,8 +180,8 @@ const BudgetHubPage = () => {
                     overallBudget.progress.isOverBudget ? "text-destructive" : "text-primary"
                   )}>
                     {overallBudget.progress.isOverBudget 
-                      ? `Over by ${formatCurrency(Math.abs(overallBudget.progress.remaining), overallBudget.currency)}`
-                      : `${formatCurrency(overallBudget.progress.remaining, overallBudget.currency)} remaining`
+                      ? `${t('budget.overBy')} ${formatCurrency(Math.abs(overallBudget.progress.remaining), overallBudget.currency)}`
+                      : `${formatCurrency(overallBudget.progress.remaining, overallBudget.currency)} ${t('budget.remaining')}`
                     }
                   </p>
                 </div>
@@ -205,7 +207,7 @@ const BudgetHubPage = () => {
           {groupedBudgets.account.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                By Account
+                {t('budget.byAccount')}
               </h3>
               <div className="space-y-3">
                 {groupedBudgets.account.map(budget => (
@@ -225,7 +227,7 @@ const BudgetHubPage = () => {
           {groupedBudgets.category.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                By Category
+                {t('budget.byCategory')}
               </h3>
               <div className="space-y-3">
                 {groupedBudgets.category.map(budget => (
@@ -245,7 +247,7 @@ const BudgetHubPage = () => {
           {groupedBudgets.subcategory.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                By Subcategory
+                {t('budget.bySubcategory')}
               </h3>
               <div className="space-y-3">
                 {groupedBudgets.subcategory.map(budget => (
