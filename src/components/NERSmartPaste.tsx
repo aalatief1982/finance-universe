@@ -52,6 +52,7 @@ interface NERSmartPasteProps {
 }
 
 const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProps) => {
+  const { t } = useLanguage();
   const [text, setText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
