@@ -16,7 +16,7 @@
  * - [ ] Props have sensible defaults
  * - [ ] Component renders without crashing
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
