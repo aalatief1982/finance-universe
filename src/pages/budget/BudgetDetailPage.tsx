@@ -343,8 +343,6 @@ const BudgetDetailPage = () => {
                 onClick={() => navigate('/transactions')}
               >
                 {t('detail.viewAll')}
-                <ChevronRight className={cn("h-4 w-4 ltr:ml-1 rtl:mr-1", isRtl && "rotate-180")} />
-              </Button>
               </Button>
             </div>
           </CardHeader>
