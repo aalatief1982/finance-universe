@@ -388,8 +388,8 @@ const Settings = () => {
       });
     } catch (error) {
       toast({
-        title: 'Export failed',
-        description: 'An error occurred while exporting your data.',
+        title: t('toast.exportFailed'),
+        description: t('toast.exportFailedDesc'),
         variant: 'destructive',
       });
     }
