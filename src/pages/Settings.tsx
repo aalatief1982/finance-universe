@@ -342,8 +342,8 @@ const Settings = () => {
       const transactions = getStoredTransactions();
       if (!transactions.length) {
         toast({
-          title: "No data to export",
-          description: "There are no transactions available to export.",
+          title: t('toast.noDataToExport'),
+          description: t('toast.noDataToExportDesc'),
           variant: "destructive",
         });
         return;
