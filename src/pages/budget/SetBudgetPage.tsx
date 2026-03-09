@@ -946,14 +946,14 @@ const SetBudgetPage = () => {
             className="flex-1"
             onClick={() => navigate('/budget')}
           >
-            Cancel
+            {t('setBudget.cancel')}
           </Button>
           <Button 
             className="flex-1"
             onClick={handleSaveClick}
             disabled={(!targetId && scope !== 'overall') || amount <= 0}
           >
-            {isEditMode ? 'Update' : 'Create'} Budget
+            {isEditMode ? t('setBudget.updateBudget') : t('setBudget.createBudgetBtn')}
           </Button>
         </div>
 
