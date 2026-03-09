@@ -4,6 +4,7 @@ import TransactionList from '../TransactionList';
 import { formatCurrency } from '@/utils/format-utils';
 import type { Transaction } from '@/types/transaction';
 import { vi } from 'vitest';
+import { LanguageProvider } from '@/i18n/LanguageContext';
 
 vi.mock('@/hooks/useMediaQuery', () => ({
   useMediaQuery: () => false,
@@ -22,7 +23,7 @@ describe('TransactionList', () => {
   };
 
   it('renders transaction title, amount and category', () => {
-    render(<TransactionList transactions={[transaction]} />);
+    render(<LanguageProvider><TransactionList transactions={[transaction]} /></LanguageProvider>);
 
     expect(screen.getByText(transaction.title)).toBeInTheDocument();
     expect(
@@ -35,11 +36,13 @@ describe('TransactionList', () => {
     const handleEdit = vi.fn();
     const handleDelete = vi.fn();
     render(
-      <TransactionList
-        transactions={[transaction]}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />,
+      <LanguageProvider>
+        <TransactionList
+          transactions={[transaction]}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      </LanguageProvider>,
     );
 
     const row = screen.getByText(transaction.title).closest('tr')!;
@@ -57,14 +60,16 @@ describe('TransactionList', () => {
 
   it('shows loading skeleton when isLoading', () => {
     const { container } = render(
-      <TransactionList transactions={[transaction]} isLoading />,
+      <LanguageProvider><TransactionList transactions={[transaction]} isLoading /></LanguageProvider>,
     );
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
   it('renders empty message when no transactions', () => {
     render(
-      <TransactionList transactions={[]} emptyMessage="Nothing here" />,
+      <LanguageProvider>
+        <TransactionList transactions={[]} emptyMessage="Nothing here" />
+      </LanguageProvider>,
     );
     expect(screen.getByText('Nothing here')).toBeInTheDocument();
   });
