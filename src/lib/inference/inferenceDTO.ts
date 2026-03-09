@@ -48,6 +48,7 @@ const normalizeOrigin = (origin: unknown): InferenceOrigin | undefined => (
   origin === 'structure' ||
   origin === 'ml' ||
   origin === 'fallback' ||
+  origin === 'freeform' ||
   origin === 'manual'
     ? origin
     : undefined

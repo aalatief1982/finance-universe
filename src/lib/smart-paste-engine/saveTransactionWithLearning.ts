@@ -35,6 +35,7 @@
  */
 
 import { safeStorage } from '@/utils/safe-storage';
+import { learnFromFreeformConfirmation } from '@/lib/freeform-entry';
 import { Transaction } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -276,11 +277,21 @@ export function saveTransactionWithLearning(
   // REVIEW: Only runs for smart-paste source with raw message
   // ============================================================================
 
+  const isFreeformSource = typeof newTransaction.source === 'string' &&
+    newTransaction.source.includes('freeform');
+
   const isLearningSource = ['smart-paste', 'sms', 'sms-import'].includes(
     newTransaction.source,
   );
 
-  if (rawMessage && isLearningSource) {
+  // --- Freeform learning branch: completely isolated from SMS stores ---
+  if (rawMessage && isFreeformSource) {
+    const vendorKey = newTransaction.vendor || newTransaction.title || '';
+    if (vendorKey.trim()) {
+      learnFromFreeformConfirmation(vendorKey, newTransaction);
+    }
+    // Skip all SMS template/keyword/vendor/account learning below
+  } else if (rawMessage && isLearningSource) {
     learnFromTransaction(rawMessage, newTransaction, senderHint || '');
 
     // Extract and save template structure

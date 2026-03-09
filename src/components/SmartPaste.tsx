@@ -36,6 +36,8 @@ import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageF
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { computeCapturedFields } from '@/lib/inference/fieldStatus';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { parseFreeformTransaction } from '@/lib/freeform-entry';
+import { nanoid } from 'nanoid';
 import type { InferenceDecisionTrace, InferenceParsingStatus } from '@/types/inference';
 
 const normalizeFieldConfidences = (
@@ -226,19 +228,6 @@ const SmartPaste = ({
     if (import.meta.env.MODE === 'development') {
       // console.log('[SmartPaste] Checking message:', text);
     }
-    // 🚫 Check if message contains financial transaction pattern
-    if (!isFinancialTransactionMessage(text)) {
-      toast({
-        title: t('toast.smartEntry.noTransaction'),
-        description: t('toast.smartEntry.noTransactionDesc'),
-        variant: 'default',
-      });
-      return;
-    }
-
-    if (import.meta.env.MODE === 'development') {
-      // console.log("[SmartPaste] Submitting message:", text);
-    }
     setIsProcessing(true);
     setIsSubmitted(true);
     setError(null);
@@ -252,87 +241,128 @@ const SmartPaste = ({
     logAnalyticsEvent('smart_paste_sms');
 
     try {
-      const {
-        transaction,
-        confidence,
-        origin,
-        parsed,
-        fieldConfidences,
-        parsingStatus,
-        matchedCount,
-        totalTemplates,
-        fieldScore,
-        keywordScore,
-        debugTrace,
-      } = await parseAndInferTransaction(text, senderHint);
+      // --- Primary path: structured/template parser (only if input passes SMS gate) ---
+      const passesStructuredGate = isFinancialTransactionMessage(text);
+      let usedFreeform = false;
 
-      const normalizedFieldConfidences = normalizeFieldConfidences(
-        fieldConfidences,
-      );
+      if (passesStructuredGate) {
+        const {
+          transaction,
+          confidence: conf,
+          origin,
+          parsed,
+          fieldConfidences: fc,
+          parsingStatus: ps,
+          matchedCount: mc,
+          totalTemplates: tt,
+          fieldScore: fs,
+          keywordScore: ks,
+          debugTrace: dt,
+        } = await parseAndInferTransaction(text, senderHint);
 
-      if (import.meta.env.MODE === 'development') {
-        // console.log("[SmartPaste] Parsed result:", parsed);
-      }
-      if (import.meta.env.MODE === 'development') {
-        // console.log("[SmartPaste] Confidence Breakdown:", {
-        // confidence,
-        // origin,
-        // fieldConfidences
-        // });
-      }
+        // If structured path is adequate (confidence >= 0.5 or template matched), use it
+        if (conf >= 0.5 || parsed.matched) {
+          const normalizedFC = normalizeFieldConfidences(fc);
+          setDetectedTransactions([transaction]);
+          setConfidence(conf);
+          setMatchOrigin(origin);
+          setFieldConfidences(normalizedFC);
+          setParsingStatus(ps);
+          setMatchedCount(mc);
+          setTotalTemplates(tt);
+          setFieldScore(fs);
+          setKeywordScore(ks);
+          setDebugTrace(dt);
 
-      setDetectedTransactions([transaction]);
-      setConfidence(confidence);
-      setMatchOrigin(origin);
-      setFieldConfidences(normalizedFieldConfidences);
-      setParsingStatus(parsingStatus);
-      setMatchedCount(matchedCount);
-      setTotalTemplates(totalTemplates);
-      setFieldScore(fieldScore);
-      setKeywordScore(keywordScore);
-      setDebugTrace(debugTrace);
+          if (parsed.matched) {
+            const bank =
+              parsed.inferredFields?.vendor?.value ||
+              parsed.directFields?.vendor?.value ||
+              parsed.directFields?.fromAccount?.value ||
+              '';
+            setMatchStatus(
+              interpolate(t('smartEntry.matchedTemplate'), {
+                bank: bank || t('smartEntry.matchedTemplateFallback'),
+              }),
+            );
+            setHasMatch(true);
+          } else {
+            setMatchStatus(t('smartEntry.readyToReview'));
+            setHasMatch(false);
+          }
 
-      // Update match status from parsed result (moved out of keystroke path)
-      if (parsed.matched) {
-        const bank =
-          parsed.inferredFields?.vendor?.value ||
-          parsed.directFields?.vendor?.value ||
-          parsed.directFields?.fromAccount?.value ||
-          '';
-        setMatchStatus(
-          interpolate(t('smartEntry.matchedTemplate'), {
-            bank: bank || t('smartEntry.matchedTemplateFallback'),
-          }),
-        );
-        setHasMatch(true);
+          if (parsed.matched) {
+            const failCount = getTemplateFailureCount(parsed.templateHash, senderHint);
+            if (failCount >= 3) {
+              toast({ title: t('toast.smartEntry.templateFailing') });
+              navigate(
+                `/train-model?msg=${encodeURIComponent(text)}&sender=${encodeURIComponent(senderHint || '')}`,
+              );
+            }
+          }
+        } else {
+          // Structured path weak — try freeform fallback
+          usedFreeform = true;
+        }
       } else {
-        setMatchStatus(t('smartEntry.readyToReview'));
-        setHasMatch(false);
+        // Input doesn't pass SMS triple-gate — try freeform directly
+        usedFreeform = true;
       }
 
-      if (import.meta.env.MODE === 'development') {
-        // console.log("[SmartPaste] State updated with fieldConfidences:", fieldConfidences || {});
-      }
+      // --- Fallback path: freeform parser ---
+      if (usedFreeform) {
+        const freeResult = parseFreeformTransaction(text);
+        if (freeResult.success) {
+          const freeTransaction: Transaction = {
+            id: nanoid(),
+            title: freeResult.title,
+            amount: freeResult.amount,
+            category: freeResult.category,
+            subcategory: freeResult.subcategory,
+            date: freeResult.date,
+            type: freeResult.type,
+            currency: freeResult.currency,
+            source: 'smart-paste-freeform',
+            vendor: freeResult.title,
+            person: freeResult.counterparty || undefined,
+          };
 
-      if (parsed.matched) {
-        const failCount = getTemplateFailureCount(
-          parsed.templateHash,
-          senderHint,
-        );
-        if (failCount >= 3) {
+          const freeFC: Record<string, number> = {
+            amount: freeResult.fieldConfidences.amount,
+            type: freeResult.fieldConfidences.type,
+            date: freeResult.fieldConfidences.date,
+            vendor: freeResult.fieldConfidences.title,
+            category: freeResult.fieldConfidences.category,
+            currency: freeResult.fieldConfidences.currency,
+          };
+
+          setDetectedTransactions([freeTransaction]);
+          setConfidence(freeResult.confidence);
+          setMatchOrigin('fallback');
+          setFieldConfidences(freeFC);
+          setParsingStatus(freeResult.confidence >= 0.5 ? 'partial' : 'failed');
+          setMatchedCount(0);
+          setTotalTemplates(0);
+          setFieldScore(0);
+          setKeywordScore(0);
+          setDebugTrace(undefined);
+          setMatchStatus(t('smartEntry.readyToReview'));
+          setHasMatch(false);
+        } else {
+          // Both paths failed — no transaction found
           toast({
-            title: t('toast.smartEntry.templateFailing'),
+            title: t('toast.smartEntry.noTransaction'),
+            description: t('toast.smartEntry.noTransactionDesc'),
+            variant: 'default',
           });
-          navigate(
-            `/train-model?msg=${encodeURIComponent(text)}&sender=${encodeURIComponent(
-              senderHint || '',
-            )}`,
-          );
+          setDetectedTransactions([]);
+          setMatchStatus(t('smartEntry.readyToReview'));
+          setHasMatch(false);
         }
       }
     } catch (err: unknown) {
       if (import.meta.env.MODE === 'development') {
-        console.error('[SmartPaste] Error in structure parsing:', err);
+        console.error('[SmartPaste] Error in parsing:', err);
       }
       setError(t('smartEntry.parseError'));
       toast({

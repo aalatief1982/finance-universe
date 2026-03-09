@@ -28,6 +28,8 @@ import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { parseFreeformTransaction } from '@/lib/freeform-entry';
+import { nanoid } from 'nanoid';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 // SmartPaste component that uses regex-based extraction to parse transaction entities.
@@ -85,34 +87,69 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
 
     try {
       const parsed = await extractTransactionEntities(text);
-      if (import.meta.env.MODE === 'development') {
-        // console.log('[SmartPaste] Extracted entities:', parsed);
-      }
 
       const result = await parseAndInferTransaction(text, senderHint);
-      const transaction = result.transaction;
-      
+      const structuredOk = result.confidence >= 0.5 || result.parsed.matched;
+
+      let transaction = result.transaction;
+      let conf = result.confidence;
+      let origin = result.origin;
+      let ps = result.parsingStatus;
+      let mc = result.matchedCount;
+      let tt = result.totalTemplates;
+      let fs = result.fieldScore;
+      let ks = result.keywordScore;
+      let fc = result.fieldConfidences;
+
+      // Freeform fallback if structured path is weak
+      if (!structuredOk) {
+        const freeResult = parseFreeformTransaction(text);
+        if (freeResult.success) {
+          transaction = {
+            id: nanoid(),
+            title: freeResult.title,
+            amount: freeResult.amount,
+            category: freeResult.category,
+            subcategory: freeResult.subcategory,
+            date: freeResult.date,
+            type: freeResult.type,
+            currency: freeResult.currency,
+            source: 'smart-paste-freeform',
+            vendor: freeResult.title,
+            person: freeResult.counterparty || undefined,
+          };
+          conf = freeResult.confidence;
+          origin = 'fallback';
+          ps = freeResult.confidence >= 0.5 ? 'partial' : 'failed';
+          mc = 0; tt = 0; fs = 0; ks = 0;
+          fc = {
+            amount: freeResult.fieldConfidences.amount,
+            type: freeResult.fieldConfidences.type,
+            date: freeResult.fieldConfidences.date,
+            vendor: freeResult.fieldConfidences.title,
+            category: freeResult.fieldConfidences.category,
+          };
+        }
+      }
+
       setDetectedTransactions([transaction]);
-      setConfidence(result.confidence);
-      setMatchOrigin(result.origin);
-      setHasMatch(!!parsed.amount);
+      setConfidence(conf);
+      setMatchOrigin(origin);
+      setHasMatch(structuredOk ? !!parsed.amount : false);
 
       if (onTransactionsDetected) {
-        if (import.meta.env.MODE === 'development') {
-          // console.log('[SmartPaste] Final transaction:', transaction);
-        }
         onTransactionsDetected(
           [transaction],
           text,
           senderHint,
-          result.confidence,
-          result.origin,
-          result.parsingStatus,
-          result.matchedCount,
-          result.totalTemplates,
-          result.fieldScore,
-          result.keywordScore,
-          result.fieldConfidences
+          conf,
+          origin,
+          ps,
+          mc,
+          tt,
+          fs,
+          ks,
+          fc,
         );
       }
     } catch (err: unknown) {
