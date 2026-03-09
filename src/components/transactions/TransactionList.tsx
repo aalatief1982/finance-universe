@@ -246,8 +246,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <DropdownMenuContent>
                     {onEdit && (
                       <DropdownMenuItem onClick={() => onEdit(transaction)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                        <Edit className="ltr:mr-2 rtl:ml-2 h-4 w-4" />
+                        {t('txCard.edit')}
                       </DropdownMenuItem>
                     )}
                     {onDelete && (
