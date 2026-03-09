@@ -142,8 +142,8 @@ const NERSmartPaste = ({ senderHint, onTransactionsDetected }: NERSmartPasteProp
       setText(clipboardText);
     } catch (err) {
       toast({
-        title: "Could not read clipboard",
-        description: "Try pasting the message manually.",
+        title: t('toast.smartEntry.clipboardFailed'),
+        description: t('toast.smartEntry.clipboardFailedDesc'),
         variant: "destructive",
       });
     }
