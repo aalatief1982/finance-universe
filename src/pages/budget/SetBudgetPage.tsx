@@ -1016,7 +1016,7 @@ const SetBudgetPage = () => {
                 setPendingDeleteAction(null);
               }}
             >
-              Delete
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
