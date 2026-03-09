@@ -28,6 +28,8 @@ import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 import { extractTransactionEntities } from '@/services/MLTransactionParser';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { parseFreeformTransaction } from '@/lib/freeform-entry';
+import { nanoid } from 'nanoid';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 // SmartPaste component that uses regex-based extraction to parse transaction entities.
