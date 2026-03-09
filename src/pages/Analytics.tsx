@@ -71,9 +71,10 @@ const AnalyticsDeltaSection: React.FC<{
   const DeltaIcon = spendingDelta >= 0 ? ArrowUpRight : ArrowDownRight;
   const BalanceIcon = balanceDelta >= 0 ? ArrowUpRight : ArrowDownRight;
 
+  const { t } = useLanguage();
   return (
     <section className="space-y-2">
-      <h2 className="text-sm font-medium text-muted-foreground">Executive Delta</h2>
+      <h2 className="text-sm font-medium text-muted-foreground">{t('analytics.executiveDelta')}</h2>
       <div className="grid grid-cols-1 gap-2">
         <button type="button" onClick={onScrollToDrivers} className="text-left">
           <Card>
