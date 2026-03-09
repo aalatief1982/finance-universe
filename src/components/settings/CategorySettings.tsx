@@ -15,12 +15,19 @@ import CategoryManager from '@/components/categories/CategoryManager';
 import CategoryHierarchy from '@/components/categories/CategoryHierarchy';
 import { Category, CategoryRule } from '@/types/transaction';
 import { transactionService } from '@/services/TransactionService';
-import { categorySuggestionService, CategorySuggestion } from '@/services/CategorySuggestionService';
+import { categorySuggestionService } from '@/services/CategorySuggestionService';
 import { useLanguage } from '@/i18n/LanguageContext';
 
+interface CategorySuggestionItem {
+  pattern: string;
+  matchCount: number;
+  suggestedCategoryId: string;
+  confidence: number;
+}
+
 interface CategorySettingsProps {
-  categories: Category[];
-  onCategoriesChange: (categories: Category[]) => void;
+  categories?: Category[];
+  onCategoriesChange?: (categories: Category[]) => void;
 }
 
 const CategorySettings: React.FC<CategorySettingsProps> = ({ categories: propCategories, onCategoriesChange: propOnCategoriesChange }) => {
