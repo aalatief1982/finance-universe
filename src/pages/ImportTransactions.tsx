@@ -368,7 +368,7 @@ const ImportTransactions = () => {
         >
           <Card ref={smsInboxRef}>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t('smsInbox.title')}box.title')}box.title')}</CardTitle>
+              <CardTitle className="text-base">{t('smsInbox.title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
