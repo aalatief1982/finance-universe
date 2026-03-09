@@ -17,6 +17,7 @@ type XpensiaWindow = Window & {
 }
 
 ;(async () => {
+  if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #1] Boot Start\nTime: ${performance.now().toFixed(2)}ms`);
   try {
     await initializeCapacitor()
   } catch (err) {
