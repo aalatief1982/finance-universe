@@ -18,6 +18,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
@@ -44,6 +45,7 @@ const ImportTransactions = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [smsInboxItems, setSmsInboxItems] = React.useState<SmsInboxItem[]>([]);
   const smsInboxRef = React.useRef<HTMLDivElement | null>(null);
   const locationState = (location.state as ImportTransactionsLocationState | null) || null;
@@ -210,8 +212,8 @@ const ImportTransactions = () => {
       });
 
       toast({
-        title: 'Could not open SMS',
-        description: 'Please try again.',
+        title: t('toast.couldNotOpenSms'),
+        description: t('toast.pleaseTryAgain'),
         variant: 'destructive',
       });
     }
@@ -246,8 +248,8 @@ const ImportTransactions = () => {
       });
 
       toast({
-        title: 'Could not continue SMS import',
-        description: 'Please try again.',
+        title: t('toast.couldNotContinueSms'),
+        description: t('toast.pleaseTryAgain'),
         variant: 'destructive',
       });
     }
