@@ -29,6 +29,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ExpenseCard from '@/components/ExpenseCard';
 import { Transaction } from '@/types/transaction';
 import { formatDate } from '@/lib/formatters';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TransactionGridProps {
   transactions: Transaction[];
