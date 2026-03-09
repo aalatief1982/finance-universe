@@ -27,6 +27,7 @@ import {
 import { AnalyticsService } from '@/services/AnalyticsService';
 import { transactionService } from '@/services/TransactionService';
 import { formatCurrency } from '@/lib/formatters';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const COLORS = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#6c757d'];
 
@@ -43,7 +44,7 @@ interface ActionItem {
   key: string;
   title: string;
   description: string;
-  ctaLabel: 'Review' | 'Fix' | 'Set budget' | 'Confirm recurring';
+  ctaLabel: string;
   onCta: () => void;
   priority: number;
 }
@@ -67,17 +68,18 @@ const AnalyticsDeltaSection: React.FC<{
   onScrollToDrivers,
   onScrollToActions,
 }) => {
+  const { t } = useLanguage();
   const DeltaIcon = spendingDelta >= 0 ? ArrowUpRight : ArrowDownRight;
   const BalanceIcon = balanceDelta >= 0 ? ArrowUpRight : ArrowDownRight;
 
   return (
     <section className="space-y-2">
-      <h2 className="text-sm font-medium text-muted-foreground">Executive Delta</h2>
+      <h2 className="text-sm font-medium text-muted-foreground">{t('analytics.executiveDelta')}</h2>
       <div className="grid grid-cols-1 gap-2">
         <button type="button" onClick={onScrollToDrivers} className="text-left">
           <Card>
             <CardContent className="py-4">
-              <p className="text-xs text-muted-foreground">Spending vs previous period</p>
+              <p className="text-xs text-muted-foreground">{t('analytics.spendingVsPrevious')}</p>
               <div className="mt-2 flex items-center justify-between">
                 <div>
                   <p className="text-lg font-semibold">{spendingDeltaPercent.toFixed(1)}%</p>
@@ -92,7 +94,7 @@ const AnalyticsDeltaSection: React.FC<{
         <button type="button" onClick={onScrollToDrivers} className="text-left">
           <Card>
             <CardContent className="py-4">
-              <p className="text-xs text-muted-foreground">Net balance vs previous period</p>
+              <p className="text-xs text-muted-foreground">{t('analytics.netBalanceVsPrevious')}</p>
               <div className="mt-2 flex items-center justify-between">
                 <div>
                   <p className="text-lg font-semibold">{balanceDeltaPercent.toFixed(1)}%</p>
@@ -109,15 +111,15 @@ const AnalyticsDeltaSection: React.FC<{
             <CardContent className="py-4">
               {budgetConfigured ? (
                 <>
-                  <p className="text-xs text-muted-foreground">Budget risk summary</p>
+                  <p className="text-xs text-muted-foreground">{t('analytics.budgetRiskSummary')}</p>
                   <p className="mt-2 text-lg font-semibold">
-                    {budgetRiskCount} categor{budgetRiskCount === 1 ? 'y is' : 'ies are'} at risk this period
+                    {budgetRiskCount} {budgetRiskCount === 1 ? t('analytics.categoryAtRisk') : t('analytics.categoriesAtRisk')}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-muted-foreground">Budget tracking</p>
-                  <p className="mt-2 text-sm font-medium">No budgets set — create budgets to track risk</p>
+                  <p className="text-xs text-muted-foreground">{t('analytics.budgetTracking')}</p>
+                  <p className="mt-2 text-sm font-medium">{t('analytics.noBudgetsSet')}</p>
                 </>
               )}
             </CardContent>
@@ -128,7 +130,10 @@ const AnalyticsDeltaSection: React.FC<{
   );
 };
 
-const DriverRows: React.FC<{ title: string; rows: DriverItem[]; onClickRow: (name: string) => void }> = ({ title, rows, onClickRow }) => (
+const DriverRows: React.FC<{ title: string; rows: DriverItem[]; onClickRow: (name: string) => void }> = ({ title, rows, onClickRow }) => {
+  const { t } = useLanguage();
+
+  return (
   <Card>
     <CardHeader>
       <CardTitle>{title}</CardTitle>
@@ -159,34 +164,40 @@ const DriverRows: React.FC<{ title: string; rows: DriverItem[]; onClickRow: (nam
           })}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Not enough history to detect changes yet.</p>
+        <p className="text-sm text-muted-foreground">{t('analytics.notEnoughHistory')}</p>
       )}
     </CardContent>
   </Card>
-);
+  );
+};
 
 const AnalyticsDriversSection: React.FC<{
   categoryDrivers: DriverItem[];
   merchantDrivers: DriverItem[];
   onCategoryClick: (categoryName: string) => void;
   onMerchantClick: (merchantName: string) => void;
-}> = ({ categoryDrivers, merchantDrivers, onCategoryClick, onMerchantClick }) => (
+}> = ({ categoryDrivers, merchantDrivers, onCategoryClick, onMerchantClick }) => {
+  const { t } = useLanguage();
+
+  return (
   <section className="space-y-2">
-    <h2 className="text-sm font-medium text-muted-foreground">Drivers of Change</h2>
+    <h2 className="text-sm font-medium text-muted-foreground">{t('analytics.driversOfChange')}</h2>
     <div className="space-y-3">
-      <DriverRows title="Category Drivers" rows={categoryDrivers} onClickRow={onCategoryClick} />
-      <DriverRows title="Merchant Drivers" rows={merchantDrivers} onClickRow={onMerchantClick} />
+      <DriverRows title={t('analytics.categoryDrivers')} rows={categoryDrivers} onClickRow={onCategoryClick} />
+      <DriverRows title={t('analytics.merchantDrivers')} rows={merchantDrivers} onClickRow={onMerchantClick} />
     </div>
   </section>
-);
+  );
+};
 
 const AnalyticsActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions }) => {
+  const { t } = useLanguage();
   if (!actions.length) return null;
   const recommendedKey = [...actions].sort((a, b) => b.priority - a.priority)[0]?.key;
 
   return (
     <section className="space-y-2">
-      <h2 className="text-sm font-medium text-muted-foreground">Actions & Risks</h2>
+      <h2 className="text-sm font-medium text-muted-foreground">{t('analytics.actionsAndRisks')}</h2>
       <div className="space-y-3">
         {actions.map(action => {
           const recommended = action.key === recommendedKey;
@@ -195,7 +206,7 @@ const AnalyticsActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions 
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{action.title}</CardTitle>
-                  {recommended && <Badge variant="secondary">Recommended</Badge>}
+                  {recommended && <Badge variant="secondary">{t('analytics.recommended')}</Badge>}
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
@@ -211,6 +222,7 @@ const AnalyticsActionsSection: React.FC<{ actions: ActionItem[] }> = ({ actions 
 };
 
 const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: number }[]; monthlyBalance: { date: string; balance: number }[] }> = ({ topCategories, monthlyBalance }) => {
+  const { t } = useLanguage();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -220,7 +232,7 @@ const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: n
           <CardHeader>
             <CollapsibleTrigger className="w-full">
               <div className="flex items-center justify-between">
-                <CardTitle>Trends</CardTitle>
+                <CardTitle>{t('home.trends')}</CardTitle>
                 {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               </div>
             </CollapsibleTrigger>
@@ -229,7 +241,7 @@ const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: n
             <CardContent className="space-y-4">
               {monthlyBalance.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Spending trend line</p>
+                  <p className="text-sm font-medium mb-2">{t('analytics.spendingTrendLine')}</p>
                   <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={monthlyBalance} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
@@ -246,7 +258,7 @@ const AnalyticsTrendsSection: React.FC<{ topCategories: { name: string; value: n
 
               {topCategories.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Category distribution</p>
+                  <p className="text-sm font-medium mb-2">{t('analytics.categoryDistribution')}</p>
                   <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={topCategories} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
@@ -303,6 +315,7 @@ const getPeriodWindow = (range: Range, customStart: Date | null, customEnd: Date
 };
 
 const Analytics: React.FC = () => {
+  const { t } = useLanguage();
   const { transactions } = useTransactions();
   const { user } = useUser();
   const navigate = useNavigate();
@@ -395,7 +408,7 @@ const Analytics: React.FC = () => {
       const grouped = new Map<string, number>();
       list.forEach(tx => {
         if (tx.type !== 'expense') return;
-        const key = groupBy === 'category' ? tx.category || 'Uncategorized' : tx.vendor?.trim() || 'Unknown merchant';
+        const key = groupBy === 'category' ? tx.category || t('analytics.uncategorizedLabel') : tx.vendor?.trim() || t('analytics.unknownMerchant');
         grouped.set(key, (grouped.get(key) ?? 0) + Math.abs(tx.amountInBase ?? tx.amount));
       });
       return grouped;
@@ -464,9 +477,9 @@ const Analytics: React.FC = () => {
     if (budgetData.length && budgetRiskCount > 0) {
       list.push({
         key: 'budget-risk',
-        title: 'Budget risk detected',
-        description: `${budgetRiskCount} categories are approaching or above 80% of budget usage.`,
-        ctaLabel: 'Set budget',
+        title: t('analytics.budgetRiskDetected'),
+        description: `${budgetRiskCount} ${t('analytics.categoriesApproachingBudget')}`,
+        ctaLabel: t('actions.setBudget'),
         onCta: () => navigate('/budget'),
         priority: 100,
       });
@@ -474,9 +487,9 @@ const Analytics: React.FC = () => {
     if (unconvertedCount > 0) {
       list.push({
         key: 'missing-fx',
-        title: 'Missing exchange rates',
-        description: `${unconvertedCount} transactions are missing conversion rates and may affect totals.`,
-        ctaLabel: 'Fix',
+        title: t('analytics.missingExchangeRates'),
+        description: `${unconvertedCount} ${t('analytics.missingRateImpact')}`,
+        ctaLabel: t('actions.fix'),
         onCta: () => navigate('/exchange-rates'),
         priority: 90,
       });
@@ -484,9 +497,9 @@ const Analytics: React.FC = () => {
     if (uncategorizedCount > 0) {
       list.push({
         key: 'uncategorized',
-        title: 'Uncategorized transactions',
-        description: `${uncategorizedCount} transactions still need categories for cleaner analytics.`,
-        ctaLabel: 'Review',
+        title: t('analytics.uncategorizedTransactions'),
+        description: `${uncategorizedCount} ${t('analytics.needCategories')}`,
+        ctaLabel: t('import.review'),
         onCta: () => navigate('/transactions?filter=uncategorized'),
         priority: 80,
       });
@@ -494,9 +507,9 @@ const Analytics: React.FC = () => {
     if (recurringVendorsCount > 0) {
       list.push({
         key: 'recurring',
-        title: 'Possible recurring transactions',
-        description: `${recurringVendorsCount} merchants look recurring based on recent cadence.`,
-        ctaLabel: 'Confirm recurring',
+        title: t('analytics.possibleRecurring'),
+        description: `${recurringVendorsCount} ${t('analytics.recurringMerchantsHint')}`,
+        ctaLabel: t('actions.confirmRecurring'),
         onCta: () => navigate('/transactions?filter=recurring'),
         priority: 70,
       });
@@ -522,20 +535,20 @@ const Analytics: React.FC = () => {
                 value={r}
                 className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
               >
-                {r.charAt(0).toUpperCase() + r.slice(1)}
+                {t(`range.${r}`)}
               </ToggleGroupItem>
             ))}
             <ToggleGroupItem
               value="custom"
               className="flex-1 transition-colors data-[state=on]:bg-primary data-[state=on]:text-primary-foreground dark:data-[state=on]:text-white font-medium"
             >
-              Custom
+              {t('range.custom')}
             </ToggleGroupItem>
           </ToggleGroup>
           {range === 'custom' && (
             <div className="mt-2 flex items-center gap-2 animate-in fade-in">
-              <DatePicker date={customStart} setDate={setCustomStart} placeholder="Start" />
-              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder="End" />
+              <DatePicker date={customStart} setDate={setCustomStart} placeholder={t('range.start')} />
+              <DatePicker date={customEnd} setDate={setCustomEnd} placeholder={t('range.end')} />
             </div>
           )}
         </div>
@@ -547,7 +560,7 @@ const Analytics: React.FC = () => {
           {filteredTransactions.length === 0 ? (
             <Card>
               <CardContent className="py-6 text-center text-sm text-muted-foreground">
-                Add a few transactions to unlock analytics insights.
+                {t('analytics.addTransactionsToUnlock')}
               </CardContent>
             </Card>
           ) : (
@@ -576,9 +589,9 @@ const Analytics: React.FC = () => {
 
               {!hasHistory && (
                 <Card ref={driversRef as React.RefObject<HTMLDivElement>}>
-                  <CardHeader><CardTitle>Drivers of Change</CardTitle></CardHeader>
+                  <CardHeader><CardTitle>{t('analytics.driversOfChange')}</CardTitle></CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground">Not enough history to detect changes yet.</p>
+                    <p className="text-sm text-muted-foreground">{t('analytics.notEnoughHistory')}</p>
                   </CardContent>
                 </Card>
               )}
@@ -593,7 +606,7 @@ const Analytics: React.FC = () => {
 
               {budgetData.length > 0 && (
                 <Card>
-                  <CardHeader><CardTitle>Budget Utilization</CardTitle></CardHeader>
+                  <CardHeader><CardTitle>{t('analytics.budgetUtilization')}</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {budgetData.map(b => (

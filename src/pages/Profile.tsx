@@ -52,11 +52,13 @@ import { useProfileImage } from '@/hooks/useProfileImage';
 import { LoadingOverlay } from '@/components/ui/loading-overlay';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { Card } from '@/components/ui/card';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const Profile = () => {
   const { user, updateUser } = useUser();
   const { toast } = useToast();
   const { image, takeOrSelectPhoto, loading } = useProfileImage();
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({
     fullName: user?.fullName || '',
@@ -73,7 +75,7 @@ const Profile = () => {
 
   const handleSaveProfile = () => {
     if (!editFormData.fullName.trim()) {
-      toast({ title: 'Full name is required', variant: 'destructive' });
+      toast({ title: t('profile.fullNameRequired'), variant: 'destructive' });
       return;
     }
 
@@ -85,7 +87,7 @@ const Profile = () => {
     });
     logAnalyticsEvent('profile_updated');
     setIsEditing(false);
-    toast({ title: 'Profile updated', description: 'Your profile has been saved.' });
+    toast({ title: t('profile.updated'), description: t('profile.saved') });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,8 +98,8 @@ const Profile = () => {
 
   const handleDeleteAccount = () => {
     toast({
-      title: 'Account deleted',
-      description: 'Your account has been permanently deleted.',
+      title: t('profile.accountDeleted'),
+      description: t('profile.accountDeletedDesc'),
       variant: 'destructive',
     });
     window.location.href = '/';
@@ -105,7 +107,7 @@ const Profile = () => {
 
   return (
     <Layout>
-      <LoadingOverlay isOpen={loading} message="Loading image..." />
+      <LoadingOverlay isOpen={loading} message={t('profile.loadingImage')} />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -118,10 +120,10 @@ const Profile = () => {
 
               <AvatarImage
                 src={image ?? (user?.avatar || '/placeholder.svg')}
-                alt={user?.fullName || 'User'}
+                alt={user?.fullName || t('profile.user')}
               />
 
-              <AvatarFallback>{user?.fullName?.charAt(0) || 'U'}</AvatarFallback>
+              <AvatarFallback>{user?.fullName?.charAt(0) || t('profile.fallbackInitial')}</AvatarFallback>
             </Avatar>
             <button
               type="button"
@@ -133,18 +135,18 @@ const Profile = () => {
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-xl font-bold">{user?.fullName || 'New User'}</h2>
+            <h2 className="text-xl font-bold">{user?.fullName || t('profile.newUser')}</h2>
             <p className="text-muted-foreground">{user?.email || user?.phone || ''}</p>
           </div>
 
-          <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+          <Button onClick={() => setIsEditing(true)}>{t('profile.editProfile')}</Button>
         </Card>
 
         <Card className="space-y-3 p-5">
           <div>
-            <h2 className="text-lg font-semibold">Danger Zone</h2>
+            <h2 className="text-lg font-semibold">{t('profile.dangerZone')}</h2>
             <p className="text-sm text-muted-foreground">
-              Permanently delete your account and all associated data.
+              {t('profile.deleteWarning')}
             </p>
           </div>
 
@@ -152,20 +154,20 @@ const Profile = () => {
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm" className="w-full sm:w-auto">
                 <Trash2 className="mr-1 h-4 w-4" />
-                Delete Account
+                {t('profile.deleteAccount')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm">
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>{t('profile.confirmDeleteTitle')}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                  {t('profile.confirmDeleteDesc')}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-500 hover:bg-red-600">
-                  Delete Account
+                  {t('profile.deleteAccount')}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -176,26 +178,26 @@ const Profile = () => {
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto px-4 pb-[max(env(safe-area-inset-bottom,0px),1rem)] pt-5 sm:px-6">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle>{t('profile.editProfile')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
 
-              <Label htmlFor="fullName">Full Name<span className="text-red-500 ml-1">*</span></Label>
+              <Label htmlFor="fullName">{t('profile.fullName')}<span className="text-red-500 ml-1">*</span></Label>
 
               <Input
                 id="fullName"
                 name="fullName"
                 value={editFormData.fullName}
                 onChange={handleInputChange}
-                placeholder="Enter your full name"
+                placeholder={t('profile.enterFullName')}
               />
             </div>
 
             <div className="space-y-2">
 
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('profile.email')}</Label>
 
               <Input
                 id="email"
@@ -203,29 +205,29 @@ const Profile = () => {
                 type="email"
                 value={editFormData.email}
                 onChange={handleInputChange}
-                placeholder="Enter your email address"
+                placeholder={t('profile.enterEmail')}
               />
             </div>
 
             <div className="space-y-2">
 
-              <Label htmlFor="phone">Mobile</Label>
+              <Label htmlFor="phone">{t('profile.mobile')}</Label>
 
               <Input
                 id="phone"
                 name="phone"
                 value={editFormData.phone}
                 onChange={handleInputChange}
-                placeholder="Enter your mobile number"
+                placeholder={t('profile.enterMobile')}
               />
             </div>
           </div>
 
           <DialogFooter className="sticky bottom-0 bg-background pt-3">
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t('common.cancel')}</Button>
             </DialogClose>
-            <Button onClick={handleSaveProfile}>Save Changes</Button>
+            <Button onClick={handleSaveProfile}>{t('profile.saveChanges')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
