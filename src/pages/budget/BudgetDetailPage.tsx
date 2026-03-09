@@ -373,7 +373,7 @@ const BudgetDetailPage = () => {
                 ))}
                 {transactions.length > 5 && (
                   <p className="text-center text-sm text-muted-foreground pt-2">
-                    +{transactions.length - 5} more transactions
+                    {t('detail.moreTransactions').replace('{count}', String(transactions.length - 5))}
                   </p>
                 )}
               </div>
