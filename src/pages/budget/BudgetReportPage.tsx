@@ -411,7 +411,7 @@ const BudgetReportPage = () => {
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-12">
-                  No category spending data
+                  {t('report.noCategoryData')}
                 </p>
               )}
             </CardContent>
