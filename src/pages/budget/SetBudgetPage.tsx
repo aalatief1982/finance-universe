@@ -47,6 +47,7 @@ import { Budget, BudgetScope, BudgetPeriod, DEFAULT_ALERT_THRESHOLDS, CreateBudg
 import { getCurrentPeriodInfo, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { CURRENCIES } from '@/lib/categories-data';
 import { toast } from '@/hooks/use-toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { getUserSettings } from '@/utils/storage-utils';
 import { ParentImpactPreview } from '@/components/budget/ParentImpactPreview';
 import { SiblingBudgetsContext } from '@/components/budget/SiblingBudgetsContext';
