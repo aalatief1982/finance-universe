@@ -43,6 +43,7 @@ const TransactionGrid: React.FC<TransactionGridProps> = ({
   onDeleteTransaction
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   // ============================================================================
   // SECTION: Animation Variants
   // PURPOSE: Provide consistent enter animations for list + items
