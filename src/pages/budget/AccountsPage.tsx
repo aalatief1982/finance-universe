@@ -315,10 +315,10 @@ const AccountsPage = () => {
         <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Edit Account
+              {t('accounts.editAccount')}
             </DialogTitle>
             <DialogDescription>
-              Update your account details
+              {t('accounts.updateDetails')}
             </DialogDescription>
           </DialogHeader>
           
