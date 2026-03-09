@@ -88,7 +88,7 @@ const AddAccountDialog: React.FC<AddAccountDialogProps> = ({ open, onClose, onAc
     const existingAccount = accountService.getAccountByName(form.name);
     const isDuplicateName = existingAccount && existingAccount.id !== initialAccount?.id;
     if (isDuplicateName) {
-      toast({ title: 'An account with this name already exists', variant: 'destructive' });
+      toast({ title: t('toast.accountNameExists'), variant: 'destructive' });
       return;
     }
 
