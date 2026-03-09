@@ -24,7 +24,7 @@ import { Capacitor } from '@capacitor/core';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
-const DEBUG_STARTUP = new URLSearchParams(window.location.search).get('debugStartup') === '1' || localStorage.getItem('xpensia_debug_startup') === '1';
+const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
 
 const Onboarding = () => {
   const navigate = useNavigate();
