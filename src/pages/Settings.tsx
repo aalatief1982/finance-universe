@@ -807,10 +807,10 @@ const Settings = () => {
               <div className="flex items-center justify-center gap-2 mt-2">
                 <Badge variant="outline" className="text-xs">
                   <ShieldCheck className="h-3 w-3 mr-1" />
-                  Admin Mode
+                  {t('settings.adminMode')}
                 </Badge>
                 <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleExitAdminMode}>
-                  Exit
+                  {t('settings.exit')}
                 </Button>
               </div>
             )}
