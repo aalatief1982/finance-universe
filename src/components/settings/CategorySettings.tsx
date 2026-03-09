@@ -23,12 +23,24 @@ interface CategorySettingsProps {
   onCategoriesChange: (categories: Category[]) => void;
 }
 
-const CategorySettings: React.FC<CategorySettingsProps> = ({ categories, onCategoriesChange }) => {
+const CategorySettings: React.FC<CategorySettingsProps> = ({ categories: propCategories, onCategoriesChange: propOnCategoriesChange }) => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('manage');
   const [categoryRules, setCategoryRules] = useState<CategoryRule[]>([]);
-  const [ruleSuggestions, setRuleSuggestions] = useState<CategorySuggestion[]>([]);
+  const [ruleSuggestions, setRuleSuggestions] = useState<CategorySuggestionItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>(propCategories || []);
+
+  const onCategoriesChange = (updated: Category[]) => {
+    setCategories(updated);
+    propOnCategoriesChange?.(updated);
+  };
+
+  useEffect(() => {
+    if (!propCategories && transactionService.getCategories) {
+      setCategories(transactionService.getCategories());
+    }
+  }, [propCategories]);
 
   const loadCategoryRules = () => {
     const rules = transactionService.getCategoryRules();
