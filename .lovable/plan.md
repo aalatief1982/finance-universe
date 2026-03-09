@@ -1,36 +1,57 @@
-## Plan: Optimize Android SpeechRecognizer for Better Voice Transcription
 
-### Status: ✅ Implemented
 
-### What was changed
+## Investigation Report: Smart Entry Typing Latency
 
-**`SpeechToTextPlugin.java`** — Native Android plugin
-- On-device recognizer via `createOnDeviceSpeechRecognizer()` for API 31+ (Android 12+), fallback to `createSpeechRecognizer()` for older devices
-- Added `EXTRA_PREFER_OFFLINE = true` for offline-first recognition
-- Increased `EXTRA_MAX_RESULTS` from 1 to 5
-- Extracts `CONFIDENCE_SCORES`, picks highest-confidence alternative
-- Returns `{ text, confidence, isFinal }` to JS bridge
+### Root Cause Found
 
-**`src/plugins/SpeechToTextPlugin.ts`** — TypeScript bridge
-- Added `confidence: number` to `speechResult` event type
+**Primary cause (HIGH confidence):** In `SmartPaste.tsx` lines 179-209, a `useEffect` watches `text` and runs `parseSmsMessage(text, senderHint)` on **every keystroke**.
 
-**`src/hooks/useSpeechToText.ts`** — React hook
-- Added `minConfidence` option (default `0.35`)
-- Discards low-confidence results with user-friendly toast
-- Dev-mode debug logging for transcript + confidence
+```javascript
+useEffect(() => {
+    if (!text.trim()) { ... return; }
+    try {
+      const parsed = parseSmsMessage(text, senderHint);  // HEAVY — runs on every keystroke
+      // template matching, regex, localStorage reads, inference...
+```
 
-**`src/i18n/en.ts` + `src/i18n/ar.ts`** — Added `voice.lowConfidence` translation key
+`parseSmsMessage` (in `structureParser.ts`, 468 lines) is the full structure parser pipeline: template extraction, template hash lookup, localStorage reads, regex matching, vendor inference, account candidate extraction, confidence scoring. This is an expensive operation designed to run once on submit — not on every character typed.
 
-### What is NOT changed
-- SmartPaste parser, SMS parsing, category detection — untouched
-- Home.tsx, MicButton.tsx — no UI changes
-- Web Speech API fallback — unchanged
+**Secondary cause (MEDIUM):** `computeCapturedFields()` at line 335 runs on every render (not in a `useMemo`), recalculating field status each time the component re-renders from the `text` state change.
 
-### Post-build steps
-1. `git pull` → `npx cap sync` → `npx cap run android`
+**Tertiary cause (LOW):** The prefill confirmation `useEffect` at line 157 also watches `text`, but it's lightweight (ref comparisons only).
 
-### Known limitations
-- `createOnDeviceSpeechRecognizer` only on API 31+ (Android 12+)
-- Some devices may not return confidence scores (defaults to 1.0)
-- Offline language packs must be downloaded manually via Android Settings
-- Mixed Arabic/English accuracy depends on active language model
+### Files Involved
+
+| File | Issue |
+|------|-------|
+| `src/components/SmartPaste.tsx` L179-209 | `parseSmsMessage` called on every keystroke via useEffect |
+| `src/components/SmartPaste.tsx` L335-344 | `computeCapturedFields` not memoized |
+
+### What Does NOT Cause Lag
+- The `onChange` handler on the Textarea (L428) is just `setText(e.target.value)` — fine
+- Voice transcript merge (L118-120) — only on speech result, not on typing
+- `handleSubmit` — only on form submit
+- `NERSmartPaste.tsx` — separate component, no useEffect on text
+
+---
+
+## Safe Fix Plan
+
+### Fix 1: Remove `parseSmsMessage` from the keystroke path (PRIMARY FIX)
+
+Remove the `useEffect` at lines 179-209 that calls `parseSmsMessage(text, senderHint)` on every `text` change. The match status preview is a nice-to-have but is the direct cause of lag. Instead, only show match status after the user taps "Review Transaction" (which already calls `parseAndInferTransaction`).
+
+**Change:** Delete the useEffect (lines 179-209). Set `matchStatus` and `hasMatch` inside `handleSubmit` instead, using the result that's already computed there.
+
+### Fix 2: Memoize `computeCapturedFields` (SECONDARY FIX)
+
+Wrap the `computeCapturedFields` call in `useMemo` depending on `detectedTransactions[0]`, `fieldConfidences`, `confidence`, and `matchOrigin`.
+
+### What stays the same
+- Textarea `onChange` handler — unchanged
+- `handleSubmit` and full parse pipeline — unchanged
+- SMS parsing logic — untouched
+- Voice/shared text prefill — unchanged
+- `NERSmartPaste.tsx` — unchanged
+- Parser files — unchanged
+
