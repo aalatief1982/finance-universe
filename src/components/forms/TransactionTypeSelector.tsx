@@ -32,6 +32,7 @@ interface TransactionTypeSelectorProps {
 const TransactionTypeSelector: React.FC<TransactionTypeSelectorProps> = ({
   form
 }) => {
+  const { t } = useLanguage();
   const vendor = form.watch('vendor')
   const [matches, setMatches] = useState<KeywordEntry[]>([])
 
