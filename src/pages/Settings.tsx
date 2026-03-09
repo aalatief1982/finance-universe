@@ -766,7 +766,7 @@ const Settings = () => {
 
           <LockedFeature
             isLocked={!betaActive}
-            featureName={t('settings.importData')}
+            featureName={t('settings.importData')}importData')}
             onLockedClick={() => handleLockedFeatureClick('Import Data')}
           >
             <div className="flex items-center justify-between">
@@ -801,7 +801,7 @@ const Settings = () => {
               className="text-sm text-muted-foreground cursor-default select-none bg-transparent border-0 p-0"
               onClick={handleVersionTap}
             >
-              Version {appVersion || '...'}
+ {t('settings.version')}      Version {appVersion || '...'}
             </button>
             {adminMode && (
               <div className="flex items-center justify-center gap-2 mt-2">
