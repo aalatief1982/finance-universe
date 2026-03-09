@@ -61,6 +61,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
   screenName,
 }) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   // Log when feedback modal opens
   useEffect(() => {
