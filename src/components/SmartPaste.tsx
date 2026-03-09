@@ -326,15 +326,15 @@ const SmartPaste = ({
     }
   };
 
-  const capturedFieldStatus = computeCapturedFields(
-    detectedTransactions[0],
-    fieldConfidences,
-    {
-      fields: ['amount', 'date', 'vendor', 'category'],
-      confidence: confidence ?? undefined,
-      origin: matchOrigin ?? undefined,
-      matchOrigin: matchOrigin ?? undefined,
-    },
+  const capturedFieldStatus = useMemo(
+    () =>
+      computeCapturedFields(detectedTransactions[0], fieldConfidences, {
+        fields: ['amount', 'date', 'vendor', 'category'],
+        confidence: confidence ?? undefined,
+        origin: matchOrigin ?? undefined,
+        matchOrigin: matchOrigin ?? undefined,
+      }),
+    [detectedTransactions, fieldConfidences, confidence, matchOrigin],
   );
 
   const handlePaste = async () => {
