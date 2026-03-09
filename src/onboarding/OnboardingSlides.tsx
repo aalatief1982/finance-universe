@@ -84,6 +84,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     });
 
     setIsVisible(true);
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`);
     const setVh = () => {
       const previousValue = document.documentElement.style.getPropertyValue('--vh-onb');
       const nextValue = `${window.innerHeight * 0.01}px`;
