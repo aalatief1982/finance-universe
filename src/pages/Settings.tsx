@@ -672,7 +672,7 @@ const Settings = () => {
 
                     // Show spinner
                     setSmsBusy(true);
-                    setSmsBusyMessage('Requesting SMS permission...');
+                    setSmsBusyMessage(t('toast.requestingSmsPermission'));
 
                     try {
                       const currentStatus = await smsPermissionService.checkPermissionStatus();
