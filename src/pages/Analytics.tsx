@@ -130,7 +130,9 @@ const AnalyticsDeltaSection: React.FC<{
   );
 };
 
-const DriverRows: React.FC<{ title: string; rows: DriverItem[]; onClickRow: (name: string) => void }> = ({ title, rows, onClickRow }) => (
+const DriverRows: React.FC<{ title: string; rows: DriverItem[]; onClickRow: (name: string) => void }> = ({ title, rows, onClickRow }) => {
+  const { t } = useLanguage();
+  return (
   <Card>
     <CardHeader>
       <CardTitle>{title}</CardTitle>
