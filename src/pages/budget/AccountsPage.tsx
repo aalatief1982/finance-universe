@@ -337,7 +337,7 @@ const AccountsPage = () => {
             
             <div>
               <label className="text-sm font-medium mb-1.5 block" htmlFor="account-type">
-                Type
+                {t('accounts.type')}
               </label>
               <Select value={form.type} onValueChange={val => setForm({ ...form, type: val as Account['type'] })}>
                 <SelectTrigger id="account-type">
