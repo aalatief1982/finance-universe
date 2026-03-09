@@ -18,6 +18,7 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
   transaction,
   onChange
 }) => {
+  const { t } = useLanguage();
   const handleChange = <K extends keyof Transaction>(field: K, value: Transaction[K]) => {
     onChange({
       ...transaction,
