@@ -420,7 +420,6 @@ export const ar: Record<string, string> = {
   'toast.lowConfidenceMatchDesc': 'تم مطابقة هذه المعاملة باستخدام بنية قالب محفوظة بثقة جزئية (40%). يمكنك المراجعة والتعديل قبل الحفظ لتحسين الاكتشاف المستقبلي.',
   'toast.telegramConnected': 'تم الاتصال بـ Telegram',
   'toast.telegramConnectedDesc': 'تم إعداد بوت Telegram الخاص بك وهو جاهز لاستقبال رسائل المعاملات.',
-  'toast.telegramConnectedDesc': 'تم إعداد بوت Telegram الخاص بك وهو جاهز لاستقبال رسائل المعاملات.',
   'toast.telegramDisconnected': 'تم فصل Telegram',
   'toast.telegramDisconnectedDesc': 'تم فصل بوت Telegram الخاص بك.',
 
