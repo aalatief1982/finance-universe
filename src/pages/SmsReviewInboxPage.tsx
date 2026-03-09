@@ -35,7 +35,7 @@ const SmsReviewInboxPage = () => {
   const handleReviewSms = async (item: SmsInboxItem) => {
     markSmsStatus(item.id, 'opened');
 
-    const dto = buildInferenceDTO(item.body, item.sender);
+    const dto = await buildInferenceDTO({ rawMessage: item.body, senderHint: item.sender });
 
     navigate('/review-sms-transactions', {
       state: {
