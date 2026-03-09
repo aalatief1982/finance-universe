@@ -212,8 +212,8 @@ const ImportTransactions = () => {
       });
 
       toast({
-        title: 'Could not open SMS',
-        description: 'Please try again.',
+        title: t('toast.couldNotOpenSms'),
+        description: t('toast.pleaseTryAgain'),
         variant: 'destructive',
       });
     }
