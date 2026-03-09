@@ -75,12 +75,12 @@ const TransactionAttributesForm: React.FC<TransactionAttributesFormProps> = ({
             onValueChange={(value) => handleChange('type', value as TransactionType)}
           >
             <SelectTrigger id="type" className="h-9">
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder={t('form.selectType')} />
             </SelectTrigger>
             <SelectContent>
               {transactionTypes.map((type) => (
                 <SelectItem key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                  {t(`transactions.${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>

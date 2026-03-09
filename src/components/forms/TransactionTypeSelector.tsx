@@ -60,13 +60,13 @@ const TransactionTypeSelector: React.FC<TransactionTypeSelectorProps> = ({
           <Select value={field.value} onValueChange={field.onChange}>
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder={t('form.selectType')} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="expense">Expense</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="transfer">Transfer</SelectItem>
+              <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+              <SelectItem value="income">{t('transactions.income')}</SelectItem>
+              <SelectItem value="transfer">{t('transactions.transfer')}</SelectItem>
             </SelectContent>
           </Select>
           {matches.length > 1 && (
