@@ -18,6 +18,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Layout from '@/components/Layout';
