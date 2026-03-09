@@ -503,4 +503,48 @@ export const ar: Record<string, string> = {
   'budget.insights.allGoodTitle': 'كل الميزانيات بحالة جيدة!',
   'budget.insights.allGoodDesc': 'لا توجد مشكلات أو اقتراحات حاليًا.',
 
+  // Actions
+  'actions.fix': 'إصلاح',
+  'actions.setBudget': 'ضبط الميزانية',
+  'actions.confirmRecurring': 'تأكيد التكرار',
+
+  // Common
+  'common.tryAgain': 'يرجى المحاولة مرة أخرى.',
+
+  // Profile
+  'profile.user': 'مستخدم',
+  'profile.fallbackInitial': 'م',
+  'profile.newUser': 'مستخدم جديد',
+  'profile.editProfile': 'تعديل الملف الشخصي',
+  'profile.dangerZone': 'منطقة الخطر',
+  'profile.deleteWarning': 'حذف حسابك وجميع البيانات المرتبطة به بشكل دائم.',
+  'profile.deleteAccount': 'حذف الحساب',
+  'profile.confirmDeleteTitle': 'هل أنت متأكد تمامًا؟',
+  'profile.confirmDeleteDesc': 'لا يمكن التراجع عن هذا الإجراء. سيتم حذف حسابك نهائيًا وإزالة بياناتك من خوادمنا.',
+  'profile.fullName': 'الاسم الكامل',
+  'profile.email': 'البريد الإلكتروني',
+  'profile.mobile': 'الجوال',
+  'profile.enterFullName': 'أدخل اسمك الكامل',
+  'profile.enterEmail': 'أدخل بريدك الإلكتروني',
+  'profile.enterMobile': 'أدخل رقم جوالك',
+  'profile.saveChanges': 'حفظ التغييرات',
+  'profile.fullNameRequired': 'الاسم الكامل مطلوب',
+  'profile.updated': 'تم تحديث الملف الشخصي',
+  'profile.saved': 'تم حفظ ملفك الشخصي.',
+  'profile.accountDeleted': 'تم حذف الحساب',
+  'profile.accountDeletedDesc': 'تم حذف حسابك بشكل دائم.',
+  'profile.loadingImage': 'جارٍ تحميل الصورة...',
+
+  // Analytics labels
+  'analytics.uncategorizedLabel': 'غير مصنّف',
+  'analytics.unknownMerchant': 'تاجر غير معروف',
+  'analytics.categoriesApproachingBudget': 'فئات تقترب من أو تتجاوز 80٪ من استخدام الميزانية.',
+  'analytics.missingRateImpact': 'معاملات ينقصها سعر التحويل وقد تؤثر على الإجماليات.',
+  'analytics.needCategories': 'معاملات ما زالت بحاجة إلى تصنيف لتحليلات أدق.',
+  'analytics.recurringMerchantsHint': 'تجّار يبدون متكررين بناءً على الوتيرة الأخيرة.',
+
+  // Exchange Rates
+  'exchangeRates.deleted': 'تم حذف سعر الصرف',
+  'exchangeRates.updateFailed': 'تعذر تحديث سعر الصرف',
+
 };
