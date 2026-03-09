@@ -22,6 +22,7 @@ const SwipeableTransactionCard: React.FC<SwipeableTransactionCardProps> = ({
   const navigate = useNavigate();
   const { deleteTransaction } = useTransactions();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const controls = useAnimation();
   const constraintsRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
