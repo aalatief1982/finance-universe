@@ -22,6 +22,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
 import { TransactionFormValues } from './transaction-form-schema';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface DescriptionFieldProps {
   form: UseFormReturn<TransactionFormValues>;
@@ -30,6 +31,7 @@ interface DescriptionFieldProps {
 const DescriptionField: React.FC<DescriptionFieldProps> = ({
   form
 }) => {
+  const { t } = useLanguage();
   return (
     <FormField
       control={form.control}
