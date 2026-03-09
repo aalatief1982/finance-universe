@@ -47,7 +47,19 @@ export function isFinancialTransactionMessage(text: string): boolean {
     }
   }
 
-  const fallbackKeywords = ["مبلغ", "حوالة", "رصيد", "بطاقة", "شراء", "تحويل", "دفع", "إيداع"];
+  // Fallback financial keywords — used when user has no stored custom keywords.
+  // Kept focused on high-signal transaction terms to avoid false positives.
+  const fallbackKeywords = [
+    // Arabic (original)
+    "مبلغ", "حوالة", "رصيد", "بطاقة", "شراء", "تحويل", "دفع", "إيداع",
+    // Arabic (enriched)
+    "عملية", "مشتريات", "سحب", "استلام", "رسوم", "الرسوم", "خصم",
+    "الرصيد", "مدفوعات",
+    // English (aligned with native classifier + common bank SMS terms)
+    "transaction", "purchase", "debit", "debited", "credit", "credited",
+    "withdrawal", "withdraw", "deposit", "deposited", "payment", "paid",
+    "transfer", "transferred", "remittance", "charged", "balance", "fee", "fees",
+  ];
   const financialKeywords = storedKeywords.length > 0 ? storedKeywords : fallbackKeywords;
 
   const normalize = (str: unknown): string =>
