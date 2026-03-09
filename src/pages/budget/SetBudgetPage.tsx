@@ -119,6 +119,7 @@ function normalizeBudgetPeriod(period: BudgetPeriod | null | undefined): BudgetP
 }
 
 const SetBudgetPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
