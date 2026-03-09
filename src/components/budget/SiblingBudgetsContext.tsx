@@ -5,6 +5,7 @@ import { formatPeriodLabel } from '@/utils/budget-period-utils';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SiblingBudgetsContextProps {
   siblings: Budget[];
@@ -26,15 +27,14 @@ export function SiblingBudgetsContext({
   parentPeriodLabel,
 }: SiblingBudgetsContextProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { t } = useLanguage();
   
   if (siblings.length === 0) return null;
   
-  // Sort siblings by periodIndex
   const sortedSiblings = [...siblings].sort(
     (a, b) => (a.periodIndex || 0) - (b.periodIndex || 0)
   );
   
-  // Calculate total including current
   const siblingTotal = sortedSiblings.reduce((sum, b) => sum + b.amount, 0);
   const totalWithCurrent = siblingTotal + currentAmount;
   
@@ -44,12 +44,12 @@ export function SiblingBudgetsContext({
         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {parentPeriodLabel || 'Period'} Breakdown
+              {parentPeriodLabel || t('detail.period')} {t('siblings.breakdown')}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">
-              Total: {formatCurrency(totalWithCurrent, currency)}
+              {t('siblings.total')}: {formatCurrency(totalWithCurrent, currency)}
             </span>
             {isOpen ? (
               <ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -61,7 +61,7 @@ export function SiblingBudgetsContext({
       </CollapsibleTrigger>
       
       <CollapsibleContent>
-        <div className="mt-2 space-y-1 pl-3 border-l-2 border-muted ml-2">
+        <div className="mt-2 space-y-1 ltr:pl-3 ltr:border-l-2 ltr:ml-2 rtl:pr-3 rtl:border-r-2 rtl:mr-2 border-muted">
           {sortedSiblings.map(sibling => {
             const label = formatPeriodLabel(sibling.period, sibling.year, sibling.periodIndex);
             const isCurrent = sibling.periodIndex === currentPeriodIndex;
@@ -79,7 +79,7 @@ export function SiblingBudgetsContext({
                   isCurrent && "text-primary font-medium"
                 )}>
                   {label}
-                  {isCurrent && " ← editing"}
+                  {isCurrent && ` ${t('siblings.editing')}`}
                 </span>
                 <span className={cn(
                   "font-medium",
@@ -87,18 +87,17 @@ export function SiblingBudgetsContext({
                 )}>
                   {formatCurrency(sibling.amount, currency)}
                   {!sibling.isOverride && (
-                    <span className="ml-1 text-xs text-muted-foreground">(calc)</span>
+                    <span className="ltr:ml-1 rtl:mr-1 text-xs text-muted-foreground">{t('siblings.calc')}</span>
                   )}
                 </span>
               </div>
             );
           })}
           
-          {/* Show current if not in siblings list */}
           {currentPeriodIndex && !sortedSiblings.find(s => s.periodIndex === currentPeriodIndex) && (
             <div className="flex items-center justify-between py-1.5 px-2 rounded text-sm bg-primary/10">
               <span className="text-primary font-medium">
-                {formatPeriodLabel(period, year, currentPeriodIndex)} ← editing
+                {formatPeriodLabel(period, year, currentPeriodIndex)} {t('siblings.editing')}
               </span>
               <span className="font-medium text-primary">
                 {formatCurrency(currentAmount, currency)}
@@ -107,7 +106,7 @@ export function SiblingBudgetsContext({
           )}
           
           <div className="flex items-center justify-between py-2 px-2 border-t mt-2 font-medium text-sm">
-            <span>Total</span>
+            <span>{t('siblings.total')}</span>
             <span>{formatCurrency(totalWithCurrent, currency)}</span>
           </div>
         </div>

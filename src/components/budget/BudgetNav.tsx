@@ -2,12 +2,13 @@ import React from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, BarChart3, Lightbulb, Wallet } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const NAV_ITEMS = [
-  { path: '/budget', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/budget/report', label: 'Reports', icon: BarChart3 },
-  { path: '/budget/insights', label: 'Insights', icon: Lightbulb },
-  { path: '/budget/accounts', label: 'Accounts', icon: Wallet },
+  { path: '/budget', labelKey: 'budgetNav.dashboard', icon: LayoutDashboard },
+  { path: '/budget/report', labelKey: 'budgetNav.reports', icon: BarChart3 },
+  { path: '/budget/insights', labelKey: 'budgetNav.insights', icon: Lightbulb },
+  { path: '/budget/accounts', labelKey: 'budgetNav.accounts', icon: Wallet },
 ];
 
 interface BudgetNavProps {
@@ -18,8 +19,8 @@ export function BudgetNav({ className }: BudgetNavProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useLanguage();
   
-  // Preserve URL params when navigating
   const preserveParams = (path: string) => {
     const params = searchParams.toString();
     return params ? `${path}?${params}` : path;
@@ -50,7 +51,7 @@ export function BudgetNav({ className }: BudgetNavProps) {
             )}
           >
             <Icon className="h-4 w-4" />
-            <span className="hidden sm:inline">{item.label}</span>
+            <span className="hidden sm:inline">{t(item.labelKey)}</span>
           </button>
         );
       })}
