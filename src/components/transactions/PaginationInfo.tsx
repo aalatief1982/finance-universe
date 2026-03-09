@@ -2,6 +2,7 @@
 import React from 'react';
 import TransactionsPagination from '@/components/TransactionsPagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface PaginationInfoProps {
   currentPage: number;
@@ -20,6 +21,8 @@ const PaginationInfo: React.FC<PaginationInfoProps> = ({
   onPageChange,
   onItemsPerPageChange
 }) => {
+  const { t } = useLanguage();
+  
   // Calculate the range of items being displayed
   const startItem = totalItems === 0 ? 0 : Math.min((currentPage - 1) * itemsPerPage + 1, totalItems);
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -29,12 +32,12 @@ const PaginationInfo: React.FC<PaginationInfoProps> = ({
       <div className="text-sm text-muted-foreground order-2 sm:order-1">
         {totalItems > 0 ? (
           <span>
-            Showing <span className="font-medium">{startItem}</span> to{' '}
-            <span className="font-medium">{endItem}</span> of{' '}
-            <span className="font-medium">{totalItems}</span> transactions
+            {t('pagination.showing')} <span className="font-medium">{startItem}</span> {t('pagination.to')}{' '}
+            <span className="font-medium">{endItem}</span> {t('pagination.of')}{' '}
+            <span className="font-medium">{totalItems}</span> {t('pagination.transactions')}
           </span>
         ) : (
-          <span>No transactions found</span>
+          <span>{t('pagination.noTransactionsFound')}</span>
         )}
       </div>
       
