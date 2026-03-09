@@ -32,10 +32,10 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
             <SelectValue placeholder={t('sort.selectField')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="date">Date</SelectItem>
-            <SelectItem value="title">Description</SelectItem>
-            <SelectItem value="category">Category</SelectItem>
-            <SelectItem value="amount">Amount</SelectItem>
+            <SelectItem value="date">{t('sort.date')}</SelectItem>
+            <SelectItem value="title">{t('sort.description')}</SelectItem>
+            <SelectItem value="category">{t('sort.category')}</SelectItem>
+            <SelectItem value="amount">{t('sort.amount')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -51,7 +51,7 @@ const TransactionSortControls: React.FC<TransactionSortControlsProps> = ({
         ) : (
           <ChevronDown className="h-4 w-4 mr-1" />
         )}
-        {sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+        {sortDirection === 'asc' ? t('sort.ascending') : t('sort.descending')}
       </Button>
     </div>
   );

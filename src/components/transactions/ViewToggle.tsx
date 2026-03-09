@@ -38,12 +38,12 @@ const ViewToggle: React.FC<ViewToggleProps> = ({ viewMode, setViewMode }) => {
               size="icon"
               className="h-8 w-8"
               onClick={() => setViewMode('table')}
-              aria-label="Table view"
+              aria-label={t('view.tableView')}
             >
               <TableIcon size={16} />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Table view</TooltipContent>
+          <TooltipContent>{t('view.tableView')}</TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>

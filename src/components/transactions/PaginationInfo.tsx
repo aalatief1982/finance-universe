@@ -44,7 +44,7 @@ const PaginationInfo: React.FC<PaginationInfoProps> = ({
       <div className="flex items-center gap-2 order-1 sm:order-2">
         {onItemsPerPageChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Show</span>
+            <span className="text-sm text-muted-foreground">{t('pagination.show')}</span>
             <Select
               value={String(itemsPerPage)}
               onValueChange={(value) => onItemsPerPageChange(Number(value))}
