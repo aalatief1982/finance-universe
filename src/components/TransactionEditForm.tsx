@@ -203,7 +203,6 @@ interface TransactionEditFormProps {
   onEditStart?: () => void;
   /** Called when form dirty state changes */
   onDirtyChange?: (isDirty: boolean) => void;
-  isSaving?: boolean;
 }
 
 const createInitialTransactionState = (
@@ -345,7 +344,6 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
   isSuggested = false,
   onEditStart,
   onDirtyChange,
-  isSaving = false,
 }) => {
   // Serialize fieldConfidences to prevent object reference changes triggering re-renders
   const { t } = useLanguage();
@@ -2506,9 +2504,8 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
             'bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-md',
             compact ? 'py-2' : 'py-3',
           )}
-        disabled={isSaving}
         >
-          {isSaving ? 'Saving...' : transaction ? 'Update Transaction' : 'Create Transaction'}
+          {transaction ? 'Update Transaction' : 'Create Transaction'}
         </Button>
       </div>
     </form>

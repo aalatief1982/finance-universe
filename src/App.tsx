@@ -161,7 +161,6 @@ function AppWrapper() {
   const location = useLocation();
 
   const navigateRef = React.useRef(navigate);
-  const locationPathRef = React.useRef(location.pathname);
   const [showSmsPrompt, setShowSmsPrompt] = useState(false);
   const hasScheduledSmsPrompt = React.useRef(false);
   const { theme, resolvedTheme } = useTheme();
@@ -188,10 +187,6 @@ function AppWrapper() {
   useEffect(() => {
     navigateRef.current = navigate;
   }, [navigate]);
-
-  useEffect(() => {
-    locationPathRef.current = location.pathname;
-  }, [location.pathname]);
 
 
   useEffect(() => {
@@ -349,7 +344,7 @@ function AppWrapper() {
     }
 
     traceState('location.pathname stable on effect run', {
-      pathname: locationPathRef.current,
+      pathname: location.pathname,
     });
   }, [location.pathname]);
 
@@ -531,12 +526,12 @@ function AppWrapper() {
         console.log('[SMS_NOTIFICATION_FLOW] consumePendingOpenRoute result (resume/active)', {
           route: pendingRoute?.route ?? null,
           source: pendingRoute?.source ?? null,
-          pathname: locationPathRef.current,
+          pathname: location.pathname,
         });
         if (pendingRoute?.route === IMPORT_ROUTE) {
           if (!SMS_AUTO_IMPORT_ENABLED) {
             console.log('[SMS_IMPORT] disabled -> skipping native pending import route', {
-              pathname: locationPathRef.current,
+              pathname: location.pathname,
             });
             return;
           }
@@ -546,7 +541,7 @@ function AppWrapper() {
           }
 
           console.log('[SMS_NOTIFICATION_FLOW] routing to import route from pending route (resume/active)', {
-            fromPath: locationPathRef.current,
+            fromPath: location.pathname,
             targetPath: IMPORT_ROUTE,
             source: pendingRoute?.source ?? null,
           });
@@ -560,7 +555,6 @@ function AppWrapper() {
     };
 
     let appStateListener: { remove: () => void } | null = null;
-    let smsReceivedListener: { remove: () => void } | null = null;
     void CapacitorApp.addListener('appStateChange', async (state) => {
       if (state.isActive) {
         // Re-check for shared text on resume (warm start from share sheet)
@@ -660,7 +654,7 @@ function AppWrapper() {
           
           // Add listener for SMS events with error handling
           try {
-            smsReceivedListener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
+            const listener = await BackgroundSmsListener.addListener('smsReceived', async ({ sender, body }) => {
               if (import.meta.env.MODE === 'development') {
                 // console.log('[Xpensia SMS] Received from', sender, ':', body);
               }
@@ -721,14 +715,13 @@ function AppWrapper() {
         // console.log('AIS-04 stopping listener');
       }
       appStateListener?.remove();
-      smsReceivedListener?.remove();
       BackgroundSmsListener.stopListening().catch(err => {
         if (import.meta.env.MODE === 'development') {
           console.warn('[SMS] Error stopping SMS listener:', err);
         }
       });
     };
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     if (!ENABLE_SMS_INTEGRATION) return;
@@ -804,7 +797,7 @@ function AppWrapper() {
       if (flowDecision.nextStep === 'route_sender_discovery' && flowDecision.route && location.pathname !== flowDecision.route) {
         if (!SMS_AUTO_IMPORT_ENABLED && IMPORT_ROUTES.has(flowDecision.route as string)) {
           console.log('[SMS_IMPORT] disabled -> skipping startup sender-discovery navigation', {
-            pathname: locationPathRef.current,
+            pathname: location.pathname,
             targetPathname: flowDecision.route,
           });
           return;
@@ -812,7 +805,7 @@ function AppWrapper() {
 
         if (import.meta.env.MODE === 'development') {
           console.log('[ROUTE_GUARD] forcing import because sender discovery is required', {
-            pathname: locationPathRef.current,
+            pathname: location.pathname,
             target: flowDecision.route,
             permissionState,
             providerSelectionState,
