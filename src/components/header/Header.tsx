@@ -66,7 +66,7 @@ const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) 
               title={t('nav.smsReview')}
               aria-label={t('nav.smsReview')}
             >
-              <Mail size={39} />
+              <Mail size={49} />
               {pendingSmsCount > 0 && (
                 <span className="absolute ltr:-right-1 rtl:-left-1 -top-1 min-w-4 rounded-full bg-destructive px-1 text-center text-[10px] leading-4 text-destructive-foreground">
                   {pendingSmsCount}
