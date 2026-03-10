@@ -99,6 +99,7 @@ const KeywordBankManager = () => {
   const handleDelete = (kw: string) => {
     deleteKeyword(kw)
     setEntries(loadKeywordBank())
+    syncKeywordsToNative()
   }
 
   return (

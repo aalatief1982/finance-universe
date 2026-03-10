@@ -69,6 +69,20 @@ export function isFinancialTransactionMessage(text: string): boolean {
 
   const normalizedText = normalize(text);
 
+  // ── OTP exclusion — reject before financial gates ──
+  const otpKeywords = [
+    "otp", "verification code", "رمز التحقق", "رمز التفعيل",
+    "one-time", "one time password", "passcode", "pin code",
+    "security code", "auth code", "كلمة المرور", "رمز التأكيد",
+  ];
+  const isOtp = otpKeywords.some(kw => normalizedText.includes(normalize(kw)));
+  if (isOtp) {
+    if (import.meta.env.MODE === 'development') {
+      console.log('[MessageFilter] Rejected: OTP keyword detected');
+    }
+    return false;
+  }
+
   const keywordMatch = financialKeywords.some(keyword =>
     normalizedText.includes(normalize(keyword))
   );

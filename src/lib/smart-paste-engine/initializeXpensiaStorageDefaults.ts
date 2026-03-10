@@ -280,7 +280,9 @@ export async function initializeXpensiaStorageDefaults() {
       // console.log('[Init] xpensia_type_keywords initialized');
     }
   }
-  
+
+  // Sync keywords to native SharedPreferences for the Android SMS classifier
+  await syncKeywordsToNative();
 
    // Ensure type keyword bank exists
 if (!safeStorage.getItem('xpensia_category_hierarchy')) {
