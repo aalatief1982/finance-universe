@@ -136,6 +136,7 @@ const SmartPaste = ({
     switch (origin) {
       case 'template': return t('smartEntry.originTemplate');
       case 'ml': return t('smartEntry.originMl');
+      case 'freeform': return t('smartEntry.originFreeform', t('smartEntry.originFallback'));
       case 'fallback': return t('smartEntry.originFallback');
       default: return t('smartEntry.originStructure');
     }
@@ -144,6 +145,7 @@ const SmartPaste = ({
   const getOriginShortLabel = (origin: string | null): string => {
     switch (origin) {
       case 'template': return t('smartEntry.originTemplateShort');
+      case 'freeform': return t('smartEntry.originFreeformShort', t('smartEntry.originFallbackShort'));
       case 'fallback': return t('smartEntry.originFallbackShort');
       case 'ml': return t('smartEntry.originMlShort');
       default: return t('smartEntry.originStructureShort');
