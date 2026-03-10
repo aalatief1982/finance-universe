@@ -1,48 +1,48 @@
-## Plan: Non-Template Freeform Fallback Parser
+## Plan: Align Native Classifier with JS Filter + Dynamic Keywords
 
 ### Status: ✅ Implemented
 
 ### Summary
-Added a completely isolated freeform fallback parser for Smart Entry that activates only when the existing structured/template parser produces weak results (confidence < 0.5 and no template match) or when input doesn't pass the SMS triple-gate filter.
+Aligned `FinancialSmsClassifier.java` (native Android) with `messageFilter.ts` (JS) to use the same triple-gate logic (keyword + amount + date), expanded keywords (27), fixed amount regex for Arabic-prefixed currency codes, added OTP exclusion, and added a keyword sync bridge from localStorage to SharedPreferences.
 
-### Architecture
-- **Two learning domains**: SMS (existing, unchanged) and Freeform (new, isolated)
-- **Routing**: Structured first → if weak → freeform fallback
-- **Learning gate**: `source` field (`smart-paste-freeform` / `voice-freeform`) controls which store gets updated at save time
+### Root Cause (Original Bug)
+The SMS `بـSAR 4` failed the native amount regex because `\b` word boundaries don't work reliably with Arabic Tatweel (U+0640) directly preceding `SAR` on some Android regex engines.
 
-### Files Added
-- `src/lib/freeform-entry/freeformTypes.ts` — Type definitions
-- `src/lib/freeform-entry/freeformParser.ts` — Core extraction logic (amount, type, date, vendor, category, counterparty)
-- `src/lib/freeform-entry/freeformLearningStore.ts` — Isolated localStorage store (`xpensia_freeform_learned_mappings`)
-- `src/lib/freeform-entry/index.ts` — Barrel exports
-- `src/lib/freeform-entry/__tests__/freeformParser.test.ts` — 11 tests (EN/AR expense, income, transfer, edge cases)
+### Changes Made
 
-### Files Changed
-- `src/types/transaction.ts` — Added `smart-paste-freeform` | `voice-freeform` to `TransactionSource`
-- `src/types/inference.ts` — Added `'freeform'` to `InferenceOrigin`
-- `src/lib/inference/inferenceDTO.ts` — Added `'freeform'` to normalizeOrigin
-- `src/lib/inference/buildInferenceDTO.ts` — Added freeform source types
-- `src/components/SmartPaste.tsx` — Freeform fallback routing after structured path
-- `src/components/NERSmartPaste.tsx` — Same freeform fallback routing
-- `src/lib/smart-paste-engine/saveTransactionWithLearning.ts` — Learning branch by source (freeform → isolated store, SMS → existing stores)
+| File | Change |
+|---|---|
+| `src/utils/syncKeywordsToNative.ts` | **New** — reads `xpensia_type_keywords` from localStorage, flattens to string array, writes to Capacitor Preferences (`xpensia_native_financial_keywords`) |
+| `FinancialSmsClassifier.java` | **Rewritten** — triple-gate (keyword+amount+date), reads dynamic keywords from SharedPreferences with fallback to 27 hardcoded, fixed amount regex (no `\b`), OTP exclusion, NFC normalization, `Log.d` diagnostics |
+| `BackgroundSmsListenerPlugin.java` | Updated `handleIncomingSms` to pass `context` to classifier |
+| `messageFilter.ts` | Added OTP exclusion keywords before financial gates |
+| `initializeXpensiaStorageDefaults.ts` | Calls `syncKeywordsToNative()` after keyword initialization |
+| `KeywordBankManager.tsx` | Calls `syncKeywordsToNative()` after save/delete |
 
-### Storage Keys
-| Domain | Key |
-|--------|-----|
-| SMS | `xpensia_template_bank`, `xpensia_keyword_bank`, `xpensia_vendor_map`, `xpensia_fromaccount_map`, `xpensia_template_account_map` |
-| Freeform | `xpensia_freeform_learned_mappings` |
+### Architecture After Changes
+
+```text
+App startup / keyword edit
+  → localStorage: xpensia_type_keywords
+  → Preferences.set: xpensia_native_financial_keywords (sync bridge)
+        ↓
+  SharedPreferences (CapacitorStorage)
+        ↓
+SMS arrives → BroadcastReceiver
+  → FinancialSmsClassifier.isFinancialTransactionMessage(context, body)
+     0. OTP check → reject if OTP keywords found
+     1. Load keywords from SharedPreferences (fallback: hardcoded 27)
+     2. Gate 1: keyword match
+     3. Gate 2: amount match (fixed regex, no \b)
+     4. Gate 3: date match (ported from JS)
+     → persist + notify
+```
+
+### OTP Keywords (shared between Java & JS)
+`otp`, `verification code`, `رمز التحقق`, `رمز التفعيل`, `one-time`, `one time password`, `passcode`, `pin code`, `security code`, `auth code`, `كلمة المرور`, `رمز التأكيد`
 
 ### What Was NOT Changed
-- SMS parser (`structureParser.ts`, `parseAndInferTransaction.ts`)
-- SMS template extraction / matching
-- SMS keyword bank logic
-- Native SMS listener / OTP / sender allow-list
-- `messageFilter.ts` triple-gate logic
-- Template failure tracking
-- Field promotion overlay
-
-### Verification
-- 11/11 unit tests pass
-- No build errors
-- SMS learning path unchanged (gated by `isLearningSource` check)
-- Freeform learning path isolated (gated by `isFreeformSource` check)
+- SMS persistence, notification channel, intent routing
+- Template bank, keyword bank, vendor map logic
+- Freeform parser
+- No new permissions required
