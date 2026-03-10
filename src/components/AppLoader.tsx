@@ -59,7 +59,6 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
       const timeout = setTimeout(() => {
         if (!cancelled && showSplash) {
           traceAppRoot(`AppLoader max timeout (${MAX_SPLASH_WAIT_MS}ms) reached, force hiding splash`);
-          if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #6b] React Splash Hide (timeout fallback)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
           setShowSplash(false);
         }
       }, MAX_SPLASH_WAIT_MS);

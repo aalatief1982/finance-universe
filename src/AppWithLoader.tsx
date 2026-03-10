@@ -207,7 +207,6 @@ const AppWithLoader: React.FC = () => {
         traceAppRoot('backgroundVendorSyncService.initialize completed (fallback)')
       } finally {
         traceAppRoot('AppWithLoader initialize end')
-        if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #5] Init Complete\nTime: ${performance.now().toFixed(2)}ms`);
         setInitializing(false)
       }
     }

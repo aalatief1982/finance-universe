@@ -235,7 +235,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                       onError={
                         i === 0
                           ? () => {
-                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #12] Slide 1 Image FAILED\nTime: ${performance.now().toFixed(2)}ms\nsrc: ${slide.image}`);
                               if (shouldLogImageLoadErrors) console.error(`Failed to load image at slide ${i}: ${slide.image}`);
                             }
                           : shouldLogImageLoadErrors
