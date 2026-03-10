@@ -116,6 +116,11 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     };
   }, []);
 
+  // Reset slide index when language changes (Swiper remounts via key)
+  useEffect(() => {
+    setIndex(0);
+  }, [language]);
+
   useEffect(() => {
     console.trace('[TRACE][OnboardingSlides] slide index changed', {
       index,
