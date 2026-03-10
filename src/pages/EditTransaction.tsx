@@ -191,6 +191,10 @@ const EditTransaction = () => {
   }, [confirmDiscardIfDirty, navigate]);
 
   const handleSave = (editedTransaction: Transaction) => {
+    if (savingRef.current) {
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = isNewTransaction
@@ -386,6 +390,7 @@ const EditTransaction = () => {
               parsingStatus={parsingStatus}
               isSuggested={isSuggested}
               onDirtyChange={setIsDirty}
+              isSaving={saving}
             />
           </CardContent>
         </Card>
