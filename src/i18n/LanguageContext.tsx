@@ -46,8 +46,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   );
 };
 
+// Fallback so components don't crash if rendered before/outside LanguageProvider
+// (e.g. during React Fast Refresh or HMR boundary resets)
+const fallback: LanguageContextType = {
+  language: 'en',
+  setLanguage: () => {},
+  t: (key: string) => translations.en[key] ?? key,
+  isRtl: false,
+};
+
 export const useLanguage = (): LanguageContextType => {
   const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error('useLanguage must be used within LanguageProvider');
-  return ctx;
+  return ctx ?? fallback;
 };
