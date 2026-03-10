@@ -86,7 +86,6 @@ const IMPORT_ROUTE = '/import-transactions';
 const SHARE_DEDUPE_WINDOW_MS = 30_000;
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
 
-const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 const traceAppRoot = (message: string, ...args: unknown[]) => {
   const now = performance.now().toFixed(2);
