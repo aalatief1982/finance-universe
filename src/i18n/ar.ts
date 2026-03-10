@@ -553,6 +553,7 @@ export const ar: Record<string, string> = {
   'smartEntry.card.originStructure': 'تطابق بنية',
   'smartEntry.card.originMl': 'استخراج ذكي',
   'smartEntry.card.originFallback': 'احتياطي',
+  'smartEntry.card.originFreeform': 'إدخال حر',
   'smartEntry.card.originUnknown': 'غير معروف',
   'smartEntry.card.noDescription': 'بدون وصف',
   'smartEntry.card.addTransaction': 'إضافة معاملة',

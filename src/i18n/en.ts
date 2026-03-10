@@ -553,6 +553,7 @@ export const en: Record<string, string> = {
   'smartEntry.card.originStructure': 'Structure Match',
   'smartEntry.card.originMl': 'AI Extracted',
   'smartEntry.card.originFallback': 'Fallback',
+  'smartEntry.card.originFreeform': 'Freeform',
   'smartEntry.card.originUnknown': 'Unknown',
   'smartEntry.card.noDescription': 'No description',
   'smartEntry.card.addTransaction': 'Add Transaction',
