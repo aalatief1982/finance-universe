@@ -15,3 +15,33 @@
 
 ## Negative check
 - Send a clearly non-financial SMS (no financial keyword/amount): no transaction notification should appear.
+
+## Mixed Arabic+Latin regression vectors
+Use these exact samples during manual QA to keep parser coverage stable:
+
+- **Financial should be accepted**
+  ```
+  شراء
+  عبر:3965;mada-apple pay
+  بـSAR 128.75
+  لـMerchant Roasters
+  26/3/10 23:49
+  ```
+- **Financial should be accepted**
+  ```
+  شراء عبر نقاط البيع
+  عبر:3965;مدى-سامسونج باي
+  بـSAR 4
+  لـSaba Restaurant
+  26/3/10 23:49
+  ```
+- **OTP/non-financial control should be rejected**
+  ```
+  رمز التحقق: 889911
+  شراء
+  عبر:3965;mada
+  بـSAR 128
+  لـMerchant
+  26/3/10 23:49
+  ```
+
