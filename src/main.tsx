@@ -14,6 +14,7 @@ const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / local
 
 type XpensiaWindow = Window & {
   __xpensiaHideInitialLoading?: () => void
+  __xpensiaCancelHtmlFallback?: () => void
 }
 
 ;(async () => {
