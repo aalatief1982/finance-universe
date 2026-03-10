@@ -1,39 +1,48 @@
+## Plan: Fix Freeform Provenance Flattening
 
+### Status: ✅ Implemented
 
-## Problem
+### Summary
+Aligned `FinancialSmsClassifier.java` (native Android) with `messageFilter.ts` (JS) to use the same triple-gate logic (keyword + amount + date), expanded keywords (27), fixed amount regex for Arabic-prefixed currency codes, added OTP exclusion, and added a keyword sync bridge from localStorage to SharedPreferences.
 
-When you tap **Review** or **Continue** on the SMS Review Inbox page, it navigates to `/review-sms-transactions`. That route is wrapped in `ImportDisabledGuard`, and since `SMS_AUTO_IMPORT_ENABLED = false`, it immediately redirects to `/home`.
+### Root Cause (Original Bug)
+The SMS `بـSAR 4` failed the native amount regex because `\b` word boundaries don't work reliably with Arabic Tatweel (U+0640) directly preceding `SAR` on some Android regex engines.
 
-## Fix
-
-Change `SmsReviewInboxPage.tsx` to navigate directly to `/edit-transaction` with the inference DTO — the same destination Smart Entry uses. The `/review-sms-transactions` page is a bulk review screen designed for the auto-import flow; for single-SMS review from a notification, going straight to edit is the correct behavior.
-
-### File: `src/pages/SmsReviewInboxPage.tsx`
-
-**Line 40–53** — Change navigation from `/review-sms-transactions` to `/edit-transaction`:
-
-```ts
-navigate('/edit-transaction', {
-  state: {
-    ...dto,
-    smsInboxId: item.id,
-    returnTo: location.pathname,
-  },
-});
-```
-
-This passes the same `InferenceDTO` shape that Smart Entry and ImportTransactions use, so the Edit Transaction page receives all parsed fields, confidence, origin, etc.
-
-### What is NOT changed
-- `ImportDisabledGuard` logic — untouched
-- `/review-sms-transactions` route — untouched (still used by bulk auto-import flow)
-- `IMPORT_ROUTES` set — untouched
-- SMS classifier alignment — untouched
-- `buildInferenceDTO` — untouched
-
-### One file changed
+### Changes Made
 
 | File | Change |
 |---|---|
-| `src/pages/SmsReviewInboxPage.tsx` | Navigate to `/edit-transaction` instead of `/review-sms-transactions` |
+| `src/utils/syncKeywordsToNative.ts` | **New** — reads `xpensia_type_keywords` from localStorage, flattens to string array, writes to Capacitor Preferences (`xpensia_native_financial_keywords`) |
+| `FinancialSmsClassifier.java` | **Rewritten** — triple-gate (keyword+amount+date), reads dynamic keywords from SharedPreferences with fallback to 27 hardcoded, fixed amount regex (no `\b`), OTP exclusion, NFC normalization, `Log.d` diagnostics |
+| `BackgroundSmsListenerPlugin.java` | Updated `handleIncomingSms` to pass `context` to classifier |
+| `messageFilter.ts` | Added OTP exclusion keywords before financial gates |
+| `initializeXpensiaStorageDefaults.ts` | Calls `syncKeywordsToNative()` after keyword initialization |
+| `KeywordBankManager.tsx` | Calls `syncKeywordsToNative()` after save/delete |
 
+### Architecture After Changes
+
+```text
+App startup / keyword edit
+  → localStorage: xpensia_type_keywords
+  → Preferences.set: xpensia_native_financial_keywords (sync bridge)
+        ↓
+  SharedPreferences (CapacitorStorage)
+        ↓
+SMS arrives → BroadcastReceiver
+  → FinancialSmsClassifier.isFinancialTransactionMessage(context, body)
+     0. OTP check → reject if OTP keywords found
+     1. Load keywords from SharedPreferences (fallback: hardcoded 27)
+     2. Gate 1: keyword match
+     3. Gate 2: amount match (fixed regex, no \b)
+     4. Gate 3: date match (ported from JS)
+     → persist + notify
+```
+
+### OTP Keywords (shared between Java & JS)
+`otp`, `verification code`, `رمز التحقق`, `رمز التفعيل`, `one-time`, `one time password`, `passcode`, `pin code`, `security code`, `auth code`, `كلمة المرور`, `رمز التأكيد`
+
+### What Was NOT Changed
+- SMS persistence, notification channel, intent routing
+- Template bank, keyword bank, vendor map logic
+- Freeform parser
+- No new permissions required
