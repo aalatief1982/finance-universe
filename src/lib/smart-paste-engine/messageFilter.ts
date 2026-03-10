@@ -87,7 +87,8 @@ export function isFinancialTransactionMessage(text: string): boolean {
     normalizedText.includes(normalize(keyword))
   );
 
-  const currencyAmountRegex = /(?:مبلغ[:\s]*)?(?:(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD|ر\.?\s?س|ريال|جنيه\s?مصري|جنيه)[\s:]?((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)|((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)[\s:]?(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD|ر\.?\s?س|ريال|جنيه\s?مصري|جنيه))/gi;
+  // Keep native parity: branch-1 currency code may include optional Arabic preposition prefix (ب / بـ).
+  const currencyAmountRegex = /(?:مبلغ[:\s]*)?(?:(?:(?:ب(?:ـ)?\s*)?(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD)|ر\.?\s?س|ريال|جنيه\s?مصري|جنيه)[\s:]?((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)|((?:\d{1,3},)*\d{1,3}(?:[.,]\d{0,2})?)[\s:]?(SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD|ر\.?\s?س|ريال|جنيه\s?مصري|جنيه))/gi;
   const amountMatch = currencyAmountRegex.test(text);
 
   const dateRegex = new RegExp(
