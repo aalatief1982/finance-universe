@@ -89,7 +89,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     const contentReadyFallback = setTimeout(() => {
       setSlide1ImageReady(true);
       signalContentReady();
-    }, 800);
+    }, 400);
 
     const setVh = () => {
       const previousValue = document.documentElement.style.getPropertyValue('--vh-onb');
