@@ -85,7 +85,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
 
     setIsVisible(true);
 
-    // Fallback: signal content ready and show slides after 800ms even if image hasn't loaded
+    // Fallback: signal content ready and show slides after 400ms even if image hasn't loaded
     const contentReadyFallback = setTimeout(() => {
       setSlide1ImageReady(true);
       signalContentReady();
