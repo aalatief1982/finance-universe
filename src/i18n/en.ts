@@ -524,10 +524,12 @@ export const en: Record<string, string> = {
   'smartEntry.originTemplate': 'Based on a saved pattern.',
   'smartEntry.originMl': 'Estimated from message text.',
   'smartEntry.originFallback': 'Best effort guess from message text.',
+  'smartEntry.originFreeform': 'Parsed from typed or spoken input.',
   'smartEntry.originStructure': 'Detected from message structure.',
   'smartEntry.originTemplateShort': 'Based on your saved patterns',
   'smartEntry.originMlShort': 'Estimated from message text',
   'smartEntry.originFallbackShort': 'Estimated from message text',
+  'smartEntry.originFreeformShort': 'Parsed from your input',
   'smartEntry.originStructureShort': 'Detected from message structure',
   'smartEntry.parseError': 'Could not parse the message. Try again or report.',
 
