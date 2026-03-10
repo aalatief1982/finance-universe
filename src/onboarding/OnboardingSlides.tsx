@@ -193,7 +193,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
               <div
                 className={`relative pb-4 bg-gradient-to-b ${slide.gradient} shrink-0 pt-8`}
               >
-                <div className="flex flex-col items-center text-center px-4" style={index === 0 ? { paddingTop: '2rem' } : undefined}>
+                <div className="flex flex-col items-center text-center px-4">
                   <div className="mb-3 p-2 rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg">
                     <div className="text-primary">
                       {slide.icon}
