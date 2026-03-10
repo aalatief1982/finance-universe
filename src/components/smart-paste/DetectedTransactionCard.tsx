@@ -41,6 +41,11 @@ const DetectedTransactionCard = ({
           label: t('smartEntry.card.originMl'),
           color: 'bg-warning/10 text-warning border border-warning/20',
         };
+      case 'freeform':
+        return {
+          label: t('smartEntry.card.originFreeform') || t('smartEntry.card.originFallback'),
+          color: 'bg-accent/10 text-accent-foreground border border-accent/20',
+        };
       case 'fallback':
         return {
           label: t('smartEntry.card.originFallback'),
