@@ -8,12 +8,15 @@ import { XpensiaLogo } from './header/XpensiaLogo';
 
 type XpensiaWindow = Window & {
   __xpensiaHideInitialLoading?: () => void;
+  __xpensiaCancelHtmlFallback?: () => void;
 };
 
 export const SplashScreen: React.FC = () => {
   useEffect(() => {
     // Hide the HTML bootstrap loader now that React splash is painted
     (window as XpensiaWindow).__xpensiaHideInitialLoading?.();
+    // Cancel the 3s safety fallback since we've taken ownership
+    (window as XpensiaWindow).__xpensiaCancelHtmlFallback?.();
   }, []);
 
   return (
