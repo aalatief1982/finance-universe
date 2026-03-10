@@ -4,6 +4,7 @@ import { parseFreeformTransaction } from '../freeformParser';
 describe('parseFreeformTransaction', () => {
   beforeEach(() => {
     localStorage.removeItem('xpensia_freeform_learned_mappings');
+    localStorage.removeItem('xpensia_freeform_phrase_mappings');
   });
 
   // --- English expense phrases ---
@@ -97,6 +98,7 @@ describe('parseFreeformTransaction', () => {
     expect(r.subcategory).toBe('Apps');
     expect(r.type).toBe('expense');
     expect(r.currency).toBe('SAR');
+    expect(r.learnedMappingApplied?.source).toBe('freeform-vendor');
     expect(r.learnedMappingApplied?.normalizedVendor).toBe('bolt');
     expect(r.learnedMappingApplied?.appliedFields).toContain('category');
   });
@@ -118,6 +120,61 @@ describe('parseFreeformTransaction', () => {
     expect(r.success).toBe(true);
     expect(r.type).toBe('income');
     expect(r.learnedMappingApplied?.appliedFields || []).not.toContain('type');
+  });
+
+
+  it('applies phrase learning for repeated non-vendor phrase', () => {
+    localStorage.setItem('xpensia_freeform_phrase_mappings', JSON.stringify([
+      {
+        normalizedPhraseKey: 'coffee',
+        category: 'Food',
+        subcategory: 'Coffee',
+        type: 'expense',
+        currency: 'SAR',
+        confirmedCount: 2,
+        lastConfirmedAt: '2026-03-10T11:11:55.053Z',
+      },
+    ]));
+
+    const r = parseFreeformTransaction('coffee 22');
+    expect(r.success).toBe(true);
+    expect(r.category).toBe('Food');
+    expect(r.subcategory).toBe('Coffee');
+    expect(r.type).toBe('expense');
+    expect(r.currency).toBe('SAR');
+    expect(r.learnedMappingApplied?.source).toBe('freeform-phrase');
+    expect(r.learnedMappingApplied?.normalizedPhraseKey).toBe('coffee');
+  });
+
+  it('keeps vendor-based mapping priority over phrase learning', () => {
+    localStorage.setItem('xpensia_freeform_learned_mappings', JSON.stringify([
+      {
+        normalizedVendor: 'bolt',
+        category: 'Transportation',
+        subcategory: 'Ride',
+        type: 'expense',
+        currency: 'SAR',
+        confirmedCount: 2,
+        lastConfirmedAt: '2026-03-10T11:11:55.053Z',
+      },
+    ]));
+
+    localStorage.setItem('xpensia_freeform_phrase_mappings', JSON.stringify([
+      {
+        normalizedPhraseKey: 'bolt',
+        category: 'Food',
+        subcategory: 'Coffee',
+        type: 'income',
+        currency: 'USD',
+        confirmedCount: 2,
+        lastConfirmedAt: '2026-03-10T11:11:55.053Z',
+      },
+    ]));
+
+    const r = parseFreeformTransaction('bolt 31');
+    expect(r.success).toBe(true);
+    expect(r.category).toBe('Transportation');
+    expect(r.learnedMappingApplied?.source).toBe('freeform-vendor');
   });
 
   // --- No amount = fail ---

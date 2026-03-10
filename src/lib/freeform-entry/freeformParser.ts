@@ -20,7 +20,7 @@
  */
 
 import { normalizeNumerals } from '@/lib/normalize-utils';
-import { lookupFreeformHint } from './freeformLearningStore';
+import { deriveFreeformPhraseKey, lookupFreeformHint, lookupFreeformPhraseHint } from './freeformLearningStore';
 import type { FreeformParseResult, FreeformFieldConfidences } from './freeformTypes';
 import type { TransactionType } from '@/types/transaction';
 
@@ -308,7 +308,10 @@ export function parseFreeformTransaction(rawText: string): FreeformParseResult {
   // --- Freeform learning lookup (exact normalized vendor only) ---
   const lookupKey = title || (residueTokens[0] ?? '');
   const learnedAppliedFields: Array<'category' | 'subcategory' | 'type' | 'currency'> = [];
+  let learnedSource: 'freeform-vendor' | 'freeform-phrase' | undefined;
   let learnedNormalizedVendor: string | undefined;
+  let learnedNormalizedPhraseKey: string | undefined;
+
   if (lookupKey) {
     const hint = lookupFreeformHint(lookupKey);
     if (hint) {
@@ -335,6 +338,43 @@ export function parseFreeformTransaction(rawText: string): FreeformParseResult {
         currency = hint.currency;
         learnedAppliedFields.push('currency');
         currencyConfidence = Math.min(0.8, 0.45 + hint.confirmedCount * 0.08);
+      }
+
+      if (learnedAppliedFields.length > 0) {
+        learnedSource = 'freeform-vendor';
+      }
+    }
+  }
+
+  if (learnedAppliedFields.length === 0) {
+    const phraseHint = lookupFreeformPhraseHint(text);
+    if (phraseHint) {
+      learnedNormalizedPhraseKey = phraseHint.normalizedPhraseKey;
+
+      if (phraseHint.category && categoryConfidence < 0.7) {
+        category = phraseHint.category;
+        learnedAppliedFields.push('category');
+        if (phraseHint.subcategory) {
+          subcategory = phraseHint.subcategory;
+          learnedAppliedFields.push('subcategory');
+        }
+        categoryConfidence = Math.min(0.75, 0.45 + phraseHint.confirmedCount * 0.08);
+      }
+
+      if (phraseHint.type && typeConfidence < 0.8) {
+        type = phraseHint.type;
+        learnedAppliedFields.push('type');
+        typeConfidence = Math.min(0.78, 0.5 + phraseHint.confirmedCount * 0.08);
+      }
+
+      if (phraseHint.currency && currencyConfidence < 0.9) {
+        currency = phraseHint.currency;
+        learnedAppliedFields.push('currency');
+        currencyConfidence = Math.min(0.8, 0.45 + phraseHint.confirmedCount * 0.08);
+      }
+
+      if (learnedAppliedFields.length > 0) {
+        learnedSource = 'freeform-phrase';
       }
     }
   }
@@ -397,9 +437,11 @@ export function parseFreeformTransaction(rawText: string): FreeformParseResult {
     fieldConfidences,
     confidence,
     learnedMappingApplied:
-      learnedNormalizedVendor && learnedAppliedFields.length > 0
+      learnedSource && learnedAppliedFields.length > 0
         ? {
+            source: learnedSource,
             normalizedVendor: learnedNormalizedVendor,
+            normalizedPhraseKey: learnedNormalizedPhraseKey || deriveFreeformPhraseKey(text),
             appliedFields: learnedAppliedFields,
           }
         : undefined,

@@ -288,7 +288,7 @@ export function saveTransactionWithLearning(
   if (rawMessage && isFreeformSource) {
     const vendorKey = newTransaction.vendor || newTransaction.title || '';
     if (vendorKey.trim()) {
-      learnFromFreeformConfirmation(vendorKey, newTransaction);
+      learnFromFreeformConfirmation(rawMessage, vendorKey, newTransaction);
     }
     // Skip all SMS template/keyword/vendor/account learning below
   } else if (rawMessage && isLearningSource) {
