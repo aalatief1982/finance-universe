@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { signalContentReady } from '@/lib/startup-ready';
 
 import 'swiper/css';
 import 'swiper/css/effect-fade';
@@ -84,7 +85,13 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     });
 
     setIsVisible(true);
-    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`);
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`); // TEMP-DEBUG-REMOVE
+
+    // Fallback: signal content ready after 800ms even if image hasn't loaded
+    const contentReadyFallback = setTimeout(() => {
+      signalContentReady();
+    }, 800);
+
     const setVh = () => {
       const previousValue = document.documentElement.style.getPropertyValue('--vh-onb');
       const nextValue = `${window.innerHeight * 0.01}px`;
@@ -105,6 +112,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
         timestamp: new Date().toISOString(),
       });
       window.cancelAnimationFrame(rafId);
+      clearTimeout(contentReadyFallback);
       window.removeEventListener('resize', setVh);
     };
   }, []);
@@ -213,7 +221,8 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                         i === 0
                           ? (event) => {
                               const imageElement = event.currentTarget;
-                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #11] Slide 1 Image Loaded\nTime: ${performance.now().toFixed(2)}ms\nnaturalWidth: ${imageElement.naturalWidth}\nnaturalHeight: ${imageElement.naturalHeight}\nsrc: ${imageElement.currentSrc || slide.image}`);
+                              signalContentReady();
+                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #11] Slide 1 Image Loaded\nTime: ${performance.now().toFixed(2)}ms\nnaturalWidth: ${imageElement.naturalWidth}\nnaturalHeight: ${imageElement.naturalHeight}\nsrc: ${imageElement.currentSrc || slide.image}`); // TEMP-DEBUG-REMOVE
                               console.trace('[TRACE][OnboardingSlides] slide image loaded', {
                                 slideIndex: i,
                                 imageUrl: imageElement.currentSrc || slide.image,

@@ -49,6 +49,7 @@ import ExchangeRates from './pages/ExchangeRates';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SplashScreen } from './components/SplashScreen';
+import { signalRouteReady, signalContentReady } from './lib/startup-ready';
 
 
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -956,6 +957,7 @@ function AppRoutes() {
       } finally {
         if (!cancelled) {
           setInitialRouteCheckDone(true);
+          signalRouteReady();
         }
       }
     };
@@ -966,6 +968,17 @@ function AppRoutes() {
       cancelled = true;
     };
   }, []);
+
+  // Signal route+content ready for web (initialRouteCheckDone starts true) and for returning users
+  React.useEffect(() => {
+    if (initialRouteCheckDone) {
+      signalRouteReady();
+      if (onboardingDone) {
+        // Returning user: no image to wait for, content is ready immediately
+        signalContentReady();
+      }
+    }
+  }, [initialRouteCheckDone, onboardingDone]);
 
   traceAppRoot(`AppRoutes render pathname=${location.pathname} onboardingDone=${onboardingDone}`);
   traceState('AppRoutes render flags', {
