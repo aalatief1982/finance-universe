@@ -42,12 +42,13 @@ final class FinancialSmsClassifier {
     };
 
     // ── Amount regex (fixed: no \b, uses flexible boundary) ────────────────
-    // Supports: SAR 1,234.56 | 1,234.56 SAR | بـSAR 4 | مبلغ: 500 ر.س
+    // Supports: SAR 1,234.56 | 1,234.56 SAR | بـSAR 4 | ب SAR 4 | مبلغ: 500 ر.س
     private static final Pattern AMOUNT_PATTERN = Pattern.compile(
             "(?i)" +
             "(?:" +
                 // Branch 1: currency code then number (flexible left boundary)
                 "(?:^|[^\\p{L}\\w])" +
+                "(?:ب(?:ـ)?\\s*)?" +
                 "(?:SAR|USD|EGP|AED|BHD|EUR|GBP|JPY|INR|CNY|CAD|AUD)" +
                 "[\\s:]*" +
                 "\\d{1,3}(?:,\\d{3})*(?:[.,]\\d{1,2})?" +
