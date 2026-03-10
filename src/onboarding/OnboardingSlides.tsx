@@ -84,7 +84,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     });
 
     setIsVisible(true);
-    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`); // TEMP-DEBUG-REMOVE
 
     // Fallback: signal content ready and show slides after 800ms even if image hasn't loaded
     const contentReadyFallback = setTimeout(() => {
