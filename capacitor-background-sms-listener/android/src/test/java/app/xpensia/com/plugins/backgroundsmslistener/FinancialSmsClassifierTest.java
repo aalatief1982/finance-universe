@@ -63,6 +63,22 @@ public class FinancialSmsClassifierTest {
     }
 
     @Test
+    public void acceptsMixedArabicLatinPurchaseSmsWithSemicolonsAndCompactDate() {
+        assertTrue(FinancialSmsClassifier.isFinancialTransactionMessage(
+                context,
+                "شراء\nعبر:3965;mada-apple pay\nبـSAR 128.75\nلـMerchant Roasters\n26/3/10 23:49"
+        ));
+    }
+
+    @Test
+    public void rejectsOtpControlsForMixedArabicLatinPurchasePattern() {
+        assertFalse(FinancialSmsClassifier.isFinancialTransactionMessage(
+                context,
+                "رمز التحقق: 889911\nشراء\nعبر:3965;mada\nبـSAR 128\nلـMerchant\n26/3/10 23:49"
+        ));
+    }
+
+    @Test
     public void rejectsOtpLikeMessagesWithSimilarTokens() {
         assertFalse(FinancialSmsClassifier.isFinancialTransactionMessage(
                 context,

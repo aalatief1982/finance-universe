@@ -47,12 +47,22 @@ describe('isFinancialTransactionMessage', () => {
   });
 
   it('continues passing short Arabic purchase with short date', () => {
-    const message = 'شراء\nعبر:3965;مدى-سامسونج باي\nبـSAR 4\nلـSaba Restaurant\n26/3/9 00:32';
+    const message = 'شراء\nعبر:3965;مدى-سامسونج باي\nبـSAR 4\nلـSaba Restaurant\n26/3/10 23:49';
+    expect(isFinancialTransactionMessage(message)).toBe(true);
+  });
+
+  it('accepts mixed Arabic+Latin transaction format with semicolons and merchant prefix', () => {
+    const message = 'شراء عبر نقاط البيع\nعبر:3965;mada-apple pay\nبـSAR 128.75\nلـMerchant Roasters\n26/3/10 23:49';
     expect(isFinancialTransactionMessage(message)).toBe(true);
   });
 
   it('rejects promotional SMS without transaction signal', () => {
     const message = 'احصل على خصم 50% على جميع المنتجات! تسوق الآن';
+    expect(isFinancialTransactionMessage(message)).toBe(false);
+  });
+
+  it('rejects OTP controls even when mixed financial-like tokens are present', () => {
+    const message = 'رمز التحقق: 889911\nشراء عبر:3965;mada\nبـSAR 120\nلـMerchant\n26/3/10 23:49';
     expect(isFinancialTransactionMessage(message)).toBe(false);
   });
 });
