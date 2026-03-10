@@ -29,6 +29,7 @@ import { TransactionType } from '@/types/transaction';
 import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
 import { saveVendorFallbacks, VendorFallbackData } from './vendorFallbackUtils';
 import { checkForVendorUpdates, getVendorData } from '@/services/VendorSyncService';
+import { syncKeywordsToNative } from '@/utils/syncKeywordsToNative';
 
 
 
