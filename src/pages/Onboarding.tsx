@@ -24,8 +24,6 @@ import { Capacitor } from '@capacitor/core';
 import OnboardingSlides from '@/onboarding/OnboardingSlides';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 
-const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
-
 const Onboarding = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,7 +45,6 @@ const Onboarding = () => {
     console.trace('[TRACE][Onboarding] component mounted', {
       timestamp: new Date().toISOString(),
     });
-    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #9] Onboarding Page Mounted\nTime: ${performance.now().toFixed(2)}ms`);
     return () => {
       if (navigationTimeoutRef.current) {
         clearTimeout(navigationTimeoutRef.current);

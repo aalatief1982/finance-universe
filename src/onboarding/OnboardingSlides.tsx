@@ -9,8 +9,6 @@ import { signalContentReady } from '@/lib/startup-ready';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
-const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
-
 interface Slide {
   image: string;
   titleKey: string;
@@ -86,7 +84,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     });
 
     setIsVisible(true);
-    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`); // TEMP-DEBUG-REMOVE
 
     // Fallback: signal content ready and show slides after 800ms even if image hasn't loaded
     const contentReadyFallback = setTimeout(() => {
@@ -225,7 +222,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                               const imageElement = event.currentTarget;
                               setSlide1ImageReady(true);
                               signalContentReady();
-                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #11] Slide 1 Image Loaded\nTime: ${performance.now().toFixed(2)}ms\nnaturalWidth: ${imageElement.naturalWidth}\nnaturalHeight: ${imageElement.naturalHeight}\nsrc: ${imageElement.currentSrc || slide.image}`); // TEMP-DEBUG-REMOVE
                               console.trace('[TRACE][OnboardingSlides] slide image loaded', {
                                 slideIndex: i,
                                 imageUrl: imageElement.currentSrc || slide.image,
@@ -239,7 +235,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                       onError={
                         i === 0
                           ? () => {
-                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #12] Slide 1 Image FAILED\nTime: ${performance.now().toFixed(2)}ms\nsrc: ${slide.image}`);
                               if (shouldLogImageLoadErrors) console.error(`Failed to load image at slide ${i}: ${slide.image}`);
                             }
                           : shouldLogImageLoadErrors

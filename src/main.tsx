@@ -10,15 +10,12 @@ import { FirebaseAnalytics } from '@capacitor-firebase/analytics'
 import { logAnalyticsEvent } from '@/utils/firebase-analytics'
 import { Device } from '@capacitor/device'
 
-const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
-
 type XpensiaWindow = Window & {
   __xpensiaHideInitialLoading?: () => void
   __xpensiaCancelHtmlFallback?: () => void
 }
 
 ;(async () => {
-  if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #1] Boot Start\nTime: ${performance.now().toFixed(2)}ms`);
   try {
     await initializeCapacitor()
   } catch (err) {
@@ -29,11 +26,8 @@ type XpensiaWindow = Window & {
 
   const root = createRoot(document.getElementById('root')!)
   root.render(<AppWithLoader />)
-  if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #2] React Root Rendered\nTime: ${performance.now().toFixed(2)}ms`);
-
-  // Safety fallback: hide HTML loader after 3s even if React never mounts SplashScreen // TEMP-DEBUG-REMOVE
+  // Safety fallback: hide HTML loader after 3s even if React never mounts SplashScreen
   const fallbackTimerId = setTimeout(() => {
-    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #3] HTML Loader Safety Fallback (3s)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
     ;(window as XpensiaWindow).__xpensiaHideInitialLoading?.()
   }, 3000)
   ;(window as XpensiaWindow).__xpensiaCancelHtmlFallback = () => {

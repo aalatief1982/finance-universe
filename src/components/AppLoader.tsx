@@ -9,7 +9,6 @@ import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
 import { onStartupReady } from '@/lib/startup-ready';
 
-const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 let traceCounter = 0;
 const traceAppRoot = (message: string, ...args: unknown[]) => {
@@ -52,7 +51,6 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
       onStartupReady(() => {
         if (!cancelled) {
           traceAppRoot('AppLoader startup-ready signals received, hiding splash');
-          if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #6] React Splash Hide (ready signals)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
           setShowSplash(false);
         }
       });
@@ -61,7 +59,6 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
       const timeout = setTimeout(() => {
         if (!cancelled && showSplash) {
           traceAppRoot(`AppLoader max timeout (${MAX_SPLASH_WAIT_MS}ms) reached, force hiding splash`);
-          if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #6b] React Splash Hide (timeout fallback)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
           setShowSplash(false);
         }
       }, MAX_SPLASH_WAIT_MS);
