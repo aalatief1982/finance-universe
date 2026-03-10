@@ -93,7 +93,7 @@ public class BackgroundSmsListenerPlugin extends Plugin {
     }
 
     static void handleIncomingSms(Context context, String sender, String body, String source, boolean emitToJs) {
-        if (!FinancialSmsClassifier.isFinancialTransactionMessage(body)) {
+        if (!FinancialSmsClassifier.isFinancialTransactionMessage(context, body)) {
             Log.d(TAG, "Skipping non-financial SMS from " + sender);
             return;
         }

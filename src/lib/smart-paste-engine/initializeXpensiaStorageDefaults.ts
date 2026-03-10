@@ -29,6 +29,7 @@ import { TransactionType } from '@/types/transaction';
 import vendorFallbackData from '../../data/ksa_all_vendors_clean_final.json';
 import { saveVendorFallbacks, VendorFallbackData } from './vendorFallbackUtils';
 import { checkForVendorUpdates, getVendorData } from '@/services/VendorSyncService';
+import { syncKeywordsToNative } from '@/utils/syncKeywordsToNative';
 
 
 
@@ -279,7 +280,9 @@ export async function initializeXpensiaStorageDefaults() {
       // console.log('[Init] xpensia_type_keywords initialized');
     }
   }
-  
+
+  // Sync keywords to native SharedPreferences for the Android SMS classifier
+  await syncKeywordsToNative();
 
    // Ensure type keyword bank exists
 if (!safeStorage.getItem('xpensia_category_hierarchy')) {
