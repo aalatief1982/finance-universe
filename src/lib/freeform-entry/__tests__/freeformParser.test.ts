@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { parseFreeformTransaction } from '../freeformParser';
 
 describe('parseFreeformTransaction', () => {
+  beforeEach(() => {
+    localStorage.removeItem('xpensia_freeform_learned_mappings');
+  });
+
   // --- English expense phrases ---
   it('parses "coffee 18 riyals" as expense', () => {
     const r = parseFreeformTransaction('coffee 18 riyals');
@@ -70,6 +74,50 @@ describe('parseFreeformTransaction', () => {
     expect(r.amount).toBe(500);
     expect(r.type).toBe('transfer');
     expect(r.counterparty).toBe('أحمد');
+  });
+
+
+  it('applies exact learned mapping for repeated freeform vendor phrase', () => {
+    localStorage.setItem('xpensia_freeform_learned_mappings', JSON.stringify([
+      {
+        normalizedVendor: 'bolt',
+        category: 'Transportation',
+        subcategory: 'Apps',
+        type: 'expense',
+        currency: 'SAR',
+        confirmedCount: 2,
+        lastConfirmedAt: '2026-03-10T11:11:55.053Z',
+      },
+    ]));
+
+    const r = parseFreeformTransaction('bolt 31');
+    expect(r.success).toBe(true);
+    expect(r.amount).toBe(31);
+    expect(r.category).toBe('Transportation');
+    expect(r.subcategory).toBe('Apps');
+    expect(r.type).toBe('expense');
+    expect(r.currency).toBe('SAR');
+    expect(r.learnedMappingApplied?.normalizedVendor).toBe('bolt');
+    expect(r.learnedMappingApplied?.appliedFields).toContain('category');
+  });
+
+  it('does not override stronger parsed type evidence with learned mapping', () => {
+    localStorage.setItem('xpensia_freeform_learned_mappings', JSON.stringify([
+      {
+        normalizedVendor: 'salary',
+        category: 'Food',
+        subcategory: 'Dining Out',
+        type: 'expense',
+        currency: 'SAR',
+        confirmedCount: 3,
+        lastConfirmedAt: '2026-03-10T11:11:55.053Z',
+      },
+    ]));
+
+    const r = parseFreeformTransaction('salary 12000');
+    expect(r.success).toBe(true);
+    expect(r.type).toBe('income');
+    expect(r.learnedMappingApplied?.appliedFields || []).not.toContain('type');
   });
 
   // --- No amount = fail ---
