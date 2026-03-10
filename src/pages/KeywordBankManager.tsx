@@ -84,6 +84,7 @@ const KeywordBankManager = () => {
 
     saveKeywordBank(updated)
     setEntries(updated)
+    syncKeywordsToNative()
     resetForm()
   }
 
