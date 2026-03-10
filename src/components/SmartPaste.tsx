@@ -78,7 +78,7 @@ interface SmartPasteProps {
     rawMessage?: string,
     senderHint?: string,
     confidence?: number,
-    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback' | 'freeform',
     parsingStatus?: InferenceParsingStatus,
     matchedCount?: number,
     totalTemplates?: number,
@@ -106,7 +106,7 @@ const SmartPaste = ({
   const [hasMatch, setHasMatch] = useState(false);
   const [confidence, setConfidence] = useState<number | null>(null);
   const [matchOrigin, setMatchOrigin] = useState<
-    'template' | 'structure' | 'ml' | 'fallback' | null
+    'template' | 'structure' | 'ml' | 'fallback' | 'freeform' | null
   >(null);
   const [fieldConfidences, setFieldConfidences] = useState<
     Record<string, number>
@@ -136,6 +136,7 @@ const SmartPaste = ({
     switch (origin) {
       case 'template': return t('smartEntry.originTemplate');
       case 'ml': return t('smartEntry.originMl');
+      case 'freeform': return t('smartEntry.originFreeform');
       case 'fallback': return t('smartEntry.originFallback');
       default: return t('smartEntry.originStructure');
     }
@@ -144,6 +145,7 @@ const SmartPaste = ({
   const getOriginShortLabel = (origin: string | null): string => {
     switch (origin) {
       case 'template': return t('smartEntry.originTemplateShort');
+      case 'freeform': return t('smartEntry.originFreeformShort');
       case 'fallback': return t('smartEntry.originFallbackShort');
       case 'ml': return t('smartEntry.originMlShort');
       default: return t('smartEntry.originStructureShort');
@@ -338,7 +340,7 @@ const SmartPaste = ({
 
           setDetectedTransactions([freeTransaction]);
           setConfidence(freeResult.confidence);
-          setMatchOrigin('fallback');
+          setMatchOrigin('freeform');
           setFieldConfidences(freeFC);
           setParsingStatus(freeResult.confidence >= 0.5 ? 'partial' : 'failed');
           setMatchedCount(0);

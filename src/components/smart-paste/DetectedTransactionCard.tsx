@@ -12,7 +12,7 @@ interface DetectedTransactionCardProps {
   fieldConfidences?: Record<string, number>;
   isSmartMatch: boolean;
   onAddTransaction: (transaction: Transaction) => void;
-  origin?: 'template' | 'structure' | 'ml' | 'fallback';
+  origin?: 'template' | 'structure' | 'ml' | 'fallback' | 'freeform';
 }
 
 const DetectedTransactionCard = ({
@@ -40,6 +40,11 @@ const DetectedTransactionCard = ({
         return {
           label: t('smartEntry.card.originMl'),
           color: 'bg-warning/10 text-warning border border-warning/20',
+        };
+      case 'freeform':
+        return {
+          label: t('smartEntry.card.originFreeform'),
+          color: 'bg-accent/10 text-accent-foreground border border-accent/20',
         };
       case 'fallback':
         return {

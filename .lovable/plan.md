@@ -1,72 +1,48 @@
+## Plan: Fix Freeform Provenance Flattening
 
+### Status: ✅ Implemented
 
-## Summary
+### Summary
+Aligned `FinancialSmsClassifier.java` (native Android) with `messageFilter.ts` (JS) to use the same triple-gate logic (keyword + amount + date), expanded keywords (27), fixed amount regex for Arabic-prefixed currency codes, added OTP exclusion, and added a keyword sync bridge from localStorage to SharedPreferences.
 
-The freeform parser provenance is flattened: `matchOrigin` is hardcoded to `'fallback'` in SmartPaste.tsx line 341, even though `InferenceOrigin` already includes `'freeform'` as a valid value. The callback type signatures in SmartPaste and ImportTransactions don't include `'freeform'` in their union, so even if the value were set correctly it would be a type mismatch.
+### Root Cause (Original Bug)
+The SMS `بـSAR 4` failed the native amount regex because `\b` word boundaries don't work reliably with Arabic Tatweel (U+0640) directly preceding `SAR` on some Android regex engines.
 
-The fix is surgical: update the `matchOrigin` union types in the callback signatures and set `'freeform'` instead of `'fallback'` in the freeform branch.
+### Changes Made
 
-## Changes
-
-### 1. `src/components/SmartPaste.tsx`
-
-**Line 81** — Add `'freeform'` to `matchOrigin` union in `SmartPasteProps.onTransactionsDetected`:
-```
-matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback' | 'freeform',
-```
-
-**Line 108-109** — Add `'freeform'` to `matchOrigin` state type:
-```
-const [matchOrigin, setMatchOrigin] = useState<
-  'template' | 'structure' | 'ml' | 'fallback' | 'freeform' | null
->(null);
-```
-
-**Line 341** — Change freeform branch from `setMatchOrigin('fallback')` to:
-```
-setMatchOrigin('freeform');
-```
-
-**Lines 135-151** — Add `'freeform'` case to `getOriginLabel` and `getOriginShortLabel`:
-- `getOriginLabel`: add `case 'freeform': return t('smartEntry.originFreeform');` (fall back to `t('smartEntry.originFallback')` if key missing)
-- `getOriginShortLabel`: add `case 'freeform': return t('smartEntry.originFreeformShort');` (fall back to same)
-
-### 2. `src/pages/ImportTransactions.tsx`
-
-**Line 268** — Add `'freeform'` to `matchOrigin` union in `handleTransactionsDetected`:
-```
-matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback' | 'freeform',
-```
-
-No other changes needed — `createInferenceDTOFromDetection` already accepts `InferenceOrigin` which includes `'freeform'`, and `normalizeInferenceDTO` already validates it. The learning isolation in `saveTransactionWithLearning` gates on `transaction.source.includes('freeform')`, which is already set correctly to `'smart-paste-freeform'`.
-
-### 3. `src/components/NERSmartPaste.tsx` (alignment)
-
-**Line 48** — Add `'freeform'` to `matchOrigin` union in `NERSmartPasteProps.onTransactionsDetected`:
-```
-matchOrigin?: "template" | "structure" | "ml" | "fallback" | "freeform",
-```
-
-## What is NOT changed
-
-- `messageFilter.ts` — untouched
-- `FinancialSmsClassifier.java` — untouched
-- `saveTransactionWithLearning.ts` — untouched (isolation already works via `source.includes('freeform')`)
-- `parseAndInferTransaction.ts` — untouched
-- `inferenceDTO.ts` / `inference.ts` — untouched (`'freeform'` already in `InferenceOrigin` enum)
-
-## Validation
-
-| Scenario | Result |
+| File | Change |
 |---|---|
-| SMS bank message | Structured parser used, origin = template/structure, freeform not triggered |
-| "coffee 18 riyals" | Freeform parser, origin = `freeform`, source = `smart-paste-freeform` |
-| "قهوة 18 ريال" | Freeform parser, origin = `freeform`, provenance preserved through DTO |
-| "حولت 500 لأحمد" | Freeform parser, save writes only to `xpensia_freeform_learned_mappings` |
-| SMS save | Template/keyword/vendor learning fires normally |
-| Freeform save | Only freeform learning store written (gated by `source.includes('freeform')`) |
+| `src/utils/syncKeywordsToNative.ts` | **New** — reads `xpensia_type_keywords` from localStorage, flattens to string array, writes to Capacitor Preferences (`xpensia_native_financial_keywords`) |
+| `FinancialSmsClassifier.java` | **Rewritten** — triple-gate (keyword+amount+date), reads dynamic keywords from SharedPreferences with fallback to 27 hardcoded, fixed amount regex (no `\b`), OTP exclusion, NFC normalization, `Log.d` diagnostics |
+| `BackgroundSmsListenerPlugin.java` | Updated `handleIncomingSms` to pass `context` to classifier |
+| `messageFilter.ts` | Added OTP exclusion keywords before financial gates |
+| `initializeXpensiaStorageDefaults.ts` | Calls `syncKeywordsToNative()` after keyword initialization |
+| `KeywordBankManager.tsx` | Calls `syncKeywordsToNative()` after save/delete |
 
-## Risks
+### Architecture After Changes
 
-- Missing i18n keys `smartEntry.originFreeform` / `smartEntry.originFreeformShort` — will add fallback to existing `originFallback` labels if keys don't exist yet.
+```text
+App startup / keyword edit
+  → localStorage: xpensia_type_keywords
+  → Preferences.set: xpensia_native_financial_keywords (sync bridge)
+        ↓
+  SharedPreferences (CapacitorStorage)
+        ↓
+SMS arrives → BroadcastReceiver
+  → FinancialSmsClassifier.isFinancialTransactionMessage(context, body)
+     0. OTP check → reject if OTP keywords found
+     1. Load keywords from SharedPreferences (fallback: hardcoded 27)
+     2. Gate 1: keyword match
+     3. Gate 2: amount match (fixed regex, no \b)
+     4. Gate 3: date match (ported from JS)
+     → persist + notify
+```
 
+### OTP Keywords (shared between Java & JS)
+`otp`, `verification code`, `رمز التحقق`, `رمز التفعيل`, `one-time`, `one time password`, `passcode`, `pin code`, `security code`, `auth code`, `كلمة المرور`, `رمز التأكيد`
+
+### What Was NOT Changed
+- SMS persistence, notification channel, intent routing
+- Template bank, keyword bank, vendor map logic
+- Freeform parser
+- No new permissions required
