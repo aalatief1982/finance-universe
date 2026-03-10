@@ -9,8 +9,6 @@ import { signalContentReady } from '@/lib/startup-ready';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
-const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
-
 interface Slide {
   image: string;
   titleKey: string;
