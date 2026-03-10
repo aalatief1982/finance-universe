@@ -52,7 +52,7 @@ interface Props {
 }
 
 const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, flickerDiag = 0 }) => {
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language, setLanguage, isRtl } = useLanguage();
   const noAnim = flickerDiag === 2;
   const fixedDims = flickerDiag === 3;
   const [index, setIndex] = useState(0);
