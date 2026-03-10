@@ -8,6 +8,7 @@ import { XpensiaLogo } from './header/XpensiaLogo';
 
 type XpensiaWindow = Window & {
   __xpensiaHideInitialLoading?: () => void;
+  __xpensiaCancelHtmlFallback?: () => void;
 };
 
 export const SplashScreen: React.FC = () => {
