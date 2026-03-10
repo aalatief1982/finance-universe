@@ -37,17 +37,10 @@ const SmsReviewInboxPage = () => {
 
     const dto = await buildInferenceDTO({ rawMessage: item.body, senderHint: item.sender });
 
-    navigate('/review-sms-transactions', {
+    navigate('/edit-transaction', {
       state: {
-        messages: [
-          {
-            body: item.body,
-            sender: item.sender,
-            timestamp: item.receivedAt,
-          },
-        ],
+        ...dto,
         smsInboxId: item.id,
-        dto,
         returnTo: location.pathname,
       },
     });
