@@ -78,7 +78,7 @@ interface SmartPasteProps {
     rawMessage?: string,
     senderHint?: string,
     confidence?: number,
-    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback' | 'freeform',
     parsingStatus?: InferenceParsingStatus,
     matchedCount?: number,
     totalTemplates?: number,
