@@ -47,7 +47,9 @@ export interface FreeformParseResult {
   confidence: number;
   /** Optional marker when values are filled from freeform learned mapping */
   learnedMappingApplied?: {
-    normalizedVendor: string;
+    source: 'freeform-vendor' | 'freeform-phrase';
+    normalizedVendor?: string;
+    normalizedPhraseKey?: string;
     appliedFields: Array<'category' | 'subcategory' | 'type' | 'currency'>;
   };
 }
@@ -55,6 +57,20 @@ export interface FreeformParseResult {
 /** A single learned vendor/phrase → category/type mapping */
 export interface FreeformLearnedMapping {
   normalizedVendor: string;
+  category: string;
+  subcategory?: string;
+  type: TransactionType;
+  currency?: string;
+  confirmedCount: number;
+  lastConfirmedAt: string;
+}
+
+
+export type FreeformPhraseLearningKey = string;
+
+/** A single learned non-vendor phrase key → category/type mapping */
+export interface FreeformPhraseLearnedMapping {
+  normalizedPhraseKey: FreeformPhraseLearningKey;
   category: string;
   subcategory?: string;
   type: TransactionType;

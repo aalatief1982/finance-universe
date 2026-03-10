@@ -1,3 +1,14 @@
 export { parseFreeformTransaction } from './freeformParser';
-export { lookupFreeformHint, learnFromFreeformConfirmation } from './freeformLearningStore';
-export type { FreeformParseResult, FreeformLearnedMapping, FreeformFieldConfidences } from './freeformTypes';
+export {
+  lookupFreeformHint,
+  lookupFreeformPhraseHint,
+  learnFromFreeformConfirmation,
+  deriveFreeformPhraseKey,
+  loadFreeformPhraseMappings,
+} from './freeformLearningStore';
+export type {
+  FreeformParseResult,
+  FreeformLearnedMapping,
+  FreeformPhraseLearnedMapping,
+  FreeformFieldConfidences,
+} from './freeformTypes';
