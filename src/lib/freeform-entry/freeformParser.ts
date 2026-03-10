@@ -305,19 +305,36 @@ export function parseFreeformTransaction(rawText: string): FreeformParseResult {
     categoryConfidence = 0.6;
   }
 
-  // --- Freeform learning lookup ---
+  // --- Freeform learning lookup (exact normalized vendor only) ---
   const lookupKey = title || (residueTokens[0] ?? '');
+  const learnedAppliedFields: Array<'category' | 'subcategory' | 'type' | 'currency'> = [];
+  let learnedNormalizedVendor: string | undefined;
   if (lookupKey) {
     const hint = lookupFreeformHint(lookupKey);
     if (hint) {
+      learnedNormalizedVendor = hint.normalizedVendor;
+
+      // Apply only when parser does not already have stronger evidence.
       if (hint.category && categoryConfidence < 0.7) {
         category = hint.category;
-        subcategory = hint.subcategory || subcategory;
-        categoryConfidence = Math.min(0.8, 0.5 + hint.confirmedCount * 0.1);
+        learnedAppliedFields.push('category');
+        if (hint.subcategory) {
+          subcategory = hint.subcategory;
+          learnedAppliedFields.push('subcategory');
+        }
+        categoryConfidence = Math.min(0.75, 0.45 + hint.confirmedCount * 0.08);
       }
-      if (hint.type) {
+
+      if (hint.type && typeConfidence < 0.8) {
         type = hint.type;
-        typeConfidence = Math.min(0.85, 0.6 + hint.confirmedCount * 0.1);
+        learnedAppliedFields.push('type');
+        typeConfidence = Math.min(0.78, 0.5 + hint.confirmedCount * 0.08);
+      }
+
+      if (hint.currency && currencyConfidence < 0.9) {
+        currency = hint.currency;
+        learnedAppliedFields.push('currency');
+        currencyConfidence = Math.min(0.8, 0.45 + hint.confirmedCount * 0.08);
       }
     }
   }
@@ -379,6 +396,13 @@ export function parseFreeformTransaction(rawText: string): FreeformParseResult {
     counterparty,
     fieldConfidences,
     confidence,
+    learnedMappingApplied:
+      learnedNormalizedVendor && learnedAppliedFields.length > 0
+        ? {
+            normalizedVendor: learnedNormalizedVendor,
+            appliedFields: learnedAppliedFields,
+          }
+        : undefined,
   };
 }
 

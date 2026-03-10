@@ -45,6 +45,11 @@ export interface FreeformParseResult {
   fieldConfidences: FreeformFieldConfidences;
   /** Overall confidence (weighted average of field confidences) */
   confidence: number;
+  /** Optional marker when values are filled from freeform learned mapping */
+  learnedMappingApplied?: {
+    normalizedVendor: string;
+    appliedFields: Array<'category' | 'subcategory' | 'type' | 'currency'>;
+  };
 }
 
 /** A single learned vendor/phrase → category/type mapping */
