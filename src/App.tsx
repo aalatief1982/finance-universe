@@ -969,6 +969,17 @@ function AppRoutes() {
     };
   }, []);
 
+  // Signal route+content ready for web (initialRouteCheckDone starts true) and for returning users
+  React.useEffect(() => {
+    if (initialRouteCheckDone) {
+      signalRouteReady();
+      if (onboardingDone) {
+        // Returning user: no image to wait for, content is ready immediately
+        signalContentReady();
+      }
+    }
+  }, [initialRouteCheckDone, onboardingDone]);
+
   traceAppRoot(`AppRoutes render pathname=${location.pathname} onboardingDone=${onboardingDone}`);
   traceState('AppRoutes render flags', {
     onboardingDone,
