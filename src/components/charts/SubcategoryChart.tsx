@@ -1,20 +1,6 @@
 /**
  * @file SubcategoryChart.tsx
  * @description UI component for SubcategoryChart.
- *
- * @module components/charts/SubcategoryChart
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
  */
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +18,7 @@ import {
 import { formatCurrency } from '@/lib/formatters';
 import { getChartColor } from '@/utils/color-utils';
 import { chunkSubcategoryData, type Item } from './subcategory-utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SubcategoryChartProps {
   data: Item[];
@@ -80,7 +67,7 @@ const YAxisTick = ({ x, y, payload }: AxisTickProps) => {
   );
 };
 
-const SubcategoryBarChart = ({ items }: { items: Item[] }) => {
+const SubcategoryBarChart = ({ items, t }: { items: Item[]; t: (key: string) => string }) => {
   const total = items.reduce((sum, c) => sum + c.value, 0);
 
   try {
@@ -109,12 +96,13 @@ const SubcategoryBarChart = ({ items }: { items: Item[] }) => {
       console.warn('[SubcategoryChart] Failed to render chart', err);
     }
     return (
-      <p className="text-center text-muted-foreground py-12">Unable to render chart</p>
+      <p className="text-center text-muted-foreground py-12">{t('chart.unableToRender')}</p>
     );
   }
 };
 
 const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   const [page, setPage] = React.useState(0);
   const chunks = React.useMemo(() => chunkSubcategoryData(data), [data]);
   const current = chunks[page] || [];
@@ -132,51 +120,51 @@ const SubcategoryChart: React.FC<SubcategoryChartProps> = ({ data }) => {
   return (
     <Card className="border border-border shadow-sm overflow-hidden">
       <CardHeader className="pb-0">
-        <CardTitle className="text-xl font-medium">Subcategory</CardTitle>
+        <CardTitle className="text-xl font-medium">{t('home.subcategory')}</CardTitle>
       </CardHeader>
       <CardContent>
         {hasData ? (
           <>
-            <div className="h-[300px] w-full" role="img" aria-label="Expenses by subcategory bar chart">
-              <SubcategoryBarChart items={current} />
+            <div className="h-[300px] w-full" role="img" aria-label={t('chart.subcategories')}>
+              <SubcategoryBarChart items={current} t={t} />
             </div>
             {chunks.length > 1 && (
-              <div className="flex justify-center items-center mt-2 space-x-2">
+              <div className="flex justify-center items-center mt-2 gap-2">
                 <button
-                  aria-label="Previous"
+                  aria-label={t('chart.previous')}
                   disabled={page === 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
-                className="p-1 disabled:opacity-50"
-              >
-                ‹
-              </button>
-              <div className="flex space-x-1">
-                {chunks.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPage(i)}
-                    className={
-                      i === page
-                        ? 'w-2 h-2 rounded-full bg-primary'
-                        : 'w-2 h-2 rounded-full bg-border'
-                    }
-                    aria-label={`Page ${i + 1}`}
-                  />
-                ))}
+                  className="p-1 disabled:opacity-50"
+                >
+                  ‹
+                </button>
+                <div className="flex gap-1">
+                  {chunks.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i)}
+                      className={
+                        i === page
+                          ? 'w-2 h-2 rounded-full bg-primary'
+                          : 'w-2 h-2 rounded-full bg-border'
+                      }
+                      aria-label={t('chart.pageN').replace('{n}', String(i + 1))}
+                    />
+                  ))}
+                </div>
+                <button
+                  aria-label={t('chart.next')}
+                  disabled={page === chunks.length - 1}
+                  onClick={() => setPage((p) => Math.min(chunks.length - 1, p + 1))}
+                  className="p-1 disabled:opacity-50"
+                >
+                  ›
+                </button>
               </div>
-              <button
-                aria-label="Next"
-                disabled={page === chunks.length - 1}
-                onClick={() => setPage((p) => Math.min(chunks.length - 1, p + 1))}
-                className="p-1 disabled:opacity-50"
-              >
-                ›
-              </button>
-            </div>
-          )}
-        </>
+            )}
+          </>
         ) : (
-          <p className="text-center text-muted-foreground py-12">No data available yet. Try adding a few transactions first.</p>
+          <p className="text-center text-muted-foreground py-12">{t('chart.noDataAvailable')}</p>
         )}
       </CardContent>
     </Card>

@@ -712,6 +712,10 @@ export const ar: Record<string, string> = {
   'chart.noDataToShow': 'لا توجد بيانات لعرضها بعد',
   'chart.notEnoughData': 'لا توجد بيانات كافية لعرض تفصيل ذي معنى',
   'chart.noDataAvailable': 'لا توجد بيانات بعد. حاول إضافة بعض المعاملات أولاً.',
+  'chart.unableToRender': 'تعذّر عرض الرسم البياني',
+  'chart.previous': 'السابق',
+  'chart.next': 'التالي',
+  'chart.pageN': 'صفحة {n}',
 
   // SmartPasteSummary
   'smartPaste.reviewBeforeSaving': 'راجع قبل الحفظ',

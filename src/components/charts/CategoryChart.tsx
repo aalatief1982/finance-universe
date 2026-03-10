@@ -1,27 +1,13 @@
 /**
  * @file CategoryChart.tsx
  * @description UI component for CategoryChart.
- *
- * @module components/charts/CategoryChart
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
  */
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, type PieLabelRenderProps } from 'recharts';
 import { formatCurrency } from '@/lib/formatters';
 import { getChartColor } from '@/utils/color-utils';
-
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const RADIAN = Math.PI / 180;
 
@@ -52,7 +38,6 @@ const renderLabel = ({ cx, cy, midAngle, outerRadius, percent }: PieLabelRenderP
   );
 };
 
-
 interface CategoryItem {
   name: string;
   value: number;
@@ -63,11 +48,10 @@ interface CategoryChartProps {
   data: CategoryItem[];
 }
 
-// Extra bottom spacing is required for the legend, so we provide an equal
-// top margin to keep the donut vertically centered within the chart.
 const CHART_MARGIN = { top: 40, right: 20, left: 20, bottom: 40 };
 
 const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   const limited = data.slice(0, 5);
   const total = limited.reduce((sum, c) => sum + c.value, 0);
   const hasData = limited.length > 0;
@@ -75,7 +59,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
   return (
     <Card className="border border-border shadow-sm overflow-hidden">
       <CardHeader className="pb-0">
-        <CardTitle className="text-xl font-medium">Category</CardTitle>
+        <CardTitle className="text-xl font-medium">{t('home.category')}</CardTitle>
       </CardHeader>
       <CardContent>
         {hasData ? (
@@ -83,7 +67,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
             <div
               className="h-[300px] w-full"
               role="img"
-              aria-label="Expenses by category donut chart"
+              aria-label={t('chart.byCategory')}
             >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart margin={CHART_MARGIN}>
@@ -97,9 +81,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
                     fill="#8884d8"
                     dataKey="value"
                     isAnimationActive
-
                     label={renderLabel}
-
                   >
                     {limited.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={getChartColor(index)} />
@@ -127,10 +109,10 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
               </ResponsiveContainer>
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-12">Not enough data to show a meaningful breakdown</p>
+            <p className="text-center text-muted-foreground py-12">{t('chart.notEnoughData')}</p>
           )
         ) : (
-          <p className="text-center text-muted-foreground py-12">No data available yet. Try adding a few transactions first.</p>
+          <p className="text-center text-muted-foreground py-12">{t('chart.noDataAvailable')}</p>
         )}
       </CardContent>
     </Card>
