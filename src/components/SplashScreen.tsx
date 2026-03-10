@@ -1,25 +1,21 @@
 /**
  * @file SplashScreen.tsx
- * @description UI component for SplashScreen.
- *
- * @module components/SplashScreen
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
+ * @description React splash screen. On mount, hides the HTML bootstrap loader
+ *   to create a single seamless handoff from HTML → React splash.
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { XpensiaLogo } from './header/XpensiaLogo';
 
+type XpensiaWindow = Window & {
+  __xpensiaHideInitialLoading?: () => void;
+};
+
 export const SplashScreen: React.FC = () => {
+  useEffect(() => {
+    // Hide the HTML bootstrap loader now that React splash is painted
+    (window as XpensiaWindow).__xpensiaHideInitialLoading?.();
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
       <div className="flex flex-col items-center space-y-6">

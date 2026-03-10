@@ -1,23 +1,13 @@
 /**
  * @file AppLoader.tsx
- * @description UI component for AppLoader.
- *
- * @module components/AppLoader
- *
- * @responsibilities
- * 1. Render UI for the feature area
- * 2. Accept props and emit user interactions
- * 3. Compose shared subcomponents where needed
- *
- * @review-tags
- * - @ui: visual/layout behavior
- *
- * @review-checklist
- * - [ ] Props have sensible defaults
- * - [ ] Component renders without crashing
+ * @description Startup splash gate. Shows SplashScreen until:
+ *   1. isInitializing is false (storage/migrations done)
+ *   2. Both route-ready AND content-ready signals have fired (from startup-ready module)
+ *   3. OR a hard 2.5s max timeout expires as safety fallback
  */
 import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
+import { onStartupReady } from '@/lib/startup-ready';
 
 const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
@@ -27,6 +17,8 @@ const traceAppRoot = (message: string, ...args: unknown[]) => {
   const now = performance.now().toFixed(2);
   console.log(`${TRACE_PREFIX}[${traceCounter}][${now}ms] ${message}`, ...args);
 };
+
+const MAX_SPLASH_WAIT_MS = 2500;
 
 interface AppLoaderProps {
   children: React.ReactNode;
@@ -38,7 +30,6 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
 
   useEffect(() => {
     traceAppRoot('AppLoader mounted');
-
     return () => {
       traceAppRoot('AppLoader unmounted');
     };
@@ -50,24 +41,35 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
 
   useEffect(() => {
     traceAppRoot(`AppLoader showSplash changed: ${showSplash}`);
-    if (!showSplash) {
-      traceAppRoot('AppLoader showSplash state now reflects false');
-    }
   }, [showSplash]);
 
   useEffect(() => {
     if (!isInitializing) {
-      traceAppRoot('AppLoader detected isInitializing=false');
-      // Show splash for minimum 1 second for better UX
-      traceAppRoot('AppLoader splash hide timer started (1000ms)');
-      const timer = setTimeout(() => {
-        traceAppRoot('AppLoader 1000ms timer callback executing');
-        traceAppRoot('AppLoader calling setShowSplash(false)');
-        if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #6] React Splash Hide\nTime: ${performance.now().toFixed(2)}ms\nisInitializing: ${isInitializing}`);
-        setShowSplash(false);
-      }, 1000);
+      traceAppRoot('AppLoader detected isInitializing=false, waiting for startup-ready signals');
+      let cancelled = false;
 
-      return () => clearTimeout(timer);
+      // Wait for both route + content readiness
+      onStartupReady(() => {
+        if (!cancelled) {
+          traceAppRoot('AppLoader startup-ready signals received, hiding splash');
+          if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #6] React Splash Hide (ready signals)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
+          setShowSplash(false);
+        }
+      });
+
+      // Hard max timeout to prevent stuck splash
+      const timeout = setTimeout(() => {
+        if (!cancelled && showSplash) {
+          traceAppRoot(`AppLoader max timeout (${MAX_SPLASH_WAIT_MS}ms) reached, force hiding splash`);
+          if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #6b] React Splash Hide (timeout fallback)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
+          setShowSplash(false);
+        }
+      }, MAX_SPLASH_WAIT_MS);
+
+      return () => {
+        cancelled = true;
+        clearTimeout(timeout);
+      };
     }
   }, [isInitializing]);
 
