@@ -106,7 +106,7 @@ const SmartPaste = ({
   const [hasMatch, setHasMatch] = useState(false);
   const [confidence, setConfidence] = useState<number | null>(null);
   const [matchOrigin, setMatchOrigin] = useState<
-    'template' | 'structure' | 'ml' | 'fallback' | null
+    'template' | 'structure' | 'ml' | 'fallback' | 'freeform' | null
   >(null);
   const [fieldConfidences, setFieldConfidences] = useState<
     Record<string, number>
