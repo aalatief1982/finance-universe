@@ -140,7 +140,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
 
   return (
     <div
-      className={`relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden transition-opacity duration-200 ${slide1ImageReady ? 'opacity-100' : 'opacity-0'}`}
+      className={`relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden transition-opacity duration-150 ${slide1ImageReady ? 'opacity-100' : 'opacity-0'}`}
     >
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
