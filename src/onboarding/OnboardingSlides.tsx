@@ -85,7 +85,13 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     });
 
     setIsVisible(true);
-    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`);
+    if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`); // TEMP-DEBUG-REMOVE
+
+    // Fallback: signal content ready after 800ms even if image hasn't loaded
+    const contentReadyFallback = setTimeout(() => {
+      signalContentReady();
+    }, 800);
+
     const setVh = () => {
       const previousValue = document.documentElement.style.getPropertyValue('--vh-onb');
       const nextValue = `${window.innerHeight * 0.01}px`;
@@ -106,6 +112,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
         timestamp: new Date().toISOString(),
       });
       window.cancelAnimationFrame(rafId);
+      clearTimeout(contentReadyFallback);
       window.removeEventListener('resize', setVh);
     };
   }, []);
