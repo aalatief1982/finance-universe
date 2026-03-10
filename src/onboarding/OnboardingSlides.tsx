@@ -179,6 +179,8 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
         </div>
       </div>
       <Swiper
+        key={language}
+        dir={isRtl ? 'rtl' : 'ltr'}
         onSlideChange={(swiper) => setIndex(swiper.activeIndex)}
         className="h-full"
         style={{ height: '100%' }}
