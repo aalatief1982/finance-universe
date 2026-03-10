@@ -524,10 +524,12 @@ export const ar: Record<string, string> = {
   'smartEntry.originTemplate': 'بناءً على نمط محفوظ.',
   'smartEntry.originMl': 'تم التقدير من نص الرسالة.',
   'smartEntry.originFallback': 'أفضل تخمين من نص الرسالة.',
+  'smartEntry.originFreeform': 'تم التحليل من النص المكتوب أو المنطوق.',
   'smartEntry.originStructure': 'تم الاكتشاف من بنية الرسالة.',
   'smartEntry.originTemplateShort': 'بناءً على أنماطك المحفوظة',
   'smartEntry.originMlShort': 'تم التقدير من نص الرسالة',
   'smartEntry.originFallbackShort': 'تم التقدير من نص الرسالة',
+  'smartEntry.originFreeformShort': 'تم التحليل من إدخالك',
   'smartEntry.originStructureShort': 'تم الاكتشاف من بنية الرسالة',
   'smartEntry.parseError': 'تعذر تحليل الرسالة. حاول مجددًا أو أبلغ عن المشكلة.',
 
