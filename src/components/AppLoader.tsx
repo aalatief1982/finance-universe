@@ -51,7 +51,6 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
       onStartupReady(() => {
         if (!cancelled) {
           traceAppRoot('AppLoader startup-ready signals received, hiding splash');
-          if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #6] React Splash Hide (ready signals)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
           setShowSplash(false);
         }
       });
