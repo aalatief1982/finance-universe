@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 
 import { ArrowRight, Zap, Brain, PieChart } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { signalContentReady } from '@/lib/startup-ready';
 
 import 'swiper/css';
 import 'swiper/css/effect-fade';
