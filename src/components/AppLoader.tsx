@@ -73,9 +73,10 @@ export const AppLoader: React.FC<AppLoaderProps> = ({ children, isInitializing }
     }
   }, [isInitializing]);
 
-  if (showSplash) {
-    return <SplashScreen />;
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {showSplash && <SplashScreen />}
+    </>
+  );
 };
