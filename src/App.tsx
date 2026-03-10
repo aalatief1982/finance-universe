@@ -957,6 +957,7 @@ function AppRoutes() {
       } finally {
         if (!cancelled) {
           setInitialRouteCheckDone(true);
+          signalRouteReady();
         }
       }
     };
