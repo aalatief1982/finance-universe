@@ -712,6 +712,10 @@ export const en: Record<string, string> = {
   'chart.noDataToShow': 'No data to show yet',
   'chart.notEnoughData': 'Not enough data to show a meaningful breakdown',
   'chart.noDataAvailable': 'No data available yet. Try adding a few transactions first.',
+  'chart.unableToRender': 'Unable to render chart',
+  'chart.previous': 'Previous',
+  'chart.next': 'Next',
+  'chart.pageN': 'Page {n}',
 
   // SmartPasteSummary
   'smartPaste.reviewBeforeSaving': 'Review before saving',
