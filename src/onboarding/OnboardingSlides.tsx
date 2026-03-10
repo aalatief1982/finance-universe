@@ -59,6 +59,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
   const fixedDims = flickerDiag === 3;
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [slide1ImageReady, setSlide1ImageReady] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
   const shouldLogImageLoadErrors = import.meta.env.MODE === 'development';
   const handleCompleteOnce = React.useCallback(() => {

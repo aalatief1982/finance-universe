@@ -1069,10 +1069,14 @@ function AppRoutes() {
       <Routes>
         <Route
           path="/"
-          element={(
-            traceAppRoot(`AppRoutes redirect route "/" -> ${onboardingDone ? '/home' : '/onboarding'}`),
-            <Navigate to={onboardingDone ? '/home' : '/onboarding'} replace />
-          )}
+          element={
+            onboardingDone
+              ? (traceAppRoot('AppRoutes redirect route "/" -> /home'), <Navigate to="/home" replace />)
+              : (traceAppRoot('AppRoutes rendering Onboarding directly at "/"'),
+                <ErrorBoundary name="Onboarding Page">
+                  <Onboarding />
+                </ErrorBoundary>)
+          }
         />
         <Route
           path="/home"
