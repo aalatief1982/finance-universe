@@ -59,6 +59,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
   const fixedDims = flickerDiag === 3;
   const [index, setIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [slide1ImageReady, setSlide1ImageReady] = useState(false);
   const hasLoggedFirstSlideRender = useRef(false);
   const shouldLogImageLoadErrors = import.meta.env.MODE === 'development';
   const handleCompleteOnce = React.useCallback(() => {
@@ -87,8 +88,9 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
     setIsVisible(true);
     if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #10] OnboardingSlides Mounted\nTime: ${performance.now().toFixed(2)}ms\ninnerHeight: ${window.innerHeight}`); // TEMP-DEBUG-REMOVE
 
-    // Fallback: signal content ready after 800ms even if image hasn't loaded
+    // Fallback: signal content ready and show slides after 800ms even if image hasn't loaded
     const contentReadyFallback = setTimeout(() => {
+      setSlide1ImageReady(true);
       signalContentReady();
     }, 800);
 
@@ -136,7 +138,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
 
   return (
     <div
-      className="relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden"
+      className={`relative w-full h-[100dvh] bg-gradient-to-br from-background via-background to-muted/30 overflow-hidden transition-opacity duration-200 ${slide1ImageReady ? 'opacity-100' : 'opacity-0'}`}
     >
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
@@ -221,6 +223,7 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                         i === 0
                           ? (event) => {
                               const imageElement = event.currentTarget;
+                              setSlide1ImageReady(true);
                               signalContentReady();
                               if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #11] Slide 1 Image Loaded\nTime: ${performance.now().toFixed(2)}ms\nnaturalWidth: ${imageElement.naturalWidth}\nnaturalHeight: ${imageElement.naturalHeight}\nsrc: ${imageElement.currentSrc || slide.image}`); // TEMP-DEBUG-REMOVE
                               console.trace('[TRACE][OnboardingSlides] slide image loaded', {
