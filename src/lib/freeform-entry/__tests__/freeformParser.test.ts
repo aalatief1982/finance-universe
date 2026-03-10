@@ -15,7 +15,7 @@ describe('parseFreeformTransaction', () => {
     expect(r.type).toBe('expense');
     expect(r.currency).toBe('SAR');
     expect(r.title.toLowerCase()).toContain('coffee');
-    expect(r.category).toBe('Food & Drink');
+    expect(r.category).toBe('Food');
   });
 
   it('parses "groceries 82" as expense', () => {

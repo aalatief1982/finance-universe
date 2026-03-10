@@ -27,6 +27,7 @@ const EXPENSE_VERBS = new Set(['paid', 'purchase', 'purchased', 'bought', 'spent
 const INCOME_VERBS = new Set(['salary', 'credited', 'received', 'earned', 'bonus', 'income', 'راتب', 'دخل', 'استلمت', 'مكافأة', 'ايراد', 'إيراد']);
 const TRANSFER_VERBS = new Set(['transfer', 'transferred', 'sent', 'remittance', 'remit', 'حولت', 'حوالة', 'تحويل', 'أرسلت', 'ارسلت']);
 const TRANSFER_IN_VERBS = new Set(['received', 'استلمت', 'استقبلت']);
+const INCOME_NOUN_PHRASE_HEADS = new Set(['salary', 'راتب']);
 const TO_MARKERS = new Set(['to', 'إلى', 'الى', 'لـ', 'ل']);
 const FROM_MARKERS = new Set(['from', 'من']);
 const TODAY_WORDS = new Set(['today', 'اليوم']);
@@ -108,6 +109,12 @@ export function deriveFreeformPhraseKey(rawText: string): FreeformPhraseLearning
 
   if (hasTransferVerb || (hasTransferInVerb && hasFrom)) {
     return hasFrom ? 'received-from-person' : 'transfer-out';
+  }
+
+  // Preserve noun-headed salary phrases (e.g. "salary 12000", "راتب 12000")
+  // so they can be learned over repeated confirmations.
+  if (tokens.length > 0 && INCOME_NOUN_PHRASE_HEADS.has(lowerTokens[0]) && tokens.some(isAmountToken)) {
+    return normalizeKey(tokens[0]);
   }
 
   const residue: string[] = [];

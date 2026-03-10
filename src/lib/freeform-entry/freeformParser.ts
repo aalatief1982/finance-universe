@@ -64,15 +64,15 @@ const CURRENCY_MAP: Record<string, string> = {
 
 // Conservative keyword → category map
 const KEYWORD_CATEGORY_MAP: Record<string, { category: string; subcategory: string }> = {
-  // Food & Drink
-  'coffee': { category: 'Food & Drink', subcategory: 'Coffee' },
-  'قهوة': { category: 'Food & Drink', subcategory: 'Coffee' },
-  'restaurant': { category: 'Food & Drink', subcategory: 'Restaurants' },
-  'مطعم': { category: 'Food & Drink', subcategory: 'Restaurants' },
-  'lunch': { category: 'Food & Drink', subcategory: 'Restaurants' },
-  'dinner': { category: 'Food & Drink', subcategory: 'Restaurants' },
-  'غداء': { category: 'Food & Drink', subcategory: 'Restaurants' },
-  'عشاء': { category: 'Food & Drink', subcategory: 'Restaurants' },
+  // Food
+  'coffee': { category: 'Food', subcategory: 'Coffee' },
+  'قهوة': { category: 'Food', subcategory: 'Coffee' },
+  'restaurant': { category: 'Food', subcategory: 'Restaurants' },
+  'مطعم': { category: 'Food', subcategory: 'Restaurants' },
+  'lunch': { category: 'Food', subcategory: 'Restaurants' },
+  'dinner': { category: 'Food', subcategory: 'Restaurants' },
+  'غداء': { category: 'Food', subcategory: 'Restaurants' },
+  'عشاء': { category: 'Food', subcategory: 'Restaurants' },
   // Groceries
   'groceries': { category: 'Groceries', subcategory: 'none' },
   'بقالة': { category: 'Groceries', subcategory: 'none' },
