@@ -31,10 +31,13 @@ type XpensiaWindow = Window & {
   if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #2] React Root Rendered\nTime: ${performance.now().toFixed(2)}ms`);
 
   // Safety fallback: hide HTML loader after 3s even if React never mounts SplashScreen // TEMP-DEBUG-REMOVE
-  setTimeout(() => {
+  const fallbackTimerId = setTimeout(() => {
     if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #3] HTML Loader Safety Fallback (3s)\nTime: ${performance.now().toFixed(2)}ms`); // TEMP-DEBUG-REMOVE
     ;(window as XpensiaWindow).__xpensiaHideInitialLoading?.()
   }, 3000)
+  ;(window as XpensiaWindow).__xpensiaCancelHtmlFallback = () => {
+    clearTimeout(fallbackTimerId)
+  }
 })()
 
 if (Capacitor.isNativePlatform()) {
