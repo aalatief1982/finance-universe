@@ -1,48 +1,53 @@
-## Plan: Non-Template Freeform Fallback Parser
 
-### Status: ✅ Implemented
 
-### Summary
-Added a completely isolated freeform fallback parser for Smart Entry that activates only when the existing structured/template parser produces weak results (confidence < 0.5 and no template match) or when input doesn't pass the SMS triple-gate filter.
+## Investigation Summary
 
-### Architecture
-- **Two learning domains**: SMS (existing, unchanged) and Freeform (new, isolated)
-- **Routing**: Structured first → if weak → freeform fallback
-- **Learning gate**: `source` field (`smart-paste-freeform` / `voice-freeform`) controls which store gets updated at save time
+The **CategoryChart.tsx** and **SubcategoryChart.tsx** components inside `src/components/charts/` contain hardcoded English strings and lack RTL support. These are the chart cards rendered inside the Category and Subcategory tabs on the Home dashboard.
 
-### Files Added
-- `src/lib/freeform-entry/freeformTypes.ts` — Type definitions
-- `src/lib/freeform-entry/freeformParser.ts` — Core extraction logic (amount, type, date, vendor, category, counterparty)
-- `src/lib/freeform-entry/freeformLearningStore.ts` — Isolated localStorage store (`xpensia_freeform_learned_mappings`)
-- `src/lib/freeform-entry/index.ts` — Barrel exports
-- `src/lib/freeform-entry/__tests__/freeformParser.test.ts` — 11 tests (EN/AR expense, income, transfer, edge cases)
+### Issues Found
 
-### Files Changed
-- `src/types/transaction.ts` — Added `smart-paste-freeform` | `voice-freeform` to `TransactionSource`
-- `src/types/inference.ts` — Added `'freeform'` to `InferenceOrigin`
-- `src/lib/inference/inferenceDTO.ts` — Added `'freeform'` to normalizeOrigin
-- `src/lib/inference/buildInferenceDTO.ts` — Added freeform source types
-- `src/components/SmartPaste.tsx` — Freeform fallback routing after structured path
-- `src/components/NERSmartPaste.tsx` — Same freeform fallback routing
-- `src/lib/smart-paste-engine/saveTransactionWithLearning.ts` — Learning branch by source (freeform → isolated store, SMS → existing stores)
+**1. Hardcoded English in CategoryChart.tsx (lines 78, 86, 130, 133)**
+- `"Category"` — card title
+- `"Expenses by category donut chart"` — aria-label
+- `"Not enough data to show a meaningful breakdown"` — empty state
+- `"No data available yet. Try adding a few transactions first."` — empty state
 
-### Storage Keys
-| Domain | Key |
-|--------|-----|
-| SMS | `xpensia_template_bank`, `xpensia_keyword_bank`, `xpensia_vendor_map`, `xpensia_fromaccount_map`, `xpensia_template_account_map` |
-| Freeform | `xpensia_freeform_learned_mappings` |
+**2. Hardcoded English in SubcategoryChart.tsx (lines 112, 135, 140, 179)**
+- `"Subcategory"` — card title
+- `"Unable to render chart"` — error fallback
+- `"Expenses by subcategory bar chart"` — aria-label
+- `"No data available yet. Try adding a few transactions first."` — empty state
+- Pagination labels: `"Previous"`, `"Next"`, `"Page ${i + 1}"`
 
-### What Was NOT Changed
-- SMS parser (`structureParser.ts`, `parseAndInferTransaction.ts`)
-- SMS template extraction / matching
-- SMS keyword bank logic
-- Native SMS listener / OTP / sender allow-list
-- `messageFilter.ts` triple-gate logic
-- Template failure tracking
-- Field promotion overlay
+**3. RTL issues in SubcategoryChart.tsx**
+- Line 144: `space-x-2` on pagination container — should use `gap-2`
+- Line 153: `space-x-1` on dot indicators — should use `gap-1`
 
-### Verification
-- 11/11 unit tests pass
-- No build errors
-- SMS learning path unchanged (gated by `isLearningSource` check)
-- Freeform learning path isolated (gated by `isFreeformSource` check)
+**4. Translation keys** — `chart.byCategory`, `chart.subcategories`, `chart.notEnoughData`, `chart.noDataAvailable` already exist in both `en.ts` and `ar.ts`. We can reuse them. We need to add a few new keys for aria-labels and pagination.
+
+### Plan
+
+**File 1: `src/components/charts/CategoryChart.tsx`**
+- Import `useLanguage`
+- Replace all hardcoded strings with `t()` calls using existing keys:
+  - Title → `t('home.category')`
+  - Empty states → `t('chart.notEnoughData')`, `t('chart.noDataAvailable')`
+  - aria-label → `t('chart.byCategory')`
+
+**File 2: `src/components/charts/SubcategoryChart.tsx`**
+- Import `useLanguage`
+- Replace all hardcoded strings with `t()` calls:
+  - Title → `t('home.subcategory')`
+  - Empty/error states → `t('chart.noDataAvailable')`, new key for "Unable to render chart"
+  - aria-label → `t('chart.subcategories')`
+  - Pagination aria-labels → new keys
+- Fix RTL: replace `space-x-2` → `gap-2`, `space-x-1` → `gap-1`
+
+**File 3: `src/i18n/en.ts`** — Add missing keys:
+- `'chart.unableToRender': 'Unable to render chart'`
+- `'chart.previous': 'Previous'`
+- `'chart.next': 'Next'`
+- `'chart.pageN': 'Page {n}'`
+
+**File 4: `src/i18n/ar.ts`** — Add Arabic translations for the new keys.
+
