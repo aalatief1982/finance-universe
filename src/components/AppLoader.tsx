@@ -9,7 +9,6 @@ import React, { useState, useEffect } from 'react';
 import { SplashScreen } from './SplashScreen';
 import { onStartupReady } from '@/lib/startup-ready';
 
-const DEBUG_STARTUP = true; // TEMP-DEBUG-REMOVE: was gated by URL param / localStorage
 const TRACE_PREFIX = '[TRACE][APP_ROOT]';
 let traceCounter = 0;
 const traceAppRoot = (message: string, ...args: unknown[]) => {
