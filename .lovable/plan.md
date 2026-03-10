@@ -1,4 +1,4 @@
-## Plan: Align Native Classifier with JS Filter + Dynamic Keywords
+## Plan: Fix Freeform Provenance Flattening
 
 ### Status: ✅ Implemented
 
