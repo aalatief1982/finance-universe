@@ -49,6 +49,7 @@ import ExchangeRates from './pages/ExchangeRates';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SplashScreen } from './components/SplashScreen';
+import { signalRouteReady, signalContentReady } from './lib/startup-ready';
 
 
 import { StatusBar, Style } from '@capacitor/status-bar';
