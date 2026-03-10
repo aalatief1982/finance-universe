@@ -136,7 +136,7 @@ const SmartPaste = ({
     switch (origin) {
       case 'template': return t('smartEntry.originTemplate');
       case 'ml': return t('smartEntry.originMl');
-      case 'freeform': return t('smartEntry.originFreeform') || t('smartEntry.originFallback');
+      case 'freeform': return t('smartEntry.originFreeform');
       case 'fallback': return t('smartEntry.originFallback');
       default: return t('smartEntry.originStructure');
     }
