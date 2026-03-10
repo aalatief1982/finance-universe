@@ -222,7 +222,6 @@ const OnboardingSlides: React.FC<Props> = ({ onComplete, isSubmitting = false, f
                               const imageElement = event.currentTarget;
                               setSlide1ImageReady(true);
                               signalContentReady();
-                              if (DEBUG_STARTUP) window.alert(`[XPENSIA DEBUG #11] Slide 1 Image Loaded\nTime: ${performance.now().toFixed(2)}ms\nnaturalWidth: ${imageElement.naturalWidth}\nnaturalHeight: ${imageElement.naturalHeight}\nsrc: ${imageElement.currentSrc || slide.image}`); // TEMP-DEBUG-REMOVE
                               console.trace('[TRACE][OnboardingSlides] slide image loaded', {
                                 slideIndex: i,
                                 imageUrl: imageElement.currentSrc || slide.image,
