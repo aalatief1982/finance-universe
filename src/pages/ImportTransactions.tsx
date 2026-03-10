@@ -265,7 +265,7 @@ const ImportTransactions = () => {
     rawMessage?: string,
     senderHint?: string,
     confidence?: number,
-    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback',
+    matchOrigin?: 'template' | 'structure' | 'ml' | 'fallback' | 'freeform',
     parsingStatus?: 'success' | 'partial' | 'failed',
     matchedCount?: number,
     totalTemplates?: number,

@@ -340,7 +340,7 @@ const SmartPaste = ({
 
           setDetectedTransactions([freeTransaction]);
           setConfidence(freeResult.confidence);
-          setMatchOrigin('fallback');
+          setMatchOrigin('freeform');
           setFieldConfidences(freeFC);
           setParsingStatus(freeResult.confidence >= 0.5 ? 'partial' : 'failed');
           setMatchedCount(0);
