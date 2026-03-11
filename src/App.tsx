@@ -83,6 +83,7 @@ import { readPendingSharedText, savePendingSharedText } from '@/lib/share-target
 
 const HOME_ROUTE = '/home';
 const IMPORT_ROUTE = '/import-transactions';
+const SMS_REVIEW_ROUTE = '/sms-review';
 const SHARE_DEDUPE_WINDOW_MS = 30_000;
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
 
@@ -528,7 +529,16 @@ function AppWrapper() {
           source: pendingRoute?.source ?? null,
           pathname: location.pathname,
         });
-        if (pendingRoute?.route === IMPORT_ROUTE) {
+        if (pendingRoute?.route === SMS_REVIEW_ROUTE) {
+          if (pendingRoute?.source === NOTIFICATION_SOURCE_SMS) {
+            markNotificationTapFlow('resume_pending_route', pendingRoute.source);
+          }
+          console.log('[SMS_NOTIFICATION_FLOW] routing to sms-review from pending route (resume/active)', {
+            fromPath: location.pathname,
+            source: pendingRoute?.source ?? null,
+          });
+          navigateRef.current(SMS_REVIEW_ROUTE);
+        } else if (pendingRoute?.route === IMPORT_ROUTE) {
           if (!SMS_AUTO_IMPORT_ENABLED) {
             console.log('[SMS_IMPORT] disabled -> skipping native pending import route', {
               pathname: location.pathname,
@@ -682,7 +692,7 @@ function AppWrapper() {
                 title: 'New SMS transaction detected',
                 description: 'Review imported SMS transactions when you are ready.',
                 action: (
-                  <ToastAction altText="View detected SMS transactions" onClick={() => navigate('/import-transactions')}>
+                  <ToastAction altText="View detected SMS transactions" onClick={() => navigate(SMS_REVIEW_ROUTE)}>
                     View
                   </ToastAction>
                 ),
@@ -925,6 +935,18 @@ function AppRoutes() {
         });
 
         if (cancelled) {
+          return;
+        }
+
+        if (pendingRoute?.route === SMS_REVIEW_ROUTE) {
+          if (pendingRoute?.source === NOTIFICATION_SOURCE_SMS) {
+            markNotificationTapFlow('cold_start_pending_route', pendingRoute.source);
+          }
+          setPendingLaunchRoute(SMS_REVIEW_ROUTE);
+          console.log('[SMS_NOTIFICATION_FLOW] startup route selected', {
+            finalRoute: SMS_REVIEW_ROUTE,
+            source: pendingRoute?.source ?? null,
+          });
           return;
         }
 
