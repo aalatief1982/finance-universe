@@ -87,7 +87,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             <Menu size={49} />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] sm:w-[400px] max-h-[100dvh] overflow-y-auto">
+        <SheetContent side="left" className="w-[300px] sm:w-[400px] max-h-[100dvh] overflow-y-auto pt-[calc(var(--safe-area-top)+1.5rem)]">
           <SheetHeader className="border-b pb-4 mb-4">
             <SheetTitle className="flex items-center">
               <div className="h-8 w-8 rounded-lg bg-primary overflow-hidden flex items-center justify-center mr-2">

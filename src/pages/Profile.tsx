@@ -58,7 +58,6 @@ const Profile = () => {
     });
     logAnalyticsEvent('profile_updated');
     setIsEditing(false);
-    toast({ title: t('profile.profileUpdated'), description: t('profile.profileUpdatedDesc') });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,7 +102,7 @@ const Profile = () => {
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-xl font-bold">{user?.fullName || t('profile.newUser')}</h2>
+            <h2 className="text-xl font-bold">{user?.fullName || ''}</h2>
             <p className="text-muted-foreground">{user?.email || user?.phone || ''}</p>
           </div>
 
