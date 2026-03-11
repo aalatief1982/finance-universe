@@ -76,7 +76,6 @@ import { useTheme } from 'next-themes';
 import { trackNavigationPath } from '@/utils/navigation';
 import { isDefaultCurrencySelectionRequired } from '@/utils/default-currency';
 import SetDefaultCurrency from '@/pages/SetDefaultCurrency';
-import { ToastAction } from '@/components/ui/toast';
 import { enqueueSms, getInboxCount } from '@/lib/sms-inbox/smsInboxQueue';
 import { ShareTarget } from '@/plugins/ShareTargetPlugin';
 import { readPendingSharedText, savePendingSharedText } from '@/lib/share-target/pendingSharedText';
@@ -115,8 +114,6 @@ const markNotificationTapFlow = (reason: string, source?: string) => {
     suppressSmsToastUntil,
   });
 };
-
-const shouldSuppressSmsToast = () => Date.now() < suppressSmsToastUntil;
 
 let hasLoggedImportDisabledWarning = false;
 
@@ -676,27 +673,6 @@ function AppWrapper() {
                 return;
               }
 
-              const suppressToast = shouldSuppressSmsToast();
-              if (suppressToast) {
-                console.log('[SMS_NOTIFICATION_FLOW] toast suppressed', {
-                  reason: 'notification_tap_flow_active',
-                  sender: sender ?? null,
-                });
-                return;
-              }
-
-              if (import.meta.env.MODE === 'development') {
-                // console.log('[NOTIFY] App active. Showing in-app transaction banner.');
-              }
-              toast({
-                title: 'New SMS transaction detected',
-                description: 'Review imported SMS transactions when you are ready.',
-                action: (
-                  <ToastAction altText="View detected SMS transactions" onClick={() => navigate(SMS_REVIEW_ROUTE)}>
-                    View
-                  </ToastAction>
-                ),
-              });
             });
             if (import.meta.env.MODE === 'development') {
               // console.log('[SMS] Successfully added SMS listener');
