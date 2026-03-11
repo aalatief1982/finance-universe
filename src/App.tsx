@@ -83,6 +83,7 @@ import { readPendingSharedText, savePendingSharedText } from '@/lib/share-target
 
 const HOME_ROUTE = '/home';
 const IMPORT_ROUTE = '/import-transactions';
+const SMS_REVIEW_ROUTE = '/sms-review';
 const SHARE_DEDUPE_WINDOW_MS = 30_000;
 const SMS_STARTUP_IMPORT_DONE_KEY = 'xpensia_sms_startup_import_done';
 
