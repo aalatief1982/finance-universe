@@ -218,6 +218,8 @@ const SmartPaste = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const submitStart = performance.now();
+    let gateDuration = 0;
 
     if (!text.trim()) {
       toast({
@@ -244,7 +246,9 @@ const SmartPaste = ({
 
     try {
       // --- Primary path: structured/template parser (only if input passes SMS gate) ---
+      const gateStart = performance.now();
       const passesStructuredGate = isFinancialTransactionMessage(text);
+      gateDuration = Number((performance.now() - gateStart).toFixed(2));
       let usedFreeform = false;
 
       if (passesStructuredGate) {
@@ -261,6 +265,16 @@ const SmartPaste = ({
           keywordScore: ks,
           debugTrace: dt,
         } = await parseAndInferTransaction(text, senderHint);
+
+        dt.operational = dt.operational || {};
+        dt.operational.financialGatePassed = passesStructuredGate;
+        dt.operational.parseMode = 'structured';
+        dt.operational.rawInputLength = text.length;
+        dt.operational.freeformFallbackUsed = false;
+        dt.operational.stageTimingsMs = {
+          ...(dt.operational.stageTimingsMs || {}),
+          gate: gateDuration,
+        };
 
         // If structured path is adequate (confidence >= 0.5 or template matched), use it
         if (conf >= 0.5 || parsed.matched) {
@@ -305,6 +319,10 @@ const SmartPaste = ({
         } else {
           // Structured path weak — try freeform fallback
           usedFreeform = true;
+          dt.operational = dt.operational || {};
+          dt.operational.freeformFallbackUsed = true;
+          dt.operational.parseMode = 'structured';
+          setDebugTrace(dt);
         }
       } else {
         // Input doesn't pass SMS triple-gate — try freeform directly
@@ -347,7 +365,39 @@ const SmartPaste = ({
           setTotalTemplates(0);
           setFieldScore(0);
           setKeywordScore(0);
-          setDebugTrace(undefined);
+          const fallbackTrace: InferenceDecisionTrace = {
+            confidenceBreakdown: {
+              fieldScore: 0,
+              templateScore: 0,
+              keywordScore: 0,
+              overallConfidence: freeResult.confidence,
+            },
+            templateSelection: {
+              selected: 'structure',
+              reason: 'Freeform fallback path used.',
+              candidates: [],
+            },
+            fields: [],
+            operational: {
+              rawInputLength: text.length,
+              financialGatePassed: passesStructuredGate,
+              parseMode: 'freeform',
+              freeformFallbackUsed: true,
+              finalConfidence: freeResult.confidence,
+              stageTimingsMs: {
+                gate: gateDuration,
+              },
+              counters: {
+                localMapsConsulted: {
+                  templateBank: false,
+                  keywordBank: false,
+                  vendorMap: false,
+                  templateAccountMap: false,
+                },
+              },
+            },
+          };
+          setDebugTrace(fallbackTrace);
           setMatchStatus(t('smartEntry.readyToReview'));
           setHasMatch(false);
         } else {
@@ -381,6 +431,17 @@ const SmartPaste = ({
       setKeywordScore(null);
       setDebugTrace(undefined);
     } finally {
+      const submitDuration = Number((performance.now() - submitStart).toFixed(2));
+      setDebugTrace((current) => {
+        if (!current) return current;
+        current.operational = current.operational || {};
+        current.operational.totalParseDurationMs = submitDuration;
+        current.operational.stageTimingsMs = current.operational.stageTimingsMs || {};
+        if (typeof current.operational.stageTimingsMs.gate !== 'number') {
+          current.operational.stageTimingsMs.gate = gateDuration;
+        }
+        return { ...current };
+      });
       setIsProcessing(false);
     }
   };

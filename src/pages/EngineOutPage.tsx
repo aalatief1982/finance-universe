@@ -89,7 +89,21 @@ const EngineOutPage = () => {
       );
 
   const traceFields = debugTrace?.fields ?? [];
+  const operational = debugTrace?.operational;
   const highlightedFields = ['vendor', 'category', 'subcategory', 'type'];
+  const finalSourceFields: Array<'amount' | 'vendor' | 'date' | 'type' | 'category' | 'subcategory'> = ['amount', 'vendor', 'date', 'type', 'category', 'subcategory'];
+  const timingOrder: Array<keyof NonNullable<NonNullable<typeof operational>['stageTimingsMs']>> = [
+    'normalize',
+    'gate',
+    'template_extraction',
+    'template_exact_lookup',
+    'template_similarity_fallback',
+    'direct_extraction',
+    'suggestion_engine',
+    'vendor_fallback',
+    'final_merge',
+    'dto_build',
+  ];
 
   return (
     <Layout withPadding fullWidth>
@@ -103,15 +117,69 @@ const EngineOutPage = () => {
         </div>
 
         <Card>
-          <CardHeader><CardTitle>Summary</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Operational Summary</CardTitle></CardHeader>
           <CardContent className="text-sm space-y-1">
             <p><strong>Source:</strong> {source}</p>
             <p><strong>Message hash:</strong> {hashMessage(inferenceDTO.rawMessage || '')}</p>
             <p><strong>Sender:</strong> {senderMasked || 'N/A'}</p>
-            <p><strong>Origin:</strong> {inferenceDTO.matchOrigin || inferenceDTO.origin || 'unknown'}</p>
-            <p><strong>Parsing status:</strong> {inferenceDTO.parsingStatus || 'unknown'}</p>
-            <p><strong>Overall confidence:</strong> {inferenceDTO.confidence ?? 'n/a'}</p>
+            <p><strong>Raw input length:</strong> {operational?.rawInputLength ?? inferenceDTO.rawMessage.length}</p>
+            <p><strong>Financial gate:</strong> {operational?.financialGatePassed === undefined ? 'n/a' : operational.financialGatePassed ? 'pass' : 'reject'}</p>
+            <p><strong>Parse mode:</strong> {operational?.parseMode || 'n/a'}</p>
+            <p><strong>Total parse duration:</strong> {operational?.totalParseDurationMs ?? 'n/a'} ms</p>
+            <p><strong>Template exact hit:</strong> {operational?.templateExactHit === undefined ? 'n/a' : operational.templateExactHit ? 'yes' : 'no'}</p>
+            <p><strong>Similarity fallback used:</strong> {operational?.similarityFallbackUsed === undefined ? 'n/a' : operational.similarityFallbackUsed ? 'yes' : 'no'}</p>
+            <p><strong>Freeform fallback used:</strong> {operational?.freeformFallbackUsed === undefined ? 'n/a' : operational.freeformFallbackUsed ? 'yes' : 'no'}</p>
+            <p><strong>Final confidence:</strong> {operational?.finalConfidence ?? inferenceDTO.confidence ?? 'n/a'}</p>
+            <p><strong>Origin:</strong> {inferenceDTO.matchOrigin || inferenceDTO.origin || 'unknown'} • <strong>Parsing status:</strong> {inferenceDTO.parsingStatus || 'unknown'}</p>
+            <div>
+              <strong>Final field sources:</strong>
+              <ul className="list-disc pl-5">
+                {finalSourceFields.map((field) => (
+                  <li key={field}>{field}: {operational?.finalSources?.[field] || 'n/a'}</li>
+                ))}
+              </ul>
+            </div>
             <p><strong>Raw SMS:</strong> {displaySensitiveText(rawSmsDisplay, showRaw)}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Timings (ms)</CardTitle></CardHeader>
+          <CardContent className="text-sm space-y-1">
+            {timingOrder.map((stage) => (
+              <p key={stage}><strong>{stage}:</strong> {operational?.stageTimingsMs?.[stage] ?? 'n/a'}</p>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Work Counters</CardTitle></CardHeader>
+          <CardContent className="text-sm space-y-1">
+            <p><strong>total templates available:</strong> {operational?.counters?.totalTemplatesAvailable ?? 'n/a'}</p>
+            <p><strong>templates scanned:</strong> {operational?.counters?.templatesScanned ?? 'n/a'}</p>
+            <p><strong>keyword bank size:</strong> {operational?.counters?.keywordBankSize ?? 'n/a'}</p>
+            <p><strong>keyword candidate hits:</strong> {operational?.counters?.keywordCandidateHits ?? 'n/a'}</p>
+            <p><strong>vendor fallback size:</strong> {operational?.counters?.vendorFallbackSize ?? 'n/a'}</p>
+            <p><strong>vendor candidates checked:</strong> {operational?.counters?.vendorCandidatesChecked ?? 'n/a'}</p>
+            <p><strong>local maps consulted:</strong></p>
+            <ul className="list-disc pl-5">
+              <li>template bank: {operational?.counters?.localMapsConsulted?.templateBank ? 'yes' : 'no'}</li>
+              <li>keyword bank: {operational?.counters?.localMapsConsulted?.keywordBank ? 'yes' : 'no'}</li>
+              <li>vendor map: {operational?.counters?.localMapsConsulted?.vendorMap ? 'yes' : 'no'}</li>
+              <li>template account map: {operational?.counters?.localMapsConsulted?.templateAccountMap ? 'yes' : 'no'}</li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Winner / Runner-up</CardTitle></CardHeader>
+          <CardContent className="text-sm space-y-1">
+            {(['type', 'category', 'subcategory', 'vendor'] as const).map((field) => (
+              <p key={field}>
+                <strong>{field}:</strong> winner={maskIfNeeded(operational?.winners?.[field]?.winner ?? 'n/a', showRaw)} ({operational?.winners?.[field]?.winnerScore ?? 'n/a'})
+                {' '}• runner-up={maskIfNeeded(operational?.winners?.[field]?.runnerUp ?? 'n/a', showRaw)} ({operational?.winners?.[field]?.runnerUpScore ?? 'n/a'})
+              </p>
+            ))}
           </CardContent>
         </Card>
 

@@ -29,6 +29,8 @@ import {
   pickBestAccountCandidate,
 } from './accountInference';
 import { getPreferredFromAccount } from './templateHashAccountMap';
+import type { InferenceDecisionTrace } from '@/types/inference';
+import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
 //import { normalizeDate } from './dateUtils';
 
 
@@ -145,7 +147,8 @@ export interface ParsedSmsResult {
   inferenceDebug?: Record<string, FieldInferenceDebug>;
 }
 
-export function parseSmsMessage(rawMessage: string, senderHint?: string): ParsedSmsResult {
+export function parseSmsMessage(rawMessage: string, senderHint?: string, debugTrace?: InferenceDecisionTrace): ParsedSmsResult {
+  const timer = new ParserTraceTimer();
   // ============================================================================
   // SECTION: Input Guardrails
   // PURPOSE: Handle empty messages without throwing
@@ -179,10 +182,12 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
   let placeholders: Record<string, string> = {};
   let templateHash = '';
   try {
+    timer.start('template_extraction');
     const result = extractTemplateStructure(rawMessage);
     structure = result.structure;
     placeholders = result.placeholders;
     templateHash = result.hash;
+    timer.end('template_extraction', debugTrace);
 
     if (!structure) throw new Error('Extracted template is empty');
     if (!placeholders) throw new Error('Extracted placeholders are missing');
@@ -207,11 +212,17 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
   // REVIEW: Missing placeholders should be logged in development
   // ============================================================================
 
+  timer.start('template_exact_lookup');
   const matchedTemplate = getTemplateByHash(
     templateHash,
     senderHint,
     (placeholders as Record<string, string>).account
   );
+  timer.end('template_exact_lookup', debugTrace);
+  if (debugTrace) {
+    const operational = ensureOperationalTrace(debugTrace);
+    operational.counters!.localMapsConsulted!.templateBank = true;
+  }
   const directFields: Record<string, ParsedField> = {};
   const defaultValues: Record<string, ParsedField> = {};
   const templateDefaults: Record<string, string> = {};
@@ -219,6 +230,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
   let toAccountSource: AccountInferenceSource = 'empty';
 
   if (matchedTemplate) {
+    timer.start('direct_extraction');
     matchedTemplate.fields.forEach((field) => {
       const value = placeholders[field];
       if (value) {
@@ -253,7 +265,9 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
         }
       });
     }
+    timer.end('direct_extraction', debugTrace);
   } else {
+    timer.start('direct_extraction');
     // ✅ FIRST-TIME message – use raw extracted values
     Object.entries(placeholders).forEach(([key, value]) => {
       directFields[key] = {
@@ -262,14 +276,20 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
         source: 'direct',
       };
     });
+    timer.end('direct_extraction', debugTrace);
   }
 
   if (directFields['vendor']) {
+    if (debugTrace) {
+      const operational = ensureOperationalTrace(debugTrace);
+      operational.counters!.localMapsConsulted!.vendorMap = true;
+    }
     directFields['vendor'].value = applyVendorMapping(directFields['vendor'].value);
   }
 
   // Normalize known field names like 'date'
   if (directFields['date']) {
+    timer.start('normalize');
     const normalized = normalizeDate(directFields['date'].value);
     if (normalized) {
       directFields['date'].value = normalized;
@@ -277,6 +297,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
         // console.log('[SmartPaste] Normalized date:', directFields['date'].value);
       }
     }
+    timer.end('normalize', debugTrace);
   }
 
   // Promote learned account remapping for exact account tokens when available.
@@ -324,6 +345,10 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
   }
 
   const templateAccountMap = loadTemplateAccountMap();
+  if (debugTrace) {
+    const operational = ensureOperationalTrace(debugTrace);
+    operational.counters!.localMapsConsulted!.templateAccountMap = true;
+  }
   const templateFromAccount =
     templateAccountMap[getTemplateAccountMapKey(templateHash, 'from')]?.accountId;
   const templateToAccount =
@@ -406,7 +431,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string): Parsed
   const rawDirects: Record<string, string> = {};
   Object.entries(directFields).forEach(([k, v]) => (rawDirects[k] = v.value));
 
-  const { inferred: inferredRaw, debugByField } = inferIndirectFieldsWithDebug(rawMessage, rawDirects);
+  const { inferred: inferredRaw, debugByField } = inferIndirectFieldsWithDebug(rawMessage, rawDirects, debugTrace);
   const inferred: Record<string, ParsedField> = {};
   Object.entries(inferredRaw).forEach(([key, value]) => {
     if (!directFields[key]) {

@@ -36,6 +36,8 @@ import {
   loadVendorFallbacks,
   VendorFallbackData,
 } from './vendorFallbackUtils';
+import type { InferenceDecisionTrace } from '@/types/inference';
+import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
 
 const BANK_KEY = 'xpensia_keyword_bank';
 
@@ -255,13 +257,15 @@ export function findClosestFallbackMatch(vendorName: string): FallbackVendorEntr
 function findClosestFallbackMatchWithDebug(vendorName: string): {
   match: FallbackVendorEntry | null;
   candidates: Array<{ vendor: string; score: number; reason: string; ruleId: string }>;
+  vendorFallbackSize: number;
+  vendorCandidatesChecked: number;
 } {
   const lowerInput = softNormalize(vendorName);
   
   // CRITICAL GUARD: Prevent crash when vendor name is empty or whitespace-only
   // string-similarity throws "Bad arguments" on empty strings
   if (!lowerInput) {
-    return { match: null, candidates: [] };
+    return { match: null, candidates: [], vendorFallbackSize: 0, vendorCandidatesChecked: 0 };
   }
   
   const fallbackVendors = getFallbackVendors();
@@ -269,7 +273,7 @@ function findClosestFallbackMatchWithDebug(vendorName: string): {
 
   // Guard: prevent crash when vendor list is empty
   if (vendorKeys.length === 0) {
-    return { match: null, candidates: [] };
+    return { match: null, candidates: [], vendorFallbackSize: 0, vendorCandidatesChecked: 0 };
   }
 
   // Step 1: Try full fuzzy match
@@ -286,6 +290,8 @@ function findClosestFallbackMatchWithDebug(vendorName: string): {
     return {
       match: { vendor: originalKey, ...data },
       candidates: [{ vendor: originalKey, score: match.bestMatch.rating, reason: 'fuzzy_similarity', ruleId: `vendor_fuzzy:${originalKey}` }],
+      vendorFallbackSize: vendorKeys.length,
+      vendorCandidatesChecked: vendorKeys.length,
     };
   }
 
@@ -325,13 +331,15 @@ function findClosestFallbackMatchWithDebug(vendorName: string): {
           reason: candidate === bestSubstringCandidate ? 'chosen_substring' : 'lower_substring_score',
           ruleId: `vendor_substring:${candidate.keyword}`,
         })),
+      vendorFallbackSize: vendorKeys.length,
+      vendorCandidatesChecked: vendorKeys.length,
     };
   }
 
   if (import.meta.env.MODE === 'development') {
     console.warn('[SmartPaste] No fallback match found for vendor:', vendorName);
   }
-  return { match: null, candidates: [] };
+  return { match: null, candidates: [], vendorFallbackSize: vendorKeys.length, vendorCandidatesChecked: vendorKeys.length };
 }
 
 // ============================================================================
@@ -366,8 +374,11 @@ export function inferIndirectFields(
 
 export function inferIndirectFieldsWithDebug(
   text: string,
-  knowns: Partial<Record<string, string>> = {}
+  knowns: Partial<Record<string, string>> = {},
+  debugTrace?: InferenceDecisionTrace,
 ): { inferred: Record<string, string>; debugByField: Record<string, FieldInferenceDebug> } {
+  const timer = new ParserTraceTimer();
+  timer.start('suggestion_engine');
   const messageText = text.toLowerCase();
   const vendorText = (knowns.vendor || '').toLowerCase();
   const rawText = `${messageText} ${vendorText}`.trim();
@@ -399,6 +410,11 @@ export function inferIndirectFieldsWithDebug(
 
   // Step 1: Load keyword bank
   const keywordBank: KeywordMapping[] = JSON.parse(safeStorage.getItem('xpensia_keyword_bank') || '[]') || [];
+  if (debugTrace) {
+    const operational = ensureOperationalTrace(debugTrace);
+    operational.counters!.keywordBankSize = Array.isArray(keywordBank) ? keywordBank.length : 0;
+    operational.counters!.localMapsConsulted!.keywordBank = true;
+  }
   if (!Array.isArray(keywordBank)) {
     if (import.meta.env.MODE === 'development') {
       console.error('[SmartPaste] Invalid keyword bank format:', keywordBank);
@@ -408,6 +424,7 @@ export function inferIndirectFieldsWithDebug(
   // Step 2: Keyword-based mapping
   type FieldCandidate = ScoredCandidate & { field: string; value: string };
   const candidatesByField = new Map<string, FieldCandidate[]>();
+  let keywordCandidateHits = 0;
 
   keywordBank.forEach((entry: KeywordMapping & Partial<KeywordEntry>) => {
     const score = scoreKeywordMatch({
@@ -419,6 +436,7 @@ export function inferIndirectFieldsWithDebug(
     });
 
     if (!score) return;
+    keywordCandidateHits += 1;
 
     entry.mappings.forEach(({ field, value }) => {
       if (!value || typeof value !== 'string' || knowns[field]) return;
@@ -458,6 +476,10 @@ export function inferIndirectFieldsWithDebug(
       console.debug(`[SmartPaste][KeywordScoring] Keyword winner for ${field}:`, winner);
     }
   });
+  if (debugTrace) {
+    const operational = ensureOperationalTrace(debugTrace);
+    operational.counters!.keywordCandidateHits = keywordCandidateHits;
+  }
 
   // Step 3: Type keyword inference
   if (!inferred['type']) {
@@ -513,9 +535,17 @@ export function inferIndirectFieldsWithDebug(
   const needsSubcategory = !inferred['subcategory'] && !knowns['subcategory'];
 
   if (needsCategory || needsSubcategory) {
+    timer.start('vendor_fallback');
     const vendorText = knowns.vendor || extractVendorName(text);
     const fallbackMatch = findClosestFallbackMatchWithDebug(vendorText);
+    timer.end('vendor_fallback', debugTrace);
     const fallback = fallbackMatch.match;
+    if (debugTrace) {
+      const operational = ensureOperationalTrace(debugTrace);
+      operational.counters!.vendorFallbackSize = fallbackMatch.vendorFallbackSize;
+      operational.counters!.vendorCandidatesChecked = fallbackMatch.vendorCandidatesChecked;
+      operational.counters!.localMapsConsulted!.vendorMap = true;
+    }
     if (import.meta.env.MODE === 'development') {
       // console.log('[SmartPaste] Fallback vendorText used:', vendorText);
     }
@@ -615,6 +645,7 @@ export function inferIndirectFieldsWithDebug(
   if (import.meta.env.MODE === 'development') {
     // console.log('[SmartPaste] Final inferred fields before return:', inferred);
   }
+  timer.end('suggestion_engine', debugTrace);
   return { inferred, debugByField };
 }
 
