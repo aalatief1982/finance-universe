@@ -79,6 +79,49 @@ export interface InferenceDecisionTrace {
       message: string;
     }>;
   };
+
+  operational?: {
+    rawInputLength?: number;
+    financialGatePassed?: boolean;
+    parseMode?: 'structured' | 'freeform' | 'rejected';
+    totalParseDurationMs?: number;
+    templateExactHit?: boolean;
+    similarityFallbackUsed?: boolean;
+    freeformFallbackUsed?: boolean;
+    finalConfidence?: number;
+    finalSources?: Partial<Record<'amount' | 'vendor' | 'date' | 'type' | 'category' | 'subcategory', string>>;
+    stageTimingsMs?: Partial<Record<
+      | 'normalize'
+      | 'gate'
+      | 'template_extraction'
+      | 'template_exact_lookup'
+      | 'template_similarity_fallback'
+      | 'direct_extraction'
+      | 'suggestion_engine'
+      | 'vendor_fallback'
+      | 'final_merge'
+      | 'dto_build', number>>;
+    counters?: {
+      totalTemplatesAvailable?: number;
+      templatesScanned?: number;
+      keywordBankSize?: number;
+      keywordCandidateHits?: number;
+      vendorFallbackSize?: number;
+      vendorCandidatesChecked?: number;
+      localMapsConsulted?: {
+        templateBank: boolean;
+        keywordBank: boolean;
+        vendorMap: boolean;
+        templateAccountMap: boolean;
+      };
+    };
+    winners?: Partial<Record<'type' | 'category' | 'subcategory' | 'vendor', {
+      winner?: string;
+      winnerScore?: number;
+      runnerUp?: string;
+      runnerUpScore?: number;
+    }>>;
+  };
 }
 
 export interface InferenceDTO {

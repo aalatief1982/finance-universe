@@ -40,6 +40,7 @@ import {
 } from './confidenceScoring';
 import { applyFieldPromotionOverlay } from './fieldPromotionOverlay';
 import type { InferenceDecisionTrace } from '@/types/inference';
+import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
 
 type DebugCandidate = NonNullable<InferenceDecisionTrace['fields'][number]['candidates']>[number];
 
@@ -137,7 +138,25 @@ export async function parseAndInferTransaction(
   senderHint?: string,
   smsId?: string,
 ): Promise<ParsedTransactionResult> {
-  const parsed = parseSmsMessage(rawMessage, senderHint);
+  const timer = new ParserTraceTimer();
+  const debugTrace: InferenceDecisionTrace = {
+    confidenceBreakdown: {
+      fieldScore: 0,
+      templateScore: 0,
+      keywordScore: 0,
+      overallConfidence: 0,
+    },
+    templateSelection: {
+      selected: 'structure',
+      reason: 'Pending parse.',
+      candidates: [],
+    },
+    fields: [],
+  };
+  const operational = ensureOperationalTrace(debugTrace);
+  operational.rawInputLength = rawMessage.length;
+
+  const parsed = parseSmsMessage(rawMessage, senderHint, debugTrace);
   const debugAccountInference =
     import.meta.env.VITE_DEBUG_ACCOUNT_INFERENCE === 'true';
   const inferredType =
@@ -189,6 +208,7 @@ export async function parseAndInferTransaction(
   // Build transaction from parsed fields
   const detectedVendorToken = parsed.directFields.vendor?.value || '';
 
+  timer.start('final_merge');
   const transaction: Transaction = {
     id: nanoid(),
     amount: parseFloat(parsed.directFields.amount?.value || '0'),
@@ -211,10 +231,13 @@ export async function parseAndInferTransaction(
       detectedVendorToken,
     },
   };
+  timer.end('final_merge', debugTrace);
 
   // Load inference data
   const keywordBank = loadKeywordBank();
   const templates = getAllTemplates();
+  operational.counters!.totalTemplatesAvailable = templates.length;
+  operational.counters!.localMapsConsulted!.templateBank = true;
 
   // ============================================================================
   // Template Confidence Calculation
@@ -230,9 +253,12 @@ export async function parseAndInferTransaction(
     // Exact template match
     templateMatched = 1;
   } else {
+    timer.start('template_similarity_fallback');
     // Check for slight matches - if template structure is similar to existing ones
     const currentStructure = parsed.template;
+    let scanned = 0;
     const similarTemplates = templates.filter((t) => {
+      scanned += 1;
       const similarity = getSimilarity(currentStructure, t.template);
       candidateTemplateScores.push({
         template: t.template,
@@ -244,6 +270,11 @@ export async function parseAndInferTransaction(
     if (similarTemplates.length > 0) {
       templateMatched = 0.6; // Partial confidence for slight matches
     }
+    operational.counters!.templatesScanned = scanned;
+    timer.end('template_similarity_fallback', debugTrace);
+  }
+  if (parsed.matched) {
+    operational.counters!.templatesScanned = 1;
   }
 
   // Calculate component confidence scores
@@ -502,31 +533,52 @@ export async function parseAndInferTransaction(
     ? 'template'
     : 'structure';
 
-  const debugTrace: InferenceDecisionTrace = {
-    confidenceBreakdown: {
-      fieldScore,
-      templateScore,
-      keywordScore,
-      overallConfidence: finalConfidence,
-    },
-    templateSelection: {
-      selected: origin,
-      reason: parsed.matched
-        ? 'Exact template hash match found.'
-        : templateMatched > 0
-          ? 'No exact match; selected best structure fallback based on similarity threshold.'
-          : 'No close template match; structure-only parse used.',
-      candidates: candidateTemplateScores
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, 5),
-    },
-    accountCandidates: parsed.candidates.accountCandidates,
-    fields: fieldTrace,
-    promotionOverlay: {
-      promotedFields: promotionOverlay.promotedFields,
-      evidence: promotionOverlay.evidence,
-    },
+  debugTrace.confidenceBreakdown = {
+    fieldScore,
+    templateScore,
+    keywordScore,
+    overallConfidence: finalConfidence,
   };
+  debugTrace.templateSelection = {
+    selected: origin,
+    reason: parsed.matched
+      ? 'Exact template hash match found.'
+      : templateMatched > 0
+        ? 'No exact match; selected best structure fallback based on similarity threshold.'
+        : 'No close template match; structure-only parse used.',
+    candidates: candidateTemplateScores
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, 5),
+  };
+  debugTrace.accountCandidates = parsed.candidates.accountCandidates;
+  debugTrace.fields = fieldTrace;
+  debugTrace.promotionOverlay = {
+    promotedFields: promotionOverlay.promotedFields,
+    evidence: promotionOverlay.evidence,
+  };
+
+  operational.templateExactHit = parsed.matched;
+  operational.similarityFallbackUsed = !parsed.matched && templateMatched > 0;
+  operational.freeformFallbackUsed = false;
+  operational.finalConfidence = finalConfidence;
+  operational.finalSources = {
+    amount: fieldTrace.find((f) => f.field === 'amount')?.sourceKind || fieldTrace.find((f) => f.field === 'amount')?.source,
+    vendor: fieldTrace.find((f) => f.field === 'vendor')?.sourceKind || fieldTrace.find((f) => f.field === 'vendor')?.source,
+    date: fieldTrace.find((f) => f.field === 'date')?.sourceKind || fieldTrace.find((f) => f.field === 'date')?.source,
+    type: fieldTrace.find((f) => f.field === 'type')?.sourceKind || fieldTrace.find((f) => f.field === 'type')?.source,
+    category: fieldTrace.find((f) => f.field === 'category')?.sourceKind || fieldTrace.find((f) => f.field === 'category')?.source,
+    subcategory: fieldTrace.find((f) => f.field === 'subcategory')?.sourceKind || fieldTrace.find((f) => f.field === 'subcategory')?.source,
+  };
+  (['type', 'category', 'subcategory', 'vendor'] as const).forEach((fieldName) => {
+    const field = fieldTrace.find((item) => item.field === fieldName);
+    if (!field) return;
+    operational.winners![fieldName] = {
+      winner: String(field.candidates?.[0]?.value ?? field.finalValue ?? ''),
+      winnerScore: field.candidates?.[0]?.score ?? field.score,
+      runnerUp: field.candidates?.[1] ? String(field.candidates[1].value) : undefined,
+      runnerUpScore: field.candidates?.[1]?.score,
+    };
+  });
 
   // Track template failure if matched but still failed
   // This triggers retraining flow after N failures

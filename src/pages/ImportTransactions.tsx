@@ -317,6 +317,7 @@ const ImportTransactions = () => {
       // }
     // });
 
+    const dtoBuildStart = performance.now();
     const inferenceDTO = createInferenceDTOFromDetection({
       transaction: {
         ...transaction,
@@ -337,6 +338,12 @@ const ImportTransactions = () => {
       mode: 'create',
       debugTrace,
     });
+
+    if (debugTrace) {
+      debugTrace.operational = debugTrace.operational || {};
+      debugTrace.operational.stageTimingsMs = debugTrace.operational.stageTimingsMs || {};
+      debugTrace.operational.stageTimingsMs.dto_build = Number((performance.now() - dtoBuildStart).toFixed(2));
+    }
 
     debugInferencePayload('smart-entry', inferenceDTO);
 
