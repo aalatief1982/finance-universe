@@ -692,7 +692,7 @@ function AppWrapper() {
                 title: 'New SMS transaction detected',
                 description: 'Review imported SMS transactions when you are ready.',
                 action: (
-                  <ToastAction altText="View detected SMS transactions" onClick={() => navigate('/import-transactions')}>
+                  <ToastAction altText="View detected SMS transactions" onClick={() => navigate(SMS_REVIEW_ROUTE)}>
                     View
                   </ToastAction>
                 ),
