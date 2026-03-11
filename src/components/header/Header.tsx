@@ -38,6 +38,20 @@ const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) 
 
   // Show mobile menu and settings on all pages except onboarding
   const showMobileIcons = !isAuthPage;
+
+  const handleSmsReviewOpen = React.useCallback(() => {
+    const nextState = {
+      smsReviewRefreshAt: Date.now(),
+    };
+
+    if (location.pathname === '/sms-review') {
+      navigate('/sms-review', { replace: true, state: nextState });
+      return;
+    }
+
+    navigate('/sms-review', { state: nextState });
+  }, [location.pathname, navigate]);
+
   return (
     <>
     <header
@@ -61,7 +75,7 @@ const Header = ({ className, showNavigation = true, onLogoClick }: HeaderProps) 
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/sms-review')}
+              onClick={handleSmsReviewOpen}
               className="relative ltr:ml-2 rtl:mr-2 h-11 w-11 p-0"
               title={t('nav.smsReview')}
               aria-label={t('nav.smsReview')}
