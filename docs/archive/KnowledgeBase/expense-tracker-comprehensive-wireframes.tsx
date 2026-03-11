@@ -73,8 +73,9 @@ const OnboardingScreen = ({ onNext }) => {
       content: (
         <div>
           <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Enter Mobile Number</label>
+            <label htmlFor="mobile-number" className="block text-gray-700 mb-2">Enter Mobile Number</label>
             <input 
+              id="mobile-number"
               type="tel" 
               placeholder="+1 (000) 000-0000" 
               className="w-full p-2 border rounded-lg"
@@ -154,7 +155,8 @@ const SMSProviderScreen = ({ onNext }) => {
           className="w-full p-2 border rounded-lg mb-4"
         />
         {providers.map(provider => (
-          <div 
+          <button
+            type="button"
             key={provider.id} 
             className={`p-3 border rounded-lg flex items-center justify-between ${
               selectedProviders.includes(provider.id) 
@@ -167,13 +169,18 @@ const SMSProviderScreen = ({ onNext }) => {
             {selectedProviders.includes(provider.id) && (
               <ChevronRight className="text-blue-600" size={24} />
             )}
-          </div>
+          </button>
         ))}
         <div className="mt-4 space-y-2">
-          <label className="block text-gray-700">Select Start Date</label>
-          <div className="flex items-center border rounded-lg p-2">
+          <label htmlFor="start-date" className="block text-gray-700">Select Start Date</label>
+          <div className="flex items-center border rounded-lg p-2 gap-2">
             <Calendar className="mr-2 text-gray-500" size={24} />
-            <span>Choose Date (Up to 6 months)</span>
+            <input
+              id="start-date"
+              type="date"
+              className="w-full"
+              aria-label="Choose Date (Up to 6 months)"
+            />
           </div>
         </div>
         <WireframeButton onClick={onNext}>Continue</WireframeButton>
