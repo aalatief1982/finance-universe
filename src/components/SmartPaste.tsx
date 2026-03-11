@@ -30,6 +30,7 @@ import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
 import NoTransactionMessage from './smart-paste/NoTransactionMessage';
 // parseSmsMessage removed from keystroke path — only used via parseAndInferTransaction on submit
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
+import { shouldKeepStructuredResult } from '@/lib/smart-paste-engine/structuredResultPolicy';
 import { getTemplateFailureCount } from '@/lib/smart-paste-engine/templateUtils';
 import { useNavigate } from 'react-router-dom';
 import { isFinancialTransactionMessage } from '@/lib/smart-paste-engine/messageFilter';
@@ -276,8 +277,20 @@ const SmartPaste = ({
           gate: gateDuration,
         };
 
-        // If structured path is adequate (confidence >= 0.5 or template matched), use it
-        if (conf >= 0.5 || parsed.matched) {
+        // Keep structured output when it is strong OR materially semi-structured.
+        if (shouldKeepStructuredResult({
+          transaction,
+          confidence: conf,
+          origin,
+          parsed,
+          fieldConfidences: fc,
+          parsingStatus: ps,
+          matchedCount: mc,
+          totalTemplates: tt,
+          fieldScore: fs,
+          keywordScore: ks,
+          debugTrace: dt,
+        })) {
           const normalizedFC = normalizeFieldConfidences(fc);
           setDetectedTransactions([transaction]);
           setConfidence(conf);
