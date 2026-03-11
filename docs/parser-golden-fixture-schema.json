@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xpensia.local/schemas/parser-golden-fixture.schema.json",
+  "title": "Xpensia Parser Golden Fixture",
+  "type": "object",
+  "required": ["id", "category", "rawInput", "expected"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "category": {
+      "type": "string",
+      "enum": [
+        "arabic_expense_sms",
+        "arabic_transfer_sms",
+        "arabic_income_salary_sms",
+        "english_purchase_sms",
+        "mixed_ar_en_sms",
+        "otp_or_non_financial",
+        "ambiguous_merchant_message",
+        "voice_transcript_freeform"
+      ]
+    },
+    "rawInput": { "type": "string", "minLength": 1 },
+    "expected": {
+      "type": "object",
+      "required": [
+        "financialClassification",
+        "amount",
+        "vendor",
+        "date",
+        "type",
+        "category",
+        "subcategory",
+        "primaryEvidenceSource"
+      ],
+      "properties": {
+        "financialClassification": {
+          "type": "string",
+          "enum": ["financial", "non_financial", "ambiguous"]
+        },
+        "amount": { "type": ["number", "null"] },
+        "vendor": { "type": ["string", "null"] },
+        "date": { "type": ["string", "null"] },
+        "type": {
+          "type": ["string", "null"],
+          "enum": ["expense", "income", "transfer", null]
+        },
+        "category": { "type": ["string", "null"] },
+        "subcategory": { "type": ["string", "null"] },
+        "primaryEvidenceSource": {
+          "type": "string",
+          "enum": ["structured_template", "keyword_bank", "vendor_fallback", "freeform", "none"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "object",
+      "properties": {
+        "senderHint": { "type": ["string", "null"] },
+        "flow": { "type": "string", "enum": ["smart_entry", "sms_review", "sms_inbox", "voice"] }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
