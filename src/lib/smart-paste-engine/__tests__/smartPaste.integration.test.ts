@@ -117,6 +117,26 @@ describe('Smart Paste Integration', () => {
       expect(typeField?.tier).not.toBe('needs_review');
     });
 
+
+    it('extracts core fields from dual-currency international SMS even when confidence is partial', async () => {
+      const sms = `شراء عبر الانترنت
+باستخدام بطاقة الأول VISA My Card الائتمانية (0275) لدى GITHUB, INC. بمبلغ USD 10.00 في UNITED STATES
+سعر الصرف: 3.75200
+المبلغ بالريال: 37.52
+الرسوم الدولية بالريال: 0.86
+المبلغ الإجمالي بالريال: 38.38
+تاريخ: 2026-02-27 22:45:40
+الرصيد: 170.07 ريال`;
+
+      const result = await parseAndInferTransaction(sms, 'ALAWAL');
+
+      expect(['partial', 'failed']).toContain(result.parsingStatus);
+      expect(result.transaction.amount).toBe(10);
+      expect(result.transaction.currency).toBe('USD');
+      expect(result.transaction.vendor.toLowerCase()).toContain('github');
+      expect(result.confidence).toBeLessThan(0.5);
+    });
+
     it('should infer income type for salary/credit messages', async () => {
       const incomeSms = 'Salary credited SAR 5000 to your account';
 
