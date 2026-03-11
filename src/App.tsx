@@ -529,7 +529,16 @@ function AppWrapper() {
           source: pendingRoute?.source ?? null,
           pathname: location.pathname,
         });
-        if (pendingRoute?.route === IMPORT_ROUTE) {
+        if (pendingRoute?.route === SMS_REVIEW_ROUTE) {
+          if (pendingRoute?.source === NOTIFICATION_SOURCE_SMS) {
+            markNotificationTapFlow('resume_pending_route', pendingRoute.source);
+          }
+          console.log('[SMS_NOTIFICATION_FLOW] routing to sms-review from pending route (resume/active)', {
+            fromPath: location.pathname,
+            source: pendingRoute?.source ?? null,
+          });
+          navigateRef.current(SMS_REVIEW_ROUTE);
+        } else if (pendingRoute?.route === IMPORT_ROUTE) {
           if (!SMS_AUTO_IMPORT_ENABLED) {
             console.log('[SMS_IMPORT] disabled -> skipping native pending import route', {
               pathname: location.pathname,
