@@ -938,6 +938,18 @@ function AppRoutes() {
           return;
         }
 
+        if (pendingRoute?.route === SMS_REVIEW_ROUTE) {
+          if (pendingRoute?.source === NOTIFICATION_SOURCE_SMS) {
+            markNotificationTapFlow('cold_start_pending_route', pendingRoute.source);
+          }
+          setPendingLaunchRoute(SMS_REVIEW_ROUTE);
+          console.log('[SMS_NOTIFICATION_FLOW] startup route selected', {
+            finalRoute: SMS_REVIEW_ROUTE,
+            source: pendingRoute?.source ?? null,
+          });
+          return;
+        }
+
         if (pendingRoute?.route === IMPORT_ROUTE && SMS_AUTO_IMPORT_ENABLED) {
           if (pendingRoute?.source === NOTIFICATION_SOURCE_SMS) {
             markNotificationTapFlow('cold_start_pending_route', pendingRoute.source);

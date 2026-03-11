@@ -94,7 +94,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                     .setPackage(context.getPackageName());
         }
         openIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        String targetRoute = "/import-transactions";
+        String targetRoute = "/sms-review";
         String targetSource = "sms_notification";
         openIntent.putExtra("xpensia_open_route", targetRoute);
         openIntent.putExtra("xpensia_open_source", targetSource);
