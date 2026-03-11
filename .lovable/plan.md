@@ -1,48 +1,45 @@
-## Plan: Fix Freeform Provenance Flattening
+## Plan: Documentation Rebuild
 
 ### Status: ✅ Implemented
 
 ### Summary
-Aligned `FinancialSmsClassifier.java` (native Android) with `messageFilter.ts` (JS) to use the same triple-gate logic (keyword + amount + date), expanded keywords (27), fixed amount regex for Arabic-prefixed currency codes, added OTP exclusion, and added a keyword sync bridge from localStorage to SharedPreferences.
+Rebuilt all highlighted documentation into 8 canonical files under `docs/current/`, archived 15+ deprecated files to `docs/archive/`, fixed plugin build error, and cleaned up empty/placeholder files.
 
-### Root Cause (Original Bug)
-The SMS `بـSAR 4` failed the native amount regex because `\b` word boundaries don't work reliably with Arabic Tatweel (U+0640) directly preceding `SAR` on some Android regex engines.
+### New Documentation Structure
 
-### Changes Made
-
-| File | Change |
-|---|---|
-| `src/utils/syncKeywordsToNative.ts` | **New** — reads `xpensia_type_keywords` from localStorage, flattens to string array, writes to Capacitor Preferences (`xpensia_native_financial_keywords`) |
-| `FinancialSmsClassifier.java` | **Rewritten** — triple-gate (keyword+amount+date), reads dynamic keywords from SharedPreferences with fallback to 27 hardcoded, fixed amount regex (no `\b`), OTP exclusion, NFC normalization, `Log.d` diagnostics |
-| `BackgroundSmsListenerPlugin.java` | Updated `handleIncomingSms` to pass `context` to classifier |
-| `messageFilter.ts` | Added OTP exclusion keywords before financial gates |
-| `initializeXpensiaStorageDefaults.ts` | Calls `syncKeywordsToNative()` after keyword initialization |
-| `KeywordBankManager.tsx` | Calls `syncKeywordsToNative()` after save/delete |
-
-### Architecture After Changes
-
-```text
-App startup / keyword edit
-  → localStorage: xpensia_type_keywords
-  → Preferences.set: xpensia_native_financial_keywords (sync bridge)
-        ↓
-  SharedPreferences (CapacitorStorage)
-        ↓
-SMS arrives → BroadcastReceiver
-  → FinancialSmsClassifier.isFinancialTransactionMessage(context, body)
-     0. OTP check → reject if OTP keywords found
-     1. Load keywords from SharedPreferences (fallback: hardcoded 27)
-     2. Gate 1: keyword match
-     3. Gate 2: amount match (fixed regex, no \b)
-     4. Gate 3: date match (ported from JS)
-     → persist + notify
+```
+docs/current/
+├── 01-product-requirements.md    — PRD reflecting current features
+├── 02-ux-screens-and-flows.md    — IA map, navigation, Mermaid workflows
+├── 03-technical-architecture.md  — Tech stack, parsing pipeline, SMS ingestion, learning, storage
+├── 04-test-strategy.md           — Test levels, critical areas, regression strategy
+├── 05-test-scripts.md            — 15 manual QA test scripts for all active screens
+├── 06-screen-inventory.md        — Route map with per-screen details
+├── 07-user-guide.md              — End-user guide with screenshot/video placeholders
+└── 08-gap-tracker.md             — Undocumented systems, dormant features, tech debt
 ```
 
-### OTP Keywords (shared between Java & JS)
-`otp`, `verification code`, `رمز التحقق`, `رمز التفعيل`, `one-time`, `one time password`, `passcode`, `pin code`, `security code`, `auth code`, `كلمة المرور`, `رمز التأكيد`
+### Archived Files
+All highlighted files from `docs/` (demand-pack, phase 2-6, Test_Script_Document) and `KnowledgeBase/` (PRD.docx, wireframes, roadmaps, design doc) moved to `docs/archive/`.
 
-### What Was NOT Changed
-- SMS persistence, notification channel, intent routing
-- Template bank, keyword bank, vendor map logic
-- Freeform parser
-- No new permissions required
+### Deleted Files
+- `KnowledgeBase/updated prd` (empty placeholder)
+- `KnowledgeBase/test.txt` (test file)
+
+### Build Fix
+Created dist/ stub files for both `capacitor-background-sms-listener` and `capacitor-sms-reader` plugins so `bun install` resolves without running build-plugins.sh first.
+
+### Gaps Covered in 08-gap-tracker.md
+- Inference DTO pipeline (undocumented)
+- SMS queue two-layer architecture (undocumented)
+- Learning system internals (undocumented)
+- Confidence/field scoring thresholds (undocumented)
+- Template vs freeform parsing distinction (undocumented)
+- Dormant features behind ImportDisabledGuard
+- Legacy/dead code (wireframes, mock implementations)
+- Platform parity gaps (web vs Android)
+
+### Visual Assets Needed (Not Yet Created)
+- App screenshots for each screen (marked in 07-user-guide.md)
+- Video recordings for: onboarding, smart entry paste, voice entry, SMS detection flow, SMS review, budget flow, share sheet
+- Mermaid diagrams render from markdown in 02-ux-screens-and-flows.md
