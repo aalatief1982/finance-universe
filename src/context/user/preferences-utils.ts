@@ -1,6 +1,5 @@
 
 import { User } from './types';
-import { toast } from '@/hooks/use-toast';
 
 /**
  * Update user preferences
@@ -21,11 +20,6 @@ export const updateUserPreferences = (
       ...user.preferences,
       ...preferences
     }
-  });
-  
-  toast({
-    title: "Profile updated",
-    description: "Your profile has been saved.",
   });
 };
 
@@ -52,11 +46,6 @@ export const updateDisplayOptions = (
       }
     }
   });
-  
-  toast({
-    title: "Profile updated",
-    description: "Your profile has been saved.",
-  });
 };
 
 /**
@@ -82,11 +71,6 @@ export const updatePrivacySettings = (
       }
     }
   });
-  
-  toast({
-    title: "Profile updated",
-    description: "Your profile has been saved.",
-  });
 };
 
 /**
@@ -111,10 +95,5 @@ export const updateDataManagement = (
         ...dataManagement
       }
     }
-  });
-  
-  toast({
-    title: "Profile updated",
-    description: "Your profile has been saved.",
   });
 };
