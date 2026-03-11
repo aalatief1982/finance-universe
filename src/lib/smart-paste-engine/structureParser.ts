@@ -43,16 +43,23 @@ import { getPreferredFromAccount } from './templateHashAccountMap';
 export function normalizeDate(dateStr: string): string | undefined {
   if (!dateStr) return undefined;
 
-  // Match short yy-mm-dd or y-m-d formats like 25-3-26
-  const match = dateStr.match(/^(\d{2})-(\d{1,2})-(\d{1,2})$/);
-  if (match) {
-    const [_, yy, mm, dd] = match;
+  // Match short DD-MM-YY or D-M-YY dash formats like 25-3-26
+  const dashMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{2})$/);
+  if (dashMatch) {
+    const [, dd, mm, yy] = dashMatch;
     const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
-    const iso = new Date(`${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`).toISOString();
-    return iso.split('T')[0]; // Only return yyyy-MM-dd
+    return `${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   }
 
-  // Fallback to native parsing
+  // Match short DD/MM/YY or D/M/YY slash formats like 11/3/26
+  const slashMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (slashMatch) {
+    const [, dd, mm, yy] = slashMatch;
+    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
+    return `${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  }
+
+  // Fallback to native parsing (safe for ISO and full-year formats)
   const parsed = new Date(dateStr);
   return isNaN(parsed.getTime()) ? undefined : parsed.toISOString().split('T')[0];
 }
