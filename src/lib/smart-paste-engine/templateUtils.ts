@@ -445,6 +445,10 @@ export function extractTemplateStructure(
           console.debug('[extractTemplateStructure] amount candidates:', candidates.map(c => ({
             amount: c.amount, currency: c.currency, score: c.score.toFixed(2),
           })));
+          if (candidates.length > 1) {
+            const runner = candidates[1];
+            console.debug('[extractTemplateStructure] runner-up:', runner.amount, runner.currency, runner.score.toFixed(2));
+          }
         }
 
         const winner = candidates[0];

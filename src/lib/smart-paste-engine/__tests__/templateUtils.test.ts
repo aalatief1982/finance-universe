@@ -128,5 +128,12 @@ describe('templateUtils', () => {
       const result = extractTemplateStructure(msg);
       expect(result.placeholders.amount).not.toBe('3.75');
     });
+
+    it('picks foreign currency when SAR conversion appears first', () => {
+      const msg = 'المبلغ المحول: 375.00 SAR\nعملية شراء بمبلغ 100.00 USD لدى NETFLIX';
+      const result = extractTemplateStructure(msg);
+      expect(result.placeholders.amount).toBe('100.00');
+      expect(result.placeholders.currency).toBe('USD');
+    });
   });
 });
