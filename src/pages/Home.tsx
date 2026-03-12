@@ -253,7 +253,7 @@ const Home = () => {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="mb-4 border-b w-full justify-start">
+                <TabsList className="mb-4 border-b flex w-full justify-start">
                   <TabsTrigger
                     value="trends"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
