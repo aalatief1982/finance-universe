@@ -541,12 +541,14 @@ const SmartPaste = ({
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="message">{t('smartEntry.label')}</Label>
-            <MicButton
-              isListening={isListening}
-              isSupported={micSupported}
-              onClick={startListening}
-              size="sm"
-            />
+            {isAdminMode() && (
+              <MicButton
+                isListening={isListening}
+                isSupported={micSupported}
+                onClick={startListening}
+                size="sm"
+              />
+            )}
           </div>
           <Textarea
             id="message"

@@ -418,15 +418,17 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-[7.5rem] right-4 z-40 md:hidden">
-        <MicButton
-          isListening={isListening}
-          isSupported={micSupported}
-          onClick={startListening}
-          size="icon"
-          className="h-12 w-12 rounded-full shadow-lg"
-        />
-      </div>
+      {isAdminMode() && (
+        <div className="fixed bottom-[7.5rem] right-4 z-40 md:hidden">
+          <MicButton
+            isListening={isListening}
+            isSupported={micSupported}
+            onClick={startListening}
+            size="icon"
+            className="h-12 w-12 rounded-full shadow-lg"
+          />
+        </div>
+      )}
       <ResponsiveFAB onClick={handleAddTransaction} />
     </Layout>
   );
