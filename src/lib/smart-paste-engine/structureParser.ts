@@ -45,6 +45,80 @@ import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
 export function normalizeDate(dateStr: string): string | undefined {
   if (!dateStr) return undefined;
 
+  const shortNumericDateMatch = dateStr
+    .trim()
+    .match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{1,2})(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?$/);
+  if (shortNumericDateMatch) {
+    const [, part1, part2, part3] = shortNumericDateMatch;
+    const p1 = parseInt(part1, 10);
+    const p2 = parseInt(part2, 10);
+    const p3 = parseInt(part3, 10);
+
+    const toFullYear = (yy: number): number => (yy < 50 ? 2000 + yy : 1900 + yy);
+    const toIsoIfValid = (year: number, month: number, day: number): string | undefined => {
+      const candidate = new Date(Date.UTC(year, month - 1, day));
+      const isExact =
+        candidate.getUTCFullYear() === year &&
+        candidate.getUTCMonth() === month - 1 &&
+        candidate.getUTCDate() === day;
+      return isExact ? candidate.toISOString().slice(0, 10) : undefined;
+    };
+
+    // Preserve previous behavior for clearly non-ambiguous values.
+    const dmyIso = toIsoIfValid(toFullYear(p3), p2, p1);
+    const mdyIso = toIsoIfValid(toFullYear(p3), p1, p2);
+    const ymdIso = toIsoIfValid(toFullYear(p1), p2, p3);
+    const validCandidates = [
+      { iso: ymdIso }, // yy/M/d
+      { iso: dmyIso }, // d/M/yy
+      { iso: mdyIso }, // M/d/yy
+    ]
+      .filter((candidate): candidate is { iso: string } => Boolean(candidate.iso))
+      .map((candidate) => ({
+        iso: candidate.iso,
+        parsedAt: new Date(`${candidate.iso}T00:00:00.000Z`).getTime(),
+      }));
+
+    if (validCandidates.length > 1) {
+      const anchorHints = globalThis as {
+        __SMART_PASTE_SMS_RECEIVED_AT__?: string;
+        __SMART_PASTE_TX_CREATED_AT__?: string;
+      };
+      const injectedAnchor =
+        anchorHints.__SMART_PASTE_SMS_RECEIVED_AT__ ||
+        anchorHints.__SMART_PASTE_TX_CREATED_AT__;
+      const fallbackAnchor = new Date();
+      const parsedAnchor = injectedAnchor ? new Date(injectedAnchor) : fallbackAnchor;
+      const anchorTime = Number.isNaN(parsedAnchor.getTime())
+        ? fallbackAnchor.getTime()
+        : parsedAnchor.getTime();
+
+      let bestCandidate: string | undefined;
+      let bestScore = Number.NEGATIVE_INFINITY;
+
+      validCandidates.forEach(({ iso, parsedAt }) => {
+        const diffDays = Math.abs(parsedAt - anchorTime) / (24 * 60 * 60 * 1000);
+        const isFuture = parsedAt > anchorTime;
+        const ageDays = (anchorTime - parsedAt) / (24 * 60 * 60 * 1000);
+
+        let score = -diffDays;
+        if (ageDays > 365 * 5) score -= 100;
+        if (ageDays > 365 * 10) score -= 250;
+        if (isFuture) score -= 100;
+        if (isFuture && diffDays > 14) score -= 200;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestCandidate = iso;
+        }
+      });
+
+      if (bestCandidate) return bestCandidate;
+    }
+
+    if (dmyIso) return dmyIso;
+  }
+
   // Match short DD-MM-YY or D-M-YY dash formats like 25-3-26
   const dashMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{2})$/);
   if (dashMatch) {
