@@ -18,6 +18,7 @@
  */
 
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CategorySummary } from '@/types/transaction';
@@ -31,13 +32,14 @@ interface CategoryBreakdownChartProps {
 
 
 const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   const chartData = data.slice(0, 8); // Limit to 8 categories for better visualization
   
   return (
     <div className="h-[270px] w-full">
       {data.length === 0 ? (
         <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-          No data available
+          {t('home.noDataYet')}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height="100%">

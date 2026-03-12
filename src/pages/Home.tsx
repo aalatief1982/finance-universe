@@ -247,13 +247,13 @@ const Home = () => {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
-            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
+            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow text-start">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="mb-4 border-b">
+                <TabsList className="mb-4 border-b w-full justify-start">
                   <TabsTrigger
                     value="trends"
                     className="data-[state=active]:border-b-2 data-[state=active]:border-primary font-medium transition-colors"
@@ -281,14 +281,14 @@ const Home = () => {
                 </TabsList>
 
                 <TabsContent value="trends" className="space-y-2">
-                  <h2 className="text-lg font-semibold">{t('home.spendingTrends')}</h2>
+                  <h2 className="text-lg font-semibold text-start">{t('home.spendingTrends')}</h2>
                   <ChartErrorBoundary chartName="Spending Trends">
                     <TimelineChart data={timelineData} />
                   </ChartErrorBoundary>
                 </TabsContent>
 
                 <TabsContent value="net" className="space-y-2">
-                  <h2 className="text-lg font-semibold">{t('home.netGrowthSummary')}</h2>
+                  <h2 className="text-lg font-semibold text-start">{t('home.netGrowthSummary')}</h2>
                   <ChartErrorBoundary chartName="Net Balance">
                     <NetBalanceChart data={timelineData} />
                   </ChartErrorBoundary>

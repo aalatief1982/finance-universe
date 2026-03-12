@@ -17,6 +17,7 @@
  * - [ ] Component renders without crashing
  */
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   BarChart,
   Bar,
@@ -36,6 +37,7 @@ interface NetBalanceChartProps {
 }
 
 const NetBalanceChart: React.FC<NetBalanceChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('default', { month: 'short', day: '2-digit' });
@@ -45,7 +47,7 @@ const NetBalanceChart: React.FC<NetBalanceChartProps> = ({ data }) => {
     <div className="h-[270px] min-h-[270px] w-full">
       {data.length === 0 ? (
         <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-          No data available
+          {t('home.noDataYet')}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height="100%">
