@@ -57,7 +57,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AnalyticsService } from "@/services/AnalyticsService";
 import { DatePicker } from "@/components/ui/date-picker";
 import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
-import { formatCurrency, formatDisplayDate } from "@/lib/formatters";
+import { formatCurrency } from "@/lib/formatters";
 import { getDefaultCurrency, getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getHomeFilteredTransactions, getHomeSummary, HomeDateRange } from "@/utils/home-transactions";
@@ -139,7 +139,13 @@ const Home = () => {
     return txn.type === "expense" ? `${base} (${t('transaction.expenseLabel')})` : base;
   };
 
-  const formatTxnDate = (dateStr: string) => formatDisplayDate(dateStr);
+  const formatTxnDate = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), "EEE, MMM dd");
+    } catch {
+      return "—";
+    }
+  };
 
   const analyticsTransactions = React.useMemo(() => {
     return filteredTransactions.map(({ effectiveAmount, isUnconverted, ...transaction }) => transaction);

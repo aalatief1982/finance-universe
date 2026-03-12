@@ -42,97 +42,23 @@ import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
  * - Handles short yy-mm-dd variants safely
  * - Falls back to Date parsing when format is unknown
  */
-/**
- * Expand a 2-digit year: <50 → 20xx, >=50 → 19xx
- */
-function expandYear(yy: number): number {
-  return yy < 50 ? 2000 + yy : 1900 + yy;
-}
-
-/**
- * Check if a date triplet (year, month, day) forms a valid calendar date.
- */
-function isValidDate(year: number, month: number, day: number): boolean {
-  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
-  const d = new Date(year, month - 1, day);
-  return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day;
-}
-
-/**
- * Score a candidate date by proximity to an anchor.
- * Lower score = better. Heavily penalizes dates >1yr in the past or >7d in the future.
- */
-function scoreCandidate(candidateIso: string, anchorMs: number): number {
-  const candidateMs = new Date(candidateIso).getTime();
-  const diffDays = (candidateMs - anchorMs) / (1000 * 60 * 60 * 24);
-
-  // Future dates beyond 30 days: heavily penalized
-  if (diffDays > 30) return 1e9 + diffDays;
-  // Past dates beyond ~400 days: heavily penalized
-  if (diffDays < -400) return 1e8 + Math.abs(diffDays);
-  // Otherwise: absolute distance in days
-  return Math.abs(diffDays);
-}
-
-/**
- * Normalize a date string into ISO (yyyy-MM-dd) format.
- * For ambiguous short-numeric dates (A/B/C or A-B-C where one part is 2-digit year),
- * generates multiple candidates and picks the closest to anchorDate.
- *
- * @param dateStr - raw date string
- * @param anchorDate - reference timestamp in ms (default: Date.now())
- */
-export function normalizeDate(dateStr: string, anchorDate?: number): string | undefined {
+export function normalizeDate(dateStr: string): string | undefined {
   if (!dateStr) return undefined;
 
-  const anchor = anchorDate ?? Date.now();
-  const sep = dateStr.includes('/') ? '/' : dateStr.includes('-') ? '-' : null;
-
-  // Match A<sep>B<sep>C where all parts are 1-2 digits (ambiguous short date)
-  const shortMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/);
-  if (shortMatch && sep) {
-    const [a, b, c] = [parseInt(shortMatch[1], 10), parseInt(shortMatch[2], 10), parseInt(shortMatch[3], 10)];
-
-    const candidates: { iso: string; score: number }[] = [];
-
-    // Candidate 1: DD/MM/YY
-    const y1 = expandYear(c);
-    if (isValidDate(y1, b, a)) {
-      const iso = `${y1}-${String(b).padStart(2, '0')}-${String(a).padStart(2, '0')}`;
-      candidates.push({ iso, score: scoreCandidate(iso, anchor) });
-    }
-
-    // Candidate 2: YY/M/DD
-    const y2 = expandYear(a);
-    if (isValidDate(y2, b, c)) {
-      const iso = `${y2}-${String(b).padStart(2, '0')}-${String(c).padStart(2, '0')}`;
-      candidates.push({ iso, score: scoreCandidate(iso, anchor) });
-    }
-
-    // Candidate 3: MM/DD/YY
-    const y3 = expandYear(c);
-    if (isValidDate(y3, a, b)) {
-      const iso = `${y3}-${String(a).padStart(2, '0')}-${String(b).padStart(2, '0')}`;
-      candidates.push({ iso, score: scoreCandidate(iso, anchor) });
-    }
-
-    if (candidates.length > 0) {
-      candidates.sort((x, y) => x.score - y.score);
-      if (import.meta.env.MODE === 'development' && candidates.length > 1) {
-        console.log('[normalizeDate] Ambiguous date candidates:', dateStr, candidates);
-      }
-      return candidates[0].iso;
-    }
+  // Match short DD-MM-YY or D-M-YY dash formats like 25-3-26
+  const dashMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{2})$/);
+  if (dashMatch) {
+    const [, dd, mm, yy] = dashMatch;
+    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
+    return `${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   }
 
-  // Match A<sep>B<sep>C where C is 4-digit year (unambiguous DD/MM/YYYY)
-  const longMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if (longMatch) {
-    const [, dd, mm, yyyy] = longMatch;
-    const y = parseInt(yyyy, 10), m = parseInt(mm, 10), d = parseInt(dd, 10);
-    if (isValidDate(y, m, d)) {
-      return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
-    }
+  // Match short DD/MM/YY or D/M/YY slash formats like 11/3/26
+  const slashMatch = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (slashMatch) {
+    const [, dd, mm, yy] = slashMatch;
+    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
+    return `${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
   }
 
   // Fallback to native parsing (safe for ISO and full-year formats)
