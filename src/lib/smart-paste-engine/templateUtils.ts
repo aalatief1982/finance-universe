@@ -408,17 +408,31 @@ export function extractTemplateStructure(
       const fxRateKeywords = /(?:سعر الصرف|exchange rate|سعر التحويل|conversion rate)/i;
       const convertedKeywords = /(?:المبلغ المحول|converted|المحول|equivalent)/i;
 
+      const isMultiCurrency = new Set(candidates.map(c => c.currency)).size > 1;
+
       for (let i = 0; i < candidates.length; i++) {
         const c = candidates[i];
         const ctxStart = Math.max(0, c.index - CONTEXT_WINDOW);
         const context = message.slice(ctxStart, c.index);
 
-        if (txnKeywords.test(context)) c.score += 2;
+        const nearTxnKeyword = txnKeywords.test(context);
+        if (nearTxnKeyword) c.score += 2;
         if (feeKeywords.test(context)) c.score -= 3;
         if (totalKeywords.test(context)) c.score -= 1;
         if (fxRateKeywords.test(context)) c.score -= 5;
-        if (convertedKeywords.test(context)) c.score += 1;
-        if (c.currency === 'SAR') c.score += 0.5;
+
+        const nearConverted = convertedKeywords.test(context);
+        if (nearConverted) {
+          // In multi-currency SMS, converted amount is secondary metadata
+          c.score += isMultiCurrency ? -1 : 1;
+        }
+
+        // SAR bonus only for single-currency messages (preserves simple domestic SMS)
+        if (c.currency === 'SAR' && !isMultiCurrency) c.score += 0.5;
+
+        // Foreign purchase boost: non-SAR candidate near txn keyword in multi-currency context
+        if (isMultiCurrency && c.currency !== 'SAR' && nearTxnKeyword) c.score += 1;
+
         // Position tiebreaker: first match gets tiny bonus (preserves simple-SMS behavior)
         c.score += 0.1 * (1 - i / Math.max(candidates.length, 1));
       }
