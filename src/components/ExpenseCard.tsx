@@ -19,7 +19,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDisplayDate } from '@/lib/formatters';
 import { motion } from 'framer-motion';
 import { Calendar, Tag } from 'lucide-react';
 
@@ -64,7 +64,7 @@ const ExpenseCard = ({
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="flex items-center gap-0.5">
               <Calendar size={10} />
-              {date}
+              {formatDisplayDate(date)}
             </span>
             <span className="flex items-center gap-0.5">
               <Tag size={10} />

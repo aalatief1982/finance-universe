@@ -39,6 +39,36 @@ export const formatDate = (dateString: string): string => {
   }).format(date);
 };
 
+const ISO_DATE_PREFIX_REGEX = /^\d{4}-\d{2}-\d{2}(?:$|T)/;
+const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export const formatDisplayDate = (dateString: string): string => {
+  if (!ISO_DATE_PREFIX_REGEX.test(dateString)) {
+    return dateString;
+  }
+
+  const [yearStr, monthStr, dayStr] = dateString.slice(0, 10).split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+    return dateString;
+  }
+
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    Number.isNaN(utcDate.getTime()) ||
+    utcDate.getUTCFullYear() !== year ||
+    utcDate.getUTCMonth() + 1 !== month ||
+    utcDate.getUTCDate() !== day
+  ) {
+    return dateString;
+  }
+
+  return `${String(day).padStart(2, '0')}-${SHORT_MONTHS[month - 1]}-${year}`;
+};
+
 export const formatShortDate = (dateString: string): string => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {

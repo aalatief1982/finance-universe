@@ -34,6 +34,7 @@ import { TransactionType } from '@/types/transaction';
 import { getCurrencySymbol } from '@/utils/format-utils';
 import { useFxEstimate } from '@/hooks/useFxEstimate';
 import { FxConvertedEstimate, UnconvertedBadge } from '@/components/fx';
+import { formatDisplayDate } from '@/lib/formatters';
 
 export interface SmsTransaction {
   id: string;
@@ -254,7 +255,7 @@ const SmsTransactionConfirmation: React.FC<SmsTransactionConfirmationProps> = ({
             <p className={`font-semibold ${getTransactionTypeColor(transaction.type)}`}>
               {formatAmount(transaction.amount, transaction.currency)}
             </p>
-            <p className="text-xs text-muted-foreground text-right">{transaction.date}</p>
+            <p className="text-xs text-muted-foreground text-right">{formatDisplayDate(transaction.date)}</p>
             {transaction.providerDetails?.balanceAfterTransaction !== undefined && (
               <p className="text-xs text-muted-foreground text-right">
                 Balance: {formatAmount(transaction.providerDetails.balanceAfterTransaction, transaction.currency)}

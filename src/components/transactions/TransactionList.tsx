@@ -20,11 +20,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { useOptionalTransactions } from '@/context/TransactionContext';
 import { Transaction } from '@/types/transaction';
 import { formatCurrency } from '@/utils/format-utils';
+import { formatDisplayDate } from '@/lib/formatters';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { format } from 'date-fns';
 import { TYPE_ICON_MAP } from '@/constants/typeIconMap';
 import CategoryIcon from '@/components/CategoryIcon';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -165,12 +165,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   };
 
   const renderDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return format(date, 'MMM d, yyyy');
-    } catch (e) {
-      return dateString;
-    }
+    return formatDisplayDate(dateString);
   };
 
   const handleConfirmDelete = () => {

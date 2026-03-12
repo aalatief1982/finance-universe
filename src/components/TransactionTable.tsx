@@ -18,9 +18,8 @@
  */
 
 import React from 'react';
-import { format } from 'date-fns';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, formatDisplayDate } from '@/lib/formatters';
 import { Transaction } from '@/types/transaction';
 import {
   Table,
@@ -53,11 +52,7 @@ const TransactionTable = ({
   };
 
   const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch (e) {
-      return dateString;
-    }
+    return formatDisplayDate(dateString);
   };
 
   return (
