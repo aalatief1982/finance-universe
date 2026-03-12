@@ -96,11 +96,11 @@ describe('templateUtils', () => {
   // ---- Multi-amount candidate scoring tests ----
 
   describe('extractTemplateStructure multi-amount scoring', () => {
-    it('picks SAR converted amount over foreign USD in dual-currency SMS', () => {
+    it('picks original foreign currency amount over SAR conversion in dual-currency SMS', () => {
       const msg = 'عملية شراء دولية بمبلغ 50.00 USD لدى AMAZON في 2026-03-10\nالمبلغ المحول: 187.50 SAR\nسعر الصرف: 3.75\nرسوم دولية: 5.63 SAR\nالإجمالي: 193.13 SAR';
       const result = extractTemplateStructure(msg);
-      expect(result.placeholders.amount).toBe('187.50');
-      expect(result.placeholders.currency).toBe('SAR');
+      expect(result.placeholders.amount).toBe('50.00');
+      expect(result.placeholders.currency).toBe('USD');
     });
 
     it('simple single-amount SMS still works (no regression)', () => {
