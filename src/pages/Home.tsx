@@ -281,7 +281,7 @@ const Home = () => {
                 </TabsList>
 
                 <TabsContent value="trends" className="space-y-2">
-                  <h2 className="text-lg font-semibold">{t('home.spendingTrends')}</h2>
+                  <h2 className="text-lg font-semibold text-start">{t('home.spendingTrends')}</h2>
                   <ChartErrorBoundary chartName="Spending Trends">
                     <TimelineChart data={timelineData} />
                   </ChartErrorBoundary>
