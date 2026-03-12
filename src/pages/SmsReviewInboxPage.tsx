@@ -74,7 +74,12 @@ const SmsReviewInboxPage = () => {
     const enriched = await Promise.all(
       items.map(async (item) => {
         try {
-          const dto = await buildInferenceDTO({ rawMessage: item.body, senderHint: item.sender });
+          const dto = await buildInferenceDTO({
+            rawMessage: item.body,
+            senderHint: item.sender,
+            anchorDate: item.receivedAt,
+            source: 'sms',
+          });
           return { item, dto, loading: false };
         } catch {
           return { item, dto: null, loading: false };
@@ -101,7 +106,12 @@ const SmsReviewInboxPage = () => {
         hasCachedDto: Boolean(cachedDto),
       });
 
-      const dto = cachedDto ?? await buildInferenceDTO({ rawMessage: item.body, senderHint: item.sender });
+      const dto = cachedDto ?? await buildInferenceDTO({
+        rawMessage: item.body,
+        senderHint: item.sender,
+        anchorDate: item.receivedAt,
+        source: 'sms',
+      });
 
       if (!dto) {
         console.warn(`${DEBUG_SMS_REVIEW_PREFIX} Early return: DTO missing`, { itemId: item.id });

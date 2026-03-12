@@ -26,9 +26,9 @@
  * - @review-risk: Template failure tracking on matched+failed
  */
 
-import { Transaction, TransactionType } from '@/types/transaction';
+import { Transaction, TransactionSource, TransactionType } from '@/types/transaction';
 import { nanoid } from 'nanoid';
-import { parseSmsMessage } from './structureParser';
+import { parseSmsMessage, type ParseContext } from './structureParser';
 import { loadKeywordBank } from './keywordBankUtils';
 import { getAllTemplates, incrementTemplateFailure } from './templateUtils';
 import { logParsingFailure } from '@/utils/parsingLogger';
@@ -43,6 +43,18 @@ import type { InferenceDecisionTrace } from '@/types/inference';
 import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
 
 type DebugCandidate = NonNullable<InferenceDecisionTrace['fields'][number]['candidates']>[number];
+
+
+type ParseAndInferContext = Omit<ParseContext, 'source'> & {
+  source?: TransactionSource | 'shared-text' | 'manual';
+};
+
+const resolvePlausibilityProfile = (context?: ParseAndInferContext): 'sms_strict' | 'manual_wide' => {
+  if (context?.plausibilityProfile) return context.plausibilityProfile;
+  const strictSources = new Set<TransactionSource | 'shared-text' | 'manual'>(['sms', 'sms-import', 'shared-text']);
+  return context?.source && strictSources.has(context.source) ? 'sms_strict' : 'manual_wide';
+};
+
 
 // ============================================================================
 // SECTION: String Similarity Utilities
@@ -137,6 +149,7 @@ export async function parseAndInferTransaction(
   rawMessage: string,
   senderHint?: string,
   smsId?: string,
+  context?: ParseAndInferContext,
 ): Promise<ParsedTransactionResult> {
   const timer = new ParserTraceTimer();
   const debugTrace: InferenceDecisionTrace = {
@@ -156,7 +169,24 @@ export async function parseAndInferTransaction(
   const operational = ensureOperationalTrace(debugTrace);
   operational.rawInputLength = rawMessage.length;
 
-  const parsed = parseSmsMessage(rawMessage, senderHint, debugTrace);
+  const parserContext: ParseContext | undefined = context
+    ? {
+        anchorDate: context.anchorDate,
+        plausibilityProfile: context.plausibilityProfile,
+        source:
+          context.source === 'sms' ||
+          context.source === 'sms-import' ||
+          context.source === 'smart-paste' ||
+          context.source === 'smart-paste-freeform' ||
+          context.source === 'voice-freeform' ||
+          context.source === 'shared-text' ||
+          context.source === 'manual'
+            ? context.source
+            : undefined,
+      }
+    : undefined;
+
+  const parsed = parseSmsMessage(rawMessage, senderHint, debugTrace, parserContext);
   const debugAccountInference =
     import.meta.env.VITE_DEBUG_ACCOUNT_INFERENCE === 'true';
   const inferredType =
@@ -287,6 +317,8 @@ export async function parseAndInferTransaction(
     templateScore,
     keywordScore,
   );
+
+  const plausibilityProfile = resolvePlausibilityProfile(context);
 
   // Build field-level confidence map
   const fields = [
@@ -521,11 +553,38 @@ export async function parseAndInferTransaction(
     };
   });
 
+  const topDateCandidate = fieldTrace.find((field) => field.field === 'date')?.candidates?.[0];
+  const runnerUpDateCandidate = fieldTrace.find((field) => field.field === 'date')?.candidates?.[1];
+  const isWeakOrAmbiguousDateCandidate = Boolean(
+    topDateCandidate && (
+      topDateCandidate.score < 0.6 ||
+      (typeof runnerUpDateCandidate?.score === 'number' && topDateCandidate.score - runnerUpDateCandidate.score <= 0.08)
+    )
+  );
+
+  const shouldForceDateNeedsReview =
+    plausibilityProfile === 'sms_strict' && isWeakOrAmbiguousDateCandidate;
+
+  if (shouldForceDateNeedsReview) {
+    const dateField = fieldTrace.find((field) => field.field === 'date');
+    if (dateField) {
+      dateField.tier = 'needs_review';
+      dateField.evidence = [
+        ...dateField.evidence,
+        'Date kept as best candidate, but confidence degraded by strict source plausibility profile.',
+      ];
+    }
+  }
+
+  const effectiveConfidence = shouldForceDateNeedsReview
+    ? Math.min(finalConfidence, 0.39)
+    : finalConfidence;
+
   // Determine parsing status based on confidence thresholds
   const parsingStatus: ParsedTransactionResult['parsingStatus'] =
-    finalConfidence >= 0.8
+    effectiveConfidence >= 0.8
       ? 'success'
-      : finalConfidence >= 0.4
+      : effectiveConfidence >= 0.4
         ? 'partial'
         : 'failed';
 
@@ -537,7 +596,7 @@ export async function parseAndInferTransaction(
     fieldScore,
     templateScore,
     keywordScore,
-    overallConfidence: finalConfidence,
+    overallConfidence: effectiveConfidence,
   };
   debugTrace.templateSelection = {
     selected: origin,
@@ -560,7 +619,7 @@ export async function parseAndInferTransaction(
   operational.templateExactHit = parsed.matched;
   operational.similarityFallbackUsed = !parsed.matched && templateMatched > 0;
   operational.freeformFallbackUsed = false;
-  operational.finalConfidence = finalConfidence;
+  operational.finalConfidence = effectiveConfidence;
   operational.finalSources = {
     amount: fieldTrace.find((f) => f.field === 'amount')?.sourceKind || fieldTrace.find((f) => f.field === 'amount')?.source,
     vendor: fieldTrace.find((f) => f.field === 'vendor')?.sourceKind || fieldTrace.find((f) => f.field === 'vendor')?.source,
@@ -598,7 +657,7 @@ export async function parseAndInferTransaction(
 
   return {
     transaction,
-    confidence: finalConfidence,
+    confidence: effectiveConfidence,
     origin,
     parsed,
     fieldConfidences,

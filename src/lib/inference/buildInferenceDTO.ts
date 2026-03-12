@@ -1,12 +1,15 @@
 import { parseAndInferTransaction } from '@/lib/smart-paste-engine/parseAndInferTransaction';
 import { normalizeInferenceDTO, type InferenceDTO } from './inferenceDTO';
 import { createInferenceDTOFromDetection } from './createInferenceDTOFromDetection';
+import type { TransactionSource } from '@/types/transaction';
 
 interface BuildInferenceDTOArgs {
   rawMessage: string;
   senderHint?: string;
   smsId?: string;
-  source?: 'smart-paste' | 'sms' | 'sms-import' | 'smart-paste-freeform' | 'voice-freeform';
+  source?: TransactionSource;
+  anchorDate?: string | Date;
+  plausibilityProfile?: 'sms_strict' | 'manual_wide';
 }
 
 export async function buildInferenceDTO({
@@ -14,9 +17,15 @@ export async function buildInferenceDTO({
   senderHint,
   smsId,
   source = 'smart-paste',
+  anchorDate,
+  plausibilityProfile,
 }: BuildInferenceDTOArgs): Promise<InferenceDTO> {
   try {
-    const result = await parseAndInferTransaction(rawMessage, senderHint, smsId);
+    const result = await parseAndInferTransaction(rawMessage, senderHint, smsId, {
+      anchorDate,
+      source,
+      plausibilityProfile,
+    });
 
     return createInferenceDTOFromDetection({
       transaction: result.transaction,
