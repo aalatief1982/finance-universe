@@ -673,8 +673,20 @@ export function extractVendorName(message: string): string {
     .normalize('NFC')
     .replace(/[\u200B-\u200D\uFEFF\u061C]/g, '');
 
+  const NON_VENDOR_TOKENS = new Set([
+    'united states', 'united kingdom', 'saudi arabia', 'united arab emirates',
+    'bahrain', 'kuwait', 'qatar', 'oman', 'egypt', 'jordan', 'lebanon',
+    'india', 'china', 'japan', 'germany', 'france', 'italy', 'spain',
+    'canada', 'australia', 'brazil', 'mexico', 'turkey', 'singapore',
+    'hong kong', 'south korea', 'netherlands', 'sweden', 'switzerland',
+    'ireland', 'us', 'uk', 'uae', 'ksa', 'usa',
+  ]);
+
   const captureCandidate = (value: string): string => {
-    const candidate = value.trim().replace(/\s+on\s+\d{4}(-\d{2}(-\d{2})?)?.*$/i, '');
+    let candidate = value.trim().replace(/\s+on\s+\d{4}(-\d{2}(-\d{2})?)?.*$/i, '');
+
+    // Strip trailing location phrases: "in UNITED STATES", "at SINGAPORE", "في السعودية"
+    candidate = candidate.replace(/\s+(?:in|at|في)\s+[A-Z][A-Za-z\s]+$/i, '').trim();
 
     const isValidVendor =
       candidate.length > 2 &&
@@ -684,7 +696,12 @@ export function extractVendorName(message: string): string {
       !candidate.match(/^\*{2,}/) &&
       !candidate.match(/^\d+(?:[.,]\d+)?$/);
 
-    return isValidVendor ? candidate : '';
+    if (!isValidVendor) return '';
+
+    // Reject if the entire candidate is a known country/location token
+    if (NON_VENDOR_TOKENS.has(candidate.toLowerCase())) return '';
+
+    return candidate;
   };
 
   const explicitLabel = normalizedMessage.match(
