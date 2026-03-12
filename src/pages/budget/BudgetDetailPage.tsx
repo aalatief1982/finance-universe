@@ -29,11 +29,11 @@ import { budgetService } from '@/services/BudgetService';
 import { accountService } from '@/services/AccountService';
 import { transactionService } from '@/services/TransactionService';
 import { formatCurrency } from '@/utils/format-utils';
+import { formatDisplayDate } from '@/lib/formatters';
 import { formatPeriodRange, getPeriodLabel, formatPeriodLabel } from '@/utils/budget-period-utils';
 import { SpendingTrendChart } from '@/components/budget/SpendingTrendChart';
 import { BudgetProgressCard } from '@/components/budget/BudgetProgressCard';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { 
   Edit, 
   ArrowLeft,
@@ -361,7 +361,7 @@ const BudgetDetailPage = () => {
                     <div>
                       <p className="font-medium text-sm">{tx.title || tx.description || 'Transaction'}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(tx.date), 'MMM d, yyyy')}
+                        {formatDisplayDate(tx.date)}
                       </p>
                     </div>
                     <span className="font-medium text-destructive">

@@ -11,6 +11,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { InferenceDTO } from '@/types/inference';
 import { useSyncExternalStore } from 'react';
+import { formatDisplayDate } from '@/lib/formatters';
 
 const DEBUG_SMS_REVIEW_PREFIX = '[DEBUG_SMS_REVIEW_FIX]';
 
@@ -32,9 +33,11 @@ const formatAmount = (dto: InferenceDTO | null, body: string): string => {
 
 const formatDate = (dto: InferenceDTO | null, receivedAt: string): string => {
   if (dto?.transaction?.date) {
-    return dto.transaction.date;
+    return formatDisplayDate(dto.transaction.date);
   }
-  return new Date(receivedAt).toLocaleDateString();
+
+  const isoFallbackDate = receivedAt.slice(0, 10);
+  return formatDisplayDate(isoFallbackDate);
 };
 
 const getPayee = (dto: InferenceDTO | null): string => {
