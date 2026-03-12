@@ -305,14 +305,6 @@ const EditTransaction = () => {
   }, [smsInboxId]);
 
   useEffect(() => {
-    if (isSuggested) {
-      toast({
-        title: "Suggested transaction",
-        description:
-          "This transaction was automatically suggested based on previous patterns. You can edit any field before saving.",
-      });
-    }
-
     if (matchDetails?.confidence === 0.4) {
       toast({
         title: "Low confidence match",
