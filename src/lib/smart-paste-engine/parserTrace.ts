@@ -1,6 +1,6 @@
 import type { InferenceDecisionTrace } from '@/types/inference';
 
-type StageKey = NonNullable<InferenceDecisionTrace['operational']>['stageTimingsMs'] extends Record<infer K, number> ? K : never;
+type StageKey = 'normalize' | 'gate' | 'template_extraction' | 'template_exact_lookup' | 'template_similarity_fallback' | 'direct_extraction' | 'suggestion_engine' | 'vendor_fallback' | 'final_merge' | 'dto_build';
 
 const nowMs = (): number => {
   if (typeof performance !== 'undefined' && typeof performance.now === 'function') {

@@ -69,6 +69,7 @@ import {
   Trash2,
   Lock,
   Bell,
+  HardDrive,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 
