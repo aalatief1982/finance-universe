@@ -1012,6 +1012,31 @@ const Settings = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Clear All Storage Confirmation */}
+      <AlertDialog open={clearStorageDialogOpen} onOpenChange={setClearStorageDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Local Storage?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all locally stored data including transactions, settings, and preferences. The app will reload after clearing. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                localStorage.clear();
+                toast({ title: 'All storage cleared', description: 'Reloading...' });
+                setTimeout(() => window.location.reload(), 800);
+              }}
+            >
+              Clear Everything
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <LoadingOverlay isOpen={smsBusy} message={smsBusyMessage} />
     </Layout>
   );
