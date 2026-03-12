@@ -150,6 +150,7 @@ const Settings = () => {
     user?.preferences?.notifications !== false
   );
   const [disablePermissionTarget, setDisablePermissionTarget] = useState<"sms" | null>(null);
+  const [clearStorageDialogOpen, setClearStorageDialogOpen] = useState(false);
 
   const handleVersionTap = () => {
     const now = Date.now();
