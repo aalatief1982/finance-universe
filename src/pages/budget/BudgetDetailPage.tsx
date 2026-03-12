@@ -362,7 +362,7 @@ const BudgetDetailPage = () => {
                     <div>
                       <p className="font-medium text-sm">{tx.title || tx.description || 'Transaction'}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(tx.date), 'MMM d, yyyy')}
+                        {formatDisplayDate(tx.date)}
                       </p>
                     </div>
                     <span className="font-medium text-destructive">

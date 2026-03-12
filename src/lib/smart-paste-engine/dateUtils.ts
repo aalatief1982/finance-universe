@@ -70,23 +70,76 @@ const possibleFormats = [
  * - Short year handling: yy < 50 → 20yy, yy >= 50 → 19yy
  * - Falls back to date-fns for more complex formats
  */
-export function normalizeDate(input: string): string | null {
+/**
+ * Expand a 2-digit year: <50 → 20xx, >=50 → 19xx
+ */
+function expandYear(yy: number): number {
+  return yy < 50 ? 2000 + yy : 1900 + yy;
+}
+
+function isValidCalendarDate(year: number, month: number, day: number): boolean {
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  const d = new Date(year, month - 1, day);
+  return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day;
+}
+
+function scoreDateCandidate(candidateIso: string, anchorMs: number): number {
+  const candidateMs = new Date(candidateIso).getTime();
+  const diffDays = (candidateMs - anchorMs) / (1000 * 60 * 60 * 24);
+  if (diffDays > 7) return 1e9 + diffDays;
+  if (diffDays < -400) return 1e8 + Math.abs(diffDays);
+  return Math.abs(diffDays);
+}
+
+/**
+ * Normalize a date string to ISO format (yyyy-MM-dd).
+ * For ambiguous short-numeric dates, generates multiple candidates
+ * and picks the closest to anchorDate.
+ * 
+ * @param input - Date string in various formats
+ * @param anchorDate - Reference timestamp in ms (default: Date.now())
+ * @returns ISO date string or null if unparseable
+ */
+export function normalizeDate(input: string, anchorDate?: number): string | null {
   const trimmed = input.trim();
+  const anchor = anchorDate ?? Date.now();
   
-  // CRITICAL: Handle DD/MM/YY slash format manually FIRST
-  // date-fns misparses 2-digit years (e.g., "25" as year 0025)
+  // Handle ambiguous A/B/C where C is 2-digit (could be DD/MM/YY, YY/M/DD, MM/DD/YY)
   const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
   if (slashMatch) {
-    const [, dd, mm, yy] = slashMatch;
-    const fullYear = parseInt(yy, 10) < 50 ? `20${yy}` : `19${yy}`;
-    return `${fullYear}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    const [a, b, c] = [parseInt(slashMatch[1], 10), parseInt(slashMatch[2], 10), parseInt(slashMatch[3], 10)];
+    const candidates: { iso: string; score: number }[] = [];
+
+    // DD/MM/YY
+    const y1 = expandYear(c);
+    if (isValidCalendarDate(y1, b, a)) {
+      const iso = `${y1}-${String(b).padStart(2, '0')}-${String(a).padStart(2, '0')}`;
+      candidates.push({ iso, score: scoreDateCandidate(iso, anchor) });
+    }
+    // YY/M/DD
+    const y2 = expandYear(a);
+    if (isValidCalendarDate(y2, b, c)) {
+      const iso = `${y2}-${String(b).padStart(2, '0')}-${String(c).padStart(2, '0')}`;
+      candidates.push({ iso, score: scoreDateCandidate(iso, anchor) });
+    }
+    // MM/DD/YY
+    const y3 = expandYear(c);
+    if (isValidCalendarDate(y3, a, b)) {
+      const iso = `${y3}-${String(a).padStart(2, '0')}-${String(b).padStart(2, '0')}`;
+      candidates.push({ iso, score: scoreDateCandidate(iso, anchor) });
+    }
+
+    if (candidates.length > 0) {
+      candidates.sort((x, y) => x.score - y.score);
+      return candidates[0].iso;
+    }
   }
   
   // Try each format with date-fns
   for (const fmt of possibleFormats) {
     const parsed = parse(trimmed, fmt, new Date());
     if (isValid(parsed)) {
-      return format(parsed, 'yyyy-MM-dd'); // For <input type="date" />
+      return format(parsed, 'yyyy-MM-dd');
     }
   }
 

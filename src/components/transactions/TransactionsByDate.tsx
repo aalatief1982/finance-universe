@@ -45,10 +45,7 @@ const TransactionsByDate: React.FC<TransactionsByDateProps> = ({ transactions })
     (a, b) => new Date(b).getTime() - new Date(a).getTime(),
   );
 
-  const formatDate = (dateString: string) => {
-    try { return format(parseISO(dateString), "EEE, MMM d"); }
-    catch { return dateString; }
-  };
+  const formatDate = (dateString: string) => formatDisplayDate(dateString);
 
   const handleTransactionClick = (transaction: Transaction) => {
     navigate(`/edit-transaction/${transaction.id}`, { state: normalizeInferenceDTO({ transaction, mode: 'edit', isSuggested: false }) });

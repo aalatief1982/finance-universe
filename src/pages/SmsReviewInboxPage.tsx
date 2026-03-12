@@ -33,9 +33,9 @@ const formatAmount = (dto: InferenceDTO | null, body: string): string => {
 
 const formatDate = (dto: InferenceDTO | null, receivedAt: string): string => {
   if (dto?.transaction?.date) {
-    return dto.transaction.date;
+    return formatDisplayDate(dto.transaction.date);
   }
-  return new Date(receivedAt).toLocaleDateString();
+  return formatDisplayDate(receivedAt);
 };
 
 const getPayee = (dto: InferenceDTO | null): string => {

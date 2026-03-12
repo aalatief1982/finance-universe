@@ -139,13 +139,7 @@ const Home = () => {
     return txn.type === "expense" ? `${base} (${t('transaction.expenseLabel')})` : base;
   };
 
-  const formatTxnDate = (dateStr: string) => {
-    try {
-      return format(new Date(dateStr), "EEE, MMM dd");
-    } catch {
-      return "—";
-    }
-  };
+  const formatTxnDate = (dateStr: string) => formatDisplayDate(dateStr);
 
   const analyticsTransactions = React.useMemo(() => {
     return filteredTransactions.map(({ effectiveAmount, isUnconverted, ...transaction }) => transaction);
