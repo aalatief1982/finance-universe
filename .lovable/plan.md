@@ -1,45 +1,50 @@
-## Plan: Documentation Rebuild
 
-### Status: ✅ Implemented
 
-### Summary
-Rebuilt all highlighted documentation into 8 canonical files under `docs/current/`, archived 15+ deprecated files to `docs/archive/`, fixed plugin build error, and cleaned up empty/placeholder files.
+## Plan: Fix Build Errors + Add Admin-Protected Storage Management Buttons
 
-### New Documentation Structure
+### Part 1 — Fix TypeScript Build Errors
 
-```
-docs/current/
-├── 01-product-requirements.md    — PRD reflecting current features
-├── 02-ux-screens-and-flows.md    — IA map, navigation, Mermaid workflows
-├── 03-technical-architecture.md  — Tech stack, parsing pipeline, SMS ingestion, learning, storage
-├── 04-test-strategy.md           — Test levels, critical areas, regression strategy
-├── 05-test-scripts.md            — 15 manual QA test scripts for all active screens
-├── 06-screen-inventory.md        — Route map with per-screen details
-├── 07-user-guide.md              — End-user guide with screenshot/video placeholders
-└── 08-gap-tracker.md             — Undocumented systems, dormant features, tech debt
+**Root cause**: In `parserTrace.ts` line 3, the `StageKey` conditional type tries to infer keys from `stageTimingsMs` but it's typed as `Partial<Record<K, number>>`, not `Record<K, number>`. The `Partial` wrapper prevents the `infer K` from resolving, so `StageKey` becomes `never`.
+
+**Fix** in `src/lib/smart-paste-engine/parserTrace.ts` line 3: Replace the conditional type with a direct extraction:
+
+```typescript
+type StageKey = NonNullable<InferenceDecisionTrace['operational']>['stageTimingsMs'] extends 
+  Partial<Record<infer K, number>> ? K : never;
 ```
 
-### Archived Files
-All highlighted files from `docs/` (demand-pack, phase 2-6, Test_Script_Document) and `KnowledgeBase/` (PRD.docx, wireframes, roadmaps, design doc) moved to `docs/archive/`.
+This should work because `Partial<Record<K, number>>` does match the `Partial<Record<infer K, ...>>` pattern. If the current TS version doesn't resolve it, fall back to explicitly listing the union type from `inference.ts` lines 93-103:
 
-### Deleted Files
-- `KnowledgeBase/updated prd` (empty placeholder)
-- `KnowledgeBase/test.txt` (test file)
+```typescript
+type StageKey = 'normalize' | 'gate' | 'template_extraction' | 'template_exact_lookup' | 
+  'template_similarity_fallback' | 'direct_extraction' | 'suggestion_engine' | 
+  'vendor_fallback' | 'final_merge' | 'dto_build';
+```
 
-### Build Fix
-Created dist/ stub files for both `capacitor-background-sms-listener` and `capacitor-sms-reader` plugins so `bun install` resolves without running build-plugins.sh first.
+The explicit union is safer and still single-source since it mirrors the type in `inference.ts`.
 
-### Gaps Covered in 08-gap-tracker.md
-- Inference DTO pipeline (undocumented)
-- SMS queue two-layer architecture (undocumented)
-- Learning system internals (undocumented)
-- Confidence/field scoring thresholds (undocumented)
-- Template vs freeform parsing distinction (undocumented)
-- Dormant features behind ImportDisabledGuard
-- Legacy/dead code (wireframes, mock implementations)
-- Platform parity gaps (web vs Android)
+### Part 2 — Add 3 Admin-Protected Storage Buttons
 
-### Visual Assets Needed (Not Yet Created)
-- App screenshots for each screen (marked in 07-user-guide.md)
-- Video recordings for: onboarding, smart entry paste, voice entry, SMS detection flow, SMS review, budget flow, share sheet
-- Mermaid diagrams render from markdown in 02-ux-screens-and-flows.md
+**Location**: `src/pages/Settings.tsx`, in the Data Management section (after the Import button around line 789), behind the existing `adminMode` guard.
+
+**Three buttons**:
+
+1. **Backup All Storage** — Collects all `localStorage` keys/values into a JSON object, downloads as `.json` file (web: anchor download, native: `Filesystem.writeFile` to Documents)
+2. **Restore Backup** — File picker for `.json`, user chooses Replace (clear all then write) or Append (merge keys), then applies to `localStorage` and reloads
+3. **Clear All Storage** — Confirmation dialog, then `localStorage.clear()` and reload
+
+**UI placement**: New subsection inside the Data Management `<section>`, wrapped in `{adminMode && (...)}` so only visible when admin mode is active. Three vertically stacked buttons with icons (HardDrive/Download, UploadCloud, Trash2).
+
+**Implementation details**:
+- Backup serializes `Object.keys(localStorage)` into `{ [key]: value }` JSON
+- Restore uses `AlertDialog` to ask Replace vs Append before applying
+- Clear uses `AlertDialog` with destructive confirmation
+- Both Restore and Clear trigger `window.location.reload()` after completion
+- Native platform uses `Filesystem.writeFile` for backup download
+- Toast feedback for all actions
+
+### Files Changed
+
+1. `src/lib/smart-paste-engine/parserTrace.ts` — Fix `StageKey` type
+2. `src/pages/Settings.tsx` — Add 3 admin-guarded storage management buttons
+
