@@ -39,7 +39,7 @@ const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({ data })
     <div className="h-[270px] w-full">
       {data.length === 0 ? (
         <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-          No data available
+          {t('home.noDataYet')}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height="100%">
