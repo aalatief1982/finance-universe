@@ -31,9 +31,38 @@ import {
 import { getPreferredFromAccount } from './templateHashAccountMap';
 import type { InferenceDecisionTrace } from '@/types/inference';
 import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
-//import { normalizeDate } from './dateUtils';
 
 
+
+export type ParserPlausibilityProfile = 'sms_strict' | 'manual_wide';
+
+export type ParserContextSource = 'smart-paste' | 'sms' | 'sms-import' | 'smart-paste-freeform' | 'voice-freeform' | 'shared-text' | 'manual';
+
+export interface ParseContext {
+  anchorDate?: string | Date;
+  source?: ParserContextSource;
+  plausibilityProfile?: ParserPlausibilityProfile;
+}
+
+const STRICT_SOURCES: ReadonlySet<ParserContextSource> = new Set(['sms', 'sms-import', 'shared-text']);
+
+const toAnchorDate = (anchorDate?: string | Date): Date | undefined => {
+  if (!anchorDate) return undefined;
+  const parsed = anchorDate instanceof Date ? anchorDate : new Date(anchorDate);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
+const resolvePlausibilityProfile = (context?: ParseContext): ParserPlausibilityProfile => {
+  if (context?.plausibilityProfile) return context.plausibilityProfile;
+  if (context?.source && STRICT_SOURCES.has(context.source)) return 'sms_strict';
+  return 'manual_wide';
+};
+
+const getPlausibilityWindowDays = (profile: ParserPlausibilityProfile) => (
+  profile === 'sms_strict'
+    ? { future: 2, past: 45 }
+    : { future: 45, past: 3650 }
+);
 
 /**
  * Normalize a date string into ISO (yyyy-MM-dd) format when possible.
@@ -42,7 +71,7 @@ import { ensureOperationalTrace, ParserTraceTimer } from './parserTrace';
  * - Handles short yy-mm-dd variants safely
  * - Falls back to Date parsing when format is unknown
  */
-export function normalizeDate(dateStr: string): string | undefined {
+export function normalizeDate(dateStr: string, context?: ParseContext): string | undefined {
   if (!dateStr) return undefined;
 
   const shortNumericDateMatch = dateStr
@@ -88,10 +117,10 @@ export function normalizeDate(dateStr: string): string | undefined {
         anchorHints.__SMART_PASTE_SMS_RECEIVED_AT__ ||
         anchorHints.__SMART_PASTE_TX_CREATED_AT__;
       const fallbackAnchor = new Date();
-      const parsedAnchor = injectedAnchor ? new Date(injectedAnchor) : fallbackAnchor;
-      const anchorTime = Number.isNaN(parsedAnchor.getTime())
-        ? fallbackAnchor.getTime()
-        : parsedAnchor.getTime();
+      const contextAnchor = toAnchorDate(context?.anchorDate);
+      const injectedAnchorDate = toAnchorDate(injectedAnchor);
+      const anchorTime = (contextAnchor || injectedAnchorDate || fallbackAnchor).getTime();
+      const plausibilityWindow = getPlausibilityWindowDays(resolvePlausibilityProfile(context));
 
       let bestCandidate: string | undefined;
       let bestScore = Number.NEGATIVE_INFINITY;
@@ -102,10 +131,10 @@ export function normalizeDate(dateStr: string): string | undefined {
         const ageDays = (anchorTime - parsedAt) / (24 * 60 * 60 * 1000);
 
         let score = -diffDays;
-        if (ageDays > 365 * 5) score -= 100;
-        if (ageDays > 365 * 10) score -= 250;
-        if (isFuture) score -= 100;
-        if (isFuture && diffDays > 14) score -= 200;
+        if (ageDays > plausibilityWindow.past) score -= 150;
+        if (ageDays > plausibilityWindow.past * 2) score -= 250;
+        if (isFuture) score -= 120;
+        if (isFuture && diffDays > plausibilityWindow.future) score -= 300;
 
         if (score > bestScore) {
           bestScore = score;
@@ -221,7 +250,7 @@ export interface ParsedSmsResult {
   inferenceDebug?: Record<string, FieldInferenceDebug>;
 }
 
-export function parseSmsMessage(rawMessage: string, senderHint?: string, debugTrace?: InferenceDecisionTrace): ParsedSmsResult {
+export function parseSmsMessage(rawMessage: string, senderHint?: string, debugTrace?: InferenceDecisionTrace, context?: ParseContext): ParsedSmsResult {
   const timer = new ParserTraceTimer();
   // ============================================================================
   // SECTION: Input Guardrails
@@ -364,7 +393,7 @@ export function parseSmsMessage(rawMessage: string, senderHint?: string, debugTr
   // Normalize known field names like 'date'
   if (directFields['date']) {
     timer.start('normalize');
-    const normalized = normalizeDate(directFields['date'].value);
+    const normalized = normalizeDate(directFields['date'].value, context);
     if (normalized) {
       directFields['date'].value = normalized;
       if (import.meta.env.MODE === 'development') {

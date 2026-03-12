@@ -189,7 +189,11 @@ const ReviewSmsTransactions: React.FC = () => {
           const result = await parseAndInferTransaction(
             rawMessage,
             msg.sender,
-            msg.id
+            msg.id,
+            {
+              anchorDate: msg.receivedAt,
+              source: 'sms-import',
+            },
           );
           const { transaction: txn, confidence, fieldConfidences, parsingStatus } = result;
           const normalizedTransaction = {
