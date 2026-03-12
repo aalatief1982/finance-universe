@@ -921,11 +921,6 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">
                   Permanently delete all local data — this cannot be undone
                 </p>
-                <AlertDialog>
-                  <AlertDialogAction asChild>
-                    <span />
-                  </AlertDialogAction>
-                </AlertDialog>
                 <Button
                   variant="destructive"
                   className="gap-2 mt-1"
