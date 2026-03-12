@@ -365,14 +365,22 @@ export function extractTemplateStructure(
 
   for (const { regex, fieldName } of patterns) {
     regex.lastIndex = 0;
-    let match;
-    while ((match = regex.exec(message)) !== null) {
-      const fullMatch = match[0];
 
-      if (fieldName === 'amount+currency') {
+    if (fieldName === 'amount+currency') {
+      // --- Multi-amount candidate scoring ---
+      interface AmountCandidate {
+        amount: string;
+        currency: string;
+        index: number;
+        end: number;
+        fullMatch: string;
+        score: number;
+      }
+      const candidates: AmountCandidate[] = [];
+      let match;
+      while ((match = regex.exec(message)) !== null) {
         let amount = '';
         let currency = '';
-
         if (match[1] && match[2]) {
           currency = match[1];
           amount = match[2];
@@ -380,31 +388,74 @@ export function extractTemplateStructure(
           amount = match[3];
           currency = match[4];
         }
-
-        if (!placeholders.amount && !placeholders.currency && amount && currency) {
-          const numericAmount = amount.replace(/,/g, '');
-          placeholders.amount = numericAmount;
-          // Normalize currency code to handle Arabic names like 'جنيه' -> 'EGP'
-          placeholders.currency = normalizeCurrencyCode(currency);
-          replacements.push({
-            start: match.index,
-            end: match.index + fullMatch.length,
-            replacement: `{{currency}} {{amount}}`
-          });
-        }
-      } else {
-        const valueGroup = match[1] || fullMatch;
-        if (!placeholders[fieldName]) {
-          placeholders[fieldName] = valueGroup.trim();
-          replacements.push({
-            start: match.index,
-            end: match.index + fullMatch.length,
-            replacement: `{{${fieldName}}}`
+        if (amount && currency) {
+          candidates.push({
+            amount: amount.replace(/,/g, ''),
+            currency: normalizeCurrencyCode(currency),
+            index: match.index,
+            end: match.index + match[0].length,
+            fullMatch: match[0],
+            score: 0,
           });
         }
       }
 
-      break; // Only take the first match for each field
+      // Score each candidate using context window before the match
+      const CONTEXT_WINDOW = 40;
+      const txnKeywords = /(?:مبلغ|بمبلغ|بقيمة|amount|purchase|payment|شراء|سداد|دفع)/i;
+      const feeKeywords = /(?:رسوم|fee|commission|عمولة|charges)/i;
+      const totalKeywords = /(?:إجمالي|الإجمالي|total|المبلغ الإجمالي)/i;
+      const fxRateKeywords = /(?:سعر الصرف|exchange rate|سعر التحويل|conversion rate)/i;
+      const convertedKeywords = /(?:المبلغ المحول|converted|المحول|equivalent)/i;
+
+      for (let i = 0; i < candidates.length; i++) {
+        const c = candidates[i];
+        const ctxStart = Math.max(0, c.index - CONTEXT_WINDOW);
+        const context = message.slice(ctxStart, c.index);
+
+        if (txnKeywords.test(context)) c.score += 2;
+        if (feeKeywords.test(context)) c.score -= 3;
+        if (totalKeywords.test(context)) c.score -= 1;
+        if (fxRateKeywords.test(context)) c.score -= 5;
+        if (convertedKeywords.test(context)) c.score += 1;
+        if (c.currency === 'SAR') c.score += 0.5;
+        // Position tiebreaker: first match gets tiny bonus (preserves simple-SMS behavior)
+        c.score += 0.1 * (1 - i / Math.max(candidates.length, 1));
+      }
+
+      // Pick the highest-scoring candidate
+      if (candidates.length > 0) {
+        candidates.sort((a, b) => b.score - a.score);
+
+        if (typeof console !== 'undefined' && import.meta.env?.DEV) {
+          console.debug('[extractTemplateStructure] amount candidates:', candidates.map(c => ({
+            amount: c.amount, currency: c.currency, score: c.score.toFixed(2),
+          })));
+        }
+
+        const winner = candidates[0];
+        placeholders.amount = winner.amount;
+        placeholders.currency = winner.currency;
+        replacements.push({
+          start: winner.index,
+          end: winner.end,
+          replacement: `{{currency}} {{amount}}`,
+        });
+      }
+    } else {
+      let match;
+      while ((match = regex.exec(message)) !== null) {
+        const valueGroup = match[1] || match[0];
+        if (!placeholders[fieldName]) {
+          placeholders[fieldName] = valueGroup.trim();
+          replacements.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: `{{${fieldName}}}`,
+          });
+        }
+        break;
+      }
     }
   }
 
