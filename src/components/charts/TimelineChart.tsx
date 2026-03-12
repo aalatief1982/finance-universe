@@ -39,6 +39,7 @@ interface TimelineChartProps {
 }
 
 const TimelineChart: React.FC<TimelineChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('default', { month: 'short', day: '2-digit' });
