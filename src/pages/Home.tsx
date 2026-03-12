@@ -50,6 +50,7 @@ import { format } from "date-fns";
 import ResponsiveFAB from "@/components/dashboard/ResponsiveFAB";
 import MicButton from "@/components/smart-paste/MicButton";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
+import { isAdminMode } from '@/utils/admin-utils';
 import { Transaction } from "@/types/transaction";
 import { useUser } from "@/context/UserContext";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -417,15 +418,17 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className="fixed bottom-[7.5rem] right-4 z-40 md:hidden">
-        <MicButton
-          isListening={isListening}
-          isSupported={micSupported}
-          onClick={startListening}
-          size="icon"
-          className="h-12 w-12 rounded-full shadow-lg"
-        />
-      </div>
+      {isAdminMode() && (
+        <div className="fixed bottom-[7.5rem] right-4 z-40 md:hidden">
+          <MicButton
+            isListening={isListening}
+            isSupported={micSupported}
+            onClick={startListening}
+            size="icon"
+            className="h-12 w-12 rounded-full shadow-lg"
+          />
+        </div>
+      )}
       <ResponsiveFAB onClick={handleAddTransaction} />
     </Layout>
   );

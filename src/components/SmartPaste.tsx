@@ -24,6 +24,7 @@ import { Transaction } from '@/types/transaction';
 import { Loader2 } from 'lucide-react';
 import MicButton from './smart-paste/MicButton';
 import { useSpeechToText } from '@/hooks/useSpeechToText';
+import { isAdminMode } from '@/utils/admin-utils';
 import { Label } from './ui/label';
 import { Card } from './ui/card';
 import DetectedTransactionCard from './smart-paste/DetectedTransactionCard';
@@ -540,12 +541,14 @@ const SmartPaste = ({
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="message">{t('smartEntry.label')}</Label>
-            <MicButton
-              isListening={isListening}
-              isSupported={micSupported}
-              onClick={startListening}
-              size="sm"
-            />
+            {isAdminMode() && (
+              <MicButton
+                isListening={isListening}
+                isSupported={micSupported}
+                onClick={startListening}
+                size="sm"
+              />
+            )}
           </div>
           <Textarea
             id="message"
