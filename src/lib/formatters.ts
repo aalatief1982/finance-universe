@@ -42,9 +42,9 @@ export const formatDate = (dateString: string): string => {
 const ISO_DATE_PREFIX_REGEX = /^\d{4}-\d{2}-\d{2}(?:$|T)/;
 const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export const formatDisplayDate = (dateString: string): string => {
+const parseIsoDateParts = (dateString: string): { year: number; month: number; day: number } | null => {
   if (!ISO_DATE_PREFIX_REGEX.test(dateString)) {
-    return dateString;
+    return null;
   }
 
   const [yearStr, monthStr, dayStr] = dateString.slice(0, 10).split('-');
@@ -53,7 +53,7 @@ export const formatDisplayDate = (dateString: string): string => {
   const day = Number(dayStr);
 
   if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
-    return dateString;
+    return null;
   }
 
   const utcDate = new Date(Date.UTC(year, month - 1, day));
@@ -63,10 +63,24 @@ export const formatDisplayDate = (dateString: string): string => {
     utcDate.getUTCMonth() + 1 !== month ||
     utcDate.getUTCDate() !== day
   ) {
-    return dateString;
+    return null;
   }
 
+  return { year, month, day };
+};
+
+export const formatIsoDateToDayMonthYear = (dateString: string): string | null => {
+  const isoParts = parseIsoDateParts(dateString);
+  if (!isoParts) {
+    return null;
+  }
+
+  const { year, month, day } = isoParts;
   return `${String(day).padStart(2, '0')}-${SHORT_MONTHS[month - 1]}-${year}`;
+};
+
+export const formatDisplayDate = (dateString: string): string => {
+  return formatIsoDateToDayMonthYear(dateString) || dateString;
 };
 
 export const formatShortDate = (dateString: string): string => {
