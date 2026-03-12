@@ -39,6 +39,20 @@ export const formatDate = (dateString: string): string => {
   }).format(date);
 };
 
+export const formatDisplayDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  } catch {
+    return dateString;
+  }
+};
+
 export const formatShortDate = (dateString: string): string => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {

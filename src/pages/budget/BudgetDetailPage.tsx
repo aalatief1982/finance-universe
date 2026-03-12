@@ -34,6 +34,7 @@ import { SpendingTrendChart } from '@/components/budget/SpendingTrendChart';
 import { BudgetProgressCard } from '@/components/budget/BudgetProgressCard';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { formatDisplayDate } from '@/lib/formatters';
 import { 
   Edit, 
   ArrowLeft,
@@ -361,7 +362,7 @@ const BudgetDetailPage = () => {
                     <div>
                       <p className="font-medium text-sm">{tx.title || tx.description || 'Transaction'}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(tx.date), 'MMM d, yyyy')}
+                        {formatDisplayDate(tx.date)}
                       </p>
                     </div>
                     <span className="font-medium text-destructive">
