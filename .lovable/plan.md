@@ -1,45 +1,16 @@
-## Plan: Documentation Rebuild
 
-### Status: ✅ Implemented
 
-### Summary
-Rebuilt all highlighted documentation into 8 canonical files under `docs/current/`, archived 15+ deprecated files to `docs/archive/`, fixed plugin build error, and cleaned up empty/placeholder files.
+## Remove SMS Inbox Card from Import Transactions Page
 
-### New Documentation Structure
+The SMS Inbox card (lines 376-433) showing "New SMS" and "In Review" sections will be completely removed from the Import Transactions page. The SMS review flow has its own dedicated `/sms-review` route, so this duplicate UI is unnecessary.
 
-```
-docs/current/
-├── 01-product-requirements.md    — PRD reflecting current features
-├── 02-ux-screens-and-flows.md    — IA map, navigation, Mermaid workflows
-├── 03-technical-architecture.md  — Tech stack, parsing pipeline, SMS ingestion, learning, storage
-├── 04-test-strategy.md           — Test levels, critical areas, regression strategy
-├── 05-test-scripts.md            — 15 manual QA test scripts for all active screens
-├── 06-screen-inventory.md        — Route map with per-screen details
-├── 07-user-guide.md              — End-user guide with screenshot/video placeholders
-└── 08-gap-tracker.md             — Undocumented systems, dormant features, tech debt
-```
+### Changes
 
-### Archived Files
-All highlighted files from `docs/` (demand-pack, phase 2-6, Test_Script_Document) and `KnowledgeBase/` (PRD.docx, wireframes, roadmaps, design doc) moved to `docs/archive/`.
+**File: `src/pages/ImportTransactions.tsx`**
 
-### Deleted Files
-- `KnowledgeBase/updated prd` (empty placeholder)
-- `KnowledgeBase/test.txt` (test file)
+1. Remove the entire `<Card ref={smsInboxRef}>` block (lines 376-433) containing the SMS Inbox, New SMS, and In Review sections.
+2. Remove now-unused state/refs/callbacks: `smsInboxItems`, `smsInboxRef`, `newItems`, `openedItems`, `loadSmsInbox`, `handleReviewSms`, `handleContinueSms`, `handleIgnoreSms`, and the `scrollToInbox` effect.
+3. Remove unused imports: `getInbox`, `markSmsStatus`, `SmsInboxItem`, `buildInferenceDTO`, `isAdminMode`, and `Button` (if no longer used elsewhere — will verify).
 
-### Build Fix
-Created dist/ stub files for both `capacitor-background-sms-listener` and `capacitor-sms-reader` plugins so `bun install` resolves without running build-plugins.sh first.
+This is a deletion-only change; the SmartPaste section and its detection flow remain untouched.
 
-### Gaps Covered in 08-gap-tracker.md
-- Inference DTO pipeline (undocumented)
-- SMS queue two-layer architecture (undocumented)
-- Learning system internals (undocumented)
-- Confidence/field scoring thresholds (undocumented)
-- Template vs freeform parsing distinction (undocumented)
-- Dormant features behind ImportDisabledGuard
-- Legacy/dead code (wireframes, mock implementations)
-- Platform parity gaps (web vs Android)
-
-### Visual Assets Needed (Not Yet Created)
-- App screenshots for each screen (marked in 07-user-guide.md)
-- Video recordings for: onboarding, smart entry paste, voice entry, SMS detection flow, SMS review, budget flow, share sheet
-- Mermaid diagrams render from markdown in 02-ux-screens-and-flows.md
