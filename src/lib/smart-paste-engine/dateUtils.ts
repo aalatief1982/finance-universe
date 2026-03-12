@@ -86,7 +86,7 @@ function isValidCalendarDate(year: number, month: number, day: number): boolean 
 function scoreDateCandidate(candidateIso: string, anchorMs: number): number {
   const candidateMs = new Date(candidateIso).getTime();
   const diffDays = (candidateMs - anchorMs) / (1000 * 60 * 60 * 24);
-  if (diffDays > 7) return 1e9 + diffDays;
+  if (diffDays > 30) return 1e9 + diffDays;
   if (diffDays < -400) return 1e8 + Math.abs(diffDays);
   return Math.abs(diffDays);
 }

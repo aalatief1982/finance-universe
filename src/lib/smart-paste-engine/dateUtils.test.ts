@@ -6,8 +6,9 @@ describe('normalizeDate', () => {
     expect(normalizeDate('2024-02-05')).toBe('2024-02-05');
   });
 
-  it('normalizes slashed dates to yyyy-MM-dd', () => {
-    expect(normalizeDate('05/02/24')).toBe('2024-02-05');
+  it('normalizes slashed dates to yyyy-MM-dd with anchor', () => {
+    const anchor = new Date('2024-02-01').getTime();
+    expect(normalizeDate('05/02/24', anchor)).toBe('2024-02-05');
   });
 
   it('returns null when input is not parseable', () => {

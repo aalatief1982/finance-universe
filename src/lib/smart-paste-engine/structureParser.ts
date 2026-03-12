@@ -66,8 +66,8 @@ function scoreCandidate(candidateIso: string, anchorMs: number): number {
   const candidateMs = new Date(candidateIso).getTime();
   const diffDays = (candidateMs - anchorMs) / (1000 * 60 * 60 * 24);
 
-  // Future dates beyond 7 days: heavily penalized
-  if (diffDays > 7) return 1e9 + diffDays;
+  // Future dates beyond 30 days: heavily penalized
+  if (diffDays > 30) return 1e9 + diffDays;
   // Past dates beyond ~400 days: heavily penalized
   if (diffDays < -400) return 1e8 + Math.abs(diffDays);
   // Otherwise: absolute distance in days
