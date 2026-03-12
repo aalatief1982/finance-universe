@@ -109,6 +109,7 @@ import {
   validateTransactionForm,
 } from '@/lib/transaction-validation';
 import { parseAmount } from '@/lib/amount';
+import { formatIsoDateToDayMonthYear } from '@/lib/formatters';
 import { resolveFieldTier, type ConfidenceTier } from '@/lib/inference/fieldTier';
 import type { InferenceDecisionTrace, InferenceOrigin, InferenceParsingStatus } from '@/types/inference';
 
@@ -1347,6 +1348,9 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
 
   const hasError = (field: keyof Transaction) =>
     Boolean(touchedFields[field] && formErrors[field]);
+  const parsedDateDisplay = editedTransaction.date
+    ? formatIsoDateToDayMonthYear(editedTransaction.date)
+    : null;
 
   return (
     <form
@@ -2365,6 +2369,11 @@ const TransactionEditForm: React.FC<TransactionEditFormProps> = ({
         />
         {renderFeedbackIcons('date')}
       </div>
+      {parsedDateDisplay && (
+        <p className="text-xs text-muted-foreground ml-[calc(6rem)]">
+          Parsed date: {parsedDateDisplay}
+        </p>
+      )}
       {hasError('date') && (
         <p className="text-xs text-destructive ml-[calc(6rem)]">
           {formErrors.date}
