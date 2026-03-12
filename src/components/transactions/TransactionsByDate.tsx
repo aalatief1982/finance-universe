@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { normalizeInferenceDTO } from "@/lib/inference/inferenceDTO";
 import { UnconvertedBadge } from "@/components/fx";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { formatDisplayDate } from "@/lib/formatters";
 
 interface TransactionsByDateProps {
   transactions: Transaction[];
