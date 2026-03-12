@@ -247,7 +247,7 @@ const Home = () => {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[var(--card-gap)]">
-            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow">
+            <div className="bg-card p-[var(--card-padding)] rounded-lg shadow text-start">
               <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
