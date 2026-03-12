@@ -32,6 +32,7 @@ interface CategoryBreakdownChartProps {
 
 
 const CategoryBreakdownChart: React.FC<CategoryBreakdownChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   const chartData = data.slice(0, 8); // Limit to 8 categories for better visualization
   
   return (
