@@ -472,25 +472,5 @@ export function saveTransactionWithLearning(
   // REVIEW: Combine mode reduces notification noise
   // ============================================================================
 
-  if (!silent) {
-    if (combineToasts) {
-      let description = `Your transaction has been successfully ${isNew ? 'created' : 'updated'}.`;
-      if (
-        rawMessage && isLearningSource && showPatternToast
-      ) {
-        description += ' Pattern saved for learning.';
-      }
-      toast({
-        title: isNew ? 'Transaction created' : 'Transaction updated',
-        description,
-      });
-    } else {
-      toast({
-        title: isNew ? 'Transaction created' : 'Transaction updated',
-        description: `Your transaction has been successfully ${isNew ? 'created' : 'updated'}`,
-      });
-    }
-  }
-
   navigateBack();
 }
