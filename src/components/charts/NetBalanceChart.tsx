@@ -37,6 +37,7 @@ interface NetBalanceChartProps {
 }
 
 const NetBalanceChart: React.FC<NetBalanceChartProps> = ({ data }) => {
+  const { t } = useLanguage();
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('default', { month: 'short', day: '2-digit' });
