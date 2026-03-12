@@ -51,6 +51,18 @@ describe('suggestionEngine', () => {
     expect(extractVendorName('Paid to Google YouTubePremium SAR 49.99')).toBe('');
   });
 
+  it('strips trailing location and extracts merchant for English anchors', () => {
+    expect(extractVendorName('purchased from GITHUB INC in UNITED STATES')).toBe('GITHUB INC');
+  });
+
+  it('does not return a country name as vendor', () => {
+    expect(extractVendorName('at UNITED STATES')).toBe('');
+  });
+
+  it('strips trailing location for Arabic anchor with country', () => {
+    expect(extractVendorName('لدى AMAZON في UNITED STATES بمبلغ 50 USD')).toBe('AMAZON');
+  });
+
   it('prefers longer vendor fallback keyword for substring matches', () => {
     localStorage.setItem(
       'xpensia_vendor_fallbacks',
