@@ -10,6 +10,7 @@ import { isAdminMode } from '@/utils/admin-utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { InferenceDTO } from '@/types/inference';
+import { formatDisplayDate } from '@/lib/formatters';
 import { useSyncExternalStore } from 'react';
 
 const DEBUG_SMS_REVIEW_PREFIX = '[DEBUG_SMS_REVIEW_FIX]';
