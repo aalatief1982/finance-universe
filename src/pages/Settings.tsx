@@ -69,6 +69,7 @@ import {
   Trash2,
   Lock,
   Bell,
+  HardDrive,
 } from "lucide-react";
 import { smsPermissionService } from "@/services/SmsPermissionService";
 
@@ -149,6 +150,7 @@ const Settings = () => {
     user?.preferences?.notifications !== false
   );
   const [disablePermissionTarget, setDisablePermissionTarget] = useState<"sms" | null>(null);
+  const [clearStorageDialogOpen, setClearStorageDialogOpen] = useState(false);
 
   const handleVersionTap = () => {
     const now = Date.now();
@@ -787,7 +789,149 @@ const Settings = () => {
             </div>
           </LockedFeature>
 
+          {/* Admin Storage Management */}
+          {adminMode && (
+            <div className="space-y-4 mt-6 border-t border-border pt-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Storage Management (Admin)
+              </h3>
 
+              {/* Backup All Storage */}
+              <div className="space-y-1">
+                <p className="font-medium">Backup All Storage</p>
+                <p className="text-sm text-muted-foreground">
+                  Download all localStorage data as a JSON file
+                </p>
+                <Button
+                  variant="outline"
+                  className="gap-2 mt-1"
+                  onClick={async () => {
+                    try {
+                      const data: Record<string, string> = {};
+                      for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key) data[key] = localStorage.getItem(key) || '';
+                      }
+                      const json = JSON.stringify(data, null, 2);
+                      const fileName = `xpensia-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+                      if (Capacitor.isNativePlatform()) {
+                        await Filesystem.writeFile({
+                          path: fileName,
+                          data: json,
+                          directory: Directory.Documents,
+                        });
+                        toast({ title: 'Backup saved', description: `Saved to Documents/${fileName}` });
+                      } else {
+                        const blob = new Blob([json], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                        toast({ title: 'Backup downloaded', description: fileName });
+                      }
+                    } catch {
+                      toast({ title: 'Backup failed', variant: 'destructive' });
+                    }
+                  }}
+                >
+                  <HardDrive size={16} />
+                  Backup Storage
+                </Button>
+              </div>
+
+              {/* Restore Backup */}
+              <div className="space-y-1">
+                <p className="font-medium">Restore Backup</p>
+                <p className="text-sm text-muted-foreground">
+                  Import a JSON backup to replace or append storage
+                </p>
+                <div className="flex gap-2 mt-1">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = '.json';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          try {
+                            const data = JSON.parse(ev.target?.result as string);
+                            if (typeof data !== 'object' || data === null) throw new Error('Invalid');
+                            localStorage.clear();
+                            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v as string));
+                            toast({ title: 'Storage replaced', description: 'Reloading...' });
+                            setTimeout(() => window.location.reload(), 800);
+                          } catch {
+                            toast({ title: 'Invalid backup file', variant: 'destructive' });
+                          }
+                        };
+                        reader.readAsText(file);
+                      };
+                      input.click();
+                    }}
+                  >
+                    <UploadCloud size={16} />
+                    Replace All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = '.json';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          try {
+                            const data = JSON.parse(ev.target?.result as string);
+                            if (typeof data !== 'object' || data === null) throw new Error('Invalid');
+                            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v as string));
+                            toast({ title: 'Storage merged', description: 'Reloading...' });
+                            setTimeout(() => window.location.reload(), 800);
+                          } catch {
+                            toast({ title: 'Invalid backup file', variant: 'destructive' });
+                          }
+                        };
+                        reader.readAsText(file);
+                      };
+                      input.click();
+                    }}
+                  >
+                    <UploadCloud size={16} />
+                    Append / Merge
+                  </Button>
+                </div>
+              </div>
+
+              {/* Clear All Storage */}
+              <div className="space-y-1">
+                <p className="font-medium text-destructive">Clear All Storage</p>
+                <p className="text-sm text-muted-foreground">
+                  Permanently delete all local data — this cannot be undone
+                </p>
+                <Button
+                  variant="destructive"
+                  className="gap-2 mt-1"
+                  onClick={() => setClearStorageDialogOpen(true)}
+                >
+                  <Trash2 size={16} />
+                  Clear All Data
+                </Button>
+              </div>
+            </div>
+          )}
 
         </section>
 
@@ -863,6 +1007,31 @@ const Settings = () => {
               }}
             >
               {t('settings.openSettings')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear All Storage Confirmation */}
+      <AlertDialog open={clearStorageDialogOpen} onOpenChange={setClearStorageDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Local Storage?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all locally stored data including transactions, settings, and preferences. The app will reload after clearing. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                localStorage.clear();
+                toast({ title: 'All storage cleared', description: 'Reloading...' });
+                setTimeout(() => window.location.reload(), 800);
+              }}
+            >
+              Clear Everything
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
