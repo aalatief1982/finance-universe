@@ -34,6 +34,7 @@ import { SpendingTrendChart } from '@/components/budget/SpendingTrendChart';
 import { BudgetProgressCard } from '@/components/budget/BudgetProgressCard';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { formatDisplayDate } from '@/lib/formatters';
 import { 
   Edit, 
   ArrowLeft,
