@@ -93,4 +93,40 @@ describe('templateUtils', () => {
     expect(found).toBeDefined();
     expect(found?.template).toBe(template);
   });
+  // ---- Multi-amount candidate scoring tests ----
+
+  describe('extractTemplateStructure multi-amount scoring', () => {
+    it('picks SAR converted amount over foreign USD in dual-currency SMS', () => {
+      const msg = 'عملية شراء دولية بمبلغ 50.00 USD لدى AMAZON في 2026-03-10\nالمبلغ المحول: 187.50 SAR\nسعر الصرف: 3.75\nرسوم دولية: 5.63 SAR\nالإجمالي: 193.13 SAR';
+      const result = extractTemplateStructure(msg);
+      expect(result.placeholders.amount).toBe('187.50');
+      expect(result.placeholders.currency).toBe('SAR');
+    });
+
+    it('simple single-amount SMS still works (no regression)', () => {
+      const msg = 'شراء بمبلغ 45.50 SAR لدى STC PAY في 2026-03-10';
+      const result = extractTemplateStructure(msg);
+      expect(result.placeholders.amount).toBe('45.50');
+      expect(result.placeholders.currency).toBe('SAR');
+    });
+
+    it('does not pick fee amount as primary', () => {
+      const msg = 'دفع بمبلغ 200.00 SAR\nرسوم: 10.00 SAR';
+      const result = extractTemplateStructure(msg);
+      expect(result.placeholders.amount).toBe('200.00');
+    });
+
+    it('picks only candidate even if it has fee context', () => {
+      const msg = 'رسوم خدمة 15.00 SAR';
+      const result = extractTemplateStructure(msg);
+      expect(result.placeholders.amount).toBe('15.00');
+      expect(result.placeholders.currency).toBe('SAR');
+    });
+
+    it('does not pick exchange rate value as amount', () => {
+      const msg = 'شراء بمبلغ 100.00 USD\nالمبلغ المحول: 375.00 SAR\nسعر الصرف: 3.75 SAR';
+      const result = extractTemplateStructure(msg);
+      expect(result.placeholders.amount).not.toBe('3.75');
+    });
+  });
 });
