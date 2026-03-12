@@ -57,7 +57,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { AnalyticsService } from "@/services/AnalyticsService";
 import { DatePicker } from "@/components/ui/date-picker";
 import { logFirebaseOnlyEvent } from "@/utils/firebase-analytics";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDisplayDate } from "@/lib/formatters";
 import { getDefaultCurrency, getCurrencyOrAppFallback } from '@/utils/default-currency';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getHomeFilteredTransactions, getHomeSummary, HomeDateRange } from "@/utils/home-transactions";
