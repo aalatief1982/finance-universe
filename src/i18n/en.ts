@@ -180,11 +180,19 @@ export const en: Record<string, string> = {
   'settings.smsPermissionDesc': 'Allow Xpensia to read your bank SMS messages and import transactions automatically',
   'settings.dataManagement': 'Data Management',
   'settings.manageData': 'Manage your data',
-  'settings.exportData': 'Export Data',
-  'settings.exportDataDesc': 'Download all your transaction data',
+  'settings.transactions': 'Transactions',
+  'settings.transactionsDesc': 'Import or export transactions as CSV files only.',
+  'settings.exportTransactions': 'Export Transactions',
+  'settings.exportTransactionsDesc': 'Download your transactions as a CSV file.',
   'settings.export': 'Export',
-  'settings.importData': 'Import Data',
-  'settings.importDataDesc': 'Import transactions from a file',
+  'settings.importTransactions': 'Import Transactions',
+  'settings.importTransactionsDesc': 'Import transactions from CSV files only.',
+  'settings.appBackup': 'App Backup',
+  'settings.appBackupDesc': 'Back up or restore all app data using backup JSON files.',
+  'settings.backupAppData': 'Backup App Data',
+  'settings.backupAppDataDesc': 'Create a full app backup as a JSON file.',
+  'settings.restoreAppData': 'Restore App Data',
+  'settings.restoreAppDataDesc': 'Restore app data from backup JSON files only.',
   'settings.import': 'Import',
   'settings.version': 'Version',
   'settings.adminMode': 'Admin Mode',
@@ -1151,5 +1159,4 @@ export const en: Record<string, string> = {
   // Accounts FAB
   'fab.addAccount': 'Add Account',
 };
-
 
