@@ -86,7 +86,7 @@ import {
   getStoredTransactions,
   storeTransactions,
 } from "@/utils/storage-utils";
-import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
+import { parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -94,6 +94,13 @@ import { openAndroidAppPermissionsSettings } from '@/lib/androidSettings';
 import { Device } from '@capacitor/device';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import {
+  createBackupPayload,
+  isLegacyTransactionArrayBackup,
+  parseBackupPayload,
+  restoreBackupData,
+  toBackupJson,
+} from '@/utils/backup-utils';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
 import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
@@ -103,6 +110,7 @@ import { isDefaultCurrencySet } from '@/utils/default-currency';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck } from 'lucide-react';
 import { SMS_AUTO_IMPORT_ENABLED } from '@/lib/env';
+import type { Transaction } from '@/types/transaction';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -341,54 +349,55 @@ const Settings = () => {
 
   const handleExportData = async () => {
     try {
-      const transactions = getStoredTransactions();
-      if (!transactions.length) {
+      const backupPayload = createBackupPayload({
+        appVersion: appVersion || 'unknown',
+        platform: Capacitor.getPlatform(),
+      });
+
+      const keyCount = Object.keys(backupPayload.data).length;
+      if (!keyCount) {
         toast({
           title: t('toast.noDataToExport'),
           description: t('toast.noDataToExportDesc'),
-          variant: "destructive",
+          variant: 'destructive',
         });
         return;
       }
 
-      const csv = convertTransactionsToCsv(transactions);
+      const backupJson = toBackupJson(backupPayload);
+      const fileName = `xpensia-backup-v${backupPayload.xpensiaBackupVersion}-${Date.now()}.json`;
 
       if (Capacitor.getPlatform() === 'web') {
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([backupJson], { type: 'application/json;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.href = url;
-        downloadAnchorNode.download = 'transactions.csv';
+        downloadAnchorNode.download = fileName;
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
         URL.revokeObjectURL(url);
       } else {
-        const fileName = `transactions_${Date.now()}.csv`;
         await Filesystem.writeFile({
           path: fileName,
-          data: csv,
+          data: backupJson,
           directory: Directory.Documents,
-          encoding: 'utf8' as unknown as import('@capacitor/filesystem').Encoding
+          encoding: 'utf8' as unknown as import('@capacitor/filesystem').Encoding,
+          recursive: true,
         });
-        toast({
-          title: t('toast.exportSuccessful'),
-          description: `${t('toast.exportSavedTo')}${fileName}`
-        });
-        return;
       }
 
-      // Log export success
       logAnalyticsEvent('data_export', {
-        count: transactions.length,
-        platform: Capacitor.getPlatform()
+        platform: Capacitor.getPlatform(),
+        backup_version: backupPayload.xpensiaBackupVersion,
+        backup_key_count: keyCount,
       });
 
       toast({
         title: t('toast.exportSuccessful'),
-        description: t('toast.exportedDesc'),
+        description: `Backup saved: ${fileName} • v${backupPayload.xpensiaBackupVersion} • ${keyCount} keys`,
       });
-    } catch (error) {
+    } catch {
       toast({
         title: t('toast.exportFailed'),
         description: t('toast.exportFailedDesc'),
@@ -398,9 +407,9 @@ const Settings = () => {
   };
 
   const handleImportData = () => {
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = ".json,.csv";
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json,.csv';
 
     fileInput.onchange = (e) => {
       const target = e.target as HTMLInputElement;
@@ -412,40 +421,114 @@ const Settings = () => {
       reader.onload = (event) => {
         try {
           const text = event.target?.result as string;
-          const isCsv = file.name.toLowerCase().endsWith(".csv");
-          const data = isCsv ? parseCsvTransactions(text) : JSON.parse(text);
+          const isCsv = file.name.toLowerCase().endsWith('.csv');
 
-          if (!Array.isArray(data) || data.length === 0) {
-            throw new Error("No valid transactions");
+          if (isCsv) {
+            const csvTransactions = parseCsvTransactions(text);
+            if (!csvTransactions.length) {
+              throw new Error('csv_has_no_valid_transactions');
+            }
+
+            const existing = getStoredTransactions();
+            const confirmImport = window.confirm(
+              t('toast.importConfirm')
+                .replace('{count}', String(csvTransactions.length))
+                .replace('{existing}', String(existing.length)),
+            );
+
+            if (!confirmImport) return;
+
+            storeTransactions([...existing, ...csvTransactions]);
+            logAnalyticsEvent('data_import', {
+              imported_count: csvTransactions.length,
+              existing_count: existing.length,
+              format: 'csv',
+            });
+
+            toast({
+              title: t('toast.importSuccessful'),
+              description: t('toast.importSuccessfulDesc'),
+            });
+            setTimeout(() => window.location.reload(), 1500);
+            return;
           }
 
-          const existing = getStoredTransactions();
-          const confirmImport = window.confirm(
-            t('toast.importConfirm').replace('{count}', String(data.length)).replace('{existing}', String(existing.length)),
+          const parsedJson = JSON.parse(text) as unknown;
+
+          if (isLegacyTransactionArrayBackup(parsedJson)) {
+            const existing = getStoredTransactions();
+            const confirmImport = window.confirm(
+              t('toast.importConfirm')
+                .replace('{count}', String(parsedJson.length))
+                .replace('{existing}', String(existing.length)),
+            );
+
+            if (!confirmImport) return;
+
+            storeTransactions([...existing, ...(parsedJson as Transaction[])]);
+            logAnalyticsEvent('data_import', {
+              imported_count: parsedJson.length,
+              existing_count: existing.length,
+              format: 'legacy-json-array',
+            });
+
+            toast({
+              title: t('toast.importSuccessful'),
+              description: t('toast.importSuccessfulDesc'),
+            });
+            setTimeout(() => window.location.reload(), 1500);
+            return;
+          }
+
+          const backup = parseBackupPayload(text);
+          const backupKeyCount = Object.keys(backup.data).length;
+          const confirmRestore = window.confirm(
+            `Restore backup file ${file.name}?
+` +
+              `Version: v${backup.xpensiaBackupVersion}
+` +
+              `Created: ${backup.createdAt}
+` +
+              `Platform: ${backup.platform}
+` +
+              `Keys: ${backupKeyCount}`,
           );
 
-          if (!confirmImport) return;
+          if (!confirmRestore) return;
 
-          const merged = [...existing, ...data];
-          storeTransactions(merged);
-          
-          // Log import success
+          const restoredCount = restoreBackupData(backup);
+
           logAnalyticsEvent('data_import', {
-            imported_count: data.length,
-            existing_count: existing.length,
-            format: isCsv ? 'csv' : 'json'
+            format: 'xpensia-backup-json',
+            backup_version: backup.xpensiaBackupVersion,
+            restored_key_count: restoredCount,
           });
-          
+
           toast({
-            title: t('toast.importSuccessful'),
-            description: t('toast.importSuccessfulDesc'),
+            title: 'Backup restored',
+            description: `Restored ${restoredCount} keys from ${file.name}.`,
           });
           setTimeout(() => window.location.reload(), 1500);
-        } catch {
+        } catch (error) {
+          const errorCode = error instanceof Error ? error.message : 'unknown_error';
+          const specificDescription: Record<string, string> = {
+            invalid_json: 'Backup file is not valid JSON.',
+            invalid_structure: 'Backup JSON must be an object with backup metadata.',
+            unsupported_backup_version: 'Unsupported backup version. Please update Xpensia first.',
+            invalid_created_at: 'Backup metadata is missing a valid createdAt timestamp.',
+            invalid_app_version: 'Backup metadata is missing appVersion.',
+            invalid_platform: 'Backup metadata is missing platform.',
+            invalid_data_shape: 'Backup data must be a key-value object.',
+            empty_backup_data: 'Backup has no data keys to restore.',
+            invalid_data_keys: 'Backup contains invalid keys (expected xpensia_* keys only).',
+            invalid_data_values: 'Backup contains invalid values (expected string values).',
+            csv_has_no_valid_transactions: 'CSV import found no valid transactions.',
+          };
+
           toast({
             title: t('toast.importFailed'),
-            description: t('toast.importFailedDesc'),
-            variant: "destructive",
+            description: specificDescription[errorCode] ?? t('toast.importFailedDesc'),
+            variant: 'destructive',
           });
         }
       };
