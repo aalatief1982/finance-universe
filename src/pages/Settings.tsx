@@ -93,7 +93,7 @@ import { App } from '@capacitor/app';
 import { openAndroidAppPermissionsSettings } from '@/lib/androidSettings';
 import { Device } from '@capacitor/device';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import {
   createBackupPayload,
   isLegacyTransactionArrayBackup,
@@ -354,7 +354,7 @@ const Settings = () => {
         platform: Capacitor.getPlatform(),
       });
 
-      const keyCount = Object.keys(backupPayload.data).length;
+      const keyCount = backupPayload.keyCount;
       if (!keyCount) {
         toast({
           title: t('toast.noDataToExport'),
@@ -366,6 +366,12 @@ const Settings = () => {
 
       const backupJson = toBackupJson(backupPayload);
       const fileName = `xpensia-backup-v${backupPayload.xpensiaBackupVersion}-${Date.now()}.json`;
+      console.info('[Backup] Payload created', {
+        fileName,
+        keyCount,
+        skippedKeyCount: backupPayload.skippedKeys.length,
+        skippedKeys: backupPayload.skippedKeys,
+      });
 
       if (Capacitor.getPlatform() === 'web') {
         const blob = new Blob([backupJson], { type: 'application/json;charset=utf-8;' });
@@ -378,13 +384,18 @@ const Settings = () => {
         downloadAnchorNode.remove();
         URL.revokeObjectURL(url);
       } else {
-        await Filesystem.writeFile({
-          path: fileName,
-          data: backupJson,
-          directory: Directory.Documents,
-          encoding: 'utf8' as unknown as import('@capacitor/filesystem').Encoding,
-          recursive: true,
-        });
+        try {
+          await Filesystem.writeFile({
+            path: fileName,
+            data: backupJson,
+            directory: Directory.Documents,
+            encoding: Encoding.UTF8,
+            recursive: true,
+          });
+        } catch (filesystemError) {
+          console.error('[Backup] Filesystem.writeFile failed', filesystemError);
+          throw new Error(`filesystem_write_failed: ${filesystemError instanceof Error ? filesystemError.message : String(filesystemError)}`);
+        }
       }
 
       logAnalyticsEvent('data_export', {
@@ -395,12 +406,16 @@ const Settings = () => {
 
       toast({
         title: t('toast.exportSuccessful'),
-        description: `Backup saved: ${fileName} • v${backupPayload.xpensiaBackupVersion} • ${keyCount} keys`,
+        description: `Backup saved: ${fileName} • v${backupPayload.xpensiaBackupVersion} • ${keyCount} keys${
+          backupPayload.skippedKeys.length ? ` • skipped ${backupPayload.skippedKeys.length}` : ''
+        }`,
       });
-    } catch {
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.error('[Backup] Export failed', { reason, error });
       toast({
         title: t('toast.exportFailed'),
-        description: t('toast.exportFailedDesc'),
+        description: `${t('toast.exportFailedDesc')} (${reason})`,
         variant: 'destructive',
       });
     }

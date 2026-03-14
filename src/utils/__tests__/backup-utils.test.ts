@@ -15,15 +15,30 @@ describe('backup-utils', () => {
     localStorage.clear();
   });
 
-  it('collects only xpensia-prefixed keys', () => {
+  it('collects JSON parseable keys and tracks skipped keys', () => {
     localStorage.setItem('xpensia_transactions', '[]');
     localStorage.setItem('theme', 'dark');
 
     expect(collectBackupData()).toEqual({
-      xpensia_transactions: '[]',
+      data: {
+        xpensia_transactions: '[]',
+      },
+      skippedKeys: ['theme'],
     });
   });
 
+
+  it('skips invalid JSON values instead of failing backup collection', () => {
+    localStorage.setItem('xpensia_transactions', '[{"id":"1"}]');
+    localStorage.setItem('xpensia_plain_text', 'not-json');
+
+    expect(collectBackupData()).toEqual({
+      data: {
+        xpensia_transactions: '[{"id":"1"}]',
+      },
+      skippedKeys: ['xpensia_plain_text'],
+    });
+  });
   it('builds parseable versioned backup json', () => {
     localStorage.setItem('xpensia_transactions', '[{"id":"1"}]');
 
@@ -32,6 +47,8 @@ describe('backup-utils', () => {
 
     expect(parsed.xpensiaBackupVersion).toBe(XPENSIA_BACKUP_VERSION);
     expect(parsed.platform).toBe('android');
+    expect(parsed.keyCount).toBe(1);
+    expect(parsed.skippedKeys).toEqual([]);
     expect(parsed.data).toEqual({
       xpensia_transactions: '[{"id":"1"}]',
     });
@@ -47,6 +64,8 @@ describe('backup-utils', () => {
       xpensiaBackupVersion: 1,
       createdAt: new Date().toISOString(),
       appVersion: '1.2.3',
+      keyCount: 2,
+      skippedKeys: [],
       platform: 'android',
       data: {
         xpensia_transactions: '[{"id":"1"}]',
