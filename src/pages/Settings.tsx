@@ -621,9 +621,18 @@ const Settings = () => {
       invalid_file_type: 'This JSON is not an Xpensia backup file.',
       unsupported_backup_version: 'This backup version is not supported by the app.',
       invalid_structure: 'Invalid backup structure. Please select an Xpensia backup file.',
+      invalid_created_at: 'Backup metadata is missing a valid creation date.',
+      invalid_app_version: 'Backup metadata is missing app version details.',
+      invalid_key_count: 'Backup metadata has an invalid key count.',
+      invalid_skipped_keys: 'Backup metadata has invalid skipped key details.',
+      invalid_platform: 'Backup metadata has an invalid platform value.',
       invalid_data_shape: 'Backup data section is invalid or missing.',
+      invalid_data_keys: 'Backup data contains invalid key names.',
+      invalid_data_values: 'Backup data contains unsupported values.',
       empty_backup_data: 'Backup file contains no restorable data.',
       key_count_mismatch: 'Backup metadata does not match backup data.',
+      failed_file_read: 'Could not read selected backup file. Please try again.',
+      unknown_error: 'Restore failed due to an unexpected backup error.',
     };
 
     return parserErrorDescriptions[errorCode] ?? 'Invalid backup file.';
@@ -652,6 +661,13 @@ const Settings = () => {
       }
 
       const reader = new FileReader();
+      reader.onerror = () => {
+        toast({
+          title: 'Restore failed',
+          description: getBackupParserErrorMessage('failed_file_read'),
+          variant: 'destructive',
+        });
+      };
       reader.onload = (ev) => {
         try {
           const rawText = ev.target?.result as string;
@@ -982,43 +998,58 @@ const Settings = () => {
               </p>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{t('settings.exportTransactions')}</p>
-                <p className="text-sm text-muted-foreground">{t('settings.exportTransactionsDesc')}</p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={handleExportTransactions}
-                className="gap-2"
-              >
-                <Download size={16} />
-                {t('settings.export')}
-              </Button>
-            </div>
+            {adminMode && (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{t('settings.exportTransactions')}</p>
+                    <p className="text-sm text-muted-foreground">{t('settings.exportTransactionsDesc')}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleExportTransactions}
+                    className="gap-2"
+                  >
+                    <Download size={16} />
+                    {t('settings.export')}
+                  </Button>
+                </div>
 
-            <LockedFeature
-              isLocked={!betaActive}
-              featureName={t('settings.importTransactions')}
-              onLockedClick={() => handleLockedFeatureClick('Import Transactions')}
-            >
+                <LockedFeature
+                  isLocked={!betaActive}
+                  featureName={t('settings.importTransactions')}
+                  onLockedClick={() => handleLockedFeatureClick('Import Transactions')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{t('settings.importTransactions')}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {t('settings.importTransactionsDesc')}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleImportTransactions}
+                      className="gap-2"
+                    >
+                      <UploadCloud size={16} />
+                      {t('settings.import')}
+                    </Button>
+                  </div>
+                </LockedFeature>
+              </>
+            )}
+
+            {!adminMode && (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{t('settings.importTransactions')}</p>
+                  <p className="font-medium">{t('settings.adminMode')}</p>
                   <p className="text-sm text-muted-foreground">
-                    {t('settings.importTransactionsDesc')}
+                    Data transfer tools are hidden outside Admin Mode while stabilization is in progress.
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={handleImportTransactions}
-                  className="gap-2"
-                >
-                  <UploadCloud size={16} />
-                  {t('settings.import')}
-                </Button>
               </div>
-            </LockedFeature>
+            )}
           </div>
 
           <div className="space-y-3 border rounded-lg p-4">
@@ -1031,41 +1062,56 @@ const Settings = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{t('settings.backupAppData')}</p>
-                <p className="text-sm text-muted-foreground">{t('settings.backupAppDataDesc')}</p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={handleBackupAppData}
-                className="gap-2"
-              >
-                <Download size={16} />
-                {t('settings.export')}
-              </Button>
-            </div>
+            {adminMode && (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{t('settings.backupAppData')}</p>
+                    <p className="text-sm text-muted-foreground">{t('settings.backupAppDataDesc')}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleBackupAppData}
+                    className="gap-2"
+                  >
+                    <Download size={16} />
+                    {t('settings.export')}
+                  </Button>
+                </div>
 
-            <LockedFeature
-              isLocked={!betaActive}
-              featureName={t('settings.restoreAppData')}
-              onLockedClick={() => handleLockedFeatureClick('Restore App Data')}
-            >
+                <LockedFeature
+                  isLocked={!betaActive}
+                  featureName={t('settings.restoreAppData')}
+                  onLockedClick={() => handleLockedFeatureClick('Restore App Data')}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{t('settings.restoreAppData')}</p>
+                      <p className="text-sm text-muted-foreground">{t('settings.restoreAppDataDesc')}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={handleRestoreAppData}
+                      className="gap-2"
+                    >
+                      <UploadCloud size={16} />
+                      {t('settings.import')}
+                    </Button>
+                  </div>
+                </LockedFeature>
+              </>
+            )}
+
+            {!adminMode && (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{t('settings.restoreAppData')}</p>
-                  <p className="text-sm text-muted-foreground">{t('settings.restoreAppDataDesc')}</p>
+                  <p className="font-medium">{t('settings.adminMode')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Backup and restore controls are admin-only until data transfer is fully stabilized.
+                  </p>
                 </div>
-                <Button
-                  variant="outline"
-                  onClick={handleRestoreAppData}
-                  className="gap-2"
-                >
-                  <UploadCloud size={16} />
-                  {t('settings.import')}
-                </Button>
               </div>
-            </LockedFeature>
+            )}
           </div>
 
           {/* Admin Storage Management */}
