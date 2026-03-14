@@ -86,7 +86,7 @@ import {
   getStoredTransactions,
   storeTransactions,
 } from "@/utils/storage-utils";
-import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
+import { parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -97,8 +97,6 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import {
   createBackupPayload,
   toBackupJson,
-  parseBackupPayload,
-  restoreBackupData,
 } from '@/utils/backup-utils';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
@@ -345,7 +343,7 @@ const Settings = () => {
     persistSettings({ weekStartsOn: value });
   };
 
-  const handleBackupAppData = async () => {
+  const handleExportData = async () => {
     try {
       const backupPayload = createBackupPayload({
         appVersion: appVersion || 'unknown',
@@ -419,51 +417,7 @@ const Settings = () => {
     }
   };
 
-  const handleExportTransactions = () => {
-    try {
-      const transactions = getStoredTransactions();
-      if (!transactions.length) {
-        toast({
-          title: t('toast.noDataToExport'),
-          description: t('toast.noDataToExportDesc'),
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const csvContent = convertTransactionsToCsv(transactions);
-      const fileName = `xpensia-transactions-${Date.now()}.csv`;
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.href = url;
-      downloadAnchorNode.download = fileName;
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
-      URL.revokeObjectURL(url);
-
-      logAnalyticsEvent('data_export', {
-        platform: Capacitor.getPlatform(),
-        format: 'csv',
-        transaction_count: transactions.length,
-      });
-
-      toast({
-        title: t('toast.exportSuccessful'),
-        description: `${transactions.length} transactions exported as CSV`,
-      });
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      toast({
-        title: t('toast.exportFailed'),
-        description: `${t('toast.exportFailedDesc')} (${reason})`,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleImportTransactions = () => {
+  const handleImportData = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.csv';
@@ -536,165 +490,6 @@ const Settings = () => {
     };
 
     fileInput.click();
-  };
-
-  const handleRestoreAppData = () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json';
-
-    fileInput.onchange = (e) => {
-      const target = e.target as HTMLInputElement;
-      if (!target.files?.length) return;
-
-      const file = target.files[0];
-      const fileName = file.name.toLowerCase();
-      const mimeType = file.type.toLowerCase();
-      const isJson = fileName.endsWith('.json') || mimeType.includes('json');
-
-      if (!isJson) {
-        toast({
-          title: t('toast.importFailed'),
-          description: 'App restore only accepts .json backup files',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const raw = event.target?.result as string;
-          const parsed = JSON.parse(raw);
-
-          if (!parsed || typeof parsed !== 'object' || !('storage' in parsed)) {
-            throw new Error('invalid_backup_json');
-          }
-
-          const storage = (parsed as { storage: Record<string, unknown> }).storage;
-          if (!storage || typeof storage !== 'object') {
-            throw new Error('invalid_backup_storage');
-          }
-
-          const confirmRestore = window.confirm('This will replace all app data from backup. Continue?');
-          if (!confirmRestore) return;
-
-          localStorage.clear();
-          Object.entries(storage).forEach(([key, value]) => {
-            if (typeof value === 'string') {
-              localStorage.setItem(key, value);
-            } else {
-              localStorage.setItem(key, JSON.stringify(value));
-            }
-          });
-
-          logAnalyticsEvent('data_import', {
-            format: 'json_backup',
-            restored_key_count: Object.keys(storage).length,
-          });
-
-          toast({
-            title: t('toast.importSuccessful'),
-            description: 'App backup restored successfully. Reloading...',
-          });
-          setTimeout(() => window.location.reload(), 800);
-        } catch (error) {
-          const reason = error instanceof Error ? error.message : String(error);
-          console.error('[Backup] Restore failed', { reason, error });
-          toast({
-            title: t('toast.importFailed'),
-            description: t('toast.importFailedDesc'),
-            variant: 'destructive',
-          });
-        }
-      };
-
-      reader.readAsText(file);
-    };
-
-    fileInput.click();
-  };
-
-  const getBackupParserErrorMessage = (errorCode: string): string => {
-    const parserErrorDescriptions: Record<string, string> = {
-      invalid_json: 'CSV files are not supported. Please upload a valid Xpensia backup JSON file.',
-      invalid_file_type: 'This JSON is not an Xpensia backup file.',
-      unsupported_backup_version: 'This backup version is not supported by the app.',
-      invalid_structure: 'Invalid backup structure. Please select an Xpensia backup file.',
-      invalid_created_at: 'Backup metadata is missing a valid creation date.',
-      invalid_app_version: 'Backup metadata is missing app version details.',
-      invalid_key_count: 'Backup metadata has an invalid key count.',
-      invalid_skipped_keys: 'Backup metadata has invalid skipped key details.',
-      invalid_platform: 'Backup metadata has an invalid platform value.',
-      invalid_data_shape: 'Backup data section is invalid or missing.',
-      invalid_data_keys: 'Backup data contains invalid key names.',
-      invalid_data_values: 'Backup data contains unsupported values.',
-      empty_backup_data: 'Backup file contains no restorable data.',
-      key_count_mismatch: 'Backup metadata does not match backup data.',
-      failed_file_read: 'Could not read selected backup file. Please try again.',
-      unknown_error: 'Restore failed due to an unexpected backup error.',
-    };
-
-    return parserErrorDescriptions[errorCode] ?? 'Invalid backup file.';
-  };
-
-  const handleAdminRestoreCompleteReplace = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,.csv';
-
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const fileName = file.name.toLowerCase();
-      const mimeType = file.type.toLowerCase();
-
-      if (fileName.endsWith('.csv') || mimeType.includes('csv')) {
-        const csvErrorCode = 'invalid_json';
-        toast({
-          title: 'Restore failed',
-          description: getBackupParserErrorMessage(csvErrorCode),
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onerror = () => {
-        toast({
-          title: 'Restore failed',
-          description: getBackupParserErrorMessage('failed_file_read'),
-          variant: 'destructive',
-        });
-      };
-      reader.onload = (ev) => {
-        try {
-          const rawText = ev.target?.result as string;
-          const backupPayload = parseBackupPayload(rawText);
-          const restoredKeyCount = backupPayload.keyCount;
-
-          localStorage.clear();
-          restoreBackupData(backupPayload);
-
-          toast({
-            title: 'Storage replaced',
-            description: `Restored ${restoredKeyCount} keys. Reloading...`,
-          });
-          setTimeout(() => window.location.reload(), 800);
-        } catch (error) {
-          const parserErrorCode = error instanceof Error ? error.message : 'unknown_error';
-          toast({
-            title: 'Restore failed',
-            description: getBackupParserErrorMessage(parserErrorCode),
-            variant: 'destructive',
-          });
-        }
-      };
-      reader.readAsText(file);
-    };
-
-    input.click();
   };
 
   return (
@@ -990,129 +785,45 @@ const Settings = () => {
           </h2>
           <p className="text-sm text-muted-foreground">{t('settings.manageData')}</p>
           
-          <div className="space-y-3 border rounded-lg p-4">
+          <div className="space-y-3">
             <div>
-              <p className="font-medium">{t('settings.transactions')}</p>
+              <p className="font-medium">{t('settings.exportData')}</p>
               <p className="text-sm text-muted-foreground">
-                {t('settings.transactionsDesc')}
+                {t('settings.exportDataDesc')}
               </p>
             </div>
-
-            {adminMode && (
-              <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{t('settings.exportTransactions')}</p>
-                    <p className="text-sm text-muted-foreground">{t('settings.exportTransactionsDesc')}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={handleExportTransactions}
-                    className="gap-2"
-                  >
-                    <Download size={16} />
-                    {t('settings.export')}
-                  </Button>
-                </div>
-
-                <LockedFeature
-                  isLocked={!betaActive}
-                  featureName={t('settings.importTransactions')}
-                  onLockedClick={() => handleLockedFeatureClick('Import Transactions')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{t('settings.importTransactions')}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {t('settings.importTransactionsDesc')}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={handleImportTransactions}
-                      className="gap-2"
-                    >
-                      <UploadCloud size={16} />
-                      {t('settings.import')}
-                    </Button>
-                  </div>
-                </LockedFeature>
-              </>
-            )}
-
-            {!adminMode && (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{t('settings.adminMode')}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Data transfer tools are hidden outside Admin Mode while stabilization is in progress.
-                  </p>
-                </div>
-              </div>
-            )}
+            <Button
+              variant="outline"
+              onClick={handleExportData}
+              className="gap-2"
+            >
+              <Download size={16} />
+              {t('settings.export')}
+            </Button>
           </div>
 
-          <div className="space-y-3 border rounded-lg p-4">
+          <LockedFeature
+            isLocked={!betaActive}
+            featureName={t('settings.importData')}
+            onLockedClick={() => handleLockedFeatureClick('Import Data')}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">{t('settings.appBackup')}</p>
+                <p className="font-medium">{t('settings.importData')}</p>
                 <p className="text-sm text-muted-foreground">
-                  {t('settings.appBackupDesc')}
+                  {t('settings.importDataDesc')}
                 </p>
               </div>
+              <Button
+                variant="outline"
+                onClick={handleImportData}
+                className="gap-2"
+              >
+                <UploadCloud size={16} />
+                {t('settings.import')}
+              </Button>
             </div>
-
-            {adminMode && (
-              <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{t('settings.backupAppData')}</p>
-                    <p className="text-sm text-muted-foreground">{t('settings.backupAppDataDesc')}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={handleBackupAppData}
-                    className="gap-2"
-                  >
-                    <Download size={16} />
-                    {t('settings.export')}
-                  </Button>
-                </div>
-
-                <LockedFeature
-                  isLocked={!betaActive}
-                  featureName={t('settings.restoreAppData')}
-                  onLockedClick={() => handleLockedFeatureClick('Restore App Data')}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{t('settings.restoreAppData')}</p>
-                      <p className="text-sm text-muted-foreground">{t('settings.restoreAppDataDesc')}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      onClick={handleRestoreAppData}
-                      className="gap-2"
-                    >
-                      <UploadCloud size={16} />
-                      {t('settings.import')}
-                    </Button>
-                  </div>
-                </LockedFeature>
-              </>
-            )}
-
-            {!adminMode && (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{t('settings.adminMode')}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Backup and restore controls are admin-only until data transfer is fully stabilized.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          </LockedFeature>
 
           {/* Admin Storage Management */}
           {adminMode && (
@@ -1173,16 +884,69 @@ const Settings = () => {
               <div className="space-y-1">
                 <p className="font-medium">Restore Backup</p>
                 <p className="text-sm text-muted-foreground">
-                  Import an Xpensia JSON backup to completely replace storage
+                  Import a JSON backup to replace or append storage
                 </p>
                 <div className="flex gap-2 mt-1">
                   <Button
                     variant="outline"
                     className="gap-2"
-                    onClick={handleAdminRestoreCompleteReplace}
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = '.json';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          try {
+                            const data = JSON.parse(ev.target?.result as string);
+                            if (typeof data !== 'object' || data === null) throw new Error('Invalid');
+                            localStorage.clear();
+                            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v as string));
+                            toast({ title: 'Storage replaced', description: 'Reloading...' });
+                            setTimeout(() => window.location.reload(), 800);
+                          } catch {
+                            toast({ title: 'Invalid backup file', variant: 'destructive' });
+                          }
+                        };
+                        reader.readAsText(file);
+                      };
+                      input.click();
+                    }}
                   >
                     <UploadCloud size={16} />
-                    Complete Replace
+                    Replace All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = '.json';
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          try {
+                            const data = JSON.parse(ev.target?.result as string);
+                            if (typeof data !== 'object' || data === null) throw new Error('Invalid');
+                            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v as string));
+                            toast({ title: 'Storage merged', description: 'Reloading...' });
+                            setTimeout(() => window.location.reload(), 800);
+                          } catch {
+                            toast({ title: 'Invalid backup file', variant: 'destructive' });
+                          }
+                        };
+                        reader.readAsText(file);
+                      };
+                      input.click();
+                    }}
+                  >
+                    <UploadCloud size={16} />
+                    Append / Merge
                   </Button>
                 </div>
               </div>

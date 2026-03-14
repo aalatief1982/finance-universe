@@ -180,19 +180,11 @@ export const ar: Record<string, string> = {
   'settings.smsPermissionDesc': 'السماح لـ Xpensia بقراءة رسائل البنك واستيراد المعاملات تلقائياً',
   'settings.dataManagement': 'إدارة البيانات',
   'settings.manageData': 'إدارة بياناتك',
-  'settings.transactions': 'المعاملات',
-  'settings.transactionsDesc': 'استيراد أو تصدير المعاملات كملفات CSV فقط.',
-  'settings.exportTransactions': 'تصدير المعاملات',
-  'settings.exportTransactionsDesc': 'تحميل معاملاتك كملف CSV.',
+  'settings.exportData': 'تصدير البيانات',
+  'settings.exportDataDesc': 'تحميل جميع بيانات معاملاتك',
   'settings.export': 'تصدير',
-  'settings.importTransactions': 'استيراد المعاملات',
-  'settings.importTransactionsDesc': 'استيراد المعاملات من ملفات CSV فقط.',
-  'settings.appBackup': 'نسخة احتياطية للتطبيق',
-  'settings.appBackupDesc': 'نسخ احتياطي أو استعادة جميع بيانات التطبيق باستخدام ملفات JSON الاحتياطية.',
-  'settings.backupAppData': 'نسخ احتياطي لبيانات التطبيق',
-  'settings.backupAppDataDesc': 'إنشاء نسخة احتياطية كاملة للتطبيق كملف JSON.',
-  'settings.restoreAppData': 'استعادة بيانات التطبيق',
-  'settings.restoreAppDataDesc': 'استعادة بيانات التطبيق من ملفات JSON الاحتياطية فقط.',
+  'settings.importData': 'استيراد البيانات',
+  'settings.importDataDesc': 'استيراد المعاملات من ملف',
   'settings.import': 'استيراد',
   'settings.version': 'الإصدار',
   'settings.adminMode': 'وضع المدير',
@@ -1159,4 +1151,5 @@ export const ar: Record<string, string> = {
   // Accounts FAB
   'fab.addAccount': 'إضافة حساب',
 };
+
 

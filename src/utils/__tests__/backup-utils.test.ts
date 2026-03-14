@@ -45,7 +45,6 @@ describe('backup-utils', () => {
     const payload = createBackupPayload({ appVersion: '1.2.3', platform: 'android' });
     const parsed = parseBackupPayload(toBackupJson(payload));
 
-    expect(parsed.xpensiaFileType).toBe('app-backup');
     expect(parsed.xpensiaBackupVersion).toBe(XPENSIA_BACKUP_VERSION);
     expect(parsed.platform).toBe('android');
     expect(parsed.keyCount).toBe(1);
@@ -57,28 +56,11 @@ describe('backup-utils', () => {
 
   it('rejects non-versioned backup shapes', () => {
     expect(() => parseBackupPayload(JSON.stringify([{ id: '1' }]))).toThrow('invalid_structure');
-    expect(() => parseBackupPayload(JSON.stringify({ data: {} }))).toThrow('invalid_file_type');
-    expect(() =>
-      parseBackupPayload(
-        JSON.stringify({
-          xpensiaFileType: 'legacy-backup',
-          xpensiaBackupVersion: XPENSIA_BACKUP_VERSION,
-          createdAt: new Date().toISOString(),
-          appVersion: '1.2.3',
-          keyCount: 1,
-          skippedKeys: [],
-          platform: 'android',
-          data: {
-            xpensia_transactions: '[{"id":"1"}]',
-          },
-        }),
-      ),
-    ).toThrow('invalid_file_type');
+    expect(() => parseBackupPayload(JSON.stringify({ data: {} }))).toThrow('unsupported_backup_version');
   });
 
   it('restores backup data as exact strings', () => {
     const restoredCount = restoreBackupData({
-      xpensiaFileType: 'app-backup',
       xpensiaBackupVersion: 1,
       createdAt: new Date().toISOString(),
       appVersion: '1.2.3',

@@ -1,7 +1,6 @@
 export const XPENSIA_BACKUP_VERSION = 1;
 
 export interface XpensiaBackupFile {
-  xpensiaFileType: 'app-backup';
   xpensiaBackupVersion: number;
   createdAt: string;
   appVersion: string;
@@ -61,7 +60,6 @@ export const createBackupPayload = ({
   const { data, skippedKeys } = collectBackupData(storage);
 
   return {
-    xpensiaFileType: 'app-backup',
     xpensiaBackupVersion: XPENSIA_BACKUP_VERSION,
     createdAt: new Date().toISOString(),
     appVersion,
@@ -91,10 +89,6 @@ export const parseBackupPayload = (jsonText: string): XpensiaBackupFile => {
   }
 
   const record = parsed as Partial<XpensiaBackupFile>;
-  if (record.xpensiaFileType !== 'app-backup') {
-    throw new Error('invalid_file_type');
-  }
-
   if (record.xpensiaBackupVersion !== XPENSIA_BACKUP_VERSION) {
     throw new Error('unsupported_backup_version');
   }
