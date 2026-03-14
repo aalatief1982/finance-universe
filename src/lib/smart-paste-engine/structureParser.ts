@@ -76,7 +76,7 @@ export function normalizeDate(dateStr: string, context?: ParseContext): string |
 
   const shortNumericDateMatch = dateStr
     .trim()
-    .match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{1,2})(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?$/);
+    .match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{1,2})(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?$/);
   if (shortNumericDateMatch) {
     const [, part1, part2, part3] = shortNumericDateMatch;
     const p1 = parseInt(part1, 10);
