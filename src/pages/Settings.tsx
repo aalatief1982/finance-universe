@@ -97,6 +97,8 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import {
   createBackupPayload,
   toBackupJson,
+  parseBackupPayload,
+  restoreBackupData,
 } from '@/utils/backup-utils';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
@@ -613,6 +615,72 @@ const Settings = () => {
     fileInput.click();
   };
 
+  const getBackupParserErrorMessage = (errorCode: string): string => {
+    const parserErrorDescriptions: Record<string, string> = {
+      invalid_json: 'CSV files are not supported. Please upload a valid Xpensia backup JSON file.',
+      invalid_file_type: 'This JSON is not an Xpensia backup file.',
+      unsupported_backup_version: 'This backup version is not supported by the app.',
+      invalid_structure: 'Invalid backup structure. Please select an Xpensia backup file.',
+      invalid_data_shape: 'Backup data section is invalid or missing.',
+      empty_backup_data: 'Backup file contains no restorable data.',
+      key_count_mismatch: 'Backup metadata does not match backup data.',
+    };
+
+    return parserErrorDescriptions[errorCode] ?? 'Invalid backup file.';
+  };
+
+  const handleAdminRestoreCompleteReplace = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,.csv';
+
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const fileName = file.name.toLowerCase();
+      const mimeType = file.type.toLowerCase();
+
+      if (fileName.endsWith('.csv') || mimeType.includes('csv')) {
+        const csvErrorCode = 'invalid_json';
+        toast({
+          title: 'Restore failed',
+          description: getBackupParserErrorMessage(csvErrorCode),
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const rawText = ev.target?.result as string;
+          const backupPayload = parseBackupPayload(rawText);
+          const restoredKeyCount = backupPayload.keyCount;
+
+          localStorage.clear();
+          restoreBackupData(backupPayload);
+
+          toast({
+            title: 'Storage replaced',
+            description: `Restored ${restoredKeyCount} keys. Reloading...`,
+          });
+          setTimeout(() => window.location.reload(), 800);
+        } catch (error) {
+          const parserErrorCode = error instanceof Error ? error.message : 'unknown_error';
+          toast({
+            title: 'Restore failed',
+            description: getBackupParserErrorMessage(parserErrorCode),
+            variant: 'destructive',
+          });
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    input.click();
+  };
+
   return (
     <Layout>
       <div className="px-1">
@@ -1059,69 +1127,16 @@ const Settings = () => {
               <div className="space-y-1">
                 <p className="font-medium">Restore Backup</p>
                 <p className="text-sm text-muted-foreground">
-                  Import a JSON backup to replace or append storage
+                  Import an Xpensia JSON backup to completely replace storage
                 </p>
                 <div className="flex gap-2 mt-1">
                   <Button
                     variant="outline"
                     className="gap-2"
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = '.json';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          try {
-                            const data = JSON.parse(ev.target?.result as string);
-                            if (typeof data !== 'object' || data === null) throw new Error('Invalid');
-                            localStorage.clear();
-                            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v as string));
-                            toast({ title: 'Storage replaced', description: 'Reloading...' });
-                            setTimeout(() => window.location.reload(), 800);
-                          } catch {
-                            toast({ title: 'Invalid backup file', variant: 'destructive' });
-                          }
-                        };
-                        reader.readAsText(file);
-                      };
-                      input.click();
-                    }}
+                    onClick={handleAdminRestoreCompleteReplace}
                   >
                     <UploadCloud size={16} />
-                    Replace All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = '.json';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          try {
-                            const data = JSON.parse(ev.target?.result as string);
-                            if (typeof data !== 'object' || data === null) throw new Error('Invalid');
-                            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v as string));
-                            toast({ title: 'Storage merged', description: 'Reloading...' });
-                            setTimeout(() => window.location.reload(), 800);
-                          } catch {
-                            toast({ title: 'Invalid backup file', variant: 'destructive' });
-                          }
-                        };
-                        reader.readAsText(file);
-                      };
-                      input.click();
-                    }}
-                  >
-                    <UploadCloud size={16} />
-                    Append / Merge
+                    Complete Replace
                   </Button>
                 </div>
               </div>
