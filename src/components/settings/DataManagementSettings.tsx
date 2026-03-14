@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { getStoredTransactions, storeTransactions } from '@/utils/storage-utils';
 import { convertTransactionsToCsv, parseCsvTransactions } from '@/utils/csv';
-import type { Transaction } from '@/types/transaction';
 import { logAnalyticsEvent } from '@/utils/firebase-analytics';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -66,20 +65,39 @@ const DataManagementSettings = () => {
   const handleImportData = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.json,.csv';
+    fileInput.accept = '.csv';
     
     fileInput.onchange = (e) => {
       const target = e.target as HTMLInputElement;
       if (!target.files?.length) return;
       
       const file = target.files[0];
+      const fileName = file.name.toLowerCase();
+
+      if (fileName.endsWith('.json')) {
+        toast({
+          title: t('toast.importFailed'),
+          description: 'JSON transaction imports are disabled. Please import a CSV file.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!fileName.endsWith('.csv')) {
+        toast({
+          title: t('toast.importFailed'),
+          description: 'Only CSV transaction imports are supported.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const reader = new FileReader();
 
       reader.onload = (event) => {
         try {
           const text = event.target?.result as string;
-          const isCsv = file.name.toLowerCase().endsWith('.csv');
-          const data = isCsv ? parseCsvTransactions(text) : (JSON.parse(text) as Transaction[]);
+          const data = parseCsvTransactions(text);
 
           if (!Array.isArray(data) || data.length === 0) {
             throw new Error('No valid transactions');
@@ -153,23 +171,23 @@ const DataManagementSettings = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">{t('dataMgmt.exportData')}</p>
+              <p className="font-medium">Export Transactions</p>
               <p className="text-sm text-muted-foreground">{t('dataMgmt.exportDataDesc')}</p>
             </div>
             <Button variant="outline" onClick={handleExportData} className="gap-2">
               <Download size={16} />
-              {t('dataMgmt.export')}
+              Export Transactions
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">{t('dataMgmt.importData')}</p>
+              <p className="font-medium">Import Transactions</p>
               <p className="text-sm text-muted-foreground">{t('dataMgmt.importDataDesc')}</p>
             </div>
             <Button variant="outline" onClick={handleImportData} className="gap-2">
               <UploadCloud size={16} />
-              {t('dataMgmt.import')}
+              Import Transactions
             </Button>
           </div>
 
