@@ -1,6 +1,7 @@
 const SMS_INBOX_QUEUE_KEY = 'xpensia_sms_inbox_queue';
 const MAX_INBOX_ITEMS = 200;
 const DEDUP_WINDOW_MS = 10 * 60 * 1000;
+const SHOULD_LOG_SMS_INBOX = import.meta.env.MODE === 'development';
 let hasLoggedInboxBootstrap = false;
 const inboxListeners = new Set<() => void>();
 
@@ -12,6 +13,7 @@ export interface SmsInboxItem {
   sender: string;
   body: string;
   receivedAt: string;
+  fingerprint?: string;
   status: SmsInboxStatus;
   source: SmsInboxSource;
 }
@@ -34,6 +36,24 @@ interface ClearInboxOptions {
 const normalize = (value: string): string => value.trim().replace(/\s+/g, ' ').toLowerCase();
 
 const buildDedupKey = (sender: string, body: string): string => `${normalize(sender)}|${normalize(body)}`;
+
+const normalizeIsoToSecond = (isoValue: string): string | null => {
+  const asMs = new Date(isoValue).getTime();
+  if (!Number.isFinite(asMs)) {
+    return null;
+  }
+
+  return new Date(Math.floor(asMs / 1000) * 1000).toISOString();
+};
+
+const buildFingerprint = (sender: string, body: string, receivedAt: string): string | null => {
+  const normalizedSecond = normalizeIsoToSecond(receivedAt);
+  if (!normalizedSecond) {
+    return null;
+  }
+
+  return `${buildDedupKey(sender, body)}|${normalizedSecond}`;
+};
 
 const getSafeStorage = (): Storage | null => {
   if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
@@ -68,6 +88,7 @@ const parseInbox = (rawValue: string | null): SmsInboxItem[] => {
         && typeof item.sender === 'string'
         && typeof item.body === 'string'
         && typeof item.receivedAt === 'string'
+        && (typeof item.fingerprint === 'undefined' || typeof item.fingerprint === 'string')
         && (item.status === 'new' || item.status === 'opened' || item.status === 'processed' || item.status === 'ignored')
         && (item.source === 'listener' || item.source === 'static_receiver');
     });
@@ -102,11 +123,34 @@ const saveInbox = (items: SmsInboxItem[]): void => {
 };
 
 export const enqueueSms = ({ sender, body, receivedAt, source = 'listener' }: EnqueueSmsInput): SmsInboxItem[] => {
-  const nextReceivedAt = receivedAt ?? new Date().toISOString();
+  const nextReceivedAt = normalizeIsoToSecond(receivedAt ?? '') ?? new Date().toISOString();
   const nextReceivedAtMs = new Date(nextReceivedAt).getTime();
 
   const inbox = loadInbox();
   const dedupKey = buildDedupKey(sender, body);
+  const fingerprint = buildFingerprint(sender, body, nextReceivedAt);
+
+  if (fingerprint) {
+    const hasExactFingerprintMatch = inbox.some((item) => {
+      if (item.fingerprint) {
+        return item.fingerprint === fingerprint;
+      }
+
+      const existingFingerprint = buildFingerprint(item.sender, item.body, item.receivedAt);
+      return existingFingerprint === fingerprint;
+    });
+
+    if (hasExactFingerprintMatch) {
+      if (SHOULD_LOG_SMS_INBOX) {
+        console.log('[SMS_INBOX][DEDUP] Skipping exact fingerprint duplicate', {
+          sender,
+          source,
+          fingerprint,
+        });
+      }
+      return inbox;
+    }
+  }
 
   const isDuplicate = inbox.some((item) => {
     const existingMs = new Date(item.receivedAt).getTime();
@@ -119,6 +163,14 @@ export const enqueueSms = ({ sender, body, receivedAt, source = 'listener' }: En
   });
 
   if (isDuplicate) {
+    if (SHOULD_LOG_SMS_INBOX) {
+      console.log('[SMS_INBOX][DEDUP] Skipping time-window duplicate', {
+        sender,
+        source,
+        dedupKey,
+        receivedAt: nextReceivedAt,
+      });
+    }
     return inbox;
   }
 
@@ -129,6 +181,7 @@ export const enqueueSms = ({ sender, body, receivedAt, source = 'listener' }: En
       sender,
       body,
       receivedAt: nextReceivedAt,
+      fingerprint: fingerprint ?? undefined,
       status: 'new' as const,
       source,
     },
@@ -139,6 +192,15 @@ export const enqueueSms = ({ sender, body, receivedAt, source = 'listener' }: En
     : nextInbox;
 
   saveInbox(trimmedInbox);
+  if (SHOULD_LOG_SMS_INBOX) {
+    console.log('[SMS_INBOX][ENQUEUE] Added inbox item', {
+      sender,
+      source,
+      receivedAt: nextReceivedAt,
+      fingerprint: fingerprint ?? null,
+      queueSize: trimmedInbox.length,
+    });
+  }
   return trimmedInbox;
 };
 
