@@ -96,9 +96,6 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import {
   createBackupPayload,
-  isLegacyTransactionArrayBackup,
-  parseBackupPayload,
-  restoreBackupData,
   toBackupJson,
 } from '@/utils/backup-utils';
 import OTADebugSection from '@/components/settings/OTADebugSection';
@@ -110,7 +107,6 @@ import { isDefaultCurrencySet } from '@/utils/default-currency';
 import { Badge } from '@/components/ui/badge';
 import { ShieldCheck } from 'lucide-react';
 import { SMS_AUTO_IMPORT_ENABLED } from '@/lib/env';
-import type { Transaction } from '@/types/transaction';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -424,119 +420,61 @@ const Settings = () => {
   const handleImportData = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.json,.csv';
+    fileInput.accept = '.csv';
 
     fileInput.onchange = (e) => {
       const target = e.target as HTMLInputElement;
       if (!target.files?.length) return;
 
       const file = target.files[0];
+      const fileName = file.name.toLowerCase();
+      const mimeType = file.type.toLowerCase();
+      const isCsv = fileName.endsWith('.csv') || mimeType.includes('csv');
+      const isJson = fileName.endsWith('.json') || mimeType.includes('json');
+
+      if (!isCsv || isJson) {
+        toast({
+          title: t('toast.importFailed'),
+          description: 'Transaction import only accepts .csv files',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const reader = new FileReader();
 
       reader.onload = (event) => {
         try {
           const text = event.target?.result as string;
-          const isCsv = file.name.toLowerCase().endsWith('.csv');
-
-          if (isCsv) {
-            const csvTransactions = parseCsvTransactions(text);
-            if (!csvTransactions.length) {
-              throw new Error('csv_has_no_valid_transactions');
-            }
-
-            const existing = getStoredTransactions();
-            const confirmImport = window.confirm(
-              t('toast.importConfirm')
-                .replace('{count}', String(csvTransactions.length))
-                .replace('{existing}', String(existing.length)),
-            );
-
-            if (!confirmImport) return;
-
-            storeTransactions([...existing, ...csvTransactions]);
-            logAnalyticsEvent('data_import', {
-              imported_count: csvTransactions.length,
-              existing_count: existing.length,
-              format: 'csv',
-            });
-
-            toast({
-              title: t('toast.importSuccessful'),
-              description: t('toast.importSuccessfulDesc'),
-            });
-            setTimeout(() => window.location.reload(), 1500);
-            return;
+          const csvTransactions = parseCsvTransactions(text);
+          if (!csvTransactions.length) {
+            throw new Error('csv_has_no_valid_transactions');
           }
 
-          const parsedJson = JSON.parse(text) as unknown;
-
-          if (isLegacyTransactionArrayBackup(parsedJson)) {
-            const existing = getStoredTransactions();
-            const confirmImport = window.confirm(
-              t('toast.importConfirm')
-                .replace('{count}', String(parsedJson.length))
-                .replace('{existing}', String(existing.length)),
-            );
-
-            if (!confirmImport) return;
-
-            storeTransactions([...existing, ...(parsedJson as Transaction[])]);
-            logAnalyticsEvent('data_import', {
-              imported_count: parsedJson.length,
-              existing_count: existing.length,
-              format: 'legacy-json-array',
-            });
-
-            toast({
-              title: t('toast.importSuccessful'),
-              description: t('toast.importSuccessfulDesc'),
-            });
-            setTimeout(() => window.location.reload(), 1500);
-            return;
-          }
-
-          const backup = parseBackupPayload(text);
-          const backupKeyCount = Object.keys(backup.data).length;
-          const confirmRestore = window.confirm(
-            `Restore backup file ${file.name}?
-` +
-              `Version: v${backup.xpensiaBackupVersion}
-` +
-              `Created: ${backup.createdAt}
-` +
-              `Platform: ${backup.platform}
-` +
-              `Keys: ${backupKeyCount}`,
+          const existing = getStoredTransactions();
+          const confirmImport = window.confirm(
+            t('toast.importConfirm')
+              .replace('{count}', String(csvTransactions.length))
+              .replace('{existing}', String(existing.length)),
           );
 
-          if (!confirmRestore) return;
+          if (!confirmImport) return;
 
-          const restoredCount = restoreBackupData(backup);
-
+          storeTransactions([...existing, ...csvTransactions]);
           logAnalyticsEvent('data_import', {
-            format: 'xpensia-backup-json',
-            backup_version: backup.xpensiaBackupVersion,
-            restored_key_count: restoredCount,
+            imported_count: csvTransactions.length,
+            existing_count: existing.length,
+            format: 'csv',
           });
 
           toast({
-            title: 'Backup restored',
-            description: `Restored ${restoredCount} keys from ${file.name}.`,
+            title: t('toast.importSuccessful'),
+            description: t('toast.importSuccessfulDesc'),
           });
           setTimeout(() => window.location.reload(), 1500);
         } catch (error) {
           const errorCode = error instanceof Error ? error.message : 'unknown_error';
           const specificDescription: Record<string, string> = {
-            invalid_json: 'Backup file is not valid JSON.',
-            invalid_structure: 'Backup JSON must be an object with backup metadata.',
-            unsupported_backup_version: 'Unsupported backup version. Please update Xpensia first.',
-            invalid_created_at: 'Backup metadata is missing a valid createdAt timestamp.',
-            invalid_app_version: 'Backup metadata is missing appVersion.',
-            invalid_platform: 'Backup metadata is missing platform.',
-            invalid_data_shape: 'Backup data must be a key-value object.',
-            empty_backup_data: 'Backup has no data keys to restore.',
-            invalid_data_keys: 'Backup contains invalid keys (expected xpensia_* keys only).',
-            invalid_data_values: 'Backup contains invalid values (expected string values).',
             csv_has_no_valid_transactions: 'CSV import found no valid transactions.',
           };
 
