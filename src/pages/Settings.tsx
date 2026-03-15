@@ -501,6 +501,64 @@ const Settings = () => {
     fileInput.click();
   };
 
+  const handleBackupAllStorage = async () => {
+    try {
+      const data: Record<string, string> = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) data[key] = localStorage.getItem(key) || '';
+      }
+
+      const json = JSON.stringify(data, null, 2);
+      const fileName = `xpensia-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+      if (Capacitor.getPlatform() === 'web') {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } else {
+        await Filesystem.writeFile({
+          path: fileName,
+          data: json,
+          directory: Directory.Data,
+          encoding: Encoding.UTF8,
+          recursive: true,
+        });
+
+        const { uri } = await Filesystem.getUri({
+          path: fileName,
+          directory: Directory.Data,
+        });
+
+        await Share.share({
+          title: 'Storage Backup JSON',
+          text: fileName,
+          url: uri,
+          dialogTitle: 'Share backup file',
+        });
+      }
+
+      toast({
+        title: Capacitor.getPlatform() === 'web' ? 'Backup downloaded' : 'Backup ready to share',
+        description: fileName,
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      console.error('[Storage Backup] Backup failed', { reason, error });
+      toast({
+        title: 'Backup failed',
+        description: reason,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <Layout>
       <div className="px-1">
@@ -850,39 +908,7 @@ const Settings = () => {
                 <Button
                   variant="outline"
                   className="gap-2 mt-1"
-                  onClick={async () => {
-                    try {
-                      const data: Record<string, string> = {};
-                      for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key) data[key] = localStorage.getItem(key) || '';
-                      }
-                      const json = JSON.stringify(data, null, 2);
-                      const fileName = `xpensia-backup-${new Date().toISOString().slice(0, 10)}.json`;
-
-                      if (Capacitor.isNativePlatform()) {
-                        await Filesystem.writeFile({
-                          path: fileName,
-                          data: json,
-                          directory: Directory.Documents,
-                        });
-                        toast({ title: 'Backup saved', description: `Saved to Documents/${fileName}` });
-                      } else {
-                        const blob = new Blob([json], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = fileName;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        URL.revokeObjectURL(url);
-                        toast({ title: 'Backup downloaded', description: fileName });
-                      }
-                    } catch {
-                      toast({ title: 'Backup failed', variant: 'destructive' });
-                    }
-                  }}
+                  onClick={handleBackupAllStorage}
                 >
                   <HardDrive size={16} />
                   Backup Storage
