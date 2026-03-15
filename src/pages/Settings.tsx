@@ -86,7 +86,7 @@ import {
   getStoredTransactions,
   storeTransactions,
 } from "@/utils/storage-utils";
-import { parseCsvTransactions } from "@/utils/csv";
+import { convertTransactionsToCsv, parseCsvTransactions } from "@/utils/csv";
 import { logAnalyticsEvent, logFirebaseOnlyEvent } from '@/utils/firebase-analytics';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -94,10 +94,6 @@ import { openAndroidAppPermissionsSettings } from '@/lib/androidSettings';
 import { Device } from '@capacitor/device';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import {
-  createBackupPayload,
-  toBackupJson,
-} from '@/utils/backup-utils';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
 import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
@@ -345,13 +341,8 @@ const Settings = () => {
 
   const handleExportData = async () => {
     try {
-      const backupPayload = createBackupPayload({
-        appVersion: appVersion || 'unknown',
-        platform: Capacitor.getPlatform(),
-      });
-
-      const keyCount = backupPayload.keyCount;
-      if (!keyCount) {
+      const transactions = getStoredTransactions();
+      if (!transactions.length) {
         toast({
           title: t('toast.noDataToExport'),
           description: t('toast.noDataToExportDesc'),
@@ -360,17 +351,11 @@ const Settings = () => {
         return;
       }
 
-      const backupJson = toBackupJson(backupPayload);
-      const fileName = `xpensia-backup-v${backupPayload.xpensiaBackupVersion}-${Date.now()}.json`;
-      console.info('[Backup] Payload created', {
-        fileName,
-        keyCount,
-        skippedKeyCount: backupPayload.skippedKeys.length,
-        skippedKeys: backupPayload.skippedKeys,
-      });
+      const csv = convertTransactionsToCsv(transactions);
+      const fileName = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
 
       if (Capacitor.getPlatform() === 'web') {
-        const blob = new Blob([backupJson], { type: 'application/json;charset=utf-8;' });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.href = url;
@@ -383,32 +368,30 @@ const Settings = () => {
         try {
           await Filesystem.writeFile({
             path: fileName,
-            data: backupJson,
+            data: csv,
             directory: Directory.Documents,
             encoding: Encoding.UTF8,
             recursive: true,
           });
         } catch (filesystemError) {
-          console.error('[Backup] Filesystem.writeFile failed', filesystemError);
+          console.error('[Transaction CSV Export] Filesystem.writeFile failed', filesystemError);
           throw new Error(`filesystem_write_failed: ${filesystemError instanceof Error ? filesystemError.message : String(filesystemError)}`);
         }
       }
 
       logAnalyticsEvent('data_export', {
         platform: Capacitor.getPlatform(),
-        backup_version: backupPayload.xpensiaBackupVersion,
-        backup_key_count: keyCount,
+        exported_count: transactions.length,
+        format: 'csv',
       });
 
       toast({
         title: t('toast.exportSuccessful'),
-        description: `Backup saved: ${fileName} • v${backupPayload.xpensiaBackupVersion} • ${keyCount} keys${
-          backupPayload.skippedKeys.length ? ` • skipped ${backupPayload.skippedKeys.length}` : ''
-        }`,
+        description: `${t('toast.exportedDesc')} (${fileName})`,
       });
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      console.error('[Backup] Export failed', { reason, error });
+      console.error('[Transaction CSV Export] Export failed', { reason, error });
       toast({
         title: t('toast.exportFailed'),
         description: `${t('toast.exportFailedDesc')} (${reason})`,
@@ -476,6 +459,8 @@ const Settings = () => {
           const errorCode = error instanceof Error ? error.message : 'unknown_error';
           const specificDescription: Record<string, string> = {
             csv_has_no_valid_transactions: 'CSV import found no valid transactions.',
+            'Invalid CSV format': 'Invalid CSV format.',
+            'Missing required fields': 'Missing required fields in CSV.',
           };
 
           toast({
