@@ -403,7 +403,10 @@ const Settings = () => {
   const handleImportData = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.csv';
+    const isAndroid = Capacitor.getPlatform() === 'android';
+    fileInput.accept = isAndroid
+      ? '.csv,text/csv,text/*,*/*'
+      : '.csv,text/csv';
 
     fileInput.onchange = (e) => {
       const target = e.target as HTMLInputElement;
@@ -415,7 +418,7 @@ const Settings = () => {
       const isCsv = fileName.endsWith('.csv') || mimeType.includes('csv');
       const isJson = fileName.endsWith('.json') || mimeType.includes('json');
 
-      if (!isCsv || isJson) {
+      if (isJson) {
         toast({
           title: t('toast.importFailed'),
           description: 'Transaction import only accepts .csv files',
@@ -429,6 +432,11 @@ const Settings = () => {
       reader.onload = (event) => {
         try {
           const text = event.target?.result as string;
+
+          if (!isCsv && !text.includes(',')) {
+            throw new Error('not_transaction_csv');
+          }
+
           const csvTransactions = parseCsvTransactions(text);
           if (!csvTransactions.length) {
             throw new Error('csv_has_no_valid_transactions');
@@ -458,6 +466,7 @@ const Settings = () => {
         } catch (error) {
           const errorCode = error instanceof Error ? error.message : 'unknown_error';
           const specificDescription: Record<string, string> = {
+            not_transaction_csv: 'Selected file is not a valid transactions CSV.',
             csv_has_no_valid_transactions: 'CSV import found no valid transactions.',
             'Invalid CSV format': 'Invalid CSV format.',
             'Missing required fields': 'Missing required fields in CSV.',
