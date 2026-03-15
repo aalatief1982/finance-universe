@@ -94,6 +94,7 @@ import { openAndroidAppPermissionsSettings } from '@/lib/androidSettings';
 import { Device } from '@capacitor/device';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import OTADebugSection from '@/components/settings/OTADebugSection';
 import { appUpdateService } from '@/services/AppUpdateService';
 import TemplateStatsSection from '@/components/settings/TemplateStatsSection';
@@ -369,9 +370,21 @@ const Settings = () => {
           await Filesystem.writeFile({
             path: fileName,
             data: csv,
-            directory: Directory.Documents,
+            directory: Directory.Data,
             encoding: Encoding.UTF8,
             recursive: true,
+          });
+
+          const { uri } = await Filesystem.getUri({
+            path: fileName,
+            directory: Directory.Data,
+          });
+
+          await Share.share({
+            title: 'Exported Transactions CSV',
+            text: fileName,
+            url: uri,
+            dialogTitle: 'Share exported data',
           });
         } catch (filesystemError) {
           console.error('[Transaction CSV Export] Filesystem.writeFile failed', filesystemError);
@@ -387,7 +400,9 @@ const Settings = () => {
 
       toast({
         title: t('toast.exportSuccessful'),
-        description: `${t('toast.exportedDesc')} (${fileName})`,
+        description: Capacitor.getPlatform() === 'web'
+          ? `${t('toast.exportedDesc')} (${fileName})`
+          : `File ready to share (${fileName})`,
       });
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
