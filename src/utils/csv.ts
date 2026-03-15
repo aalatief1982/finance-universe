@@ -23,12 +23,40 @@
 
 export interface CsvConversionOptions {
   delimiter?: string;
-  /** Include FX columns in export (default: true) */
-  includeFxFields?: boolean;
 }
 
 import { Transaction, TransactionType, TransactionSource, FxSource } from '@/types/transaction';
 import { v4 as uuidv4 } from 'uuid';
+
+export const TRANSACTION_CSV_COLUMNS = [
+  'id',
+  'title',
+  'amount',
+  'category',
+  'subcategory',
+  'date',
+  'type',
+  'notes',
+  'source',
+  'currency',
+  'person',
+  'fromAccount',
+  'toAccount',
+  'country',
+  'description',
+  'originalCurrency',
+  'vendor',
+  'account',
+  'createdAt',
+  'baseCurrency',
+  'amountInBase',
+  'fxRateToBase',
+  'fxSource',
+  'fxLockedAt',
+  'fxPair',
+] as const;
+
+const REQUIRED_IMPORT_COLUMNS = ['id', 'title', 'amount', 'date', 'type', 'currency', 'createdAt'] as const;
 
 /**
  * Convert an array of transactions to a CSV string.
@@ -44,42 +72,7 @@ export const convertTransactionsToCsv = (
   if (!transactions || transactions.length === 0) return '';
 
   const delimiter = options.delimiter || ',';
-  const includeFxFields = options.includeFxFields !== false;
-
-  // Base headers
-  const baseHeaders = [
-    'id',
-    'title',
-    'amount',
-    'category',
-    'subcategory',
-    'date',
-    'type',
-    'notes',
-    'source',
-    'currency',
-    'person',
-    'fromAccount',
-    'toAccount',
-    'country',
-    'description',
-    'originalCurrency',
-    'vendor',
-    'account',
-    'createdAt'
-  ];
-
-  // FX-specific headers for multi-currency audit trail
-  const fxHeaders = [
-    'baseCurrency',
-    'amountInBase',
-    'fxRateToBase',
-    'fxSource',
-    'fxLockedAt',
-    'fxPair'
-  ];
-
-  const headers = includeFxFields ? [...baseHeaders, ...fxHeaders] : baseHeaders;
+  const headers = [...TRANSACTION_CSV_COLUMNS];
 
   const escape = (value: unknown) => {
     if (value === undefined || value === null) return '';
@@ -129,7 +122,9 @@ export const parseCsvTransactions = (fileData: string): Transaction[] => {
   }
   if (current.trim().length > 0) rows.push(current);
 
-  if (rows.length < 2) return [];
+  if (rows.length < 2) {
+    throw new Error('Invalid CSV format');
+  }
 
   const splitRow = (row: string) => {
     const values: string[] = [];
@@ -162,6 +157,13 @@ export const parseCsvTransactions = (fileData: string): Transaction[] => {
   };
 
   const headers = splitRow(rows[0]);
+  if (
+    headers.length !== TRANSACTION_CSV_COLUMNS.length ||
+    headers.some((header, index) => header !== TRANSACTION_CSV_COLUMNS[index])
+  ) {
+    throw new Error('Invalid CSV format');
+  }
+
   const transactions: Transaction[] = [];
 
   for (let i = 1; i < rows.length; i++) {
@@ -173,16 +175,21 @@ export const parseCsvTransactions = (fileData: string): Transaction[] => {
       row[h] = values[idx];
     });
 
-    // Validate required fields
-    if (!row.title || !row.amount || !row.date || !row.type || !row.category) {
-      continue;
+    const hasMissingRequired = REQUIRED_IMPORT_COLUMNS.some(column => !row[column]);
+    if (hasMissingRequired) {
+      throw new Error('Missing required fields');
+    }
+
+    const parsedAmount = Number.parseFloat(row.amount);
+    if (Number.isNaN(parsedAmount)) {
+      throw new Error('Invalid CSV format');
     }
 
     const txn: Transaction = {
       id: row.id || uuidv4(),
       title: row.title,
-      amount: parseFloat(row.amount),
-      category: row.category,
+      amount: parsedAmount,
+      category: row.category || '',
       date: row.date,
       type: row.type as TransactionType,
       source: (row.source as TransactionSource) || 'import',
@@ -205,8 +212,8 @@ export const parseCsvTransactions = (fileData: string): Transaction[] => {
 
     // FX fields for multi-currency support
     if (row.baseCurrency) txn.baseCurrency = row.baseCurrency;
-    if (row.amountInBase) txn.amountInBase = parseFloat(row.amountInBase);
-    if (row.fxRateToBase) txn.fxRateToBase = parseFloat(row.fxRateToBase);
+    if (row.amountInBase) txn.amountInBase = Number.parseFloat(row.amountInBase);
+    if (row.fxRateToBase) txn.fxRateToBase = Number.parseFloat(row.fxRateToBase);
     if (row.fxSource) txn.fxSource = row.fxSource as FxSource;
     if (row.fxLockedAt) txn.fxLockedAt = row.fxLockedAt;
     if (row.fxPair) txn.fxPair = row.fxPair;

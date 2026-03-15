@@ -1,4 +1,4 @@
-import { convertTransactionsToCsv, parseCsvTransactions } from '../csv';
+import { convertTransactionsToCsv, parseCsvTransactions, TRANSACTION_CSV_COLUMNS } from '../csv';
 import { Transaction } from '@/types/transaction';
 
 describe('CSV utilities', () => {
@@ -12,6 +12,7 @@ describe('CSV utilities', () => {
       type: 'expense',
       source: 'manual',
       currency: 'USD',
+      createdAt: '2024-05-01T00:00:00.000Z',
     },
     {
       id: '2',
@@ -23,6 +24,7 @@ describe('CSV utilities', () => {
       source: 'manual',
       notes: 'Monthly salary',
       currency: 'USD',
+      createdAt: '2024-05-02T00:00:00.000Z',
     }
   ];
 
@@ -32,16 +34,26 @@ describe('CSV utilities', () => {
     expect(parsed).toEqual(sampleTransactions);
   });
 
-  it('ignores rows missing required fields when parsing', () => {
-    const csv =
-      'id,title,amount,category,subcategory,date,type,notes,source,currency,person,fromAccount,toAccount,country,description,originalCurrency,vendor,account,createdAt\n' +
-      '"1","Item","10","Other","","2024-06-01","expense","","manual","","","","","","","","",""\n' +
-      '"2","","5","Misc","","2024-06-02","expense","","manual","","","","","","","","",""';
+  it('exports with the exact required header order', () => {
+    const csv = convertTransactionsToCsv(sampleTransactions);
+    const [header] = csv.split('\n');
+    expect(header).toBe(TRANSACTION_CSV_COLUMNS.join(','));
+  });
 
-    const parsed = parseCsvTransactions(csv);
-    expect(parsed.length).toBe(1);
-    expect(parsed[0].id).toBe('1');
-    expect(parsed[0].title).toBe('Item');
+  it('throws when required fields are missing when parsing', () => {
+    const csv =
+      `${TRANSACTION_CSV_COLUMNS.join(',')}\n` +
+      '"1","Item","10","Other","","2024-06-01","expense","","manual","USD","","","","","","","","","","","","","","",""';
+
+    expect(() => parseCsvTransactions(csv)).toThrow('Missing required fields');
+  });
+
+  it('throws when CSV header does not match required format', () => {
+    const csv =
+      'id,title,amount,date,type,currency,createdAt\n' +
+      '"1","Item","10","2024-06-01","expense","USD","2024-06-01T00:00:00.000Z"';
+
+    expect(() => parseCsvTransactions(csv)).toThrow('Invalid CSV format');
   });
 
   it('handles newline characters in fields', () => {
@@ -56,6 +68,7 @@ describe('CSV utilities', () => {
         source: 'manual',
         notes: 'line1\nline2',
         currency: 'USD',
+        createdAt: '2024-07-01T00:00:00.000Z',
       },
     ];
 
